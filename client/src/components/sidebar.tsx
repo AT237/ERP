@@ -22,11 +22,17 @@ import { CSS } from "@dnd-kit/utilities";
 import { 
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact,
-  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save
+  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const defaultNavigation = [
   {
@@ -361,38 +367,47 @@ export default function Sidebar() {
 
   return (
     <aside className="w-72 bg-card border-r border-border flex flex-col">
-      {/* Edit Mode Controls */}
-      <div className="p-4 border-b border-border">
-        <button
-          onClick={toggleEditMode}
-          className={cn(
-            "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-            isEditMode
-              ? "bg-green-500 hover:bg-green-600 text-white"
-              : "bg-orange-500 hover:bg-orange-600 text-white"
+      {/* Header with Settings */}
+      <div className="p-4 border-b border-border flex justify-between items-center">
+        <div className="flex-1">
+          {isEditMode && (
+            <div className="space-y-2">
+              <button
+                onClick={toggleEditMode}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-green-500 hover:bg-green-600 text-white"
+                data-testid="save-edit-mode"
+              >
+                <Save size={16} />
+                Opslaan
+              </button>
+              <button
+                onClick={cancelEdit}
+                className="w-full px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="cancel-edit"
+              >
+                Annuleren
+              </button>
+            </div>
           )}
-          data-testid="toggle-edit-mode"
-        >
-          {isEditMode ? (
-            <>
-              <Save size={16} />
-              Opslaan
-            </>
-          ) : (
-            <>
-              <Settings size={16} />
-              Menu volgorde aanpassen
-            </>
-          )}
-        </button>
-        {isEditMode && (
-          <button
-            onClick={cancelEdit}
-            className="w-full mt-2 px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            data-testid="cancel-edit"
-          >
-            Annuleren
-          </button>
+        </div>
+        
+        {!isEditMode && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="p-2 hover:bg-accent rounded-md transition-colors"
+                data-testid="settings-menu"
+              >
+                <Settings size={16} className="text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={toggleEditMode} className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4" />
+                Menu volgorde aanpassen
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
       
