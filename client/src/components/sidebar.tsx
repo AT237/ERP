@@ -126,7 +126,7 @@ function SortableNavItem({ item, sectionId, isEditMode }: { item: any; sectionId
       <Link
         href={item.href}
         className={cn(
-          "flex items-center space-x-3 px-3 py-2 rounded-md transition-colors relative flex-1",
+          "flex items-center space-x-2 px-3 py-1.5 rounded-md transition-colors relative flex-1",
           isActive
             ? "bg-orange-50 text-foreground border-l-4 border-orange-500"
             : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -134,14 +134,14 @@ function SortableNavItem({ item, sectionId, isEditMode }: { item: any; sectionId
         data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
       >
         <div className={cn(
-          "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+          "w-6 h-6 rounded-lg flex items-center justify-center transition-colors",
           isActive 
             ? "bg-orange-500 text-white" 
             : "bg-orange-400 text-white hover:bg-orange-500"
         )}>
-          <Icon size={16} />
+          <Icon size={14} />
         </div>
-        <span className="font-medium">{item.name}</span>
+        <span className="text-sm font-medium">{item.name}</span>
       </Link>
     </div>
   );
@@ -167,7 +167,7 @@ function SortableSection({ section, collapsedSections, toggleSection, isEditMode
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="space-y-1">
+    <div ref={setNodeRef} style={style} className="space-y-0.5">
       <div className="flex items-center justify-between">
         <div className="flex items-center flex-1">
           {isEditMode && (
@@ -180,7 +180,7 @@ function SortableSection({ section, collapsedSections, toggleSection, isEditMode
               <GripVertical size={12} className="text-muted-foreground" />
             </div>
           )}
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1 flex-1">
+          <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-2 py-1 flex-1">
             {section.name}
           </h3>
         </div>
@@ -396,7 +396,7 @@ export default function Sidebar() {
         )}
       </div>
       
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-1.5">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
