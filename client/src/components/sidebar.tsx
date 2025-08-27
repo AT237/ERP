@@ -366,7 +366,7 @@ export default function Sidebar() {
   return (
     <aside className="w-72 bg-card border-r border-border flex flex-col relative">
       {/* Settings in top-right corner */}
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-2 right-2 z-10">
         {isEditMode ? (
           <div className="space-y-2">
             <button
