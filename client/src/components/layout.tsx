@@ -112,8 +112,60 @@ export default function Layout({ children }: LayoutProps) {
     });
   };
 
+  const motivationalMessages = [
+    {
+      title: "Power Your Next Project! ⚡",
+      message: "Ready to energize your workflow? Start by exploring your projects, managing utilities, or checking your latest reports.",
+      action: "Click on any menu item to get started"
+    },
+    {
+      title: "Let's Get Electric! 🔌", 
+      message: "Your utility empire awaits! Whether it's managing power grids, tracking projects, or analyzing performance - everything starts here.",
+      action: "Choose a section from the sidebar to begin"
+    },
+    {
+      title: "Spark Innovation Today! ⚡",
+      message: "From power distribution to project excellence - your tools are ready. Time to illuminate your business potential!",
+      action: "Select any module to jumpstart your productivity"
+    },
+    {
+      title: "Current Status: Ready to Work! 🌟",
+      message: "Your electrical projects and utility operations are waiting for your expertise. Let's power up and make things happen!",
+      action: "Open a menu item to start managing your projects"
+    },
+    {
+      title: "High Voltage Productivity Ahead! ⚡",
+      message: "Transform your utility business with smart project management. Every great electrical project starts with a single click.",
+      action: "Navigate to any section to begin your journey"
+    }
+  ];
+
+  const getRandomMessage = () => {
+    return motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+  };
+
   const renderActiveTabContent = () => {
     const activeTab = tabs.find(tab => tab.id === activeTabId);
+    
+    // If no tabs exist, show motivational message
+    if (tabs.length === 0) {
+      const message = getRandomMessage();
+      return (
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center max-w-md">
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold text-foreground mb-4">{message.title}</h1>
+              <p className="text-lg text-muted-foreground mb-6">{message.message}</p>
+              <p className="text-sm text-orange-600 font-medium">{message.action}</p>
+            </div>
+            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-6">
+              <div className="text-6xl mb-4">⚡</div>
+              <p className="text-sm text-muted-foreground">Welcome to ATE Solutions - Where Power Meets Precision</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
     
     if (!activeTab) {
       return children; // fallback to dashboard
