@@ -5,6 +5,9 @@ import Header from "./header";
 import SectionInfoPanel from "./section-info-panel";
 import logoImage from "@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg";
 
+// Lazy load components outside the render function to prevent re-importing
+const CustomerTable = lazy(() => import('./customer-table'));
+
 interface LayoutProps {
   children: React.ReactNode;
 }
@@ -149,7 +152,7 @@ export default function Layout({ children }: LayoutProps) {
 
       return () => clearInterval(interval);
     }
-  }, [tabs.length, motivationalMessages.length]);
+  }, [tabs.length]); // Remove motivationalMessages.length from dependency
 
   const renderActiveTabContent = () => {
     const activeTab = tabs.find(tab => tab.id === activeTabId);
@@ -198,10 +201,9 @@ export default function Layout({ children }: LayoutProps) {
     if (activeTab.type === 'menu') {
       // Render specific menu components
       if (activeTab.id === 'customers') {
-        const CustomerTable = lazy(() => import('./customer-table'));
         return (
           <div className="p-6">
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
               <CustomerTable />
             </Suspense>
           </div>
