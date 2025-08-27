@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 const navigation = [
   {
     name: "Overview",
+    collapsible: true,
     items: [
       { name: "Dashboard", href: "/dashboard", icon: BarChart3 }
     ]
