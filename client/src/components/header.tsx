@@ -4,7 +4,7 @@ import { Plus, User } from "lucide-react";
 const pageLabels: Record<string, { title: string; description: string }> = {
   "dashboard": { title: "Dashboard", description: "Overview of your business operations" },
   "inventory": { title: "Inventory Management", description: "Manage your stock and inventory items" },
-  "customers": { title: "Customer Management", description: "Manage your customer relationships" },
+  "customers": { title: "Customers Management", description: "Manage your customer relationships" },
   "suppliers": { title: "Supplier Management", description: "Manage your supplier relationships" },
   "quotations": { title: "Quotations", description: "Create and manage price quotations" },
   "invoices": { title: "Invoices", description: "Generate and track invoices" },
