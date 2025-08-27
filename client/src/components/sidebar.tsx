@@ -239,7 +239,7 @@ export default function Sidebar() {
   // Save user preferences
   const savePreferences = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest(`/api/user-preferences`, "POST", {
+      return await apiRequest("POST", `/api/user-preferences`, {
         userId,
         navigationOrder: data.navigationOrder,
         collapsedSections: data.collapsedSections,
