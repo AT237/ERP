@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { X } from "lucide-react";
 import Sidebar from "./sidebar";
 import Header from "./header";
@@ -196,12 +196,21 @@ export default function Layout({ children }: LayoutProps) {
     }
     
     if (activeTab.type === 'menu') {
+      // Render specific menu components
+      if (activeTab.id === 'customers') {
+        const CustomerTable = lazy(() => import('./customer-table'));
+        return (
+          <div className="p-6">
+            <Suspense fallback={<div>Loading...</div>}>
+              <CustomerTable />
+            </Suspense>
+          </div>
+        );
+      }
+      
+      // Default placeholder for other menu items
       return (
         <div className="p-6">
-          <div className="mb-4">
-            <h1 className="text-2xl font-bold text-foreground">{activeTab.name}</h1>
-            <p className="text-muted-foreground">Manage your {activeTab.name.toLowerCase()} here.</p>
-          </div>
           <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
             <p className="text-muted-foreground">Content for {activeTab.name} will be implemented here.</p>
             {activeTab.menuRoute && (
