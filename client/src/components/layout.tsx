@@ -311,7 +311,7 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Main content area with orange border to connect with active tab */}
           <main className={`flex-1 flex flex-col overflow-hidden ${
-            tabs.length > 0 ? 'border-2 border-orange-500 border-t-0 bg-white' : 'bg-white'
+            tabs.length > 0 ? 'border-2 border-orange-500 bg-white' : 'bg-white'
           }`}>
             <Header activeTab={tabs.find(tab => tab.id === activeTabId)} />
             
