@@ -395,8 +395,8 @@ export default function Sidebar() {
                 <Settings size={16} className="text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={toggleEditMode} className="cursor-pointer">
+            <DropdownMenuContent align="end" className="w-64 border-2 border-border shadow-lg">
+              <DropdownMenuItem onClick={toggleEditMode} className="cursor-pointer px-3 py-2 text-sm">
                 <Settings className="mr-2 h-4 w-4" />
                 Menu volgorde aanpassen
               </DropdownMenuItem>
