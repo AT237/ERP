@@ -174,26 +174,21 @@ function SortableSection({ section, collapsedSections, toggleSection, isEditMode
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-0.5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center flex-1">
-          {isEditMode && (
-            <div
-              {...attributes}
-              {...listeners}
-              className="p-1 cursor-grab active:cursor-grabbing hover:bg-accent rounded transition-colors mr-2"
-              data-testid={`drag-section-${section.id}`}
-            >
-              <GripVertical size={12} className="text-muted-foreground" />
-            </div>
-          )}
-          <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-2 py-1 flex-1">
-            {section.name}
-          </h3>
-        </div>
+      <div className="flex items-center">
+        {isEditMode && (
+          <div
+            {...attributes}
+            {...listeners}
+            className="p-1 cursor-grab active:cursor-grabbing hover:bg-accent rounded transition-colors mr-2"
+            data-testid={`drag-section-${section.id}`}
+          >
+            <GripVertical size={12} className="text-muted-foreground" />
+          </div>
+        )}
         {isCollapsible && (
           <button
             onClick={() => toggleSection(section.name)}
-            className="p-1 hover:bg-accent rounded transition-colors"
+            className="p-1 hover:bg-accent rounded transition-colors mr-1"
             data-testid={`toggle-${section.name.toLowerCase()}`}
           >
             {isCollapsed ? (
@@ -203,6 +198,9 @@ function SortableSection({ section, collapsedSections, toggleSection, isEditMode
             )}
           </button>
         )}
+        <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-2 py-1 flex-1">
+          {section.name}
+        </h3>
       </div>
       {(!isCollapsible || !isCollapsed) && (
         <SortableContext
@@ -366,32 +364,28 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-72 bg-card border-r border-border flex flex-col">
-      {/* Header with Settings */}
-      <div className="p-4 border-b border-border flex justify-between items-center">
-        <div className="flex-1">
-          {isEditMode && (
-            <div className="space-y-2">
-              <button
-                onClick={toggleEditMode}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-green-500 hover:bg-green-600 text-white"
-                data-testid="save-edit-mode"
-              >
-                <Save size={16} />
-                Opslaan
-              </button>
-              <button
-                onClick={cancelEdit}
-                className="w-full px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                data-testid="cancel-edit"
-              >
-                Annuleren
-              </button>
-            </div>
-          )}
-        </div>
-        
-        {!isEditMode && (
+    <aside className="w-72 bg-card border-r border-border flex flex-col relative">
+      {/* Settings in top-right corner */}
+      <div className="absolute top-4 right-4 z-10">
+        {isEditMode ? (
+          <div className="space-y-2">
+            <button
+              onClick={toggleEditMode}
+              className="flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-green-500 hover:bg-green-600 text-white"
+              data-testid="save-edit-mode"
+            >
+              <Save size={16} />
+              Opslaan
+            </button>
+            <button
+              onClick={cancelEdit}
+              className="w-full px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="cancel-edit"
+            >
+              Annuleren
+            </button>
+          </div>
+        ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
