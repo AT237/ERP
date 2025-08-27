@@ -411,6 +411,19 @@ export default function Sidebar({ onSectionClick }: SidebarProps) {
     };
   }).filter(section => section.items.length > 0 || !searchQuery.trim()); // Hide empty sections when searching
 
+  // When searching, temporarily expand sections that have matches
+  const effectiveCollapsedSections = searchQuery.trim() 
+    ? filteredNavigation.reduce((acc, section) => {
+        // If this section has matching items, expand it during search
+        if (section.items.length > 0) {
+          acc[section.name] = false; // Expand section
+        } else {
+          acc[section.name] = collapsedSections[section.name] || false;
+        }
+        return acc;
+      }, {} as Record<string, boolean>)
+    : collapsedSections;
+
   return (
     <aside className="w-72 bg-card border-r border-border flex flex-col">
       {/* Search Bar and Settings */}
@@ -493,7 +506,7 @@ export default function Sidebar({ onSectionClick }: SidebarProps) {
               <SortableSection
                 key={section.id}
                 section={section}
-                collapsedSections={collapsedSections}
+                collapsedSections={effectiveCollapsedSections}
                 toggleSection={toggleSection}
                 isEditMode={isEditMode}
                 onSectionClick={onSectionClick}
