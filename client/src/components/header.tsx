@@ -42,27 +42,17 @@ export default function Header({ activeTab }: HeaderProps) {
     pageInfo = pageLabels["dashboard"];
   }
 
+  // Clean up title - remove "Management" and make compact
+  const cleanTitle = pageInfo.title.replace(' Management', '');
+
   return (
-    <header className="bg-card border-b border-border px-6 py-4">
+    <header className="bg-card border-b border-border px-6 py-2">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{pageInfo.title}</h1>
-          <p className="text-muted-foreground">{pageInfo.description}</p>
+          <h1 className="text-lg font-medium text-foreground">{cleanTitle}</h1>
         </div>
-        <div className="flex items-center space-x-4">
-          <Button 
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-            data-testid="button-new-entry"
-          >
-            <Plus className="mr-2" size={16} />
-            New Entry
-          </Button>
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-              <User className="text-muted-foreground" size={16} />
-            </div>
-            <span className="text-sm font-medium">Admin User</span>
-          </div>
+        <div className="flex items-center space-x-2">
+          {/* Removed New Entry button and Admin User info as requested */}
         </div>
       </div>
     </header>
