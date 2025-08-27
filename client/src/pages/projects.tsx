@@ -15,6 +15,8 @@ import {
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
+import { SelectWithAdd } from "@/components/ui/select-with-add";
+import { QuickAddCustomer } from "@/components/quick-add-forms";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -286,21 +288,26 @@ export default function Projects() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="customerId">Customer</Label>
-                  <Select 
-                    value={form.watch("customerId")} 
+                  <SelectWithAdd
+                    value={form.watch("customerId")}
                     onValueChange={(value) => form.setValue("customerId", value)}
+                    placeholder="Select customer"
+                    addFormTitle="Add New Customer"
+                    testId="select-customer"
+                    addFormContent={
+                      <QuickAddCustomer 
+                        onSuccess={(customerId) => {
+                          form.setValue("customerId", customerId);
+                        }}
+                      />
+                    }
                   >
-                    <SelectTrigger data-testid="select-customer">
-                      <SelectValue placeholder="Select customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers?.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    {customers?.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectWithAdd>
                 </div>
                 
                 <div>
