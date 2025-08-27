@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Plus, User } from "lucide-react";
 import { useLocation } from "wouter";
-import logoImage from "@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg";
 
 const pageLabels: Record<string, { title: string; description: string }> = {
   "/": { title: "Dashboard", description: "Overview of your business operations" },
@@ -25,17 +24,9 @@ export default function Header() {
   return (
     <header className="bg-card border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-6">
-          <img 
-            src={logoImage} 
-            alt="ATE Solutions B.V." 
-            className="h-12 w-auto object-contain"
-            data-testid="company-logo"
-          />
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{pageInfo.title}</h1>
-            <p className="text-muted-foreground">{pageInfo.description}</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{pageInfo.title}</h1>
+          <p className="text-muted-foreground">{pageInfo.description}</p>
         </div>
         <div className="flex items-center space-x-4">
           <Button 
