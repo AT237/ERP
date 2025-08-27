@@ -68,7 +68,7 @@ export default function Sidebar() {
                   className={cn(
                     "flex items-center space-x-3 px-3 py-2 rounded-md transition-colors relative",
                     isActive
-                      ? "bg-gray-100 text-foreground border-l-4 border-gray-400"
+                      ? "bg-orange-50 text-foreground border-l-4 border-orange-500"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                   data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
