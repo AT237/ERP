@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   BarChart3, Building, Users, Truck, Package, FileText, 
-  Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact 
+  Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact,
+  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,9 +32,15 @@ const navigation = [
   },
   {
     name: "Sales",
+    collapsible: true,
     items: [
-      { name: "Quotations", href: "/quotations", icon: FileText },
-      { name: "Invoices", href: "/invoices", icon: Receipt }
+      { name: "Sales Quotations", href: "/quotations", icon: FileText },
+      { name: "Sales Proforma Invoices", href: "/proforma-invoices", icon: FileCheck },
+      { name: "Sales Orders", href: "/sales-orders", icon: ShoppingCart },
+      { name: "Order Confirmations", href: "/order-confirmations", icon: CheckSquare },
+      { name: "Sales Projects", href: "/projects", icon: FolderOpen },
+      { name: "Sales Work Orders", href: "/work-orders", icon: ClipboardList },
+      { name: "Sales Packing Lists", href: "/packing-lists", icon: Box }
     ]
   },
   {
@@ -53,18 +61,45 @@ const navigation = [
 
 export default function Sidebar() {
   const [location] = useLocation();
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (sectionName: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionName]: !prev[sectionName]
+    }));
+  };
 
   return (
     <aside className="w-72 bg-card border-r border-border flex flex-col">
       
       {/* Navigation Menu */}
       <nav className="flex-1 p-4 space-y-2">
-        {navigation.map((section) => (
-          <div key={section.name} className="space-y-1">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1">
-              {section.name}
-            </h3>
-            {section.items.map((item) => {
+        {navigation.map((section) => {
+          const isCollapsed = collapsedSections[section.name];
+          const isCollapsible = section.collapsible;
+          
+          return (
+            <div key={section.name} className="space-y-1">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1">
+                  {section.name}
+                </h3>
+                {isCollapsible && (
+                  <button
+                    onClick={() => toggleSection(section.name)}
+                    className="p-1 hover:bg-accent rounded transition-colors"
+                    data-testid={`toggle-${section.name.toLowerCase()}`}
+                  >
+                    {isCollapsed ? (
+                      <ChevronDown size={14} className="text-muted-foreground" />
+                    ) : (
+                      <ChevronUp size={14} className="text-muted-foreground" />
+                    )}
+                  </button>
+                )}
+              </div>
+              {(!isCollapsible || !isCollapsed) && section.items.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.href || (item.href === "/dashboard" && location === "/");
               
@@ -92,8 +127,8 @@ export default function Sidebar() {
                 </Link>
               );
             })}
-          </div>
-        ))}
+            </div>
+        )})}
       </nav>
     </aside>
   );
