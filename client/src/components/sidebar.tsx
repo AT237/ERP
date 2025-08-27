@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { 
   BarChart3, Building, Users, Truck, Package, FileText, 
-  Receipt, FolderOpen, ClipboardList, ShoppingCart, Box 
+  Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,17 +13,24 @@ const navigation = [
     ]
   },
   {
+    name: "Relaties",
+    items: [
+      { name: "Customers", href: "/customers", icon: Users },
+      { name: "Suppliers", href: "/suppliers", icon: Truck },
+      { name: "Contact Persons", href: "/contacts", icon: Contact },
+      { name: "Prospects", href: "/prospects", icon: UserPlus }
+    ]
+  },
+  {
     name: "Inventory",
     items: [
       { name: "Stock Management", href: "/inventory", icon: Package },
-      { name: "Suppliers", href: "/suppliers", icon: Truck },
       { name: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart }
     ]
   },
   {
     name: "Sales",
     items: [
-      { name: "Customers", href: "/customers", icon: Users },
       { name: "Quotations", href: "/quotations", icon: FileText },
       { name: "Invoices", href: "/invoices", icon: Receipt }
     ]
