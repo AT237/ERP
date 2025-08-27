@@ -198,7 +198,11 @@ function SortableSection({ section, collapsedSections, toggleSection, isEditMode
             )}
           </button>
         )}
-        <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-2 py-1 flex-1">
+        <h3 
+          className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-2 py-1 flex-1 cursor-pointer hover:text-orange-500 transition-colors"
+          onClick={() => onSectionClick?.({id: section.id, name: section.name})}
+          data-testid={`section-header-${section.id}`}
+        >
           {section.name}
         </h3>
       </div>
@@ -221,7 +225,11 @@ function SortableSection({ section, collapsedSections, toggleSection, isEditMode
   );
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  onSectionClick?: (section: {id: string, name: string}) => void;
+}
+
+export default function Sidebar({ onSectionClick }: SidebarProps) {
   const [navigation, setNavigation] = useState(defaultNavigation);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [isEditMode, setIsEditMode] = useState(false);

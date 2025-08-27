@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./sidebar";
 import Header from "./header";
+import SectionInfoPanel from "./section-info-panel";
 import logoImage from "@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg";
 
 interface LayoutProps {
@@ -9,6 +10,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedSection, setSelectedSection] = useState<{id: string, name: string} | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -62,11 +64,19 @@ export default function Layout({ children }: LayoutProps) {
       
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        <Sidebar onSectionClick={setSelectedSection} />
         <main className="flex-1 flex flex-col overflow-hidden">
           <Header />
           <div className="flex-1 overflow-auto">
-            {children}
+            {selectedSection ? (
+              <SectionInfoPanel 
+                sectionId={selectedSection.id}
+                sectionName={selectedSection.name}
+                onClose={() => setSelectedSection(null)}
+              />
+            ) : (
+              children
+            )}
           </div>
         </main>
       </div>
