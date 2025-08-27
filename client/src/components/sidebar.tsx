@@ -1,139 +1,359 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { 
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact,
-  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare
+  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
-const navigation = [
+const defaultNavigation = [
   {
+    id: "overview",
     name: "Overview",
     collapsible: true,
     items: [
-      { name: "Dashboard", href: "/dashboard", icon: BarChart3 }
+      { id: "dashboard", name: "Dashboard", href: "/dashboard", icon: BarChart3 }
     ]
   },
   {
+    id: "relaties",
     name: "Relaties",
     collapsible: true,
     items: [
-      { name: "Customers", href: "/customers", icon: Users },
-      { name: "Suppliers", href: "/suppliers", icon: Truck },
-      { name: "Contact Persons", href: "/contacts", icon: Contact },
-      { name: "Prospects", href: "/prospects", icon: UserPlus }
+      { id: "customers", name: "Customers", href: "/customers", icon: Users },
+      { id: "suppliers", name: "Suppliers", href: "/suppliers", icon: Truck },
+      { id: "contacts", name: "Contact Persons", href: "/contacts", icon: Contact },
+      { id: "prospects", name: "Prospects", href: "/prospects", icon: UserPlus }
     ]
   },
   {
+    id: "inventory",
     name: "Inventory",
     collapsible: true,
     items: [
-      { name: "Stock Management", href: "/inventory", icon: Package },
-      { name: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart }
+      { id: "stock", name: "Stock Management", href: "/inventory", icon: Package },
+      { id: "purchase-orders", name: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart }
     ]
   },
   {
+    id: "sales",
     name: "Sales",
     collapsible: true,
     items: [
-      { name: "Sales Quotations", href: "/quotations", icon: FileText },
-      { name: "Sales Proforma Invoices", href: "/proforma-invoices", icon: FileCheck },
-      { name: "Sales Orders", href: "/sales-orders", icon: ShoppingCart },
-      { name: "Order Confirmations", href: "/order-confirmations", icon: CheckSquare },
-      { name: "Sales Projects", href: "/projects", icon: FolderOpen },
-      { name: "Sales Work Orders", href: "/work-orders", icon: ClipboardList },
-      { name: "Sales Packing Lists", href: "/packing-lists", icon: Box }
+      { id: "quotations", name: "Sales Quotations", href: "/quotations", icon: FileText },
+      { id: "proforma", name: "Sales Proforma Invoices", href: "/proforma-invoices", icon: FileCheck },
+      { id: "orders", name: "Sales Orders", href: "/sales-orders", icon: ShoppingCart },
+      { id: "confirmations", name: "Order Confirmations", href: "/order-confirmations", icon: CheckSquare },
+      { id: "sales-projects", name: "Sales Projects", href: "/projects", icon: FolderOpen },
+      { id: "sales-work", name: "Sales Work Orders", href: "/work-orders", icon: ClipboardList },
+      { id: "sales-packing", name: "Sales Packing Lists", href: "/packing-lists", icon: Box }
     ]
   },
   {
+    id: "operations",
     name: "Operations",
     collapsible: true,
     items: [
-      { name: "Projects", href: "/projects", icon: FolderOpen },
-      { name: "Work Orders", href: "/work-orders", icon: ClipboardList },
-      { name: "Packing Lists", href: "/packing-lists", icon: Box }
+      { id: "projects", name: "Projects", href: "/projects", icon: FolderOpen },
+      { id: "work-orders", name: "Work Orders", href: "/work-orders", icon: ClipboardList },
+      { id: "packing-lists", name: "Packing Lists", href: "/packing-lists", icon: Box }
     ]
   },
   {
+    id: "reports",
     name: "Reports",
     collapsible: true,
     items: [
-      { name: "Analytics", href: "/reports", icon: BarChart3 }
+      { id: "analytics", name: "Analytics", href: "/reports", icon: BarChart3 }
     ]
   }
 ];
 
-export default function Sidebar() {
-  const [location] = useLocation();
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+function SortableNavItem({ item, sectionId }: { item: any; sectionId: string }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `${sectionId}-${item.id}` });
 
-  const toggleSection = (sectionName: string) => {
-    setCollapsedSections(prev => ({
-      ...prev,
-      [sectionName]: !prev[sectionName]
-    }));
+  const [location] = useLocation();
+  const Icon = item.icon;
+  const isActive = location === item.href || (item.href === "/dashboard" && location === "/");
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
   };
 
   return (
-    <aside className="w-72 bg-card border-r border-border flex flex-col">
-      
-      {/* Navigation Menu */}
-      <nav className="flex-1 p-4 space-y-2">
-        {navigation.map((section) => {
-          const isCollapsed = collapsedSections[section.name];
-          const isCollapsible = section.collapsible;
+    <div ref={setNodeRef} style={style} className="flex items-center">
+      <div
+        {...attributes}
+        {...listeners}
+        className="p-1 cursor-grab active:cursor-grabbing hover:bg-accent rounded transition-colors mr-2"
+        data-testid={`drag-handle-${item.id}`}
+      >
+        <GripVertical size={12} className="text-muted-foreground" />
+      </div>
+      <Link
+        href={item.href}
+        className={cn(
+          "flex items-center space-x-3 px-3 py-2 rounded-md transition-colors relative flex-1",
+          isActive
+            ? "bg-orange-50 text-foreground border-l-4 border-orange-500"
+            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        )}
+        data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+      >
+        <div className={cn(
+          "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+          isActive 
+            ? "bg-orange-500 text-white" 
+            : "bg-orange-400 text-white hover:bg-orange-500"
+        )}>
+          <Icon size={16} />
+        </div>
+        <span className="font-medium">{item.name}</span>
+      </Link>
+    </div>
+  );
+}
+
+function SortableSection({ section, collapsedSections, toggleSection }: any) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: section.id });
+
+  const isCollapsed = collapsedSections[section.name];
+  const isCollapsible = section.collapsible;
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="space-y-1">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center flex-1">
+          <div
+            {...attributes}
+            {...listeners}
+            className="p-1 cursor-grab active:cursor-grabbing hover:bg-accent rounded transition-colors mr-2"
+            data-testid={`drag-section-${section.id}`}
+          >
+            <GripVertical size={12} className="text-muted-foreground" />
+          </div>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1 flex-1">
+            {section.name}
+          </h3>
+        </div>
+        {isCollapsible && (
+          <button
+            onClick={() => toggleSection(section.name)}
+            className="p-1 hover:bg-accent rounded transition-colors"
+            data-testid={`toggle-${section.name.toLowerCase()}`}
+          >
+            {isCollapsed ? (
+              <ChevronDown size={14} className="text-muted-foreground" />
+            ) : (
+              <ChevronUp size={14} className="text-muted-foreground" />
+            )}
+          </button>
+        )}
+      </div>
+      {(!isCollapsible || !isCollapsed) && (
+        <SortableContext
+          items={section.items.map((item: any) => `${section.id}-${item.id}`)}
+          strategy={verticalListSortingStrategy}
+        >
+          {section.items.map((item: any) => (
+            <SortableNavItem
+              key={item.id}
+              item={item}
+              sectionId={section.id}
+            />
+          ))}
+        </SortableContext>
+      )}
+    </div>
+  );
+}
+
+export default function Sidebar() {
+  const [navigation, setNavigation] = useState(defaultNavigation);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const queryClient = useQueryClient();
+  
+  // For demo purposes, using admin user ID. In real app, get from auth context
+  const userId = "admin";
+
+  // Load user preferences
+  const { data: preferences } = useQuery({
+    queryKey: ["/api/user-preferences", userId],
+  });
+
+  // Save user preferences
+  const savePreferences = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest(`/api/user-preferences`, "POST", {
+        userId,
+        navigationOrder: data.navigationOrder,
+        collapsedSections: data.collapsedSections,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user-preferences", userId] });
+    },
+  });
+
+  // Initialize navigation and collapsed sections from preferences
+  useEffect(() => {
+    if (preferences && typeof preferences === 'object') {
+      if ((preferences as any).navigationOrder && Array.isArray((preferences as any).navigationOrder)) {
+        setNavigation((preferences as any).navigationOrder);
+      }
+      if ((preferences as any).collapsedSections && typeof (preferences as any).collapsedSections === 'object') {
+        setCollapsedSections((preferences as any).collapsedSections);
+      }
+    }
+  }, [preferences]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const toggleSection = (sectionName: string) => {
+    const newCollapsedSections = {
+      ...collapsedSections,
+      [sectionName]: !collapsedSections[sectionName]
+    };
+    setCollapsedSections(newCollapsedSections);
+    
+    // Save to backend
+    savePreferences.mutate({
+      navigationOrder: navigation,
+      collapsedSections: newCollapsedSections,
+    });
+  };
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (!over) return;
+
+    if (active.id !== over.id) {
+      const activeId = active.id as string;
+      const overId = over.id as string;
+
+      // Handle section reordering
+      if (!activeId.includes('-') && !overId.includes('-')) {
+        setNavigation((items) => {
+          const oldIndex = items.findIndex((item) => item.id === activeId);
+          const newIndex = items.findIndex((item) => item.id === overId);
+          const newNavigation = arrayMove(items, oldIndex, newIndex);
           
-          return (
-            <div key={section.name} className="space-y-1">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1">
-                  {section.name}
-                </h3>
-                {isCollapsible && (
-                  <button
-                    onClick={() => toggleSection(section.name)}
-                    className="p-1 hover:bg-accent rounded transition-colors"
-                    data-testid={`toggle-${section.name.toLowerCase()}`}
-                  >
-                    {isCollapsed ? (
-                      <ChevronDown size={14} className="text-muted-foreground" />
-                    ) : (
-                      <ChevronUp size={14} className="text-muted-foreground" />
-                    )}
-                  </button>
-                )}
-              </div>
-              {(!isCollapsible || !isCollapsed) && section.items.map((item) => {
-              const Icon = item.icon;
-              const isActive = location === item.href || (item.href === "/dashboard" && location === "/");
+          // Save to backend
+          savePreferences.mutate({
+            navigationOrder: newNavigation,
+            collapsedSections,
+          });
+          
+          return newNavigation;
+        });
+      } else {
+        // Handle item reordering within a section
+        const activeParts = activeId.split('-');
+        const overParts = overId.split('-');
+        
+        if (activeParts.length === 2 && overParts.length === 2 && activeParts[0] === overParts[0]) {
+          const sectionId = activeParts[0];
+          const activeItemId = activeParts[1];
+          const overItemId = overParts[1];
+          
+          setNavigation((sections) => {
+            const newSections = [...sections];
+            const sectionIndex = newSections.findIndex(s => s.id === sectionId);
+            
+            if (sectionIndex !== -1) {
+              const section = newSections[sectionIndex];
+              const oldIndex = section.items.findIndex((item: any) => item.id === activeItemId);
+              const newIndex = section.items.findIndex((item: any) => item.id === overItemId);
               
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center space-x-3 px-3 py-2 rounded-md transition-colors relative",
-                    isActive
-                      ? "bg-orange-50 text-foreground border-l-4 border-orange-500"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                  data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
-                >
-                  <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-                    isActive 
-                      ? "bg-orange-500 text-white" 
-                      : "bg-orange-400 text-white hover:bg-orange-500"
-                  )}>
-                    <Icon size={16} />
-                  </div>
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              );
-            })}
-            </div>
-        )})}
+              const newItems = arrayMove(section.items, oldIndex, newIndex);
+              newSections[sectionIndex] = { ...section, items: newItems };
+              
+              // Save to backend
+              savePreferences.mutate({
+                navigationOrder: newSections,
+                collapsedSections,
+              });
+            }
+            
+            return newSections;
+          });
+        }
+      }
+    }
+  }
+
+  return (
+    <aside className="w-72 bg-card border-r border-border flex flex-col">
+      <nav className="flex-1 p-4 space-y-2">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={Array.isArray(navigation) ? navigation.map(section => section.id) : []}
+            strategy={verticalListSortingStrategy}
+          >
+            {Array.isArray(navigation) ? navigation.map((section) => (
+              <SortableSection
+                key={section.id}
+                section={section}
+                collapsedSections={collapsedSections}
+                toggleSection={toggleSection}
+              />
+            )) : null}
+          </SortableContext>
+        </DndContext>
       </nav>
     </aside>
   );

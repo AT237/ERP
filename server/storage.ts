@@ -1,14 +1,15 @@
 import {
   users, customers, suppliers, inventoryItems, projects, quotations, quotationItems,
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, workOrders,
-  packingLists, packingListItems,
+  packingLists, packingListItems, userPreferences,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type InventoryItem, type InsertInventoryItem,
   type Project, type InsertProject, type Quotation, type InsertQuotation,
   type QuotationItem, type InsertQuotationItem, type Invoice, type InsertInvoice,
   type InvoiceItem, type InsertInvoiceItem, type PurchaseOrder, type InsertPurchaseOrder,
   type PurchaseOrderItem, type InsertPurchaseOrderItem, type WorkOrder, type InsertWorkOrder,
-  type PackingList, type InsertPackingList, type PackingListItem, type InsertPackingListItem
+  type PackingList, type InsertPackingList, type PackingListItem, type InsertPackingListItem,
+  type UserPreferences, type InsertUserPreferences
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, or, ilike } from "drizzle-orm";
@@ -18,6 +19,10 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // User Preferences methods
+  getUserPreferences(userId: string): Promise<UserPreferences | undefined>;
+  saveUserPreferences(preferences: InsertUserPreferences): Promise<UserPreferences>;
 
   // Customer methods
   getCustomers(): Promise<Customer[]>;
@@ -125,6 +130,32 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  // User Preferences methods
+  async getUserPreferences(userId: string): Promise<UserPreferences | undefined> {
+    const [preferences] = await db.select().from(userPreferences).where(eq(userPreferences.userId, userId));
+    return preferences || undefined;
+  }
+
+  async saveUserPreferences(preferences: InsertUserPreferences): Promise<UserPreferences> {
+    const [existing] = await db.select().from(userPreferences).where(eq(userPreferences.userId, preferences.userId!));
+    
+    if (existing) {
+      const [updated] = await db
+        .update(userPreferences)
+        .set({
+          navigationOrder: preferences.navigationOrder,
+          collapsedSections: preferences.collapsedSections,
+          updatedAt: sql`NOW()`
+        })
+        .where(eq(userPreferences.userId, preferences.userId!))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(userPreferences).values(preferences).returning();
+      return created;
+    }
   }
 
   // Customer methods

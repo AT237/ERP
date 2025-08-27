@@ -6,7 +6,7 @@ import {
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
   insertInvoiceSchema, insertInvoiceItemSchema, insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema, insertWorkOrderSchema, insertPackingListSchema,
-  insertPackingListItemSchema
+  insertPackingListItemSchema, insertUserPreferencesSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -628,6 +628,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting packing list:", error);
       res.status(500).json({ message: "Failed to delete packing list" });
+    }
+  });
+
+  // User Preferences routes
+  app.get("/api/user-preferences/:userId", async (req, res) => {
+    try {
+      const preferences = await storage.getUserPreferences(req.params.userId);
+      res.json(preferences || { navigationOrder: null, collapsedSections: {} });
+    } catch (error) {
+      console.error("Error fetching user preferences:", error);
+      res.status(500).json({ message: "Failed to fetch user preferences" });
+    }
+  });
+
+  app.post("/api/user-preferences", async (req, res) => {
+    try {
+      const preferencesData = insertUserPreferencesSchema.parse(req.body);
+      const preferences = await storage.saveUserPreferences(preferencesData);
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error saving user preferences:", error);
+      res.status(400).json({ message: "Failed to save user preferences" });
     }
   });
 
