@@ -22,7 +22,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { 
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact,
-  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical
+  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -91,7 +91,7 @@ const defaultNavigation = [
   }
 ];
 
-function SortableNavItem({ item, sectionId }: { item: any; sectionId: string }) {
+function SortableNavItem({ item, sectionId, isEditMode }: { item: any; sectionId: string; isEditMode: boolean }) {
   const {
     attributes,
     listeners,
@@ -113,14 +113,16 @@ function SortableNavItem({ item, sectionId }: { item: any; sectionId: string }) 
 
   return (
     <div ref={setNodeRef} style={style} className="flex items-center">
-      <div
-        {...attributes}
-        {...listeners}
-        className="p-1 cursor-grab active:cursor-grabbing hover:bg-accent rounded transition-colors mr-2"
-        data-testid={`drag-handle-${item.id}`}
-      >
-        <GripVertical size={12} className="text-muted-foreground" />
-      </div>
+      {isEditMode && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="p-1 cursor-grab active:cursor-grabbing hover:bg-accent rounded transition-colors mr-2"
+          data-testid={`drag-handle-${item.id}`}
+        >
+          <GripVertical size={12} className="text-muted-foreground" />
+        </div>
+      )}
       <Link
         href={item.href}
         className={cn(
@@ -145,7 +147,7 @@ function SortableNavItem({ item, sectionId }: { item: any; sectionId: string }) 
   );
 }
 
-function SortableSection({ section, collapsedSections, toggleSection }: any) {
+function SortableSection({ section, collapsedSections, toggleSection, isEditMode }: any) {
   const {
     attributes,
     listeners,
@@ -168,14 +170,16 @@ function SortableSection({ section, collapsedSections, toggleSection }: any) {
     <div ref={setNodeRef} style={style} className="space-y-1">
       <div className="flex items-center justify-between">
         <div className="flex items-center flex-1">
-          <div
-            {...attributes}
-            {...listeners}
-            className="p-1 cursor-grab active:cursor-grabbing hover:bg-accent rounded transition-colors mr-2"
-            data-testid={`drag-section-${section.id}`}
-          >
-            <GripVertical size={12} className="text-muted-foreground" />
-          </div>
+          {isEditMode && (
+            <div
+              {...attributes}
+              {...listeners}
+              className="p-1 cursor-grab active:cursor-grabbing hover:bg-accent rounded transition-colors mr-2"
+              data-testid={`drag-section-${section.id}`}
+            >
+              <GripVertical size={12} className="text-muted-foreground" />
+            </div>
+          )}
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1 flex-1">
             {section.name}
           </h3>
@@ -204,6 +208,7 @@ function SortableSection({ section, collapsedSections, toggleSection }: any) {
               key={item.id}
               item={item}
               sectionId={section.id}
+              isEditMode={isEditMode}
             />
           ))}
         </SortableContext>
@@ -215,6 +220,8 @@ function SortableSection({ section, collapsedSections, toggleSection }: any) {
 export default function Sidebar() {
   const [navigation, setNavigation] = useState(defaultNavigation);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [originalNavigation, setOriginalNavigation] = useState(defaultNavigation);
   const queryClient = useQueryClient();
   
   // For demo purposes, using admin user ID. In real app, get from auth context
@@ -269,13 +276,35 @@ export default function Sidebar() {
     };
     setCollapsedSections(newCollapsedSections);
     
-    // Save to backend (debounced to avoid too many calls)
-    setTimeout(() => {
+    // Only save collapsed sections immediately, not navigation order
+    if (!isEditMode) {
+      setTimeout(() => {
+        savePreferences.mutate({
+          navigationOrder: navigation,
+          collapsedSections: newCollapsedSections,
+        });
+      }, 500);
+    }
+  };
+
+  const toggleEditMode = () => {
+    if (isEditMode) {
+      // Save changes
       savePreferences.mutate({
         navigationOrder: navigation,
-        collapsedSections: newCollapsedSections,
+        collapsedSections,
       });
-    }, 500);
+      setIsEditMode(false);
+    } else {
+      // Enter edit mode - save current state as backup
+      setOriginalNavigation([...navigation]);
+      setIsEditMode(true);
+    }
+  };
+
+  const cancelEdit = () => {
+    setNavigation(originalNavigation);
+    setIsEditMode(false);
   };
 
   function handleDragEnd(event: DragEndEvent) {
@@ -294,11 +323,7 @@ export default function Sidebar() {
           const newIndex = items.findIndex((item) => item.id === overId);
           const newNavigation = arrayMove(items, oldIndex, newIndex);
           
-          // Save to backend
-          savePreferences.mutate({
-            navigationOrder: newNavigation,
-            collapsedSections,
-          });
+          // Don't auto-save in edit mode
           
           return newNavigation;
         });
@@ -324,11 +349,7 @@ export default function Sidebar() {
               const newItems = arrayMove(section.items, oldIndex, newIndex);
               newSections[sectionIndex] = { ...section, items: newItems };
               
-              // Save to backend
-              savePreferences.mutate({
-                navigationOrder: newSections,
-                collapsedSections,
-              });
+              // Don't auto-save in edit mode
             }
             
             return newSections;
@@ -340,11 +361,46 @@ export default function Sidebar() {
 
   return (
     <aside className="w-72 bg-card border-r border-border flex flex-col">
+      {/* Edit Mode Controls */}
+      <div className="p-4 border-b border-border">
+        <button
+          onClick={toggleEditMode}
+          className={cn(
+            "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+            isEditMode
+              ? "bg-green-500 hover:bg-green-600 text-white"
+              : "bg-orange-500 hover:bg-orange-600 text-white"
+          )}
+          data-testid="toggle-edit-mode"
+        >
+          {isEditMode ? (
+            <>
+              <Save size={16} />
+              Opslaan
+            </>
+          ) : (
+            <>
+              <Settings size={16} />
+              Menu volgorde aanpassen
+            </>
+          )}
+        </button>
+        {isEditMode && (
+          <button
+            onClick={cancelEdit}
+            className="w-full mt-2 px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="cancel-edit"
+          >
+            Annuleren
+          </button>
+        )}
+      </div>
+      
       <nav className="flex-1 p-4 space-y-2">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
+          onDragEnd={isEditMode ? handleDragEnd : () => {}}
         >
           <SortableContext
             items={Array.isArray(navigation) ? navigation.map(section => section.id) : []}
@@ -356,6 +412,7 @@ export default function Sidebar() {
                 section={section}
                 collapsedSections={collapsedSections}
                 toggleSection={toggleSection}
+                isEditMode={isEditMode}
               />
             )) : null}
           </SortableContext>
