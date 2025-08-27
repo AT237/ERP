@@ -100,11 +100,8 @@ export default function Layout({ children }: LayoutProps) {
         if (remainingTabs.length > 0) {
           setActiveTabId(remainingTabs[0].id);
         } else {
-          // If no tabs left, create a new dashboard tab
-          const dashboardTab: Tab = { id: 'dashboard', name: 'Dashboard', type: 'page' };
-          setTabs([dashboardTab]);
-          setActiveTabId('dashboard');
-          return [dashboardTab];
+          // If no tabs left, clear active tab to show welcome screen
+          setActiveTabId('');
         }
       }
       
