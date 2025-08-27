@@ -137,16 +137,26 @@ export default function Layout({ children }: LayoutProps) {
     }
   ];
 
-  const getRandomMessage = () => {
-    return motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
-  };
+  // State for rotating motivational messages
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+
+  // Timer for rotating messages every 30 seconds
+  useEffect(() => {
+    if (tabs.length === 0) {
+      const interval = setInterval(() => {
+        setCurrentMessageIndex(prev => (prev + 1) % motivationalMessages.length);
+      }, 30000); // 30 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [tabs.length, motivationalMessages.length]);
 
   const renderActiveTabContent = () => {
     const activeTab = tabs.find(tab => tab.id === activeTabId);
     
     // If no tabs exist, show motivational message
     if (tabs.length === 0) {
-      const message = getRandomMessage();
+      const message = motivationalMessages[currentMessageIndex];
       return (
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-md">
@@ -165,7 +175,14 @@ export default function Layout({ children }: LayoutProps) {
     }
     
     if (!activeTab) {
-      return children; // fallback to dashboard
+      // No active tab found - show empty state instead of dashboard
+      return (
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center">
+            <p className="text-muted-foreground">No tab selected</p>
+          </div>
+        </div>
+      );
     }
     
     if (activeTab.type === 'section') {
