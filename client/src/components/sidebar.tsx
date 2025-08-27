@@ -22,7 +22,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { 
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact,
-  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search
+  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search, ChevronsDown, ChevronsUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -300,6 +300,29 @@ export default function Sidebar({ onSectionClick }: SidebarProps) {
     }
   };
 
+  const toggleAllSections = () => {
+    const allCollapsed = navigation.every(section => collapsedSections[section.name]);
+    const newCollapsedSections: Record<string, boolean> = {};
+    
+    navigation.forEach(section => {
+      newCollapsedSections[section.name] = !allCollapsed;
+    });
+    
+    setCollapsedSections(newCollapsedSections);
+    
+    // Save to database
+    if (!isEditMode) {
+      setTimeout(() => {
+        savePreferences.mutate({
+          navigationOrder: navigation,
+          collapsedSections: newCollapsedSections,
+        });
+      }, 500);
+    }
+  };
+
+  const areAllSectionsCollapsed = navigation.every(section => collapsedSections[section.name]);
+
   const toggleEditMode = () => {
     if (isEditMode) {
       // Save changes
@@ -393,6 +416,20 @@ export default function Sidebar({ onSectionClick }: SidebarProps) {
       {/* Search Bar and Settings */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2">
+          {/* Toggle All Sections Button */}
+          <button
+            onClick={toggleAllSections}
+            className="p-2 hover:bg-accent rounded-md transition-colors"
+            title={areAllSectionsCollapsed ? "Alle secties uitklappen" : "Alle secties inklappen"}
+            data-testid="toggle-all-sections"
+          >
+            {areAllSectionsCollapsed ? (
+              <ChevronsDown size={20} className="text-muted-foreground" />
+            ) : (
+              <ChevronsUp size={20} className="text-muted-foreground" />
+            )}
+          </button>
+          
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
