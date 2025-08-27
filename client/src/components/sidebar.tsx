@@ -16,6 +16,7 @@ const navigation = [
   },
   {
     name: "Relaties",
+    collapsible: true,
     items: [
       { name: "Customers", href: "/customers", icon: Users },
       { name: "Suppliers", href: "/suppliers", icon: Truck },
@@ -25,6 +26,7 @@ const navigation = [
   },
   {
     name: "Inventory",
+    collapsible: true,
     items: [
       { name: "Stock Management", href: "/inventory", icon: Package },
       { name: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart }
@@ -45,6 +47,7 @@ const navigation = [
   },
   {
     name: "Operations",
+    collapsible: true,
     items: [
       { name: "Projects", href: "/projects", icon: FolderOpen },
       { name: "Work Orders", href: "/work-orders", icon: ClipboardList },
@@ -53,6 +56,7 @@ const navigation = [
   },
   {
     name: "Reports",
+    collapsible: true,
     items: [
       { name: "Analytics", href: "/reports", icon: BarChart3 }
     ]
