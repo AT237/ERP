@@ -233,29 +233,30 @@ export default function Layout({ children }: LayoutProps) {
         {/* Right Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Tab Bar - Now at the very top of right area */}
-          <div className="bg-gray-50 border-b border-border px-4 py-2">
+          <div className="bg-gray-50 border-b border-border px-4 py-1">
             <div className="flex items-center space-x-1 overflow-x-auto">
               {tabs.map((tab) => (
                 <div
                   key={tab.id}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-t-lg border-b-2 transition-colors cursor-pointer min-w-0 ${
+                  className={`flex items-center gap-1 px-3 py-1 rounded-t-lg border-b-2 transition-colors cursor-pointer min-w-0 font-sans ${
                     activeTabId === tab.id
                       ? 'bg-white border-orange-500 text-orange-600'
                       : 'bg-gray-100 border-transparent text-gray-600 hover:bg-gray-200'
                   }`}
                   onClick={() => setActiveTabId(tab.id)}
                   data-testid={`tab-${tab.id}`}
+                  style={{ fontFamily: 'Arial, sans-serif' }}
                 >
-                  <span className="text-sm font-medium truncate max-w-32">{tab.name}</span>
+                  <span className="text-xs font-medium truncate max-w-24">{tab.name}</span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       closeTab(tab.id);
                     }}
-                    className="p-1 hover:bg-gray-300 rounded-full transition-colors"
+                    className="p-0.5 hover:bg-gray-300 rounded-full transition-colors"
                     data-testid={`close-tab-${tab.id}`}
                   >
-                    <X size={14} />
+                    <X size={12} />
                   </button>
                 </div>
               ))}
