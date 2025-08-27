@@ -49,18 +49,6 @@ export default function Sidebar() {
 
   return (
     <aside className="w-72 bg-card border-r border-border flex flex-col">
-      {/* Company Header */}
-      <div className="p-6 border-b border-border">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <Building className="text-primary-foreground" size={20} />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg text-foreground">Menu</h1>
-            <p className="text-xs text-muted-foreground">Navigatie</p>
-          </div>
-        </div>
-      </div>
       
       {/* Navigation Menu */}
       <nav className="flex-1 p-4 space-y-2">
@@ -85,7 +73,9 @@ export default function Sidebar() {
                   )}
                   data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                 >
-                  <Icon size={20} />
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                    <Icon size={16} />
+                  </div>
                   <span className="font-medium">{item.name}</span>
                 </Link>
               );
