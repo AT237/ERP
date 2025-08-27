@@ -244,6 +244,27 @@ export default function Layout({ children }: LayoutProps) {
                       : 'bg-gray-100 border-transparent text-gray-600 hover:bg-gray-200'
                   }`}
                   onClick={() => setActiveTabId(tab.id)}
+                  onMouseDown={(e) => {
+                    // Middle mouse button (scroll wheel click) to close tab
+                    if (e.button === 1) {
+                      e.preventDefault();
+                      closeTab(tab.id);
+                    }
+                  }}
+                  onAuxClick={(e) => {
+                    // Alternative middle click handler for better browser compatibility
+                    if (e.button === 1) {
+                      e.preventDefault();
+                      closeTab(tab.id);
+                    }
+                  }}
+                  onTouchStart={(e) => {
+                    // Handle 3-finger tap for touchpad (when supported)
+                    if (e.touches.length === 3) {
+                      e.preventDefault();
+                      closeTab(tab.id);
+                    }
+                  }}
                   data-testid={`tab-${tab.id}`}
                   style={{ fontFamily: 'Arial, sans-serif' }}
                 >
