@@ -14,6 +14,8 @@ import {
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
+import { SelectWithAdd } from "@/components/ui/select-with-add";
+import { QuickAddSupplier } from "@/components/quick-add-forms";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -278,21 +280,26 @@ export default function PurchaseOrders() {
                 
                 <div>
                   <Label htmlFor="supplierId">Supplier *</Label>
-                  <Select 
-                    value={form.watch("supplierId")} 
+                  <SelectWithAdd
+                    value={form.watch("supplierId")}
                     onValueChange={(value) => form.setValue("supplierId", value)}
+                    placeholder="Select supplier"
+                    addFormTitle="Add New Supplier"
+                    testId="select-supplier"
+                    addFormContent={
+                      <QuickAddSupplier 
+                        onSuccess={(supplierId) => {
+                          form.setValue("supplierId", supplierId);
+                        }}
+                      />
+                    }
                   >
-                    <SelectTrigger data-testid="select-supplier">
-                      <SelectValue placeholder="Select supplier" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {suppliers?.map((supplier) => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    {suppliers?.map((supplier) => (
+                      <SelectItem key={supplier.id} value={supplier.id}>
+                        {supplier.name}
+                      </SelectItem>
+                    ))}
+                  </SelectWithAdd>
                   {form.formState.errors.supplierId && (
                     <p className="text-sm text-destructive mt-1">
                       {form.formState.errors.supplierId.message}

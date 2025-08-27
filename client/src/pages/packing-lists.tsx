@@ -14,6 +14,8 @@ import {
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
+import { SelectWithAdd } from "@/components/ui/select-with-add";
+import { QuickAddCustomer, QuickAddProject } from "@/components/quick-add-forms";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -283,21 +285,26 @@ export default function PackingLists() {
                 
                 <div>
                   <Label htmlFor="customerId">Customer *</Label>
-                  <Select 
-                    value={form.watch("customerId")} 
+                  <SelectWithAdd
+                    value={form.watch("customerId")}
                     onValueChange={(value) => form.setValue("customerId", value)}
+                    placeholder="Select customer"
+                    addFormTitle="Add New Customer"
+                    testId="select-customer"
+                    addFormContent={
+                      <QuickAddCustomer 
+                        onSuccess={(customerId) => {
+                          form.setValue("customerId", customerId);
+                        }}
+                      />
+                    }
                   >
-                    <SelectTrigger data-testid="select-customer">
-                      <SelectValue placeholder="Select customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers?.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    {customers?.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectWithAdd>
                   {form.formState.errors.customerId && (
                     <p className="text-sm text-destructive mt-1">
                       {form.formState.errors.customerId.message}
@@ -328,21 +335,26 @@ export default function PackingLists() {
                 
                 <div>
                   <Label htmlFor="projectId">Project (Optional)</Label>
-                  <Select 
-                    value={form.watch("projectId")} 
+                  <SelectWithAdd
+                    value={form.watch("projectId")}
                     onValueChange={(value) => form.setValue("projectId", value)}
+                    placeholder="Select project"
+                    addFormTitle="Add New Project"
+                    testId="select-project"
+                    addFormContent={
+                      <QuickAddProject 
+                        onSuccess={(projectId) => {
+                          form.setValue("projectId", projectId);
+                        }}
+                      />
+                    }
                   >
-                    <SelectTrigger data-testid="select-project">
-                      <SelectValue placeholder="Select project" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projects?.map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    {projects?.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectWithAdd>
                 </div>
               </div>
               

@@ -4,6 +4,7 @@ import {
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import logoImage from "@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg";
 
 const navigation = [
   {
@@ -51,14 +52,13 @@ export default function Sidebar() {
     <aside className="w-72 bg-card border-r border-border flex flex-col">
       {/* Company Header */}
       <div className="p-6 border-b border-border">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <Building className="text-primary-foreground" size={20} />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg text-foreground">ErpFlow</h1>
-            <p className="text-xs text-muted-foreground">Enterprise Solutions</p>
-          </div>
+        <div className="flex items-center justify-center">
+          <img 
+            src={logoImage} 
+            alt="ATE Solutions B.V." 
+            className="h-16 w-auto object-contain"
+            data-testid="sidebar-company-logo"
+          />
         </div>
       </div>
       
