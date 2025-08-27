@@ -258,15 +258,15 @@ export default function Layout({ children }: LayoutProps) {
         {/* Right Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Tab Bar - Now at the very top of right area */}
-          <div className="bg-gray-50 border-b border-border px-4 py-1">
+          <div className="bg-gray-50 px-4 py-1">
             <div className="flex items-center space-x-1 overflow-x-auto">
               {tabs.map((tab) => (
                 <div
                   key={tab.id}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-t-lg border-b-2 transition-colors cursor-pointer min-w-0 font-sans ${
+                  className={`flex items-center gap-1 px-3 py-1 rounded-t-lg transition-colors cursor-pointer min-w-0 font-sans ${
                     activeTabId === tab.id
-                      ? 'bg-white border-orange-500 text-orange-600'
-                      : 'bg-gray-100 border-transparent text-gray-600 hover:bg-gray-200'
+                      ? 'bg-white border-2 border-orange-500 border-b-0 text-orange-600 relative z-10'
+                      : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200'
                   }`}
                   onClick={() => setActiveTabId(tab.id)}
                   onMouseDown={(e) => {
@@ -309,7 +309,10 @@ export default function Layout({ children }: LayoutProps) {
             </div>
           </div>
 
-          <main className="flex-1 flex flex-col overflow-hidden">
+          {/* Main content area with orange border to connect with active tab */}
+          <main className={`flex-1 flex flex-col overflow-hidden ${
+            tabs.length > 0 ? 'border-2 border-orange-500 border-t-0 bg-white' : 'bg-white'
+          }`}>
             <Header activeTab={tabs.find(tab => tab.id === activeTabId)} />
             
             {/* Tab Content */}
