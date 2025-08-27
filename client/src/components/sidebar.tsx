@@ -22,7 +22,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { 
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact,
-  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical
+  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -234,6 +234,7 @@ export default function Sidebar({ onSectionClick }: SidebarProps) {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [isEditMode, setIsEditMode] = useState(false);
   const [originalNavigation, setOriginalNavigation] = useState(defaultNavigation);
+  const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
   
   // For demo purposes, using admin user ID. In real app, get from auth context
@@ -371,50 +372,87 @@ export default function Sidebar({ onSectionClick }: SidebarProps) {
     }
   }
 
+  // Filter navigation based on search query
+  const filteredNavigation = navigation.map(section => {
+    if (!searchQuery.trim()) {
+      return section; // Return all items if no search query
+    }
+    
+    const filteredItems = section.items.filter(item =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    return {
+      ...section,
+      items: filteredItems
+    };
+  }).filter(section => section.items.length > 0 || !searchQuery.trim()); // Hide empty sections when searching
+
   return (
-    <aside className="w-72 bg-card border-r border-border flex flex-col relative">
-      {/* Settings in top-right corner */}
-      <div className="absolute top-2 right-2 z-10">
-        {isEditMode ? (
-          <button
-            onClick={toggleEditMode}
-            className="flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-green-500 hover:bg-green-600 text-white"
-            data-testid="save-edit-mode"
-          >
-            <Save size={16} />
-            Opslaan
-          </button>
-        ) : (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+    <aside className="w-72 bg-card border-r border-border flex flex-col">
+      {/* Search Bar and Settings */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search menu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 border border-border rounded-md text-sm bg-background focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              data-testid="menu-search"
+            />
+          </div>
+          
+          {isEditMode ? (
+            <div className="flex flex-col gap-2">
               <button
-                className="p-2 hover:bg-accent rounded-md transition-colors"
-                data-testid="settings-menu"
+                onClick={toggleEditMode}
+                className="flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-green-500 hover:bg-green-600 text-white"
+                data-testid="save-edit-mode"
               >
-                <Settings size={16} className="text-muted-foreground" />
+                <Save size={16} />
+                Opslaan
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 border-2 border-border shadow-lg">
-              <DropdownMenuItem onClick={toggleEditMode} className="cursor-pointer px-3 py-2 text-sm">
-                <Settings className="mr-2 h-4 w-4" />
-                Menu volgorde aanpassen
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+            </div>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="p-2 hover:bg-accent rounded-md transition-colors"
+                  data-testid="settings-menu"
+                >
+                  <Settings size={16} className="text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 border-2 border-border shadow-lg">
+                <DropdownMenuItem onClick={toggleEditMode} className="cursor-pointer px-3 py-2 text-sm">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Menu volgorde aanpassen
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
       
       <nav className="flex-1 p-4 space-y-1.5">
+        {searchQuery.trim() && (
+          <div className="text-xs text-muted-foreground mb-2">
+            {filteredNavigation.reduce((total, section) => total + section.items.length, 0)} results found
+          </div>
+        )}
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={isEditMode ? handleDragEnd : () => {}}
         >
           <SortableContext
-            items={Array.isArray(navigation) ? navigation.map(section => section.id) : []}
+            items={Array.isArray(filteredNavigation) ? filteredNavigation.map(section => section.id) : []}
             strategy={verticalListSortingStrategy}
           >
-            {Array.isArray(navigation) ? navigation.map((section) => (
+            {Array.isArray(filteredNavigation) ? filteredNavigation.map((section) => (
               <SortableSection
                 key={section.id}
                 section={section}
