@@ -66,14 +66,19 @@ export default function Sidebar() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center space-x-3 px-3 py-2 rounded-md transition-colors",
+                    "flex items-center space-x-3 px-3 py-2 rounded-md transition-colors relative",
                     isActive
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-gray-100 text-foreground border-l-4 border-gray-400"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                   data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                  <div className={cn(
+                    "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                    isActive 
+                      ? "bg-orange-500 text-white" 
+                      : "bg-orange-400 text-white hover:bg-orange-500"
+                  )}>
                     <Icon size={16} />
                   </div>
                   <span className="font-medium">{item.name}</span>
