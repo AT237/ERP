@@ -1,0 +1,376 @@
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, integer, decimal, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// Users table for system authentication
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  email: text("email"),
+  role: text("role").default("user"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Customers table
+export const customers = pgTable("customers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  address: text("address"),
+  contactPerson: text("contact_person"),
+  taxId: text("tax_id"),
+  paymentTerms: integer("payment_terms").default(30),
+  status: text("status").default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Suppliers table
+export const suppliers = pgTable("suppliers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  address: text("address"),
+  contactPerson: text("contact_person"),
+  taxId: text("tax_id"),
+  paymentTerms: integer("payment_terms").default(30),
+  status: text("status").default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Inventory items table
+export const inventoryItems = pgTable("inventory_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  sku: text("sku").notNull().unique(),
+  description: text("description"),
+  category: text("category"),
+  unit: text("unit").default("pcs"),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  currentStock: integer("current_stock").default(0),
+  minimumStock: integer("minimum_stock").default(0),
+  status: text("status").default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Projects table
+export const projects = pgTable("projects", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  customerId: varchar("customer_id").references(() => customers.id),
+  status: text("status").default("planning"),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  totalValue: decimal("total_value", { precision: 10, scale: 2 }),
+  progress: integer("progress").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Quotations table
+export const quotations = pgTable("quotations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  quotationNumber: text("quotation_number").notNull().unique(),
+  customerId: varchar("customer_id").references(() => customers.id).notNull(),
+  projectId: varchar("project_id").references(() => projects.id),
+  status: text("status").default("draft"),
+  validUntil: timestamp("valid_until"),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Quotation items table
+export const quotationItems = pgTable("quotation_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  quotationId: varchar("quotation_id").references(() => quotations.id).notNull(),
+  itemId: varchar("item_id").references(() => inventoryItems.id),
+  description: text("description").notNull(),
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+});
+
+// Invoices table
+export const invoices = pgTable("invoices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceNumber: text("invoice_number").notNull().unique(),
+  customerId: varchar("customer_id").references(() => customers.id).notNull(),
+  quotationId: varchar("quotation_id").references(() => quotations.id),
+  projectId: varchar("project_id").references(() => projects.id),
+  status: text("status").default("pending"),
+  dueDate: timestamp("due_date"),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  paidAmount: decimal("paid_amount", { precision: 10, scale: 2 }).default("0"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Invoice items table
+export const invoiceItems = pgTable("invoice_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceId: varchar("invoice_id").references(() => invoices.id).notNull(),
+  itemId: varchar("item_id").references(() => inventoryItems.id),
+  description: text("description").notNull(),
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+});
+
+// Purchase orders table
+export const purchaseOrders = pgTable("purchase_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderNumber: text("order_number").notNull().unique(),
+  supplierId: varchar("supplier_id").references(() => suppliers.id).notNull(),
+  status: text("status").default("pending"),
+  orderDate: timestamp("order_date").defaultNow(),
+  expectedDate: timestamp("expected_date"),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Purchase order items table
+export const purchaseOrderItems = pgTable("purchase_order_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id).notNull(),
+  itemId: varchar("item_id").references(() => inventoryItems.id).notNull(),
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+});
+
+// Work orders table
+export const workOrders = pgTable("work_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderNumber: text("order_number").notNull().unique(),
+  projectId: varchar("project_id").references(() => projects.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  assignedTo: text("assigned_to"),
+  status: text("status").default("pending"),
+  priority: text("priority").default("medium"),
+  startDate: timestamp("start_date"),
+  dueDate: timestamp("due_date"),
+  completedDate: timestamp("completed_date"),
+  estimatedHours: integer("estimated_hours"),
+  actualHours: integer("actual_hours"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Packing lists table
+export const packingLists = pgTable("packing_lists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  packingNumber: text("packing_number").notNull().unique(),
+  invoiceId: varchar("invoice_id").references(() => invoices.id),
+  projectId: varchar("project_id").references(() => projects.id),
+  customerId: varchar("customer_id").references(() => customers.id).notNull(),
+  status: text("status").default("pending"),
+  shippingAddress: text("shipping_address"),
+  shippingMethod: text("shipping_method"),
+  trackingNumber: text("tracking_number"),
+  weight: decimal("weight", { precision: 8, scale: 2 }),
+  dimensions: text("dimensions"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Packing list items table
+export const packingListItems = pgTable("packing_list_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  packingListId: varchar("packing_list_id").references(() => packingLists.id).notNull(),
+  itemId: varchar("item_id").references(() => inventoryItems.id).notNull(),
+  quantity: integer("quantity").notNull(),
+  packedQuantity: integer("packed_quantity").default(0),
+});
+
+// Define relations
+export const customersRelations = relations(customers, ({ many }) => ({
+  projects: many(projects),
+  quotations: many(quotations),
+  invoices: many(invoices),
+  packingLists: many(packingLists),
+}));
+
+export const suppliersRelations = relations(suppliers, ({ many }) => ({
+  purchaseOrders: many(purchaseOrders),
+}));
+
+export const inventoryItemsRelations = relations(inventoryItems, ({ many }) => ({
+  quotationItems: many(quotationItems),
+  invoiceItems: many(invoiceItems),
+  purchaseOrderItems: many(purchaseOrderItems),
+  packingListItems: many(packingListItems),
+}));
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [projects.customerId],
+    references: [customers.id],
+  }),
+  quotations: many(quotations),
+  invoices: many(invoices),
+  workOrders: many(workOrders),
+  packingLists: many(packingLists),
+}));
+
+export const quotationsRelations = relations(quotations, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [quotations.customerId],
+    references: [customers.id],
+  }),
+  project: one(projects, {
+    fields: [quotations.projectId],
+    references: [projects.id],
+  }),
+  items: many(quotationItems),
+  invoices: many(invoices),
+}));
+
+export const quotationItemsRelations = relations(quotationItems, ({ one }) => ({
+  quotation: one(quotations, {
+    fields: [quotationItems.quotationId],
+    references: [quotations.id],
+  }),
+  item: one(inventoryItems, {
+    fields: [quotationItems.itemId],
+    references: [inventoryItems.id],
+  }),
+}));
+
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [invoices.customerId],
+    references: [customers.id],
+  }),
+  quotation: one(quotations, {
+    fields: [invoices.quotationId],
+    references: [quotations.id],
+  }),
+  project: one(projects, {
+    fields: [invoices.projectId],
+    references: [projects.id],
+  }),
+  items: many(invoiceItems),
+  packingLists: many(packingLists),
+}));
+
+export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
+  invoice: one(invoices, {
+    fields: [invoiceItems.invoiceId],
+    references: [invoices.id],
+  }),
+  item: one(inventoryItems, {
+    fields: [invoiceItems.itemId],
+    references: [inventoryItems.id],
+  }),
+}));
+
+export const purchaseOrdersRelations = relations(purchaseOrders, ({ one, many }) => ({
+  supplier: one(suppliers, {
+    fields: [purchaseOrders.supplierId],
+    references: [suppliers.id],
+  }),
+  items: many(purchaseOrderItems),
+}));
+
+export const purchaseOrderItemsRelations = relations(purchaseOrderItems, ({ one }) => ({
+  purchaseOrder: one(purchaseOrders, {
+    fields: [purchaseOrderItems.purchaseOrderId],
+    references: [purchaseOrders.id],
+  }),
+  item: one(inventoryItems, {
+    fields: [purchaseOrderItems.itemId],
+    references: [inventoryItems.id],
+  }),
+}));
+
+export const workOrdersRelations = relations(workOrders, ({ one }) => ({
+  project: one(projects, {
+    fields: [workOrders.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const packingListsRelations = relations(packingLists, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [packingLists.customerId],
+    references: [customers.id],
+  }),
+  invoice: one(invoices, {
+    fields: [packingLists.invoiceId],
+    references: [invoices.id],
+  }),
+  project: one(projects, {
+    fields: [packingLists.projectId],
+    references: [projects.id],
+  }),
+  items: many(packingListItems),
+}));
+
+export const packingListItemsRelations = relations(packingListItems, ({ one }) => ({
+  packingList: one(packingLists, {
+    fields: [packingListItems.packingListId],
+    references: [packingLists.id],
+  }),
+  item: one(inventoryItems, {
+    fields: [packingListItems.itemId],
+    references: [inventoryItems.id],
+  }),
+}));
+
+// Insert schemas
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, createdAt: true });
+export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, createdAt: true });
+export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({ id: true, createdAt: true });
+export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, createdAt: true });
+export const insertQuotationSchema = createInsertSchema(quotations).omit({ id: true, createdAt: true });
+export const insertQuotationItemSchema = createInsertSchema(quotationItems).omit({ id: true });
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({ id: true, createdAt: true });
+export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({ id: true });
+export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit({ id: true, createdAt: true });
+export const insertPurchaseOrderItemSchema = createInsertSchema(purchaseOrderItems).omit({ id: true });
+export const insertWorkOrderSchema = createInsertSchema(workOrders).omit({ id: true, createdAt: true });
+export const insertPackingListSchema = createInsertSchema(packingLists).omit({ id: true, createdAt: true });
+export const insertPackingListItemSchema = createInsertSchema(packingListItems).omit({ id: true });
+
+// Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type Customer = typeof customers.$inferSelect;
+export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
+export type Supplier = typeof suppliers.$inferSelect;
+export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
+export type InventoryItem = typeof inventoryItems.$inferSelect;
+export type InsertInventoryItem = z.infer<typeof insertInventoryItemSchema>;
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type Quotation = typeof quotations.$inferSelect;
+export type InsertQuotation = z.infer<typeof insertQuotationSchema>;
+export type QuotationItem = typeof quotationItems.$inferSelect;
+export type InsertQuotationItem = z.infer<typeof insertQuotationItemSchema>;
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type InvoiceItem = typeof invoiceItems.$inferSelect;
+export type InsertInvoiceItem = z.infer<typeof insertInvoiceItemSchema>;
+export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
+export type InsertPurchaseOrder = z.infer<typeof insertPurchaseOrderSchema>;
+export type PurchaseOrderItem = typeof purchaseOrderItems.$inferSelect;
+export type InsertPurchaseOrderItem = z.infer<typeof insertPurchaseOrderItemSchema>;
+export type WorkOrder = typeof workOrders.$inferSelect;
+export type InsertWorkOrder = z.infer<typeof insertWorkOrderSchema>;
+export type PackingList = typeof packingLists.$inferSelect;
+export type InsertPackingList = z.infer<typeof insertPackingListSchema>;
+export type PackingListItem = typeof packingListItems.$inferSelect;
+export type InsertPackingListItem = z.infer<typeof insertPackingListItemSchema>;

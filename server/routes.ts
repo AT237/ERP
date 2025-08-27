@@ -1,0 +1,636 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import {
+  insertCustomerSchema, insertSupplierSchema, insertInventoryItemSchema,
+  insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
+  insertInvoiceSchema, insertInvoiceItemSchema, insertPurchaseOrderSchema,
+  insertPurchaseOrderItemSchema, insertWorkOrderSchema, insertPackingListSchema,
+  insertPackingListItemSchema
+} from "@shared/schema";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Dashboard routes
+  app.get("/api/dashboard/stats", async (req, res) => {
+    try {
+      const stats = await storage.getDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard statistics" });
+    }
+  });
+
+  // Customer routes
+  app.get("/api/customers", async (req, res) => {
+    try {
+      const customers = await storage.getCustomers();
+      res.json(customers);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      res.status(500).json({ message: "Failed to fetch customers" });
+    }
+  });
+
+  app.get("/api/customers/:id", async (req, res) => {
+    try {
+      const customer = await storage.getCustomer(req.params.id);
+      if (!customer) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+      res.json(customer);
+    } catch (error) {
+      console.error("Error fetching customer:", error);
+      res.status(500).json({ message: "Failed to fetch customer" });
+    }
+  });
+
+  app.post("/api/customers", async (req, res) => {
+    try {
+      const customerData = insertCustomerSchema.parse(req.body);
+      const customer = await storage.createCustomer(customerData);
+      res.status(201).json(customer);
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      res.status(400).json({ message: "Failed to create customer" });
+    }
+  });
+
+  app.put("/api/customers/:id", async (req, res) => {
+    try {
+      const customerData = insertCustomerSchema.partial().parse(req.body);
+      const customer = await storage.updateCustomer(req.params.id, customerData);
+      res.json(customer);
+    } catch (error) {
+      console.error("Error updating customer:", error);
+      res.status(400).json({ message: "Failed to update customer" });
+    }
+  });
+
+  app.delete("/api/customers/:id", async (req, res) => {
+    try {
+      await storage.deleteCustomer(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      res.status(500).json({ message: "Failed to delete customer" });
+    }
+  });
+
+  // Supplier routes
+  app.get("/api/suppliers", async (req, res) => {
+    try {
+      const suppliers = await storage.getSuppliers();
+      res.json(suppliers);
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+      res.status(500).json({ message: "Failed to fetch suppliers" });
+    }
+  });
+
+  app.get("/api/suppliers/:id", async (req, res) => {
+    try {
+      const supplier = await storage.getSupplier(req.params.id);
+      if (!supplier) {
+        return res.status(404).json({ message: "Supplier not found" });
+      }
+      res.json(supplier);
+    } catch (error) {
+      console.error("Error fetching supplier:", error);
+      res.status(500).json({ message: "Failed to fetch supplier" });
+    }
+  });
+
+  app.post("/api/suppliers", async (req, res) => {
+    try {
+      const supplierData = insertSupplierSchema.parse(req.body);
+      const supplier = await storage.createSupplier(supplierData);
+      res.status(201).json(supplier);
+    } catch (error) {
+      console.error("Error creating supplier:", error);
+      res.status(400).json({ message: "Failed to create supplier" });
+    }
+  });
+
+  app.put("/api/suppliers/:id", async (req, res) => {
+    try {
+      const supplierData = insertSupplierSchema.partial().parse(req.body);
+      const supplier = await storage.updateSupplier(req.params.id, supplierData);
+      res.json(supplier);
+    } catch (error) {
+      console.error("Error updating supplier:", error);
+      res.status(400).json({ message: "Failed to update supplier" });
+    }
+  });
+
+  app.delete("/api/suppliers/:id", async (req, res) => {
+    try {
+      await storage.deleteSupplier(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting supplier:", error);
+      res.status(500).json({ message: "Failed to delete supplier" });
+    }
+  });
+
+  // Inventory routes
+  app.get("/api/inventory", async (req, res) => {
+    try {
+      const items = await storage.getInventoryItems();
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching inventory:", error);
+      res.status(500).json({ message: "Failed to fetch inventory items" });
+    }
+  });
+
+  app.get("/api/inventory/low-stock", async (req, res) => {
+    try {
+      const items = await storage.getLowStockItems();
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching low stock items:", error);
+      res.status(500).json({ message: "Failed to fetch low stock items" });
+    }
+  });
+
+  app.get("/api/inventory/:id", async (req, res) => {
+    try {
+      const item = await storage.getInventoryItem(req.params.id);
+      if (!item) {
+        return res.status(404).json({ message: "Inventory item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      console.error("Error fetching inventory item:", error);
+      res.status(500).json({ message: "Failed to fetch inventory item" });
+    }
+  });
+
+  app.post("/api/inventory", async (req, res) => {
+    try {
+      const itemData = insertInventoryItemSchema.parse(req.body);
+      const item = await storage.createInventoryItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error creating inventory item:", error);
+      res.status(400).json({ message: "Failed to create inventory item" });
+    }
+  });
+
+  app.put("/api/inventory/:id", async (req, res) => {
+    try {
+      const itemData = insertInventoryItemSchema.partial().parse(req.body);
+      const item = await storage.updateInventoryItem(req.params.id, itemData);
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating inventory item:", error);
+      res.status(400).json({ message: "Failed to update inventory item" });
+    }
+  });
+
+  app.delete("/api/inventory/:id", async (req, res) => {
+    try {
+      await storage.deleteInventoryItem(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting inventory item:", error);
+      res.status(500).json({ message: "Failed to delete inventory item" });
+    }
+  });
+
+  // Project routes
+  app.get("/api/projects", async (req, res) => {
+    try {
+      const projects = await storage.getProjects();
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      res.status(500).json({ message: "Failed to fetch projects" });
+    }
+  });
+
+  app.get("/api/projects/:id", async (req, res) => {
+    try {
+      const project = await storage.getProject(req.params.id);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      res.json(project);
+    } catch (error) {
+      console.error("Error fetching project:", error);
+      res.status(500).json({ message: "Failed to fetch project" });
+    }
+  });
+
+  app.post("/api/projects", async (req, res) => {
+    try {
+      const projectData = insertProjectSchema.parse(req.body);
+      const project = await storage.createProject(projectData);
+      res.status(201).json(project);
+    } catch (error) {
+      console.error("Error creating project:", error);
+      res.status(400).json({ message: "Failed to create project" });
+    }
+  });
+
+  app.put("/api/projects/:id", async (req, res) => {
+    try {
+      const projectData = insertProjectSchema.partial().parse(req.body);
+      const project = await storage.updateProject(req.params.id, projectData);
+      res.json(project);
+    } catch (error) {
+      console.error("Error updating project:", error);
+      res.status(400).json({ message: "Failed to update project" });
+    }
+  });
+
+  app.delete("/api/projects/:id", async (req, res) => {
+    try {
+      await storage.deleteProject(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      res.status(500).json({ message: "Failed to delete project" });
+    }
+  });
+
+  // Quotation routes
+  app.get("/api/quotations", async (req, res) => {
+    try {
+      const quotations = await storage.getQuotations();
+      res.json(quotations);
+    } catch (error) {
+      console.error("Error fetching quotations:", error);
+      res.status(500).json({ message: "Failed to fetch quotations" });
+    }
+  });
+
+  app.get("/api/quotations/:id", async (req, res) => {
+    try {
+      const quotation = await storage.getQuotation(req.params.id);
+      if (!quotation) {
+        return res.status(404).json({ message: "Quotation not found" });
+      }
+      res.json(quotation);
+    } catch (error) {
+      console.error("Error fetching quotation:", error);
+      res.status(500).json({ message: "Failed to fetch quotation" });
+    }
+  });
+
+  app.get("/api/quotations/:id/items", async (req, res) => {
+    try {
+      const items = await storage.getQuotationItems(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching quotation items:", error);
+      res.status(500).json({ message: "Failed to fetch quotation items" });
+    }
+  });
+
+  app.post("/api/quotations", async (req, res) => {
+    try {
+      const quotationData = insertQuotationSchema.parse(req.body);
+      const quotation = await storage.createQuotation(quotationData);
+      res.status(201).json(quotation);
+    } catch (error) {
+      console.error("Error creating quotation:", error);
+      res.status(400).json({ message: "Failed to create quotation" });
+    }
+  });
+
+  app.post("/api/quotations/:id/items", async (req, res) => {
+    try {
+      const itemData = insertQuotationItemSchema.parse({
+        ...req.body,
+        quotationId: req.params.id
+      });
+      const item = await storage.addQuotationItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error adding quotation item:", error);
+      res.status(400).json({ message: "Failed to add quotation item" });
+    }
+  });
+
+  app.put("/api/quotations/:id", async (req, res) => {
+    try {
+      const quotationData = insertQuotationSchema.partial().parse(req.body);
+      const quotation = await storage.updateQuotation(req.params.id, quotationData);
+      res.json(quotation);
+    } catch (error) {
+      console.error("Error updating quotation:", error);
+      res.status(400).json({ message: "Failed to update quotation" });
+    }
+  });
+
+  app.delete("/api/quotations/:id", async (req, res) => {
+    try {
+      await storage.deleteQuotation(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting quotation:", error);
+      res.status(500).json({ message: "Failed to delete quotation" });
+    }
+  });
+
+  // Invoice routes
+  app.get("/api/invoices", async (req, res) => {
+    try {
+      const invoices = await storage.getInvoices();
+      res.json(invoices);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+      res.status(500).json({ message: "Failed to fetch invoices" });
+    }
+  });
+
+  app.get("/api/invoices/:id", async (req, res) => {
+    try {
+      const invoice = await storage.getInvoice(req.params.id);
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error fetching invoice:", error);
+      res.status(500).json({ message: "Failed to fetch invoice" });
+    }
+  });
+
+  app.get("/api/invoices/:id/items", async (req, res) => {
+    try {
+      const items = await storage.getInvoiceItems(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching invoice items:", error);
+      res.status(500).json({ message: "Failed to fetch invoice items" });
+    }
+  });
+
+  app.post("/api/invoices", async (req, res) => {
+    try {
+      const invoiceData = insertInvoiceSchema.parse(req.body);
+      const invoice = await storage.createInvoice(invoiceData);
+      res.status(201).json(invoice);
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      res.status(400).json({ message: "Failed to create invoice" });
+    }
+  });
+
+  app.post("/api/invoices/:id/items", async (req, res) => {
+    try {
+      const itemData = insertInvoiceItemSchema.parse({
+        ...req.body,
+        invoiceId: req.params.id
+      });
+      const item = await storage.addInvoiceItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error adding invoice item:", error);
+      res.status(400).json({ message: "Failed to add invoice item" });
+    }
+  });
+
+  app.put("/api/invoices/:id", async (req, res) => {
+    try {
+      const invoiceData = insertInvoiceSchema.partial().parse(req.body);
+      const invoice = await storage.updateInvoice(req.params.id, invoiceData);
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error updating invoice:", error);
+      res.status(400).json({ message: "Failed to update invoice" });
+    }
+  });
+
+  app.delete("/api/invoices/:id", async (req, res) => {
+    try {
+      await storage.deleteInvoice(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting invoice:", error);
+      res.status(500).json({ message: "Failed to delete invoice" });
+    }
+  });
+
+  // Purchase Order routes
+  app.get("/api/purchase-orders", async (req, res) => {
+    try {
+      const orders = await storage.getPurchaseOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching purchase orders:", error);
+      res.status(500).json({ message: "Failed to fetch purchase orders" });
+    }
+  });
+
+  app.get("/api/purchase-orders/:id", async (req, res) => {
+    try {
+      const order = await storage.getPurchaseOrder(req.params.id);
+      if (!order) {
+        return res.status(404).json({ message: "Purchase order not found" });
+      }
+      res.json(order);
+    } catch (error) {
+      console.error("Error fetching purchase order:", error);
+      res.status(500).json({ message: "Failed to fetch purchase order" });
+    }
+  });
+
+  app.get("/api/purchase-orders/:id/items", async (req, res) => {
+    try {
+      const items = await storage.getPurchaseOrderItems(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching purchase order items:", error);
+      res.status(500).json({ message: "Failed to fetch purchase order items" });
+    }
+  });
+
+  app.post("/api/purchase-orders", async (req, res) => {
+    try {
+      const orderData = insertPurchaseOrderSchema.parse(req.body);
+      const order = await storage.createPurchaseOrder(orderData);
+      res.status(201).json(order);
+    } catch (error) {
+      console.error("Error creating purchase order:", error);
+      res.status(400).json({ message: "Failed to create purchase order" });
+    }
+  });
+
+  app.post("/api/purchase-orders/:id/items", async (req, res) => {
+    try {
+      const itemData = insertPurchaseOrderItemSchema.parse({
+        ...req.body,
+        purchaseOrderId: req.params.id
+      });
+      const item = await storage.addPurchaseOrderItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error adding purchase order item:", error);
+      res.status(400).json({ message: "Failed to add purchase order item" });
+    }
+  });
+
+  app.put("/api/purchase-orders/:id", async (req, res) => {
+    try {
+      const orderData = insertPurchaseOrderSchema.partial().parse(req.body);
+      const order = await storage.updatePurchaseOrder(req.params.id, orderData);
+      res.json(order);
+    } catch (error) {
+      console.error("Error updating purchase order:", error);
+      res.status(400).json({ message: "Failed to update purchase order" });
+    }
+  });
+
+  app.delete("/api/purchase-orders/:id", async (req, res) => {
+    try {
+      await storage.deletePurchaseOrder(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting purchase order:", error);
+      res.status(500).json({ message: "Failed to delete purchase order" });
+    }
+  });
+
+  // Work Order routes
+  app.get("/api/work-orders", async (req, res) => {
+    try {
+      const orders = await storage.getWorkOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching work orders:", error);
+      res.status(500).json({ message: "Failed to fetch work orders" });
+    }
+  });
+
+  app.get("/api/work-orders/:id", async (req, res) => {
+    try {
+      const order = await storage.getWorkOrder(req.params.id);
+      if (!order) {
+        return res.status(404).json({ message: "Work order not found" });
+      }
+      res.json(order);
+    } catch (error) {
+      console.error("Error fetching work order:", error);
+      res.status(500).json({ message: "Failed to fetch work order" });
+    }
+  });
+
+  app.post("/api/work-orders", async (req, res) => {
+    try {
+      const orderData = insertWorkOrderSchema.parse(req.body);
+      const order = await storage.createWorkOrder(orderData);
+      res.status(201).json(order);
+    } catch (error) {
+      console.error("Error creating work order:", error);
+      res.status(400).json({ message: "Failed to create work order" });
+    }
+  });
+
+  app.put("/api/work-orders/:id", async (req, res) => {
+    try {
+      const orderData = insertWorkOrderSchema.partial().parse(req.body);
+      const order = await storage.updateWorkOrder(req.params.id, orderData);
+      res.json(order);
+    } catch (error) {
+      console.error("Error updating work order:", error);
+      res.status(400).json({ message: "Failed to update work order" });
+    }
+  });
+
+  app.delete("/api/work-orders/:id", async (req, res) => {
+    try {
+      await storage.deleteWorkOrder(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting work order:", error);
+      res.status(500).json({ message: "Failed to delete work order" });
+    }
+  });
+
+  // Packing List routes
+  app.get("/api/packing-lists", async (req, res) => {
+    try {
+      const lists = await storage.getPackingLists();
+      res.json(lists);
+    } catch (error) {
+      console.error("Error fetching packing lists:", error);
+      res.status(500).json({ message: "Failed to fetch packing lists" });
+    }
+  });
+
+  app.get("/api/packing-lists/:id", async (req, res) => {
+    try {
+      const list = await storage.getPackingList(req.params.id);
+      if (!list) {
+        return res.status(404).json({ message: "Packing list not found" });
+      }
+      res.json(list);
+    } catch (error) {
+      console.error("Error fetching packing list:", error);
+      res.status(500).json({ message: "Failed to fetch packing list" });
+    }
+  });
+
+  app.get("/api/packing-lists/:id/items", async (req, res) => {
+    try {
+      const items = await storage.getPackingListItems(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching packing list items:", error);
+      res.status(500).json({ message: "Failed to fetch packing list items" });
+    }
+  });
+
+  app.post("/api/packing-lists", async (req, res) => {
+    try {
+      const listData = insertPackingListSchema.parse(req.body);
+      const list = await storage.createPackingList(listData);
+      res.status(201).json(list);
+    } catch (error) {
+      console.error("Error creating packing list:", error);
+      res.status(400).json({ message: "Failed to create packing list" });
+    }
+  });
+
+  app.post("/api/packing-lists/:id/items", async (req, res) => {
+    try {
+      const itemData = insertPackingListItemSchema.parse({
+        ...req.body,
+        packingListId: req.params.id
+      });
+      const item = await storage.addPackingListItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error adding packing list item:", error);
+      res.status(400).json({ message: "Failed to add packing list item" });
+    }
+  });
+
+  app.put("/api/packing-lists/:id", async (req, res) => {
+    try {
+      const listData = insertPackingListSchema.partial().parse(req.body);
+      const list = await storage.updatePackingList(req.params.id, listData);
+      res.json(list);
+    } catch (error) {
+      console.error("Error updating packing list:", error);
+      res.status(400).json({ message: "Failed to update packing list" });
+    }
+  });
+
+  app.delete("/api/packing-lists/:id", async (req, res) => {
+    try {
+      await storage.deletePackingList(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting packing list:", error);
+      res.status(500).json({ message: "Failed to delete packing list" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}

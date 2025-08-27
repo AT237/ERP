@@ -1,0 +1,53 @@
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import NotFound from "@/pages/not-found";
+import Dashboard from "@/pages/dashboard";
+import Inventory from "@/pages/inventory";
+import Customers from "@/pages/customers";
+import Suppliers from "@/pages/suppliers";
+import Quotations from "@/pages/quotations";
+import Invoices from "@/pages/invoices";
+import Projects from "@/pages/projects";
+import WorkOrders from "@/pages/work-orders";
+import PurchaseOrders from "@/pages/purchase-orders";
+import PackingLists from "@/pages/packing-lists";
+import Reports from "@/pages/reports";
+import Layout from "@/components/layout";
+
+function Router() {
+  return (
+    <Layout>
+      <Switch>
+        <Route path="/" component={Dashboard} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/inventory" component={Inventory} />
+        <Route path="/customers" component={Customers} />
+        <Route path="/suppliers" component={Suppliers} />
+        <Route path="/quotations" component={Quotations} />
+        <Route path="/invoices" component={Invoices} />
+        <Route path="/projects" component={Projects} />
+        <Route path="/work-orders" component={WorkOrders} />
+        <Route path="/purchase-orders" component={PurchaseOrders} />
+        <Route path="/packing-lists" component={PackingLists} />
+        <Route path="/reports" component={Reports} />
+        <Route component={NotFound} />
+      </Switch>
+    </Layout>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Router />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
