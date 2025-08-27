@@ -225,76 +225,19 @@ export default function CustomerTable() {
 
   return (
     <div className="space-y-2">
-      {/* Compact Search and Controls */}
-      <div className="flex items-center justify-between gap-2 py-2">
-        <div className="flex items-center gap-2 flex-1">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={14} />
-            <Input
-              placeholder="Search customers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 h-8 text-sm"
-              data-testid="search-customers"
-            />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs">
-                <Filter size={14} className="mr-1" />
-                Filter
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {visibleColumns.filter(col => col.filterable).map((column) => (
-                <DropdownMenuItem
-                  key={column.key}
-                  onClick={() => addFilter(column.key)}
-                  className="text-xs"
-                >
-                  {column.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs">
-                <Settings size={14} className="mr-1" />
-                Columns
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48">
-              <div className="text-xs font-medium p-2 border-b">Column Visibility</div>
-              {columns.map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.key}
-                  checked={column.visible}
-                  onCheckedChange={() => toggleColumnVisibility(column.key)}
-                  className="text-xs"
-                >
-                  {column.label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" className="h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
-            <Plus size={14} className="mr-1" />
-            Toevoegen
-          </Button>
+      {/* Compact Controls - Only delete button now */}
+      {selectedRows.length > 0 && (
+        <div className="flex items-center justify-end gap-2 py-1">
           <Button 
             size="sm" 
             variant="destructive" 
             className="h-8 text-xs"
-            disabled={selectedRows.length === 0}
           >
             <Trash2 size={14} className="mr-1" />
             Verwijderen ({selectedRows.length})
           </Button>
         </div>
-      </div>
+      )}
 
       {/* Active Filters - Compact */}
       {filters.length > 0 && (

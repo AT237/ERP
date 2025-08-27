@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Plus, User } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, User, Search, Filter, Settings } from "lucide-react";
 
 const pageLabels: Record<string, { title: string; description: string }> = {
   "dashboard": { title: "Dashboard", description: "Overview of your business operations" },
@@ -48,12 +49,33 @@ export default function Header({ activeTab }: HeaderProps) {
   return (
     <header className="bg-card border-b border-border px-6 py-2">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-medium text-foreground">{cleanTitle}</h1>
-        </div>
-        <div className="flex items-center space-x-2">
-          {/* Removed New Entry button and Admin User info as requested */}
-        </div>
+        <h1 className="text-lg font-medium text-foreground">{cleanTitle}</h1>
+        
+        {/* Show controls for customer page */}
+        {activeTab?.id === 'customers' && (
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Input
+                placeholder="Search customers..."
+                className="pl-8 h-8 text-sm w-64"
+                data-testid="header-search-customers"
+              />
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={14} />
+            </div>
+            <Button variant="outline" size="sm" className="h-8 text-xs">
+              <Filter size={14} className="mr-1" />
+              Filter
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 text-xs">
+              <Settings size={14} className="mr-1" />
+              Columns
+            </Button>
+            <Button size="sm" className="h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
+              <Plus size={14} className="mr-1" />
+              Toevoegen
+            </Button>
+          </div>
+        )}
       </div>
     </header>
   );
