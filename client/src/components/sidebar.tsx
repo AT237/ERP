@@ -237,6 +237,10 @@ export default function Sidebar() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user-preferences", userId] });
     },
+    onError: (error: any) => {
+      console.error("Failed to save preferences:", error);
+      // Silently fail for now, preferences will work locally
+    },
   });
 
   // Initialize navigation and collapsed sections from preferences
@@ -265,11 +269,13 @@ export default function Sidebar() {
     };
     setCollapsedSections(newCollapsedSections);
     
-    // Save to backend
-    savePreferences.mutate({
-      navigationOrder: navigation,
-      collapsedSections: newCollapsedSections,
-    });
+    // Save to backend (debounced to avoid too many calls)
+    setTimeout(() => {
+      savePreferences.mutate({
+        navigationOrder: navigation,
+        collapsedSections: newCollapsedSections,
+      });
+    }, 500);
   };
 
   function handleDragEnd(event: DragEndEvent) {
