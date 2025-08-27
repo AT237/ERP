@@ -22,8 +22,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Filter, ChevronDown, Plus, Search } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Filter, ChevronDown, Plus, Search, Trash2, Settings, Eye, EyeOff, GripVertical } from "lucide-react";
 
 type Customer = {
   id: string;
@@ -46,6 +49,14 @@ type ColumnFilter = {
   value: string;
 };
 
+type ColumnConfig = {
+  key: string;
+  label: string;
+  visible: boolean;
+  width: number;
+  filterable: boolean;
+};
+
 const filterOptions = [
   { value: 'contains', label: 'Contains' },
   { value: 'not_contains', label: 'Does not contain' },
@@ -60,7 +71,21 @@ const filterOptions = [
 export default function CustomerTable() {
   const [filters, setFilters] = useState<ColumnFilter[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
   const queryClient = useQueryClient();
+
+  const [columns, setColumns] = useState<ColumnConfig[]>([
+    { key: 'name', label: 'Name', visible: true, width: 180, filterable: true },
+    { key: 'email', label: 'Email', visible: true, width: 200, filterable: true },
+    { key: 'phone', label: 'Phone', visible: true, width: 140, filterable: true },
+    { key: 'address', label: 'Address', visible: true, width: 220, filterable: true },
+    { key: 'contactPerson', label: 'Contact', visible: true, width: 150, filterable: true },
+    { key: 'taxId', label: 'Tax ID', visible: true, width: 120, filterable: true },
+    { key: 'paymentTerms', label: 'Terms', visible: true, width: 80, filterable: true },
+    { key: 'status', label: 'Status', visible: true, width: 100, filterable: true },
+    { key: 'createdAt', label: 'Created', visible: true, width: 100, filterable: true },
+  ]);
 
   const { data: customers = [], isLoading } = useQuery<Customer[]>({
     queryKey: ['/api/customers'],
@@ -129,17 +154,66 @@ export default function CustomerTable() {
     return new Date(date).toLocaleDateString('nl-NL');
   };
 
-  const columns = [
-    { key: 'name', label: 'Name', filterable: true },
-    { key: 'email', label: 'Email', filterable: true },
-    { key: 'phone', label: 'Phone', filterable: true },
-    { key: 'address', label: 'Address', filterable: true },
-    { key: 'contactPerson', label: 'Contact Person', filterable: true },
-    { key: 'taxId', label: 'Tax ID', filterable: true },
-    { key: 'paymentTerms', label: 'Payment Terms', filterable: true },
-    { key: 'status', label: 'Status', filterable: true },
-    { key: 'createdAt', label: 'Created', filterable: true },
-  ];
+  const toggleColumnVisibility = (columnKey: string) => {
+    setColumns(prev => prev.map(col => 
+      col.key === columnKey ? { ...col, visible: !col.visible } : col
+    ));
+  };
+
+  const handleMouseDown = (e: React.MouseEvent, columnKey: string) => {
+    e.preventDefault();
+    const column = columns.find(col => col.key === columnKey);
+    if (column) {
+      setResizing({
+        column: columnKey,
+        startX: e.clientX,
+        startWidth: column.width
+      });
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (resizing) {
+      const diff = e.clientX - resizing.startX;
+      const newWidth = Math.max(60, resizing.startWidth + diff);
+      setColumns(prev => prev.map(col => 
+        col.key === resizing.column ? { ...col, width: newWidth } : col
+      ));
+    }
+  };
+
+  const handleMouseUp = () => {
+    setResizing(null);
+  };
+
+  useEffect(() => {
+    if (resizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [resizing]);
+
+  const toggleRowSelection = (id: string) => {
+    setSelectedRows(prev => 
+      prev.includes(id) 
+        ? prev.filter(rowId => rowId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const toggleAllRows = () => {
+    if (selectedRows.length === filteredCustomers.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(filteredCustomers.map(customer => customer.id));
+    }
+  };
+
+  const visibleColumns = columns.filter(col => col.visible);
 
   if (isLoading) {
     return (
@@ -150,116 +224,162 @@ export default function CustomerTable() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Search and Controls */}
-      <div className="flex items-center justify-between gap-4">
+    <div className="space-y-2">
+      {/* Compact Search and Controls */}
+      <div className="flex items-center justify-between gap-2 py-2">
         <div className="flex items-center gap-2 flex-1">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+          <div className="relative max-w-sm">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={14} />
             <Input
-              placeholder="Search all customers..."
+              placeholder="Search customers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-8 h-8 text-sm"
               data-testid="search-customers"
             />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter size={16} className="mr-2" />
-                Add Filter
-                <ChevronDown size={16} className="ml-2" />
+              <Button variant="outline" size="sm" className="h-8 text-xs">
+                <Filter size={14} className="mr-1" />
+                Filter
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              {columns.filter(col => col.filterable).map((column) => (
+              {visibleColumns.filter(col => col.filterable).map((column) => (
                 <DropdownMenuItem
                   key={column.key}
                   onClick={() => addFilter(column.key)}
+                  className="text-xs"
                 >
                   {column.label}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 text-xs">
+                <Settings size={14} className="mr-1" />
+                Columns
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-48">
+              <div className="text-xs font-medium p-2 border-b">Column Visibility</div>
+              {columns.map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.key}
+                  checked={column.visible}
+                  onCheckedChange={() => toggleColumnVisibility(column.key)}
+                  className="text-xs"
+                >
+                  {column.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-          <Plus size={16} className="mr-2" />
-          Add Customer
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" className="h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
+            <Plus size={14} className="mr-1" />
+            Toevoegen
+          </Button>
+          <Button 
+            size="sm" 
+            variant="destructive" 
+            className="h-8 text-xs"
+            disabled={selectedRows.length === 0}
+          >
+            <Trash2 size={14} className="mr-1" />
+            Verwijderen ({selectedRows.length})
+          </Button>
+        </div>
       </div>
 
-      {/* Active Filters */}
+      {/* Active Filters - Compact */}
       {filters.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium">Active Filters:</h4>
-          <div className="flex flex-wrap gap-2">
-            {filters.map((filter, index) => (
-              <div key={index} className="flex items-center gap-2 bg-muted p-2 rounded-lg">
-                <span className="text-sm font-medium">
-                  {columns.find(col => col.key === filter.column)?.label}
-                </span>
-                <Select 
-                  value={filter.type} 
-                  onValueChange={(value) => updateFilter(index, 'type', value)}
-                >
-                  <SelectTrigger className="w-32 h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filterOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  placeholder="Value"
-                  value={filter.value}
-                  onChange={(e) => updateFilter(index, 'value', e.target.value)}
-                  className="w-24 h-8 text-xs"
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeFilter(index)}
-                  className="h-8 w-8 p-0"
-                >
-                  ×
-                </Button>
-              </div>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-1">
+          {filters.map((filter, index) => (
+            <div key={index} className="flex items-center gap-1 bg-muted px-2 py-1 rounded text-xs">
+              <span className="font-medium">
+                {visibleColumns.find(col => col.key === filter.column)?.label}
+              </span>
+              <Select 
+                value={filter.type} 
+                onValueChange={(value) => updateFilter(index, 'type', value)}
+              >
+                <SelectTrigger className="w-24 h-6 text-xs border-0 p-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {filterOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value} className="text-xs">
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="Value"
+                value={filter.value}
+                onChange={(e) => updateFilter(index, 'value', e.target.value)}
+                className="w-20 h-6 text-xs border-0 p-1"
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => removeFilter(index)}
+                className="h-6 w-6 p-0 text-xs"
+              >
+                ×
+              </Button>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Results count */}
-      <div className="text-sm text-muted-foreground">
-        Showing {filteredCustomers.length} of {customers.length} customers
+      {/* Compact Results count */}
+      <div className="text-xs text-muted-foreground py-1">
+        {filteredCustomers.length} of {customers.length} customers
+        {selectedRows.length > 0 && ` • ${selectedRows.length} selected`}
       </div>
 
-      {/* Table */}
+      {/* Compact Table with Resizable Columns */}
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
-              {columns.map((column) => (
-                <TableHead key={column.key} className="font-medium">
-                  <div className="flex items-center gap-2">
-                    {column.label}
+            <TableRow className="bg-muted/50 h-8">
+              <TableHead className="w-8 p-2">
+                <Checkbox
+                  checked={selectedRows.length === filteredCustomers.length && filteredCustomers.length > 0}
+                  onCheckedChange={toggleAllRows}
+                  className="h-3 w-3"
+                />
+              </TableHead>
+              {visibleColumns.map((column) => (
+                <TableHead 
+                  key={column.key} 
+                  className="font-medium text-xs p-2 relative"
+                  style={{ width: column.width }}
+                >
+                  <div className="flex items-center gap-1 pr-2">
+                    <span className="truncate">{column.label}</span>
                     {column.filterable && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => addFilter(column.key)}
-                        className="h-6 w-6 p-0 opacity-50 hover:opacity-100"
+                        className="h-4 w-4 p-0 opacity-50 hover:opacity-100"
                       >
-                        <Filter size={12} />
+                        <Filter size={10} />
                       </Button>
                     )}
                   </div>
+                  {/* Resize Handle */}
+                  <div 
+                    className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/20 active:bg-primary/40"
+                    onMouseDown={(e) => handleMouseDown(e, column.key)}
+                  />
                 </TableHead>
               ))}
             </TableRow>
@@ -267,30 +387,60 @@ export default function CustomerTable() {
           <TableBody>
             {filteredCustomers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center py-8 text-muted-foreground">
-                  No customers found matching your criteria
+                <TableCell colSpan={visibleColumns.length + 1} className="text-center py-4 text-xs text-muted-foreground">
+                  No customers found
                 </TableCell>
               </TableRow>
             ) : (
               filteredCustomers.map((customer) => (
-                <TableRow key={customer.id} className="hover:bg-muted/30 cursor-pointer">
-                  <TableCell className="font-medium">{customer.name}</TableCell>
-                  <TableCell>{customer.email || '-'}</TableCell>
-                  <TableCell>{customer.phone || '-'}</TableCell>
-                  <TableCell className="max-w-48 truncate">{customer.address || '-'}</TableCell>
-                  <TableCell>{customer.contactPerson || '-'}</TableCell>
-                  <TableCell>{customer.taxId || '-'}</TableCell>
-                  <TableCell>{customer.paymentTerms} days</TableCell>
-                  <TableCell>
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      customer.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {customer.status}
-                    </span>
+                <TableRow 
+                  key={customer.id} 
+                  className={`hover:bg-muted/30 h-8 text-xs ${
+                    selectedRows.includes(customer.id) ? 'bg-muted/50' : ''
+                  }`}
+                >
+                  <TableCell className="p-2">
+                    <Checkbox
+                      checked={selectedRows.includes(customer.id)}
+                      onCheckedChange={() => toggleRowSelection(customer.id)}
+                      className="h-3 w-3"
+                    />
                   </TableCell>
-                  <TableCell>{formatDate(customer.createdAt)}</TableCell>
+                  {visibleColumns.map((column) => (
+                    <TableCell 
+                      key={column.key} 
+                      className="p-2 text-xs truncate"
+                      style={{ width: column.width }}
+                    >
+                      {column.key === 'name' ? (
+                        <span className="font-medium">{customer.name}</span>
+                      ) : column.key === 'email' ? (
+                        customer.email || '-'
+                      ) : column.key === 'phone' ? (
+                        customer.phone || '-'
+                      ) : column.key === 'address' ? (
+                        <span className="truncate" title={customer.address || '-'}>
+                          {customer.address || '-'}
+                        </span>
+                      ) : column.key === 'contactPerson' ? (
+                        customer.contactPerson || '-'
+                      ) : column.key === 'taxId' ? (
+                        customer.taxId || '-'
+                      ) : column.key === 'paymentTerms' ? (
+                        `${customer.paymentTerms}d`
+                      ) : column.key === 'status' ? (
+                        <span className={`inline-flex px-1 py-0.5 rounded text-xs font-medium ${
+                          customer.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {customer.status}
+                        </span>
+                      ) : column.key === 'createdAt' ? (
+                        formatDate(customer.createdAt)
+                      ) : null}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))
             )}
