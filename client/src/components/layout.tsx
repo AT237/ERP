@@ -12,7 +12,8 @@ interface LayoutProps {
 interface Tab {
   id: string;
   name: string;
-  type: 'section' | 'page';
+  type: 'section' | 'page' | 'menu';
+  menuRoute?: string;
   content?: React.ReactNode;
 }
 
@@ -68,15 +69,43 @@ export default function Layout({ children }: LayoutProps) {
     }
   };
 
-  const closeTab = (tabId: string) => {
-    if (tabId === 'dashboard') return; // Don't allow closing dashboard
+  const handleMenuClick = (menuItem: {id: string, name: string, route?: string}) => {
+    // Check if tab already exists
+    const existingTab = tabs.find(tab => tab.id === menuItem.id);
     
+    if (existingTab) {
+      // Switch to existing tab
+      setActiveTabId(menuItem.id);
+    } else {
+      // Create new tab for menu item
+      const newTab: Tab = {
+        id: menuItem.id,
+        name: menuItem.name,
+        type: 'menu',
+        menuRoute: menuItem.route
+      };
+      
+      setTabs(prevTabs => [...prevTabs, newTab]);
+      setActiveTabId(menuItem.id);
+    }
+  };
+
+  const closeTab = (tabId: string) => {
     setTabs(prevTabs => {
       const newTabs = prevTabs.filter(tab => tab.id !== tabId);
       
-      // If we're closing the active tab, switch to dashboard
+      // If we're closing the active tab, switch to first remaining tab or dashboard
       if (activeTabId === tabId) {
-        setActiveTabId('dashboard');
+        const remainingTabs = newTabs;
+        if (remainingTabs.length > 0) {
+          setActiveTabId(remainingTabs[0].id);
+        } else {
+          // If no tabs left, create a new dashboard tab
+          const dashboardTab: Tab = { id: 'dashboard', name: 'Dashboard', type: 'page' };
+          setTabs([dashboardTab]);
+          setActiveTabId('dashboard');
+          return [dashboardTab];
+        }
       }
       
       return newTabs;
@@ -97,6 +126,23 @@ export default function Layout({ children }: LayoutProps) {
           sectionName={activeTab.name}
           onClose={() => closeTab(activeTab.id)}
         />
+      );
+    }
+    
+    if (activeTab.type === 'menu') {
+      return (
+        <div className="p-6">
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold text-foreground">{activeTab.name}</h1>
+            <p className="text-muted-foreground">Manage your {activeTab.name.toLowerCase()} here.</p>
+          </div>
+          <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+            <p className="text-muted-foreground">Content for {activeTab.name} will be implemented here.</p>
+            {activeTab.menuRoute && (
+              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+            )}
+          </div>
+        </div>
       );
     }
     
@@ -130,11 +176,11 @@ export default function Layout({ children }: LayoutProps) {
       
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar onSectionClick={handleSectionClick} />
-        <main className="flex-1 flex flex-col overflow-hidden">
-          <Header />
-          
-          {/* Tab Bar */}
+        <Sidebar onSectionClick={handleSectionClick} onMenuClick={handleMenuClick} />
+        
+        {/* Right Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Tab Bar - Now at the very top of right area */}
           <div className="bg-gray-50 border-b border-border px-4 py-2">
             <div className="flex items-center space-x-1 overflow-x-auto">
               {tabs.map((tab) => (
@@ -149,28 +195,30 @@ export default function Layout({ children }: LayoutProps) {
                   data-testid={`tab-${tab.id}`}
                 >
                   <span className="text-sm font-medium truncate max-w-32">{tab.name}</span>
-                  {tab.id !== 'dashboard' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        closeTab(tab.id);
-                      }}
-                      className="p-1 hover:bg-gray-300 rounded-full transition-colors"
-                      data-testid={`close-tab-${tab.id}`}
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeTab(tab.id);
+                    }}
+                    className="p-1 hover:bg-gray-300 rounded-full transition-colors"
+                    data-testid={`close-tab-${tab.id}`}
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Tab Content */}
-          <div className="flex-1 overflow-auto">
-            {renderActiveTabContent()}
-          </div>
-        </main>
+          <main className="flex-1 flex flex-col overflow-hidden">
+            <Header />
+            
+            {/* Tab Content */}
+            <div className="flex-1 overflow-auto">
+              {renderActiveTabContent()}
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );

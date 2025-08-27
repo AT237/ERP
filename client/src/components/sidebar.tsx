@@ -97,7 +97,7 @@ const defaultNavigation = [
   }
 ];
 
-function SortableNavItem({ item, sectionId, isEditMode }: { item: any; sectionId: string; isEditMode: boolean }) {
+function SortableNavItem({ item, sectionId, isEditMode, onMenuClick }: { item: any; sectionId: string; isEditMode: boolean; onMenuClick?: (menuItem: {id: string, name: string, route?: string}) => void }) {
   const {
     attributes,
     listeners,
@@ -129,15 +129,16 @@ function SortableNavItem({ item, sectionId, isEditMode }: { item: any; sectionId
           <GripVertical size={12} className="text-muted-foreground" />
         </div>
       )}
-      <Link
-        href={item.href}
+      <button
+        onClick={() => onMenuClick?.({id: item.id, name: item.name, route: item.href})}
         className={cn(
-          "flex items-center space-x-2 px-3 py-1.5 rounded-md transition-colors relative flex-1",
+          "flex items-center space-x-2 px-3 py-1.5 rounded-md transition-colors relative flex-1 text-left w-full",
           isActive
             ? "bg-orange-50 text-foreground border-l-4 border-orange-500"
             : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
         )}
         data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+        disabled={isEditMode}
       >
         <div className={cn(
           "w-6 h-6 rounded-lg flex items-center justify-center transition-colors",
@@ -148,12 +149,12 @@ function SortableNavItem({ item, sectionId, isEditMode }: { item: any; sectionId
           <Icon size={14} />
         </div>
         <span className="text-sm font-medium">{item.name}</span>
-      </Link>
+      </button>
     </div>
   );
 }
 
-function SortableSection({ section, collapsedSections, toggleSection, isEditMode, onSectionClick }: any) {
+function SortableSection({ section, collapsedSections, toggleSection, isEditMode, onSectionClick, onMenuClick }: any) {
   const {
     attributes,
     listeners,
@@ -217,6 +218,7 @@ function SortableSection({ section, collapsedSections, toggleSection, isEditMode
               item={item}
               sectionId={section.id}
               isEditMode={isEditMode}
+              onMenuClick={onMenuClick}
             />
           ))}
         </SortableContext>
@@ -227,9 +229,10 @@ function SortableSection({ section, collapsedSections, toggleSection, isEditMode
 
 interface SidebarProps {
   onSectionClick?: (section: {id: string, name: string}) => void;
+  onMenuClick?: (menuItem: {id: string, name: string, route?: string}) => void;
 }
 
-export default function Sidebar({ onSectionClick }: SidebarProps) {
+export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
   const [navigation, setNavigation] = useState(defaultNavigation);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [isEditMode, setIsEditMode] = useState(false);
@@ -510,6 +513,7 @@ export default function Sidebar({ onSectionClick }: SidebarProps) {
                 toggleSection={toggleSection}
                 isEditMode={isEditMode}
                 onSectionClick={onSectionClick}
+                onMenuClick={onMenuClick}
               />
             )) : null}
           </SortableContext>
