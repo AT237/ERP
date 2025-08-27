@@ -368,23 +368,14 @@ export default function Sidebar() {
       {/* Settings in top-right corner */}
       <div className="absolute top-2 right-2 z-10">
         {isEditMode ? (
-          <div className="space-y-2">
-            <button
-              onClick={toggleEditMode}
-              className="flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-green-500 hover:bg-green-600 text-white"
-              data-testid="save-edit-mode"
-            >
-              <Save size={16} />
-              Opslaan
-            </button>
-            <button
-              onClick={cancelEdit}
-              className="w-full px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="cancel-edit"
-            >
-              Annuleren
-            </button>
-          </div>
+          <button
+            onClick={toggleEditMode}
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-green-500 hover:bg-green-600 text-white"
+            data-testid="save-edit-mode"
+          >
+            <Save size={16} />
+            Opslaan
+          </button>
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
