@@ -153,7 +153,7 @@ function SortableNavItem({ item, sectionId, isEditMode }: { item: any; sectionId
   );
 }
 
-function SortableSection({ section, collapsedSections, toggleSection, isEditMode }: any) {
+function SortableSection({ section, collapsedSections, toggleSection, isEditMode, onSectionClick }: any) {
   const {
     attributes,
     listeners,
@@ -421,6 +421,7 @@ export default function Sidebar({ onSectionClick }: SidebarProps) {
                 collapsedSections={collapsedSections}
                 toggleSection={toggleSection}
                 isEditMode={isEditMode}
+                onSectionClick={onSectionClick}
               />
             )) : null}
           </SortableContext>
