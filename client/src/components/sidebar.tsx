@@ -433,7 +433,7 @@ export default function Sidebar({ onSectionClick }: SidebarProps) {
           <button
             onClick={toggleAllSections}
             className="p-2 hover:bg-accent rounded-md transition-colors"
-            title={areAllSectionsCollapsed ? "Alle secties uitklappen" : "Alle secties inklappen"}
+            title={areAllSectionsCollapsed ? "Expand all sections" : "Collapse all sections"}
             data-testid="toggle-all-sections"
           >
             {areAllSectionsCollapsed ? (
@@ -463,7 +463,7 @@ export default function Sidebar({ onSectionClick }: SidebarProps) {
                 data-testid="save-edit-mode"
               >
                 <Save size={16} />
-                Opslaan
+                Save
               </button>
             </div>
           ) : (
@@ -479,7 +479,7 @@ export default function Sidebar({ onSectionClick }: SidebarProps) {
               <DropdownMenuContent align="end" className="w-64 border-2 border-border shadow-lg">
                 <DropdownMenuItem onClick={toggleEditMode} className="cursor-pointer px-3 py-2 text-sm">
                   <Settings className="mr-2 h-4 w-4" />
-                  Menu volgorde aanpassen
+                  Adjust menu order
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
