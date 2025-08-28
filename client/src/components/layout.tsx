@@ -8,6 +8,7 @@ import logoImage from "@assets/ATE solutions AFAS logo verticaal_1756322897372.j
 
 // Lazy load components outside the render function to prevent re-importing
 const CustomerTable = lazy(() => import('./customer-table'));
+const SupplierTable = lazy(() => import('./supplier-table'));
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -210,6 +211,14 @@ export default function Layout({ children }: LayoutProps) {
               </Suspense>
             </div>
           </CustomerProvider>
+        );
+      }
+
+      if (activeTab.id === 'suppliers') {
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <SupplierTable />
+          </Suspense>
         );
       }
       
