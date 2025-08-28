@@ -410,10 +410,10 @@ export default function CustomerTable() {
               {visibleColumns.map((column) => (
                 <TableHead 
                   key={column.key} 
-                  className="font-bold text-xs p-1 relative uppercase"
+                  className="font-bold text-xs p-2 relative uppercase"
                   style={{ width: column.width }}
                 >
-                  <div className="flex items-center gap-1 pr-2">
+                  <div className="flex items-center gap-3 pr-2">
                     <span className="truncate">{column.label}</span>
                     {column.filterable && (
                       <Button
