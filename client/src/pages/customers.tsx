@@ -607,14 +607,14 @@ export default function Customers() {
             <Table>
               <TableHeader className="bg-orange-50 dark:bg-orange-900/20">
                 <TableRow>
-                  <TableHead className="whitespace-nowrap">Company Name</TableHead>
-                  <TableHead className="whitespace-nowrap">Email</TableHead>
-                  <TableHead className="whitespace-nowrap">Phone</TableHead>
-                  <TableHead className="whitespace-nowrap">Mobile</TableHead>
-                  <TableHead className="whitespace-nowrap">Language</TableHead>
-                  <TableHead className="whitespace-nowrap">Payment Terms</TableHead>
-                  <TableHead className="whitespace-nowrap">Status</TableHead>
-                  <TableHead className="whitespace-nowrap">Actions</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Company Name</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Email</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Phone</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Mobile</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Language</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Payment Terms</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Status</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -626,7 +626,7 @@ export default function Customers() {
                   </TableRow>
                 ) : (
                   filteredCustomers.map((customer) => (
-                    <TableRow key={customer.id} data-testid={`row-customer-${customer.id}`}>
+                    <TableRow key={customer.id} data-testid={`row-customer-${customer.id}`} className="text-sm font-normal">
                       <TableCell className="font-medium">{customer.name}</TableCell>
                       <TableCell>
                         {customer.email ? (
