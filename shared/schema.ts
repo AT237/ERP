@@ -50,6 +50,7 @@ export const customerContacts = pgTable("customer_contacts", {
 // Customers table
 export const customers = pgTable("customers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerNumber: text("customer_number").notNull().unique(),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
@@ -60,12 +61,14 @@ export const customers = pgTable("customers", {
   language: text("language").default("nl"),
   paymentTerms: integer("payment_terms").default(30),
   status: text("status").default("active"),
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Suppliers table
 export const suppliers = pgTable("suppliers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  supplierNumber: text("supplier_number").notNull().unique(),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
@@ -74,6 +77,7 @@ export const suppliers = pgTable("suppliers", {
   taxId: text("tax_id"),
   paymentTerms: integer("payment_terms").default(30),
   status: text("status").default("active"),
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -385,8 +389,8 @@ export const insertUserSchema = createInsertSchema(users).omit({ id: true, creat
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertAddressSchema = createInsertSchema(addresses).omit({ id: true, createdAt: true });
 export const insertCustomerContactSchema = createInsertSchema(customerContacts).omit({ id: true, createdAt: true });
-export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, createdAt: true });
-export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, createdAt: true });
+export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, customerNumber: true, createdAt: true, deletedAt: true });
+export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, supplierNumber: true, createdAt: true, deletedAt: true });
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({ id: true, createdAt: true });
 export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, createdAt: true });
 export const insertQuotationSchema = createInsertSchema(quotations).omit({ id: true, createdAt: true });

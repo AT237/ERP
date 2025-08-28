@@ -160,7 +160,9 @@ export class DatabaseStorage implements IStorage {
 
   // Customer methods
   async getCustomers(): Promise<Customer[]> {
-    return await db.select().from(customers).orderBy(desc(customers.createdAt));
+    return await db.select().from(customers)
+      .where(sql`deleted_at IS NULL`)
+      .orderBy(desc(customers.createdAt));
   }
 
   async getCustomer(id: string): Promise<Customer | undefined> {
@@ -169,7 +171,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
-    const [newCustomer] = await db.insert(customers).values(customer).returning();
+    // Generate next customer number
+    const lastCustomer = await db.select({ customerNumber: customers.customerNumber })
+      .from(customers)
+      .orderBy(desc(customers.customerNumber))
+      .limit(1);
+    
+    let nextNumber = 1;
+    if (lastCustomer.length > 0 && lastCustomer[0].customerNumber) {
+      const match = lastCustomer[0].customerNumber.match(/DEB-(\d+)/);
+      if (match) {
+        nextNumber = parseInt(match[1]) + 1;
+      }
+    }
+    
+    const customerNumber = `DEB-${nextNumber.toString().padStart(5, '0')}`;
+    
+    const [newCustomer] = await db.insert(customers).values({
+      ...customer,
+      customerNumber
+    }).returning();
     return newCustomer;
   }
 
@@ -179,12 +200,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCustomer(id: string): Promise<void> {
-    await db.delete(customers).where(eq(customers.id, id));
+    // Soft delete - set deletedAt timestamp
+    await db.update(customers)
+      .set({ deletedAt: sql`NOW()` })
+      .where(eq(customers.id, id));
   }
 
   // Supplier methods
   async getSuppliers(): Promise<Supplier[]> {
-    return await db.select().from(suppliers).orderBy(desc(suppliers.createdAt));
+    return await db.select().from(suppliers)
+      .where(sql`deleted_at IS NULL`)
+      .orderBy(desc(suppliers.createdAt));
   }
 
   async getSupplier(id: string): Promise<Supplier | undefined> {
@@ -193,7 +219,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSupplier(supplier: InsertSupplier): Promise<Supplier> {
-    const [newSupplier] = await db.insert(suppliers).values(supplier).returning();
+    // Generate next supplier number
+    const lastSupplier = await db.select({ supplierNumber: suppliers.supplierNumber })
+      .from(suppliers)
+      .orderBy(desc(suppliers.supplierNumber))
+      .limit(1);
+    
+    let nextNumber = 1;
+    if (lastSupplier.length > 0 && lastSupplier[0].supplierNumber) {
+      const match = lastSupplier[0].supplierNumber.match(/CRED-(\d+)/);
+      if (match) {
+        nextNumber = parseInt(match[1]) + 1;
+      }
+    }
+    
+    const supplierNumber = `CRED-${nextNumber.toString().padStart(5, '0')}`;
+    
+    const [newSupplier] = await db.insert(suppliers).values({
+      ...supplier,
+      supplierNumber
+    }).returning();
     return newSupplier;
   }
 
@@ -203,7 +248,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteSupplier(id: string): Promise<void> {
-    await db.delete(suppliers).where(eq(suppliers.id, id));
+    // Soft delete - set deletedAt timestamp
+    await db.update(suppliers)
+      .set({ deletedAt: sql`NOW()` })
+      .where(eq(suppliers.id, id));
   }
 
   // Inventory methods

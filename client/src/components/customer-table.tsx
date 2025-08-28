@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,23 +37,11 @@ import { useCustomerContext } from "@/contexts/CustomerContext";
 import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical, Trash2, Copy, Download } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertCustomerSchema, type InsertCustomer } from "@shared/schema";
+import { insertCustomerSchema, type InsertCustomer, type Customer } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
-type Customer = {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  contactPerson: string | null;
-  taxId: string | null;
-  paymentTerms: number;
-  status: string;
-  createdAt: Date;
-};
 
 type FilterType = 'contains' | 'not_contains' | 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'starts_with' | 'ends_with';
 
@@ -126,6 +114,7 @@ export default function CustomerTable() {
   const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
   const [selectedCustomerForReport, setSelectedCustomerForReport] = useState<Customer | null>(null);
   const [showCustomerReport, setShowCustomerReport] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -205,8 +194,98 @@ export default function CustomerTable() {
     }
   });
 
+  // Mutation for updating customer
+  const updateCustomerMutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      if (!editingCustomer) throw new Error("No customer to update");
+      
+      const customerData: Partial<InsertCustomer> = {
+        name: data.name,
+        email: data.email || null,
+        phone: data.phone || null,
+        mobile: data.mobile || null,
+        taxId: data.taxId || null,
+        paymentTerms: parseInt(data.paymentTerms),
+        status: data.status,
+        bankAccount: data.bankAccount || null,
+        language: data.language,
+      };
+      
+      const response = await fetch(`/api/customers/${editingCustomer.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(customerData),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to update customer");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      setEditingCustomer(null);
+      setShowAddCustomerDialog(false);
+      form.reset();
+      toast({
+        title: "Success",
+        description: "Customer updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update customer",
+        variant: "destructive",
+      });
+      console.error("Failed to update customer:", error);
+    }
+  });
+
+  // Update form when editing customer changes
+  React.useEffect(() => {
+    if (editingCustomer) {
+      form.reset({
+        name: editingCustomer.name || "",
+        email: editingCustomer.email || "",
+        phone: editingCustomer.phone || "",
+        mobile: editingCustomer.mobile || "",
+        taxId: editingCustomer.taxId || "",
+        paymentTerms: editingCustomer.paymentTerms?.toString() || "30",
+        status: editingCustomer.status || "active",
+        bankAccount: editingCustomer.bankAccount || "",
+        language: editingCustomer.language || "en",
+        // Address fields - need to be handled separately when addresses are implemented
+        street: "",
+        houseNumber: "",
+        postalCode: "",
+        city: "",
+        country: "",
+        // Primary contact fields
+        primaryContactName: "",
+        primaryContactEmail: "",
+        primaryContactPhone: "",
+        primaryContactMobile: "",
+        primaryContactPosition: "",
+      });
+    }
+  }, [editingCustomer, form]);
+
+  const handleEditCustomer = (customer: Customer) => {
+    setEditingCustomer(customer);
+    setShowAddCustomerDialog(true);
+    setShowCustomerReport(false);
+  };
+
   const onSubmit = (data: FormData) => {
-    createCustomerMutation.mutate(data);
+    if (editingCustomer) {
+      updateCustomerMutation.mutate(data);
+    } else {
+      createCustomerMutation.mutate(data);
+    }
   };
 
   const handleCustomerDoubleClick = (customer: Customer) => {
@@ -605,11 +684,11 @@ export default function CustomerTable() {
                       ) : column.key === 'phone' ? (
                         customer.phone || '-'
                       ) : column.key === 'address' ? (
-                        <span className="truncate" title={customer.address || '-'}>
-                          {customer.address || '-'}
+                        <span className="truncate" title={customer.addressId ? 'Address linked' : '-'}>
+                          {customer.addressId ? 'Address linked' : '-'}
                         </span>
                       ) : column.key === 'contactPerson' ? (
-                        customer.contactPerson || '-'
+                        'N/A'
                       ) : column.key === 'taxId' ? (
                         customer.taxId || '-'
                       ) : column.key === 'paymentTerms' ? (
@@ -623,7 +702,7 @@ export default function CustomerTable() {
                           {customer.status}
                         </span>
                       ) : column.key === 'createdAt' ? (
-                        formatDate(customer.createdAt)
+                        customer.createdAt ? formatDate(customer.createdAt) : '-'
                       ) : null}
                     </TableCell>
                   ))}
@@ -641,7 +720,9 @@ export default function CustomerTable() {
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4">
           <div className="flex justify-center">
-            <DialogTitle className="text-2xl font-bold text-orange-600">Add New Customer</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-orange-600">
+              {editingCustomer ? "Edit Customer" : "Add New Customer"}
+            </DialogTitle>
           </div>
           <div className="w-full h-px bg-gray-300 mt-4"></div>
         </DialogHeader>
@@ -880,7 +961,10 @@ export default function CustomerTable() {
               disabled={createCustomerMutation.isPending}
               data-testid="button-save-customer"
             >
-              {createCustomerMutation.isPending ? "Adding..." : "Add Customer"}
+              {editingCustomer 
+                ? (updateCustomerMutation.isPending ? "Updating..." : "Update Customer")
+                : (createCustomerMutation.isPending ? "Adding..." : "Add Customer")
+              }
             </Button>
           </div>
         </form>
@@ -902,7 +986,7 @@ export default function CustomerTable() {
             {/* Customer Header */}
             <div className="text-center space-y-2">
               <h2 className="text-xl font-bold text-gray-800">{selectedCustomerForReport.name}</h2>
-              <p className="text-sm text-gray-600">Customer ID: {selectedCustomerForReport.id}</p>
+              <p className="text-sm text-gray-600">Customer ID: {selectedCustomerForReport.customerNumber || selectedCustomerForReport.id}</p>
             </div>
 
             {/* Customer Details */}
@@ -923,11 +1007,11 @@ export default function CustomerTable() {
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium text-gray-600">Address:</span>
-                    <span className="text-right max-w-48">{selectedCustomerForReport.address || '-'}</span>
+                    <span className="text-right max-w-48">{selectedCustomerForReport.addressId ? 'Address linked' : '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium text-gray-600">Contact Person:</span>
-                    <span>{selectedCustomerForReport.contactPerson || '-'}</span>
+                    <span>N/A</span>
                   </div>
                 </div>
               </div>
@@ -958,7 +1042,7 @@ export default function CustomerTable() {
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium text-gray-600">Created:</span>
-                    <span>{new Date(selectedCustomerForReport.createdAt).toLocaleDateString('en-US')}</span>
+                    <span>{selectedCustomerForReport.createdAt ? new Date(selectedCustomerForReport.createdAt).toLocaleDateString('en-US') : '-'}</span>
                   </div>
                 </div>
               </div>
@@ -1002,11 +1086,7 @@ export default function CustomerTable() {
               <Button
                 type="button"
                 className="bg-orange-600 hover:bg-orange-700 text-white"
-                onClick={() => {
-                  // TODO: Implement edit customer functionality
-                  setShowCustomerReport(false);
-                  // Open edit dialog
-                }}
+                onClick={() => handleEditCustomer(selectedCustomerForReport!)}
                 data-testid="button-edit-customer"
               >
                 Edit Customer
