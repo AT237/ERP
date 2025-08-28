@@ -988,7 +988,7 @@ export default function CustomerTable() {
             {/* Customer Header */}
             <div className="text-center space-y-2">
               <h2 className="text-xl font-bold text-gray-800">{selectedCustomerForReport.name}</h2>
-              <p className="text-sm text-gray-600">Customer ID: {selectedCustomerForReport.customerNumber || selectedCustomerForReport.id}</p>
+              <p className="text-sm text-gray-600">Customer ID: {selectedCustomerForReport.customerNumber}</p>
             </div>
 
             {/* Customer Details */}
