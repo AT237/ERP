@@ -200,7 +200,7 @@ export default function CustomerTable() {
   return (
     <div className="space-y-4">
       {/* Customer Controls Toolbar */}
-      <div className="flex items-center justify-between bg-card border border-border rounded-lg p-4">
+      <div className="flex items-center justify-between bg-card border border-border rounded-lg p-4 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10">
         <h2 className="text-lg font-medium text-foreground">Customers</h2>
         
         <div className="flex items-center gap-2">

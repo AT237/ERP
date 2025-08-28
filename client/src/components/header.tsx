@@ -65,7 +65,10 @@ export default function Header({ activeTab }: HeaderProps) {
   return (
     <header className="bg-card border-b border-border px-6 py-2">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-medium text-foreground">{cleanTitle}</h1>
+        {/* Hide title for customers page since it has its own toolbar */}
+        {activeTab?.id !== 'customers' && (
+          <h1 className="text-lg font-medium text-foreground">{cleanTitle}</h1>
+        )}
         
         {/* Show controls for customer page */}
         {activeTab?.id === 'customers' && customerContext && (
