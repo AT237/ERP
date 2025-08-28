@@ -20,15 +20,15 @@ interface CustomerContextType {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   filters: ColumnFilter[];
-  setFilters: (filters: ColumnFilter[]) => void;
+  setFilters: (filters: ColumnFilter[] | ((prev: ColumnFilter[]) => ColumnFilter[])) => void;
   addFilter: (column: string) => void;
   updateFilter: (index: number, field: keyof ColumnFilter, value: string) => void;
   removeFilter: (index: number) => void;
   columns: ColumnConfig[];
-  setColumns: (columns: ColumnConfig[]) => void;
+  setColumns: (columns: ColumnConfig[] | ((prev: ColumnConfig[]) => ColumnConfig[])) => void;
   toggleColumnVisibility: (columnKey: string) => void;
   selectedRows: string[];
-  setSelectedRows: (rows: string[]) => void;
+  setSelectedRows: (rows: string[] | ((prev: string[]) => string[])) => void;
   toggleRowSelection: (id: string) => void;
   toggleAllRows: (customerIds: string[]) => void;
   deleteSelectedRows: () => void;
