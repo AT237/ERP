@@ -28,6 +28,18 @@ import { z } from "zod";
 
 const formSchema = insertCustomerSchema.extend({
   paymentTerms: z.string().min(1, "Payment terms is required"),
+  // Temporary fields for address input (will be saved to addresses table)
+  street: z.string().optional(),
+  houseNumber: z.string().optional(), 
+  postalCode: z.string().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  // Temporary fields for primary contact (will be saved to customerContacts table)
+  primaryContactName: z.string().optional(),
+  primaryContactEmail: z.string().optional(),
+  primaryContactPhone: z.string().optional(),
+  primaryContactMobile: z.string().optional(),
+  primaryContactPosition: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -48,11 +60,24 @@ export default function Customers() {
       name: "",
       email: "",
       phone: "",
-      address: "",
-      contactPerson: "",
+      mobile: "",
       taxId: "",
+      bankAccount: "",
+      language: "nl",
       paymentTerms: "30",
       status: "active",
+      // Address fields
+      street: "",
+      houseNumber: "",
+      postalCode: "",
+      city: "",
+      country: "Netherlands",
+      // Primary contact fields
+      primaryContactName: "",
+      primaryContactEmail: "",
+      primaryContactPhone: "",
+      primaryContactMobile: "",
+      primaryContactPosition: "",
     },
   });
 
@@ -144,11 +169,24 @@ export default function Customers() {
       name: customer.name,
       email: customer.email || "",
       phone: customer.phone || "",
-      address: customer.address || "",
-      contactPerson: customer.contactPerson || "",
+      mobile: customer.mobile || "",
       taxId: customer.taxId || "",
+      bankAccount: customer.bankAccount || "",
+      language: customer.language || "nl",
       paymentTerms: customer.paymentTerms?.toString() || "30",
       status: customer.status || "active",
+      // Address fields (we'll load these from related address)
+      street: "",
+      houseNumber: "",
+      postalCode: "",
+      city: "",
+      country: "Netherlands",
+      // Primary contact fields (we'll load these from related contacts)
+      primaryContactName: "",
+      primaryContactEmail: "",
+      primaryContactPhone: "",
+      primaryContactMobile: "",
+      primaryContactPosition: "",
     });
     setIsDialogOpen(true);
   };
@@ -168,7 +206,8 @@ export default function Customers() {
   const filteredCustomers = customers?.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase())
+    customer.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.mobile?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   if (isLoading) {
@@ -236,120 +275,269 @@ export default function Customers() {
               </DialogTitle>
             </DialogHeader>
             
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Customer Name *</Label>
-                  <Input
-                    id="name"
-                    {...form.register("name")}
-                    placeholder="Enter customer name"
-                    data-testid="input-customer-name"
-                  />
-                  {form.formState.errors.name && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.name.message}
-                    </p>
-                  )}
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto">
+              {/* Company Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">Company Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Company Name *</Label>
+                    <Input
+                      id="name"
+                      {...form.register("name")}
+                      placeholder="Enter company name"
+                      data-testid="input-customer-name"
+                    />
+                    {form.formState.errors.name && (
+                      <p className="text-sm text-destructive mt-1">
+                        {form.formState.errors.name.message}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="taxId">Tax ID</Label>
+                    <Input
+                      id="taxId"
+                      {...form.register("taxId")}
+                      placeholder="Tax identification number"
+                      data-testid="input-tax-id"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="bankAccount">Bank Account</Label>
+                    <Input
+                      id="bankAccount"
+                      {...form.register("bankAccount")}
+                      placeholder="Bank account number"
+                      data-testid="input-bank-account"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="language">Language</Label>
+                    <Select 
+                      value={form.watch("language")} 
+                      onValueChange={(value) => form.setValue("language", value)}
+                    >
+                      <SelectTrigger data-testid="select-language">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="nl">Dutch</SelectItem>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="de">German</SelectItem>
+                        <SelectItem value="fr">French</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">Contact Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      {...form.register("email")}
+                      placeholder="company@example.com"
+                      data-testid="input-email"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      {...form.register("phone")}
+                      placeholder="+31 20 123 4567"
+                      data-testid="input-phone"
+                    />
+                  </div>
                 </div>
                 
                 <div>
-                  <Label htmlFor="contactPerson">Contact Person</Label>
+                  <Label htmlFor="mobile">Mobile</Label>
                   <Input
-                    id="contactPerson"
-                    {...form.register("contactPerson")}
-                    placeholder="Contact person name"
-                    data-testid="input-contact-person"
+                    id="mobile"
+                    {...form.register("mobile")}
+                    placeholder="+31 6 12 34 56 78"
+                    data-testid="input-mobile"
                   />
                 </div>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...form.register("email")}
-                    placeholder="customer@example.com"
-                    data-testid="input-email"
-                  />
+
+              {/* Address Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">Address Information</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2">
+                    <Label htmlFor="street">Street</Label>
+                    <Input
+                      id="street"
+                      {...form.register("street")}
+                      placeholder="Enter street name"
+                      data-testid="input-street"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="houseNumber">House Number</Label>
+                    <Input
+                      id="houseNumber"
+                      {...form.register("houseNumber")}
+                      placeholder="123A"
+                      data-testid="input-house-number"
+                    />
+                  </div>
                 </div>
                 
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    {...form.register("phone")}
-                    placeholder="+1 (555) 123-4567"
-                    data-testid="input-phone"
-                  />
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="postalCode">Postal Code</Label>
+                    <Input
+                      id="postalCode"
+                      {...form.register("postalCode")}
+                      placeholder="1234 AB"
+                      data-testid="input-postal-code"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      {...form.register("city")}
+                      placeholder="Amsterdam"
+                      data-testid="input-city"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="country">Country</Label>
+                    <Input
+                      id="country"
+                      {...form.register("country")}
+                      placeholder="Netherlands"
+                      data-testid="input-country"
+                    />
+                  </div>
                 </div>
               </div>
-              
-              <div>
-                <Label htmlFor="address">Address</Label>
-                <Textarea
-                  id="address"
-                  {...form.register("address")}
-                  placeholder="Enter customer address..."
-                  rows={3}
-                  data-testid="textarea-address"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="taxId">Tax ID</Label>
-                  <Input
-                    id="taxId"
-                    {...form.register("taxId")}
-                    placeholder="Tax identification number"
-                    data-testid="input-tax-id"
-                  />
+
+              {/* Primary Contact Person */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">Primary Contact Person</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="primaryContactName">Contact Name</Label>
+                    <Input
+                      id="primaryContactName"
+                      {...form.register("primaryContactName")}
+                      placeholder="John Doe"
+                      data-testid="input-primary-contact-name"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="primaryContactPosition">Position</Label>
+                    <Input
+                      id="primaryContactPosition"
+                      {...form.register("primaryContactPosition")}
+                      placeholder="Manager"
+                      data-testid="input-primary-contact-position"
+                    />
+                  </div>
                 </div>
                 
-                <div>
-                  <Label htmlFor="paymentTerms">Payment Terms (Days)</Label>
-                  <Select 
-                    value={form.watch("paymentTerms")} 
-                    onValueChange={(value) => form.setValue("paymentTerms", value)}
-                  >
-                    <SelectTrigger data-testid="select-payment-terms">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 Days</SelectItem>
-                      <SelectItem value="30">30 Days</SelectItem>
-                      <SelectItem value="45">45 Days</SelectItem>
-                      <SelectItem value="60">60 Days</SelectItem>
-                      <SelectItem value="90">90 Days</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="primaryContactEmail">Contact Email</Label>
+                    <Input
+                      id="primaryContactEmail"
+                      type="email"
+                      {...form.register("primaryContactEmail")}
+                      placeholder="john@company.com"
+                      data-testid="input-primary-contact-email"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="primaryContactPhone">Contact Phone</Label>
+                    <Input
+                      id="primaryContactPhone"
+                      {...form.register("primaryContactPhone")}
+                      placeholder="+31 20 123 4567"
+                      data-testid="input-primary-contact-phone"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="primaryContactMobile">Contact Mobile</Label>
+                    <Input
+                      id="primaryContactMobile"
+                      {...form.register("primaryContactMobile")}
+                      placeholder="+31 6 12 34 56 78"
+                      data-testid="input-primary-contact-mobile"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Business Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">Business Settings</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="paymentTerms">Payment Terms (Days)</Label>
+                    <Select 
+                      value={form.watch("paymentTerms")} 
+                      onValueChange={(value) => form.setValue("paymentTerms", value)}
+                    >
+                      <SelectTrigger data-testid="select-payment-terms">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="15">15 Days</SelectItem>
+                        <SelectItem value="30">30 Days</SelectItem>
+                        <SelectItem value="45">45 Days</SelectItem>
+                        <SelectItem value="60">60 Days</SelectItem>
+                        <SelectItem value="90">90 Days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select 
+                      value={form.watch("status")} 
+                      onValueChange={(value) => form.setValue("status", value)}
+                    >
+                      <SelectTrigger data-testid="select-status">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
               
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select 
-                  value={form.watch("status")} 
-                  onValueChange={(value) => form.setValue("status", value)}
-                >
-                  <SelectTrigger data-testid="select-status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex space-x-3">
+              <div className="flex space-x-3 pt-4 border-t">
                 <Button 
                   type="submit" 
                   disabled={createMutation.isPending || updateMutation.isPending}
                   data-testid="button-save-customer"
+                  className="bg-orange-600 hover:bg-orange-700"
                 >
                   {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : "Save Customer"}
                 </Button>
@@ -380,10 +568,11 @@ export default function Customers() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer Name</TableHead>
-                  <TableHead>Contact Person</TableHead>
+                  <TableHead>Company Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
+                  <TableHead>Mobile</TableHead>
+                  <TableHead>Language</TableHead>
                   <TableHead>Payment Terms</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
@@ -392,7 +581,7 @@ export default function Customers() {
               <TableBody>
                 {filteredCustomers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       No customers found. Create your first customer to get started.
                     </TableCell>
                   </TableRow>
@@ -400,27 +589,48 @@ export default function Customers() {
                   filteredCustomers.map((customer) => (
                     <TableRow key={customer.id} data-testid={`row-customer-${customer.id}`}>
                       <TableCell className="font-medium">{customer.name}</TableCell>
-                      <TableCell>{customer.contactPerson || "—"}</TableCell>
                       <TableCell>
                         {customer.email ? (
                           <div className="flex items-center space-x-2">
-                            <Mail size={14} />
-                            <span>{customer.email}</span>
+                            <Mail size={14} className="text-orange-500" />
+                            <a href={`mailto:${customer.email}`} className="text-blue-600 hover:underline">
+                              {customer.email}
+                            </a>
                           </div>
                         ) : "—"}
                       </TableCell>
                       <TableCell>
                         {customer.phone ? (
                           <div className="flex items-center space-x-2">
-                            <Phone size={14} />
-                            <span>{customer.phone}</span>
+                            <Phone size={14} className="text-orange-500" />
+                            <a href={`tel:${customer.phone}`} className="text-blue-600 hover:underline">
+                              {customer.phone}
+                            </a>
                           </div>
                         ) : "—"}
                       </TableCell>
-                      <TableCell>{customer.paymentTerms} days</TableCell>
                       <TableCell>
-                        <Badge variant={customer.status === "active" ? "default" : "secondary"}>
-                          {customer.status}
+                        {customer.mobile ? (
+                          <div className="flex items-center space-x-2">
+                            <Phone size={14} className="text-green-500" />
+                            <a href={`tel:${customer.mobile}`} className="text-blue-600 hover:underline">
+                              {customer.mobile}
+                            </a>
+                          </div>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {customer.language?.toUpperCase() || "NL"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{customer.paymentTerms || 30} days</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={customer.status === "active" ? "default" : "secondary"}
+                          className={customer.status === "active" ? "bg-green-100 text-green-800" : ""}
+                        >
+                          {customer.status === "active" ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
                       <TableCell>

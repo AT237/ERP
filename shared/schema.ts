@@ -23,15 +23,41 @@ export const userPreferences = pgTable("user_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Addresses table for reusable addresses
+export const addresses = pgTable("addresses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  street: text("street").notNull(),
+  houseNumber: text("house_number").notNull(),
+  postalCode: text("postal_code").notNull(),
+  city: text("city").notNull(),
+  country: text("country").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Customer contacts table for multiple contact persons per customer
+export const customerContacts = pgTable("customer_contacts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").references(() => customers.id).notNull(),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  mobile: text("mobile"),
+  position: text("position"),
+  isPrimary: boolean("is_primary").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Customers table
 export const customers = pgTable("customers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
-  address: text("address"),
-  contactPerson: text("contact_person"),
+  mobile: text("mobile"),
+  addressId: varchar("address_id").references(() => addresses.id),
   taxId: text("tax_id"),
+  bankAccount: text("bank_account"),
+  language: text("language").default("nl"),
   paymentTerms: integer("payment_terms").default(30),
   status: text("status").default("active"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -204,7 +230,23 @@ export const packingListItems = pgTable("packing_list_items", {
 });
 
 // Define relations
-export const customersRelations = relations(customers, ({ many }) => ({
+export const addressesRelations = relations(addresses, ({ many }) => ({
+  customers: many(customers),
+}));
+
+export const customerContactsRelations = relations(customerContacts, ({ one }) => ({
+  customer: one(customers, {
+    fields: [customerContacts.customerId],
+    references: [customers.id],
+  }),
+}));
+
+export const customersRelations = relations(customers, ({ one, many }) => ({
+  address: one(addresses, {
+    fields: [customers.addressId],
+    references: [addresses.id],
+  }),
+  contacts: many(customerContacts),
   projects: many(projects),
   quotations: many(quotations),
   invoices: many(invoices),
@@ -341,6 +383,8 @@ export const packingListItemsRelations = relations(packingListItems, ({ one }) =
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertAddressSchema = createInsertSchema(addresses).omit({ id: true, createdAt: true });
+export const insertCustomerContactSchema = createInsertSchema(customerContacts).omit({ id: true, createdAt: true });
 export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, createdAt: true });
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, createdAt: true });
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({ id: true, createdAt: true });
@@ -360,6 +404,10 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+export type Address = typeof addresses.$inferSelect;
+export type InsertAddress = z.infer<typeof insertAddressSchema>;
+export type CustomerContact = typeof customerContacts.$inferSelect;
+export type InsertCustomerContact = z.infer<typeof insertCustomerContactSchema>;
 export type Customer = typeof customers.$inferSelect;
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Supplier = typeof suppliers.$inferSelect;
