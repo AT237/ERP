@@ -124,6 +124,8 @@ export default function CustomerTable() {
   } = customerContext;
   
   const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
+  const [selectedCustomerForReport, setSelectedCustomerForReport] = useState<Customer | null>(null);
+  const [showCustomerReport, setShowCustomerReport] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -205,6 +207,11 @@ export default function CustomerTable() {
 
   const onSubmit = (data: FormData) => {
     createCustomerMutation.mutate(data);
+  };
+
+  const handleCustomerDoubleClick = (customer: Customer) => {
+    setSelectedCustomerForReport(customer);
+    setShowCustomerReport(true);
   };
 
   const { data: customers = [], isLoading } = useQuery<Customer[]>({
@@ -569,10 +576,11 @@ export default function CustomerTable() {
               filteredCustomers.map((customer) => (
                 <TableRow 
                   key={customer.id} 
-                  className={`hover:bg-muted/30 text-xs ${
+                  className={`hover:bg-muted/30 text-xs cursor-pointer ${
                     selectedRows.includes(customer.id) ? 'bg-muted/50' : 'bg-transparent'
                   }`}
                   style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
+                  onDoubleClick={() => handleCustomerDoubleClick(customer)}
                 >
                   <TableCell className="p-2" style={{ height: '32px', lineHeight: '1.2' }}>
                     <div className="flex items-center justify-center h-4 w-4">
@@ -876,6 +884,136 @@ export default function CustomerTable() {
             </Button>
           </div>
         </form>
+      </DialogContent>
+    </Dialog>
+
+    {/* Customer Report Dialog */}
+    <Dialog open={showCustomerReport} onOpenChange={setShowCustomerReport}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-4">
+          <div className="flex justify-center">
+            <DialogTitle className="text-2xl font-bold text-orange-600">Customer Report</DialogTitle>
+          </div>
+          <div className="w-full h-px bg-gray-300 mt-4"></div>
+        </DialogHeader>
+        
+        {selectedCustomerForReport && (
+          <div className="space-y-6">
+            {/* Customer Header */}
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-bold text-gray-800">{selectedCustomerForReport.name}</h2>
+              <p className="text-sm text-gray-600">Customer ID: {selectedCustomerForReport.id}</p>
+            </div>
+
+            {/* Customer Details */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Contact Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+                  Contact Information
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Email:</span>
+                    <span>{selectedCustomerForReport.email || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Phone:</span>
+                    <span>{selectedCustomerForReport.phone || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Address:</span>
+                    <span className="text-right max-w-48">{selectedCustomerForReport.address || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Contact Person:</span>
+                    <span>{selectedCustomerForReport.contactPerson || '-'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Business Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+                  Business Information
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Tax ID:</span>
+                    <span>{selectedCustomerForReport.taxId || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Payment Terms:</span>
+                    <span>{selectedCustomerForReport.paymentTerms} days</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Status:</span>
+                    <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                      selectedCustomerForReport.status === 'active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {selectedCustomerForReport.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Created:</span>
+                    <span>{new Date(selectedCustomerForReport.createdAt).toLocaleDateString('en-US')}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Statistics Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+                Customer Statistics
+              </h3>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-orange-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-orange-600">0</div>
+                  <div className="text-sm text-gray-600">Total Projects</div>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-blue-600">0</div>
+                  <div className="text-sm text-gray-600">Total Invoices</div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-green-600">€0</div>
+                  <div className="text-sm text-gray-600">Total Revenue</div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-purple-600">0</div>
+                  <div className="text-sm text-gray-600">Active Orders</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end space-x-4 pt-6 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCustomerReport(false)}
+                data-testid="button-close-report"
+              >
+                Close
+              </Button>
+              <Button
+                type="button"
+                className="bg-orange-600 hover:bg-orange-700 text-white"
+                onClick={() => {
+                  // TODO: Implement edit customer functionality
+                  setShowCustomerReport(false);
+                  // Open edit dialog
+                }}
+                data-testid="button-edit-customer"
+              >
+                Edit Customer
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
     </>
