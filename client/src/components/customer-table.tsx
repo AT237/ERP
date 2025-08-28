@@ -822,17 +822,29 @@ export default function CustomerTable() {
 
               <div>
                 <Label htmlFor="language">Preferred Language</Label>
-                <Select onValueChange={(value) => form.setValue("language", value)}>
-                  <SelectTrigger data-testid="select-customer-language">
-                    <SelectValue placeholder="Select language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="nl">Dutch</SelectItem>
-                    <SelectItem value="de">German</SelectItem>
-                    <SelectItem value="fr">French</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select onValueChange={(value) => form.setValue("language", value)}>
+                    <SelectTrigger data-testid="select-customer-language" className="flex-1">
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="nl">Dutch</SelectItem>
+                      <SelectItem value="de">German</SelectItem>
+                      <SelectItem value="fr">French</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => {/* TODO: Open language dialog */}}
+                    data-testid="button-add-language"
+                  >
+                    <Plus size={16} />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
