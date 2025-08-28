@@ -143,13 +143,17 @@ function DraggableColumnHeader({
     <TableHead
       ref={setNodeRef}
       style={dragStyle}
-      className={`${className} cursor-grab active:cursor-grabbing ${isDragging ? 'z-50' : ''}`}
-      {...attributes}
-      {...listeners}
+      className={`${className} ${isDragging ? 'z-50' : ''}`}
       data-testid={`column-header-${column.key}`}
     >
       <div className="flex items-center gap-2">
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
+        <div
+          className="cursor-grab active:cursor-grabbing p-1 -m-1 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
         {children}
       </div>
     </TableHead>
@@ -852,9 +856,9 @@ export default function CustomerTable() {
                             variant="ghost"
                             size="icon"
                             onClick={() => addFilter(column.key)}
-                            className="h-3 w-3 p-0 opacity-50 hover:opacity-100 flex-shrink-0"
+                            className="h-6 w-6 p-1 opacity-50 hover:opacity-100 flex-shrink-0 hover:bg-orange-100 dark:hover:bg-orange-800/30"
                           >
-                            <Filter size={8} />
+                            <Filter size={12} />
                           </Button>
                         )}
                       </div>
