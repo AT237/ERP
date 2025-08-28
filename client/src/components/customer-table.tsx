@@ -410,7 +410,7 @@ export default function CustomerTable() {
               {visibleColumns.map((column) => (
                 <TableHead 
                   key={column.key} 
-                  className="font-bold text-xs p-2 relative"
+                  className="font-bold text-xs p-2 relative uppercase"
                   style={{ width: column.width }}
                 >
                   <div className="flex items-center gap-2 pr-2">
