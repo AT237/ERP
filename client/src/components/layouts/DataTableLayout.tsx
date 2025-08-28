@@ -132,6 +132,8 @@ export interface DataTableLayoutProps<T = any> {
   // Actions
   headerActions?: DataTableAction[];
   rowActions?: (row: T) => DataTableAction[];
+  onDuplicate?: (row: T) => void;
+  onExport?: () => void;
   
   // Dialogs
   addEditDialog?: {
@@ -259,6 +261,8 @@ export function DataTableLayout<T = any>({
   entityNamePlural,
   applyFiltersAndSearch,
   applySorting,
+  onDuplicate,
+  onExport,
 }: DataTableLayoutProps<T>) {
   
   const [showColumnDialog, setShowColumnDialog] = useState(false);
@@ -438,7 +442,7 @@ export function DataTableLayout<T = any>({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Header Actions */}
+            {/* Header Actions - matching original customer layout */}
             {headerActions.map((action) => (
               <Button
                 key={action.key}
@@ -454,20 +458,54 @@ export function DataTableLayout<T = any>({
               </Button>
             ))}
 
-            {/* Selected row actions */}
-            {selectedRows.length > 0 && deleteConfirmDialog && (
+            {/* Delete button */}
+            {deleteConfirmDialog && (
               <Button
                 size="sm"
                 variant="destructive"
                 onClick={() => deleteConfirmDialog.onOpenChange(true)}
-                className={`h-8 text-xs w-28 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                className="h-8 text-xs bg-red-500 text-white hover:bg-red-600"
                 disabled={selectedRows.length === 0}
                 data-testid="button-delete-selected"
               >
                 <Trash2 size={14} className="mr-1" />
-                <span className="min-w-[4rem] text-left">
-                  Delete{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
-                </span>
+                Delete
+              </Button>
+            )}
+
+            {/* Duplicate button */}
+            {onDuplicate && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs"
+                disabled={selectedRows.length !== 1}
+                onClick={() => {
+                  if (selectedRows.length === 1) {
+                    const selectedItem = sortedData.find(item => getRowId(item) === selectedRows[0]);
+                    if (selectedItem) {
+                      onDuplicate(selectedItem);
+                    }
+                  }
+                }}
+                data-testid="button-duplicate"
+              >
+                <Copy size={14} className="mr-1" />
+                Duplicate
+              </Button>
+            )}
+
+            {/* Export button */}
+            {onExport && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs"
+                onClick={onExport}
+                data-testid="button-export"
+              >
+                <Download size={14} className="mr-1" />
+                Export
               </Button>
             )}
           </div>

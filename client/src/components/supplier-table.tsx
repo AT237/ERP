@@ -242,6 +242,32 @@ export default function SupplierTable() {
     dataTableState.toggleAllRows(allRowIds);
   };
 
+  // Export functionality
+  const handleExport = () => {
+    // Implement export to Excel functionality similar to customer table
+    toast({
+      title: "Export",
+      description: "Export functionality will be implemented",
+    });
+  };
+
+  // Duplicate functionality  
+  const handleDuplicate = (supplier: Supplier) => {
+    // Pre-fill form with supplier data for duplication
+    form.reset({
+      name: `${supplier.name} (Copy)`,
+      email: supplier.email || "",
+      phone: supplier.phone || "",
+      address: supplier.address || "",
+      contactPerson: supplier.contactPerson || "",
+      taxId: "", // Clear tax ID for duplicate
+      paymentTerms: supplier.paymentTerms?.toString() || "30",
+      status: "active", // Reset to active
+    });
+    setEditingSupplier(null); // Make sure we're not editing
+    setShowAddSupplierDialog(true);
+  };
+
   // Define form sections for the add/edit dialog
   const formSections: FormSection[] = [
     {
@@ -513,6 +539,10 @@ export default function SupplierTable() {
       // Filter and search functions
       applyFiltersAndSearch={dataTableState.applyFiltersAndSearch}
       applySorting={dataTableState.applySorting}
+      
+      // Additional functionality
+      onExport={handleExport}
+      onDuplicate={handleDuplicate}
     />
   );
 }
