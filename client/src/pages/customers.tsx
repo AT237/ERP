@@ -607,14 +607,14 @@ export default function Customers() {
             <Table>
               <TableHeader className="bg-orange-50 dark:bg-orange-900/20">
                 <TableRow>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Company Name</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Email</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Phone</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Mobile</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Language</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Payment Terms</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Status</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs">Actions</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Company Name</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Email</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Phone</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Mobile</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Language</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Payment Terms</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Status</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
