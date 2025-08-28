@@ -406,7 +406,7 @@ export default function CustomerTable() {
                 <Checkbox
                   checked={selectedRows.length === filteredCustomers.length && filteredCustomers.length > 0}
                   onCheckedChange={() => toggleAllRows(filteredCustomers.map(customer => customer.id))}
-                  className="h-3 w-3"
+                  className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                 />
               </TableHead>
               {visibleColumns.map((column) => (
@@ -456,7 +456,7 @@ export default function CustomerTable() {
                     <Checkbox
                       checked={selectedRows.includes(customer.id)}
                       onCheckedChange={() => toggleRowSelection(customer.id)}
-                      className="h-3 w-3"
+                      className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                     />
                   </TableCell>
                   {visibleColumns.map((column) => (
