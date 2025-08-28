@@ -464,12 +464,14 @@ export function DataTableLayout<T = any>({
                 size="sm"
                 variant="destructive"
                 onClick={() => deleteConfirmDialog.onOpenChange(true)}
-                className="h-8 text-xs bg-red-500 text-white hover:bg-red-600"
+                className={`h-8 text-xs w-28 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
                 disabled={selectedRows.length === 0}
                 data-testid="button-delete-selected"
               >
                 <Trash2 size={14} className="mr-1" />
-                Delete
+                <span className="min-w-[4rem] text-left">
+                  Delete{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
+                </span>
               </Button>
             )}
 
@@ -478,7 +480,7 @@ export function DataTableLayout<T = any>({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 text-xs"
+                className={`h-8 text-xs ${selectedRows.length !== 1 ? 'opacity-40 cursor-not-allowed' : ''}`}
                 disabled={selectedRows.length !== 1}
                 onClick={() => {
                   if (selectedRows.length === 1) {
@@ -497,51 +499,76 @@ export function DataTableLayout<T = any>({
 
             {/* Export button */}
             {onExport && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 text-xs"
-                onClick={onExport}
-                data-testid="button-export"
-              >
-                <Download size={14} className="mr-1" />
-                Export
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`h-8 text-xs w-28 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                    disabled={selectedRows.length === 0}
+                    data-testid="button-export"
+                  >
+                    <Download size={14} className="mr-1" />
+                    <span className="min-w-[4rem] text-left">
+                      Export{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={onExport} className="text-xs">
+                    Export to Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onExport} className="text-xs">
+                    Export to PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onExport} className="text-xs">
+                    Export to Word
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Active Filters Row */}
-        {filters.length > 0 && (
-          <div className="flex items-center gap-4 flex-wrap px-2">
-            {filters.map((filter, index) => (
-              <div key={index} className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-md p-2">
-                <span className="text-xs text-orange-700 font-medium">
-                  {columns.find(col => col.key === filter.column)?.label}:
-                </span>
-                <Input
-                  size={10}
-                  value={filter.value}
-                  onChange={(e) => onUpdateFilter(index, { ...filter, value: e.target.value })}
-                  className="h-6 text-xs border-orange-200 focus:border-orange-400 w-24"
-                  data-testid={`filter-${filter.column}`}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onRemoveFilter(index)}
-                  className="h-6 w-6 p-0 hover:bg-orange-100"
-                  data-testid={`remove-filter-${filter.column}`}
-                >
-                  ×
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="space-y-4">
+        {/* Active Filters - Compact */}
+        <div className="min-h-[2rem] flex items-start">
+          {filters.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {filters.map((filter, index) => (
+                <div key={index} className="flex items-center gap-1 bg-muted px-2 py-1 rounded text-xs">
+                  <span className="font-medium">
+                    {columns.find(col => col.key === filter.column)?.label}
+                  </span>
+                  <Input
+                    placeholder="Value"
+                    value={filter.value}
+                    onChange={(e) => onUpdateFilter(index, { ...filter, value: e.target.value })}
+                    className="w-20 h-6 text-xs border-0 p-1"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onRemoveFilter(index)}
+                    className="h-6 w-6 p-0 text-xs"
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-        {/* Table */}
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+        {/* Compact Results count */}
+        <div className="text-xs text-muted-foreground py-1">
+          {sortedData.length} of {data.length} {entityNamePlural.toLowerCase()}
+          {selectedRows.length > 0 && ` • ${selectedRows.length} selected`}
+        </div>
+
+        {/* Compact Table with Resizable Columns */}
+        <div className="rounded-lg overflow-hidden border-0">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -549,34 +576,29 @@ export function DataTableLayout<T = any>({
           >
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50 dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-900">
-                  {/* Select All Checkbox */}
-                  <TableHead className="w-12 p-2" style={{ width: 48 }}>
-                    <div className="flex items-center justify-center">
+                <TableRow className="bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800 h-6 shadow-sm shadow-orange-500/10">
+                  <TableHead className="w-8 p-2">
+                    <div className="flex items-center justify-center h-4 w-4">
                       <Checkbox
                         checked={selectedRows.length === sortedData.length && sortedData.length > 0}
                         onCheckedChange={onToggleAllRows}
-                        className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
-                        data-testid="checkbox-select-all"
+                        className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
+                        style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
                       />
                     </div>
                   </TableHead>
-
-                  {/* Column Headers */}
-                  <SortableContext 
-                    items={columnOrder} 
-                    strategy={horizontalListSortingStrategy}
-                  >
+                  
+                  <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
                     {currentVisibleColumns.map((column) => (
                       <DraggableColumnHeader
                         key={column.key}
                         column={column}
-                        className="relative select-none text-xs font-semibold text-gray-700 dark:text-gray-300 p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        style={{ width: column.width, minWidth: column.width, maxWidth: column.width }}
+                        className="font-bold text-xs p-2 relative uppercase text-orange-800 dark:text-orange-200"
+                        style={{ width: column.width }}
                       >
-                        <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2 pr-2">
                           <div 
-                            className={`flex items-center gap-2 ${column.sortable ? 'cursor-pointer' : ''}`}
+                            className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded px-1 py-1"
                             onClick={() => column.sortable && onSort(column.key)}
                           >
                             <span>{column.label}</span>
