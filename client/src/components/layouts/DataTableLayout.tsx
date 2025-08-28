@@ -369,60 +369,74 @@ export function DataTableLayout<T = any>({
   return (
     <>
       <div className="space-y-4">
-        {/* Header with Search, Filters and Actions */}
-        <div className="flex items-center justify-between gap-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-          {/* Left side - Search and Filters */}
-          <div className="flex items-center gap-4 flex-1">
+        {/* Header with Title and Controls - matching original customer layout */}
+        <div className="flex items-center gap-12 p-2">
+          {/* Title Section */}
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-12 py-3 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10">
+            <h2 className="text-xl font-bold text-orange-800 dark:text-orange-200">{entityNamePlural}</h2>
+          </div>
+          
+          {/* Actions Section */}
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 flex items-center gap-2">
             {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <div className="relative">
               <Input
                 placeholder={`Search ${entityNamePlural.toLowerCase()}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-8 h-8 text-sm w-64"
                 data-testid="input-search"
               />
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={14} />
             </div>
-
-            {/* Active Filters */}
-            {filters.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Filters:</span>
-                {filters.map((filter, index) => (
-                  <div key={index} className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs flex items-center gap-1">
-                    <span>{columns.find(col => col.key === filter.column)?.label}: {filter.value}</span>
-                    <button
-                      onClick={() => onRemoveFilter(index)}
-                      className="text-orange-600 hover:text-orange-800"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Right side - Actions */}
-          <div className="flex items-center gap-2">
-            {/* Selected row actions */}
-            {selectedRows.length > 0 && (
-              <div className="flex items-center gap-2 mr-4">
-                <span className="text-sm text-gray-600">{selectedRows.length} selected</span>
-                {deleteConfirmDialog && (
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => deleteConfirmDialog.onOpenChange(true)}
-                    data-testid="button-delete-selected"
+            
+            {/* Filter Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs w-20">
+                  <Filter size={14} className="mr-1" />
+                  Filter{filters.length > 0 ? ` ${filters.length}` : ''}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {columns.filter(col => col.filterable).map((column) => (
+                  <DropdownMenuItem
+                    key={column.key}
+                    onClick={() => onAddFilter(column.key)}
+                    className="text-xs"
                   >
-                    <Trash2 size={16} className="mr-1" />
-                    Delete
-                  </Button>
-                )}
-              </div>
-            )}
+                    {column.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            {/* Column Visibility Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <Settings size={14} className="mr-1" />
+                  Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                className="w-48" 
+                onCloseAutoFocus={(e) => e.preventDefault()}
+              >
+                <div className="text-xs font-medium p-2 border-b">Column Visibility</div>
+                {columns.map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.key}
+                    checked={column.visible}
+                    onCheckedChange={() => toggleColumnVisibility(column.key)}
+                    onSelect={(e) => e.preventDefault()}
+                    className="text-xs"
+                  >
+                    {column.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Header Actions */}
             {headerActions.map((action) => (
@@ -433,40 +447,60 @@ export function DataTableLayout<T = any>({
                 onClick={action.onClick}
                 disabled={action.disabled}
                 data-testid={`button-${action.key}`}
-                className={action.variant === 'default' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
+                className={action.variant === 'default' ? 'h-8 text-xs bg-green-600 text-white hover:bg-green-700' : 'h-8 text-xs'}
               >
                 {action.icon && <span className="mr-1">{action.icon}</span>}
                 {action.label}
               </Button>
             ))}
 
-            {/* Column Settings */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline" data-testid="button-column-settings">
-                  <Settings size={16} className="mr-1" />
-                  Columns
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="p-2">
-                  <div className="text-sm font-medium mb-2">Toggle Columns</div>
-                  {columns.map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.key}
-                      checked={column.visible}
-                      onCheckedChange={() => toggleColumnVisibility(column.key)}
-                      className="text-xs"
-                    >
-                      {column.visible ? <Eye size={12} className="mr-2" /> : <EyeOff size={12} className="mr-2" />}
-                      {column.label}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Selected row actions */}
+            {selectedRows.length > 0 && deleteConfirmDialog && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => deleteConfirmDialog.onOpenChange(true)}
+                className={`h-8 text-xs w-28 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                disabled={selectedRows.length === 0}
+                data-testid="button-delete-selected"
+              >
+                <Trash2 size={14} className="mr-1" />
+                <span className="min-w-[4rem] text-left">
+                  Delete{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
+                </span>
+              </Button>
+            )}
           </div>
         </div>
+
+        {/* Active Filters Row */}
+        {filters.length > 0 && (
+          <div className="flex items-center gap-4 flex-wrap px-2">
+            {filters.map((filter, index) => (
+              <div key={index} className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-md p-2">
+                <span className="text-xs text-orange-700 font-medium">
+                  {columns.find(col => col.key === filter.column)?.label}:
+                </span>
+                <Input
+                  size={10}
+                  value={filter.value}
+                  onChange={(e) => onUpdateFilter(index, { ...filter, value: e.target.value })}
+                  className="h-6 text-xs border-orange-200 focus:border-orange-400 w-24"
+                  data-testid={`filter-${filter.column}`}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemoveFilter(index)}
+                  className="h-6 w-6 p-0 hover:bg-orange-100"
+                  data-testid={`remove-filter-${filter.column}`}
+                >
+                  ×
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Table */}
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
