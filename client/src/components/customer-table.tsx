@@ -202,12 +202,12 @@ export default function CustomerTable() {
       {/* Customer Controls Toolbar */}
       <div className="flex items-center gap-12 p-2">
         {/* Title Section */}
-        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-12 py-4 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10">
+        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-12 py-3 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10">
           <h2 className="text-lg font-medium text-orange-800 dark:text-orange-200">Customers</h2>
         </div>
         
         {/* Actions Section */}
-        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 flex items-center gap-2">
           {/* Search */}
           <div className="relative">
             <Input
