@@ -400,7 +400,7 @@ export default function CustomerTable() {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 h-6">
-              <TableHead className="w-8 p-1">
+              <TableHead className="w-8 p-2">
                 <Checkbox
                   checked={selectedRows.length === filteredCustomers.length && filteredCustomers.length > 0}
                   onCheckedChange={() => toggleAllRows(filteredCustomers.map(customer => customer.id))}
