@@ -22,7 +22,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { 
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact,
-  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search, ChevronsDown, ChevronsUp
+  ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search, ChevronsDown, ChevronsUp,
+  Ruler, Calendar, Plane, Percent, MapPin, Tag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -61,6 +62,19 @@ const defaultNavigation = [
     items: [
       { id: "stock", name: "Stock Management", href: "/inventory", icon: Package },
       { id: "purchase-orders", name: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart }
+    ]
+  },
+  {
+    id: "master-data",
+    name: "Master Data",
+    collapsible: true,
+    items: [
+      { id: "uom", name: "Units of Measure", href: "/master-data/uom", icon: Ruler },
+      { id: "payment-terms", name: "Payment Terms", href: "/master-data/payment-terms", icon: Calendar },
+      { id: "incoterms", name: "Incoterms", href: "/master-data/incoterms", icon: Plane },
+      { id: "vat", name: "VAT Rates", href: "/master-data/vat", icon: Percent },
+      { id: "cities", name: "Cities", href: "/master-data/cities", icon: MapPin },
+      { id: "statuses", name: "Statuses", href: "/master-data/statuses", icon: Tag }
     ]
   },
   {
