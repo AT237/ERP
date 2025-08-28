@@ -151,9 +151,18 @@ export default function Customers() {
   });
 
   const onSubmit = (data: FormData) => {
+    // Extract only customer table fields
     const submitData: InsertCustomer = {
-      ...data,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      mobile: data.mobile,
+      taxId: data.taxId,
+      bankAccount: data.bankAccount,
+      language: data.language,
       paymentTerms: parseInt(data.paymentTerms),
+      status: data.status,
+      // We'll handle address and contacts separately later
     };
 
     if (editingCustomer) {
@@ -199,7 +208,29 @@ export default function Customers() {
 
   const handleNewCustomer = () => {
     setEditingCustomer(null);
-    form.reset();
+    form.reset({
+      name: "",
+      email: "",
+      phone: "",
+      mobile: "",
+      taxId: "",
+      bankAccount: "",
+      language: "nl",
+      paymentTerms: "30",
+      status: "active",
+      // Address fields
+      street: "",
+      houseNumber: "",
+      postalCode: "",
+      city: "",
+      country: "Netherlands",
+      // Primary contact fields
+      primaryContactName: "",
+      primaryContactEmail: "",
+      primaryContactPhone: "",
+      primaryContactMobile: "",
+      primaryContactPosition: "",
+    });
     setIsDialogOpen(true);
   };
 
