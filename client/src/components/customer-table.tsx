@@ -399,8 +399,8 @@ export default function CustomerTable() {
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50 h-8">
-              <TableHead className="w-8 p-2">
+            <TableRow className="bg-muted/50 h-6">
+              <TableHead className="w-8 p-1">
                 <Checkbox
                   checked={selectedRows.length === filteredCustomers.length && filteredCustomers.length > 0}
                   onCheckedChange={() => toggleAllRows(filteredCustomers.map(customer => customer.id))}
@@ -410,17 +410,17 @@ export default function CustomerTable() {
               {visibleColumns.map((column) => (
                 <TableHead 
                   key={column.key} 
-                  className="font-bold text-xs p-2 relative uppercase h-8"
+                  className="font-bold text-xs p-1 relative uppercase"
                   style={{ width: column.width }}
                 >
-                  <div className="flex items-center justify-between h-4 overflow-hidden">
+                  <div className="flex items-center gap-1 pr-2">
                     <span className="truncate">{column.label}</span>
                     {column.filterable && (
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => addFilter(column.key)}
-                        className="h-3 w-3 p-0 opacity-50 hover:opacity-100 flex-shrink-0 ml-1"
+                        className="h-3 w-3 p-0 opacity-50 hover:opacity-100 flex-shrink-0"
                       >
                         <Filter size={8} />
                       </Button>
@@ -446,11 +446,11 @@ export default function CustomerTable() {
               filteredCustomers.map((customer) => (
                 <TableRow 
                   key={customer.id} 
-                  className={`hover:bg-muted/30 h-8 text-xs ${
+                  className={`hover:bg-muted/30 h-6 text-xs ${
                     selectedRows.includes(customer.id) ? 'bg-muted/50' : ''
                   }`}
                 >
-                  <TableCell className="p-2">
+                  <TableCell className="p-1">
                     <Checkbox
                       checked={selectedRows.includes(customer.id)}
                       onCheckedChange={() => toggleRowSelection(customer.id)}
@@ -460,7 +460,7 @@ export default function CustomerTable() {
                   {visibleColumns.map((column) => (
                     <TableCell 
                       key={column.key} 
-                      className="p-2 text-xs truncate"
+                      className="p-1 text-xs truncate"
                       style={{ width: column.width }}
                     >
                       {column.key === 'name' ? (
