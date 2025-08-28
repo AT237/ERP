@@ -34,13 +34,15 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCustomerContext } from "@/contexts/CustomerContext";
-import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical, Trash2, Copy, Download } from "lucide-react";
+import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical, Trash2, Copy, Download, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema, type InsertCustomer, type Customer } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 
 type FilterType = 'contains' | 'not_contains' | 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'starts_with' | 'ends_with';
@@ -387,6 +389,119 @@ export default function CustomerTable() {
     }
   }, [resizing]);
 
+  // Handle Email PDF functionality
+  const handleEmailPDF = async (customer: Customer) => {
+    try {
+      toast({
+        title: "Generating PDF...",
+        description: "Please wait while we prepare the customer report.",
+      });
+
+      // Generate PDF content
+      const pdf = new jsPDF();
+      
+      // Add header
+      pdf.setFontSize(20);
+      pdf.setTextColor(234, 88, 12); // Orange color
+      pdf.text('Customer Report', 20, 30);
+      
+      // Add customer details
+      pdf.setFontSize(12);
+      pdf.setTextColor(0, 0, 0);
+      
+      let yPosition = 50;
+      const lineHeight = 8;
+      
+      pdf.text(`Customer ID: ${customer.customerNumber}`, 20, yPosition);
+      yPosition += lineHeight;
+      
+      pdf.text(`Name: ${customer.name}`, 20, yPosition);
+      yPosition += lineHeight;
+      
+      if (customer.email) {
+        pdf.text(`Email: ${customer.email}`, 20, yPosition);
+        yPosition += lineHeight;
+      }
+      
+      if (customer.phone) {
+        pdf.text(`Phone: ${customer.phone}`, 20, yPosition);
+        yPosition += lineHeight;
+      }
+      
+      if (customer.mobile) {
+        pdf.text(`Mobile: ${customer.mobile}`, 20, yPosition);
+        yPosition += lineHeight;
+      }
+      
+      if (customer.taxId) {
+        pdf.text(`Tax ID: ${customer.taxId}`, 20, yPosition);
+        yPosition += lineHeight;
+      }
+      
+      if (customer.bankAccount) {
+        pdf.text(`Bank Account: ${customer.bankAccount}`, 20, yPosition);
+        yPosition += lineHeight;
+      }
+      
+      pdf.text(`Payment Terms: ${customer.paymentTerms} days`, 20, yPosition);
+      yPosition += lineHeight;
+      
+      pdf.text(`Status: ${customer.status}`, 20, yPosition);
+      yPosition += lineHeight;
+      
+      if (customer.createdAt) {
+        pdf.text(`Created: ${new Date(customer.createdAt).toLocaleDateString('en-US')}`, 20, yPosition);
+        yPosition += lineHeight;
+      }
+      
+      // Add statistics section
+      yPosition += 20;
+      pdf.setFontSize(14);
+      pdf.setTextColor(234, 88, 12);
+      pdf.text('Customer Statistics', 20, yPosition);
+      
+      yPosition += 15;
+      pdf.setFontSize(12);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Total Projects: 0', 20, yPosition);
+      yPosition += lineHeight;
+      pdf.text('Total Invoices: 0', 20, yPosition);
+      yPosition += lineHeight;
+      pdf.text('Total Revenue: €0', 20, yPosition);
+      yPosition += lineHeight;
+      pdf.text('Active Orders: 0', 20, yPosition);
+      
+      // Add footer
+      yPosition += 30;
+      pdf.setFontSize(10);
+      pdf.setTextColor(128, 128, 128);
+      pdf.text(`Generated on ${new Date().toLocaleDateString('en-US')} at ${new Date().toLocaleTimeString('en-US')}`, 20, yPosition);
+      
+      // Save PDF
+      const fileName = `Customer_Report_${customer.customerNumber}_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+      
+      // Open Outlook with pre-filled email
+      const subject = `Customer Report - ${customer.name} (${customer.customerNumber})`;
+      const body = `Dear colleague,%0A%0APlease find attached the customer report for ${customer.name} (Customer ID: ${customer.customerNumber}).%0A%0AGenerated on ${new Date().toLocaleDateString('en-US')} at ${new Date().toLocaleTimeString('en-US')}.%0A%0ABest regards`;
+      
+      const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${body}`;
+      window.open(mailtoLink, '_blank');
+      
+      toast({
+        title: "PDF Generated Successfully",
+        description: `Customer report saved as ${fileName}. Outlook should open with a pre-filled email.`,
+      });
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const visibleColumns = columns.filter(col => col.visible);
 
@@ -1092,6 +1207,16 @@ export default function CustomerTable() {
                 data-testid="button-close-report"
               >
                 Close
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                onClick={() => handleEmailPDF(selectedCustomerForReport!)}
+                data-testid="button-email-pdf"
+              >
+                <Mail size={16} className="mr-2" />
+                Email as PDF
               </Button>
               <Button
                 type="button"
