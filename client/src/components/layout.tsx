@@ -260,15 +260,15 @@ export default function Layout({ children }: LayoutProps) {
         {/* Right Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Tab Bar - Now at the very top of right area */}
-          <div className="bg-gray-50 px-4 py-2 border-b-0">
-            <div className="flex items-center space-x-1 overflow-x-auto">
+          <div className="bg-gray-50 px-4 pb-0 pt-2 border-b-0">
+            <div className="flex items-end space-x-1 overflow-x-auto">
               {tabs.map((tab) => (
                 <div
                   key={tab.id}
-                  className={`flex items-center gap-1 px-3 py-2 rounded-t-xl transition-colors cursor-pointer min-w-0 font-sans mb-[-2px] ${
+                  className={`flex items-center gap-1 px-3 py-2 rounded-t-lg transition-colors cursor-pointer min-w-0 font-sans ${
                     activeTabId === tab.id
-                      ? 'bg-orange-500 text-white relative z-10 border-2 border-orange-500 border-b-0'
-                      : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-orange-500 text-white relative z-10 border-2 border-orange-500 border-b-orange-500'
+                      : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200 mb-[2px]'
                   }`}
                   onClick={() => setActiveTabId(tab.id)}
                   onMouseDown={(e) => {
