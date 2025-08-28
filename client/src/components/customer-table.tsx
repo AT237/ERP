@@ -938,6 +938,7 @@ export default function CustomerTable() {
           </Table>
         </DndContext>
       </div>
+      </div>
 
       {/* Add Customer Dialog */}
       <Dialog open={showAddCustomerDialog} onOpenChange={setShowAddCustomerDialog}>
@@ -1360,8 +1361,7 @@ export default function CustomerTable() {
           </div>
         </div>
       </DialogContent>
-      </Dialog>
-      </div>
+    </Dialog>
     </>
   );
 }
