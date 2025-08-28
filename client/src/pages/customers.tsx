@@ -207,6 +207,8 @@ export default function Customers() {
   };
 
   const handleNewCustomer = () => {
+    alert("ADD Customer button clicked!");
+    console.log("ADD Customer button clicked!");
     setEditingCustomer(null);
     form.reset({
       name: "",
@@ -231,7 +233,9 @@ export default function Customers() {
       primaryContactMobile: "",
       primaryContactPosition: "",
     });
+    console.log("Setting dialog open to true");
     setIsDialogOpen(true);
+    console.log("Dialog state after setting:", isDialogOpen);
   };
 
   const filteredCustomers = customers?.filter(customer =>
