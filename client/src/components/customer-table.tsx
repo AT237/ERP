@@ -276,12 +276,12 @@ export default function CustomerTable() {
           <Button 
             size="sm" 
             variant="destructive" 
-            className={`h-8 text-xs ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+            className={`h-8 text-xs w-20 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
             disabled={selectedRows.length === 0}
             onClick={deleteSelectedRows}
           >
             <Trash2 size={14} className="mr-1" />
-            Delete {selectedRows.length > 0 && `(${selectedRows.length})`}
+            Delete{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
           </Button>
           
           {/* Duplicate button - always visible, disabled when not exactly 1 row selected */}
@@ -305,11 +305,11 @@ export default function CustomerTable() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className={`h-8 text-xs ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                className={`h-8 text-xs w-20 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
                 disabled={selectedRows.length === 0}
               >
                 <Download size={14} className="mr-1" />
-                Export {selectedRows.length > 0 && `(${selectedRows.length})`}
+                Export{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
