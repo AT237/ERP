@@ -452,9 +452,10 @@ export default function CustomerTable() {
               filteredCustomers.map((customer) => (
                 <TableRow 
                   key={customer.id} 
-                  className={`hover:bg-muted/30 h-8 text-xs ${
-                    selectedRows.includes(customer.id) ? 'bg-muted/50' : ''
+                  className={`hover:bg-muted/30 h-8 text-xs transition-colors ${
+                    selectedRows.includes(customer.id) ? 'bg-muted/50' : 'bg-transparent'
                   }`}
+                  style={{ height: '32px' }}
                 >
                   <TableCell className="p-2">
                     <Checkbox
