@@ -206,6 +206,10 @@ export default function CustomerTable() {
   const [selectedCustomerForReport, setSelectedCustomerForReport] = useState<Customer | null>(null);
   const [showCustomerReport, setShowCustomerReport] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [showContactPersonDialog, setShowContactPersonDialog] = useState(false);
+  const [showPaymentTermsDialog, setShowPaymentTermsDialog] = useState(false);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -1176,7 +1180,7 @@ export default function CustomerTable() {
                     variant="outline"
                     size="icon"
                     className="shrink-0"
-                    onClick={() => {/* TODO: Open contact person dialog */}}
+                    onClick={() => setShowContactPersonDialog(true)}
                     data-testid="button-add-contact-person"
                   >
                     <Plus size={16} />
@@ -1212,7 +1216,7 @@ export default function CustomerTable() {
                     variant="outline"
                     size="icon"
                     className="shrink-0"
-                    onClick={() => {/* TODO: Open payment terms dialog */}}
+                    onClick={() => setShowPaymentTermsDialog(true)}
                     data-testid="button-add-payment-terms"
                   >
                     <Plus size={16} />
@@ -1243,7 +1247,7 @@ export default function CustomerTable() {
                     variant="outline"
                     size="icon"
                     className="shrink-0"
-                    onClick={() => {/* TODO: Open status dialog */}}
+                    onClick={() => setShowStatusDialog(true)}
                     data-testid="button-add-status"
                   >
                     <Plus size={16} />
@@ -1270,7 +1274,7 @@ export default function CustomerTable() {
                     variant="outline"
                     size="icon"
                     className="shrink-0"
-                    onClick={() => {/* TODO: Open language dialog */}}
+                    onClick={() => setShowLanguageDialog(true)}
                     data-testid="button-add-language"
                   >
                     <Plus size={16} />
@@ -1521,6 +1525,138 @@ export default function CustomerTable() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    {/* Contact Person Dialog */}
+    <Dialog open={showContactPersonDialog} onOpenChange={setShowContactPersonDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-orange-600">Add Contact Person</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="contactName">Name</Label>
+            <Input id="contactName" placeholder="Enter contact person name" data-testid="input-contact-name" />
+          </div>
+          <div>
+            <Label htmlFor="contactRole">Role</Label>
+            <Input id="contactRole" placeholder="Enter role (e.g., Sales Manager)" data-testid="input-contact-role" />
+          </div>
+          <div>
+            <Label htmlFor="contactEmail">Email</Label>
+            <Input id="contactEmail" type="email" placeholder="Enter email address" data-testid="input-contact-email" />
+          </div>
+          <div>
+            <Label htmlFor="contactPhone">Phone</Label>
+            <Input id="contactPhone" placeholder="Enter phone number" data-testid="input-contact-phone" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowContactPersonDialog(false)} data-testid="button-cancel-contact">
+            Cancel
+          </Button>
+          <Button 
+            className="bg-orange-600 hover:bg-orange-700 text-white"
+            onClick={() => setShowContactPersonDialog(false)}
+            data-testid="button-save-contact"
+          >
+            Add Contact Person
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Payment Terms Dialog */}
+    <Dialog open={showPaymentTermsDialog} onOpenChange={setShowPaymentTermsDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-orange-600">Add Payment Terms</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="termDays">Payment Days</Label>
+            <Input id="termDays" type="number" placeholder="Enter number of days" data-testid="input-payment-days" />
+          </div>
+          <div>
+            <Label htmlFor="termDescription">Description</Label>
+            <Input id="termDescription" placeholder="Enter description (e.g., Net 45 days)" data-testid="input-payment-description" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowPaymentTermsDialog(false)} data-testid="button-cancel-payment">
+            Cancel
+          </Button>
+          <Button 
+            className="bg-orange-600 hover:bg-orange-700 text-white"
+            onClick={() => setShowPaymentTermsDialog(false)}
+            data-testid="button-save-payment"
+          >
+            Add Payment Terms
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Status Dialog */}
+    <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-orange-600">Add Customer Status</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="statusName">Status Name</Label>
+            <Input id="statusName" placeholder="Enter status name (e.g., VIP)" data-testid="input-status-name" />
+          </div>
+          <div>
+            <Label htmlFor="statusDescription">Description</Label>
+            <Input id="statusDescription" placeholder="Enter status description" data-testid="input-status-description" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowStatusDialog(false)} data-testid="button-cancel-status">
+            Cancel
+          </Button>
+          <Button 
+            className="bg-orange-600 hover:bg-orange-700 text-white"
+            onClick={() => setShowStatusDialog(false)}
+            data-testid="button-save-status"
+          >
+            Add Status
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Language Dialog */}
+    <Dialog open={showLanguageDialog} onOpenChange={setShowLanguageDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-orange-600">Add Language</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="languageCode">Language Code</Label>
+            <Input id="languageCode" placeholder="Enter language code (e.g., es)" data-testid="input-language-code" />
+          </div>
+          <div>
+            <Label htmlFor="languageName">Language Name</Label>
+            <Input id="languageName" placeholder="Enter language name (e.g., Spanish)" data-testid="input-language-name" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowLanguageDialog(false)} data-testid="button-cancel-language">
+            Cancel
+          </Button>
+          <Button 
+            className="bg-orange-600 hover:bg-orange-700 text-white"
+            onClick={() => setShowLanguageDialog(false)}
+            data-testid="button-save-language"
+          >
+            Add Language
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </>
   );
 }
