@@ -645,28 +645,31 @@ export default function CustomerTable() {
               Company Information
             </h3>
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Company Name *</Label>
-                <Input
-                  id="name"
-                  {...form.register("name")}
-                  placeholder="Enter company name"
-                  data-testid="input-customer-name"
-                />
-                {form.formState.errors.name && (
-                  <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.name.message}
-                  </p>
-                )}
+              <div className="flex items-center gap-4">
+                <Label htmlFor="name" className="w-32 text-right">Company Name *</Label>
+                <div className="flex-1">
+                  <Input
+                    id="name"
+                    {...form.register("name")}
+                    placeholder="Enter company name"
+                    data-testid="input-customer-name"
+                  />
+                  {form.formState.errors.name && (
+                    <p className="text-sm text-destructive mt-1">
+                      {form.formState.errors.name.message}
+                    </p>
+                  )}
+                </div>
               </div>
               
-              <div>
-                <Label htmlFor="taxId">Tax ID</Label>
+              <div className="flex items-center gap-4">
+                <Label htmlFor="taxId" className="w-32 text-right">Tax ID</Label>
                 <Input
                   id="taxId"
                   {...form.register("taxId")}
                   placeholder="Tax identification number"
                   data-testid="input-customer-tax-id"
+                  className="flex-1"
                 />
               </div>
             </div>
@@ -678,44 +681,48 @@ export default function CustomerTable() {
               Contact Information
             </h3>
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
+              <div className="flex items-center gap-4">
+                <Label htmlFor="email" className="w-32 text-right">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   {...form.register("email")}
                   placeholder="company@example.com"
                   data-testid="input-customer-email"
+                  className="flex-1"
                 />
               </div>
               
-              <div>
-                <Label htmlFor="phone">Phone Number</Label>
+              <div className="flex items-center gap-4">
+                <Label htmlFor="phone" className="w-32 text-right">Phone Number</Label>
                 <Input
                   id="phone"
                   {...form.register("phone")}
                   placeholder="+31 20 123 4567"
                   data-testid="input-customer-phone"
+                  className="flex-1"
                 />
               </div>
 
-              <div>
-                <Label htmlFor="mobile">Mobile Number</Label>
+              <div className="flex items-center gap-4">
+                <Label htmlFor="mobile" className="w-32 text-right">Mobile Number</Label>
                 <Input
                   id="mobile"
                   {...form.register("mobile")}
                   placeholder="+31 6 12 34 56 78"
                   data-testid="input-customer-mobile"
+                  className="flex-1"
                 />
               </div>
 
-              <div>
-                <Label htmlFor="bankAccount">Bank Account</Label>
+              <div className="flex items-center gap-4">
+                <Label htmlFor="bankAccount" className="w-32 text-right">Bank Account</Label>
                 <Input
                   id="bankAccount"
                   {...form.register("bankAccount")}
                   placeholder="NL91 ABNA 0417 1643 00"
                   data-testid="input-customer-bank-account"
+                  className="flex-1"
                 />
               </div>
             </div>
@@ -727,9 +734,9 @@ export default function CustomerTable() {
               Contact Persons
             </h3>
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="contactPersons">Select Contact Persons</Label>
-                <div className="flex gap-2">
+              <div className="flex items-center gap-4">
+                <Label htmlFor="contactPersons" className="w-32 text-right">Contact Persons</Label>
+                <div className="flex gap-2 flex-1">
                   <Select>
                     <SelectTrigger data-testid="select-contact-persons" className="flex-1">
                       <SelectValue placeholder="Select existing contact persons" />
@@ -761,9 +768,9 @@ export default function CustomerTable() {
               Business Settings
             </h3>
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="paymentTerms">Payment Terms (days) *</Label>
-                <div className="flex gap-2">
+              <div className="flex items-center gap-4">
+                <Label htmlFor="paymentTerms" className="w-32 text-right">Payment Terms *</Label>
+                <div className="flex gap-2 flex-1">
                   <Select onValueChange={(value) => form.setValue("paymentTerms", value)}>
                     <SelectTrigger data-testid="select-payment-terms" className="flex-1">
                       <SelectValue placeholder="Select payment terms" />
@@ -788,15 +795,15 @@ export default function CustomerTable() {
                   </Button>
                 </div>
                 {form.formState.errors.paymentTerms && (
-                  <p className="text-sm text-destructive mt-1">
+                  <p className="text-sm text-destructive mt-1 ml-36">
                     {form.formState.errors.paymentTerms.message}
                   </p>
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <div className="flex gap-2">
+              <div className="flex items-center gap-4">
+                <Label htmlFor="status" className="w-32 text-right">Status</Label>
+                <div className="flex gap-2 flex-1">
                   <Select onValueChange={(value) => form.setValue("status", value)}>
                     <SelectTrigger data-testid="select-customer-status" className="flex-1">
                       <SelectValue placeholder="Select status" />
@@ -820,9 +827,9 @@ export default function CustomerTable() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="language">Preferred Language</Label>
-                <div className="flex gap-2">
+              <div className="flex items-center gap-4">
+                <Label htmlFor="language" className="w-32 text-right">Language</Label>
+                <div className="flex gap-2 flex-1">
                   <Select onValueChange={(value) => form.setValue("language", value)}>
                     <SelectTrigger data-testid="select-customer-language" className="flex-1">
                       <SelectValue placeholder="Select language" />
