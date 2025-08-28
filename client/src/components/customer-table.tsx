@@ -451,13 +451,19 @@ export default function CustomerTable() {
                 Columns
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48">
+            <DropdownMenuContent 
+              className="w-48" 
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
               <div className="text-xs font-medium p-2 border-b">Column Visibility</div>
               {columns.map((column) => (
                 <DropdownMenuCheckboxItem
                   key={column.key}
                   checked={column.visible}
-                  onCheckedChange={() => toggleColumnVisibility(column.key)}
+                  onCheckedChange={(checked) => {
+                    toggleColumnVisibility(column.key);
+                  }}
+                  onSelect={(e) => e.preventDefault()}
                   className="text-xs"
                 >
                   {column.label}
