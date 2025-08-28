@@ -1477,14 +1477,38 @@ export default function CustomerTable() {
     <AlertDialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Klanten verwijderen</AlertDialogTitle>
+          <AlertDialogTitle>Delete Customer{selectedRows.length > 1 ? 's' : ''}</AlertDialogTitle>
           <AlertDialogDescription>
-            Weet je zeker dat je {selectedRows.length} {selectedRows.length === 1 ? 'klant' : 'klanten'} wilt verwijderen? 
-            Deze actie kan niet ongedaan worden gemaakt.
+            {selectedRows.length === 1 ? (
+              <>
+                Are you sure you want to delete{' '}
+                <span className="font-semibold">
+                  {filteredAndSortedCustomers.find(c => c.id === selectedRows[0])?.name || 'this customer'}
+                </span>
+                ?<br />
+                This action cannot be undone.
+              </>
+            ) : (
+              <>
+                Are you sure you want to delete these {selectedRows.length} customers?<br />
+                <div className="mt-2 text-sm">
+                  {selectedRows.slice(0, 3).map(id => {
+                    const customer = filteredAndSortedCustomers.find(c => c.id === id);
+                    return customer ? (
+                      <div key={id} className="font-semibold">• {customer.name}</div>
+                    ) : null;
+                  })}
+                  {selectedRows.length > 3 && (
+                    <div className="text-muted-foreground">... and {selectedRows.length - 3} more</div>
+                  )}
+                </div>
+                This action cannot be undone.
+              </>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuleren</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={() => {
               deleteCustomersMutation.mutate(selectedRows);
@@ -1492,7 +1516,7 @@ export default function CustomerTable() {
             disabled={deleteCustomersMutation.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {deleteCustomersMutation.isPending ? "Verwijderen..." : "Verwijderen"}
+            {deleteCustomersMutation.isPending ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
