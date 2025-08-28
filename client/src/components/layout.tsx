@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { X } from "lucide-react";
 import Sidebar from "./sidebar";
-import Header from "./header";
+
 import SectionInfoPanel from "./section-info-panel";
 import { CustomerProvider } from "@/contexts/CustomerContext";
 import logoImage from "@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg";
@@ -318,8 +318,6 @@ export default function Layout({ children }: LayoutProps) {
           <main className={`flex-1 flex flex-col overflow-hidden ${
             tabs.length > 0 ? 'border-2 border-orange-500 bg-white rounded-lg' : 'bg-white'
           }`}>
-            <Header activeTab={tabs.find(tab => tab.id === activeTabId)} />
-            
             {/* Tab Content */}
             <div className="flex-1 overflow-auto">
               {renderActiveTabContent()}
