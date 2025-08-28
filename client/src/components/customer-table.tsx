@@ -200,9 +200,9 @@ export default function CustomerTable() {
   return (
     <div className="space-y-4">
       {/* Customer Controls Toolbar */}
-      <div className="flex items-center gap-6 bg-card border border-border rounded-lg p-4 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10">
+      <div className="flex items-center gap-6 p-2">
         {/* Title Section */}
-        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-2">
+        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-8 py-3 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10">
           <h2 className="text-lg font-medium text-orange-800 dark:text-orange-200">Customers</h2>
         </div>
         
