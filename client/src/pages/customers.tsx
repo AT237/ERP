@@ -292,14 +292,15 @@ export default function Customers() {
           </div>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleNewCustomer} data-testid="button-add-customer">
-              <Plus className="mr-2" size={16} />
-              Add Customer
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+        <Button onClick={handleNewCustomer} data-testid="button-add-customer">
+          <Plus className="mr-2" size={16} />
+          Add Customer
+        </Button>
+      </div>
+
+      {/* Customer Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
                 {editingCustomer ? "Edit Customer" : "Add New Customer"}
@@ -351,7 +352,7 @@ export default function Customers() {
                   <div>
                     <Label htmlFor="language">Language</Label>
                     <Select 
-                      value={form.watch("language")} 
+                      value={form.watch("language") || "nl"} 
                       onValueChange={(value) => form.setValue("language", value)}
                     >
                       <SelectTrigger data-testid="select-language">
@@ -548,7 +549,7 @@ export default function Customers() {
                   <div>
                     <Label htmlFor="status">Status</Label>
                     <Select 
-                      value={form.watch("status")} 
+                      value={form.watch("status") || "active"} 
                       onValueChange={(value) => form.setValue("status", value)}
                     >
                       <SelectTrigger data-testid="select-status">
@@ -584,7 +585,6 @@ export default function Customers() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
 
       {/* Customers Table */}
       <Card>
