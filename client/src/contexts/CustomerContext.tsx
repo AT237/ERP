@@ -14,7 +14,13 @@ type ColumnConfig = {
   visible: boolean;
   width: number;
   filterable: boolean;
+  sortable: boolean;
 };
+
+type SortConfig = {
+  column: string;
+  direction: 'asc' | 'desc';
+} | null;
 
 interface CustomerContextType {
   searchTerm: string;
@@ -33,6 +39,8 @@ interface CustomerContextType {
   toggleAllRows: (customerIds: string[]) => void;
   deleteSelectedRows: () => void;
   confirmDeleteCustomers: () => void;
+  sortConfig: SortConfig;
+  handleSort: (column: string) => void;
   showAddCustomerDialog: boolean;
   setShowAddCustomerDialog: (show: boolean) => void;
   showColumnDialog: boolean;
@@ -53,19 +61,20 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   const [showColumnDialog, setShowColumnDialog] = useState(false);
   const [showFilterDialog, setShowFilterDialog] = useState(false);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
   const [columns, setColumns] = useState<ColumnConfig[]>([
-    { key: 'customerNumber', label: 'Customer ID', visible: true, width: 120, filterable: true },
-    { key: 'name', label: 'Name', visible: true, width: 180, filterable: true },
-    { key: 'email', label: 'Email', visible: true, width: 200, filterable: true },
-    { key: 'phone', label: 'Phone', visible: true, width: 140, filterable: true },
-    { key: 'mobile', label: 'Mobile', visible: false, width: 140, filterable: true },
-    { key: 'taxId', label: 'Tax ID', visible: true, width: 120, filterable: true },
-    { key: 'bankAccount', label: 'Bank Account', visible: false, width: 150, filterable: true },
-    { key: 'language', label: 'Language', visible: false, width: 100, filterable: true },
-    { key: 'paymentTerms', label: 'Payment Terms', visible: true, width: 120, filterable: true },
-    { key: 'status', label: 'Status', visible: true, width: 100, filterable: true },
-    { key: 'createdAt', label: 'Created', visible: true, width: 100, filterable: true },
+    { key: 'customerNumber', label: 'Customer ID', visible: true, width: 120, filterable: true, sortable: true },
+    { key: 'name', label: 'Name', visible: true, width: 180, filterable: true, sortable: true },
+    { key: 'email', label: 'Email', visible: true, width: 200, filterable: true, sortable: true },
+    { key: 'phone', label: 'Phone', visible: true, width: 140, filterable: true, sortable: true },
+    { key: 'mobile', label: 'Mobile', visible: false, width: 140, filterable: true, sortable: true },
+    { key: 'taxId', label: 'Tax ID', visible: true, width: 120, filterable: true, sortable: true },
+    { key: 'bankAccount', label: 'Bank Account', visible: false, width: 150, filterable: true, sortable: true },
+    { key: 'language', label: 'Language', visible: false, width: 100, filterable: true, sortable: true },
+    { key: 'paymentTerms', label: 'Payment Terms', visible: true, width: 120, filterable: true, sortable: true },
+    { key: 'status', label: 'Status', visible: true, width: 100, filterable: true, sortable: true },
+    { key: 'createdAt', label: 'Created', visible: true, width: 100, filterable: true, sortable: true },
   ]);
 
   const addFilter = (column: string) => {
@@ -137,6 +146,16 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const handleSort = (column: string) => {
+    setSortConfig(prev => {
+      if (prev?.column === column) {
+        return prev.direction === 'asc' ? { column, direction: 'desc' } : { column, direction: 'asc' };
+      } else {
+        return { column, direction: 'asc' };
+      }
+    });
+  };
+
   return (
     <CustomerContext.Provider value={{
       searchTerm,
@@ -155,6 +174,8 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       toggleAllRows,
       deleteSelectedRows,
       confirmDeleteCustomers,
+      sortConfig,
+      handleSort,
       showAddCustomerDialog,
       setShowAddCustomerDialog,
       showColumnDialog,

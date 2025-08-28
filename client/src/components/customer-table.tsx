@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCustomerContext } from "@/contexts/CustomerContext";
-import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical, Trash2, Copy, Download, Mail } from "lucide-react";
+import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical, Trash2, Copy, Download, Mail, ChevronUp, ChevronsUpDown } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema, type InsertCustomer, type Customer } from "@shared/schema";
@@ -89,6 +89,7 @@ type ColumnConfig = {
   visible: boolean;
   width: number;
   filterable: boolean;
+  sortable: boolean;
 };
 
 const filterOptions = [
@@ -197,6 +198,8 @@ export default function CustomerTable() {
     showDeleteConfirmDialog,
     setShowDeleteConfirmDialog,
     confirmDeleteCustomers,
+    sortConfig,
+    handleSort,
   } = customerContext;
   
   const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
@@ -492,22 +495,59 @@ export default function CustomerTable() {
     }
   };
 
-  const filteredCustomers = customers.filter(customer => {
-    // Apply global search
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = Object.values(customer).some(value => 
-        String(value || '').toLowerCase().includes(searchLower)
-      );
-      if (!matchesSearch) return false;
-    }
+  const filteredAndSortedCustomers = (() => {
+    // First apply filters
+    let filtered = customers.filter(customer => {
+      // Apply global search
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = Object.values(customer).some(value => 
+          String(value || '').toLowerCase().includes(searchLower)
+        );
+        if (!matchesSearch) return false;
+      }
 
-    // Apply column filters
-    return filters.every(filter => {
-      const value = customer[filter.column as keyof Customer];
-      return applyFilter(value, filter);
+      // Apply column filters
+      return filters.every(filter => {
+        const value = customer[filter.column as keyof Customer];
+        return applyFilter(value, filter);
+      });
     });
-  });
+
+    // Then apply sorting
+    if (sortConfig) {
+      filtered = [...filtered].sort((a, b) => {
+        const aValue = a[sortConfig.column as keyof Customer];
+        const bValue = b[sortConfig.column as keyof Customer];
+        
+        // Handle null/undefined values
+        if (aValue == null && bValue == null) return 0;
+        if (aValue == null) return sortConfig.direction === 'asc' ? 1 : -1;
+        if (bValue == null) return sortConfig.direction === 'asc' ? -1 : 1;
+        
+        // Handle different data types
+        let comparison = 0;
+        if (sortConfig.column === 'createdAt') {
+          // Date comparison
+          const aDate = new Date(aValue as string);
+          const bDate = new Date(bValue as string);
+          comparison = aDate.getTime() - bDate.getTime();
+        } else if (sortConfig.column === 'paymentTerms') {
+          // Number comparison
+          comparison = Number(aValue) - Number(bValue);
+        } else {
+          // String comparison
+          const aStr = String(aValue).toLowerCase();
+          const bStr = String(bValue).toLowerCase();
+          comparison = aStr.localeCompare(bStr);
+        }
+        
+        return sortConfig.direction === 'asc' ? comparison : -comparison;
+      });
+    }
+    
+    return filtered;
+  })();
 
 
   const formatDate = (date: Date | string) => {
@@ -864,7 +904,7 @@ export default function CustomerTable() {
 
       {/* Compact Results count */}
       <div className="text-xs text-muted-foreground py-1">
-        {filteredCustomers.length} of {customers.length} customers
+        {filteredAndSortedCustomers.length} of {customers.length} customers
         {selectedRows.length > 0 && ` • ${selectedRows.length} selected`}
       </div>
 
@@ -881,8 +921,8 @@ export default function CustomerTable() {
                 <TableHead className="w-8 p-2">
                   <div className="flex items-center justify-center h-4 w-4">
                     <Checkbox
-                      checked={selectedRows.length === filteredCustomers.length && filteredCustomers.length > 0}
-                      onCheckedChange={() => toggleAllRows(filteredCustomers.map(customer => customer.id))}
+                      checked={selectedRows.length === filteredAndSortedCustomers.length && filteredAndSortedCustomers.length > 0}
+                      onCheckedChange={() => toggleAllRows(filteredAndSortedCustomers.map(customer => customer.id))}
                       className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
                       style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
                     />
@@ -896,8 +936,26 @@ export default function CustomerTable() {
                       className="font-bold text-xs p-2 relative uppercase text-orange-800 dark:text-orange-200"
                       style={{ width: column.width }}
                     >
-                      <div className="flex items-center gap-3 pr-2">
-                        <span className="truncate">{column.label}</span>
+                      <div className="flex items-center gap-2 pr-2">
+                        <div 
+                          className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded px-1 py-1"
+                          onClick={() => column.sortable && handleSort(column.key)}
+                        >
+                          <span className="truncate">{column.label}</span>
+                          {column.sortable && (
+                            <div className="flex items-center">
+                              {sortConfig?.column === column.key ? (
+                                sortConfig.direction === 'asc' ? (
+                                  <ChevronUp size={14} className="text-orange-600" />
+                                ) : (
+                                  <ChevronDown size={14} className="text-orange-600" />
+                                )
+                              ) : (
+                                <ChevronsUpDown size={14} className="opacity-30" />
+                              )}
+                            </div>
+                          )}
+                        </div>
                         {column.filterable && (
                           <Button
                             variant="ghost"
@@ -920,14 +978,14 @@ export default function CustomerTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCustomers.length === 0 ? (
+              {filteredAndSortedCustomers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={currentVisibleColumns.length + 1} className="text-center py-4 text-xs text-muted-foreground">
                     No customers found
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredCustomers.map((customer) => (
+                filteredAndSortedCustomers.map((customer) => (
                   <TableRow 
                     key={customer.id} 
                     className={`hover:bg-muted/30 text-xs cursor-pointer ${
