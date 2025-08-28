@@ -1,5 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+} from "@/components/ui/dropdown-menu";
+import { useCustomerContext } from "@/contexts/CustomerContext";
 import { Plus, User, Search, Filter, Settings } from "lucide-react";
 
 const pageLabels: Record<string, { title: string; description: string }> = {
@@ -46,31 +54,82 @@ export default function Header({ activeTab }: HeaderProps) {
   // Clean up title - remove "Management" and make compact
   const cleanTitle = pageInfo.title.replace(' Management', '');
 
+  // Use customer context if on customer page
+  let customerContext;
+  try {
+    customerContext = activeTab?.id === 'customers' ? useCustomerContext() : null;
+  } catch {
+    customerContext = null;
+  }
+
   return (
     <header className="bg-card border-b border-border px-6 py-2">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-medium text-foreground">{cleanTitle}</h1>
         
         {/* Show controls for customer page */}
-        {activeTab?.id === 'customers' && (
+        {activeTab?.id === 'customers' && customerContext && (
           <div className="flex items-center gap-2">
             <div className="relative">
               <Input
                 placeholder="Search customers..."
+                value={customerContext.searchTerm}
+                onChange={(e) => customerContext.setSearchTerm(e.target.value)}
                 className="pl-8 h-8 text-sm w-64"
                 data-testid="header-search-customers"
               />
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={14} />
             </div>
-            <Button variant="outline" size="sm" className="h-8 text-xs">
-              <Filter size={14} className="mr-1" />
-              Filter
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs">
-              <Settings size={14} className="mr-1" />
-              Columns
-            </Button>
-            <Button size="sm" className="h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
+            
+            {/* Filter Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <Filter size={14} className="mr-1" />
+                  Filter {customerContext.filters.length > 0 && `(${customerContext.filters.length})`}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {customerContext.columns.filter(col => col.filterable).map((column) => (
+                  <DropdownMenuItem
+                    key={column.key}
+                    onClick={() => customerContext.addFilter(column.key)}
+                    className="text-xs"
+                  >
+                    {column.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            {/* Column Visibility Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <Settings size={14} className="mr-1" />
+                  Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48">
+                <div className="text-xs font-medium p-2 border-b">Column Visibility</div>
+                {customerContext.columns.map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.key}
+                    checked={column.visible}
+                    onCheckedChange={() => customerContext.toggleColumnVisibility(column.key)}
+                    className="text-xs"
+                  >
+                    {column.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <Button 
+              size="sm" 
+              className="h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => customerContext.setShowAddCustomerDialog(true)}
+            >
               <Plus size={14} className="mr-1" />
               Toevoegen
             </Button>

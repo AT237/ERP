@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import Sidebar from "./sidebar";
 import Header from "./header";
 import SectionInfoPanel from "./section-info-panel";
+import { CustomerProvider } from "@/contexts/CustomerContext";
 import logoImage from "@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg";
 
 // Lazy load components outside the render function to prevent re-importing
@@ -202,11 +203,13 @@ export default function Layout({ children }: LayoutProps) {
       // Render specific menu components
       if (activeTab.id === 'customers') {
         return (
-          <div className="p-6">
-            <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
-              <CustomerTable />
-            </Suspense>
-          </div>
+          <CustomerProvider>
+            <div className="p-6">
+              <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+                <CustomerTable />
+              </Suspense>
+            </div>
+          </CustomerProvider>
         );
       }
       

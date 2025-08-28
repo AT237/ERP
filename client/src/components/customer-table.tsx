@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useCustomerContext } from "@/contexts/CustomerContext";
 import { Filter, ChevronDown, Plus, Search, Trash2, Settings, Eye, EyeOff, GripVertical } from "lucide-react";
 
 type Customer = {
@@ -69,23 +70,26 @@ const filterOptions = [
 ];
 
 export default function CustomerTable() {
-  const [filters, setFilters] = useState<ColumnFilter[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const customerContext = useCustomerContext();
+  const {
+    searchTerm,
+    setSearchTerm,
+    filters,
+    setFilters,
+    addFilter,
+    updateFilter,
+    removeFilter,
+    columns,
+    setColumns,
+    toggleColumnVisibility,
+    selectedRows,
+    setSelectedRows,
+    toggleRowSelection,
+    toggleAllRows,
+  } = customerContext;
+  
   const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
   const queryClient = useQueryClient();
-
-  const [columns, setColumns] = useState<ColumnConfig[]>([
-    { key: 'name', label: 'Name', visible: true, width: 180, filterable: true },
-    { key: 'email', label: 'Email', visible: true, width: 200, filterable: true },
-    { key: 'phone', label: 'Phone', visible: true, width: 140, filterable: true },
-    { key: 'address', label: 'Address', visible: true, width: 220, filterable: true },
-    { key: 'contactPerson', label: 'Contact', visible: true, width: 150, filterable: true },
-    { key: 'taxId', label: 'Tax ID', visible: true, width: 120, filterable: true },
-    { key: 'paymentTerms', label: 'Terms', visible: true, width: 80, filterable: true },
-    { key: 'status', label: 'Status', visible: true, width: 100, filterable: true },
-    { key: 'createdAt', label: 'Created', visible: true, width: 100, filterable: true },
-  ]);
 
   const { data: customers = [], isLoading } = useQuery<Customer[]>({
     queryKey: ['/api/customers'],
@@ -136,29 +140,11 @@ export default function CustomerTable() {
     });
   });
 
-  const addFilter = (column: string) => {
-    setFilters(prev => [...prev, { column, type: 'contains', value: '' }]);
-  };
-
-  const updateFilter = (index: number, field: keyof ColumnFilter, value: string) => {
-    setFilters(prev => prev.map((filter, i) => 
-      i === index ? { ...filter, [field]: value } : filter
-    ));
-  };
-
-  const removeFilter = (index: number) => {
-    setFilters(prev => prev.filter((_, i) => i !== index));
-  };
 
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('nl-NL');
   };
 
-  const toggleColumnVisibility = (columnKey: string) => {
-    setColumns(prev => prev.map(col => 
-      col.key === columnKey ? { ...col, visible: !col.visible } : col
-    ));
-  };
 
   const handleMouseDown = (e: React.MouseEvent, columnKey: string) => {
     e.preventDefault();
@@ -176,9 +162,9 @@ export default function CustomerTable() {
     if (resizing) {
       const diff = e.clientX - resizing.startX;
       const newWidth = Math.max(60, resizing.startWidth + diff);
-      setColumns(prev => prev.map(col => 
+      setColumns(prev => prev.map((col: ColumnConfig) => 
         col.key === resizing.column ? { ...col, width: newWidth } : col
-      ));
+      ) as ColumnConfig[]);
     }
   };
 
@@ -197,21 +183,6 @@ export default function CustomerTable() {
     }
   }, [resizing]);
 
-  const toggleRowSelection = (id: string) => {
-    setSelectedRows(prev => 
-      prev.includes(id) 
-        ? prev.filter(rowId => rowId !== id)
-        : [...prev, id]
-    );
-  };
-
-  const toggleAllRows = () => {
-    if (selectedRows.length === filteredCustomers.length) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(filteredCustomers.map(customer => customer.id));
-    }
-  };
 
   const visibleColumns = columns.filter(col => col.visible);
 
@@ -295,7 +266,7 @@ export default function CustomerTable() {
               <TableHead className="w-8 p-2">
                 <Checkbox
                   checked={selectedRows.length === filteredCustomers.length && filteredCustomers.length > 0}
-                  onCheckedChange={toggleAllRows}
+                  onCheckedChange={() => toggleAllRows(filteredCustomers.map(customer => customer.id))}
                   className="h-3 w-3"
                 />
               </TableHead>
