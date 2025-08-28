@@ -273,62 +273,64 @@ export default function CustomerTable() {
             Add Customer
           </Button>
           
-          {/* Duplicate button - only show when exactly 1 row is selected */}
-          {selectedRows.length === 1 && (
-            <Button 
-              size="sm" 
-              variant="outline"
-              className="h-8 text-xs"
-              onClick={() => {
-                // TODO: Implement duplicate functionality
-                console.log('Duplicate customer:', selectedRows[0]);
-              }}
-            >
-              <Copy size={14} className="mr-1" />
-              Duplicate
-            </Button>
-          )}
+          {/* Duplicate button - always visible, disabled when not exactly 1 row selected */}
+          <Button 
+            size="sm" 
+            variant="outline"
+            className={`h-8 text-xs ${selectedRows.length !== 1 ? 'opacity-40 cursor-not-allowed' : ''}`}
+            disabled={selectedRows.length !== 1}
+            onClick={() => {
+              // TODO: Implement duplicate functionality
+              console.log('Duplicate customer:', selectedRows[0]);
+            }}
+          >
+            <Copy size={14} className="mr-1" />
+            Duplicate
+          </Button>
           
-          {/* Export button - only show when rows are selected */}
-          {selectedRows.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 text-xs">
-                  <Download size={14} className="mr-1" />
-                  Export ({selectedRows.length})
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem
-                  onClick={() => {
-                    // TODO: Implement Excel export
-                    console.log('Export to Excel:', selectedRows);
-                  }}
-                  className="text-xs"
-                >
-                  Export to Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    // TODO: Implement PDF export
-                    console.log('Export to PDF:', selectedRows);
-                  }}
-                  className="text-xs"
-                >
-                  Export to PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    // TODO: Implement Word export
-                    console.log('Export to Word:', selectedRows);
-                  }}
-                  className="text-xs"
-                >
-                  Export to Word
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {/* Export button - always visible, disabled when no rows selected */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={`h-8 text-xs ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                disabled={selectedRows.length === 0}
+              >
+                <Download size={14} className="mr-1" />
+                Export {selectedRows.length > 0 && `(${selectedRows.length})`}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem
+                onClick={() => {
+                  // TODO: Implement Excel export
+                  console.log('Export to Excel:', selectedRows);
+                }}
+                className="text-xs"
+              >
+                Export to Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  // TODO: Implement PDF export
+                  console.log('Export to PDF:', selectedRows);
+                }}
+                className="text-xs"
+              >
+                Export to PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  // TODO: Implement Word export
+                  console.log('Export to Word:', selectedRows);
+                }}
+                className="text-xs"
+              >
+                Export to Word
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           <Button 
             size="sm" 
