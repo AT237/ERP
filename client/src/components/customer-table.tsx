@@ -1097,7 +1097,7 @@ export default function CustomerTable() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Company Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
               Company Information
             </h3>
             <div className="space-y-4">
@@ -1133,7 +1133,7 @@ export default function CustomerTable() {
 
           {/* Contact Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
               Contact Information
             </h3>
             <div className="space-y-4">
@@ -1186,7 +1186,7 @@ export default function CustomerTable() {
 
           {/* Contact Persons */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
               Contact Persons
             </h3>
             <div className="space-y-4">
@@ -1220,7 +1220,7 @@ export default function CustomerTable() {
 
           {/* Business Settings */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
               Business Settings
             </h3>
             <div className="space-y-4">
@@ -1360,7 +1360,7 @@ export default function CustomerTable() {
             <div className="grid grid-cols-2 gap-6">
               {/* Contact Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
                   Contact Information
                 </h3>
                 <div className="space-y-2 text-sm">
@@ -1385,7 +1385,7 @@ export default function CustomerTable() {
 
               {/* Business Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
                   Business Information
                 </h3>
                 <div className="space-y-2 text-sm">
@@ -1417,7 +1417,7 @@ export default function CustomerTable() {
 
             {/* Statistics Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+              <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
                 Customer Statistics
               </h3>
               <div className="grid grid-cols-4 gap-4">

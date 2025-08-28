@@ -318,7 +318,7 @@ export default function Customers() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto">
               {/* Company Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">Company Information</h3>
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">Company Information</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Company Name *</Label>
@@ -379,7 +379,7 @@ export default function Customers() {
 
               {/* Contact Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">Contact Information</h3>
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">Contact Information</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="email">Email</Label>
@@ -416,7 +416,7 @@ export default function Customers() {
 
               {/* Address Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">Address Information</h3>
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">Address Information</h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="col-span-2">
                     <Label htmlFor="street">Street</Label>
@@ -474,7 +474,7 @@ export default function Customers() {
 
               {/* Primary Contact Person */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">Primary Contact Person</h3>
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">Primary Contact Person</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="primaryContactName">Contact Name</Label>
@@ -533,7 +533,7 @@ export default function Customers() {
 
               {/* Business Settings */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">Business Settings</h3>
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">Business Settings</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="paymentTerms">Payment Terms (Days)</Label>

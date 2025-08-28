@@ -114,7 +114,7 @@ export function FormLayout({
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-6">
       {sections.map((section, sectionIndex) => (
         <div key={sectionIndex} className="space-y-4">
-          <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+          <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
             {section.title}
           </h3>
           <div className="space-y-4">

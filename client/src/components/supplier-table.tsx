@@ -440,7 +440,7 @@ export default function SupplierTable() {
             {/* Supplier Details */}
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
                   Contact Information
                 </h3>
                 <div className="space-y-2 text-sm">
@@ -464,7 +464,7 @@ export default function SupplierTable() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
                   Business Information
                 </h3>
                 <div className="space-y-2 text-sm">
@@ -496,7 +496,7 @@ export default function SupplierTable() {
 
             {/* Statistics Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+              <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
                 Supplier Statistics
               </h3>
               <div className="grid grid-cols-4 gap-4">
