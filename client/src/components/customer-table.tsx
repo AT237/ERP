@@ -399,8 +399,8 @@ export default function CustomerTable() {
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50 h-8">
-              <TableHead className="w-8 p-2">
+            <TableRow className="bg-muted/50 h-6">
+              <TableHead className="w-8 p-1">
                 <Checkbox
                   checked={selectedRows.length === filteredCustomers.length && filteredCustomers.length > 0}
                   onCheckedChange={() => toggleAllRows(filteredCustomers.map(customer => customer.id))}
@@ -410,7 +410,7 @@ export default function CustomerTable() {
               {visibleColumns.map((column) => (
                 <TableHead 
                   key={column.key} 
-                  className="font-medium text-xs p-2 relative"
+                  className="font-bold text-xs p-1 relative"
                   style={{ width: column.width }}
                 >
                   <div className="flex items-center gap-1 pr-2">
