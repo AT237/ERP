@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCustomerContext } from "@/contexts/CustomerContext";
-import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical } from "lucide-react";
+import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical, Trash2 } from "lucide-react";
 
 type Customer = {
   id: string;
@@ -86,6 +86,9 @@ export default function CustomerTable() {
     setSelectedRows,
     toggleRowSelection,
     toggleAllRows,
+    deleteSelectedRows,
+    showAddCustomerDialog,
+    setShowAddCustomerDialog,
   } = customerContext;
   
   const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
@@ -195,6 +198,90 @@ export default function CustomerTable() {
   }
 
   return (
+    <div className="space-y-4">
+      {/* Customer Controls Toolbar */}
+      <div className="flex items-center justify-between bg-card border border-border rounded-lg p-4">
+        <h2 className="text-lg font-medium text-foreground">Customers</h2>
+        
+        <div className="flex items-center gap-2">
+          {/* Search */}
+          <div className="relative">
+            <Input
+              placeholder="Search customers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8 h-8 text-sm w-64"
+              data-testid="search-customers"
+            />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={14} />
+          </div>
+          
+          {/* Filter Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 text-xs">
+                <Filter size={14} className="mr-1" />
+                Filter {filters.length > 0 && `(${filters.length})`}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {columns.filter(col => col.filterable).map((column) => (
+                <DropdownMenuItem
+                  key={column.key}
+                  onClick={() => addFilter(column.key)}
+                  className="text-xs"
+                >
+                  {column.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {/* Column Visibility Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 text-xs">
+                <Settings size={14} className="mr-1" />
+                Columns
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-48">
+              <div className="text-xs font-medium p-2 border-b">Column Visibility</div>
+              {columns.map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.key}
+                  checked={column.visible}
+                  onCheckedChange={() => toggleColumnVisibility(column.key)}
+                  className="text-xs"
+                >
+                  {column.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button 
+            size="sm" 
+            className="h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => setShowAddCustomerDialog(true)}
+          >
+            <Plus size={14} className="mr-1" />
+            Toevoegen
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant="destructive" 
+            className={`h-8 text-xs ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+            disabled={selectedRows.length === 0}
+            onClick={deleteSelectedRows}
+          >
+            <Trash2 size={14} className="mr-1" />
+            Verwijderen {selectedRows.length > 0 && `(${selectedRows.length})`}
+          </Button>
+        </div>
+      </div>
+
     <div className="space-y-2">
 
       {/* Active Filters - Compact */}
@@ -347,6 +434,7 @@ export default function CustomerTable() {
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );
