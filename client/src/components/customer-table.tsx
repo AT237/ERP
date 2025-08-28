@@ -418,11 +418,11 @@ export default function CustomerTable() {
                     {column.filterable && (
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => addFilter(column.key)}
-                        className="h-4 w-4 p-0 opacity-50 hover:opacity-100"
+                        className="h-3 w-3 p-0 opacity-50 hover:opacity-100"
                       >
-                        <Filter size={10} />
+                        <Filter size={8} />
                       </Button>
                     )}
                   </div>
