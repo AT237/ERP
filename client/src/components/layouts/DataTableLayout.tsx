@@ -575,7 +575,7 @@ export function DataTableLayout<T = any>({
             onDragEnd={handleDragEnd}
           >
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-orange-50 dark:bg-orange-900/20">
                 <TableRow>
                   <TableHead className="w-8 p-2">
                     <div className="flex items-center justify-center h-4 w-4">

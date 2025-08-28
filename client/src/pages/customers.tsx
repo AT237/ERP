@@ -605,7 +605,7 @@ export default function Customers() {
         <CardContent>
           <div className="rounded-md border">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-orange-50 dark:bg-orange-900/20">
                 <TableRow>
                   <TableHead className="whitespace-nowrap">Company Name</TableHead>
                   <TableHead className="whitespace-nowrap">Email</TableHead>
