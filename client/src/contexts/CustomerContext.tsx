@@ -51,6 +51,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   const [showFilterDialog, setShowFilterDialog] = useState(false);
 
   const [columns, setColumns] = useState<ColumnConfig[]>([
+    { key: 'customerNumber', label: 'Customer ID', visible: true, width: 120, filterable: true },
     { key: 'name', label: 'Name', visible: true, width: 180, filterable: true },
     { key: 'email', label: 'Email', visible: true, width: 200, filterable: true },
     { key: 'phone', label: 'Phone', visible: true, width: 140, filterable: true },

@@ -677,7 +677,9 @@ export default function CustomerTable() {
                       className="p-2 text-xs truncate"
                       style={{ width: column.width, height: '32px', lineHeight: '1.2' }}
                     >
-                      {column.key === 'name' ? (
+                      {column.key === 'customerNumber' ? (
+                        <span className="font-mono text-xs">{customer.customerNumber || customer.id.slice(0, 8)}</span>
+                      ) : column.key === 'name' ? (
                         <span className="font-medium">{customer.name}</span>
                       ) : column.key === 'email' ? (
                         customer.email || '-'
