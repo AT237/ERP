@@ -223,9 +223,9 @@ export default function CustomerTable() {
           {/* Filter Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs">
+              <Button variant="outline" size="sm" className="h-8 text-xs w-20">
                 <Filter size={14} className="mr-1" />
-                Filter {filters.length > 0 && `(${filters.length})`}
+                Filter{filters.length > 0 ? ` ${filters.length}` : ''}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -345,11 +345,12 @@ export default function CustomerTable() {
         </div>
       </div>
 
-    <div className="space-y-2">
+    <div className="space-y-4">
 
       {/* Active Filters - Compact */}
-      {filters.length > 0 && (
-        <div className="flex flex-wrap gap-1">
+      <div className="min-h-[2rem] flex items-start">
+        {filters.length > 0 && (
+          <div className="flex flex-wrap gap-1">
           {filters.map((filter, index) => (
             <div key={index} className="flex items-center gap-1 bg-muted px-2 py-1 rounded text-xs">
               <span className="font-medium">
@@ -386,8 +387,9 @@ export default function CustomerTable() {
               </Button>
             </div>
           ))}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       {/* Compact Results count */}
       <div className="text-xs text-muted-foreground py-1">
