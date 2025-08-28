@@ -109,6 +109,8 @@ export default function CustomerTable() {
     deleteSelectedRows,
     showAddCustomerDialog,
     setShowAddCustomerDialog,
+    showColumnDialog,
+    setShowColumnDialog,
   } = customerContext;
   
   const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
