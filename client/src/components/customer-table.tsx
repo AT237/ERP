@@ -626,8 +626,9 @@ export default function CustomerTable() {
     {/* Add Customer Dialog */}
     <Dialog open={showAddCustomerDialog} onOpenChange={setShowAddCustomerDialog}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+        <DialogHeader className="text-center pb-4">
           <DialogTitle className="text-xl font-bold text-orange-600">Add New Customer</DialogTitle>
+          <div className="w-full h-px bg-gray-300 mt-4"></div>
         </DialogHeader>
         
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
