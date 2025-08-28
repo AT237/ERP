@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Select, 
   SelectContent, 
@@ -25,9 +26,21 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCustomerContext } from "@/contexts/CustomerContext";
 import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical, Trash2, Copy, Download } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertCustomerSchema, type InsertCustomer } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
 
 type Customer = {
   id: string;
@@ -69,6 +82,25 @@ const filterOptions = [
   { value: 'ends_with', label: 'Ends with' },
 ];
 
+// Form schema for the Add Customer dialog
+const formSchema = insertCustomerSchema.extend({
+  paymentTerms: z.string().min(1, "Payment terms is required"),
+  // Address fields
+  street: z.string().optional(),
+  houseNumber: z.string().optional(),
+  postalCode: z.string().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  // Primary contact fields
+  primaryContactName: z.string().optional(),
+  primaryContactEmail: z.string().optional(),
+  primaryContactPhone: z.string().optional(),
+  primaryContactMobile: z.string().optional(),
+  primaryContactPosition: z.string().optional(),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
 export default function CustomerTable() {
   const customerContext = useCustomerContext();
   const {
@@ -93,6 +125,82 @@ export default function CustomerTable() {
   
   const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Form setup for Add Customer dialog
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      mobile: "",
+      address: "",
+      contactPerson: "",
+      taxId: "",
+      paymentTerms: "30",
+      status: "active",
+      bankAccount: "",
+      language: "en",
+      // Address fields
+      street: "",
+      houseNumber: "",
+      postalCode: "",
+      city: "",
+      country: "",
+      // Primary contact fields
+      primaryContactName: "",
+      primaryContactEmail: "",
+      primaryContactPhone: "",
+      primaryContactMobile: "",
+      primaryContactPosition: "",
+    }
+  });
+
+  // Mutation for creating new customer
+  const createCustomerMutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      const customerData: InsertCustomer = {
+        name: data.name,
+        email: data.email || null,
+        phone: data.phone || null,
+        mobile: data.mobile || null,
+        address: data.address || null,
+        contactPerson: data.contactPerson || null,
+        taxId: data.taxId || null,
+        paymentTerms: parseInt(data.paymentTerms),
+        status: data.status,
+        bankAccount: data.bankAccount || null,
+        language: data.language,
+      };
+      
+      return await apiRequest("/api/customers", {
+        method: "POST",
+        body: JSON.stringify(customerData),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      setShowAddCustomerDialog(false);
+      form.reset();
+      toast({
+        title: "Success",
+        description: "Customer added successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add customer. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Failed to add customer:", error);
+    }
+  });
+
+  const onSubmit = (data: FormData) => {
+    createCustomerMutation.mutate(data);
+  };
 
   const { data: customers = [], isLoading } = useQuery<Customer[]>({
     queryKey: ['/api/customers'],
@@ -198,6 +306,7 @@ export default function CustomerTable() {
   }
 
   return (
+    <>
     <div className="space-y-4">
       {/* Customer Controls Toolbar */}
       <div className="flex items-center gap-12 p-2">
@@ -513,5 +622,177 @@ export default function CustomerTable() {
         </div>
       </div>
     </div>
+
+    {/* Add Customer Dialog */}
+    <Dialog open={showAddCustomerDialog} onOpenChange={setShowAddCustomerDialog}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold text-orange-600">Add New Customer</DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Company Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+              Company Information
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="name">Company Name *</Label>
+                <Input
+                  id="name"
+                  {...form.register("name")}
+                  placeholder="Enter company name"
+                  data-testid="input-customer-name"
+                />
+                {form.formState.errors.name && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="taxId">Tax ID</Label>
+                <Input
+                  id="taxId"
+                  {...form.register("taxId")}
+                  placeholder="Tax identification number"
+                  data-testid="input-customer-tax-id"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+              Contact Information
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  {...form.register("email")}
+                  placeholder="company@example.com"
+                  data-testid="input-customer-email"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  {...form.register("phone")}
+                  placeholder="+31 20 123 4567"
+                  data-testid="input-customer-phone"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="mobile">Mobile Number</Label>
+                <Input
+                  id="mobile"
+                  {...form.register("mobile")}
+                  placeholder="+31 6 12 34 56 78"
+                  data-testid="input-customer-mobile"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bankAccount">Bank Account</Label>
+                <Input
+                  id="bankAccount"
+                  {...form.register("bankAccount")}
+                  placeholder="NL91 ABNA 0417 1643 00"
+                  data-testid="input-customer-bank-account"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Business Settings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+              Business Settings
+            </h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="paymentTerms">Payment Terms (days) *</Label>
+                <Select onValueChange={(value) => form.setValue("paymentTerms", value)}>
+                  <SelectTrigger data-testid="select-payment-terms">
+                    <SelectValue placeholder="Select payment terms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Immediate payment</SelectItem>
+                    <SelectItem value="14">14 days</SelectItem>
+                    <SelectItem value="30">30 days</SelectItem>
+                    <SelectItem value="60">60 days</SelectItem>
+                    <SelectItem value="90">90 days</SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.paymentTerms && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.paymentTerms.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select onValueChange={(value) => form.setValue("status", value)}>
+                  <SelectTrigger data-testid="select-customer-status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="prospect">Prospect</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="language">Preferred Language</Label>
+                <Select onValueChange={(value) => form.setValue("language", value)}>
+                  <SelectTrigger data-testid="select-customer-language">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="nl">Dutch</SelectItem>
+                    <SelectItem value="de">German</SelectItem>
+                    <SelectItem value="fr">French</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex items-center justify-end space-x-4 pt-6 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowAddCustomerDialog(false)}
+              data-testid="button-cancel-customer"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+              disabled={createCustomerMutation.isPending}
+              data-testid="button-save-customer"
+            >
+              {createCustomerMutation.isPending ? "Adding..." : "Add Customer"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
