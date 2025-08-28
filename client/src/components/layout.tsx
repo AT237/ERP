@@ -216,9 +216,11 @@ export default function Layout({ children }: LayoutProps) {
 
       if (activeTab.id === 'suppliers') {
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
-            <SupplierTable />
-          </Suspense>
+          <div className="p-6">
+            <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+              <SupplierTable />
+            </Suspense>
+          </div>
         );
       }
       
