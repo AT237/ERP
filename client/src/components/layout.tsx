@@ -265,9 +265,9 @@ export default function Layout({ children }: LayoutProps) {
               {tabs.map((tab) => (
                 <div
                   key={tab.id}
-                  className={`flex items-center gap-1 px-3 py-2 rounded-t-xl transition-colors cursor-pointer min-w-0 font-sans ${
+                  className={`flex items-center gap-1 px-3 py-2 rounded-t-xl transition-colors cursor-pointer min-w-0 font-sans mb-[-2px] ${
                     activeTabId === tab.id
-                      ? 'bg-orange-500 text-white relative z-10'
+                      ? 'bg-orange-500 text-white relative z-10 border-2 border-orange-500 border-b-0'
                       : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200'
                   }`}
                   onClick={() => setActiveTabId(tab.id)}
