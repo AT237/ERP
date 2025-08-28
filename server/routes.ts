@@ -67,6 +67,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/customers/:id", async (req, res) => {
+    try {
+      const customerData = insertCustomerSchema.partial().parse(req.body);
+      const customer = await storage.updateCustomer(req.params.id, customerData);
+      res.json(customer);
+    } catch (error) {
+      console.error("Error updating customer:", error);
+      res.status(400).json({ message: "Failed to update customer" });
+    }
+  });
+
   app.delete("/api/customers/:id", async (req, res) => {
     try {
       await storage.deleteCustomer(req.params.id);
