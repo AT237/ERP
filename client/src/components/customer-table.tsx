@@ -628,7 +628,7 @@ export default function CustomerTable() {
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4">
           <div className="flex justify-center">
-            <DialogTitle className="text-xl font-bold text-orange-600">Add New Customer</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-orange-600">Add New Customer</DialogTitle>
           </div>
           <div className="w-full h-px bg-gray-300 mt-4"></div>
         </DialogHeader>
