@@ -109,7 +109,7 @@ function SortableNavItem({ item, sectionId, isEditMode, onMenuClick }: { item: a
 
   const [location] = useLocation();
   const Icon = item.icon;
-  const isActive = location === item.href || (item.href === "/dashboard" && location === "/");
+  const isActive = location === item.href;
 
   const style = {
     transform: CSS.Transform.toString(transform),
