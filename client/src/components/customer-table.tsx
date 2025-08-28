@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCustomerContext } from "@/contexts/CustomerContext";
-import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical, Trash2 } from "lucide-react";
+import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical, Trash2, Copy, Download } from "lucide-react";
 
 type Customer = {
   id: string;
@@ -266,12 +266,69 @@ export default function CustomerTable() {
           
           <Button 
             size="sm" 
-            className="h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+            className="h-8 text-xs bg-green-600 text-white hover:bg-green-700"
             onClick={() => setShowAddCustomerDialog(true)}
           >
             <Plus size={14} className="mr-1" />
-            Toevoegen
+            Add Customer
           </Button>
+          
+          {/* Duplicate button - only show when exactly 1 row is selected */}
+          {selectedRows.length === 1 && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="h-8 text-xs"
+              onClick={() => {
+                // TODO: Implement duplicate functionality
+                console.log('Duplicate customer:', selectedRows[0]);
+              }}
+            >
+              <Copy size={14} className="mr-1" />
+              Duplicate
+            </Button>
+          )}
+          
+          {/* Export button - only show when rows are selected */}
+          {selectedRows.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <Download size={14} className="mr-1" />
+                  Export ({selectedRows.length})
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem
+                  onClick={() => {
+                    // TODO: Implement Excel export
+                    console.log('Export to Excel:', selectedRows);
+                  }}
+                  className="text-xs"
+                >
+                  Export to Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    // TODO: Implement PDF export
+                    console.log('Export to PDF:', selectedRows);
+                  }}
+                  className="text-xs"
+                >
+                  Export to PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    // TODO: Implement Word export
+                    console.log('Export to Word:', selectedRows);
+                  }}
+                  className="text-xs"
+                >
+                  Export to Word
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           
           <Button 
             size="sm" 
