@@ -273,6 +273,17 @@ export default function CustomerTable() {
             Add Customer
           </Button>
           
+          <Button 
+            size="sm" 
+            variant="destructive" 
+            className={`h-8 text-xs ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+            disabled={selectedRows.length === 0}
+            onClick={deleteSelectedRows}
+          >
+            <Trash2 size={14} className="mr-1" />
+            Verwijderen {selectedRows.length > 0 && `(${selectedRows.length})`}
+          </Button>
+          
           {/* Duplicate button - always visible, disabled when not exactly 1 row selected */}
           <Button 
             size="sm" 
@@ -331,17 +342,6 @@ export default function CustomerTable() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
-          <Button 
-            size="sm" 
-            variant="destructive" 
-            className={`h-8 text-xs ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
-            disabled={selectedRows.length === 0}
-            onClick={deleteSelectedRows}
-          >
-            <Trash2 size={14} className="mr-1" />
-            Verwijderen {selectedRows.length > 0 && `(${selectedRows.length})`}
-          </Button>
         </div>
       </div>
 
