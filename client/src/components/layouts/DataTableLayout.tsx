@@ -215,7 +215,7 @@ function DraggableColumnHeader({
     <TableHead
       ref={setNodeRef}
       style={dragStyle}
-      className={`${className} ${isDragging ? 'z-50' : ''}`}
+      className={`${className} ${isDragging ? 'z-50' : ''} whitespace-nowrap`}
       data-testid={`column-header-${column.key}`}
     >
       <div className="flex items-center gap-2">
@@ -601,7 +601,7 @@ export function DataTableLayout<T = any>({
                             className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-muted rounded px-1 py-1"
                             onClick={() => column.sortable && onSort(column.key)}
                           >
-                            <span>{column.label}</span>
+                            <span className="whitespace-nowrap">{column.label}</span>
                             {column.sortable && (
                               <div className="flex items-center">
                                 {sortConfig?.column === column.key ? (
