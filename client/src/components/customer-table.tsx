@@ -135,8 +135,6 @@ export default function CustomerTable() {
       email: "",
       phone: "",
       mobile: "",
-      address: "",
-      contactPerson: "",
       taxId: "",
       paymentTerms: "30",
       status: "active",
@@ -165,8 +163,6 @@ export default function CustomerTable() {
         email: data.email || null,
         phone: data.phone || null,
         mobile: data.mobile || null,
-        address: data.address || null,
-        contactPerson: data.contactPerson || null,
         taxId: data.taxId || null,
         paymentTerms: parseInt(data.paymentTerms),
         status: data.status,
@@ -174,10 +170,19 @@ export default function CustomerTable() {
         language: data.language,
       };
       
-      return await apiRequest("/api/customers", {
+      const response = await fetch("/api/customers", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(customerData),
       });
+      
+      if (!response.ok) {
+        throw new Error("Failed to create customer");
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
@@ -639,7 +644,7 @@ export default function CustomerTable() {
             <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
               Company Information
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
                 <Label htmlFor="name">Company Name *</Label>
                 <Input
@@ -672,7 +677,7 @@ export default function CustomerTable() {
             <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
               Contact Information
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
                 <Label htmlFor="email">Email Address</Label>
                 <Input
@@ -716,26 +721,72 @@ export default function CustomerTable() {
             </div>
           </div>
 
+          {/* Contact Persons */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+              Contact Persons
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="contactPersons">Select Contact Persons</Label>
+                <div className="flex gap-2">
+                  <Select>
+                    <SelectTrigger data-testid="select-contact-persons" className="flex-1">
+                      <SelectValue placeholder="Select existing contact persons" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="john-doe">John Doe - Sales Manager</SelectItem>
+                      <SelectItem value="jane-smith">Jane Smith - Project Manager</SelectItem>
+                      <SelectItem value="mike-jones">Mike Jones - Technical Lead</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => {/* TODO: Open contact person dialog */}}
+                    data-testid="button-add-contact-person"
+                  >
+                    <Plus size={16} />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Business Settings */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
               Business Settings
             </h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-4">
               <div>
                 <Label htmlFor="paymentTerms">Payment Terms (days) *</Label>
-                <Select onValueChange={(value) => form.setValue("paymentTerms", value)}>
-                  <SelectTrigger data-testid="select-payment-terms">
-                    <SelectValue placeholder="Select payment terms" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">Immediate payment</SelectItem>
-                    <SelectItem value="14">14 days</SelectItem>
-                    <SelectItem value="30">30 days</SelectItem>
-                    <SelectItem value="60">60 days</SelectItem>
-                    <SelectItem value="90">90 days</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select onValueChange={(value) => form.setValue("paymentTerms", value)}>
+                    <SelectTrigger data-testid="select-payment-terms" className="flex-1">
+                      <SelectValue placeholder="Select payment terms" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Immediate payment</SelectItem>
+                      <SelectItem value="14">14 days</SelectItem>
+                      <SelectItem value="30">30 days</SelectItem>
+                      <SelectItem value="60">60 days</SelectItem>
+                      <SelectItem value="90">90 days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => {/* TODO: Open payment terms dialog */}}
+                    data-testid="button-add-payment-terms"
+                  >
+                    <Plus size={16} />
+                  </Button>
+                </div>
                 {form.formState.errors.paymentTerms && (
                   <p className="text-sm text-destructive mt-1">
                     {form.formState.errors.paymentTerms.message}
@@ -745,16 +796,28 @@ export default function CustomerTable() {
 
               <div>
                 <Label htmlFor="status">Status</Label>
-                <Select onValueChange={(value) => form.setValue("status", value)}>
-                  <SelectTrigger data-testid="select-customer-status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="prospect">Prospect</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select onValueChange={(value) => form.setValue("status", value)}>
+                    <SelectTrigger data-testid="select-customer-status" className="flex-1">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="prospect">Prospect</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => {/* TODO: Open status dialog */}}
+                    data-testid="button-add-status"
+                  >
+                    <Plus size={16} />
+                  </Button>
+                </div>
               </div>
 
               <div>
