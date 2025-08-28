@@ -342,11 +342,13 @@ export default function CustomerTable() {
         }
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, customerIds) => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      setSelectedRows([]);
+      setShowDeleteConfirmDialog(false);
       toast({
         title: "Succesvol",
-        description: `${selectedRows.length} ${selectedRows.length === 1 ? 'klant' : 'klanten'} verwijderd`,
+        description: `${customerIds.length} ${customerIds.length === 1 ? 'klant' : 'klanten'} verwijderd`,
       });
     },
     onError: (error) => {
@@ -1428,8 +1430,6 @@ export default function CustomerTable() {
           <AlertDialogAction 
             onClick={() => {
               deleteCustomersMutation.mutate(selectedRows);
-              setShowDeleteConfirmDialog(false);
-              setSelectedRows([]);
             }}
             disabled={deleteCustomersMutation.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
