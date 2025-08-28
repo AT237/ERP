@@ -444,7 +444,7 @@ export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
   return (
     <aside className="w-72 bg-card border-r border-border flex flex-col">
       {/* Search Bar and Settings */}
-      <div className="px-4 pt-4 pb-2 border-b border-border">
+      <div className="px-4 border-b border-border pt-[9px] pb-[9px]">
         <div className="flex items-center gap-2">
           {/* Toggle All Sections Button */}
           <button
@@ -503,7 +503,6 @@ export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
           )}
         </div>
       </div>
-      
       <nav className="flex-1 p-4 space-y-1.5">
         {searchQuery.trim() && (
           <div className="text-xs text-muted-foreground mb-2">
