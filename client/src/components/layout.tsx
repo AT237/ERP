@@ -266,9 +266,9 @@ export default function Layout({ children }: LayoutProps) {
               {tabs.map((tab) => (
                 <div
                   key={tab.id}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-t-lg transition-colors cursor-pointer min-w-0 font-sans ${
+                  className={`flex items-center gap-1 px-3 py-1 rounded-t-xl transition-colors cursor-pointer min-w-0 font-sans ${
                     activeTabId === tab.id
-                      ? 'bg-white border-2 border-orange-500 border-b-0 text-orange-600 relative z-10'
+                      ? 'bg-orange-500 text-white relative z-10'
                       : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200'
                   }`}
                   onClick={() => setActiveTabId(tab.id)}
@@ -302,7 +302,9 @@ export default function Layout({ children }: LayoutProps) {
                       e.stopPropagation();
                       closeTab(tab.id);
                     }}
-                    className="p-0.5 hover:bg-gray-300 rounded-full transition-colors"
+                    className={`p-0.5 rounded-full transition-colors ${
+                      activeTabId === tab.id ? 'hover:bg-orange-600' : 'hover:bg-gray-300'
+                    }`}
                     data-testid={`close-tab-${tab.id}`}
                   >
                     <X size={12} />
@@ -314,7 +316,7 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Main content area with orange border to connect with active tab */}
           <main className={`flex-1 flex flex-col overflow-hidden ${
-            tabs.length > 0 ? 'border-2 border-orange-500 bg-white' : 'bg-white'
+            tabs.length > 0 ? 'border-2 border-orange-500 bg-white rounded-lg' : 'bg-white'
           }`}>
             <Header activeTab={tabs.find(tab => tab.id === activeTabId)} />
             
