@@ -685,14 +685,14 @@ export default function CustomerTable() {
                         customer.email || '-'
                       ) : column.key === 'phone' ? (
                         customer.phone || '-'
-                      ) : column.key === 'address' ? (
-                        <span className="truncate" title={customer.addressId ? 'Address linked' : '-'}>
-                          {customer.addressId ? 'Address linked' : '-'}
-                        </span>
-                      ) : column.key === 'contactPerson' ? (
-                        'N/A'
+                      ) : column.key === 'mobile' ? (
+                        customer.mobile || '-'
                       ) : column.key === 'taxId' ? (
                         customer.taxId || '-'
+                      ) : column.key === 'bankAccount' ? (
+                        customer.bankAccount || '-'
+                      ) : column.key === 'language' ? (
+                        customer.language || '-'
                       ) : column.key === 'paymentTerms' ? (
                         `${customer.paymentTerms}d`
                       ) : column.key === 'status' ? (
@@ -1098,6 +1098,38 @@ export default function CustomerTable() {
         )}
       </DialogContent>
     </Dialog>
+    {/* Column Visibility Dialog */}
+    <Dialog open={showColumnDialog} onOpenChange={setShowColumnDialog}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Manage Columns</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">Toggle column visibility:</p>
+          <div className="space-y-3">
+            {columns.map((column) => (
+              <div key={column.key} className="flex items-center justify-between">
+                <label className="text-sm font-medium">{column.label}</label>
+                <Checkbox
+                  checked={column.visible}
+                  onCheckedChange={() => toggleColumnVisibility(column.key)}
+                  className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setShowColumnDialog(false)}
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+
     </>
   );
 }
