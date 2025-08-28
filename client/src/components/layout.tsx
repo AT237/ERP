@@ -213,6 +213,73 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
+      // Master Data components
+      if (activeTab.id === 'uom') {
+        return (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <p className="text-muted-foreground">Units of Measure management will be implemented here.</p>
+              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+            </div>
+          </div>
+        );
+      }
+      
+      if (activeTab.id === 'payment-terms') {
+        return (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <p className="text-muted-foreground">Payment Terms management will be implemented here.</p>
+              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+            </div>
+          </div>
+        );
+      }
+      
+      if (activeTab.id === 'incoterms') {
+        return (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <p className="text-muted-foreground">Incoterms management will be implemented here.</p>
+              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+            </div>
+          </div>
+        );
+      }
+      
+      if (activeTab.id === 'vat') {
+        return (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <p className="text-muted-foreground">VAT Rates management will be implemented here.</p>
+              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+            </div>
+          </div>
+        );
+      }
+      
+      if (activeTab.id === 'cities') {
+        return (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <p className="text-muted-foreground">Cities management will be implemented here.</p>
+              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+            </div>
+          </div>
+        );
+      }
+      
+      if (activeTab.id === 'statuses') {
+        return (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <p className="text-muted-foreground">Statuses management will be implemented here.</p>
+              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+            </div>
+          </div>
+        );
+      }
+      
       // Default placeholder for other menu items
       return (
         <div className="p-6">

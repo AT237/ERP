@@ -2,6 +2,7 @@ import {
   users, customers, suppliers, inventoryItems, projects, quotations, quotationItems,
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, workOrders,
   packingLists, packingListItems, userPreferences,
+  unitsOfMeasure, paymentTerms, incoterms, vatRates, cities, statuses,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type InventoryItem, type InsertInventoryItem,
   type Project, type InsertProject, type Quotation, type InsertQuotation,
@@ -9,7 +10,10 @@ import {
   type InvoiceItem, type InsertInvoiceItem, type PurchaseOrder, type InsertPurchaseOrder,
   type PurchaseOrderItem, type InsertPurchaseOrderItem, type WorkOrder, type InsertWorkOrder,
   type PackingList, type InsertPackingList, type PackingListItem, type InsertPackingListItem,
-  type UserPreferences, type InsertUserPreferences
+  type UserPreferences, type InsertUserPreferences,
+  type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentTerm, type InsertPaymentTerm,
+  type Incoterm, type InsertIncoterm, type VatRate, type InsertVatRate,
+  type City, type InsertCity, type Status, type InsertStatus
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, or, ilike } from "drizzle-orm";
@@ -113,6 +117,37 @@ export interface IStorage {
     lowStockCount: number;
     outOfStockCount: number;
   }>;
+
+  // Master Data methods
+  getUnitsOfMeasure(): Promise<UnitOfMeasure[]>;
+  createUnitOfMeasure(uom: InsertUnitOfMeasure): Promise<UnitOfMeasure>;
+  updateUnitOfMeasure(id: string, uom: Partial<InsertUnitOfMeasure>): Promise<UnitOfMeasure>;
+  deleteUnitOfMeasure(id: string): Promise<void>;
+
+  getPaymentTerms(): Promise<PaymentTerm[]>;
+  createPaymentTerm(term: InsertPaymentTerm): Promise<PaymentTerm>;
+  updatePaymentTerm(id: string, term: Partial<InsertPaymentTerm>): Promise<PaymentTerm>;
+  deletePaymentTerm(id: string): Promise<void>;
+
+  getIncoterms(): Promise<Incoterm[]>;
+  createIncoterm(incoterm: InsertIncoterm): Promise<Incoterm>;
+  updateIncoterm(id: string, incoterm: Partial<InsertIncoterm>): Promise<Incoterm>;
+  deleteIncoterm(id: string): Promise<void>;
+
+  getVatRates(): Promise<VatRate[]>;
+  createVatRate(rate: InsertVatRate): Promise<VatRate>;
+  updateVatRate(id: string, rate: Partial<InsertVatRate>): Promise<VatRate>;
+  deleteVatRate(id: string): Promise<void>;
+
+  getCities(): Promise<City[]>;
+  createCity(city: InsertCity): Promise<City>;
+  updateCity(id: string, city: Partial<InsertCity>): Promise<City>;
+  deleteCity(id: string): Promise<void>;
+
+  getStatuses(): Promise<Status[]>;
+  createStatus(status: InsertStatus): Promise<Status>;
+  updateStatus(id: string, status: Partial<InsertStatus>): Promise<Status>;
+  deleteStatus(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -549,6 +584,115 @@ export class DatabaseStorage implements IStorage {
       lowStockCount: Number(lowStockResult[0]?.count || 0),
       outOfStockCount: Number(outOfStockResult[0]?.count || 0),
     };
+  }
+
+  // Master Data methods implementation
+  async getUnitsOfMeasure(): Promise<UnitOfMeasure[]> {
+    return await db.select().from(unitsOfMeasure).where(eq(unitsOfMeasure.isActive, true)).orderBy(unitsOfMeasure.name);
+  }
+
+  async createUnitOfMeasure(uom: InsertUnitOfMeasure): Promise<UnitOfMeasure> {
+    const [newUom] = await db.insert(unitsOfMeasure).values(uom).returning();
+    return newUom;
+  }
+
+  async updateUnitOfMeasure(id: string, uom: Partial<InsertUnitOfMeasure>): Promise<UnitOfMeasure> {
+    const [updatedUom] = await db.update(unitsOfMeasure).set(uom).where(eq(unitsOfMeasure.id, id)).returning();
+    return updatedUom;
+  }
+
+  async deleteUnitOfMeasure(id: string): Promise<void> {
+    await db.update(unitsOfMeasure).set({ isActive: false }).where(eq(unitsOfMeasure.id, id));
+  }
+
+  async getPaymentTerms(): Promise<PaymentTerm[]> {
+    return await db.select().from(paymentTerms).where(eq(paymentTerms.isActive, true)).orderBy(paymentTerms.days);
+  }
+
+  async createPaymentTerm(term: InsertPaymentTerm): Promise<PaymentTerm> {
+    const [newTerm] = await db.insert(paymentTerms).values(term).returning();
+    return newTerm;
+  }
+
+  async updatePaymentTerm(id: string, term: Partial<InsertPaymentTerm>): Promise<PaymentTerm> {
+    const [updatedTerm] = await db.update(paymentTerms).set(term).where(eq(paymentTerms.id, id)).returning();
+    return updatedTerm;
+  }
+
+  async deletePaymentTerm(id: string): Promise<void> {
+    await db.update(paymentTerms).set({ isActive: false }).where(eq(paymentTerms.id, id));
+  }
+
+  async getIncoterms(): Promise<Incoterm[]> {
+    return await db.select().from(incoterms).where(eq(incoterms.isActive, true)).orderBy(incoterms.code);
+  }
+
+  async createIncoterm(incoterm: InsertIncoterm): Promise<Incoterm> {
+    const [newIncoterm] = await db.insert(incoterms).values(incoterm).returning();
+    return newIncoterm;
+  }
+
+  async updateIncoterm(id: string, incoterm: Partial<InsertIncoterm>): Promise<Incoterm> {
+    const [updatedIncoterm] = await db.update(incoterms).set(incoterm).where(eq(incoterms.id, id)).returning();
+    return updatedIncoterm;
+  }
+
+  async deleteIncoterm(id: string): Promise<void> {
+    await db.update(incoterms).set({ isActive: false }).where(eq(incoterms.id, id));
+  }
+
+  async getVatRates(): Promise<VatRate[]> {
+    return await db.select().from(vatRates).where(eq(vatRates.isActive, true)).orderBy(vatRates.rate);
+  }
+
+  async createVatRate(rate: InsertVatRate): Promise<VatRate> {
+    const [newRate] = await db.insert(vatRates).values(rate).returning();
+    return newRate;
+  }
+
+  async updateVatRate(id: string, rate: Partial<InsertVatRate>): Promise<VatRate> {
+    const [updatedRate] = await db.update(vatRates).set(rate).where(eq(vatRates.id, id)).returning();
+    return updatedRate;
+  }
+
+  async deleteVatRate(id: string): Promise<void> {
+    await db.update(vatRates).set({ isActive: false }).where(eq(vatRates.id, id));
+  }
+
+  async getCities(): Promise<City[]> {
+    return await db.select().from(cities).where(eq(cities.isActive, true)).orderBy(cities.name);
+  }
+
+  async createCity(city: InsertCity): Promise<City> {
+    const [newCity] = await db.insert(cities).values(city).returning();
+    return newCity;
+  }
+
+  async updateCity(id: string, city: Partial<InsertCity>): Promise<City> {
+    const [updatedCity] = await db.update(cities).set(city).where(eq(cities.id, id)).returning();
+    return updatedCity;
+  }
+
+  async deleteCity(id: string): Promise<void> {
+    await db.update(cities).set({ isActive: false }).where(eq(cities.id, id));
+  }
+
+  async getStatuses(): Promise<Status[]> {
+    return await db.select().from(statuses).where(eq(statuses.isActive, true)).orderBy(statuses.category, statuses.name);
+  }
+
+  async createStatus(status: InsertStatus): Promise<Status> {
+    const [newStatus] = await db.insert(statuses).values(status).returning();
+    return newStatus;
+  }
+
+  async updateStatus(id: string, status: Partial<InsertStatus>): Promise<Status> {
+    const [updatedStatus] = await db.update(statuses).set(status).where(eq(statuses.id, id)).returning();
+    return updatedStatus;
+  }
+
+  async deleteStatus(id: string): Promise<void> {
+    await db.update(statuses).set({ isActive: false }).where(eq(statuses.id, id));
   }
 }
 

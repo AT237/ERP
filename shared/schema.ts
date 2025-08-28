@@ -233,6 +233,69 @@ export const packingListItems = pgTable("packing_list_items", {
   packedQuantity: integer("packed_quantity").default(0),
 });
 
+// Master Data tables
+export const unitsOfMeasure = pgTable("units_of_measure", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const paymentTerms = pgTable("payment_terms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  days: integer("days").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const incoterms = pgTable("incoterms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const vatRates = pgTable("vat_rates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  rate: decimal("rate", { precision: 5, scale: 2 }).notNull(),
+  country: text("country").default("NL"),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const cities = pgTable("cities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  postalCode: text("postal_code").notNull(),
+  country: text("country").notNull(),
+  region: text("region"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const statuses = pgTable("statuses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  category: text("category").notNull(),
+  color: text("color"),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Define relations
 export const addressesRelations = relations(addresses, ({ many }) => ({
   customers: many(customers),
@@ -403,6 +466,14 @@ export const insertWorkOrderSchema = createInsertSchema(workOrders).omit({ id: t
 export const insertPackingListSchema = createInsertSchema(packingLists).omit({ id: true, createdAt: true });
 export const insertPackingListItemSchema = createInsertSchema(packingListItems).omit({ id: true });
 
+// Master Data insert schemas
+export const insertUnitOfMeasureSchema = createInsertSchema(unitsOfMeasure).omit({ id: true, createdAt: true });
+export const insertPaymentTermSchema = createInsertSchema(paymentTerms).omit({ id: true, createdAt: true });
+export const insertIncotermSchema = createInsertSchema(incoterms).omit({ id: true, createdAt: true });
+export const insertVatRateSchema = createInsertSchema(vatRates).omit({ id: true, createdAt: true });
+export const insertCitySchema = createInsertSchema(cities).omit({ id: true, createdAt: true });
+export const insertStatusSchema = createInsertSchema(statuses).omit({ id: true, createdAt: true });
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -438,3 +509,17 @@ export type PackingList = typeof packingLists.$inferSelect;
 export type InsertPackingList = z.infer<typeof insertPackingListSchema>;
 export type PackingListItem = typeof packingListItems.$inferSelect;
 export type InsertPackingListItem = z.infer<typeof insertPackingListItemSchema>;
+
+// Master Data types
+export type UnitOfMeasure = typeof unitsOfMeasure.$inferSelect;
+export type InsertUnitOfMeasure = z.infer<typeof insertUnitOfMeasureSchema>;
+export type PaymentTerm = typeof paymentTerms.$inferSelect;
+export type InsertPaymentTerm = z.infer<typeof insertPaymentTermSchema>;
+export type Incoterm = typeof incoterms.$inferSelect;
+export type InsertIncoterm = z.infer<typeof insertIncotermSchema>;
+export type VatRate = typeof vatRates.$inferSelect;
+export type InsertVatRate = z.infer<typeof insertVatRateSchema>;
+export type City = typeof cities.$inferSelect;
+export type InsertCity = z.infer<typeof insertCitySchema>;
+export type Status = typeof statuses.$inferSelect;
+export type InsertStatus = z.infer<typeof insertStatusSchema>;

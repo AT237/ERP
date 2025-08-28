@@ -6,7 +6,9 @@ import {
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
   insertInvoiceSchema, insertInvoiceItemSchema, insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema, insertWorkOrderSchema, insertPackingListSchema,
-  insertPackingListItemSchema, insertUserPreferencesSchema
+  insertPackingListItemSchema, insertUserPreferencesSchema,
+  insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
+  insertVatRateSchema, insertCitySchema, insertStatusSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -661,6 +663,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error saving user preferences:", error);
       res.status(400).json({ message: "Failed to save user preferences" });
+    }
+  });
+
+  // Master Data routes - Units of Measure
+  app.get("/api/masterdata/units-of-measure", async (req, res) => {
+    try {
+      const units = await storage.getUnitsOfMeasure();
+      res.json(units);
+    } catch (error) {
+      console.error("Error fetching units of measure:", error);
+      res.status(500).json({ message: "Failed to fetch units of measure" });
+    }
+  });
+
+  app.post("/api/masterdata/units-of-measure", async (req, res) => {
+    try {
+      const unitData = insertUnitOfMeasureSchema.parse(req.body);
+      const unit = await storage.createUnitOfMeasure(unitData);
+      res.json(unit);
+    } catch (error) {
+      console.error("Error creating unit of measure:", error);
+      res.status(400).json({ message: "Failed to create unit of measure" });
+    }
+  });
+
+  // Master Data routes - Payment Terms
+  app.get("/api/masterdata/payment-terms", async (req, res) => {
+    try {
+      const terms = await storage.getPaymentTerms();
+      res.json(terms);
+    } catch (error) {
+      console.error("Error fetching payment terms:", error);
+      res.status(500).json({ message: "Failed to fetch payment terms" });
+    }
+  });
+
+  app.post("/api/masterdata/payment-terms", async (req, res) => {
+    try {
+      const termData = insertPaymentTermSchema.parse(req.body);
+      const term = await storage.createPaymentTerm(termData);
+      res.json(term);
+    } catch (error) {
+      console.error("Error creating payment term:", error);
+      res.status(400).json({ message: "Failed to create payment term" });
+    }
+  });
+
+  // Master Data routes - Incoterms
+  app.get("/api/masterdata/incoterms", async (req, res) => {
+    try {
+      const incoterms = await storage.getIncoterms();
+      res.json(incoterms);
+    } catch (error) {
+      console.error("Error fetching incoterms:", error);
+      res.status(500).json({ message: "Failed to fetch incoterms" });
+    }
+  });
+
+  app.post("/api/masterdata/incoterms", async (req, res) => {
+    try {
+      const incotermData = insertIncotermSchema.parse(req.body);
+      const incoterm = await storage.createIncoterm(incotermData);
+      res.json(incoterm);
+    } catch (error) {
+      console.error("Error creating incoterm:", error);
+      res.status(400).json({ message: "Failed to create incoterm" });
+    }
+  });
+
+  // Master Data routes - VAT Rates
+  app.get("/api/masterdata/vat-rates", async (req, res) => {
+    try {
+      const rates = await storage.getVatRates();
+      res.json(rates);
+    } catch (error) {
+      console.error("Error fetching VAT rates:", error);
+      res.status(500).json({ message: "Failed to fetch VAT rates" });
+    }
+  });
+
+  app.post("/api/masterdata/vat-rates", async (req, res) => {
+    try {
+      const rateData = insertVatRateSchema.parse(req.body);
+      const rate = await storage.createVatRate(rateData);
+      res.json(rate);
+    } catch (error) {
+      console.error("Error creating VAT rate:", error);
+      res.status(400).json({ message: "Failed to create VAT rate" });
+    }
+  });
+
+  // Master Data routes - Cities
+  app.get("/api/masterdata/cities", async (req, res) => {
+    try {
+      const cities = await storage.getCities();
+      res.json(cities);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+      res.status(500).json({ message: "Failed to fetch cities" });
+    }
+  });
+
+  app.post("/api/masterdata/cities", async (req, res) => {
+    try {
+      const cityData = insertCitySchema.parse(req.body);
+      const city = await storage.createCity(cityData);
+      res.json(city);
+    } catch (error) {
+      console.error("Error creating city:", error);
+      res.status(400).json({ message: "Failed to create city" });
+    }
+  });
+
+  // Master Data routes - Statuses
+  app.get("/api/masterdata/statuses", async (req, res) => {
+    try {
+      const statuses = await storage.getStatuses();
+      res.json(statuses);
+    } catch (error) {
+      console.error("Error fetching statuses:", error);
+      res.status(500).json({ message: "Failed to fetch statuses" });
+    }
+  });
+
+  app.post("/api/masterdata/statuses", async (req, res) => {
+    try {
+      const statusData = insertStatusSchema.parse(req.body);
+      const status = await storage.createStatus(statusData);
+      res.json(status);
+    } catch (error) {
+      console.error("Error creating status:", error);
+      res.status(400).json({ message: "Failed to create status" });
     }
   });
 
