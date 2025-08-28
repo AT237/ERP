@@ -444,7 +444,7 @@ export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
   return (
     <aside className="w-72 bg-card border-r border-border flex flex-col">
       {/* Search Bar and Settings */}
-      <div className="px-4 border-b border-border pt-[9px] pb-[9px]">
+      <div className="px-4 border-b border-border pt-[7px] pb-[7px]">
         <div className="flex items-center gap-2">
           {/* Toggle All Sections Button */}
           <button
