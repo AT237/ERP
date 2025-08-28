@@ -253,7 +253,6 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
       </div>
-      
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         <Sidebar onSectionClick={handleSectionClick} onMenuClick={handleMenuClick} />
@@ -266,11 +265,7 @@ export default function Layout({ children }: LayoutProps) {
               {tabs.map((tab) => (
                 <div
                   key={tab.id}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-t-xl transition-colors cursor-pointer min-w-0 font-sans ${
-                    activeTabId === tab.id
-                      ? 'bg-orange-500 text-white relative z-10'
-                      : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200'
-                  }`}
+                  className="flex items-center gap-1 px-3 py-1 rounded-t-xl transition-colors cursor-pointer min-w-0 font-sans bg-orange-500 text-white relative z-10 pt-[7px] pb-[7px]"
                   onClick={() => setActiveTabId(tab.id)}
                   onMouseDown={(e) => {
                     // Middle mouse button (scroll wheel click) to close tab
