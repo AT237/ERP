@@ -374,14 +374,14 @@ export function DataTableLayout<T = any>({
     <>
       <div className="space-y-4">
         {/* Header with Title and Controls - matching original customer layout */}
-        <div className="flex items-center gap-20 p-2">
+        <div className="relative p-2">
           {/* Title Section */}
-          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-6 py-3 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10 w-fit">
+          <div className="absolute left-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-6 py-3 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10 w-fit">
             <h2 className="text-xl font-bold text-orange-800 dark:text-orange-200 whitespace-nowrap">{entityNamePlural}</h2>
           </div>
           
-          {/* Actions Section */}
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 flex items-center gap-2">
+          {/* Actions Section - starts at fixed coordinate */}
+          <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 flex items-center gap-2">
             {/* Search */}
             <div className="relative">
               <Input
