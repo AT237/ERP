@@ -281,7 +281,9 @@ export default function CustomerTable() {
             onClick={deleteSelectedRows}
           >
             <Trash2 size={14} className="mr-1" />
-            Delete{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
+            <span className="min-w-[3rem] text-left">
+              Delete{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
+            </span>
           </Button>
           
           {/* Duplicate button - always visible, disabled when not exactly 1 row selected */}
@@ -309,7 +311,9 @@ export default function CustomerTable() {
                 disabled={selectedRows.length === 0}
               >
                 <Download size={14} className="mr-1" />
-                Export{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
+                <span className="min-w-[3rem] text-left">
+                  Export{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
