@@ -350,14 +350,14 @@ export default function CustomerTable() {
       setSelectedRows([]);
       setShowDeleteConfirmDialog(false);
       toast({
-        title: "Succesvol",
-        description: `${customerIds.length} ${customerIds.length === 1 ? 'klant' : 'klanten'} verwijderd`,
+        title: "Success",
+        description: `${customerIds.length} ${customerIds.length === 1 ? 'customer' : 'customers'} deleted`,
       });
     },
     onError: (error) => {
       toast({
-        title: "Fout",
-        description: "Er ging iets mis bij het verwijderen van de klanten",
+        title: "Error",
+        description: "Failed to delete customers. Please try again.",
         variant: "destructive",
       });
       console.error("Failed to delete customers:", error);
