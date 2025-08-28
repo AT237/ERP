@@ -31,6 +31,7 @@ interface CustomerContextType {
   setSelectedRows: (rows: string[]) => void;
   toggleRowSelection: (id: string) => void;
   toggleAllRows: (customerIds: string[]) => void;
+  deleteSelectedRows: () => void;
   showAddCustomerDialog: boolean;
   setShowAddCustomerDialog: (show: boolean) => void;
   showColumnDialog: boolean;
@@ -97,6 +98,15 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteSelectedRows = () => {
+    if (selectedRows.length > 0) {
+      // Here you would typically call an API to delete the customers
+      console.log('Deleting customers:', selectedRows);
+      // After successful deletion, clear the selection
+      setSelectedRows([]);
+    }
+  };
+
   return (
     <CustomerContext.Provider value={{
       searchTerm,
@@ -113,6 +123,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       setSelectedRows,
       toggleRowSelection,
       toggleAllRows,
+      deleteSelectedRows,
       showAddCustomerDialog,
       setShowAddCustomerDialog,
       showColumnDialog,

@@ -8,7 +8,7 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { useCustomerContext } from "@/contexts/CustomerContext";
-import { Plus, User, Search, Filter, Settings } from "lucide-react";
+import { Plus, User, Search, Filter, Settings, Trash2 } from "lucide-react";
 
 const pageLabels: Record<string, { title: string; description: string }> = {
   "dashboard": { title: "Dashboard", description: "Overview of your business operations" },
@@ -132,6 +132,17 @@ export default function Header({ activeTab }: HeaderProps) {
             >
               <Plus size={14} className="mr-1" />
               Toevoegen
+            </Button>
+            
+            <Button 
+              size="sm" 
+              variant="destructive" 
+              className={`h-8 text-xs ${customerContext.selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+              disabled={customerContext.selectedRows.length === 0}
+              onClick={customerContext.deleteSelectedRows}
+            >
+              <Trash2 size={14} className="mr-1" />
+              Verwijderen {customerContext.selectedRows.length > 0 && `(${customerContext.selectedRows.length})`}
             </Button>
           </div>
         )}

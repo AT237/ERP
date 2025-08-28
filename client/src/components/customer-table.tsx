@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCustomerContext } from "@/contexts/CustomerContext";
-import { Filter, ChevronDown, Plus, Search, Trash2, Settings, Eye, EyeOff, GripVertical } from "lucide-react";
+import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical } from "lucide-react";
 
 type Customer = {
   id: string;
@@ -196,19 +196,6 @@ export default function CustomerTable() {
 
   return (
     <div className="space-y-2">
-      {/* Compact Controls - Only delete button now */}
-      {selectedRows.length > 0 && (
-        <div className="flex items-center justify-end gap-2 py-1">
-          <Button 
-            size="sm" 
-            variant="destructive" 
-            className="h-8 text-xs"
-          >
-            <Trash2 size={14} className="mr-1" />
-            Verwijderen ({selectedRows.length})
-          </Button>
-        </div>
-      )}
 
       {/* Active Filters - Compact */}
       {filters.length > 0 && (
