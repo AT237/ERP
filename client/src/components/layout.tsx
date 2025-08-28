@@ -314,7 +314,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Main content area with orange border to connect with active tab */}
-          <main className={`flex-1 flex flex-col overflow-hidden ${
+          <main className={`flex-1 flex flex-col overflow-hidden mt-[1px] ${
             tabs.length > 0 ? 'border-2 border-orange-500 bg-white rounded-lg' : 'bg-white'
           }`}>
             {/* Tab Content */}
