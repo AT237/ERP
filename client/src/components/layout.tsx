@@ -261,7 +261,7 @@ export default function Layout({ children }: LayoutProps) {
         {/* Right Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Tab Bar - Now at the very top of right area */}
-          <div className="bg-gray-50 px-4 py-1">
+          <div className="bg-gray-50 px-4 py-2 border-b-0">
             <div className="flex items-center space-x-1 overflow-x-auto">
               {tabs.map((tab) => (
                 <div

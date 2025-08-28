@@ -402,7 +402,7 @@ export default function CustomerTable() {
       </div>
 
       {/* Compact Table with Resizable Columns */}
-      <div className="border rounded-lg overflow-hidden">
+      <div className="rounded-lg overflow-hidden border-0">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 h-6">
