@@ -826,7 +826,7 @@ export default function CustomerTable() {
         >
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50 h-6">
+              <TableRow className="bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800 h-6 shadow-sm shadow-orange-500/10">
                 <TableHead className="w-8 p-2">
                   <div className="flex items-center justify-center h-4 w-4">
                     <Checkbox
@@ -842,7 +842,7 @@ export default function CustomerTable() {
                     <DraggableColumnHeader
                       key={column.key}
                       column={column}
-                      className="font-bold text-xs p-2 relative uppercase"
+                      className="font-bold text-xs p-2 relative uppercase text-orange-800 dark:text-orange-200"
                       style={{ width: column.width }}
                     >
                       <div className="flex items-center gap-3 pr-2">
