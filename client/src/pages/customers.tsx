@@ -296,10 +296,14 @@ export default function Customers() {
           </div>
         </div>
         
-        <Button onClick={handleNewCustomer} data-testid="button-add-customer">
+        <button 
+          onClick={() => alert("SIMPLE BUTTON WORKS!")} 
+          className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+          data-testid="button-add-customer"
+        >
           <Plus className="mr-2" size={16} />
-          Add Customer
-        </Button>
+          Add Customer (TEST)
+        </button>
       </div>
 
       {/* Customer Dialog */}
