@@ -281,7 +281,7 @@ export default function CustomerTable() {
             onClick={deleteSelectedRows}
           >
             <Trash2 size={14} className="mr-1" />
-            Verwijderen {selectedRows.length > 0 && `(${selectedRows.length})`}
+            Delete {selectedRows.length > 0 && `(${selectedRows.length})`}
           </Button>
           
           {/* Duplicate button - always visible, disabled when not exactly 1 row selected */}
