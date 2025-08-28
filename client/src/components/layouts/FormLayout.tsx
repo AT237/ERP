@@ -1,0 +1,165 @@
+import React, { ReactNode } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Plus } from "lucide-react";
+
+export interface FormField {
+  key: string;
+  label: string;
+  type: 'text' | 'email' | 'tel' | 'select' | 'custom';
+  placeholder?: string;
+  required?: boolean;
+  options?: { value: string; label: string }[];
+  customComponent?: ReactNode;
+  addButton?: {
+    onClick: () => void;
+    'data-testid'?: string;
+  };
+  register?: any; // react-hook-form register
+  error?: string;
+  setValue?: (value: string) => void;
+  'data-testid'?: string;
+}
+
+export interface FormSection {
+  title: string;
+  fields: FormField[];
+}
+
+export interface FormLayoutProps {
+  sections: FormSection[];
+  onSubmit: () => void;
+  onCancel: () => void;
+  submitLabel: string;
+  cancelLabel?: string;
+  isSubmitting?: boolean;
+  submitVariant?: 'default' | 'destructive';
+}
+
+export function FormLayout({
+  sections,
+  onSubmit,
+  onCancel,
+  submitLabel,
+  cancelLabel = "Cancel",
+  isSubmitting = false,
+  submitVariant = 'default'
+}: FormLayoutProps) {
+  
+  const renderField = (field: FormField) => {
+    const baseInputProps = {
+      id: field.key,
+      placeholder: field.placeholder,
+      'data-testid': field['data-testid'] || `input-${field.key}`,
+      className: "flex-1"
+    };
+
+    switch (field.type) {
+      case 'select':
+        return (
+          <div className="flex gap-2 flex-1">
+            <Select onValueChange={field.setValue}>
+              <SelectTrigger 
+                data-testid={field['data-testid'] || `select-${field.key}`} 
+                className="flex-1"
+              >
+                <SelectValue placeholder={field.placeholder} />
+              </SelectTrigger>
+              <SelectContent>
+                {field.options?.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {field.addButton && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                onClick={field.addButton.onClick}
+                data-testid={field.addButton['data-testid']}
+              >
+                <Plus size={16} />
+              </Button>
+            )}
+          </div>
+        );
+      
+      case 'custom':
+        return field.customComponent;
+      
+      default:
+        return (
+          <Input
+            {...baseInputProps}
+            type={field.type}
+            {...(field.register || {})}
+          />
+        );
+    }
+  };
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-6">
+      {sections.map((section, sectionIndex) => (
+        <div key={sectionIndex} className="space-y-4">
+          <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">
+            {section.title}
+          </h3>
+          <div className="space-y-4">
+            {section.fields.map((field) => (
+              <div key={field.key} className="flex items-center gap-4">
+                <Label 
+                  htmlFor={field.key} 
+                  className="w-32 text-right"
+                >
+                  {field.label} {field.required && '*'}
+                </Label>
+                <div className="flex-1">
+                  {renderField(field)}
+                  {field.error && (
+                    <p className="text-sm text-destructive mt-1">
+                      {field.error}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* Form Actions */}
+      <div className="flex items-center justify-end space-x-4 pt-6 border-t">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          data-testid="button-form-cancel"
+        >
+          {cancelLabel}
+        </Button>
+        <Button
+          type="submit"
+          className={submitVariant === 'default' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
+          variant={submitVariant}
+          disabled={isSubmitting}
+          data-testid="button-form-submit"
+        >
+          {submitLabel}
+        </Button>
+      </div>
+    </form>
+  );
+}

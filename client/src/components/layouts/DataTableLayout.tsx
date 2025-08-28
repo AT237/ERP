@@ -1,0 +1,656 @@
+import React, { useState, useEffect, ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Filter, 
+  ChevronDown, 
+  Plus, 
+  Search, 
+  Settings, 
+  Eye, 
+  EyeOff, 
+  GripVertical, 
+  Trash2, 
+  Copy, 
+  Download,
+  ChevronUp, 
+  ChevronsUpDown 
+} from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import {
+  CSS,
+} from '@dnd-kit/utilities';
+
+export type FilterType = 'contains' | 'not_contains' | 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'starts_with' | 'ends_with';
+
+export type ColumnFilter = {
+  column: string;
+  type: FilterType;
+  value: string;
+};
+
+export type ColumnConfig = {
+  key: string;
+  label: string;
+  visible: boolean;
+  width: number;
+  filterable: boolean;
+  sortable: boolean;
+  renderCell?: (value: any, row: any) => ReactNode;
+};
+
+export type SortConfig = {
+  column: string;
+  direction: 'asc' | 'desc';
+} | null;
+
+export type DataTableAction = {
+  key: string;
+  label: string;
+  icon?: ReactNode;
+  onClick: () => void;
+  variant?: 'default' | 'outline' | 'destructive';
+  disabled?: boolean;
+};
+
+export interface DataTableLayoutProps<T = any> {
+  // Data and loading state
+  data: T[];
+  isLoading: boolean;
+  
+  // Table configuration
+  columns: ColumnConfig[];
+  setColumns: (columns: ColumnConfig[] | ((prev: ColumnConfig[]) => ColumnConfig[])) => void;
+  
+  // Search and filtering
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  filters: ColumnFilter[];
+  setFilters: (filters: ColumnFilter[]) => void;
+  onAddFilter: (columnKey: string) => void;
+  onUpdateFilter: (index: number, filter: ColumnFilter) => void;
+  onRemoveFilter: (index: number) => void;
+  
+  // Sorting
+  sortConfig: SortConfig;
+  onSort: (column: string) => void;
+  
+  // Row selection
+  selectedRows: string[];
+  setSelectedRows: (rows: string[]) => void;
+  onToggleRowSelection: (id: string) => void;
+  onToggleAllRows: () => void;
+  
+  // Actions
+  headerActions?: DataTableAction[];
+  rowActions?: (row: T) => DataTableAction[];
+  
+  // Dialogs
+  addEditDialog?: {
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    title: string;
+    content: ReactNode;
+  };
+  
+  detailDialog?: {
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    title: string;
+    content: ReactNode;
+  };
+  
+  deleteConfirmDialog?: {
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    onConfirm: () => void;
+    itemCount: number;
+  };
+  
+  // Event handlers
+  onRowDoubleClick?: (row: T) => void;
+  getRowId: (row: T) => string;
+  
+  // Customization
+  entityName: string; // e.g., "Customer", "Supplier", "Product"
+  entityNamePlural: string; // e.g., "Customers", "Suppliers", "Products"
+  
+  // Filter and search function
+  applyFiltersAndSearch: (data: T[], searchTerm: string, filters: ColumnFilter[]) => T[];
+  applySorting: (data: T[], sortConfig: SortConfig) => T[];
+}
+
+const filterOptions = [
+  { value: 'contains', label: 'Contains' },
+  { value: 'not_contains', label: 'Does not contain' },
+  { value: 'equals', label: 'Equals' },
+  { value: 'not_equals', label: 'Does not equal' },
+  { value: 'greater_than', label: 'Greater than' },
+  { value: 'less_than', label: 'Less than' },
+  { value: 'starts_with', label: 'Starts with' },
+  { value: 'ends_with', label: 'Ends with' },
+];
+
+// Draggable Column Header Component
+function DraggableColumnHeader({ 
+  column, 
+  children, 
+  className,
+  style 
+}: { 
+  column: ColumnConfig;
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: column.key,
+  });
+
+  const dragStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    ...style,
+  };
+
+  return (
+    <TableHead
+      ref={setNodeRef}
+      style={dragStyle}
+      className={`${className} ${isDragging ? 'z-50' : ''}`}
+      data-testid={`column-header-${column.key}`}
+    >
+      <div className="flex items-center gap-2">
+        <div
+          className="cursor-grab active:cursor-grabbing p-1 -m-1 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
+        {children}
+      </div>
+    </TableHead>
+  );
+}
+
+export function DataTableLayout<T = any>({
+  data,
+  isLoading,
+  columns,
+  setColumns,
+  searchTerm,
+  setSearchTerm,
+  filters,
+  setFilters,
+  onAddFilter,
+  onUpdateFilter,
+  onRemoveFilter,
+  sortConfig,
+  onSort,
+  selectedRows,
+  setSelectedRows,
+  onToggleRowSelection,
+  onToggleAllRows,
+  headerActions = [],
+  rowActions,
+  addEditDialog,
+  detailDialog,
+  deleteConfirmDialog,
+  onRowDoubleClick,
+  getRowId,
+  entityName,
+  entityNamePlural,
+  applyFiltersAndSearch,
+  applySorting,
+}: DataTableLayoutProps<T>) {
+  
+  const [showColumnDialog, setShowColumnDialog] = useState(false);
+  const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Column order state - get visible columns in their current order
+  const currentVisibleColumns = columns.filter(col => col.visible);
+  const columnOrder = currentVisibleColumns.map(col => col.key);
+
+  // Handle drag end
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = columnOrder.indexOf(active.id as string);
+      const newIndex = columnOrder.indexOf(over.id as string);
+      
+      // Create new column order
+      const newColumnOrder = arrayMove(columnOrder, oldIndex, newIndex);
+      
+      // Reorder the columns array to match the new order
+      const reorderedColumns = columns.map(col => {
+        if (!col.visible) return col; // Keep non-visible columns as is
+        return { ...col };
+      });
+
+      // Sort the visible columns by their new order
+      const visibleCols = reorderedColumns.filter(col => col.visible);
+      const nonVisibleCols = reorderedColumns.filter(col => !col.visible);
+      
+      const sortedVisibleCols = newColumnOrder.map(key => 
+        visibleCols.find(col => col.key === key)!
+      );
+
+      setColumns([...sortedVisibleCols, ...nonVisibleCols]);
+    }
+  };
+
+  // Column resizing handlers
+  const handleMouseDown = (e: React.MouseEvent, columnKey: string) => {
+    e.preventDefault();
+    const column = columns.find(col => col.key === columnKey);
+    if (column) {
+      setResizing({
+        column: columnKey,
+        startX: e.clientX,
+        startWidth: column.width
+      });
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (resizing) {
+      const diff = e.clientX - resizing.startX;
+      const newWidth = Math.max(60, resizing.startWidth + diff);
+      setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => 
+        col.key === resizing.column ? { ...col, width: newWidth } : col
+      ));
+    }
+  };
+
+  const handleMouseUp = () => {
+    setResizing(null);
+  };
+
+  useEffect(() => {
+    if (resizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [resizing]);
+
+  // Column visibility toggle
+  const toggleColumnVisibility = (columnKey: string) => {
+    setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => 
+      col.key === columnKey ? { ...col, visible: !col.visible } : col
+    ));
+  };
+
+  // Apply filters and search
+  const filteredData = applyFiltersAndSearch(data, searchTerm, filters);
+  const sortedData = applySorting(filteredData, sortConfig);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Loading {entityNamePlural.toLowerCase()}...</div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="space-y-4">
+        {/* Header with Search, Filters and Actions */}
+        <div className="flex items-center justify-between gap-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+          {/* Left side - Search and Filters */}
+          <div className="flex items-center gap-4 flex-1">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder={`Search ${entityNamePlural.toLowerCase()}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                data-testid="input-search"
+              />
+            </div>
+
+            {/* Active Filters */}
+            {filters.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Filters:</span>
+                {filters.map((filter, index) => (
+                  <div key={index} className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs flex items-center gap-1">
+                    <span>{columns.find(col => col.key === filter.column)?.label}: {filter.value}</span>
+                    <button
+                      onClick={() => onRemoveFilter(index)}
+                      className="text-orange-600 hover:text-orange-800"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right side - Actions */}
+          <div className="flex items-center gap-2">
+            {/* Selected row actions */}
+            {selectedRows.length > 0 && (
+              <div className="flex items-center gap-2 mr-4">
+                <span className="text-sm text-gray-600">{selectedRows.length} selected</span>
+                {deleteConfirmDialog && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => deleteConfirmDialog.onOpenChange(true)}
+                    data-testid="button-delete-selected"
+                  >
+                    <Trash2 size={16} className="mr-1" />
+                    Delete
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Header Actions */}
+            {headerActions.map((action) => (
+              <Button
+                key={action.key}
+                size="sm"
+                variant={action.variant || 'default'}
+                onClick={action.onClick}
+                disabled={action.disabled}
+                data-testid={`button-${action.key}`}
+                className={action.variant === 'default' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
+              >
+                {action.icon && <span className="mr-1">{action.icon}</span>}
+                {action.label}
+              </Button>
+            ))}
+
+            {/* Column Settings */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" data-testid="button-column-settings">
+                  <Settings size={16} className="mr-1" />
+                  Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="p-2">
+                  <div className="text-sm font-medium mb-2">Toggle Columns</div>
+                  {columns.map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.key}
+                      checked={column.visible}
+                      onCheckedChange={() => toggleColumnVisibility(column.key)}
+                      className="text-xs"
+                    >
+                      {column.visible ? <Eye size={12} className="mr-2" /> : <EyeOff size={12} className="mr-2" />}
+                      {column.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50 dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-900">
+                  {/* Select All Checkbox */}
+                  <TableHead className="w-12 p-2" style={{ width: 48 }}>
+                    <div className="flex items-center justify-center">
+                      <Checkbox
+                        checked={selectedRows.length === sortedData.length && sortedData.length > 0}
+                        onCheckedChange={onToggleAllRows}
+                        className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                        data-testid="checkbox-select-all"
+                      />
+                    </div>
+                  </TableHead>
+
+                  {/* Column Headers */}
+                  <SortableContext 
+                    items={columnOrder} 
+                    strategy={horizontalListSortingStrategy}
+                  >
+                    {currentVisibleColumns.map((column) => (
+                      <DraggableColumnHeader
+                        key={column.key}
+                        column={column}
+                        className="relative select-none text-xs font-semibold text-gray-700 dark:text-gray-300 p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        style={{ width: column.width, minWidth: column.width, maxWidth: column.width }}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div 
+                            className={`flex items-center gap-2 ${column.sortable ? 'cursor-pointer' : ''}`}
+                            onClick={() => column.sortable && onSort(column.key)}
+                          >
+                            <span>{column.label}</span>
+                            {column.sortable && (
+                              <div className="flex items-center">
+                                {sortConfig?.column === column.key ? (
+                                  sortConfig.direction === 'asc' ? (
+                                    <ChevronUp size={14} className="text-orange-600" />
+                                  ) : (
+                                    <ChevronDown size={14} className="text-orange-600" />
+                                  )
+                                ) : (
+                                  <ChevronsUpDown size={14} className="opacity-30" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          {column.filterable && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => onAddFilter(column.key)}
+                              className="h-6 w-6 p-1 opacity-50 hover:opacity-100 flex-shrink-0 hover:bg-orange-100 dark:hover:bg-orange-800/30"
+                            >
+                              <Filter size={12} />
+                            </Button>
+                          )}
+                        </div>
+                        {/* Resize Handle */}
+                        <div 
+                          className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/20 active:bg-primary/40"
+                          onMouseDown={(e) => handleMouseDown(e, column.key)}
+                        />
+                      </DraggableColumnHeader>
+                    ))}
+                  </SortableContext>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={currentVisibleColumns.length + 1} className="text-center py-4 text-xs text-muted-foreground">
+                      No {entityNamePlural.toLowerCase()} found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  sortedData.map((row) => {
+                    const rowId = getRowId(row);
+                    return (
+                      <TableRow 
+                        key={rowId} 
+                        className={`hover:bg-muted/30 text-xs cursor-pointer ${
+                          selectedRows.includes(rowId) ? 'bg-muted/50' : 'bg-transparent'
+                        }`}
+                        style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
+                        onDoubleClick={() => onRowDoubleClick?.(row)}
+                      >
+                        <TableCell className="p-2" style={{ height: '32px', lineHeight: '1.2' }}>
+                          <div className="flex items-center justify-center h-4 w-4">
+                            <Checkbox
+                              checked={selectedRows.includes(rowId)}
+                              onCheckedChange={() => onToggleRowSelection(rowId)}
+                              className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
+                              style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
+                            />
+                          </div>
+                        </TableCell>
+                        {currentVisibleColumns.map((column) => (
+                          <TableCell 
+                            key={column.key} 
+                            className="p-2 text-xs truncate"
+                            style={{ width: column.width, height: '32px', lineHeight: '1.2' }}
+                          >
+                            {column.renderCell 
+                              ? column.renderCell(row[column.key as keyof T], row)
+                              : String(row[column.key as keyof T] || '-')
+                            }
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </DndContext>
+        </div>
+      </div>
+
+      {/* Add/Edit Dialog */}
+      {addEditDialog && (
+        <Dialog open={addEditDialog.isOpen} onOpenChange={addEditDialog.onOpenChange}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-4">
+              <div className="flex justify-center">
+                <DialogTitle className="text-2xl font-bold text-orange-600">
+                  {addEditDialog.title}
+                </DialogTitle>
+              </div>
+              <div className="w-full h-px bg-gray-300 mt-4"></div>
+            </DialogHeader>
+            {addEditDialog.content}
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Detail Dialog */}
+      {detailDialog && (
+        <Dialog open={detailDialog.isOpen} onOpenChange={detailDialog.onOpenChange}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-4">
+              <div className="flex justify-center">
+                <DialogTitle className="text-2xl font-bold text-orange-600">
+                  {detailDialog.title}
+                </DialogTitle>
+              </div>
+              <div className="w-full h-px bg-gray-300 mt-4"></div>
+            </DialogHeader>
+            {detailDialog.content}
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmDialog && (
+        <AlertDialog open={deleteConfirmDialog.isOpen} onOpenChange={deleteConfirmDialog.onOpenChange}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {deleteConfirmDialog.itemCount} {deleteConfirmDialog.itemCount === 1 ? entityName.toLowerCase() : entityNamePlural.toLowerCase()}? 
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={deleteConfirmDialog.onConfirm}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+    </>
+  );
+}

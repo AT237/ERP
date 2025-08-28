@@ -20,6 +20,16 @@ The frontend is built with **React 18** using TypeScript and follows a component
 
 The frontend follows a modular structure with shared components, page-specific components, and utility functions organized in separate directories.
 
+### Reusable Layout System
+A comprehensive layout system has been implemented to ensure consistency across different data management interfaces:
+
+- **DataTableLayout**: A fully-featured table component with search, filtering, sorting, column management, drag & drop reordering, row selection, and dialog support for CRUD operations
+- **FormLayout**: A structured form component with section-based organization, multiple field types, automatic error handling, and standardized styling
+- **useDataTable Hook**: Custom hook for managing table state including columns, filters, sorting, and row selection
+- **Type Safety**: Full TypeScript support with generic types for different data entities
+
+This system is used across customer, supplier, inventory, and other data management interfaces to provide a consistent user experience and reduce code duplication.
+
 ## Backend Architecture
 The backend uses **Node.js with Express.js** in a RESTful API pattern:
 
