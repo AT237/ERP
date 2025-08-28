@@ -407,11 +407,14 @@ export default function CustomerTable() {
           <TableHeader>
             <TableRow className="bg-muted/50 h-6">
               <TableHead className="w-8 p-2">
-                <Checkbox
-                  checked={selectedRows.length === filteredCustomers.length && filteredCustomers.length > 0}
-                  onCheckedChange={() => toggleAllRows(filteredCustomers.map(customer => customer.id))}
-                  className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
-                />
+                <div className="flex items-center justify-center h-4 w-4">
+                  <Checkbox
+                    checked={selectedRows.length === filteredCustomers.length && filteredCustomers.length > 0}
+                    onCheckedChange={() => toggleAllRows(filteredCustomers.map(customer => customer.id))}
+                    className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
+                    style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
+                  />
+                </div>
               </TableHead>
               {visibleColumns.map((column) => (
                 <TableHead 
@@ -458,11 +461,14 @@ export default function CustomerTable() {
                   style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
                 >
                   <TableCell className="p-2" style={{ height: '32px', lineHeight: '1.2' }}>
-                    <Checkbox
-                      checked={selectedRows.includes(customer.id)}
-                      onCheckedChange={() => toggleRowSelection(customer.id)}
-                      className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
-                    />
+                    <div className="flex items-center justify-center h-4 w-4">
+                      <Checkbox
+                        checked={selectedRows.includes(customer.id)}
+                        onCheckedChange={() => toggleRowSelection(customer.id)}
+                        className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
+                        style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
+                      />
+                    </div>
                   </TableCell>
                   {visibleColumns.map((column) => (
                     <TableCell 
