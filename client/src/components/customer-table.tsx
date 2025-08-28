@@ -276,12 +276,12 @@ export default function CustomerTable() {
           <Button 
             size="sm" 
             variant="destructive" 
-            className={`h-8 text-xs w-20 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+            className={`h-8 text-xs w-28 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
             disabled={selectedRows.length === 0}
             onClick={deleteSelectedRows}
           >
             <Trash2 size={14} className="mr-1" />
-            <span className="min-w-[3rem] text-left">
+            <span className="min-w-[4rem] text-left">
               Delete{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
             </span>
           </Button>
@@ -307,11 +307,11 @@ export default function CustomerTable() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className={`h-8 text-xs w-20 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                className={`h-8 text-xs w-28 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
                 disabled={selectedRows.length === 0}
               >
                 <Download size={14} className="mr-1" />
-                <span className="min-w-[3rem] text-left">
+                <span className="min-w-[4rem] text-left">
                   Export{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
                 </span>
               </Button>
