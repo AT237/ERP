@@ -452,12 +452,12 @@ export default function CustomerTable() {
               filteredCustomers.map((customer) => (
                 <TableRow 
                   key={customer.id} 
-                  className={`hover:bg-muted/30 h-8 text-xs transition-colors ${
+                  className={`hover:bg-muted/30 text-xs ${
                     selectedRows.includes(customer.id) ? 'bg-muted/50' : 'bg-transparent'
                   }`}
-                  style={{ height: '32px' }}
+                  style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
                 >
-                  <TableCell className="p-2">
+                  <TableCell className="p-2" style={{ height: '32px', lineHeight: '1.2' }}>
                     <Checkbox
                       checked={selectedRows.includes(customer.id)}
                       onCheckedChange={() => toggleRowSelection(customer.id)}
@@ -468,7 +468,7 @@ export default function CustomerTable() {
                     <TableCell 
                       key={column.key} 
                       className="p-2 text-xs truncate"
-                      style={{ width: column.width }}
+                      style={{ width: column.width, height: '32px', lineHeight: '1.2' }}
                     >
                       {column.key === 'name' ? (
                         <span className="font-medium">{customer.name}</span>
