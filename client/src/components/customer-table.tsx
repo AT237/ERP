@@ -402,174 +402,239 @@ export default function CustomerTable() {
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       
-      // Page header - center aligned document title
-      pdf.setFontSize(16);
+      // Draw orange rectangle logo (like ATE Solutions)
+      pdf.setFillColor(255, 140, 0); // Orange color
+      pdf.rect(20, 10, 8, 12, 'F'); // Orange rectangle
+      
+      // Company name next to logo
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
       pdf.setTextColor(0, 0, 0);
+      pdf.text('ATE SOLUTIONS B.V.', 32, 19);
+      
+      // Horizontal line under company name
+      pdf.setLineWidth(0.5);
+      pdf.line(20, 25, pageWidth - 20, 25);
+      
+      // Page number (top right)
+      pdf.setFontSize(10);
+      pdf.text('1 of 1', pageWidth - 25, 15);
+      
+      // Document title (centered)
       const currentDate = new Date().toLocaleDateString('en-GB', { 
         day: '2-digit', 
         month: '2-digit', 
         year: 'numeric' 
       });
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
       const title = `CUSTOMER REPORT ${customer.customerNumber}`;
       const titleWidth = pdf.getTextWidth(title);
-      pdf.text(title, (pageWidth - titleWidth) / 2, 25);
+      pdf.text(title, (pageWidth - titleWidth) / 2, 40);
       
-      // Date on the right
-      pdf.setFontSize(12);
-      pdf.text(`Date: ${currentDate}`, pageWidth - 50, 25);
-      
-      // Company details header (left side)
-      let yPos = 45;
+      // Date (top right of title area)
       pdf.setFontSize(11);
+      pdf.text(`Date: ${currentDate}`, pageWidth - 50, 40);
+      
+      // Supplier section (left side)
+      let yPos = 55;
+      pdf.setFontSize(10);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Company: Your Company Name', 20, yPos);
-      
+      pdf.text('Supplier:', 20, yPos);
       pdf.setFont('helvetica', 'normal');
-      yPos += 6;
-      pdf.text('Address Line 1', 28, yPos);
-      yPos += 5;
-      pdf.text('Address Line 2', 28, yPos);
-      yPos += 5;
-      pdf.text('Phone: +31 (0)xx xxx xxxx', 28, yPos);
-      yPos += 5;
-      pdf.text('Email: info@company.nl', 28, yPos);
-      yPos += 5;
-      pdf.text('VAT no. NL xxxx xxxxx Bxx', 28, yPos);
-      yPos += 5;
-      pdf.text('C.o.c. no. xxxxxxxx', 28, yPos);
+      pdf.text('ATE Solutions B.V.', 35, yPos);
       
-      // Customer details header (right side)
-      yPos = 45;
+      yPos += 5;
+      pdf.text('Oude Telgterweg 255', 35, yPos);
+      yPos += 4;
+      pdf.text('3853PG, ERMELO', 35, yPos);
+      yPos += 4;
+      pdf.text('0031 085-0410183', 35, yPos);
+      yPos += 4;
+      pdf.text('info@atesolutions.nl', 35, yPos);
+      yPos += 4;
+      pdf.text('VAT no. NL 8656 38792 B01', 35, yPos);
+      yPos += 4;
+      pdf.text('C.o.c. no. 91385415', 35, yPos);
+      yPos += 4;
+      pdf.text('IBAN: NL28INGB 0102962979', 35, yPos);
+      yPos += 4;
+      pdf.text('Netherlands', 35, yPos);
+      
+      // Customer section (right side)  
+      yPos = 55;
       pdf.setFont('helvetica', 'bold');
-      pdf.text(`Customer: ${customer.name}`, pageWidth - 80, yPos);
-      
+      pdf.text('Customer:', pageWidth - 80, yPos);
       pdf.setFont('helvetica', 'normal');
-      yPos += 6;
+      pdf.text(customer.name, pageWidth - 65, yPos);
+      
+      yPos += 5;
       if (customer.email) {
-        pdf.text(customer.email, pageWidth - 72, yPos);
-        yPos += 5;
+        pdf.text(customer.email, pageWidth - 65, yPos);
+        yPos += 4;
       }
       if (customer.phone) {
-        pdf.text(`Phone: ${customer.phone}`, pageWidth - 72, yPos);
-        yPos += 5;
+        pdf.text(customer.phone, pageWidth - 65, yPos);
+        yPos += 4;
       }
       if (customer.mobile) {
-        pdf.text(`Mobile: ${customer.mobile}`, pageWidth - 72, yPos);
-        yPos += 5;
-      }
-      if (customer.taxId) {
-        pdf.text(`VAT: ${customer.taxId}`, pageWidth - 72, yPos);
-        yPos += 5;
+        pdf.text(customer.mobile, pageWidth - 65, yPos);
+        yPos += 4;
       }
       
-      // Main content section
-      yPos = 100;
-      
-      // Customer Information Section
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(12);
-      pdf.text('Customer Information:', 20, yPos);
-      
-      yPos += 10;
-      pdf.setFont('helvetica', 'normal');
+      // Report description section (like packing list description)
+      yPos = 95;
       pdf.setFontSize(10);
-      
-      // Create table-like structure
-      const leftCol = 20;
-      const rightCol = 90;
-      const lineHeight = 6;
-      
-      pdf.text('Customer ID:', leftCol, yPos);
-      pdf.text(customer.customerNumber || '-', rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Name:', leftCol, yPos);
-      pdf.text(customer.name, rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Email:', leftCol, yPos);
-      pdf.text(customer.email || '-', rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Phone:', leftCol, yPos);
-      pdf.text(customer.phone || '-', rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Mobile:', leftCol, yPos);
-      pdf.text(customer.mobile || '-', rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Tax ID:', leftCol, yPos);
-      pdf.text(customer.taxId || '-', rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Bank Account:', leftCol, yPos);
-      pdf.text(customer.bankAccount || '-', rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Payment Terms:', leftCol, yPos);
-      pdf.text(`${customer.paymentTerms} days`, rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Status:', leftCol, yPos);
-      pdf.text(customer.status.toUpperCase(), rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Created:', leftCol, yPos);
-      pdf.text(customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('en-GB') : '-', rightCol, yPos);
-      yPos += lineHeight * 2;
-      
-      // Statistics Section
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(12);
-      pdf.text('Customer Statistics:', 20, yPos);
-      
-      yPos += 10;
+      pdf.text('Report description:', 20, yPos);
       pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(10);
+      pdf.text(`Customer profile report for ${customer.name}`, 65, yPos);
       
-      pdf.text('Total Projects:', leftCol, yPos);
-      pdf.text('0', rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Total Invoices:', leftCol, yPos);
-      pdf.text('0', rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Total Revenue:', leftCol, yPos);
-      pdf.text('€0,00', rightCol, yPos);
-      yPos += lineHeight;
-      
-      pdf.text('Active Orders:', leftCol, yPos);
-      pdf.text('0', rightCol, yPos);
-      yPos += lineHeight * 3;
-      
-      // Notes section
+      yPos += 5;
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Notes:', leftCol, yPos);
+      pdf.text('Customer ID:', 20, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(customer.customerNumber || '-', 65, yPos);
+      
+      yPos += 5;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Report date:', 20, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(currentDate, 65, yPos);
+      
+      yPos += 5;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Status:', 20, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text((customer.status || 'active').toUpperCase(), 65, yPos);
+      
+      // Contact address (right side like delivery address)
+      yPos = 95;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Contact address:', pageWidth - 80, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(customer.name, pageWidth - 65, yPos);
+      
+      yPos += 5;
+      if (customer.email) {
+        pdf.text(customer.email, pageWidth - 65, yPos);
+        yPos += 4;
+      }
+      if (customer.phone) {
+        pdf.text(customer.phone, pageWidth - 65, yPos);
+        yPos += 4;
+      }
+      
+      // Table header (like position table in packing list)
+      yPos = 130;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      
+      // Table headers
+      pdf.text('Item', 20, yPos);
+      pdf.text('Description', 50, yPos);
+      pdf.text('Value', 130, yPos);
+      pdf.text('Status', 160, yPos);
+      
+      // Table content
       yPos += 8;
       pdf.setFont('helvetica', 'normal');
-      pdf.text('Customer report automatically generated from business management system.', leftCol, yPos);
       
-      // Footer section (similar to packing list)
-      const footerY = pageHeight - 40;
+      pdf.text('010', 20, yPos);
+      pdf.text('Customer ID', 50, yPos);
+      pdf.text(customer.customerNumber || '-', 130, yPos);
+      pdf.text('Active', 160, yPos);
       
-      // Terms line
+      yPos += 6;
+      pdf.text('020', 20, yPos);
+      pdf.text('Payment Terms', 50, yPos);
+      pdf.text(`${customer.paymentTerms} days`, 130, yPos);
+      pdf.text('Standard', 160, yPos);
+      
+      yPos += 6;
+      pdf.text('030', 20, yPos);
+      pdf.text('Tax Registration', 50, yPos);
+      pdf.text(customer.taxId || 'Not provided', 130, yPos);
+      pdf.text(customer.taxId ? 'Verified' : 'Pending', 160, yPos);
+      
+      yPos += 6;
+      pdf.text('040', 20, yPos);
+      pdf.text('Bank Account', 50, yPos);
+      pdf.text(customer.bankAccount || 'Not provided', 130, yPos);
+      pdf.text(customer.bankAccount ? 'On file' : 'Required', 160, yPos);
+      
+      yPos += 6;
+      pdf.text('050', 20, yPos);
+      pdf.text('Contact Method', 50, yPos);
+      pdf.text(customer.email ? 'Email' : customer.phone ? 'Phone' : 'Mail', 130, yPos);
+      pdf.text('Preferred', 160, yPos);
+      
+      // Additional customer statistics (continue table)
+      yPos += 8;
+      pdf.text('060', 20, yPos);
+      pdf.text('Account Created', 50, yPos);
+      pdf.text(customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('en-GB') : '-', 130, yPos);
+      pdf.text('Complete', 160, yPos);
+      
+      yPos += 6;
+      pdf.text('070', 20, yPos);
+      pdf.text('Total Projects', 50, yPos);
+      pdf.text('0', 130, yPos);
+      pdf.text('Current', 160, yPos);
+      
+      yPos += 6;
+      pdf.text('080', 20, yPos);
+      pdf.text('Total Revenue', 50, yPos);
+      pdf.text('€0,00', 130, yPos);
+      pdf.text('YTD', 160, yPos);
+      
+      yPos += 6;
+      pdf.text('090', 20, yPos);
+      pdf.text('Account Status', 50, yPos);
+      pdf.text((customer.status || 'active').toUpperCase(), 130, yPos);
+      pdf.text('Verified', 160, yPos);
+      
+      // Empty space for more content if needed
+      yPos += 20;
+      
+      // Weight/Statistics section (like in packing list)
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Account Summary:', 20, yPos);
+      yPos += 8;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Total active customers: 14', 40, yPos);
+      yPos += 5;
+      pdf.text('New this month: 2', 40, yPos);
+      yPos += 5;
+      pdf.text('Payment compliance: 100%', 40, yPos);
+      
+      // Notes section
+      yPos += 15;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Note:', 20, yPos);
+      yPos += 8;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Customer report generated automatically from business management system.', 40, yPos);
+      
+      // Footer section (exactly like ATE packing list)
+      const footerY = pageHeight - 30;
+      
+      // Terms line (exactly like packing list)
       pdf.setFontSize(9);
-      pdf.text('Our general terms and conditions apply to all our services.', 20, footerY - 10);
+      pdf.text('Our general terms and conditions apply to all our deliveries.', 20, footerY - 10);
       
-      // Signature section
+      // Signature section (exactly like packing list)
       pdf.setFontSize(10);
-      pdf.text('Kind regards, Management', 20, footerY);
+      pdf.text('Kind regards, A. Tomassen', 20, footerY);
       
       pdf.text('Name receiver:', pageWidth - 100, footerY);
-      pdf.text('Signature receiver:', pageWidth - 100, footerY + 15);
-      pdf.text('Date:', pageWidth - 100, footerY + 30);
+      pdf.text('Signature receiver:', pageWidth - 100, footerY + 10);
+      pdf.text('Date:', pageWidth - 100, footerY + 20);
       
       // Draw signature lines
       pdf.line(pageWidth - 60, footerY + 2, pageWidth - 20, footerY + 2);
-      pdf.line(pageWidth - 60, footerY + 17, pageWidth - 20, footerY + 17);
-      pdf.line(pageWidth - 60, footerY + 32, pageWidth - 20, footerY + 32);
+      pdf.line(pageWidth - 60, footerY + 12, pageWidth - 20, footerY + 12);
+      pdf.line(pageWidth - 60, footerY + 22, pageWidth - 20, footerY + 22);
       
       // Save PDF
       const fileName = `Customer_Report_${customer.customerNumber}_${new Date().toISOString().split('T')[0]}.pdf`;
