@@ -32,12 +32,15 @@ interface CustomerContextType {
   toggleRowSelection: (id: string) => void;
   toggleAllRows: (customerIds: string[]) => void;
   deleteSelectedRows: () => void;
+  confirmDeleteCustomers: () => void;
   showAddCustomerDialog: boolean;
   setShowAddCustomerDialog: (show: boolean) => void;
   showColumnDialog: boolean;
   setShowColumnDialog: (show: boolean) => void;
   showFilterDialog: boolean;
   setShowFilterDialog: (show: boolean) => void;
+  showDeleteConfirmDialog: boolean;
+  setShowDeleteConfirmDialog: (show: boolean) => void;
 }
 
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
@@ -49,6 +52,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   const [showAddCustomerDialog, setShowAddCustomerDialog] = useState(false);
   const [showColumnDialog, setShowColumnDialog] = useState(false);
   const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
 
   const [columns, setColumns] = useState<ColumnConfig[]>([
     { key: 'customerNumber', label: 'Customer ID', visible: true, width: 120, filterable: true },
@@ -102,10 +106,34 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
 
   const deleteSelectedRows = () => {
     if (selectedRows.length > 0) {
-      // Here you would typically call an API to delete the customers
-      console.log('Deleting customers:', selectedRows);
-      // After successful deletion, clear the selection
-      setSelectedRows([]);
+      setShowDeleteConfirmDialog(true);
+    }
+  };
+
+  const confirmDeleteCustomers = async () => {
+    if (selectedRows.length > 0) {
+      try {
+        // Delete each customer
+        for (const customerId of selectedRows) {
+          const response = await fetch(`/api/customers/${customerId}`, {
+            method: 'DELETE',
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Failed to delete customer ${customerId}`);
+          }
+        }
+        
+        // After successful deletion, clear the selection
+        setSelectedRows([]);
+        setShowDeleteConfirmDialog(false);
+        
+        // You might want to trigger a refetch of customers here
+        console.log('Successfully deleted customers:', selectedRows);
+      } catch (error) {
+        console.error('Error deleting customers:', error);
+        // Here you would typically show an error toast
+      }
     }
   };
 
@@ -126,12 +154,15 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       toggleRowSelection,
       toggleAllRows,
       deleteSelectedRows,
+      confirmDeleteCustomers,
       showAddCustomerDialog,
       setShowAddCustomerDialog,
       showColumnDialog,
       setShowColumnDialog,
       showFilterDialog,
       setShowFilterDialog,
+      showDeleteConfirmDialog,
+      setShowDeleteConfirmDialog,
     }}>
       {children}
     </CustomerContext.Provider>

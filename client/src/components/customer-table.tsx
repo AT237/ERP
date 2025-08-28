@@ -30,8 +30,20 @@ import {
   Dialog, 
   DialogContent, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogDescription,
+  DialogFooter 
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCustomerContext } from "@/contexts/CustomerContext";
 import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical, Trash2, Copy, Download, Mail } from "lucide-react";
@@ -182,6 +194,9 @@ export default function CustomerTable() {
     setShowAddCustomerDialog,
     showColumnDialog,
     setShowColumnDialog,
+    showDeleteConfirmDialog,
+    setShowDeleteConfirmDialog,
+    confirmDeleteCustomers,
   } = customerContext;
   
   const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
@@ -311,6 +326,36 @@ export default function CustomerTable() {
         variant: "destructive",
       });
       console.error("Failed to add customer:", error);
+    }
+  });
+
+  // Mutation for deleting customers
+  const deleteCustomersMutation = useMutation({
+    mutationFn: async (customerIds: string[]) => {
+      for (const customerId of customerIds) {
+        const response = await fetch(`/api/customers/${customerId}`, {
+          method: 'DELETE',
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to delete customer ${customerId}`);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      toast({
+        title: "Succesvol",
+        description: `${selectedRows.length} ${selectedRows.length === 1 ? 'klant' : 'klanten'} verwijderd`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fout",
+        description: "Er ging iets mis bij het verwijderen van de klanten",
+        variant: "destructive",
+      });
+      console.error("Failed to delete customers:", error);
     }
   });
 
@@ -1367,6 +1412,33 @@ export default function CustomerTable() {
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Delete Confirmation Dialog */}
+    <AlertDialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Klanten verwijderen</AlertDialogTitle>
+          <AlertDialogDescription>
+            Weet je zeker dat je {selectedRows.length} {selectedRows.length === 1 ? 'klant' : 'klanten'} wilt verwijderen? 
+            Deze actie kan niet ongedaan worden gemaakt.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuleren</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={() => {
+              deleteCustomersMutation.mutate(selectedRows);
+              setShowDeleteConfirmDialog(false);
+              setSelectedRows([]);
+            }}
+            disabled={deleteCustomersMutation.isPending}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {deleteCustomersMutation.isPending ? "Verwijderen..." : "Verwijderen"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
