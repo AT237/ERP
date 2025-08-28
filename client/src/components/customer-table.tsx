@@ -445,6 +445,31 @@ export default function CustomerTable() {
         primaryContactMobile: "",
         primaryContactPosition: "",
       });
+    } else {
+      // Reset form to default values when adding new customer
+      form.reset({
+        name: "",
+        email: "",
+        phone: "",
+        mobile: "",
+        taxId: "",
+        paymentTerms: "30",
+        status: "active",
+        bankAccount: "",
+        language: "en",
+        // Address fields
+        street: "",
+        houseNumber: "",
+        postalCode: "",
+        city: "",
+        country: "",
+        // Primary contact fields
+        primaryContactName: "",
+        primaryContactEmail: "",
+        primaryContactPhone: "",
+        primaryContactMobile: "",
+        primaryContactPosition: "",
+      });
     }
   }, [editingCustomer, form]);
 
@@ -777,7 +802,10 @@ export default function CustomerTable() {
           <Button 
             size="sm" 
             className="h-8 text-xs bg-green-600 text-white hover:bg-green-700"
-            onClick={() => setShowAddCustomerDialog(true)}
+            onClick={() => {
+              setEditingCustomer(null);
+              setShowAddCustomerDialog(true);
+            }}
           >
             <Plus size={14} className="mr-1" />
             Add Customer
