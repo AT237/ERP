@@ -397,85 +397,179 @@ export default function CustomerTable() {
         description: "Please wait while we prepare the customer report.",
       });
 
-      // Generate PDF content
-      const pdf = new jsPDF();
+      // Generate PDF content in A4 format
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
       
-      // Add header
-      pdf.setFontSize(20);
-      pdf.setTextColor(234, 88, 12); // Orange color
-      pdf.text('Customer Report', 20, 30);
-      
-      // Add customer details
-      pdf.setFontSize(12);
+      // Page header - center aligned document title
+      pdf.setFontSize(16);
       pdf.setTextColor(0, 0, 0);
+      const currentDate = new Date().toLocaleDateString('en-GB', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      });
+      const title = `CUSTOMER REPORT ${customer.customerNumber}`;
+      const titleWidth = pdf.getTextWidth(title);
+      pdf.text(title, (pageWidth - titleWidth) / 2, 25);
       
-      let yPosition = 50;
-      const lineHeight = 8;
+      // Date on the right
+      pdf.setFontSize(12);
+      pdf.text(`Date: ${currentDate}`, pageWidth - 50, 25);
       
-      pdf.text(`Customer ID: ${customer.customerNumber}`, 20, yPosition);
-      yPosition += lineHeight;
+      // Company details header (left side)
+      let yPos = 45;
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Company: Your Company Name', 20, yPos);
       
-      pdf.text(`Name: ${customer.name}`, 20, yPosition);
-      yPosition += lineHeight;
+      pdf.setFont('helvetica', 'normal');
+      yPos += 6;
+      pdf.text('Address Line 1', 28, yPos);
+      yPos += 5;
+      pdf.text('Address Line 2', 28, yPos);
+      yPos += 5;
+      pdf.text('Phone: +31 (0)xx xxx xxxx', 28, yPos);
+      yPos += 5;
+      pdf.text('Email: info@company.nl', 28, yPos);
+      yPos += 5;
+      pdf.text('VAT no. NL xxxx xxxxx Bxx', 28, yPos);
+      yPos += 5;
+      pdf.text('C.o.c. no. xxxxxxxx', 28, yPos);
       
+      // Customer details header (right side)
+      yPos = 45;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`Customer: ${customer.name}`, pageWidth - 80, yPos);
+      
+      pdf.setFont('helvetica', 'normal');
+      yPos += 6;
       if (customer.email) {
-        pdf.text(`Email: ${customer.email}`, 20, yPosition);
-        yPosition += lineHeight;
+        pdf.text(customer.email, pageWidth - 72, yPos);
+        yPos += 5;
       }
-      
       if (customer.phone) {
-        pdf.text(`Phone: ${customer.phone}`, 20, yPosition);
-        yPosition += lineHeight;
+        pdf.text(`Phone: ${customer.phone}`, pageWidth - 72, yPos);
+        yPos += 5;
       }
-      
       if (customer.mobile) {
-        pdf.text(`Mobile: ${customer.mobile}`, 20, yPosition);
-        yPosition += lineHeight;
+        pdf.text(`Mobile: ${customer.mobile}`, pageWidth - 72, yPos);
+        yPos += 5;
       }
-      
       if (customer.taxId) {
-        pdf.text(`Tax ID: ${customer.taxId}`, 20, yPosition);
-        yPosition += lineHeight;
+        pdf.text(`VAT: ${customer.taxId}`, pageWidth - 72, yPos);
+        yPos += 5;
       }
       
-      if (customer.bankAccount) {
-        pdf.text(`Bank Account: ${customer.bankAccount}`, 20, yPosition);
-        yPosition += lineHeight;
-      }
+      // Main content section
+      yPos = 100;
       
-      pdf.text(`Payment Terms: ${customer.paymentTerms} days`, 20, yPosition);
-      yPosition += lineHeight;
-      
-      pdf.text(`Status: ${customer.status}`, 20, yPosition);
-      yPosition += lineHeight;
-      
-      if (customer.createdAt) {
-        pdf.text(`Created: ${new Date(customer.createdAt).toLocaleDateString('en-US')}`, 20, yPosition);
-        yPosition += lineHeight;
-      }
-      
-      // Add statistics section
-      yPosition += 20;
-      pdf.setFontSize(14);
-      pdf.setTextColor(234, 88, 12);
-      pdf.text('Customer Statistics', 20, yPosition);
-      
-      yPosition += 15;
+      // Customer Information Section
+      pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(12);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text('Total Projects: 0', 20, yPosition);
-      yPosition += lineHeight;
-      pdf.text('Total Invoices: 0', 20, yPosition);
-      yPosition += lineHeight;
-      pdf.text('Total Revenue: €0', 20, yPosition);
-      yPosition += lineHeight;
-      pdf.text('Active Orders: 0', 20, yPosition);
+      pdf.text('Customer Information:', 20, yPos);
       
-      // Add footer
-      yPosition += 30;
+      yPos += 10;
+      pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(10);
-      pdf.setTextColor(128, 128, 128);
-      pdf.text(`Generated on ${new Date().toLocaleDateString('en-US')} at ${new Date().toLocaleTimeString('en-US')}`, 20, yPosition);
+      
+      // Create table-like structure
+      const leftCol = 20;
+      const rightCol = 90;
+      const lineHeight = 6;
+      
+      pdf.text('Customer ID:', leftCol, yPos);
+      pdf.text(customer.customerNumber || '-', rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Name:', leftCol, yPos);
+      pdf.text(customer.name, rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Email:', leftCol, yPos);
+      pdf.text(customer.email || '-', rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Phone:', leftCol, yPos);
+      pdf.text(customer.phone || '-', rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Mobile:', leftCol, yPos);
+      pdf.text(customer.mobile || '-', rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Tax ID:', leftCol, yPos);
+      pdf.text(customer.taxId || '-', rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Bank Account:', leftCol, yPos);
+      pdf.text(customer.bankAccount || '-', rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Payment Terms:', leftCol, yPos);
+      pdf.text(`${customer.paymentTerms} days`, rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Status:', leftCol, yPos);
+      pdf.text(customer.status.toUpperCase(), rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Created:', leftCol, yPos);
+      pdf.text(customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('en-GB') : '-', rightCol, yPos);
+      yPos += lineHeight * 2;
+      
+      // Statistics Section
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Customer Statistics:', 20, yPos);
+      
+      yPos += 10;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      
+      pdf.text('Total Projects:', leftCol, yPos);
+      pdf.text('0', rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Total Invoices:', leftCol, yPos);
+      pdf.text('0', rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Total Revenue:', leftCol, yPos);
+      pdf.text('€0,00', rightCol, yPos);
+      yPos += lineHeight;
+      
+      pdf.text('Active Orders:', leftCol, yPos);
+      pdf.text('0', rightCol, yPos);
+      yPos += lineHeight * 3;
+      
+      // Notes section
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Notes:', leftCol, yPos);
+      yPos += 8;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Customer report automatically generated from business management system.', leftCol, yPos);
+      
+      // Footer section (similar to packing list)
+      const footerY = pageHeight - 40;
+      
+      // Terms line
+      pdf.setFontSize(9);
+      pdf.text('Our general terms and conditions apply to all our services.', 20, footerY - 10);
+      
+      // Signature section
+      pdf.setFontSize(10);
+      pdf.text('Kind regards, Management', 20, footerY);
+      
+      pdf.text('Name receiver:', pageWidth - 100, footerY);
+      pdf.text('Signature receiver:', pageWidth - 100, footerY + 15);
+      pdf.text('Date:', pageWidth - 100, footerY + 30);
+      
+      // Draw signature lines
+      pdf.line(pageWidth - 60, footerY + 2, pageWidth - 20, footerY + 2);
+      pdf.line(pageWidth - 60, footerY + 17, pageWidth - 20, footerY + 17);
+      pdf.line(pageWidth - 60, footerY + 32, pageWidth - 20, footerY + 32);
       
       // Save PDF
       const fileName = `Customer_Report_${customer.customerNumber}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -483,7 +577,7 @@ export default function CustomerTable() {
       
       // Open Outlook with pre-filled email
       const subject = `Customer Report - ${customer.name} (${customer.customerNumber})`;
-      const body = `Dear colleague,%0A%0APlease find attached the customer report for ${customer.name} (Customer ID: ${customer.customerNumber}).%0A%0AGenerated on ${new Date().toLocaleDateString('en-US')} at ${new Date().toLocaleTimeString('en-US')}.%0A%0ABest regards`;
+      const body = `Dear colleague,%0A%0APlease find attached the customer report for ${customer.name} (Customer ID: ${customer.customerNumber}).%0A%0AGenerated on ${currentDate}.%0A%0ABest regards`;
       
       const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${body}`;
       window.open(mailtoLink, '_blank');
