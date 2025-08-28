@@ -410,17 +410,17 @@ export default function CustomerTable() {
               {visibleColumns.map((column) => (
                 <TableHead 
                   key={column.key} 
-                  className="font-bold text-xs p-2 relative uppercase"
+                  className="font-bold text-xs p-2 relative uppercase h-8"
                   style={{ width: column.width }}
                 >
-                  <div className="flex items-center gap-2 pr-2">
+                  <div className="flex items-center justify-between h-4 overflow-hidden">
                     <span className="truncate">{column.label}</span>
                     {column.filterable && (
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => addFilter(column.key)}
-                        className="h-3 w-3 p-0 opacity-50 hover:opacity-100"
+                        className="h-3 w-3 p-0 opacity-50 hover:opacity-100 flex-shrink-0 ml-1"
                       >
                         <Filter size={8} />
                       </Button>
