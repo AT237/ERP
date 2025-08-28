@@ -42,6 +42,25 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import * as XLSX from "xlsx";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import {
+  CSS,
+} from '@dnd-kit/utilities';
 
 
 type FilterType = 'contains' | 'not_contains' | 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'starts_with' | 'ends_with';
@@ -90,6 +109,53 @@ const formSchema = insertCustomerSchema.extend({
 
 type FormData = z.infer<typeof formSchema>;
 
+// Draggable Column Header Component
+function DraggableColumnHeader({ 
+  column, 
+  children, 
+  className,
+  style 
+}: { 
+  column: ColumnConfig;
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: column.key,
+  });
+
+  const dragStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    ...style,
+  };
+
+  return (
+    <TableHead
+      ref={setNodeRef}
+      style={dragStyle}
+      className={`${className} cursor-grab active:cursor-grabbing ${isDragging ? 'z-50' : ''}`}
+      {...attributes}
+      {...listeners}
+      data-testid={`column-header-${column.key}`}
+    >
+      <div className="flex items-center gap-2">
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+        {children}
+      </div>
+    </TableHead>
+  );
+}
+
 export default function CustomerTable() {
   const customerContext = useCustomerContext();
   const {
@@ -120,6 +186,53 @@ export default function CustomerTable() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Column order state - get visible columns in their current order
+  const currentVisibleColumns = columns.filter(col => col.visible);
+  const columnOrder = currentVisibleColumns.map(col => col.key);
+
+  // Handle drag end
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = columnOrder.indexOf(active.id as string);
+      const newIndex = columnOrder.indexOf(over.id as string);
+      
+      // Create new column order
+      const newColumnOrder = arrayMove(columnOrder, oldIndex, newIndex);
+      
+      // Reorder the columns array to match the new order
+      const reorderedColumns = columns.map(col => {
+        if (!col.visible) return col; // Keep non-visible columns as is
+        
+        const newPosition = newColumnOrder.indexOf(col.key);
+        return { ...col };
+      });
+
+      // Sort the visible columns by their new order
+      const visibleCols = reorderedColumns.filter(col => col.visible);
+      const nonVisibleCols = reorderedColumns.filter(col => !col.visible);
+      
+      const sortedVisibleCols = newColumnOrder.map(key => 
+        visibleCols.find(col => col.key === key)!
+      );
+
+      setColumns([...sortedVisibleCols, ...nonVisibleCols]);
+    }
+  };
 
   // Form setup for Add Customer dialog
   const form = useForm<FormData>({
@@ -494,9 +607,9 @@ export default function CustomerTable() {
 
   return (
     <>
-    <div className="space-y-4">
-      {/* Customer Controls Toolbar */}
-      <div className="flex items-center gap-12 p-2">
+      <div className="space-y-4">
+        {/* Customer Controls Toolbar */}
+        <div className="flex items-center gap-12 p-2">
         {/* Title Section */}
         <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-12 py-3 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10">
           <h2 className="text-xl font-bold text-orange-800 dark:text-orange-200">Customers</h2>
@@ -705,75 +818,83 @@ export default function CustomerTable() {
 
       {/* Compact Table with Resizable Columns */}
       <div className="rounded-lg overflow-hidden border-0">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50 h-6">
-              <TableHead className="w-8 p-2">
-                <div className="flex items-center justify-center h-4 w-4">
-                  <Checkbox
-                    checked={selectedRows.length === filteredCustomers.length && filteredCustomers.length > 0}
-                    onCheckedChange={() => toggleAllRows(filteredCustomers.map(customer => customer.id))}
-                    className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
-                    style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
-                  />
-                </div>
-              </TableHead>
-              {visibleColumns.map((column) => (
-                <TableHead 
-                  key={column.key} 
-                  className="font-bold text-xs p-2 relative uppercase"
-                  style={{ width: column.width }}
-                >
-                  <div className="flex items-center gap-3 pr-2">
-                    <span className="truncate">{column.label}</span>
-                    {column.filterable && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => addFilter(column.key)}
-                        className="h-3 w-3 p-0 opacity-50 hover:opacity-100 flex-shrink-0"
-                      >
-                        <Filter size={8} />
-                      </Button>
-                    )}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 h-6">
+                <TableHead className="w-8 p-2">
+                  <div className="flex items-center justify-center h-4 w-4">
+                    <Checkbox
+                      checked={selectedRows.length === filteredCustomers.length && filteredCustomers.length > 0}
+                      onCheckedChange={() => toggleAllRows(filteredCustomers.map(customer => customer.id))}
+                      className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
+                      style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
+                    />
                   </div>
-                  {/* Resize Handle */}
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/20 active:bg-primary/40"
-                    onMouseDown={(e) => handleMouseDown(e, column.key)}
-                  />
                 </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCustomers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={visibleColumns.length + 1} className="text-center py-4 text-xs text-muted-foreground">
-                  No customers found
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredCustomers.map((customer) => (
-                <TableRow 
-                  key={customer.id} 
-                  className={`hover:bg-muted/30 text-xs cursor-pointer ${
-                    selectedRows.includes(customer.id) ? 'bg-muted/50' : 'bg-transparent'
-                  }`}
-                  style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
-                  onDoubleClick={() => handleCustomerDoubleClick(customer)}
-                >
-                  <TableCell className="p-2" style={{ height: '32px', lineHeight: '1.2' }}>
-                    <div className="flex items-center justify-center h-4 w-4">
-                      <Checkbox
-                        checked={selectedRows.includes(customer.id)}
-                        onCheckedChange={() => toggleRowSelection(customer.id)}
-                        className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
-                        style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
+                <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
+                  {currentVisibleColumns.map((column) => (
+                    <DraggableColumnHeader
+                      key={column.key}
+                      column={column}
+                      className="font-bold text-xs p-2 relative uppercase"
+                      style={{ width: column.width }}
+                    >
+                      <div className="flex items-center gap-3 pr-2">
+                        <span className="truncate">{column.label}</span>
+                        {column.filterable && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => addFilter(column.key)}
+                            className="h-3 w-3 p-0 opacity-50 hover:opacity-100 flex-shrink-0"
+                          >
+                            <Filter size={8} />
+                          </Button>
+                        )}
+                      </div>
+                      {/* Resize Handle */}
+                      <div 
+                        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/20 active:bg-primary/40"
+                        onMouseDown={(e) => handleMouseDown(e, column.key)}
                       />
-                    </div>
+                    </DraggableColumnHeader>
+                  ))}
+                </SortableContext>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCustomers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={currentVisibleColumns.length + 1} className="text-center py-4 text-xs text-muted-foreground">
+                    No customers found
                   </TableCell>
-                  {visibleColumns.map((column) => (
+                </TableRow>
+              ) : (
+                filteredCustomers.map((customer) => (
+                  <TableRow 
+                    key={customer.id} 
+                    className={`hover:bg-muted/30 text-xs cursor-pointer ${
+                      selectedRows.includes(customer.id) ? 'bg-muted/50' : 'bg-transparent'
+                    }`}
+                    style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
+                    onDoubleClick={() => handleCustomerDoubleClick(customer)}
+                  >
+                    <TableCell className="p-2" style={{ height: '32px', lineHeight: '1.2' }}>
+                      <div className="flex items-center justify-center h-4 w-4">
+                        <Checkbox
+                          checked={selectedRows.includes(customer.id)}
+                          onCheckedChange={() => toggleRowSelection(customer.id)}
+                          className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
+                          style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
+                        />
+                      </div>
+                    </TableCell>
+                    {currentVisibleColumns.map((column) => (
                     <TableCell 
                       key={column.key} 
                       className="p-2 text-xs truncate"
@@ -813,14 +934,13 @@ export default function CustomerTable() {
                 </TableRow>
               ))
             )}
-          </TableBody>
-        </Table>
-        </div>
+            </TableBody>
+          </Table>
+        </DndContext>
       </div>
-    </div>
 
-    {/* Add Customer Dialog */}
-    <Dialog open={showAddCustomerDialog} onOpenChange={setShowAddCustomerDialog}>
+      {/* Add Customer Dialog */}
+      <Dialog open={showAddCustomerDialog} onOpenChange={setShowAddCustomerDialog}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4">
           <div className="flex justify-center">
@@ -1240,8 +1360,8 @@ export default function CustomerTable() {
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-
+      </Dialog>
+      </div>
     </>
   );
 }
