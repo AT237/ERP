@@ -260,7 +260,7 @@ export default function Layout({ children }: LayoutProps) {
         {/* Right Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Tab Bar - Now at the very top of right area */}
-          <div className="bg-gray-50 px-4 pb-0 pt-2 border-b-0">
+          <div className="bg-gray-50 px-4 border-b-0 h-[62px] flex items-end">
             <div className="flex items-end space-x-1 overflow-x-auto">
               {tabs.map((tab) => (
                 <div
@@ -314,7 +314,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Main content area with orange border to connect with active tab */}
-          <main className={`flex-1 flex flex-col overflow-hidden mt-[3px] ${
+          <main className={`flex-1 flex flex-col overflow-hidden ${
             tabs.length > 0 ? 'border-2 border-orange-500 bg-white rounded-lg' : 'bg-white'
           }`}>
             {/* Tab Content */}
