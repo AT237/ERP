@@ -576,13 +576,13 @@ export function DataTableLayout<T = any>({
           >
             <Table>
               <TableHeader>
-                <TableRow className="bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800 h-6 shadow-sm shadow-orange-500/10">
+                <TableRow>
                   <TableHead className="w-8 p-2">
                     <div className="flex items-center justify-center h-4 w-4">
                       <Checkbox
                         checked={selectedRows.length === sortedData.length && sortedData.length > 0}
                         onCheckedChange={onToggleAllRows}
-                        className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
+                        className="h-4 w-4 flex-shrink-0"
                         style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
                       />
                     </div>
@@ -593,12 +593,12 @@ export function DataTableLayout<T = any>({
                       <DraggableColumnHeader
                         key={column.key}
                         column={column}
-                        className="font-bold text-xs p-2 relative uppercase text-orange-800 dark:text-orange-200"
+                        className="font-medium"
                         style={{ width: column.width }}
                       >
                         <div className="flex items-center gap-2 pr-2">
                           <div 
-                            className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded px-1 py-1"
+                            className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-muted rounded px-1 py-1"
                             onClick={() => column.sortable && onSort(column.key)}
                           >
                             <span>{column.label}</span>
@@ -606,9 +606,9 @@ export function DataTableLayout<T = any>({
                               <div className="flex items-center">
                                 {sortConfig?.column === column.key ? (
                                   sortConfig.direction === 'asc' ? (
-                                    <ChevronUp size={14} className="text-orange-600" />
+                                    <ChevronUp size={14} className="text-muted-foreground" />
                                   ) : (
-                                    <ChevronDown size={14} className="text-orange-600" />
+                                    <ChevronDown size={14} className="text-muted-foreground" />
                                   )
                                 ) : (
                                   <ChevronsUpDown size={14} className="opacity-30" />
@@ -621,7 +621,7 @@ export function DataTableLayout<T = any>({
                               variant="ghost"
                               size="icon"
                               onClick={() => onAddFilter(column.key)}
-                              className="h-6 w-6 p-1 opacity-50 hover:opacity-100 flex-shrink-0 hover:bg-orange-100 dark:hover:bg-orange-800/30"
+                              className="h-6 w-6 p-1 opacity-50 hover:opacity-100 flex-shrink-0 hover:bg-muted"
                             >
                               <Filter size={12} />
                             </Button>
