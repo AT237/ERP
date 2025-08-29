@@ -669,7 +669,7 @@ export function DataTableLayout<T = any>({
                         {currentVisibleColumns.map((column) => (
                           <TableCell 
                             key={column.key} 
-                            className="p-2 truncate"
+                            className="p-2 truncate text-[12px]"
                             style={{ width: column.width, height: '32px', lineHeight: '1.2' }}
                           >
                             {column.renderCell 
