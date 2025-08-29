@@ -14,7 +14,8 @@ import { useDataTable } from '@/hooks/useDataTable';
 
 // Form schema
 const formSchema = insertCustomerContactSchema.extend({
-  name: z.string().min(1, "Name is required"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   customerId: z.string().min(1, "Customer is required"),
 });
 
@@ -23,7 +24,42 @@ type FormData = z.infer<typeof formSchema>;
 // Default column configuration for customer contacts
 const defaultColumns: ColumnConfig[] = [
   createIdColumn('id', 'Contact ID'),
-  { key: 'name', label: 'Name', visible: true, width: 200, filterable: true, sortable: true },
+  { 
+    key: 'fullName', 
+    label: 'Name', 
+    visible: true, 
+    width: 200, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: any, row: CustomerContact) => 
+      `${row.firstName} ${row.lastName}`
+  },
+  { 
+    key: 'dateOfBirth', 
+    label: 'Date of Birth', 
+    visible: true, 
+    width: 120, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: Date | null) => value ? 
+      new Date(value).toLocaleDateString('nl-NL') : "—"
+  },
+  { 
+    key: 'mobile', 
+    label: 'Mobile', 
+    visible: true, 
+    width: 140, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => value ? (
+      <div className="flex items-center space-x-2">
+        <Phone size={14} className="text-green-500" />
+        <a href={`tel:${value}`} className="text-blue-600 hover:underline text-sm">
+          {value}
+        </a>
+      </div>
+    ) : "—"
+  },
   { key: 'position', label: 'Position', visible: true, width: 150, filterable: true, sortable: true },
   { 
     key: 'email', 
@@ -116,12 +152,14 @@ export default function ContactPersonsTable() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: "",
       mobile: "",
       position: "",
       customerId: "",
+      dateOfBirth: undefined,
       isPrimary: false,
     }
   });
@@ -220,12 +258,14 @@ export default function ContactPersonsTable() {
   const handleEdit = (contact: CustomerContact) => {
     setEditingContact(contact);
     form.reset({
-      name: contact.name,
+      firstName: contact.firstName || "",
+      lastName: contact.lastName || "",
       email: contact.email || "",
       phone: contact.phone || "",
       mobile: contact.mobile || "",
       position: contact.position || "",
       customerId: contact.customerId,
+      dateOfBirth: contact.dateOfBirth ? new Date(contact.dateOfBirth) : undefined,
       isPrimary: contact.isPrimary || false,
     });
     setShowAddDialog(true);
@@ -259,13 +299,38 @@ export default function ContactPersonsTable() {
           'data-testid': "select-customer"
         },
         {
-          key: "name",
-          label: "Full Name",
+          key: "firstName",
+          label: "First Name",
           type: "text",
           required: true,
-          register: form.register("name"),
-          error: form.formState.errors.name?.message,
-          'data-testid': "input-contact-name"
+          register: form.register("firstName"),
+          error: form.formState.errors.firstName?.message,
+          'data-testid': "input-first-name"
+        },
+        {
+          key: "lastName",
+          label: "Last Name",
+          type: "text",
+          required: true,
+          register: form.register("lastName"),
+          error: form.formState.errors.lastName?.message,
+          'data-testid': "input-last-name"
+        },
+        {
+          key: "dateOfBirth",
+          label: "Date of Birth",
+          type: "text",
+          register: form.register("dateOfBirth"),
+          error: form.formState.errors.dateOfBirth?.message,
+          'data-testid': "input-date-of-birth"
+        },
+        {
+          key: "mobile",
+          label: "Mobile Number",
+          type: "text",
+          register: form.register("mobile"),
+          error: form.formState.errors.mobile?.message,
+          'data-testid': "input-mobile-number"
         },
         {
           key: "position",
@@ -312,12 +377,14 @@ export default function ContactPersonsTable() {
   const handleAddContact = () => {
     setEditingContact(null);
     form.reset({
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: "",
       mobile: "",
       position: "",
       customerId: "",
+      dateOfBirth: undefined,
       isPrimary: false,
     });
     setShowAddDialog(true);

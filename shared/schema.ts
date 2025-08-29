@@ -38,7 +38,9 @@ export const addresses = pgTable("addresses", {
 export const customerContacts = pgTable("customer_contacts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   customerId: varchar("customer_id").references(() => customers.id).notNull(),
-  name: text("name").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  dateOfBirth: timestamp("date_of_birth"),
   email: text("email"),
   phone: text("phone"),
   mobile: text("mobile"),
@@ -56,6 +58,7 @@ export const customers = pgTable("customers", {
   phone: text("phone"),
   mobile: text("mobile"),
   addressId: varchar("address_id").references(() => addresses.id),
+  contactPersonEmail: text("contact_person_email"),
   taxId: text("tax_id"),
   bankAccount: text("bank_account"),
   language: text("language").default("nl"),

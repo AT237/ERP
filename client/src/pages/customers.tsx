@@ -40,6 +40,7 @@ const formSchema = insertCustomerSchema.extend({
   primaryContactPhone: z.string().optional(),
   primaryContactMobile: z.string().optional(),
   primaryContactPosition: z.string().optional(),
+  contactPersonEmail: z.string().email().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -78,6 +79,7 @@ export default function Customers() {
       primaryContactPhone: "",
       primaryContactMobile: "",
       primaryContactPosition: "",
+      contactPersonEmail: "",
     },
   });
 
@@ -162,6 +164,7 @@ export default function Customers() {
       language: data.language,
       paymentTerms: parseInt(data.paymentTerms),
       status: data.status,
+      contactPersonEmail: data.contactPersonEmail,
       // We'll handle address and contacts separately later
     };
 
@@ -196,6 +199,7 @@ export default function Customers() {
       primaryContactPhone: "",
       primaryContactMobile: "",
       primaryContactPosition: "",
+      contactPersonEmail: customer.contactPersonEmail || "",
     });
     setIsDialogOpen(true);
   };
@@ -411,6 +415,22 @@ export default function Customers() {
                     placeholder="+31 6 12 34 56 78"
                     data-testid="input-mobile"
                   />
+                </div>
+                
+                <div>
+                  <Label htmlFor="contactPersonEmail">Contact Person Email in Company</Label>
+                  <Input
+                    id="contactPersonEmail"
+                    type="email"
+                    {...form.register("contactPersonEmail")}
+                    placeholder="contactperson@company.com"
+                    data-testid="input-contact-person-email"
+                  />
+                  {form.formState.errors.contactPersonEmail && (
+                    <p className="text-sm text-destructive mt-1">
+                      {form.formState.errors.contactPersonEmail.message}
+                    </p>
+                  )}
                 </div>
               </div>
 
