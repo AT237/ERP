@@ -339,8 +339,8 @@ export default function ContactPersonsTable() {
       getRowId={(contact) => contact.id}
       
       // UI configuration
-      entityNameSingular="contact person"
-      entityNamePlural="contact persons"
+      entityName="Contact Person"
+      entityNamePlural="Contact Persons"
       
       // Event handlers
       onRowDoubleClick={handleEdit}
@@ -365,9 +365,9 @@ export default function ContactPersonsTable() {
         filters.forEach(filter => {
           filtered = filtered.filter((contact: any) => {
             const value = contact[filter.column];
-            const filterValue = filter.value.toLowerCase();
+            const filterValue = filter.value?.toLowerCase() || '';
             
-            if (!value) return false;
+            if (!value || !filterValue) return false;
             
             switch (filter.type) {
               case 'contains':

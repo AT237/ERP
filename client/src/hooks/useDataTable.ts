@@ -83,7 +83,7 @@ export function useDataTable({ defaultColumns, defaultSort }: UseDataTableProps)
     if (!filter.value) return true;
     
     const cellValue = String(value || '').toLowerCase();
-    const filterValue = filter.value.toLowerCase();
+    const filterValue = filter.value?.toLowerCase() || '';
     
     switch (filter.type) {
       case 'contains':
