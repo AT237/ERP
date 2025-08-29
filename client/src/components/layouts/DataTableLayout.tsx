@@ -350,7 +350,18 @@ export function DataTableLayout<T = any>({
   const handleMouseMove = (e: MouseEvent) => {
     if (resizing) {
       const diff = e.clientX - resizing.startX;
-      const newWidth = Math.max(60, resizing.startWidth + diff);
+      const column = columns.find(col => col.key === resizing.column);
+      // Allow smaller minimum width for ID columns and use their existing minWidth if specified
+      let minWidth = 35; // Very small default minimum
+      if (column?.minWidth) {
+        minWidth = column.minWidth;
+      } else if (column?.key.toLowerCase().includes('id')) {
+        minWidth = 50; // Smaller minimum for ID columns
+      } else {
+        minWidth = 60; // Standard minimum for other columns
+      }
+      
+      const newWidth = Math.max(minWidth, resizing.startWidth + diff);
       setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => 
         col.key === resizing.column ? { ...col, width: newWidth } : col
       ));
