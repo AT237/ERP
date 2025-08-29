@@ -1,7 +1,7 @@
 import {
   users, customers, suppliers, inventoryItems, projects, quotations, quotationItems,
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, workOrders,
-  packingLists, packingListItems, userPreferences,
+  packingLists, packingListItems, userPreferences, customerContacts,
   unitsOfMeasure, paymentTerms, incoterms, vatRates, cities, statuses,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type InventoryItem, type InsertInventoryItem,
@@ -10,7 +10,7 @@ import {
   type InvoiceItem, type InsertInvoiceItem, type PurchaseOrder, type InsertPurchaseOrder,
   type PurchaseOrderItem, type InsertPurchaseOrderItem, type WorkOrder, type InsertWorkOrder,
   type PackingList, type InsertPackingList, type PackingListItem, type InsertPackingListItem,
-  type UserPreferences, type InsertUserPreferences,
+  type UserPreferences, type InsertUserPreferences, type CustomerContact, type InsertCustomerContact,
   type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentTerm, type InsertPaymentTerm,
   type Incoterm, type InsertIncoterm, type VatRate, type InsertVatRate,
   type City, type InsertCity, type Status, type InsertStatus
@@ -34,6 +34,14 @@ export interface IStorage {
   createCustomer(customer: InsertCustomer): Promise<Customer>;
   updateCustomer(id: string, customer: Partial<InsertCustomer>): Promise<Customer>;
   deleteCustomer(id: string): Promise<void>;
+
+  // Customer Contact methods
+  getCustomerContacts(): Promise<CustomerContact[]>;
+  getCustomerContact(id: string): Promise<CustomerContact | undefined>;
+  getCustomerContactsByCustomer(customerId: string): Promise<CustomerContact[]>;
+  createCustomerContact(contact: InsertCustomerContact): Promise<CustomerContact>;
+  updateCustomerContact(id: string, contact: Partial<InsertCustomerContact>): Promise<CustomerContact>;
+  deleteCustomerContact(id: string): Promise<void>;
 
   // Supplier methods
   getSuppliers(): Promise<Supplier[]>;
@@ -239,6 +247,36 @@ export class DatabaseStorage implements IStorage {
     await db.update(customers)
       .set({ deletedAt: sql`NOW()` })
       .where(eq(customers.id, id));
+  }
+
+  // Customer Contact methods
+  async getCustomerContacts(): Promise<CustomerContact[]> {
+    return await db.select().from(customerContacts).orderBy(desc(customerContacts.createdAt));
+  }
+
+  async getCustomerContact(id: string): Promise<CustomerContact | undefined> {
+    const [contact] = await db.select().from(customerContacts).where(eq(customerContacts.id, id));
+    return contact || undefined;
+  }
+
+  async getCustomerContactsByCustomer(customerId: string): Promise<CustomerContact[]> {
+    return await db.select().from(customerContacts)
+      .where(eq(customerContacts.customerId, customerId))
+      .orderBy(desc(customerContacts.isPrimary), desc(customerContacts.createdAt));
+  }
+
+  async createCustomerContact(contact: InsertCustomerContact): Promise<CustomerContact> {
+    const [newContact] = await db.insert(customerContacts).values(contact).returning();
+    return newContact;
+  }
+
+  async updateCustomerContact(id: string, contact: Partial<InsertCustomerContact>): Promise<CustomerContact> {
+    const [updatedContact] = await db.update(customerContacts).set(contact).where(eq(customerContacts.id, id)).returning();
+    return updatedContact;
+  }
+
+  async deleteCustomerContact(id: string): Promise<void> {
+    await db.delete(customerContacts).where(eq(customerContacts.id, id));
   }
 
   // Supplier methods

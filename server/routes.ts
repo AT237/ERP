@@ -6,7 +6,7 @@ import {
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
   insertInvoiceSchema, insertInvoiceItemSchema, insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema, insertWorkOrderSchema, insertPackingListSchema,
-  insertPackingListItemSchema, insertUserPreferencesSchema,
+  insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
   insertVatRateSchema, insertCitySchema, insertStatusSchema
 } from "@shared/schema";
@@ -87,6 +87,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting customer:", error);
       res.status(500).json({ message: "Failed to delete customer" });
+    }
+  });
+
+  // Customer Contact routes
+  app.get("/api/customer-contacts", async (req, res) => {
+    try {
+      const contacts = await storage.getCustomerContacts();
+      res.json(contacts);
+    } catch (error) {
+      console.error("Error fetching customer contacts:", error);
+      res.status(500).json({ message: "Failed to fetch customer contacts" });
+    }
+  });
+
+  app.get("/api/customer-contacts/by-customer/:customerId", async (req, res) => {
+    try {
+      const contacts = await storage.getCustomerContactsByCustomer(req.params.customerId);
+      res.json(contacts);
+    } catch (error) {
+      console.error("Error fetching customer contacts:", error);
+      res.status(500).json({ message: "Failed to fetch customer contacts" });
+    }
+  });
+
+  app.get("/api/customer-contacts/:id", async (req, res) => {
+    try {
+      const contact = await storage.getCustomerContact(req.params.id);
+      if (!contact) {
+        return res.status(404).json({ message: "Customer contact not found" });
+      }
+      res.json(contact);
+    } catch (error) {
+      console.error("Error fetching customer contact:", error);
+      res.status(500).json({ message: "Failed to fetch customer contact" });
+    }
+  });
+
+  app.post("/api/customer-contacts", async (req, res) => {
+    try {
+      const contactData = insertCustomerContactSchema.parse(req.body);
+      const contact = await storage.createCustomerContact(contactData);
+      res.status(201).json(contact);
+    } catch (error) {
+      console.error("Error creating customer contact:", error);
+      res.status(400).json({ message: "Failed to create customer contact" });
+    }
+  });
+
+  app.patch("/api/customer-contacts/:id", async (req, res) => {
+    try {
+      const contactData = insertCustomerContactSchema.partial().parse(req.body);
+      const contact = await storage.updateCustomerContact(req.params.id, contactData);
+      res.json(contact);
+    } catch (error) {
+      console.error("Error updating customer contact:", error);
+      res.status(400).json({ message: "Failed to update customer contact" });
+    }
+  });
+
+  app.delete("/api/customer-contacts/:id", async (req, res) => {
+    try {
+      await storage.deleteCustomerContact(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting customer contact:", error);
+      res.status(500).json({ message: "Failed to delete customer contact" });
     }
   });
 
