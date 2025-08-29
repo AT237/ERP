@@ -662,8 +662,8 @@ export function DataTableLayout<T = any>({
             <Table className="table-fixed w-full" style={{ tableLayout: 'fixed' }}>
               <TableHeader className="bg-orange-50 dark:bg-orange-900/20">
                 <TableRow>
-                  <TableHead className="w-8 p-2 border-r border-orange-200/50">
-                    <div className="flex items-center justify-center h-4 w-4">
+                  <TableHead className="w-12 p-2 border-r border-orange-200/50" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
+                    <div className="flex items-center justify-center h-4 w-4 mx-auto">
                       <Checkbox
                         checked={selectedRows.length === sortedData.length && sortedData.length > 0}
                         onCheckedChange={onToggleAllRows}
@@ -747,8 +747,8 @@ export function DataTableLayout<T = any>({
                         style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
                         onDoubleClick={() => onRowDoubleClick?.(row)}
                       >
-                        <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ height: '32px', lineHeight: '1.2' }}>
-                          <div className="flex items-center justify-center h-4 w-4">
+                        <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ width: '48px', minWidth: '48px', maxWidth: '48px', height: '32px', lineHeight: '1.2' }}>
+                          <div className="flex items-center justify-center h-4 w-4 mx-auto">
                             <Checkbox
                               checked={selectedRows.includes(rowId)}
                               onCheckedChange={() => onToggleRowSelection(rowId)}
