@@ -218,13 +218,13 @@ function DraggableColumnHeader({
       className={`${className} ${isDragging ? 'z-50' : ''} whitespace-nowrap`}
       data-testid={`column-header-${column.key}`}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <div
-          className="cursor-grab active:cursor-grabbing p-1 -m-1 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded"
+          className="cursor-grab active:cursor-grabbing p-0.5 -m-0.5 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded"
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
+          <GripVertical className="h-3 w-3 text-muted-foreground" />
         </div>
         {children}
       </div>
@@ -596,9 +596,9 @@ export function DataTableLayout<T = any>({
                         className="font-medium"
                         style={{ width: column.width }}
                       >
-                        <div className="flex items-center gap-2 pr-2">
+                        <div className="flex items-center gap-1 pr-2">
                           <div 
-                            className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-muted rounded px-1 py-1"
+                            className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-muted rounded px-1 py-1"
                             onClick={() => column.sortable && onSort(column.key)}
                           >
                             <span className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">{column.label}</span>
