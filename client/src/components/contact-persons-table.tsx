@@ -12,10 +12,40 @@ import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layo
 import { FormLayout, FormSection } from '@/components/layouts/FormLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 
-// Form schema
+// Form schema with date validation
 const formSchema = insertCustomerContactSchema.extend({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
+  dateOfBirth: z.string()
+    .optional()
+    .refine((val) => {
+      if (!val) return true; // Optional field
+      
+      // Check DD-MM-YYYY format
+      const dateRegex = /^(\d{2})-(\d{2})-(\d{4})$/;
+      const match = val.match(dateRegex);
+      if (!match) return false;
+      
+      const [, day, month, year] = match;
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      
+      // Check if date is valid
+      if (date.getDate() !== parseInt(day) || 
+          date.getMonth() !== parseInt(month) - 1 || 
+          date.getFullYear() !== parseInt(year)) {
+        return false;
+      }
+      
+      // Check age limit (max 120 years)
+      const today = new Date();
+      const age = today.getFullYear() - date.getFullYear();
+      const monthDiff = today.getMonth() - date.getMonth();
+      const dayDiff = today.getDate() - date.getDate();
+      
+      const actualAge = age - (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? 1 : 0);
+      
+      return actualAge <= 120 && date <= today;
+    }, "Please enter a valid date in DD-MM-YYYY format (max age 120 years)")
 }).omit({ customerId: true, position: true });
 
 type FormData = z.infer<typeof formSchema>;
@@ -145,7 +175,7 @@ export default function ContactPersonsTable() {
       mobile: "",
 
 
-      dateOfBirth: undefined,
+      dateOfBirth: "",
       isPrimary: false,
     }
   });
@@ -231,12 +261,33 @@ export default function ContactPersonsTable() {
     },
   });
 
+  // Helper function to convert DD-MM-YYYY to Date
+  const convertDateString = (dateStr: string | undefined): Date | undefined => {
+    if (!dateStr) return undefined;
+    const match = dateStr.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (!match) return undefined;
+    const [, day, month, year] = match;
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  };
+
+  // Helper function to convert Date to DD-MM-YYYY
+  const formatDateString = (date: Date | string | null): string => {
+    if (!date) return "";
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const day = dateObj.getDate().toString().padStart(2, '0');
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const year = dateObj.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   // Form submit handler
   const onSubmit = (data: FormData) => {
     // Always set customerId to null for independent contacts
+    // Convert date string to Date object
     const submitData = {
       ...data,
-      customerId: null
+      customerId: null,
+      dateOfBirth: convertDateString(data.dateOfBirth)
     };
     
     if (editingContact) {
@@ -255,7 +306,7 @@ export default function ContactPersonsTable() {
       email: contact.email || "",
       phone: contact.phone || "",
       mobile: contact.mobile || "",
-      dateOfBirth: contact.dateOfBirth ? new Date(contact.dateOfBirth) : undefined,
+      dateOfBirth: contact.dateOfBirth ? formatDateString(contact.dateOfBirth) : "",
       isPrimary: contact.isPrimary || false,
     });
     setShowAddDialog(true);
@@ -297,7 +348,8 @@ export default function ContactPersonsTable() {
         {
           key: "dateOfBirth",
           label: "Date of Birth",
-          type: "text",
+          type: "date",
+          placeholder: "DD-MM-YYYY",
           register: form.register("dateOfBirth"),
           error: form.formState.errors.dateOfBirth?.message,
           'data-testid': "input-date-of-birth"
@@ -344,9 +396,7 @@ export default function ContactPersonsTable() {
       email: "",
       phone: "",
       mobile: "",
-
-
-      dateOfBirth: undefined,
+      dateOfBirth: "",
       isPrimary: false,
     });
     setShowAddDialog(true);

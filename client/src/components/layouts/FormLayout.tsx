@@ -14,7 +14,7 @@ import { Plus } from "lucide-react";
 export interface FormField {
   key: string;
   label: string;
-  type: 'text' | 'email' | 'tel' | 'select' | 'custom';
+  type: 'text' | 'email' | 'tel' | 'date' | 'select' | 'custom';
   placeholder?: string;
   required?: boolean;
   options?: { value: string; label: string }[];
@@ -94,6 +94,26 @@ export function FormLayout({
               </Button>
             )}
           </div>
+        );
+      
+      case 'date':
+        return (
+          <Input
+            {...baseInputProps}
+            type="text"
+            placeholder="DD-MM-YYYY"
+            maxLength={10}
+            onChange={(e) => {
+              // Apply European date mask
+              let value = e.target.value.replace(/\D/g, '');
+              if (value.length >= 2) value = value.slice(0, 2) + '-' + value.slice(2);
+              if (value.length >= 5) value = value.slice(0, 5) + '-' + value.slice(5, 9);
+              e.target.value = value;
+              // Call original onChange if it exists
+              field.register?.onChange?.(e);
+            }}
+            {...(field.register || {})}
+          />
         );
       
       case 'custom':
