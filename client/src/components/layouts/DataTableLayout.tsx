@@ -394,8 +394,8 @@ export function DataTableLayout<T = any>({
   const handleMouseMove = (e: MouseEvent) => {
     if (resizing) {
       const diff = e.clientX - resizing.startX;
-      // Universal minimum width of 10px for all columns
-      const newWidth = Math.max(10, resizing.startWidth + diff);
+      // Universal minimum width of 1px for all columns - allow very narrow columns
+      const newWidth = Math.max(1, resizing.startWidth + diff);
       setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => 
         col.key === resizing.column ? { ...col, width: newWidth } : col
       ));
@@ -640,7 +640,7 @@ export function DataTableLayout<T = any>({
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <Table>
+            <Table className="table-fixed w-full" style={{ tableLayout: 'fixed' }}>
               <TableHeader className="bg-orange-50 dark:bg-orange-900/20">
                 <TableRow>
                   <TableHead className="w-8 p-2 border-r border-orange-200/50">
@@ -660,7 +660,7 @@ export function DataTableLayout<T = any>({
                         key={column.key}
                         column={column}
                         className="font-medium"
-                        style={{ width: column.width }}
+                        style={{ width: `${column.width}px`, minWidth: `${column.width}px`, maxWidth: `${column.width}px` }}
                         onDoubleClick={handleColumnDoubleClick}
                       >
                         <div className="flex items-center w-full">
@@ -742,7 +742,7 @@ export function DataTableLayout<T = any>({
                           <TableCell 
                             key={column.key} 
                             className={`p-2 truncate border-r border-gray-100 dark:border-gray-700 ${column.key === currentVisibleColumns[0]?.key ? 'font-medium' : ''}`}
-                            style={{ width: column.width, height: '32px', lineHeight: '1.2' }}
+                            style={{ width: `${column.width}px`, minWidth: `${column.width}px`, maxWidth: `${column.width}px`, height: '32px', lineHeight: '1.2' }}
                           >
                             {/* Content area with consistent left margin matching header */}
                             <div className="flex items-center">
