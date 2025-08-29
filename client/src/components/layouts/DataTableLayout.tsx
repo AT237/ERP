@@ -219,14 +219,14 @@ function DraggableColumnHeader({
       data-testid={`column-header-${column.key}`}
     >
       <div className="flex items-center gap-2">
-        {children}
         <div
-          className="cursor-grab active:cursor-grabbing p-1 -m-1 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded ml-auto"
+          className="cursor-grab active:cursor-grabbing p-1 -m-1 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded"
           {...attributes}
           {...listeners}
         >
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
+        {children}
       </div>
     </TableHead>
   );
@@ -669,7 +669,7 @@ export function DataTableLayout<T = any>({
                         {currentVisibleColumns.map((column) => (
                           <TableCell 
                             key={column.key} 
-                            className="p-2 truncate text-[12px]"
+                            className={`p-2 truncate ${column.key === currentVisibleColumns[0]?.key ? 'font-medium' : ''}`}
                             style={{ width: column.width, height: '32px', lineHeight: '1.2' }}
                           >
                             {column.renderCell 
