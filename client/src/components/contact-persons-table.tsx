@@ -5,14 +5,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerContactSchema, type InsertCustomerContact, type CustomerContact, type Customer } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Plus, Mail, Phone } from "lucide-react";
+import { Plus, Mail, Phone, Minus } from "lucide-react";
 
 // Import our reusable layouts
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { FormLayout, FormSection } from '@/components/layouts/FormLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-// Form schema with date validation
+// Form schema with date and mobile validation
 const formSchema = insertCustomerContactSchema.extend({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
@@ -77,17 +79,27 @@ const defaultColumns: ColumnConfig[] = [
     key: 'mobile', 
     label: 'Mobile', 
     visible: true, 
-    width: 140, 
+    width: 160, 
     filterable: true, 
     sortable: true,
-    renderCell: (value: string) => value ? (
-      <div className="flex items-center space-x-2">
-        <Phone size={14} className="text-green-500" />
-        <a href={`tel:${value}`} className="text-blue-600 hover:underline text-sm">
-          {value}
-        </a>
-      </div>
-    ) : "—"
+    renderCell: (value: string[] | string | null, row: CustomerContact) => {
+      const mobiles = Array.isArray(value) ? value : value ? [value] : [];
+      return mobiles.length > 0 ? (
+        <div className="space-y-1">
+          {mobiles.slice(0, 2).map((mobile, i) => (
+            <div key={i} className="flex items-center space-x-2">
+              <Phone size={12} className="text-green-500" />
+              <a href={`tel:${mobile}`} className="text-blue-600 hover:underline text-xs">
+                {mobile}
+              </a>
+            </div>
+          ))}
+          {mobiles.length > 2 && (
+            <span className="text-xs text-gray-500">+{mobiles.length - 2} more</span>
+          )}
+        </div>
+      ) : "—";
+    }
   },
   { key: 'position', label: 'Position', visible: true, width: 150, filterable: true, sortable: true },
   { 
@@ -147,6 +159,7 @@ export default function ContactPersonsTable() {
   const [editingContact, setEditingContact] = useState<CustomerContact | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [mobileNumbers, setMobileNumbers] = useState<string[]>([""]);
 
   // Initialize data table state
   const dataTableState = useDataTable({ 
@@ -172,9 +185,7 @@ export default function ContactPersonsTable() {
       lastName: "",
       email: "",
       phone: "",
-      mobile: "",
-
-
+      mobile: [],
       dateOfBirth: "",
       isPrimary: false,
     }
@@ -300,12 +311,15 @@ export default function ContactPersonsTable() {
   // Handle edit
   const handleEdit = (contact: CustomerContact) => {
     setEditingContact(contact);
+    const mobilesArray = Array.isArray(contact.mobile) ? contact.mobile : contact.mobile ? [contact.mobile] : [];
+    setMobileNumbers(mobilesArray.length > 0 ? mobilesArray : [""]);
+    
     form.reset({
       firstName: contact.firstName || "",
       lastName: contact.lastName || "",
       email: contact.email || "",
       phone: contact.phone || "",
-      mobile: contact.mobile || "",
+      mobile: mobilesArray,
       dateOfBirth: contact.dateOfBirth ? formatDateString(contact.dateOfBirth) : "",
       isPrimary: contact.isPrimary || false,
     });
@@ -356,11 +370,55 @@ export default function ContactPersonsTable() {
         },
         {
           key: "mobile",
-          label: "Mobile Number",
-          type: "text",
-          register: form.register("mobile"),
+          label: "Mobile Numbers",
+          type: "custom",
           error: form.formState.errors.mobile?.message,
-          'data-testid': "input-mobile-number"
+          'data-testid': "input-mobile-numbers",
+          customComponent: (
+            <div className="space-y-2">
+              {mobileNumbers.map((number, index) => (
+                <div key={index} className="flex gap-2 items-start">
+                  <Input
+                    type="text"
+                    value={number}
+                    onChange={(e) => updateMobileNumber(index, e.target.value)}
+                    placeholder="+0031612345678"
+                    data-testid={`input-mobile-${index}`}
+                    className="flex-1"
+                  />
+                  {mobileNumbers.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => removeMobileNumber(index)}
+                      data-testid={`button-remove-mobile-${index}`}
+                      className="shrink-0"
+                    >
+                      <Minus size={16} />
+                    </Button>
+                  )}
+                  {index === mobileNumbers.length - 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={addMobileNumber}
+                      data-testid="button-add-mobile"
+                      className="shrink-0"
+                    >
+                      <Plus size={16} />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              {form.formState.errors.mobile && (
+                <p className="text-sm text-red-600">
+                  {form.formState.errors.mobile.message}
+                </p>
+              )}
+            </div>
+          )
         }
       ]
     },
@@ -387,6 +445,35 @@ export default function ContactPersonsTable() {
     }
   ];
 
+  // Handle mobile number management
+  const addMobileNumber = () => {
+    const newNumbers = [...mobileNumbers, ""];
+    setMobileNumbers(newNumbers);
+    form.setValue("mobile", newNumbers.filter(n => n.trim() !== ""));
+  };
+
+  const removeMobileNumber = (index: number) => {
+    const newNumbers = mobileNumbers.filter((_, i) => i !== index);
+    setMobileNumbers(newNumbers);
+    form.setValue("mobile", newNumbers.filter(n => n.trim() !== ""));
+  };
+
+  const updateMobileNumber = (index: number, value: string) => {
+    // Apply country code mask
+    let formattedValue = value.replace(/[^\d+]/g, ''); // Keep only digits and +
+    if (formattedValue && !formattedValue.startsWith('+')) {
+      formattedValue = '+' + formattedValue;
+    }
+    
+    const newNumbers = [...mobileNumbers];
+    newNumbers[index] = formattedValue;
+    setMobileNumbers(newNumbers);
+    
+    // Update form with non-empty numbers
+    const validNumbers = newNumbers.filter(n => n.trim() !== "");
+    form.setValue("mobile", validNumbers);
+  };
+
   // Handle add contact
   const handleAddContact = () => {
     setEditingContact(null);
@@ -395,10 +482,11 @@ export default function ContactPersonsTable() {
       lastName: "",
       email: "",
       phone: "",
-      mobile: "",
+      mobile: [],
       dateOfBirth: "",
       isPrimary: false,
     });
+    setMobileNumbers([""]);
     setShowAddDialog(true);
   };
 

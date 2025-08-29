@@ -43,7 +43,7 @@ export const customerContacts = pgTable("customer_contacts", {
   dateOfBirth: timestamp("date_of_birth"),
   email: text("email"),
   phone: text("phone"),
-  mobile: text("mobile"),
+  mobile: jsonb("mobile").$type<string[]>().default(sql`'[]'::jsonb`),
   position: text("position"),
   isPrimary: boolean("is_primary").default(false),
   createdAt: timestamp("created_at").defaultNow(),
@@ -454,7 +454,13 @@ export const packingListItemsRelations = relations(packingListItems, ({ one }) =
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertAddressSchema = createInsertSchema(addresses).omit({ id: true, createdAt: true });
-export const insertCustomerContactSchema = createInsertSchema(customerContacts).omit({ id: true, createdAt: true });
+export const insertCustomerContactSchema = createInsertSchema(customerContacts).omit({ id: true, createdAt: true }).extend({
+  mobile: z.array(
+    z.string()
+      .min(1, "Mobile number is required")
+      .regex(/^\+\d{4}\d{6,12}$/, "Mobile number must start with country code (+0031) followed by 6-12 digits")
+  ).default([])
+});
 export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, customerNumber: true, createdAt: true, deletedAt: true });
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, supplierNumber: true, createdAt: true, deletedAt: true });
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({ id: true, createdAt: true });
