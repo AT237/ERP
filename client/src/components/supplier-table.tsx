@@ -21,7 +21,17 @@ type FormData = z.infer<typeof formSchema>;
 
 // Default column configuration for suppliers
 const defaultColumns: ColumnConfig[] = [
-  { key: 'supplierNumber', label: 'Supplier ID', visible: true, width: 120, filterable: true, sortable: true },
+  { 
+    key: 'supplierNumber', 
+    label: 'Supplier ID', 
+    visible: true, 
+    width: 120, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => (
+      <span className="font-mono text-xs">{value}</span>
+    )
+  },
   { key: 'name', label: 'Name', visible: true, width: 200, filterable: true, sortable: true },
   { key: 'contactPerson', label: 'Contact Person', visible: true, width: 150, filterable: true, sortable: true },
   { key: 'email', label: 'Email', visible: true, width: 180, filterable: true, sortable: true },
