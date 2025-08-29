@@ -291,7 +291,12 @@ export function DataTableLayout<T = any>({
 }: DataTableLayoutProps<T>) {
   
   const [showColumnDialog, setShowColumnDialog] = useState(false);
-  const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
+  const [resizing, setResizing] = useState<{ 
+    column: string; 
+    startX: number; 
+    startWidth: number;
+    frozenWidths: { [key: string]: number }; // Freeze other column widths
+  } | null>(null);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -344,10 +349,17 @@ export function DataTableLayout<T = any>({
     e.stopPropagation();
     const column = columns.find(col => col.key === columnKey);
     if (column) {
+      // Capture ALL current column widths to freeze them during resize
+      const frozenWidths: { [key: string]: number } = {};
+      columns.forEach(col => {
+        frozenWidths[col.key] = col.width;
+      });
+      
       setResizing({
         column: columnKey,
         startX: e.clientX,
-        startWidth: column.width
+        startWidth: column.width,
+        frozenWidths
       });
     }
   };
@@ -396,9 +408,16 @@ export function DataTableLayout<T = any>({
       const diff = e.clientX - resizing.startX;
       // Universal minimum width of 1px for all columns - allow very narrow columns
       const newWidth = Math.max(1, resizing.startWidth + diff);
-      setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => 
-        col.key === resizing.column ? { ...col, width: newWidth } : col
-      ));
+      
+      setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => {
+        if (col.key === resizing.column) {
+          // Only change the column being resized
+          return { ...col, width: newWidth };
+        } else {
+          // Keep all other columns at their frozen width
+          return { ...col, width: resizing.frozenWidths[col.key] };
+        }
+      }));
     }
   };
 
