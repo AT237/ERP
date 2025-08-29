@@ -94,22 +94,6 @@ const defaultColumns: ColumnConfig[] = [
     ) : "—"
   },
   { 
-    key: 'mobile', 
-    label: 'Mobile', 
-    visible: true, 
-    width: 140, 
-    filterable: true, 
-    sortable: true,
-    renderCell: (value: string) => value ? (
-      <div className="flex items-center space-x-2">
-        <Phone size={14} className="text-green-500" />
-        <a href={`tel:${value}`} className="text-blue-600 hover:underline text-sm">
-          {value}
-        </a>
-      </div>
-    ) : "—"
-  },
-  { 
     key: 'isPrimary', 
     label: 'Primary', 
     visible: true, 
@@ -360,14 +344,6 @@ export default function ContactPersonsTable() {
           register: form.register("phone"),
           error: form.formState.errors.phone?.message,
           'data-testid': "input-contact-phone"
-        },
-        {
-          key: "mobile",
-          label: "Mobile Number",
-          type: "tel",
-          register: form.register("mobile"),
-          error: form.formState.errors.mobile?.message,
-          'data-testid': "input-contact-mobile"
         }
       ]
     }
