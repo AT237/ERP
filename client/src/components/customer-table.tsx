@@ -47,6 +47,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCustomerContext } from "@/contexts/CustomerContext";
 import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical, Trash2, Copy, Download, Mail, ChevronUp, ChevronsUpDown } from "lucide-react";
+import { createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema, type InsertCustomer, type Customer } from "@shared/schema";

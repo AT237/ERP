@@ -28,6 +28,25 @@ A comprehensive layout system has been implemented to ensure consistency across 
 - **useDataTable Hook**: Custom hook for managing table state including columns, filters, sorting, and row selection
 - **Type Safety**: Full TypeScript support with generic types for different data entities
 
+### Standardized Styling System
+All data tables now follow a consistent visual design:
+
+- **Orange Theme**: Headers use `bg-orange-50 dark:bg-orange-900/20` with `text-orange-800 dark:text-orange-200` text
+- **Orange Title Blocks**: Fixed positioning at 350px from left edge for consistent action menu placement
+- **ID Column Helper**: `createIdColumn()` function provides automatic `font-mono text-xs` styling for monospace ID displays
+- **Grip Icons**: Standardized size (`h-3 w-3`) and positioning with orange hover states
+- **Typography**: Uppercase, font-semibold headers with consistent spacing (`gap-1`, `p-0.5`)
+
+Usage example for new tables:
+```typescript
+import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
+
+const defaultColumns: ColumnConfig[] = [
+  createIdColumn('invoiceNumber', 'Invoice ID'), // Automatic monospace styling
+  { key: 'name', label: 'Name', visible: true, width: 200, filterable: true, sortable: true },
+];
+```
+
 This system is used across customer, supplier, inventory, and other data management interfaces to provide a consistent user experience and reduce code duplication.
 
 ## Backend Architecture

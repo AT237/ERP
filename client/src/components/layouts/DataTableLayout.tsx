@@ -87,6 +87,19 @@ export type ColumnConfig = {
   renderCell?: (value: any, row: any) => ReactNode;
 };
 
+// Helper function for consistent ID column styling
+export const createIdColumn = (key: string, label: string, width = 120): ColumnConfig => ({
+  key,
+  label,
+  visible: true,
+  width,
+  filterable: true,
+  sortable: true,
+  renderCell: (value: string) => (
+    <span className="font-mono text-xs">{value}</span>
+  )
+});
+
 export type SortConfig = {
   column: string;
   direction: 'asc' | 'desc';
