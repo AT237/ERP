@@ -120,7 +120,10 @@ export default function ContactPersonsTable() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Initialize data table state
-  const dataTableState = useDataTable({ defaultColumns });
+  const dataTableState = useDataTable({ 
+    defaultColumns,
+    tableKey: 'contact-persons'
+  });
 
   // Fetch customer contacts
   const { data: contacts = [], isLoading: isLoadingContacts } = useQuery<CustomerContact[]>({

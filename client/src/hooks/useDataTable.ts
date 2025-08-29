@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   ColumnFilter, 
   ColumnConfig, 
@@ -9,11 +9,45 @@ import {
 export interface UseDataTableProps {
   defaultColumns: ColumnConfig[];
   defaultSort?: SortConfig;
+  tableKey?: string; // Unique identifier for localStorage
 }
 
-export function useDataTable({ defaultColumns, defaultSort }: UseDataTableProps) {
+export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataTableProps) {
+  // Load columns from localStorage if available
+  const getStoredColumns = (): ColumnConfig[] => {
+    if (!tableKey) return defaultColumns;
+    try {
+      const stored = localStorage.getItem(`table-columns-${tableKey}`);
+      if (stored) {
+        const parsedColumns = JSON.parse(stored);
+        // Merge stored columns with default to ensure new fields are included
+        return defaultColumns.map(defaultCol => {
+          const storedCol = parsedColumns.find((col: ColumnConfig) => col.key === defaultCol.key);
+          return storedCol ? { ...defaultCol, ...storedCol } : defaultCol;
+        });
+      }
+    } catch (error) {
+      console.warn('Failed to load table columns from localStorage:', error);
+    }
+    return defaultColumns;
+  };
+
   // Column management
-  const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns);
+  const [columns, setColumnsState] = useState<ColumnConfig[]>(getStoredColumns());
+  
+  // Save columns to localStorage when they change
+  const setColumns = (newColumns: ColumnConfig[] | ((prev: ColumnConfig[]) => ColumnConfig[])) => {
+    const updatedColumns = typeof newColumns === 'function' ? newColumns(columns) : newColumns;
+    setColumnsState(updatedColumns);
+    
+    if (tableKey) {
+      try {
+        localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(updatedColumns));
+      } catch (error) {
+        console.warn('Failed to save table columns to localStorage:', error);
+      }
+    }
+  };
   
   // Search and filtering
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,9 +59,20 @@ export function useDataTable({ defaultColumns, defaultSort }: UseDataTableProps)
   // Row selection
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
+  // Save to localStorage when columns change
+  useEffect(() => {
+    if (tableKey) {
+      try {
+        localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(columns));
+      } catch (error) {
+        console.warn('Failed to save table columns to localStorage:', error);
+      }
+    }
+  }, [columns, tableKey]);
+
   // Helper functions
   const toggleColumnVisibility = (columnKey: string) => {
-    setColumns(prev => prev.map(col => 
+    setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => 
       col.key === columnKey ? { ...col, visible: !col.visible } : col
     ));
   };

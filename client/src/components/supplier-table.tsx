@@ -72,7 +72,8 @@ export default function SupplierTable() {
   // Use our data table hook
   const dataTableState = useDataTable({
     defaultColumns,
-    defaultSort: { column: 'name', direction: 'asc' }
+    defaultSort: { column: 'name', direction: 'asc' },
+    tableKey: 'suppliers'
   });
   
   // Dialog states
