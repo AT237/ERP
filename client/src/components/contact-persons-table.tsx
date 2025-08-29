@@ -16,8 +16,7 @@ import { useDataTable } from '@/hooks/useDataTable';
 const formSchema = insertCustomerContactSchema.extend({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  customerId: z.string().optional(),
-});
+}).omit({ customerId: true });
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -145,7 +144,7 @@ export default function ContactPersonsTable() {
       phone: "",
       mobile: "",
       position: "",
-      customerId: "none",
+
       dateOfBirth: undefined,
       isPrimary: false,
     }
@@ -234,16 +233,16 @@ export default function ContactPersonsTable() {
 
   // Form submit handler
   const onSubmit = (data: FormData) => {
-    // Convert "none" to null for independent contacts
+    // Always set customerId to null for independent contacts
     const submitData = {
       ...data,
-      customerId: data.customerId === "none" ? null : data.customerId
+      customerId: null
     };
     
     if (editingContact) {
-      updateContactMutation.mutate(submitData as FormData);
+      updateContactMutation.mutate(submitData as any);
     } else {
-      createContactMutation.mutate(submitData as FormData);
+      createContactMutation.mutate(submitData as any);
     }
   };
 
@@ -257,7 +256,6 @@ export default function ContactPersonsTable() {
       phone: contact.phone || "",
       mobile: contact.mobile || "",
       position: contact.position || "",
-      customerId: contact.customerId || "none",
       dateOfBirth: contact.dateOfBirth ? new Date(contact.dateOfBirth) : undefined,
       isPrimary: contact.isPrimary || false,
     });
@@ -273,52 +271,12 @@ export default function ContactPersonsTable() {
     };
   });
 
-  // Separate customers into linked and regular
-  const linkedCustomers = customers.filter(c => c.contactPersonEmail);
-  const regularCustomers = customers.filter(c => !c.contactPersonEmail);
-  
-  // Create options with visual indicators
-  const customerOptions = [
-    { value: "none", label: "No company (independent contact)" },
-    
-    // Linked companies section
-    ...(linkedCustomers.length > 0 ? [{
-      value: "section-linked",
-      label: "--- Companies with Contact Person Email ---",
-      disabled: true
-    }] : []),
-    ...linkedCustomers.map((customer: Customer) => ({
-      value: customer.id,
-      label: `${customer.name} (📧 ${customer.contactPersonEmail})`
-    })),
-    
-    // Regular companies section  
-    ...(regularCustomers.length > 0 ? [{
-      value: "section-other",
-      label: "--- Other Companies ---",
-      disabled: true
-    }] : []),
-    ...regularCustomers.map((customer: Customer) => ({
-      value: customer.id,
-      label: customer.name
-    }))
-  ];
 
   // Form sections
   const formSections: FormSection[] = [
     {
       title: "Contact Information",
       fields: [
-        {
-          key: "customerId",
-          label: "Customer",
-          type: "select",
-          required: false,
-          options: customerOptions,
-          register: form.register("customerId"),
-          error: form.formState.errors.customerId?.message,
-          'data-testid': "select-customer"
-        },
         {
           key: "firstName",
           label: "First Name",
@@ -396,7 +354,7 @@ export default function ContactPersonsTable() {
       phone: "",
       mobile: "",
       position: "",
-      customerId: "none",
+
       dateOfBirth: undefined,
       isPrimary: false,
     });
