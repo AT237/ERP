@@ -37,7 +37,7 @@ export const addresses = pgTable("addresses", {
 // Customer contacts table for multiple contact persons per customer
 export const customerContacts = pgTable("customer_contacts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  customerId: varchar("customer_id").references(() => customers.id).notNull(),
+  customerId: varchar("customer_id").references(() => customers.id),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   dateOfBirth: timestamp("date_of_birth"),

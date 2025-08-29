@@ -16,7 +16,7 @@ import { useDataTable } from '@/hooks/useDataTable';
 const formSchema = insertCustomerContactSchema.extend({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  customerId: z.string().min(1, "Customer is required"),
+  customerId: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -145,7 +145,7 @@ export default function ContactPersonsTable() {
       phone: "",
       mobile: "",
       position: "",
-      customerId: "",
+      customerId: "none",
       dateOfBirth: undefined,
       isPrimary: false,
     }
@@ -234,10 +234,16 @@ export default function ContactPersonsTable() {
 
   // Form submit handler
   const onSubmit = (data: FormData) => {
+    // Convert "none" to null for independent contacts
+    const submitData = {
+      ...data,
+      customerId: data.customerId === "none" ? null : data.customerId
+    };
+    
     if (editingContact) {
-      updateContactMutation.mutate(data);
+      updateContactMutation.mutate(submitData as FormData);
     } else {
-      createContactMutation.mutate(data);
+      createContactMutation.mutate(submitData as FormData);
     }
   };
 
@@ -251,7 +257,7 @@ export default function ContactPersonsTable() {
       phone: contact.phone || "",
       mobile: contact.mobile || "",
       position: contact.position || "",
-      customerId: contact.customerId,
+      customerId: contact.customerId || "none",
       dateOfBirth: contact.dateOfBirth ? new Date(contact.dateOfBirth) : undefined,
       isPrimary: contact.isPrimary || false,
     });
@@ -263,7 +269,7 @@ export default function ContactPersonsTable() {
     const customer = customers.find((c: Customer) => c.id === contact.customerId);
     return {
       ...contact,
-      customerName: customer?.name || 'Unknown Customer',
+      customerName: contact.customerId ? (customer?.name || 'Unknown Customer') : 'Independent Contact',
     };
   });
 
@@ -273,9 +279,11 @@ export default function ContactPersonsTable() {
   
   // Create options with visual indicators
   const customerOptions = [
+    { value: "none", label: "No company (independent contact)" },
+    
     // Linked companies section
     ...(linkedCustomers.length > 0 ? [{
-      value: "",
+      value: "section-linked",
       label: "--- Companies with Contact Person Email ---",
       disabled: true
     }] : []),
@@ -286,7 +294,7 @@ export default function ContactPersonsTable() {
     
     // Regular companies section  
     ...(regularCustomers.length > 0 ? [{
-      value: "",
+      value: "section-other",
       label: "--- Other Companies ---",
       disabled: true
     }] : []),
@@ -305,7 +313,7 @@ export default function ContactPersonsTable() {
           key: "customerId",
           label: "Customer",
           type: "select",
-          required: true,
+          required: false,
           options: customerOptions,
           register: form.register("customerId"),
           error: form.formState.errors.customerId?.message,
@@ -388,7 +396,7 @@ export default function ContactPersonsTable() {
       phone: "",
       mobile: "",
       position: "",
-      customerId: "",
+      customerId: "none",
       dateOfBirth: undefined,
       isPrimary: false,
     });
