@@ -267,6 +267,35 @@ export default function ContactPersonsTable() {
     };
   });
 
+  // Separate customers into linked and regular
+  const linkedCustomers = customers.filter(c => c.contactPersonEmail);
+  const regularCustomers = customers.filter(c => !c.contactPersonEmail);
+  
+  // Create options with visual indicators
+  const customerOptions = [
+    // Linked companies section
+    ...(linkedCustomers.length > 0 ? [{
+      value: "",
+      label: "--- Companies with Contact Person Email ---",
+      disabled: true
+    }] : []),
+    ...linkedCustomers.map((customer: Customer) => ({
+      value: customer.id,
+      label: `${customer.name} (📧 ${customer.contactPersonEmail})`
+    })),
+    
+    // Regular companies section  
+    ...(regularCustomers.length > 0 ? [{
+      value: "",
+      label: "--- Other Companies ---",
+      disabled: true
+    }] : []),
+    ...regularCustomers.map((customer: Customer) => ({
+      value: customer.id,
+      label: customer.name
+    }))
+  ];
+
   // Form sections
   const formSections: FormSection[] = [
     {
@@ -277,10 +306,7 @@ export default function ContactPersonsTable() {
           label: "Customer",
           type: "select",
           required: true,
-          options: (customers as Customer[]).map((customer: Customer) => ({
-            value: customer.id,
-            label: customer.name
-          })),
+          options: customerOptions,
           register: form.register("customerId"),
           error: form.formState.errors.customerId?.message,
           'data-testid': "select-customer"
