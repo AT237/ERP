@@ -16,7 +16,7 @@ import { useDataTable } from '@/hooks/useDataTable';
 const formSchema = insertCustomerContactSchema.extend({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-}).omit({ customerId: true });
+}).omit({ customerId: true, position: true });
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -143,7 +143,7 @@ export default function ContactPersonsTable() {
       email: "",
       phone: "",
       mobile: "",
-      position: "",
+
 
       dateOfBirth: undefined,
       isPrimary: false,
@@ -255,7 +255,6 @@ export default function ContactPersonsTable() {
       email: contact.email || "",
       phone: contact.phone || "",
       mobile: contact.mobile || "",
-      position: contact.position || "",
       dateOfBirth: contact.dateOfBirth ? new Date(contact.dateOfBirth) : undefined,
       isPrimary: contact.isPrimary || false,
     });
@@ -310,14 +309,6 @@ export default function ContactPersonsTable() {
           register: form.register("mobile"),
           error: form.formState.errors.mobile?.message,
           'data-testid': "input-mobile-number"
-        },
-        {
-          key: "position",
-          label: "Position/Title",
-          type: "text",
-          register: form.register("position"),
-          error: form.formState.errors.position?.message,
-          'data-testid': "input-contact-position"
         }
       ]
     },
@@ -353,7 +344,7 @@ export default function ContactPersonsTable() {
       email: "",
       phone: "",
       mobile: "",
-      position: "",
+
 
       dateOfBirth: undefined,
       isPrimary: false,
