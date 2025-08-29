@@ -614,7 +614,7 @@ export function DataTableLayout<T = any>({
                             className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded px-1 py-1"
                             onClick={() => column.sortable && onSort(column.key)}
                           >
-                            <span className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">{column.label}</span>
+                            <span className="whitespace-nowrap uppercase font-bold text-xs text-orange-800 dark:text-orange-200">{column.label}</span>
                             {column.sortable && (
                               <div className="flex items-center">
                                 {sortConfig?.column === column.key ? (
