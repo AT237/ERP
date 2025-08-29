@@ -308,6 +308,21 @@ export default function ContactPersonsTable() {
     }
   ];
 
+  // Handle add contact
+  const handleAddContact = () => {
+    setEditingContact(null);
+    form.reset({
+      name: "",
+      email: "",
+      phone: "",
+      mobile: "",
+      position: "",
+      customerId: "",
+      isPrimary: false,
+    });
+    setShowAddDialog(true);
+  };
+
   return (
     <DataTableLayout
       // Data and loading
@@ -341,6 +356,46 @@ export default function ContactPersonsTable() {
       // UI configuration
       entityName="Contact Person"
       entityNamePlural="Contact Persons"
+      
+      // Header actions
+      headerActions={[
+        {
+          key: 'add-contact',
+          label: 'Add Contact Person',
+          icon: <Plus size={16} />,
+          onClick: handleAddContact,
+          variant: 'default'
+        }
+      ]}
+      
+      // Dialogs
+      addEditDialog={{
+        isOpen: showAddDialog,
+        onOpenChange: setShowAddDialog,
+        title: editingContact ? "Edit Contact Person" : "Add New Contact Person",
+        content: (
+          <FormLayout
+            sections={formSections}
+            onSubmit={form.handleSubmit(onSubmit)}
+            onCancel={() => {
+              setShowAddDialog(false);
+              setEditingContact(null);
+            }}
+            submitLabel={editingContact 
+              ? (updateContactMutation.isPending ? "Updating..." : "Update Contact Person")
+              : (createContactMutation.isPending ? "Adding..." : "Add Contact Person")
+            }
+            isSubmitting={createContactMutation.isPending || updateContactMutation.isPending}
+          />
+        )
+      }}
+      
+      deleteConfirmDialog={{
+        isOpen: showDeleteDialog,
+        onOpenChange: setShowDeleteDialog,
+        onConfirm: () => deleteContactsMutation.mutate(dataTableState.selectedRows),
+        itemCount: dataTableState.selectedRows.length
+      }}
       
       // Event handlers
       onRowDoubleClick={handleEdit}
