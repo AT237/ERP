@@ -199,12 +199,14 @@ function DraggableColumnHeader({
   column, 
   children, 
   className,
-  style 
+  style,
+  onDoubleClick
 }: { 
   column: ColumnConfig;
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
+  onDoubleClick?: (e: React.MouseEvent, columnKey: string) => void;
 }) {
   const {
     attributes,
@@ -230,6 +232,8 @@ function DraggableColumnHeader({
       style={dragStyle}
       className={`${className} ${isDragging ? 'z-50' : ''} whitespace-nowrap relative border-r border-orange-200/50`}
       data-testid={`column-header-${column.key}`}
+      onDoubleClick={(e) => onDoubleClick?.(e, column.key)}
+      title="Double-click to auto-resize, drag to reorder"
     >
       <div className="flex items-center h-full">
         {/* Fixed position grip icon - always at left edge */}
@@ -337,6 +341,7 @@ export function DataTableLayout<T = any>({
   // Column resizing handlers
   const handleMouseDown = (e: React.MouseEvent, columnKey: string) => {
     e.preventDefault();
+    e.stopPropagation();
     const column = columns.find(col => col.key === columnKey);
     if (column) {
       setResizing({
@@ -347,21 +352,50 @@ export function DataTableLayout<T = any>({
     }
   };
 
+  // Auto-resize column to fit content on double-click
+  const handleColumnDoubleClick = (e: React.MouseEvent, columnKey: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Calculate the optimal width by measuring content
+    const column = columns.find(col => col.key === columnKey);
+    if (!column) return;
+    
+    // Create temporary element to measure text width
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    
+    // Set font to match table header
+    context.font = 'bold 12px system-ui';
+    
+    let maxWidth = 0;
+    
+    // Measure header text
+    const headerWidth = context.measureText(column.label).width + 40; // Add padding
+    maxWidth = Math.max(maxWidth, headerWidth);
+    
+    // Measure content in visible rows
+    sortedData.slice(0, 100).forEach((row) => { // Check first 100 rows for performance
+      const cellValue = String(row[column.key as keyof T] || '');
+      context.font = '14px system-ui'; // Regular font for content
+      const contentWidth = context.measureText(cellValue).width + 50; // Add padding
+      maxWidth = Math.max(maxWidth, contentWidth);
+    });
+    
+    // Set new width with reasonable bounds
+    const newWidth = Math.min(Math.max(50, maxWidth), 400);
+    
+    setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => 
+      col.key === columnKey ? { ...col, width: newWidth } : col
+    ));
+  };
+
   const handleMouseMove = (e: MouseEvent) => {
     if (resizing) {
       const diff = e.clientX - resizing.startX;
-      const column = columns.find(col => col.key === resizing.column);
-      // Allow smaller minimum width for ID columns and use their existing minWidth if specified
-      let minWidth = 35; // Very small default minimum
-      if (column?.minWidth) {
-        minWidth = column.minWidth;
-      } else if (column?.key.toLowerCase().includes('id')) {
-        minWidth = 50; // Smaller minimum for ID columns
-      } else {
-        minWidth = 60; // Standard minimum for other columns
-      }
-      
-      const newWidth = Math.max(minWidth, resizing.startWidth + diff);
+      // Universal minimum width of 10px for all columns
+      const newWidth = Math.max(10, resizing.startWidth + diff);
       setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => 
         col.key === resizing.column ? { ...col, width: newWidth } : col
       ));
@@ -627,6 +661,7 @@ export function DataTableLayout<T = any>({
                         column={column}
                         className="font-medium"
                         style={{ width: column.width }}
+                        onDoubleClick={handleColumnDoubleClick}
                       >
                         <div className="flex items-center w-full">
                           {/* Label and sort area with consistent alignment */}
