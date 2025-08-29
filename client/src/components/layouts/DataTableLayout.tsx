@@ -237,7 +237,7 @@ function DraggableColumnHeader({
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="h-3 w-3 text-muted-foreground" />
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
         {children}
       </div>
@@ -411,7 +411,7 @@ export function DataTableLayout<T = any>({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 text-xs w-20">
-                  <Filter size={14} className="mr-1" />
+                  <Filter size={14} className="mr-1 text-orange-500" />
                   Filter{filters.length > 0 ? ` ${filters.length}` : ''}
                 </Button>
               </DropdownMenuTrigger>
@@ -432,7 +432,7 @@ export function DataTableLayout<T = any>({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 text-xs">
-                  <Settings size={14} className="mr-1" />
+                  <Settings size={14} className="mr-1 text-orange-500" />
                   Columns
                 </Button>
               </DropdownMenuTrigger>
@@ -611,7 +611,7 @@ export function DataTableLayout<T = any>({
                       >
                         <div className="flex items-center gap-1 pr-2">
                           <div 
-                            className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-muted rounded px-1 py-1"
+                            className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded px-1 py-1"
                             onClick={() => column.sortable && onSort(column.key)}
                           >
                             <span className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">{column.label}</span>
@@ -619,12 +619,12 @@ export function DataTableLayout<T = any>({
                               <div className="flex items-center">
                                 {sortConfig?.column === column.key ? (
                                   sortConfig.direction === 'asc' ? (
-                                    <ChevronUp size={14} className="text-muted-foreground" />
+                                    <ChevronUp size={14} className="text-orange-500" />
                                   ) : (
-                                    <ChevronDown size={14} className="text-muted-foreground" />
+                                    <ChevronDown size={14} className="text-orange-500" />
                                   )
                                 ) : (
-                                  <ChevronsUpDown size={14} className="opacity-30" />
+                                  <ChevronsUpDown size={14} className="opacity-30 text-orange-500" />
                                 )}
                               </div>
                             )}
@@ -636,7 +636,7 @@ export function DataTableLayout<T = any>({
                               onClick={() => onAddFilter(column.key)}
                               className="h-6 w-6 p-1 opacity-50 hover:opacity-100 flex-shrink-0 hover:bg-muted"
                             >
-                              <Filter size={12} />
+                              <Filter size={12} className="text-orange-500" />
                             </Button>
                           )}
                         </div>
