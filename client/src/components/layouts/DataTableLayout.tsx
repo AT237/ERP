@@ -228,18 +228,26 @@ function DraggableColumnHeader({
     <TableHead
       ref={setNodeRef}
       style={dragStyle}
-      className={`${className} ${isDragging ? 'z-50' : ''} whitespace-nowrap`}
+      className={`${className} ${isDragging ? 'z-50' : ''} whitespace-nowrap relative border-r border-orange-200/50`}
       data-testid={`column-header-${column.key}`}
     >
-      <div className="flex items-center gap-1">
+      <div className="flex items-center h-full">
+        {/* Fixed position grip icon - always at left edge */}
         <div
-          className="cursor-grab active:cursor-grabbing p-0.5 -m-0.5 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded"
+          className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded w-6 flex items-center justify-center flex-shrink-0"
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
+          <GripVertical className="h-3 w-3 text-orange-400" />
         </div>
-        {children}
+        
+        {/* Content area with consistent left margin */}
+        <div className="flex-1 min-w-0 pr-2">
+          {children}
+        </div>
+        
+        {/* Visual separator line */}
+        <div className="absolute right-0 top-1 bottom-1 w-px bg-orange-300/30"></div>
       </div>
     </TableHead>
   );
@@ -590,7 +598,7 @@ export function DataTableLayout<T = any>({
             <Table>
               <TableHeader className="bg-orange-50 dark:bg-orange-900/20">
                 <TableRow>
-                  <TableHead className="w-8 p-2">
+                  <TableHead className="w-8 p-2 border-r border-orange-200/50">
                     <div className="flex items-center justify-center h-4 w-4">
                       <Checkbox
                         checked={selectedRows.length === sortedData.length && sortedData.length > 0}
@@ -609,41 +617,46 @@ export function DataTableLayout<T = any>({
                         className="font-medium"
                         style={{ width: column.width }}
                       >
-                        <div className="flex items-center gap-1 pr-2">
+                        <div className="flex items-center w-full">
+                          {/* Label and sort area with consistent alignment */}
                           <div 
-                            className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded px-1 py-1"
+                            className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded px-1 py-1 min-w-0"
                             onClick={() => column.sortable && onSort(column.key)}
                           >
-                            <span className="whitespace-nowrap uppercase font-bold text-xs text-orange-800 dark:text-orange-200">{column.label}</span>
+                            <span className="whitespace-nowrap uppercase font-bold text-xs text-orange-800 dark:text-orange-200 truncate">{column.label}</span>
                             {column.sortable && (
-                              <div className="flex items-center">
+                              <div className="flex items-center flex-shrink-0">
                                 {sortConfig?.column === column.key ? (
                                   sortConfig.direction === 'asc' ? (
-                                    <ChevronUp size={14} className="text-orange-500" />
+                                    <ChevronUp size={12} className="text-orange-500" />
                                   ) : (
-                                    <ChevronDown size={14} className="text-orange-500" />
+                                    <ChevronDown size={12} className="text-orange-500" />
                                   )
                                 ) : (
-                                  <ChevronsUpDown size={14} className="opacity-30 text-orange-500" />
+                                  <ChevronsUpDown size={12} className="opacity-30 text-orange-500" />
                                 )}
                               </div>
                             )}
                           </div>
+                          
+                          {/* Filter button with consistent positioning */}
                           {column.filterable && (
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => onAddFilter(column.key)}
-                              className="h-6 w-6 p-1 opacity-50 hover:opacity-100 flex-shrink-0 hover:bg-muted"
+                              className="h-5 w-5 p-0.5 opacity-50 hover:opacity-100 flex-shrink-0 hover:bg-muted ml-1"
                             >
-                              <Filter size={12} className="text-orange-500" />
+                              <Filter size={10} className="text-orange-500" />
                             </Button>
                           )}
                         </div>
-                        {/* Resize Handle */}
+                        
+                        {/* Enhanced Resize Handle - more visible */}
                         <div 
-                          className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/20 active:bg-primary/40"
+                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-orange-400/30 active:bg-orange-500/40 transition-colors border-r-2 border-transparent hover:border-orange-400"
                           onMouseDown={(e) => handleMouseDown(e, column.key)}
+                          title="Drag to resize column"
                         />
                       </DraggableColumnHeader>
                     ))}
@@ -669,7 +682,7 @@ export function DataTableLayout<T = any>({
                         style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
                         onDoubleClick={() => onRowDoubleClick?.(row)}
                       >
-                        <TableCell className="p-2" style={{ height: '32px', lineHeight: '1.2' }}>
+                        <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ height: '32px', lineHeight: '1.2' }}>
                           <div className="flex items-center justify-center h-4 w-4">
                             <Checkbox
                               checked={selectedRows.includes(rowId)}
@@ -682,13 +695,19 @@ export function DataTableLayout<T = any>({
                         {currentVisibleColumns.map((column) => (
                           <TableCell 
                             key={column.key} 
-                            className={`p-2 truncate ${column.key === currentVisibleColumns[0]?.key ? 'font-medium' : ''}`}
+                            className={`p-2 truncate border-r border-gray-100 dark:border-gray-700 ${column.key === currentVisibleColumns[0]?.key ? 'font-medium' : ''}`}
                             style={{ width: column.width, height: '32px', lineHeight: '1.2' }}
                           >
-                            {column.renderCell 
-                              ? column.renderCell(row[column.key as keyof T], row)
-                              : String(row[column.key as keyof T] || '-')
-                            }
+                            {/* Content area with consistent left margin matching header */}
+                            <div className="flex items-center">
+                              <div className="w-6 flex-shrink-0"></div>
+                              <div className="flex-1 min-w-0 truncate">
+                                {column.renderCell 
+                                  ? column.renderCell(row[column.key as keyof T], row)
+                                  : String(row[column.key as keyof T] || '-')
+                                }
+                              </div>
+                            </div>
                           </TableCell>
                         ))}
                       </TableRow>
