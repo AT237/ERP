@@ -404,6 +404,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/quotation-items/:id", async (req, res) => {
+    try {
+      const itemData = insertQuotationItemSchema.partial().parse(req.body);
+      const item = await storage.updateQuotationItem(req.params.id, itemData);
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating quotation item:", error);
+      res.status(400).json({ message: "Failed to update quotation item" });
+    }
+  });
+
+  app.delete("/api/quotation-items/:id", async (req, res) => {
+    try {
+      await storage.deleteQuotationItem(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting quotation item:", error);
+      res.status(500).json({ message: "Failed to delete quotation item" });
+    }
+  });
+
   app.delete("/api/quotations/:id", async (req, res) => {
     try {
       await storage.deleteQuotation(req.params.id);

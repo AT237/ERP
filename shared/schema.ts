@@ -120,11 +120,18 @@ export const quotations = pgTable("quotations", {
   customerId: varchar("customer_id").references(() => customers.id).notNull(),
   projectId: varchar("project_id").references(() => projects.id),
   status: text("status").default("draft"),
+  quotationDate: timestamp("quotation_date").defaultNow(),
+  description: text("description"),
+  revisionNumber: text("revision_number").default("V1.0"),
   validUntil: timestamp("valid_until"),
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
   taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0"),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   notes: text("notes"),
+  // Conditions
+  incoTerms: text("inco_terms"),
+  paymentConditions: text("payment_conditions"),
+  deliveryConditions: text("delivery_conditions"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

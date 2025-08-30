@@ -1,80 +1,193 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table";
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
-} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
-import { SelectWithAdd } from "@/components/ui/select-with-add";
-import { QuickAddCustomer } from "@/components/quick-add-forms";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertQuotationSchema } from "@shared/schema";
+import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, FileText, Search, Calendar, DollarSign } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Download, Save, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Quotation, InsertQuotation, Customer } from "@shared/schema";
+import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
+import { useDataTable } from '@/hooks/useDataTable';
+import type { Quotation, InsertQuotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
 
-const formSchema = insertQuotationSchema.extend({
+// Form schemas
+const quotationFormSchema = insertQuotationSchema.extend({
   subtotal: z.string().min(1, "Subtotal is required"),
   taxAmount: z.string().optional(),
   totalAmount: z.string().min(1, "Total amount is required"),
+  quotationDate: z.string().optional(),
+  validUntil: z.string().optional(),
 });
 
-type FormData = z.infer<typeof formSchema>;
+const quotationItemFormSchema = insertQuotationItemSchema.extend({
+  unitPrice: z.string().min(1, "Unit price is required"),
+  lineTotal: z.string().min(1, "Line total is required"),
+});
+
+type QuotationFormData = z.infer<typeof quotationFormSchema>;
+type QuotationItemFormData = z.infer<typeof quotationItemFormSchema>;
+
+// Default column configuration for quotation items
+const defaultItemColumns: ColumnConfig[] = [
+  createIdColumn('id', 'Line ID'),
+  { 
+    key: 'description', 
+    label: 'Description', 
+    visible: true, 
+    width: 300, 
+    filterable: true, 
+    sortable: true 
+  },
+  { 
+    key: 'quantity', 
+    label: 'Quantity', 
+    visible: true, 
+    width: 100, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: number) => value?.toString() || "0"
+  },
+  { 
+    key: 'unitPrice', 
+    label: 'Unit Price', 
+    visible: true, 
+    width: 120, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => `€${value || "0.00"}`
+  },
+  { 
+    key: 'lineTotal', 
+    label: 'Line Total', 
+    visible: true, 
+    width: 120, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => `€${value || "0.00"}`
+  },
+];
 
 export default function Quotations() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingQuotation, setEditingQuotation] = useState<Quotation | null>(null);
+  const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
+  const [activeTab, setActiveTab] = useState("general");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showItemDialog, setShowItemDialog] = useState(false);
+  const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
   const { toast } = useToast();
 
-  const { data: quotations, isLoading } = useQuery<Quotation[]>({
+  // Data table state for quotation items
+  const itemTableState = useDataTable({ 
+    defaultColumns: defaultItemColumns,
+    tableKey: 'quotation-items'
+  });
+
+  // Fetch data
+  const { data: quotations = [], isLoading } = useQuery<Quotation[]>({
     queryKey: ["/api/quotations"],
   });
 
-  const { data: customers } = useQuery<Customer[]>({
+  const { data: customers = [] } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
   });
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
+    queryKey: ["/api/inventory"],
+  });
+
+  const { data: quotationItems = [], isLoading: isLoadingItems } = useQuery<QuotationItem[]>({
+    queryKey: ["/api/quotations", selectedQuotation?.id, "items"],
+    queryFn: async () => {
+      if (!selectedQuotation?.id) return [];
+      const response = await fetch(`/api/quotations/${selectedQuotation.id}/items`);
+      if (!response.ok) throw new Error('Failed to fetch quotation items');
+      return response.json();
+    },
+    enabled: !!selectedQuotation?.id,
+  });
+
+  // Forms
+  const quotationForm = useForm<QuotationFormData>({
+    resolver: zodResolver(quotationFormSchema),
     defaultValues: {
       quotationNumber: "",
       customerId: "",
+      description: "",
+      revisionNumber: "V1.0",
       status: "draft",
-      validUntil: undefined,
-      subtotal: "",
-      taxAmount: "0",
-      totalAmount: "",
+      quotationDate: format(new Date(), 'yyyy-MM-dd'),
+      validUntil: "",
+      subtotal: "0.00",
+      taxAmount: "0.00",
+      totalAmount: "0.00",
       notes: "",
+      incoTerms: "",
+      paymentConditions: "",
+      deliveryConditions: "",
     },
   });
 
-  const createMutation = useMutation({
-    mutationFn: async (data: InsertQuotation) => {
-      const response = await apiRequest("POST", "/api/quotations", data);
+  const itemForm = useForm<QuotationItemFormData>({
+    resolver: zodResolver(quotationItemFormSchema),
+    defaultValues: {
+      quotationId: "",
+      description: "",
+      quantity: 1,
+      unitPrice: "0.00",
+      lineTotal: "0.00",
+    },
+  });
+
+  // Helper functions
+  const calculateLineTotal = (quantity: number, unitPrice: string) => {
+    const total = quantity * parseFloat(unitPrice || "0");
+    return total.toFixed(2);
+  };
+
+  const calculateQuotationTotals = () => {
+    const subtotal = quotationItems.reduce((sum, item) => {
+      return sum + parseFloat(item.lineTotal || "0");
+    }, 0);
+    
+    const taxAmount = subtotal * 0.21; // 21% VAT
+    const totalAmount = subtotal + taxAmount;
+    
+    quotationForm.setValue("subtotal", subtotal.toFixed(2));
+    quotationForm.setValue("taxAmount", taxAmount.toFixed(2));
+    quotationForm.setValue("totalAmount", totalAmount.toFixed(2));
+  };
+
+  // Mutations
+  const createQuotationMutation = useMutation({
+    mutationFn: async (data: QuotationFormData) => {
+      const processedData = {
+        ...data,
+        quotationDate: data.quotationDate ? new Date(data.quotationDate) : new Date(),
+        validUntil: data.validUntil ? new Date(data.validUntil) : null,
+        subtotal: parseFloat(data.subtotal),
+        taxAmount: parseFloat(data.taxAmount || "0"),
+        totalAmount: parseFloat(data.totalAmount),
+      };
+      const response = await apiRequest("POST", "/api/quotations", processedData);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (newQuotation) => {
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
-      setIsDialogOpen(false);
-      form.reset();
-      setEditingQuotation(null);
+      setSelectedQuotation(newQuotation);
+      setIsEditMode(false);
       toast({
         title: "Success",
         description: "Quotation created successfully",
@@ -89,16 +202,23 @@ export default function Quotations() {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertQuotation> }) => {
-      const response = await apiRequest("PUT", `/api/quotations/${id}`, data);
+  const updateQuotationMutation = useMutation({
+    mutationFn: async (data: QuotationFormData) => {
+      const processedData = {
+        ...data,
+        quotationDate: data.quotationDate ? new Date(data.quotationDate) : new Date(),
+        validUntil: data.validUntil ? new Date(data.validUntil) : null,
+        subtotal: parseFloat(data.subtotal),
+        taxAmount: parseFloat(data.taxAmount || "0"),
+        totalAmount: parseFloat(data.totalAmount),
+      };
+      const response = await apiRequest("PUT", `/api/quotations/${selectedQuotation!.id}`, processedData);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
-      setIsDialogOpen(false);
-      form.reset();
-      setEditingQuotation(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations", selectedQuotation?.id, "items"] });
+      setIsEditMode(false);
       toast({
         title: "Success",
         description: "Quotation updated successfully",
@@ -113,391 +233,443 @@ export default function Quotations() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/quotations/${id}`);
+  const createItemMutation = useMutation({
+    mutationFn: async (data: QuotationItemFormData) => {
+      const processedData = {
+        ...data,
+        unitPrice: parseFloat(data.unitPrice),
+        lineTotal: parseFloat(data.lineTotal),
+      };
+      const quotationId = selectedQuotation?.id || data.quotationId;
+      if (!quotationId) throw new Error('No quotation selected');
+      
+      const response = await apiRequest("POST", `/api/quotations/${quotationId}/items`, processedData);
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations", selectedQuotation?.id, "items"] });
+      setShowItemDialog(false);
+      itemForm.reset();
+      calculateQuotationTotals();
       toast({
         title: "Success",
-        description: "Quotation deleted successfully",
+        description: "Quotation item added successfully",
       });
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to delete quotation",
+        description: "Failed to add quotation item",
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    const submitData: InsertQuotation = {
-      ...data,
-      subtotal: data.subtotal,
-      taxAmount: data.taxAmount || "0",
-      totalAmount: data.totalAmount,
-      validUntil: data.validUntil ? new Date(data.validUntil) : undefined,
-    };
-
-    if (editingQuotation) {
-      updateMutation.mutate({ id: editingQuotation.id, data: submitData });
-    } else {
-      createMutation.mutate(submitData);
-    }
-  };
-
-  const handleEdit = (quotation: Quotation) => {
-    setEditingQuotation(quotation);
-    form.reset({
-      quotationNumber: quotation.quotationNumber,
-      customerId: quotation.customerId,
-      status: quotation.status || "draft",
-      validUntil: quotation.validUntil ? format(new Date(quotation.validUntil), "yyyy-MM-dd") : undefined,
-      subtotal: quotation.subtotal,
-      taxAmount: quotation.taxAmount || "0",
-      totalAmount: quotation.totalAmount,
-      notes: quotation.notes || "",
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this quotation?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
+  // Event handlers
   const handleNewQuotation = () => {
-    setEditingQuotation(null);
-    form.reset();
-    setIsDialogOpen(true);
+    quotationForm.reset({
+      quotationNumber: `Q${Date.now()}`,
+      customerId: "",
+      description: "",
+      revisionNumber: "V1.0",
+      status: "draft",
+      quotationDate: format(new Date(), 'yyyy-MM-dd'),
+      validUntil: "",
+      subtotal: "0.00",
+      taxAmount: "0.00",
+      totalAmount: "0.00",
+      notes: "",
+      incoTerms: "",
+      paymentConditions: "",
+      deliveryConditions: "",
+    });
+    setSelectedQuotation(null);
+    setIsEditMode(true);
+    setActiveTab("general");
   };
 
-  const filteredQuotations = quotations?.filter(quotation =>
-    quotation.quotationNumber.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const handleSelectQuotation = (quotation: Quotation) => {
+    setSelectedQuotation(quotation);
+    quotationForm.reset({
+      ...quotation,
+      quotationDate: quotation.quotationDate ? format(new Date(quotation.quotationDate), 'yyyy-MM-dd') : '',
+      validUntil: quotation.validUntil ? format(new Date(quotation.validUntil), 'yyyy-MM-dd') : '',
+      subtotal: quotation.subtotal?.toString() || "0.00",
+      taxAmount: quotation.taxAmount?.toString() || "0.00",
+      totalAmount: quotation.totalAmount?.toString() || "0.00",
+    });
+    setIsEditMode(false);
+    setActiveTab("general");
+  };
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case "approved": return "default";
-      case "sent": return "secondary";
-      case "draft": return "outline";
-      case "rejected": return "destructive";
-      default: return "outline";
+  const handleSaveQuotation = (data: QuotationFormData) => {
+    if (selectedQuotation) {
+      updateQuotationMutation.mutate(data);
+    } else {
+      createQuotationMutation.mutate(data);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const handleAddItem = () => {
+    if (!selectedQuotation && !isEditMode) {
+      toast({
+        title: "Warning",
+        description: "Please create or select a quotation first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    itemForm.reset({
+      quotationId: selectedQuotation?.id || "",
+      description: "",
+      quantity: 1,
+      unitPrice: "0.00",
+      lineTotal: "0.00",
+    });
+    setEditingItem(null);
+    setShowItemDialog(true);
+  };
+
+  const handleEditItem = (item: QuotationItem) => {
+    itemForm.reset({
+      ...item,
+      unitPrice: item.unitPrice?.toString() || "0.00",
+      lineTotal: item.lineTotal?.toString() || "0.00",
+    });
+    setEditingItem(item);
+    setShowItemDialog(true);
+  };
+
+  const handleSaveItem = (data: QuotationItemFormData) => {
+    createItemMutation.mutate(data);
+  };
+
+  const handleGeneratePDF = () => {
+    // TODO: Implement PDF generation
+    toast({
+      title: "Coming Soon",
+      description: "PDF generation will be implemented soon",
+    });
+  };
+
+  // Update line total when quantity or unit price changes
+  const watchQuantity = itemForm.watch("quantity");
+  const watchUnitPrice = itemForm.watch("unitPrice");
+
+  // Auto-calculate line total
+  React.useEffect(() => {
+    const lineTotal = calculateLineTotal(watchQuantity || 1, watchUnitPrice || "0.00");
+    itemForm.setValue("lineTotal", lineTotal);
+  }, [watchQuantity, watchUnitPrice, itemForm]);
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header Image */}
-      <Card>
-        <CardContent className="p-0">
-          <img 
-            src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=300" 
-            alt="Team working on engineering project" 
-            className="rounded-lg w-full h-48 object-cover" 
-          />
-        </CardContent>
-      </Card>
-
-      {/* Header with Actions */}
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
-            <Input
-              placeholder="Search quotations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-64"
-              data-testid="input-search-quotations"
-            />
-          </div>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Quotations</h2>
+          <p className="text-muted-foreground">Manage your quotations and generate PDFs</p>
         </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleNewQuotation} data-testid="button-add-quotation">
-              <Plus className="mr-2" size={16} />
-              Add Quotation
+        <div className="flex gap-2">
+          <Button onClick={handleNewQuotation} data-testid="button-new-quotation">
+            <Plus className="mr-2 h-4 w-4" />
+            New Quotation
+          </Button>
+          {selectedQuotation && (
+            <Button 
+              variant="outline" 
+              onClick={handleGeneratePDF}
+              data-testid="button-generate-pdf"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Generate PDF
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {editingQuotation ? "Edit Quotation" : "Create New Quotation"}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="quotationNumber">Quotation Number *</Label>
-                  <Input
-                    id="quotationNumber"
-                    {...form.register("quotationNumber")}
-                    placeholder="QUO-2024-0001"
-                    data-testid="input-quotation-number"
-                  />
-                  {form.formState.errors.quotationNumber && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.quotationNumber.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="customerId">Customer *</Label>
-                  <SelectWithAdd
-                    value={form.watch("customerId")}
-                    onValueChange={(value) => form.setValue("customerId", value)}
-                    placeholder="Select customer"
-                    addFormTitle="Add New Customer"
-                    testId="select-customer"
-                    addFormContent={
-                      <QuickAddCustomer 
-                        onSuccess={(customerId) => {
-                          form.setValue("customerId", customerId);
-                        }}
-                      />
-                    }
-                  >
-                    {customers?.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectWithAdd>
-                  {form.formState.errors.customerId && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.customerId.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select 
-                    value={form.watch("status")} 
-                    onValueChange={(value) => form.setValue("status", value)}
-                  >
-                    <SelectTrigger data-testid="select-status">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="sent">Sent</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="validUntil">Valid Until</Label>
-                  <Input
-                    id="validUntil"
-                    type="date"
-                    {...form.register("validUntil")}
-                    data-testid="input-valid-until"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="subtotal">Subtotal *</Label>
-                  <Input
-                    id="subtotal"
-                    {...form.register("subtotal")}
-                    placeholder="0.00"
-                    type="number"
-                    step="0.01"
-                    data-testid="input-subtotal"
-                  />
-                  {form.formState.errors.subtotal && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.subtotal.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="taxAmount">Tax Amount</Label>
-                  <Input
-                    id="taxAmount"
-                    {...form.register("taxAmount")}
-                    placeholder="0.00"
-                    type="number"
-                    step="0.01"
-                    data-testid="input-tax-amount"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="totalAmount">Total Amount *</Label>
-                  <Input
-                    id="totalAmount"
-                    {...form.register("totalAmount")}
-                    placeholder="0.00"
-                    type="number"
-                    step="0.01"
-                    data-testid="input-total-amount"
-                  />
-                  {form.formState.errors.totalAmount && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.totalAmount.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  {...form.register("notes")}
-                  placeholder="Additional notes..."
-                  rows={3}
-                  data-testid="textarea-notes"
-                />
-              </div>
-              
-              <div className="flex space-x-3">
-                <Button 
-                  type="submit" 
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  data-testid="button-save-quotation"
-                >
-                  {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : "Save Quotation"}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                  data-testid="button-cancel"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+          )}
+        </div>
       </div>
 
-      {/* Quotations Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileText className="mr-2" size={20} />
-            Quotations ({filteredQuotations.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Quotation #</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Valid Until</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredQuotations.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No quotations found. Create your first quotation to get started.
-                    </TableCell>
-                  </TableRow>
+      <div className="grid grid-cols-12 gap-6">
+        {/* Quotations List */}
+        <div className="col-span-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quotations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {isLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))
+                ) : quotations.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">
+                    No quotations found
+                  </p>
                 ) : (
-                  filteredQuotations.map((quotation) => {
-                    const customer = customers?.find(c => c.id === quotation.customerId);
+                  quotations.map((quotation) => {
+                    const customer = customers.find(c => c.id === quotation.customerId);
                     return (
-                      <TableRow key={quotation.id} data-testid={`row-quotation-${quotation.id}`}>
-                        <TableCell className="font-medium">{quotation.quotationNumber}</TableCell>
-                        <TableCell>{customer?.name || "—"}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Calendar size={14} />
-                            <span>{format(new Date(quotation.createdAt!), "MMM dd, yyyy")}</span>
+                      <div
+                        key={quotation.id}
+                        className={`p-3 border rounded cursor-pointer hover:bg-muted/50 ${
+                          selectedQuotation?.id === quotation.id ? 'bg-muted border-primary' : ''
+                        }`}
+                        onClick={() => handleSelectQuotation(quotation)}
+                        data-testid={`quotation-item-${quotation.id}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{quotation.quotationNumber}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {customer?.name || 'Unknown Customer'}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              €{quotation.totalAmount?.toString() || '0.00'}
+                            </p>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          {quotation.validUntil ? format(new Date(quotation.validUntil), "MMM dd, yyyy") : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <DollarSign size={14} />
-                            <span>${quotation.totalAmount}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusVariant(quotation.status || "draft")}>
+                          <Badge variant={quotation.status === 'draft' ? 'secondary' : 'default'}>
                             {quotation.status}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(quotation)}
-                              data-testid={`button-edit-${quotation.id}`}
-                            >
-                              <Edit size={14} />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDelete(quotation.id)}
-                              data-testid={`button-delete-${quotation.id}`}
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                        </div>
+                      </div>
                     );
                   })
                 )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quotation Details */}
+        <div className="col-span-8">
+          {(selectedQuotation || isEditMode) ? (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>
+                    {isEditMode ? (selectedQuotation ? 'Edit Quotation' : 'New Quotation') : 'Quotation Details'}
+                  </CardTitle>
+                  <div className="flex gap-2">
+                    {!isEditMode && (
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsEditMode(true)}
+                        data-testid="button-edit-quotation"
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
+                    )}
+                    {isEditMode && (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setIsEditMode(false)}
+                          data-testid="button-cancel-edit"
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={quotationForm.handleSubmit(handleSaveQuotation)}
+                          data-testid="button-save-quotation"
+                        >
+                          <Save className="mr-2 h-4 w-4" />
+                          Save
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="general" data-testid="tab-general">General</TabsTrigger>
+                    <TabsTrigger value="conditions" data-testid="tab-conditions">Conditions</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="general" className="space-y-6">
+                    {/* General Information */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="quotationNumber">Quotation Number</Label>
+                        <Input
+                          id="quotationNumber"
+                          {...quotationForm.register("quotationNumber")}
+                          readOnly={!isEditMode}
+                          data-testid="input-quotation-number"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="revisionNumber">Revision Number</Label>
+                        <Input
+                          id="revisionNumber"
+                          {...quotationForm.register("revisionNumber")}
+                          readOnly={!isEditMode}
+                          data-testid="input-revision-number"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="customerId">Customer</Label>
+                        <Select 
+                          value={quotationForm.watch("customerId")} 
+                          onValueChange={(value) => quotationForm.setValue("customerId", value)}
+                          disabled={!isEditMode}
+                        >
+                          <SelectTrigger data-testid="select-customer">
+                            <SelectValue placeholder="Select customer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {customers.map((customer) => (
+                              <SelectItem key={customer.id} value={customer.id}>
+                                {customer.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="quotationDate">Quotation Date</Label>
+                        <Input
+                          id="quotationDate"
+                          type="date"
+                          {...quotationForm.register("quotationDate")}
+                          readOnly={!isEditMode}
+                          data-testid="input-quotation-date"
+                        />
+                      </div>
+                      <div className="col-span-2 space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          id="description"
+                          {...quotationForm.register("description")}
+                          readOnly={!isEditMode}
+                          data-testid="input-description"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quotation Items Table */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Quotation Lines</h3>
+                        {isEditMode && (
+                          <Button onClick={handleAddItem} data-testid="button-add-item">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Item
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <DataTableLayout
+                        data={quotationItems}
+                        isLoading={isLoadingItems}
+                        columns={itemTableState.columns}
+                        setColumns={itemTableState.setColumns}
+                        searchTerm={itemTableState.searchTerm}
+                        setSearchTerm={itemTableState.setSearchTerm}
+                        filters={itemTableState.filters}
+                        setFilters={itemTableState.setFilters}
+                        onAddFilter={itemTableState.addFilter}
+                        onUpdateFilter={itemTableState.updateFilter}
+                        onRemoveFilter={itemTableState.removeFilter}
+                        sortConfig={itemTableState.sortConfig}
+                        onSort={itemTableState.sort}
+                        selectedRows={itemTableState.selectedRows}
+                        setSelectedRows={itemTableState.setSelectedRows}
+                        onToggleRowSelection={itemTableState.toggleRowSelection}
+                        onToggleAllRows={itemTableState.toggleAllRows}
+                        onRowDoubleClick={handleEditItem}
+                        getRowId={(item: QuotationItem) => item.id}
+                        entityName="Quotation Item"
+                        entityNamePlural="Quotation Items"
+                        applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
+                        applySorting={itemTableState.applySorting}
+                      />
+                    </div>
+
+                    {/* Totals */}
+                    <div className="flex justify-end">
+                      <div className="w-80 space-y-2">
+                        <div className="flex justify-between">
+                          <span>Subtotal:</span>
+                          <span>€{quotationForm.watch("subtotal")}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Tax (21%):</span>
+                          <span>€{quotationForm.watch("taxAmount")}</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-lg border-t pt-2">
+                          <span>Total:</span>
+                          <span>€{quotationForm.watch("totalAmount")}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="conditions" className="space-y-4">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="incoTerms">Incoterms</Label>
+                        <Input
+                          id="incoTerms"
+                          {...quotationForm.register("incoTerms")}
+                          readOnly={!isEditMode}
+                          placeholder="e.g., EXW, FOB, CIF"
+                          data-testid="input-inco-terms"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="paymentConditions">Payment Conditions</Label>
+                        <Textarea
+                          id="paymentConditions"
+                          {...quotationForm.register("paymentConditions")}
+                          readOnly={!isEditMode}
+                          placeholder="e.g., 30 days net, Payment upon delivery"
+                          data-testid="input-payment-conditions"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="deliveryConditions">Delivery Conditions</Label>
+                        <Textarea
+                          id="deliveryConditions"
+                          {...quotationForm.register("deliveryConditions")}
+                          readOnly={!isEditMode}
+                          placeholder="e.g., 2-3 weeks delivery time"
+                          data-testid="input-delivery-conditions"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Notes</Label>
+                        <Textarea
+                          id="notes"
+                          {...quotationForm.register("notes")}
+                          readOnly={!isEditMode}
+                          placeholder="Additional notes..."
+                          data-testid="input-notes"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="flex items-center justify-center h-96">
+                <div className="text-center">
+                  <FileText className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Quotation Selected</h3>
+                  <p className="text-muted-foreground">
+                    Select a quotation from the list or create a new one to get started.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
