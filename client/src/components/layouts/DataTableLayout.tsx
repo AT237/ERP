@@ -736,13 +736,20 @@ export function DataTableLayout<T = any>({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  sortedData.map((row) => {
+                  sortedData.map((row, index) => {
                     const rowId = getRowId(row);
+                    const isSelected = selectedRows.includes(rowId);
+                    const isEven = index % 2 === 0;
+                    
                     return (
                       <TableRow 
                         key={rowId} 
                         className={`hover:bg-muted/30 text-sm font-normal cursor-pointer ${
-                          selectedRows.includes(rowId) ? 'bg-muted/50' : 'bg-transparent'
+                          isSelected 
+                            ? 'bg-muted/50' 
+                            : isEven 
+                              ? 'bg-white dark:bg-gray-950' 
+                              : 'bg-gray-50 dark:bg-gray-900/50'
                         }`}
                         style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
                         onDoubleClick={() => onRowDoubleClick?.(row)}
