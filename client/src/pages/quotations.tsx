@@ -575,11 +575,14 @@ export default function Quotations() {
                         onUpdateFilter={itemTableState.updateFilter}
                         onRemoveFilter={itemTableState.removeFilter}
                         sortConfig={itemTableState.sortConfig}
-                        onSort={itemTableState.sort}
+                        onSort={itemTableState.handleSort}
                         selectedRows={itemTableState.selectedRows}
                         setSelectedRows={itemTableState.setSelectedRows}
                         onToggleRowSelection={itemTableState.toggleRowSelection}
-                        onToggleAllRows={itemTableState.toggleAllRows}
+                        onToggleAllRows={() => {
+                          const allIds = quotationItems.map(item => item.id);
+                          itemTableState.toggleAllRows(allIds);
+                        }}
                         onRowDoubleClick={handleEditItem}
                         getRowId={(item: QuotationItem) => item.id}
                         entityName="Quotation Item"
