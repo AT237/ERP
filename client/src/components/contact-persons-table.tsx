@@ -191,6 +191,35 @@ export default function ContactPersonsTable() {
     }
   });
 
+  // Handle mobile number management - defined before JSX usage
+  const addMobileNumber = () => {
+    const newNumbers = [...mobileNumbers, ""];
+    setMobileNumbers(newNumbers);
+    form.setValue("mobile", newNumbers.filter(n => n.trim() !== ""));
+  };
+
+  const removeMobileNumber = (index: number) => {
+    const newNumbers = mobileNumbers.filter((_, i) => i !== index);
+    setMobileNumbers(newNumbers);
+    form.setValue("mobile", newNumbers.filter(n => n.trim() !== ""));
+  };
+
+  const updateMobileNumber = (index: number, value: string) => {
+    // Apply country code mask
+    let formattedValue = value.replace(/[^\d+]/g, ''); // Keep only digits and +
+    if (formattedValue && !formattedValue.startsWith('+')) {
+      formattedValue = '+' + formattedValue;
+    }
+    
+    const newNumbers = [...mobileNumbers];
+    newNumbers[index] = formattedValue;
+    setMobileNumbers(newNumbers);
+    
+    // Update form with non-empty numbers
+    const validNumbers = newNumbers.filter(n => n.trim() !== "");
+    form.setValue("mobile", validNumbers);
+  };
+
   // Create contact mutation
   const createContactMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -444,35 +473,6 @@ export default function ContactPersonsTable() {
       ]
     }
   ];
-
-  // Handle mobile number management
-  const addMobileNumber = () => {
-    const newNumbers = [...mobileNumbers, ""];
-    setMobileNumbers(newNumbers);
-    form.setValue("mobile", newNumbers.filter(n => n.trim() !== ""));
-  };
-
-  const removeMobileNumber = (index: number) => {
-    const newNumbers = mobileNumbers.filter((_, i) => i !== index);
-    setMobileNumbers(newNumbers);
-    form.setValue("mobile", newNumbers.filter(n => n.trim() !== ""));
-  };
-
-  const updateMobileNumber = (index: number, value: string) => {
-    // Apply country code mask
-    let formattedValue = value.replace(/[^\d+]/g, ''); // Keep only digits and +
-    if (formattedValue && !formattedValue.startsWith('+')) {
-      formattedValue = '+' + formattedValue;
-    }
-    
-    const newNumbers = [...mobileNumbers];
-    newNumbers[index] = formattedValue;
-    setMobileNumbers(newNumbers);
-    
-    // Update form with non-empty numbers
-    const validNumbers = newNumbers.filter(n => n.trim() !== "");
-    form.setValue("mobile", validNumbers);
-  };
 
   // Handle add contact
   const handleAddContact = () => {
