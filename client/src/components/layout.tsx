@@ -234,6 +234,16 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         );
       }
+
+      if (activeTab.id === 'quotations') {
+        // Import and render Quotations component directly
+        const QuotationsPage = lazy(() => import('../pages/quotations'));
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <QuotationsPage />
+          </Suspense>
+        );
+      }
       
       // Master Data components
       if (activeTab.id === 'uom') {
