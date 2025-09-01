@@ -19,7 +19,7 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
     <div className={`space-y-4 ${className}`}>
       <Tabs value={activeTab} onValueChange={onTabChange}>
         {/* Tab Navigation - Styled like main navigation */}
-        <TabsList className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg h-auto">
+        <TabsList className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg h-auto tab-transition">
           {tabs.map((tab) => (
             <TabsTrigger
               key={tab.id}
@@ -37,10 +37,10 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
           ))}
         </TabsList>
 
-        {/* Tab Content - With orange border */}
-        <div className="border-2 border-orange-200 dark:border-orange-700 rounded-lg bg-white dark:bg-gray-900 p-6">
+        {/* Tab Content - With orange border and smooth transitions */}
+        <div className="border-2 border-orange-200 dark:border-orange-700 rounded-lg bg-white dark:bg-gray-900 p-6 transition-smooth">
           {tabs.map((tab) => (
-            <TabsContent key={tab.id} value={tab.id} className="mt-0">
+            <TabsContent key={tab.id} value={tab.id} className="mt-0 transition-smooth">
               {tab.content}
             </TabsContent>
           ))}

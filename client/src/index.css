@@ -90,3 +90,93 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
 }
+
+/* Anti-flicker CSS - prevents screen flashing during renders */
+@layer components {
+  /* Global smooth transitions to prevent jarring state changes */
+  .transition-smooth {
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  }
+
+  /* Loading state stabilization */
+  [data-loading="true"] {
+    opacity: 0.7;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  [data-loading="false"] {
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  /* Prevent layout shifts during loading */
+  .data-table-container {
+    min-height: 300px;
+    transition: all 0.3s ease-in-out;
+  }
+
+  /* Stable skeleton animations with staggered timing */
+  .skeleton-pulse {
+    animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes skeleton-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Dialog entrance/exit transitions */
+  [data-state="open"] {
+    animation: enter 0.2s ease-in-out;
+  }
+
+  [data-state="closed"] {
+    animation: exit 0.2s ease-in-out;
+  }
+
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: scale(0.96) translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes exit {
+    from {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.96) translateY(-10px);
+    }
+  }
+
+  /* Table row transitions */
+  .table-row {
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+  }
+
+  /* Tab transitions */
+  .tab-transition {
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Form field transitions */
+  .form-field {
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+
+  /* Prevent flicker during React hot reload */
+  [data-react-hot-reload] {
+    transition: none !important;
+  }
+}

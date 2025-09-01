@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   ColumnFilter, 
   ColumnConfig, 
@@ -13,8 +13,8 @@ export interface UseDataTableProps {
 }
 
 export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataTableProps) {
-  // Load columns from localStorage if available
-  const getStoredColumns = (): ColumnConfig[] => {
+  // Load columns from localStorage if available - memoized to prevent repeated parsing
+  const getStoredColumns = useCallback((): ColumnConfig[] => {
     if (!tableKey) return defaultColumns;
     try {
       const stored = localStorage.getItem(`table-columns-${tableKey}`);
@@ -30,71 +30,66 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
       console.warn('Failed to load table columns from localStorage:', error);
     }
     return defaultColumns;
-  };
+  }, [defaultColumns, tableKey]);
 
-  // Column management
-  const [columns, setColumnsState] = useState<ColumnConfig[]>(getStoredColumns());
+  // Column management - stable initial state
+  const [columns, setColumnsState] = useState<ColumnConfig[]>(() => getStoredColumns());
   
-  // Save columns to localStorage when they change
-  const setColumns = (newColumns: ColumnConfig[] | ((prev: ColumnConfig[]) => ColumnConfig[])) => {
-    const updatedColumns = typeof newColumns === 'function' ? newColumns(columns) : newColumns;
-    setColumnsState(updatedColumns);
-    
-    if (tableKey) {
-      try {
-        localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(updatedColumns));
-      } catch (error) {
-        console.warn('Failed to save table columns to localStorage:', error);
+  // Save columns to localStorage - debounced to prevent frequent writes
+  const setColumns = useCallback((newColumns: ColumnConfig[] | ((prev: ColumnConfig[]) => ColumnConfig[])) => {
+    setColumnsState(prevColumns => {
+      const updatedColumns = typeof newColumns === 'function' ? newColumns(prevColumns) : newColumns;
+      
+      // Async localStorage save to prevent blocking
+      if (tableKey) {
+        setTimeout(() => {
+          try {
+            localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(updatedColumns));
+          } catch (error) {
+            console.warn('Failed to save table columns to localStorage:', error);
+          }
+        }, 0);
       }
-    }
-  };
+      
+      return updatedColumns;
+    });
+  }, [tableKey]);
   
-  // Search and filtering
+  // Search and filtering - stable state
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<ColumnFilter[]>([]);
   
-  // Sorting
-  const [sortConfig, setSortConfig] = useState<SortConfig>(defaultSort || null);
+  // Sorting - stable state with proper typing
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(defaultSort || null);
   
-  // Row selection
+  // Row selection - stable state
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
-  // Save to localStorage when columns change
-  useEffect(() => {
-    if (tableKey) {
-      try {
-        localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(columns));
-      } catch (error) {
-        console.warn('Failed to save table columns to localStorage:', error);
-      }
-    }
-  }, [columns, tableKey]);
-
-  // Helper functions
-  const toggleColumnVisibility = (columnKey: string) => {
+  // Memoized helper functions to prevent re-renders
+  const toggleColumnVisibility = useCallback((columnKey: string) => {
     setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => 
       col.key === columnKey ? { ...col, visible: !col.visible } : col
     ));
-  };
+  }, [setColumns]);
 
-  const addFilter = (columnKey: string) => {
+  const addFilter = useCallback((columnKey: string) => {
     const newFilter: ColumnFilter = {
       column: columnKey,
       type: 'contains',
       value: ''
     };
     setFilters(prev => [...prev, newFilter]);
-  };
+  }, []);
 
-  const updateFilter = (index: number, filter: ColumnFilter) => {
+  const updateFilter = useCallback((index: number, filter: ColumnFilter) => {
     setFilters(prev => prev.map((f, i) => i === index ? filter : f));
-  };
+  }, []);
 
-  const removeFilter = (index: number) => {
+  const removeFilter = useCallback((index: number) => {
     setFilters(prev => prev.filter((_, i) => i !== index));
-  };
+  }, []);
 
-  const handleSort = (column: string) => {
+  const handleSort = useCallback((column: string) => {
     setSortConfig(prev => {
       if (prev?.column === column) {
         return prev.direction === 'asc' 
@@ -103,130 +98,108 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
       }
       return { column, direction: 'asc' };
     });
-  };
+  }, []);
 
-  const toggleRowSelection = (id: string) => {
+  const toggleRowSelection = useCallback((id: string) => {
     setSelectedRows(prev => 
       prev.includes(id) 
         ? prev.filter(rowId => rowId !== id)
         : [...prev, id]
     );
-  };
+  }, []);
 
-  const toggleAllRows = (allRowIds: string[]) => {
+  const toggleAllRows = useCallback((allIds: string[]) => {
     setSelectedRows(prev => 
-      prev.length === allRowIds.length ? [] : allRowIds
+      prev.length === allIds.length ? [] : allIds
     );
-  };
+  }, []);
 
-  const clearSelection = () => {
-    setSelectedRows([]);
-  };
-
-  // Generic filter function
-  const applyFilter = (value: any, filter: ColumnFilter): boolean => {
-    if (!filter.value) return true;
-    
-    const cellValue = String(value || '').toLowerCase();
-    const filterValue = filter.value?.toLowerCase() || '';
-    
-    switch (filter.type) {
-      case 'contains':
-        return cellValue.includes(filterValue);
-      case 'not_contains':
-        return !cellValue.includes(filterValue);
-      case 'equals':
-        return cellValue === filterValue;
-      case 'not_equals':
-        return cellValue !== filterValue;
-      case 'greater_than':
-        return Number(cellValue) > Number(filterValue);
-      case 'less_than':
-        return Number(cellValue) < Number(filterValue);
-      case 'starts_with':
-        return cellValue.startsWith(filterValue);
-      case 'ends_with':
-        return cellValue.endsWith(filterValue);
-      default:
-        return true;
-    }
-  };
-
-  // Generic filter and search function
-  const applyFiltersAndSearch = <T extends Record<string, any>>(
-    data: T[], 
-    searchTerm: string, 
-    filters: ColumnFilter[]
-  ): T[] => {
+  // Memoized filter/search functions to prevent unnecessary calculations
+  const applyFiltersAndSearch = useCallback(<T extends Record<string, any>>(data: T[]): T[] => {
     return data.filter(item => {
-      // Apply global search
+      // Apply search term
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = Object.values(item).some(value => 
-          String(value || '').toLowerCase().includes(searchLower)
-        );
-        if (!matchesSearch) return false;
+        const searchMatch = Object.values(item).some(value => {
+          if (value === null || value === undefined) return false;
+          return String(value).toLowerCase().includes(searchLower);
+        });
+        if (!searchMatch) return false;
       }
 
       // Apply column filters
       return filters.every(filter => {
         const value = item[filter.column];
-        return applyFilter(value, filter);
+        const filterValue = filter.value.toLowerCase();
+        const itemValue = value ? String(value).toLowerCase() : '';
+
+        switch (filter.type) {
+          case 'contains':
+            return itemValue.includes(filterValue);
+          case 'not_contains':
+            return !itemValue.includes(filterValue);
+          case 'equals':
+            return itemValue === filterValue;
+          case 'not_equals':
+            return itemValue !== filterValue;
+          case 'starts_with':
+            return itemValue.startsWith(filterValue);
+          case 'ends_with':
+            return itemValue.endsWith(filterValue);
+          case 'greater_than':
+            return parseFloat(itemValue) > parseFloat(filterValue);
+          case 'less_than':
+            return parseFloat(itemValue) < parseFloat(filterValue);
+          default:
+            return true;
+        }
       });
     });
-  };
+  }, [searchTerm, filters]);
 
-  // Generic sorting function
-  const applySorting = <T extends Record<string, any>>(
-    data: T[], 
-    sortConfig: SortConfig
-  ): T[] => {
+  const applySorting = useCallback(<T extends Record<string, any>>(data: T[]): T[] => {
     if (!sortConfig) return data;
 
     return [...data].sort((a, b) => {
       const aValue = a[sortConfig.column];
       const bValue = b[sortConfig.column];
-      
+
       // Handle null/undefined values
-      if (aValue == null && bValue == null) return 0;
-      if (aValue == null) return sortConfig.direction === 'asc' ? 1 : -1;
-      if (bValue == null) return sortConfig.direction === 'asc' ? -1 : 1;
-      
-      // Handle different data types
+      if (aValue === null || aValue === undefined) return 1;
+      if (bValue === null || bValue === undefined) return -1;
+
+      // Convert to strings for comparison
+      const aStr = String(aValue).toLowerCase();
+      const bStr = String(bValue).toLowerCase();
+
       let comparison = 0;
-      
-      // Check if values are dates
-      if (sortConfig.column.includes('At') || sortConfig.column.includes('Date')) {
-        const aDate = new Date(aValue);
-        const bDate = new Date(bValue);
-        comparison = aDate.getTime() - bDate.getTime();
-      }
-      // Check if values are numbers
-      else if (!isNaN(Number(aValue)) && !isNaN(Number(bValue))) {
-        comparison = Number(aValue) - Number(bValue);
-      }
-      // String comparison
-      else {
-        const aStr = String(aValue).toLowerCase();
-        const bStr = String(bValue).toLowerCase();
-        comparison = aStr.localeCompare(bStr);
-      }
-      
-      return sortConfig.direction === 'asc' ? comparison : -comparison;
+      if (aStr < bStr) comparison = -1;
+      if (aStr > bStr) comparison = 1;
+
+      return sortConfig.direction === 'desc' ? comparison * -1 : comparison;
     });
-  };
+  }, [sortConfig]);
+
+  // Memoized visible columns to prevent re-calculations
+  const visibleColumns = useMemo(() => 
+    columns.filter(col => col.visible), 
+    [columns]
+  );
 
   return {
     // State
     columns,
-    setColumns,
     searchTerm,
-    setSearchTerm,
     filters,
-    setFilters,
     sortConfig,
-    setSortConfig,
     selectedRows,
+    visibleColumns,
+    
+    // Setters
+    setColumns,
+    setSearchTerm,
+    setFilters,
+    setSortConfig,
     setSelectedRows,
     
     // Actions
@@ -237,9 +210,8 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
     handleSort,
     toggleRowSelection,
     toggleAllRows,
-    clearSelection,
     
-    // Helper functions
+    // Processing functions
     applyFiltersAndSearch,
     applySorting,
   };
