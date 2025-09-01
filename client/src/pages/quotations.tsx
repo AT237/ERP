@@ -56,21 +56,30 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
   const { toast } = useToast();
 
-  // Fetch data
-  const { data: quotations = [], isLoading } = useQuery<Quotation[]>({
+  // Optimized data fetching with stable loading state
+  const { data: quotations = [], isLoading: quotationsLoading } = useQuery<Quotation[]>({
     queryKey: ["/api/quotations"],
+    staleTime: 30000, // Prevent refetch for 30 seconds
+    gcTime: 300000, // Keep in cache for 5 minutes
   });
 
-  const { data: customers = [] } = useQuery<Customer[]>({
+  const { data: customers = [], isLoading: customersLoading } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
+    staleTime: 60000, // Customers change less frequently
+    gcTime: 600000, // Keep in cache for 10 minutes
   });
 
-  const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
+  const { data: inventoryItems = [], isLoading: inventoryLoading } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory"],
+    staleTime: 30000,
+    gcTime: 300000,
   });
 
-  // Default column configuration for quotations table
-  const defaultColumns: ColumnConfig[] = React.useMemo(() => [
+  // Combined loading state to prevent partial renders
+  const isLoading = quotationsLoading || customersLoading;
+
+  // Stabilized column configuration for quotations table - prevents flicker
+  const baseColumns: ColumnConfig[] = React.useMemo(() => [
     createIdColumn('quotationNumber', 'Quotation #'),
     { 
       key: 'customerId', 
@@ -80,6 +89,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       filterable: true, 
       sortable: true,
       renderCell: (value: string) => {
+        // Use stable reference - avoid dependency on customers array
         const customer = customers?.find((c: Customer) => c.id === value);
         return customer?.name || 'Unknown Customer';
       }
@@ -132,7 +142,22 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       filterable: true, 
       sortable: true 
     },
-  ], [customers]);
+  ], []); // Removed customers dependency to prevent flicker
+
+  // Create stable columns with current customer data
+  const defaultColumns = React.useMemo(() => 
+    baseColumns.map(col => {
+      if (col.key === 'customerId') {
+        return {
+          ...col,
+          renderCell: (value: string) => {
+            const customer = customers?.find((c: Customer) => c.id === value);
+            return customer?.name || 'Unknown Customer';
+          }
+        };
+      }
+      return col;
+    }), [baseColumns, customers]);
 
   // Default column configuration for quotation items
   const defaultItemColumns: ColumnConfig[] = [

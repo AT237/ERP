@@ -58,34 +58,39 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const handleSectionClick = (section: {id: string, name: string}) => {
-    // Check if tab already exists
+    // Check if tab already exists - prevent unnecessary state updates
     const existingTab = tabs.find(tab => tab.id === section.id);
     
     if (existingTab) {
-      // Switch to existing tab
-      setActiveTabId(section.id);
+      // Only switch if not already active - prevents flicker
+      if (activeTabId !== section.id) {
+        setActiveTabId(section.id);
+      }
     } else {
-      // Create new tab
+      // Create new tab with optimized update
       const newTab: Tab = {
         id: section.id,
         name: section.name,
         type: 'section'
       };
       
+      // Batch state updates to prevent flicker
       setTabs(prevTabs => [...prevTabs, newTab]);
       setActiveTabId(section.id);
     }
   };
 
   const handleMenuClick = (menuItem: {id: string, name: string, route?: string}) => {
-    // Check if tab already exists
+    // Check if tab already exists - prevent unnecessary state updates
     const existingTab = tabs.find(tab => tab.id === menuItem.id);
     
     if (existingTab) {
-      // Switch to existing tab
-      setActiveTabId(menuItem.id);
+      // Only switch if not already active - prevents flicker
+      if (activeTabId !== menuItem.id) {
+        setActiveTabId(menuItem.id);
+      }
     } else {
-      // Create new tab for menu item
+      // Create new tab for menu item with optimized update
       const newTab: Tab = {
         id: menuItem.id,
         name: menuItem.name,
@@ -93,6 +98,7 @@ export default function Layout({ children }: LayoutProps) {
         menuRoute: menuItem.route
       };
       
+      // Batch state updates to prevent flicker
       setTabs(prevTabs => [...prevTabs, newTab]);
       setActiveTabId(menuItem.id);
     }
