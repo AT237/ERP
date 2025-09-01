@@ -41,6 +41,71 @@ const quotationItemFormSchema = insertQuotationItemSchema.extend({
 type QuotationFormData = z.infer<typeof quotationFormSchema>;
 type QuotationItemFormData = z.infer<typeof quotationItemFormSchema>;
 
+// Default column configuration for quotations table
+const defaultColumns: ColumnConfig[] = [
+  createIdColumn('quotationNumber', 'Quotation #'),
+  { 
+    key: 'customerId', 
+    label: 'Customer', 
+    visible: true, 
+    width: 200, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: Quotation, customers: Customer[]) => {
+      const customer = customers?.find(c => c.id === value);
+      return customer?.name || 'Unknown';
+    }
+  },
+  { 
+    key: 'quotationDate', 
+    label: 'Quote Date', 
+    visible: true, 
+    width: 120, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => value ? format(new Date(value), 'dd-MM-yyyy') : ''
+  },
+  { 
+    key: 'validUntil', 
+    label: 'Valid Until', 
+    visible: true, 
+    width: 120, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => value ? format(new Date(value), 'dd-MM-yyyy') : ''
+  },
+  { 
+    key: 'totalAmount', 
+    label: 'Total Amount', 
+    visible: true, 
+    width: 120, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => `€${value || "0.00"}`
+  },
+  { 
+    key: 'status', 
+    label: 'Status', 
+    visible: true, 
+    width: 100, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => (
+      <Badge variant={value === 'draft' ? 'secondary' : value === 'sent' ? 'default' : 'outline'}>
+        {value || 'draft'}
+      </Badge>
+    )
+  },
+  { 
+    key: 'revisionNumber', 
+    label: 'Revision', 
+    visible: true, 
+    width: 100, 
+    filterable: true, 
+    sortable: true 
+  },
+];
+
 // Default column configuration for quotation items
 const defaultItemColumns: ColumnConfig[] = [
   createIdColumn('id', 'Line ID'),
@@ -82,12 +147,20 @@ const defaultItemColumns: ColumnConfig[] = [
 ];
 
 export default function Quotations() {
+  const [showQuotationDialog, setShowQuotationDialog] = useState(false);
+  const [editingQuotation, setEditingQuotation] = useState<Quotation | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   const [activeTab, setActiveTab] = useState("general");
-  const [isEditMode, setIsEditMode] = useState(false);
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
   const { toast } = useToast();
+
+  // Data table state
+  const tableState = useDataTable({ 
+    defaultColumns,
+    tableKey: 'quotations'
+  });
 
   // Data table state for quotation items
   const itemTableState = useDataTable({ 
@@ -184,10 +257,11 @@ export default function Quotations() {
       const response = await apiRequest("POST", "/api/quotations", processedData);
       return response.json();
     },
-    onSuccess: (newQuotation) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
-      setSelectedQuotation(newQuotation);
-      setIsEditMode(false);
+      setShowQuotationDialog(false);
+      quotationForm.reset();
+      setEditingQuotation(null);
       toast({
         title: "Success",
         description: "Quotation created successfully",
@@ -212,13 +286,14 @@ export default function Quotations() {
         taxAmount: parseFloat(data.taxAmount || "0"),
         totalAmount: parseFloat(data.totalAmount),
       };
-      const response = await apiRequest("PUT", `/api/quotations/${selectedQuotation!.id}`, processedData);
+      const response = await apiRequest("PUT", `/api/quotations/${editingQuotation!.id}`, processedData);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/quotations", selectedQuotation?.id, "items"] });
-      setIsEditMode(false);
+      setShowQuotationDialog(false);
+      quotationForm.reset();
+      setEditingQuotation(null);
       toast({
         title: "Success",
         description: "Quotation updated successfully",
@@ -228,6 +303,26 @@ export default function Quotations() {
       toast({
         title: "Error",
         description: "Failed to update quotation",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteQuotationMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/quotations/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
+      toast({
+        title: "Success",
+        description: "Quotation deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete quotation",
         variant: "destructive",
       });
     },
@@ -266,7 +361,7 @@ export default function Quotations() {
   });
 
   // Event handlers
-  const handleNewQuotation = () => {
+  const handleAddQuotation = () => {
     quotationForm.reset({
       quotationNumber: `Q${Date.now()}`,
       customerId: "",
@@ -283,13 +378,11 @@ export default function Quotations() {
       paymentConditions: "",
       deliveryConditions: "",
     });
-    setSelectedQuotation(null);
-    setIsEditMode(true);
-    setActiveTab("general");
+    setEditingQuotation(null);
+    setShowQuotationDialog(true);
   };
 
-  const handleSelectQuotation = (quotation: Quotation) => {
-    setSelectedQuotation(quotation);
+  const handleEditQuotation = (quotation: Quotation) => {
     quotationForm.reset({
       ...quotation,
       quotationDate: quotation.quotationDate ? format(new Date(quotation.quotationDate), 'yyyy-MM-dd') : '',
@@ -298,30 +391,42 @@ export default function Quotations() {
       taxAmount: quotation.taxAmount?.toString() || "0.00",
       totalAmount: quotation.totalAmount?.toString() || "0.00",
     });
-    setIsEditMode(false);
+    setEditingQuotation(quotation);
+    setShowQuotationDialog(true);
+  };
+
+  const handleViewQuotation = (quotation: Quotation) => {
+    setSelectedQuotation(quotation);
     setActiveTab("general");
+    setShowDetailDialog(true);
   };
 
   const handleSaveQuotation = (data: QuotationFormData) => {
-    if (selectedQuotation) {
+    if (editingQuotation) {
       updateQuotationMutation.mutate(data);
     } else {
       createQuotationMutation.mutate(data);
     }
   };
 
+  const handleDeleteQuotation = (quotation: Quotation) => {
+    if (window.confirm(`Are you sure you want to delete quotation ${quotation.quotationNumber}?`)) {
+      deleteQuotationMutation.mutate(quotation.id);
+    }
+  };
+
   const handleAddItem = () => {
-    if (!selectedQuotation && !isEditMode) {
+    if (!selectedQuotation) {
       toast({
         title: "Warning",
-        description: "Please create or select a quotation first",
+        description: "Please select a quotation first",
         variant: "destructive",
       });
       return;
     }
     
     itemForm.reset({
-      quotationId: selectedQuotation?.id || "",
+      quotationId: selectedQuotation.id,
       description: "",
       quantity: 1,
       unitPrice: "0.00",
@@ -331,22 +436,11 @@ export default function Quotations() {
     setShowItemDialog(true);
   };
 
-  const handleEditItem = (item: QuotationItem) => {
-    itemForm.reset({
-      ...item,
-      unitPrice: item.unitPrice?.toString() || "0.00",
-      lineTotal: item.lineTotal?.toString() || "0.00",
-    });
-    setEditingItem(item);
-    setShowItemDialog(true);
-  };
-
   const handleSaveItem = (data: QuotationItemFormData) => {
     createItemMutation.mutate(data);
   };
 
   const handleGeneratePDF = () => {
-    // TODO: Implement PDF generation
     toast({
       title: "Coming Soon",
       description: "PDF generation will be implemented soon",
@@ -363,316 +457,382 @@ export default function Quotations() {
     itemForm.setValue("lineTotal", lineTotal);
   }, [watchQuantity, watchUnitPrice, itemForm]);
 
+  // Render custom cell content that includes customers data
+  const renderCellWithCustomers = (value: any, row: Quotation, column: ColumnConfig) => {
+    if (column.renderCell) {
+      return column.renderCell(value, row, customers);
+    }
+    return value;
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Quotations</h2>
-          <p className="text-muted-foreground">Manage your quotations and generate PDFs</p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={handleNewQuotation} data-testid="button-new-quotation">
-            <Plus className="mr-2 h-4 w-4" />
-            New Quotation
-          </Button>
-          {selectedQuotation && (
-            <Button 
-              variant="outline" 
-              onClick={handleGeneratePDF}
-              data-testid="button-generate-pdf"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Generate PDF
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-12 gap-6">
-        {/* Quotations List */}
-        <div className="col-span-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quotations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {isLoading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-16 w-full" />
-                  ))
-                ) : quotations.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-4">
-                    No quotations found
-                  </p>
-                ) : (
-                  quotations.map((quotation) => {
-                    const customer = customers.find(c => c.id === quotation.customerId);
-                    return (
-                      <div
-                        key={quotation.id}
-                        className={`p-3 border rounded cursor-pointer hover:bg-muted/50 ${
-                          selectedQuotation?.id === quotation.id ? 'bg-muted border-primary' : ''
-                        }`}
-                        onClick={() => handleSelectQuotation(quotation)}
-                        data-testid={`quotation-item-${quotation.id}`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{quotation.quotationNumber}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {customer?.name || 'Unknown Customer'}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              €{quotation.totalAmount?.toString() || '0.00'}
-                            </p>
-                          </div>
-                          <Badge variant={quotation.status === 'draft' ? 'secondary' : 'default'}>
-                            {quotation.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
+    <div className="p-6">
+      <DataTableLayout
+        data={quotations}
+        isLoading={isLoading}
+        columns={tableState.columns}
+        setColumns={tableState.setColumns}
+        searchTerm={tableState.searchTerm}
+        setSearchTerm={tableState.setSearchTerm}
+        filters={tableState.filters}
+        setFilters={tableState.setFilters}
+        onAddFilter={tableState.addFilter}
+        onUpdateFilter={tableState.updateFilter}
+        onRemoveFilter={tableState.removeFilter}
+        sortConfig={tableState.sortConfig}
+        onSort={tableState.handleSort}
+        selectedRows={tableState.selectedRows}
+        setSelectedRows={tableState.setSelectedRows}
+        onToggleRowSelection={tableState.toggleRowSelection}
+        onToggleAllRows={() => {
+          const allIds = quotations.map(quotation => quotation.id);
+          tableState.toggleAllRows(allIds);
+        }}
+        onRowDoubleClick={handleViewQuotation}
+        getRowId={(quotation: Quotation) => quotation.id}
+        entityName="Quotation"
+        entityNamePlural="Quotations"
+        applyFiltersAndSearch={tableState.applyFiltersAndSearch}
+        applySorting={tableState.applySorting}
+        headerActions={[
+          {
+            key: 'add',
+            label: 'Add Quotation',
+            icon: <Plus className="h-4 w-4" />,
+            onClick: handleAddQuotation,
+            variant: 'default'
+          }
+        ]}
+        rowActions={(quotation: Quotation) => [
+          {
+            key: 'view',
+            label: 'View',
+            icon: <Eye className="h-4 w-4" />,
+            onClick: () => handleViewQuotation(quotation),
+            variant: 'outline'
+          },
+          {
+            key: 'edit',
+            label: 'Edit',
+            icon: <Edit className="h-4 w-4" />,
+            onClick: () => handleEditQuotation(quotation),
+            variant: 'outline'
+          },
+          {
+            key: 'delete',
+            label: 'Delete',
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: () => handleDeleteQuotation(quotation),
+            variant: 'destructive'
+          }
+        ]}
+        addEditDialog={{
+          isOpen: showQuotationDialog,
+          onOpenChange: setShowQuotationDialog,
+          title: editingQuotation ? 'Edit Quotation' : 'Add Quotation',
+          content: (
+            <form onSubmit={quotationForm.handleSubmit(handleSaveQuotation)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="quotationNumber">Quotation Number</Label>
+                  <Input
+                    id="quotationNumber"
+                    {...quotationForm.register("quotationNumber")}
+                    data-testid="input-quotation-number"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="revisionNumber">Revision Number</Label>
+                  <Input
+                    id="revisionNumber"
+                    {...quotationForm.register("revisionNumber")}
+                    data-testid="input-revision-number"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="customerId">Customer</Label>
+                  <Select 
+                    value={quotationForm.watch("customerId")} 
+                    onValueChange={(value) => quotationForm.setValue("customerId", value)}
+                  >
+                    <SelectTrigger data-testid="select-customer">
+                      <SelectValue placeholder="Select customer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quotationDate">Quotation Date</Label>
+                  <Input
+                    id="quotationDate"
+                    type="date"
+                    {...quotationForm.register("quotationDate")}
+                    data-testid="input-quotation-date"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="validUntil">Valid Until</Label>
+                  <Input
+                    id="validUntil"
+                    type="date"
+                    {...quotationForm.register("validUntil")}
+                    data-testid="input-valid-until"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select 
+                    value={quotationForm.watch("status")} 
+                    onValueChange={(value) => quotationForm.setValue("status", value)}
+                  >
+                    <SelectTrigger data-testid="select-status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="sent">Sent</SelectItem>
+                      <SelectItem value="accepted">Accepted</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                      <SelectItem value="expired">Expired</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    {...quotationForm.register("description")}
+                    data-testid="input-description"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="subtotal">Subtotal (€)</Label>
+                  <Input
+                    id="subtotal"
+                    type="number"
+                    step="0.01"
+                    {...quotationForm.register("subtotal")}
+                    data-testid="input-subtotal"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="totalAmount">Total Amount (€)</Label>
+                  <Input
+                    id="totalAmount"
+                    type="number"
+                    step="0.01"
+                    {...quotationForm.register("totalAmount")}
+                    data-testid="input-total-amount"
+                  />
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quotation Details */}
-        <div className="col-span-8">
-          {(selectedQuotation || isEditMode) ? (
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>
-                    {isEditMode ? (selectedQuotation ? 'Edit Quotation' : 'New Quotation') : 'Quotation Details'}
-                  </CardTitle>
-                  <div className="flex gap-2">
-                    {!isEditMode && (
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setIsEditMode(true)}
-                        data-testid="button-edit-quotation"
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </Button>
-                    )}
-                    {isEditMode && (
-                      <>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setIsEditMode(false)}
-                          data-testid="button-cancel-edit"
-                        >
-                          Cancel
-                        </Button>
-                        <Button 
-                          onClick={quotationForm.handleSubmit(handleSaveQuotation)}
-                          data-testid="button-save-quotation"
-                        >
-                          <Save className="mr-2 h-4 w-4" />
-                          Save
-                        </Button>
-                      </>
-                    )}
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setShowQuotationDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" data-testid="button-save-quotation">
+                  {editingQuotation ? 'Update' : 'Create'} Quotation
+                </Button>
+              </div>
+            </form>
+          )
+        }}
+        detailDialog={{
+          isOpen: showDetailDialog,
+          onOpenChange: setShowDetailDialog,
+          title: selectedQuotation ? `Quotation: ${selectedQuotation.quotationNumber}` : 'Quotation Details',
+          content: selectedQuotation ? (
+            <div className="space-y-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="general" data-testid="tab-general">General</TabsTrigger>
+                  <TabsTrigger value="conditions" data-testid="tab-conditions">Conditions</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="general" className="space-y-6">
+                  {/* General Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Customer</Label>
+                      <p className="text-sm mt-1">{customers.find(c => c.id === selectedQuotation.customerId)?.name || 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <Label>Quotation Date</Label>
+                      <p className="text-sm mt-1">
+                        {selectedQuotation.quotationDate ? format(new Date(selectedQuotation.quotationDate), 'dd-MM-yyyy') : '-'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label>Valid Until</Label>
+                      <p className="text-sm mt-1">
+                        {selectedQuotation.validUntil ? format(new Date(selectedQuotation.validUntil), 'dd-MM-yyyy') : '-'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label>Status</Label>
+                      <Badge className="mt-1" variant={selectedQuotation.status === 'draft' ? 'secondary' : 'default'}>
+                        {selectedQuotation.status}
+                      </Badge>
+                    </div>
+                    <div className="col-span-2">
+                      <Label>Description</Label>
+                      <p className="text-sm mt-1">{selectedQuotation.description || '-'}</p>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="general" data-testid="tab-general">General</TabsTrigger>
-                    <TabsTrigger value="conditions" data-testid="tab-conditions">Conditions</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="general" className="space-y-6">
-                    {/* General Information */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="quotationNumber">Quotation Number</Label>
-                        <Input
-                          id="quotationNumber"
-                          {...quotationForm.register("quotationNumber")}
-                          readOnly={!isEditMode}
-                          data-testid="input-quotation-number"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="revisionNumber">Revision Number</Label>
-                        <Input
-                          id="revisionNumber"
-                          {...quotationForm.register("revisionNumber")}
-                          readOnly={!isEditMode}
-                          data-testid="input-revision-number"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="customerId">Customer</Label>
-                        <Select 
-                          value={quotationForm.watch("customerId")} 
-                          onValueChange={(value) => quotationForm.setValue("customerId", value)}
-                          disabled={!isEditMode}
-                        >
-                          <SelectTrigger data-testid="select-customer">
-                            <SelectValue placeholder="Select customer" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {customers.map((customer) => (
-                              <SelectItem key={customer.id} value={customer.id}>
-                                {customer.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="quotationDate">Quotation Date</Label>
-                        <Input
-                          id="quotationDate"
-                          type="date"
-                          {...quotationForm.register("quotationDate")}
-                          readOnly={!isEditMode}
-                          data-testid="input-quotation-date"
-                        />
-                      </div>
-                      <div className="col-span-2 space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          {...quotationForm.register("description")}
-                          readOnly={!isEditMode}
-                          data-testid="input-description"
-                        />
-                      </div>
-                    </div>
 
-                    {/* Quotation Items Table */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Quotation Lines</h3>
-                        {isEditMode && (
-                          <Button onClick={handleAddItem} data-testid="button-add-item">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Item
-                          </Button>
-                        )}
-                      </div>
-                      
-                      <DataTableLayout
-                        data={quotationItems}
-                        isLoading={isLoadingItems}
-                        columns={itemTableState.columns}
-                        setColumns={itemTableState.setColumns}
-                        searchTerm={itemTableState.searchTerm}
-                        setSearchTerm={itemTableState.setSearchTerm}
-                        filters={itemTableState.filters}
-                        setFilters={itemTableState.setFilters}
-                        onAddFilter={itemTableState.addFilter}
-                        onUpdateFilter={itemTableState.updateFilter}
-                        onRemoveFilter={itemTableState.removeFilter}
-                        sortConfig={itemTableState.sortConfig}
-                        onSort={itemTableState.handleSort}
-                        selectedRows={itemTableState.selectedRows}
-                        setSelectedRows={itemTableState.setSelectedRows}
-                        onToggleRowSelection={itemTableState.toggleRowSelection}
-                        onToggleAllRows={() => {
-                          const allIds = quotationItems.map(item => item.id);
-                          itemTableState.toggleAllRows(allIds);
-                        }}
-                        onRowDoubleClick={handleEditItem}
-                        getRowId={(item: QuotationItem) => item.id}
-                        entityName="Quotation Item"
-                        entityNamePlural="Quotation Items"
-                        applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
-                        applySorting={itemTableState.applySorting}
-                      />
+                  {/* Quotation Items Table */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Quotation Lines</h3>
+                      <Button onClick={handleAddItem} data-testid="button-add-item">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Item
+                      </Button>
                     </div>
+                    
+                    <DataTableLayout
+                      data={quotationItems}
+                      isLoading={isLoadingItems}
+                      columns={itemTableState.columns}
+                      setColumns={itemTableState.setColumns}
+                      searchTerm={itemTableState.searchTerm}
+                      setSearchTerm={itemTableState.setSearchTerm}
+                      filters={itemTableState.filters}
+                      setFilters={itemTableState.setFilters}
+                      onAddFilter={itemTableState.addFilter}
+                      onUpdateFilter={itemTableState.updateFilter}
+                      onRemoveFilter={itemTableState.removeFilter}
+                      sortConfig={itemTableState.sortConfig}
+                      onSort={itemTableState.handleSort}
+                      selectedRows={itemTableState.selectedRows}
+                      setSelectedRows={itemTableState.setSelectedRows}
+                      onToggleRowSelection={itemTableState.toggleRowSelection}
+                      onToggleAllRows={() => {
+                        const allIds = quotationItems.map(item => item.id);
+                        itemTableState.toggleAllRows(allIds);
+                      }}
+                      getRowId={(item: QuotationItem) => item.id}
+                      entityName="Quotation Item"
+                      entityNamePlural="Quotation Items"
+                      applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
+                      applySorting={itemTableState.applySorting}
+                      addEditDialog={{
+                        isOpen: showItemDialog,
+                        onOpenChange: setShowItemDialog,
+                        title: editingItem ? 'Edit Item' : 'Add Item',
+                        content: (
+                          <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="description">Description</Label>
+                              <Textarea
+                                id="description"
+                                {...itemForm.register("description")}
+                                data-testid="input-item-description"
+                              />
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="quantity">Quantity</Label>
+                                <Input
+                                  id="quantity"
+                                  type="number"
+                                  {...itemForm.register("quantity", { valueAsNumber: true })}
+                                  data-testid="input-quantity"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="unitPrice">Unit Price (€)</Label>
+                                <Input
+                                  id="unitPrice"
+                                  type="number"
+                                  step="0.01"
+                                  {...itemForm.register("unitPrice")}
+                                  data-testid="input-unit-price"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="lineTotal">Line Total (€)</Label>
+                                <Input
+                                  id="lineTotal"
+                                  type="number"
+                                  step="0.01"
+                                  {...itemForm.register("lineTotal")}
+                                  readOnly
+                                  className="bg-muted"
+                                  data-testid="input-line-total"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
+                                Cancel
+                              </Button>
+                              <Button type="submit" data-testid="button-save-item">
+                                {editingItem ? 'Update' : 'Add'} Item
+                              </Button>
+                            </div>
+                          </form>
+                        )
+                      }}
+                    />
+                  </div>
 
-                    {/* Totals */}
-                    <div className="flex justify-end">
-                      <div className="w-80 space-y-2">
-                        <div className="flex justify-between">
-                          <span>Subtotal:</span>
-                          <span>€{quotationForm.watch("subtotal")}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Tax (21%):</span>
-                          <span>€{quotationForm.watch("taxAmount")}</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-lg border-t pt-2">
-                          <span>Total:</span>
-                          <span>€{quotationForm.watch("totalAmount")}</span>
-                        </div>
+                  {/* Totals */}
+                  <div className="flex justify-end">
+                    <div className="w-80 space-y-2">
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>€{selectedQuotation.subtotal?.toString() || '0.00'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Tax (21%):</span>
+                        <span>€{selectedQuotation.taxAmount?.toString() || '0.00'}</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-lg border-t pt-2">
+                        <span>Total:</span>
+                        <span>€{selectedQuotation.totalAmount?.toString() || '0.00'}</span>
                       </div>
                     </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="conditions" className="space-y-4">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="incoTerms">Incoterms</Label>
-                        <Input
-                          id="incoTerms"
-                          {...quotationForm.register("incoTerms")}
-                          readOnly={!isEditMode}
-                          placeholder="e.g., EXW, FOB, CIF"
-                          data-testid="input-inco-terms"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="paymentConditions">Payment Conditions</Label>
-                        <Textarea
-                          id="paymentConditions"
-                          {...quotationForm.register("paymentConditions")}
-                          readOnly={!isEditMode}
-                          placeholder="e.g., 30 days net, Payment upon delivery"
-                          data-testid="input-payment-conditions"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="deliveryConditions">Delivery Conditions</Label>
-                        <Textarea
-                          id="deliveryConditions"
-                          {...quotationForm.register("deliveryConditions")}
-                          readOnly={!isEditMode}
-                          placeholder="e.g., 2-3 weeks delivery time"
-                          data-testid="input-delivery-conditions"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="notes">Notes</Label>
-                        <Textarea
-                          id="notes"
-                          {...quotationForm.register("notes")}
-                          readOnly={!isEditMode}
-                          placeholder="Additional notes..."
-                          data-testid="input-notes"
-                        />
-                      </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="conditions" className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Incoterms</Label>
+                      <p className="text-sm mt-1">{selectedQuotation.incoTerms || '-'}</p>
                     </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="flex items-center justify-center h-96">
-                <div className="text-center">
-                  <FileText className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Quotation Selected</h3>
-                  <p className="text-muted-foreground">
-                    Select a quotation from the list or create a new one to get started.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+                    <div>
+                      <Label>Payment Conditions</Label>
+                      <p className="text-sm mt-1">{selectedQuotation.paymentConditions || '-'}</p>
+                    </div>
+                    <div>
+                      <Label>Delivery Conditions</Label>
+                      <p className="text-sm mt-1">{selectedQuotation.deliveryConditions || '-'}</p>
+                    </div>
+                    <div>
+                      <Label>Notes</Label>
+                      <p className="text-sm mt-1">{selectedQuotation.notes || '-'}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button onClick={handleGeneratePDF} data-testid="button-generate-pdf">
+                      <Download className="mr-2 h-4 w-4" />
+                      Generate PDF
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          ) : null
+        }}
+      />
     </div>
   );
 }
