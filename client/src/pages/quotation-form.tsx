@@ -465,34 +465,21 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-gray-500">Quotation Number</Label>
-                  <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-md border">
-                    <span className="font-mono text-sm">Auto-generated (Q-YYYY-NNN)</span>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-700">
+                    <span className="font-mono text-lg font-semibold text-blue-800 dark:text-blue-200">Q-2025-001</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-gray-500">Revision Number</Label>
-                  <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-md border">
-                    <span className="font-mono text-sm">V1.0 (Auto-generated)</span>
+                  <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border-2 border-purple-200 dark:border-purple-700">
+                    <span className="font-mono text-lg font-semibold text-purple-800 dark:text-purple-200">V1.0</span>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select 
-                    value={quotationForm.watch("status")} 
-                    onValueChange={(value) => quotationForm.setValue("status", value)}
-                  >
-                    <SelectTrigger data-testid="select-status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="sent">Sent</SelectItem>
-                      <SelectItem value="order">Order</SelectItem>
-                      <SelectItem value="declined">Declined</SelectItem>
-                      <SelectItem value="revised">Revised</SelectItem>
-                      <SelectItem value="expired">Expired</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-sm font-medium text-gray-500">Status</Label>
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border-2 border-green-200 dark:border-green-700">
+                    <span className="text-lg font-semibold text-green-800 dark:text-green-200">Draft</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
