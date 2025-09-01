@@ -268,9 +268,21 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="general" data-testid="tab-general">General</TabsTrigger>
-              <TabsTrigger value="conditions" data-testid="tab-conditions">Conditions</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-orange-50 dark:bg-orange-900/20 p-1 rounded-lg border border-orange-200 dark:border-orange-700">
+              <TabsTrigger 
+                value="general" 
+                data-testid="tab-general"
+                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=inactive]:text-orange-700 dark:data-[state=inactive]:text-orange-300 font-semibold px-4 py-2 rounded-md transition-all"
+              >
+                General
+              </TabsTrigger>
+              <TabsTrigger 
+                value="conditions" 
+                data-testid="tab-conditions"
+                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=inactive]:text-orange-700 dark:data-[state=inactive]:text-orange-300 font-semibold px-4 py-2 rounded-md transition-all"
+              >
+                Conditions
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="general" className="space-y-6">
