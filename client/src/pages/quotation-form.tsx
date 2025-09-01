@@ -463,22 +463,22 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-500">Quotation Number</Label>
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-700">
-                    <span className="font-mono text-lg font-semibold text-blue-800 dark:text-blue-200">Q-2025-001</span>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Quotation Number</Label>
+                  <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded border">
+                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>Q-2025-001</span>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-500">Revision Number</Label>
-                  <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border-2 border-purple-200 dark:border-purple-700">
-                    <span className="font-mono text-lg font-semibold text-purple-800 dark:text-purple-200">V1.0</span>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Revision Number</Label>
+                  <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded border">
+                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>V1.0</span>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-500">Status</Label>
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border-2 border-green-200 dark:border-green-700">
-                    <span className="text-lg font-semibold text-green-800 dark:text-green-200">Draft</span>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Status</Label>
+                  <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded border">
+                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>Draft</span>
                   </div>
                 </div>
               </div>
