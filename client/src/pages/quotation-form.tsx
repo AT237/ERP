@@ -15,13 +15,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Save, X, FileText, Download } from "lucide-react";
+import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import type { Quotation, InsertQuotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
+
+// Memo interface
+interface Memo {
+  id: string;
+  title: string;
+  content: string;
+  isInternal: boolean;
+  createdAt: Date;
+}
 
 // Form schemas
 const quotationFormSchema = insertQuotationSchema.extend({
@@ -249,6 +258,169 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
     itemForm.setValue("lineTotal", lineTotal);
   }, [watchQuantity, watchUnitPrice, itemForm]);
 
+  // Memo handlers
+  const handleAddMemo = () => {
+    const newMemo: Memo = {
+      id: `memo-${Date.now()}`,
+      title: `Memo ${memos.length + 1}`,
+      content: '',
+      isInternal: true,
+      createdAt: new Date()
+    };
+    setMemos(prev => [...prev, newMemo]);
+    toast({
+      title: "Success",
+      description: "New memo added",
+    });
+  };
+
+  const handleUpdateMemo = (memoId: string, updatedData: Partial<Memo>) => {
+    setMemos(prev => prev.map(memo => 
+      memo.id === memoId ? { ...memo, ...updatedData } : memo
+    ));
+  };
+
+  const handleDeleteMemo = (memoId: string) => {
+    setMemos(prev => prev.filter(memo => memo.id !== memoId));
+    toast({
+      title: "Success",
+      description: "Memo deleted",
+    });
+  };
+
+  const handleInsertTimestamp = (memoId: string, content: string) => {
+    const timestamp = new Date().toLocaleString('nl-NL');
+    const newContent = content + ` [${timestamp}] `;
+    handleUpdateMemo(memoId, { content: newContent });
+  };
+
+  // Memo Card Component
+  const MemoCard = ({ memo, index, onUpdate, onDelete, onInsertTimestamp }: {
+    memo: Memo;
+    index: number;
+    onUpdate: (data: Partial<Memo>) => void;
+    onDelete: () => void;
+    onInsertTimestamp: (content: string) => void;
+  }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [localTitle, setLocalTitle] = useState(memo.title);
+    const [localContent, setLocalContent] = useState(memo.content);
+    const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+    const handleSave = () => {
+      onUpdate({ title: localTitle, content: localContent });
+      setIsEditing(false);
+    };
+
+    const insertTimestampAtCursor = () => {
+      if (textareaRef.current) {
+        const cursorPos = textareaRef.current.selectionStart;
+        const timestamp = `[${new Date().toLocaleString('nl-NL')}]`;
+        const newContent = localContent.slice(0, cursorPos) + timestamp + localContent.slice(cursorPos);
+        setLocalContent(newContent);
+        onUpdate({ content: newContent });
+      } else {
+        onInsertTimestamp(localContent);
+      }
+    };
+
+    return (
+      <Card className="border border-orange-200 dark:border-orange-700">
+        <CardContent className="p-4">
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {isEditing ? (
+                  <Input
+                    value={localTitle}
+                    onChange={(e) => setLocalTitle(e.target.value)}
+                    className="font-semibold"
+                    placeholder="Memo title"
+                  />
+                ) : (
+                  <h4 className="font-semibold text-orange-800 dark:text-orange-200">
+                    {memo.title}
+                  </h4>
+                )}
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onUpdate({ isInternal: !memo.isInternal })}
+                    className={memo.isInternal ? 'text-blue-600' : 'text-green-600'}
+                  >
+                    {memo.isInternal ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {memo.isInternal ? 'Internal' : 'Print'}
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={insertTimestampAtCursor}
+                  title="Insert timestamp at cursor"
+                >
+                  <Clock className="h-4 w-4" />
+                </Button>
+                {isEditing ? (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={handleSave}>
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={onDelete} className="text-red-600">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div>
+              {isEditing ? (
+                <Textarea
+                  ref={textareaRef}
+                  value={localContent}
+                  onChange={(e) => setLocalContent(e.target.value)}
+                  placeholder="Enter memo content..."
+                  className="min-h-[100px]"
+                />
+              ) : (
+                <div className="min-h-[100px] p-3 bg-gray-50 dark:bg-gray-800 rounded border">
+                  {memo.content || <span className="text-gray-400 italic">No content yet...</span>}
+                </div>
+              )}
+            </div>
+            
+            {/* Footer */}
+            <div className="text-xs text-gray-500 flex items-center justify-between">
+              <span>Created: {memo.createdAt.toLocaleDateString('nl-NL')}</span>
+              <span className={`px-2 py-1 rounded text-xs ${
+                memo.isInternal 
+                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200' 
+                  : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200'
+              }`}>
+                {memo.isInternal ? 'Internal memo' : 'Will be printed'}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="p-6">
       <Card>
@@ -350,7 +522,7 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
                         </Select>
                       </div>
                       <div className="col-span-2 space-y-2">
-                        <Label htmlFor="description">Description</Label>
+                        <Label htmlFor="description">Quotation description</Label>
                         <Textarea
                           id="description"
                           {...quotationForm.register("description")}
@@ -358,130 +530,41 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
                         />
                       </div>
                     </div>
-
-                    {/* Quotation Items Table */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Quotation Lines</h3>
-                        <Button onClick={handleAddItem} data-testid="button-add-item">
-                          <Plus className="mr-2 h-4 w-4" />
-                          Add Item
-                        </Button>
-                      </div>
-                      
-                      <DataTableLayout
-                        data={quotationItems}
-                        isLoading={false}
-                        columns={itemTableState.columns}
-                        setColumns={itemTableState.setColumns}
-                        searchTerm={itemTableState.searchTerm}
-                        setSearchTerm={itemTableState.setSearchTerm}
-                        filters={itemTableState.filters}
-                        setFilters={itemTableState.setFilters}
-                        onAddFilter={itemTableState.addFilter}
-                        onUpdateFilter={itemTableState.updateFilter}
-                        onRemoveFilter={itemTableState.removeFilter}
-                        sortConfig={itemTableState.sortConfig}
-                        onSort={itemTableState.handleSort}
-                        selectedRows={itemTableState.selectedRows}
-                        setSelectedRows={itemTableState.setSelectedRows}
-                        onToggleRowSelection={itemTableState.toggleRowSelection}
-                        onToggleAllRows={() => {
-                          const allIds = quotationItems.map(item => item.id);
-                          itemTableState.toggleAllRows(allIds);
-                        }}
-                        getRowId={(item: QuotationItem) => item.id}
-                        entityName="Quotation Item"
-                        entityNamePlural="Quotation Items"
-                        applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
-                        applySorting={itemTableState.applySorting}
-                        rowActions={(item: QuotationItem) => [
-                          {
-                            key: 'delete',
-                            label: 'Delete',
-                            icon: <X className="h-4 w-4" />,
-                            onClick: () => handleDeleteItem(item),
-                            variant: 'destructive'
-                          }
-                        ]}
-                        addEditDialog={{
-                          isOpen: showItemDialog,
-                          onOpenChange: setShowItemDialog,
-                          title: 'Add Item',
-                          content: (
-                            <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                  id="description"
-                                  {...itemForm.register("description")}
-                                  data-testid="input-item-description"
-                                />
-                              </div>
-                              <div className="grid grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor="quantity">Quantity</Label>
-                                  <Input
-                                    id="quantity"
-                                    type="number"
-                                    {...itemForm.register("quantity", { valueAsNumber: true })}
-                                    data-testid="input-quantity"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="unitPrice">Unit Price (€)</Label>
-                                  <Input
-                                    id="unitPrice"
-                                    type="number"
-                                    step="0.01"
-                                    {...itemForm.register("unitPrice")}
-                                    data-testid="input-unit-price"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="lineTotal">Line Total (€)</Label>
-                                  <Input
-                                    id="lineTotal"
-                                    type="number"
-                                    step="0.01"
-                                    {...itemForm.register("lineTotal")}
-                                    readOnly
-                                    className="bg-muted"
-                                    data-testid="input-line-total"
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
-                                  Cancel
-                                </Button>
-                                <Button type="submit" data-testid="button-save-item">
-                                  Add Item
-                                </Button>
-                              </div>
-                            </form>
-                          )
-                        }}
-                      />
+                  </div>
+                )
+              },
+              {
+                id: "memo",
+                label: "Memo",
+                content: (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200">Memo Management</h3>
+                      <Button onClick={handleAddMemo} variant="outline" size="sm">
+                        <Plus className="mr-2 h-4 w-4" />
+                        New Memo
+                      </Button>
                     </div>
-
-                    {/* Totals */}
-                    <div className="flex justify-end">
-                      <div className="w-80 space-y-2">
-                        <div className="flex justify-between">
-                          <span>Subtotal:</span>
-                          <span>€{quotationForm.watch("subtotal")}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Tax (21%):</span>
-                          <span>€{quotationForm.watch("taxAmount")}</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-lg border-t pt-2">
-                          <span>Total:</span>
-                          <span>€{quotationForm.watch("totalAmount")}</span>
-                        </div>
+                    
+                    {memos.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <MessageSquare className="mx-auto h-12 w-12 mb-4 text-gray-300" />
+                        <p>No memos created yet. Click "New Memo" to add one.</p>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {memos.map((memo, index) => (
+                          <MemoCard
+                            key={memo.id}
+                            memo={memo}
+                            index={index}
+                            onUpdate={(updatedMemo) => handleUpdateMemo(memo.id, updatedMemo)}
+                            onDelete={() => handleDeleteMemo(memo.id)}
+                            onInsertTimestamp={(content) => handleInsertTimestamp(memo.id, content)}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )
               },
@@ -576,6 +659,130 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
               }
             ]}
           />
+
+          {/* Quotation Items - Always Visible */}
+          <div className="mt-8 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200">Quotation Lines</h3>
+              <Button onClick={handleAddItem} data-testid="button-add-item">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Item
+              </Button>
+            </div>
+            
+            <DataTableLayout
+              data={quotationItems}
+              isLoading={false}
+              columns={itemTableState.columns}
+              setColumns={itemTableState.setColumns}
+              searchTerm={itemTableState.searchTerm}
+              setSearchTerm={itemTableState.setSearchTerm}
+              filters={itemTableState.filters}
+              setFilters={itemTableState.setFilters}
+              onAddFilter={itemTableState.addFilter}
+              onUpdateFilter={itemTableState.updateFilter}
+              onRemoveFilter={itemTableState.removeFilter}
+              sortConfig={itemTableState.sortConfig}
+              onSort={itemTableState.handleSort}
+              selectedRows={itemTableState.selectedRows}
+              setSelectedRows={itemTableState.setSelectedRows}
+              onToggleRowSelection={itemTableState.toggleRowSelection}
+              onToggleAllRows={() => {
+                const allIds = quotationItems.map(item => item.id);
+                itemTableState.toggleAllRows(allIds);
+              }}
+              getRowId={(item: QuotationItem) => item.id}
+              entityName="Quotation Item"
+              entityNamePlural="Quotation Items"
+              applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
+              applySorting={itemTableState.applySorting}
+              rowActions={(item: QuotationItem) => [
+                {
+                  key: 'delete',
+                  label: 'Delete',
+                  icon: <X className="h-4 w-4" />,
+                  onClick: () => handleDeleteItem(item),
+                  variant: 'destructive'
+                }
+              ]}
+              addEditDialog={{
+                isOpen: showItemDialog,
+                onOpenChange: setShowItemDialog,
+                title: 'Add Item',
+                content: (
+                  <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        {...itemForm.register("description")}
+                        data-testid="input-item-description"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="quantity">Quantity</Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          {...itemForm.register("quantity", { valueAsNumber: true })}
+                          data-testid="input-quantity"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="unitPrice">Unit Price (€)</Label>
+                        <Input
+                          id="unitPrice"
+                          type="number"
+                          step="0.01"
+                          {...itemForm.register("unitPrice")}
+                          data-testid="input-unit-price"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lineTotal">Line Total (€)</Label>
+                        <Input
+                          id="lineTotal"
+                          type="number"
+                          step="0.01"
+                          {...itemForm.register("lineTotal")}
+                          readOnly
+                          className="bg-muted"
+                          data-testid="input-line-total"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" data-testid="button-save-item">
+                        Add Item
+                      </Button>
+                    </div>
+                  </form>
+                )
+              }}
+            />
+          </div>
+
+          {/* Totals - Always Visible */}
+          <div className="mt-6 flex justify-end">
+            <div className="w-80 space-y-2 bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200">
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span>€{quotationForm.watch("subtotal")}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Tax (21%):</span>
+                <span>€{quotationForm.watch("taxAmount")}</span>
+              </div>
+              <div className="flex justify-between font-bold text-lg border-t border-orange-300 pt-2">
+                <span>Total:</span>
+                <span className="text-orange-600">€{quotationForm.watch("totalAmount")}</span>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
