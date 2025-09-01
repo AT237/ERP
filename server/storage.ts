@@ -391,7 +391,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createQuotation(quotation: InsertQuotation): Promise<Quotation> {
-    const [newQuotation] = await db.insert(quotations).values(quotation).returning();
+    // Generate next quotation number with Q-YYYY-NNN format
+    const currentYear = quotation.quotationDate ? new Date(quotation.quotationDate).getFullYear() : new Date().getFullYear();
+    
+    // Get the last quotation for the current year
+    const lastQuotation = await db.select({ quotationNumber: quotations.quotationNumber })
+      .from(quotations)
+      .where(sql`EXTRACT(YEAR FROM ${quotations.quotationDate}) = ${currentYear}`)
+      .orderBy(desc(quotations.quotationNumber))
+      .limit(1);
+    
+    let nextNumber = 1;
+    if (lastQuotation.length > 0 && lastQuotation[0].quotationNumber) {
+      const match = lastQuotation[0].quotationNumber.match(/Q-(\d{4})-(\d{3})/);
+      if (match && parseInt(match[1]) === currentYear) {
+        nextNumber = parseInt(match[2]) + 1;
+      }
+    }
+    
+    const quotationNumber = `Q-${currentYear}-${nextNumber.toString().padStart(3, '0')}`;
+    
+    // Set validity to 30 days from quotation date if not provided
+    let validUntil = quotation.validUntil;
+    if (!validUntil && quotation.quotationDate) {
+      const quoteDate = new Date(quotation.quotationDate);
+      quoteDate.setDate(quoteDate.getDate() + 30);
+      validUntil = quoteDate;
+    }
+    
+    const [newQuotation] = await db.insert(quotations).values({
+      ...quotation,
+      quotationNumber,
+      validUntil,
+      revisionNumber: quotation.revisionNumber || "V1.0"
+    }).returning();
     return newQuotation;
   }
 

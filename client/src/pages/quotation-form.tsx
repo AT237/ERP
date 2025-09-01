@@ -121,13 +121,13 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
   const quotationForm = useForm<QuotationFormData>({
     resolver: zodResolver(quotationFormSchema),
     defaultValues: {
-      quotationNumber: `Q${Date.now()}`,
+      quotationNumber: "Auto-generated",
       customerId: "",
       description: "",
       revisionNumber: "V1.0",
       status: "draft",
       quotationDate: format(new Date(), 'yyyy-MM-dd'),
-      validUntil: "",
+      validUntil: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), // 30 days from now
       subtotal: "0.00",
       taxAmount: "0.00",
       totalAmount: "0.00",
@@ -258,6 +258,16 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
     const lineTotal = calculateLineTotal(watchQuantity || 1, watchUnitPrice || "0.00");
     itemForm.setValue("lineTotal", lineTotal);
   }, [watchQuantity, watchUnitPrice, itemForm]);
+
+  // Auto-update validity when quotation date changes
+  const watchQuotationDate = quotationForm.watch("quotationDate");
+  useEffect(() => {
+    if (watchQuotationDate) {
+      const quoteDate = new Date(watchQuotationDate);
+      quoteDate.setDate(quoteDate.getDate() + 30);
+      quotationForm.setValue("validUntil", format(quoteDate, 'yyyy-MM-dd'));
+    }
+  }, [watchQuotationDate, quotationForm]);
 
   // Memo handlers
   const handleAddMemo = () => {
@@ -456,7 +466,9 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
                         <Label htmlFor="quotationNumber">Quotation Number</Label>
                         <Input
                           id="quotationNumber"
-                          {...quotationForm.register("quotationNumber")}
+                          value="Auto-generated (Q-YYYY-NNN)"
+                          disabled
+                          className="bg-gray-100 dark:bg-gray-800 text-gray-500"
                           data-testid="input-quotation-number"
                         />
                       </div>
@@ -464,7 +476,9 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
                         <Label htmlFor="revisionNumber">Revision Number</Label>
                         <Input
                           id="revisionNumber"
-                          {...quotationForm.register("revisionNumber")}
+                          value="V1.0 (Auto-generated)"
+                          disabled
+                          className="bg-gray-100 dark:bg-gray-800 text-gray-500"
                           data-testid="input-revision-number"
                         />
                       </div>
@@ -516,8 +530,9 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
                           <SelectContent>
                             <SelectItem value="draft">Draft</SelectItem>
                             <SelectItem value="sent">Sent</SelectItem>
-                            <SelectItem value="accepted">Accepted</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
+                            <SelectItem value="order">Order</SelectItem>
+                            <SelectItem value="declined">Declined</SelectItem>
+                            <SelectItem value="revised">Revised</SelectItem>
                             <SelectItem value="expired">Expired</SelectItem>
                           </SelectContent>
                         </Select>

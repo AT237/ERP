@@ -86,6 +86,17 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     }
   };
 
+  const handleRevise = (quotation: Quotation) => {
+    if (onCreateNew) {
+      onCreateNew({
+        id: `revise-quotation-${quotation.id}`,
+        name: `Revise ${quotation.quotationNumber}`,
+        formType: 'quotation-revision',
+        parentId: 'quotations'
+      });
+    }
+  };
+
   const handleView = (quotation: Quotation) => {
     console.log('View:', quotation.quotationNumber);
   };
@@ -147,6 +158,13 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
             label: 'Edit',
             icon: <Edit className="h-4 w-4" />,
             onClick: () => handleEdit(quotation),
+            variant: 'outline'
+          },
+          {
+            key: 'revise',
+            label: 'Create Revision',
+            icon: <Plus className="h-4 w-4" />,
+            onClick: () => handleRevise(quotation),
             variant: 'outline'
           },
           {
