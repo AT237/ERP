@@ -26,19 +26,14 @@ interface Tab {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // FIXED: Remove timer that was causing flicker every second
   const [tabs, setTabs] = useState<Tab[]>([
     { id: 'dashboard', name: 'Dashboard', type: 'page', content: children }
   ]);
   const [activeTabId, setActiveTabId] = useState('dashboard');
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
+  // Get current time only when needed, no interval
+  const getCurrentTime = () => new Date();
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('nl-NL', {
@@ -403,10 +398,10 @@ export default function Layout({ children }: LayoutProps) {
             Admin Gebruiker
           </div>
           <div className="text-sm text-muted-foreground" data-testid="current-date">
-            {formatDate(currentTime)}
+            {formatDate(getCurrentTime())}
           </div>
           <div className="text-sm font-mono text-muted-foreground" data-testid="current-time">
-            {formatTime(currentTime)}
+            {formatTime(getCurrentTime())}
           </div>
         </div>
       </div>
