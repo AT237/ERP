@@ -18,9 +18,11 @@ interface LayoutProps {
 interface Tab {
   id: string;
   name: string;
-  type: 'section' | 'page' | 'menu';
+  type: 'section' | 'page' | 'menu' | 'form';
   menuRoute?: string;
   content?: React.ReactNode;
+  formType?: string;
+  parentId?: string;
 }
 
 export default function Layout({ children }: LayoutProps) {
@@ -93,6 +95,28 @@ export default function Layout({ children }: LayoutProps) {
       
       setTabs(prevTabs => [...prevTabs, newTab]);
       setActiveTabId(menuItem.id);
+    }
+  };
+
+  const handleFormClick = (formInfo: {id: string, name: string, formType: string, parentId?: string}) => {
+    // Check if tab already exists
+    const existingTab = tabs.find(tab => tab.id === formInfo.id);
+    
+    if (existingTab) {
+      // Switch to existing tab
+      setActiveTabId(formInfo.id);
+    } else {
+      // Create new tab for form
+      const newTab: Tab = {
+        id: formInfo.id,
+        name: formInfo.name,
+        type: 'form',
+        formType: formInfo.formType,
+        parentId: formInfo.parentId
+      };
+      
+      setTabs(prevTabs => [...prevTabs, newTab]);
+      setActiveTabId(formInfo.id);
     }
   };
 
@@ -240,7 +264,7 @@ export default function Layout({ children }: LayoutProps) {
         const QuotationsPage = lazy(() => import('../pages/quotations'));
         return (
           <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
-            <QuotationsPage />
+            <QuotationsPage onCreateNew={handleFormClick} />
           </Suspense>
         );
       }
@@ -320,6 +344,34 @@ export default function Layout({ children }: LayoutProps) {
             {activeTab.menuRoute && (
               <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
             )}
+          </div>
+        </div>
+      );
+    }
+    
+    if (activeTab.type === 'form') {
+      // Handle form tabs
+      if (activeTab.formType === 'quotation') {
+        const QuotationForm = lazy(() => import('@/pages/quotation-form'));
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <QuotationForm onSave={() => {
+              // Return to quotations tab after save
+              const quotationsTab = tabs.find(tab => tab.id === 'quotations');
+              if (quotationsTab) {
+                setActiveTabId('quotations');
+                closeTab(activeTab.id);
+              }
+            }} />
+          </Suspense>
+        );
+      }
+      
+      // Default form placeholder
+      return (
+        <div className="p-6">
+          <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+            <p className="text-muted-foreground">Form for {activeTab.name} will be implemented here.</p>
           </div>
         </div>
       );

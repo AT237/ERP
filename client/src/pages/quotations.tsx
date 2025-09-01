@@ -51,10 +51,7 @@ const defaultColumns: ColumnConfig[] = [
     width: 200, 
     filterable: true, 
     sortable: true,
-    renderCell: (value: string, row: Quotation, customers: Customer[]) => {
-      const customer = customers?.find(c => c.id === value);
-      return customer?.name || 'Unknown';
-    }
+    renderCell: (value: string) => value
   },
   { 
     key: 'quotationDate', 
@@ -146,7 +143,11 @@ const defaultItemColumns: ColumnConfig[] = [
   },
 ];
 
-export default function Quotations() {
+interface QuotationsProps {
+  onCreateNew?: (formInfo: {id: string, name: string, formType: string, parentId?: string}) => void;
+}
+
+export default function Quotations({ onCreateNew }: QuotationsProps) {
   const [showQuotationDialog, setShowQuotationDialog] = useState(false);
   const [editingQuotation, setEditingQuotation] = useState<Quotation | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
@@ -286,7 +287,7 @@ export default function Quotations() {
         taxAmount: parseFloat(data.taxAmount || "0"),
         totalAmount: parseFloat(data.totalAmount),
       };
-      const response = await apiRequest("PUT", `/api/quotations/${editingQuotation!.id}`, processedData);
+      const response = await apiRequest("PUT", `/api/quotations/${editingQuotation?.id}`, processedData);
       return response.json();
     },
     onSuccess: () => {
@@ -362,31 +363,41 @@ export default function Quotations() {
 
   // Event handlers
   const handleAddQuotation = () => {
-    quotationForm.reset({
-      quotationNumber: `Q${Date.now()}`,
-      customerId: "",
-      description: "",
-      revisionNumber: "V1.0",
-      status: "draft",
-      quotationDate: format(new Date(), 'yyyy-MM-dd'),
-      validUntil: "",
-      subtotal: "0.00",
-      taxAmount: "0.00",
-      totalAmount: "0.00",
-      notes: "",
-      incoTerms: "",
-      paymentConditions: "",
-      deliveryConditions: "",
-    });
-    setEditingQuotation(null);
-    setShowQuotationDialog(true);
+    if (onCreateNew) {
+      onCreateNew({
+        id: 'new-quotation',
+        name: 'New Quotation',
+        formType: 'quotation',
+        parentId: 'quotations'
+      });
+    } else {
+      // Fallback to dialog if no tab system
+      quotationForm.reset({
+        quotationNumber: `Q${Date.now()}`,
+        customerId: "",
+        description: "",
+        revisionNumber: "V1.0",
+        status: "draft",
+        quotationDate: format(new Date(), 'yyyy-MM-dd'),
+        validUntil: "",
+        subtotal: "0.00",
+        taxAmount: "0.00",
+        totalAmount: "0.00",
+        notes: "",
+        incoTerms: "",
+        paymentConditions: "",
+        deliveryConditions: "",
+      });
+      setEditingQuotation(null);
+      setShowQuotationDialog(true);
+    }
   };
 
   const handleEditQuotation = (quotation: Quotation) => {
     quotationForm.reset({
       ...quotation,
       quotationDate: quotation.quotationDate ? format(new Date(quotation.quotationDate), 'yyyy-MM-dd') : '',
-      validUntil: quotation.validUntil ? format(new Date(quotation.validUntil), 'yyyy-MM-dd') : '',
+      validUntil: quotation.validUntil ? format(new Date(quotation.validUntil), 'yyyy-MM-dd') : undefined,
       subtotal: quotation.subtotal?.toString() || "0.00",
       taxAmount: quotation.taxAmount?.toString() || "0.00",
       totalAmount: quotation.totalAmount?.toString() || "0.00",
@@ -460,7 +471,7 @@ export default function Quotations() {
   // Render custom cell content that includes customers data
   const renderCellWithCustomers = (value: any, row: Quotation, column: ColumnConfig) => {
     if (column.renderCell) {
-      return column.renderCell(value, row, customers);
+      return column.renderCell(value, row);
     }
     return value;
   };
