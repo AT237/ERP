@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FormTabLayout } from '@/components/layouts/FormTabLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
@@ -253,7 +254,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       const processedData = {
         ...data,
         quotationDate: data.quotationDate ? new Date(data.quotationDate) : new Date(),
-        validUntil: data.validUntil ? new Date(data.validUntil) : null,
+        validUntil: data.validUntil ? new Date(data.validUntil) : undefined,
         subtotal: parseFloat(data.subtotal),
         taxAmount: parseFloat(data.taxAmount || "0"),
         totalAmount: parseFloat(data.totalAmount),
@@ -285,7 +286,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       const processedData = {
         ...data,
         quotationDate: data.quotationDate ? new Date(data.quotationDate) : new Date(),
-        validUntil: data.validUntil ? new Date(data.validUntil) : null,
+        validUntil: data.validUntil ? new Date(data.validUntil) : undefined,
         subtotal: parseFloat(data.subtotal),
         taxAmount: parseFloat(data.taxAmount || "0"),
         totalAmount: parseFloat(data.totalAmount),
@@ -399,7 +400,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   const handleEditQuotation = (quotation: Quotation) => {
     quotationForm.reset({
       ...quotation,
-      quotationDate: quotation.quotationDate ? format(new Date(quotation.quotationDate), 'yyyy-MM-dd') : '',
+      quotationDate: quotation.quotationDate ? format(new Date(quotation.quotationDate), 'yyyy-MM-dd') : undefined,
       validUntil: quotation.validUntil ? format(new Date(quotation.validUntil), 'yyyy-MM-dd') : undefined,
       subtotal: quotation.subtotal?.toString() || "0.00",
       taxAmount: quotation.taxAmount?.toString() || "0.00",
@@ -655,198 +656,260 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
           title: selectedQuotation ? `Quotation: ${selectedQuotation.quotationNumber}` : 'Quotation Details',
           content: selectedQuotation ? (
             <div className="space-y-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2 bg-orange-50 dark:bg-orange-900/20 p-1 rounded-lg border border-orange-200 dark:border-orange-700">
-                  <TabsTrigger 
-                    value="general" 
-                    data-testid="tab-general"
-                    className="data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=inactive]:text-orange-700 dark:data-[state=inactive]:text-orange-300 font-semibold px-4 py-2 rounded-md transition-all"
-                  >
-                    General
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="conditions" 
-                    data-testid="tab-conditions"
-                    className="data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=inactive]:text-orange-700 dark:data-[state=inactive]:text-orange-300 font-semibold px-4 py-2 rounded-md transition-all"
-                  >
-                    Conditions
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="general" className="space-y-6">
-                  {/* General Information */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Customer</Label>
-                      <p className="text-sm mt-1">{customers.find(c => c.id === selectedQuotation.customerId)?.name || 'Unknown'}</p>
-                    </div>
-                    <div>
-                      <Label>Quotation Date</Label>
-                      <p className="text-sm mt-1">
-                        {selectedQuotation.quotationDate ? format(new Date(selectedQuotation.quotationDate), 'dd-MM-yyyy') : '-'}
-                      </p>
-                    </div>
-                    <div>
-                      <Label>Valid Until</Label>
-                      <p className="text-sm mt-1">
-                        {selectedQuotation.validUntil ? format(new Date(selectedQuotation.validUntil), 'dd-MM-yyyy') : '-'}
-                      </p>
-                    </div>
-                    <div>
-                      <Label>Status</Label>
-                      <Badge className="mt-1" variant={selectedQuotation.status === 'draft' ? 'secondary' : 'default'}>
-                        {selectedQuotation.status}
-                      </Badge>
-                    </div>
-                    <div className="col-span-2">
-                      <Label>Description</Label>
-                      <p className="text-sm mt-1">{selectedQuotation.description || '-'}</p>
-                    </div>
-                  </div>
+              <FormTabLayout
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                tabs={[
+                  {
+                    id: "general",
+                    label: "General",
+                    content: (
+                      <div className="space-y-6">
+                        {/* General Information */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Customer</Label>
+                            <p className="text-sm mt-1">{customers.find(c => c.id === selectedQuotation.customerId)?.name || 'Unknown'}</p>
+                          </div>
+                          <div>
+                            <Label>Quotation Date</Label>
+                            <p className="text-sm mt-1">
+                              {selectedQuotation.quotationDate ? format(new Date(selectedQuotation.quotationDate), 'dd-MM-yyyy') : '-'}
+                            </p>
+                          </div>
+                          <div>
+                            <Label>Valid Until</Label>
+                            <p className="text-sm mt-1">
+                              {selectedQuotation.validUntil ? format(new Date(selectedQuotation.validUntil), 'dd-MM-yyyy') : '-'}
+                            </p>
+                          </div>
+                          <div>
+                            <Label>Status</Label>
+                            <Badge className="mt-1" variant={selectedQuotation.status === 'draft' ? 'secondary' : 'default'}>
+                              {selectedQuotation.status}
+                            </Badge>
+                          </div>
+                          <div className="col-span-2">
+                            <Label>Description</Label>
+                            <p className="text-sm mt-1">{selectedQuotation.description || '-'}</p>
+                          </div>
+                        </div>
 
-                  {/* Quotation Items Table */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Quotation Lines</h3>
-                      <Button onClick={handleAddItem} data-testid="button-add-item">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Item
-                      </Button>
-                    </div>
-                    
-                    <DataTableLayout
-                      data={quotationItems}
-                      isLoading={isLoadingItems}
-                      columns={itemTableState.columns}
-                      setColumns={itemTableState.setColumns}
-                      searchTerm={itemTableState.searchTerm}
-                      setSearchTerm={itemTableState.setSearchTerm}
-                      filters={itemTableState.filters}
-                      setFilters={itemTableState.setFilters}
-                      onAddFilter={itemTableState.addFilter}
-                      onUpdateFilter={itemTableState.updateFilter}
-                      onRemoveFilter={itemTableState.removeFilter}
-                      sortConfig={itemTableState.sortConfig}
-                      onSort={itemTableState.handleSort}
-                      selectedRows={itemTableState.selectedRows}
-                      setSelectedRows={itemTableState.setSelectedRows}
-                      onToggleRowSelection={itemTableState.toggleRowSelection}
-                      onToggleAllRows={() => {
-                        const allIds = quotationItems.map(item => item.id);
-                        itemTableState.toggleAllRows(allIds);
-                      }}
-                      getRowId={(item: QuotationItem) => item.id}
-                      entityName="Quotation Item"
-                      entityNamePlural="Quotation Items"
-                      applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
-                      applySorting={itemTableState.applySorting}
-                      addEditDialog={{
-                        isOpen: showItemDialog,
-                        onOpenChange: setShowItemDialog,
-                        title: editingItem ? 'Edit Item' : 'Add Item',
-                        content: (
-                          <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="description">Description</Label>
-                              <Textarea
-                                id="description"
-                                {...itemForm.register("description")}
-                                data-testid="input-item-description"
-                              />
-                            </div>
-                            <div className="grid grid-cols-3 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="quantity">Quantity</Label>
-                                <Input
-                                  id="quantity"
-                                  type="number"
-                                  {...itemForm.register("quantity", { valueAsNumber: true })}
-                                  data-testid="input-quantity"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="unitPrice">Unit Price (€)</Label>
-                                <Input
-                                  id="unitPrice"
-                                  type="number"
-                                  step="0.01"
-                                  {...itemForm.register("unitPrice")}
-                                  data-testid="input-unit-price"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="lineTotal">Line Total (€)</Label>
-                                <Input
-                                  id="lineTotal"
-                                  type="number"
-                                  step="0.01"
-                                  {...itemForm.register("lineTotal")}
-                                  readOnly
-                                  className="bg-muted"
-                                  data-testid="input-line-total"
-                                />
-                              </div>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
-                                Cancel
-                              </Button>
-                              <Button type="submit" data-testid="button-save-item">
-                                {editingItem ? 'Update' : 'Add'} Item
-                              </Button>
-                            </div>
-                          </form>
-                        )
-                      }}
-                    />
-                  </div>
+                        {/* Quotation Items Table */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold">Quotation Lines</h3>
+                            <Button onClick={handleAddItem} data-testid="button-add-item">
+                              <Plus className="mr-2 h-4 w-4" />
+                              Add Item
+                            </Button>
+                          </div>
+                          
+                          <DataTableLayout
+                            data={quotationItems}
+                            isLoading={isLoadingItems}
+                            columns={itemTableState.columns}
+                            setColumns={itemTableState.setColumns}
+                            searchTerm={itemTableState.searchTerm}
+                            setSearchTerm={itemTableState.setSearchTerm}
+                            filters={itemTableState.filters}
+                            setFilters={itemTableState.setFilters}
+                            onAddFilter={itemTableState.addFilter}
+                            onUpdateFilter={itemTableState.updateFilter}
+                            onRemoveFilter={itemTableState.removeFilter}
+                            sortConfig={itemTableState.sortConfig}
+                            onSort={itemTableState.handleSort}
+                            selectedRows={itemTableState.selectedRows}
+                            setSelectedRows={itemTableState.setSelectedRows}
+                            onToggleRowSelection={itemTableState.toggleRowSelection}
+                            onToggleAllRows={() => {
+                              const allIds = quotationItems.map(item => item.id);
+                              itemTableState.toggleAllRows(allIds);
+                            }}
+                            getRowId={(item: QuotationItem) => item.id}
+                            entityName="Quotation Item"
+                            entityNamePlural="Quotation Items"
+                            applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
+                            applySorting={itemTableState.applySorting}
+                            addEditDialog={{
+                              isOpen: showItemDialog,
+                              onOpenChange: setShowItemDialog,
+                              title: editingItem ? 'Edit Item' : 'Add Item',
+                              content: (
+                                <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="description">Description</Label>
+                                    <Textarea
+                                      id="description"
+                                      {...itemForm.register("description")}
+                                      data-testid="input-item-description"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-4">
+                                    <div className="space-y-2">
+                                      <Label htmlFor="quantity">Quantity</Label>
+                                      <Input
+                                        id="quantity"
+                                        type="number"
+                                        {...itemForm.register("quantity", { valueAsNumber: true })}
+                                        data-testid="input-quantity"
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label htmlFor="unitPrice">Unit Price (€)</Label>
+                                      <Input
+                                        id="unitPrice"
+                                        type="number"
+                                        step="0.01"
+                                        {...itemForm.register("unitPrice")}
+                                        data-testid="input-unit-price"
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label htmlFor="lineTotal">Line Total (€)</Label>
+                                      <Input
+                                        id="lineTotal"
+                                        type="number"
+                                        step="0.01"
+                                        {...itemForm.register("lineTotal")}
+                                        readOnly
+                                        className="bg-muted"
+                                        data-testid="input-line-total"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-end gap-2">
+                                    <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
+                                      Cancel
+                                    </Button>
+                                    <Button type="submit" data-testid="button-save-item">
+                                      {editingItem ? 'Update' : 'Add'} Item
+                                    </Button>
+                                  </div>
+                                </form>
+                              )
+                            }}
+                          />
+                        </div>
 
-                  {/* Totals */}
-                  <div className="flex justify-end">
-                    <div className="w-80 space-y-2">
-                      <div className="flex justify-between">
-                        <span>Subtotal:</span>
-                        <span>€{selectedQuotation.subtotal?.toString() || '0.00'}</span>
+                        {/* Totals */}
+                        <div className="flex justify-end">
+                          <div className="w-80 space-y-2">
+                            <div className="flex justify-between">
+                              <span>Subtotal:</span>
+                              <span>€{selectedQuotation.subtotal?.toString() || '0.00'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Tax (21%):</span>
+                              <span>€{selectedQuotation.taxAmount?.toString() || '0.00'}</span>
+                            </div>
+                            <div className="flex justify-between font-bold text-lg border-t pt-2">
+                              <span>Total:</span>
+                              <span>€{selectedQuotation.totalAmount?.toString() || '0.00'}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Tax (21%):</span>
-                        <span>€{selectedQuotation.taxAmount?.toString() || '0.00'}</span>
+                    )
+                  },
+                  {
+                    id: "conditions",
+                    label: "Conditions",
+                    content: (
+                      <div className="space-y-4">
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Incoterms</Label>
+                            <p className="text-sm mt-1">{selectedQuotation.incoTerms || '-'}</p>
+                          </div>
+                          <div>
+                            <Label>Payment Conditions</Label>
+                            <p className="text-sm mt-1">{selectedQuotation.paymentConditions || '-'}</p>
+                          </div>
+                          <div>
+                            <Label>Delivery Conditions</Label>
+                            <p className="text-sm mt-1">{selectedQuotation.deliveryConditions || '-'}</p>
+                          </div>
+                          <div>
+                            <Label>Notes</Label>
+                            <p className="text-sm mt-1">{selectedQuotation.notes || '-'}</p>
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <Button onClick={handleGeneratePDF} data-testid="button-generate-pdf">
+                            <Download className="mr-2 h-4 w-4" />
+                            Generate PDF
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex justify-between font-bold text-lg border-t pt-2">
-                        <span>Total:</span>
-                        <span>€{selectedQuotation.totalAmount?.toString() || '0.00'}</span>
+                    )
+                  },
+                  {
+                    id: "financial",
+                    label: "Financial",
+                    content: (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Financial Overview</h3>
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <div>
+                              <Label>Subtotal</Label>
+                              <p className="text-lg font-medium">€{selectedQuotation.subtotal?.toString() || '0.00'}</p>
+                            </div>
+                            <div>
+                              <Label>Tax (21%)</Label>
+                              <p className="text-lg font-medium">€{selectedQuotation.taxAmount?.toString() || '0.00'}</p>
+                            </div>
+                            <div className="border-t pt-2">
+                              <Label>Total Amount</Label>
+                              <p className="text-2xl font-bold text-orange-600">€{selectedQuotation.totalAmount?.toString() || '0.00'}</p>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div>
+                              <Label>Status</Label>
+                              <Badge className="mt-1" variant={selectedQuotation.status === 'draft' ? 'secondary' : 'default'}>
+                                {selectedQuotation.status}
+                              </Badge>
+                            </div>
+                            <div>
+                              <Label>Created Date</Label>
+                              <p className="text-sm">{selectedQuotation.quotationDate ? format(new Date(selectedQuotation.quotationDate), 'dd-MM-yyyy') : '-'}</p>
+                            </div>
+                            <div>
+                              <Label>Valid Until</Label>
+                              <p className="text-sm">{selectedQuotation.validUntil ? format(new Date(selectedQuotation.validUntil), 'dd-MM-yyyy') : '-'}</p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="conditions" className="space-y-4">
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Incoterms</Label>
-                      <p className="text-sm mt-1">{selectedQuotation.incoTerms || '-'}</p>
-                    </div>
-                    <div>
-                      <Label>Payment Conditions</Label>
-                      <p className="text-sm mt-1">{selectedQuotation.paymentConditions || '-'}</p>
-                    </div>
-                    <div>
-                      <Label>Delivery Conditions</Label>
-                      <p className="text-sm mt-1">{selectedQuotation.deliveryConditions || '-'}</p>
-                    </div>
-                    <div>
-                      <Label>Notes</Label>
-                      <p className="text-sm mt-1">{selectedQuotation.notes || '-'}</p>
-                    </div>
-                  </div>
-                  <div className="flex justify-end">
-                    <Button onClick={handleGeneratePDF} data-testid="button-generate-pdf">
-                      <Download className="mr-2 h-4 w-4" />
-                      Generate PDF
-                    </Button>
-                  </div>
-                </TabsContent>
-              </Tabs>
+                    )
+                  },
+                  {
+                    id: "documents",
+                    label: "Documents",
+                    content: (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Document Management</h3>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                          <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                          <p className="text-gray-600 mb-4">No documents uploaded yet</p>
+                          <div className="space-x-2">
+                            <Button variant="outline">
+                              <Plus className="mr-2 h-4 w-4" />
+                              Upload Document
+                            </Button>
+                            <Button onClick={handleGeneratePDF}>
+                              <Download className="mr-2 h-4 w-4" />
+                              Generate PDF
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  }
+                ]}
+              />
             </div>
           ) : null
         }}

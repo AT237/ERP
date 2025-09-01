@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FormTabLayout } from '@/components/layouts/FormTabLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
@@ -14,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Save, X } from "lucide-react";
+import { Plus, Save, X, FileText, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
@@ -163,7 +164,7 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
       const processedData = {
         ...data,
         quotationDate: data.quotationDate ? new Date(data.quotationDate) : new Date(),
-        validUntil: data.validUntil ? new Date(data.validUntil) : null,
+        validUntil: data.validUntil ? new Date(data.validUntil) : undefined,
         subtotal: parseFloat(data.subtotal),
         taxAmount: parseFloat(data.taxAmount || "0"),
         totalAmount: parseFloat(data.totalAmount),
@@ -267,273 +268,314 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 bg-orange-50 dark:bg-orange-900/20 p-1 rounded-lg border border-orange-200 dark:border-orange-700">
-              <TabsTrigger 
-                value="general" 
-                data-testid="tab-general"
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=inactive]:text-orange-700 dark:data-[state=inactive]:text-orange-300 font-semibold px-4 py-2 rounded-md transition-all"
-              >
-                General
-              </TabsTrigger>
-              <TabsTrigger 
-                value="conditions" 
-                data-testid="tab-conditions"
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=inactive]:text-orange-700 dark:data-[state=inactive]:text-orange-300 font-semibold px-4 py-2 rounded-md transition-all"
-              >
-                Conditions
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="general" className="space-y-6">
-              {/* General Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="quotationNumber">Quotation Number</Label>
-                  <Input
-                    id="quotationNumber"
-                    {...quotationForm.register("quotationNumber")}
-                    data-testid="input-quotation-number"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="revisionNumber">Revision Number</Label>
-                  <Input
-                    id="revisionNumber"
-                    {...quotationForm.register("revisionNumber")}
-                    data-testid="input-revision-number"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customerId">Customer</Label>
-                  <Select 
-                    value={quotationForm.watch("customerId")} 
-                    onValueChange={(value) => quotationForm.setValue("customerId", value)}
-                  >
-                    <SelectTrigger data-testid="select-customer">
-                      <SelectValue placeholder="Select customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="quotationDate">Quotation Date</Label>
-                  <Input
-                    id="quotationDate"
-                    type="date"
-                    {...quotationForm.register("quotationDate")}
-                    data-testid="input-quotation-date"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="validUntil">Valid Until</Label>
-                  <Input
-                    id="validUntil"
-                    type="date"
-                    {...quotationForm.register("validUntil")}
-                    data-testid="input-valid-until"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select 
-                    value={quotationForm.watch("status")} 
-                    onValueChange={(value) => quotationForm.setValue("status", value)}
-                  >
-                    <SelectTrigger data-testid="select-status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="sent">Sent</SelectItem>
-                      <SelectItem value="accepted">Accepted</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                      <SelectItem value="expired">Expired</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    {...quotationForm.register("description")}
-                    data-testid="input-description"
-                  />
-                </div>
-              </div>
+          <FormTabLayout
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            tabs={[
+              {
+                id: "general",
+                label: "General",
+                content: (
+                  <div className="space-y-6">
+                    {/* General Information */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="quotationNumber">Quotation Number</Label>
+                        <Input
+                          id="quotationNumber"
+                          {...quotationForm.register("quotationNumber")}
+                          data-testid="input-quotation-number"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="revisionNumber">Revision Number</Label>
+                        <Input
+                          id="revisionNumber"
+                          {...quotationForm.register("revisionNumber")}
+                          data-testid="input-revision-number"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="customerId">Customer</Label>
+                        <Select 
+                          value={quotationForm.watch("customerId")} 
+                          onValueChange={(value) => quotationForm.setValue("customerId", value)}
+                        >
+                          <SelectTrigger data-testid="select-customer">
+                            <SelectValue placeholder="Select customer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {customers.map((customer) => (
+                              <SelectItem key={customer.id} value={customer.id}>
+                                {customer.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="quotationDate">Quotation Date</Label>
+                        <Input
+                          id="quotationDate"
+                          type="date"
+                          {...quotationForm.register("quotationDate")}
+                          data-testid="input-quotation-date"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="validUntil">Valid Until</Label>
+                        <Input
+                          id="validUntil"
+                          type="date"
+                          {...quotationForm.register("validUntil")}
+                          data-testid="input-valid-until"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="status">Status</Label>
+                        <Select 
+                          value={quotationForm.watch("status")} 
+                          onValueChange={(value) => quotationForm.setValue("status", value)}
+                        >
+                          <SelectTrigger data-testid="select-status">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="sent">Sent</SelectItem>
+                            <SelectItem value="accepted">Accepted</SelectItem>
+                            <SelectItem value="rejected">Rejected</SelectItem>
+                            <SelectItem value="expired">Expired</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-2 space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          id="description"
+                          {...quotationForm.register("description")}
+                          data-testid="input-description"
+                        />
+                      </div>
+                    </div>
 
-              {/* Quotation Items Table */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Quotation Lines</h3>
-                  <Button onClick={handleAddItem} data-testid="button-add-item">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Item
-                  </Button>
-                </div>
-                
-                <DataTableLayout
-                  data={quotationItems}
-                  isLoading={false}
-                  columns={itemTableState.columns}
-                  setColumns={itemTableState.setColumns}
-                  searchTerm={itemTableState.searchTerm}
-                  setSearchTerm={itemTableState.setSearchTerm}
-                  filters={itemTableState.filters}
-                  setFilters={itemTableState.setFilters}
-                  onAddFilter={itemTableState.addFilter}
-                  onUpdateFilter={itemTableState.updateFilter}
-                  onRemoveFilter={itemTableState.removeFilter}
-                  sortConfig={itemTableState.sortConfig}
-                  onSort={itemTableState.handleSort}
-                  selectedRows={itemTableState.selectedRows}
-                  setSelectedRows={itemTableState.setSelectedRows}
-                  onToggleRowSelection={itemTableState.toggleRowSelection}
-                  onToggleAllRows={() => {
-                    const allIds = quotationItems.map(item => item.id);
-                    itemTableState.toggleAllRows(allIds);
-                  }}
-                  getRowId={(item: QuotationItem) => item.id}
-                  entityName="Quotation Item"
-                  entityNamePlural="Quotation Items"
-                  applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
-                  applySorting={itemTableState.applySorting}
-                  rowActions={(item: QuotationItem) => [
-                    {
-                      key: 'delete',
-                      label: 'Delete',
-                      icon: <X className="h-4 w-4" />,
-                      onClick: () => handleDeleteItem(item),
-                      variant: 'destructive'
-                    }
-                  ]}
-                  addEditDialog={{
-                    isOpen: showItemDialog,
-                    onOpenChange: setShowItemDialog,
-                    title: 'Add Item',
-                    content: (
-                      <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="description">Description</Label>
-                          <Textarea
-                            id="description"
-                            {...itemForm.register("description")}
-                            data-testid="input-item-description"
-                          />
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="quantity">Quantity</Label>
-                            <Input
-                              id="quantity"
-                              type="number"
-                              {...itemForm.register("quantity", { valueAsNumber: true })}
-                              data-testid="input-quantity"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="unitPrice">Unit Price (€)</Label>
-                            <Input
-                              id="unitPrice"
-                              type="number"
-                              step="0.01"
-                              {...itemForm.register("unitPrice")}
-                              data-testid="input-unit-price"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="lineTotal">Line Total (€)</Label>
-                            <Input
-                              id="lineTotal"
-                              type="number"
-                              step="0.01"
-                              {...itemForm.register("lineTotal")}
-                              readOnly
-                              className="bg-muted"
-                              data-testid="input-line-total"
-                            />
-                          </div>
-                        </div>
-                        <div className="flex justify-end gap-2">
-                          <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
-                            Cancel
-                          </Button>
-                          <Button type="submit" data-testid="button-save-item">
-                            Add Item
-                          </Button>
-                        </div>
-                      </form>
-                    )
-                  }}
-                />
-              </div>
+                    {/* Quotation Items Table */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Quotation Lines</h3>
+                        <Button onClick={handleAddItem} data-testid="button-add-item">
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add Item
+                        </Button>
+                      </div>
+                      
+                      <DataTableLayout
+                        data={quotationItems}
+                        isLoading={false}
+                        columns={itemTableState.columns}
+                        setColumns={itemTableState.setColumns}
+                        searchTerm={itemTableState.searchTerm}
+                        setSearchTerm={itemTableState.setSearchTerm}
+                        filters={itemTableState.filters}
+                        setFilters={itemTableState.setFilters}
+                        onAddFilter={itemTableState.addFilter}
+                        onUpdateFilter={itemTableState.updateFilter}
+                        onRemoveFilter={itemTableState.removeFilter}
+                        sortConfig={itemTableState.sortConfig}
+                        onSort={itemTableState.handleSort}
+                        selectedRows={itemTableState.selectedRows}
+                        setSelectedRows={itemTableState.setSelectedRows}
+                        onToggleRowSelection={itemTableState.toggleRowSelection}
+                        onToggleAllRows={() => {
+                          const allIds = quotationItems.map(item => item.id);
+                          itemTableState.toggleAllRows(allIds);
+                        }}
+                        getRowId={(item: QuotationItem) => item.id}
+                        entityName="Quotation Item"
+                        entityNamePlural="Quotation Items"
+                        applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
+                        applySorting={itemTableState.applySorting}
+                        rowActions={(item: QuotationItem) => [
+                          {
+                            key: 'delete',
+                            label: 'Delete',
+                            icon: <X className="h-4 w-4" />,
+                            onClick: () => handleDeleteItem(item),
+                            variant: 'destructive'
+                          }
+                        ]}
+                        addEditDialog={{
+                          isOpen: showItemDialog,
+                          onOpenChange: setShowItemDialog,
+                          title: 'Add Item',
+                          content: (
+                            <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="description">Description</Label>
+                                <Textarea
+                                  id="description"
+                                  {...itemForm.register("description")}
+                                  data-testid="input-item-description"
+                                />
+                              </div>
+                              <div className="grid grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="quantity">Quantity</Label>
+                                  <Input
+                                    id="quantity"
+                                    type="number"
+                                    {...itemForm.register("quantity", { valueAsNumber: true })}
+                                    data-testid="input-quantity"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="unitPrice">Unit Price (€)</Label>
+                                  <Input
+                                    id="unitPrice"
+                                    type="number"
+                                    step="0.01"
+                                    {...itemForm.register("unitPrice")}
+                                    data-testid="input-unit-price"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="lineTotal">Line Total (€)</Label>
+                                  <Input
+                                    id="lineTotal"
+                                    type="number"
+                                    step="0.01"
+                                    {...itemForm.register("lineTotal")}
+                                    readOnly
+                                    className="bg-muted"
+                                    data-testid="input-line-total"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-end gap-2">
+                                <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
+                                  Cancel
+                                </Button>
+                                <Button type="submit" data-testid="button-save-item">
+                                  Add Item
+                                </Button>
+                              </div>
+                            </form>
+                          )
+                        }}
+                      />
+                    </div>
 
-              {/* Totals */}
-              <div className="flex justify-end">
-                <div className="w-80 space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>€{quotationForm.watch("subtotal")}</span>
+                    {/* Totals */}
+                    <div className="flex justify-end">
+                      <div className="w-80 space-y-2">
+                        <div className="flex justify-between">
+                          <span>Subtotal:</span>
+                          <span>€{quotationForm.watch("subtotal")}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Tax (21%):</span>
+                          <span>€{quotationForm.watch("taxAmount")}</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-lg border-t pt-2">
+                          <span>Total:</span>
+                          <span>€{quotationForm.watch("totalAmount")}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Tax (21%):</span>
-                    <span>€{quotationForm.watch("taxAmount")}</span>
+                )
+              },
+              {
+                id: "conditions",
+                label: "Conditions",
+                content: (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="incoTerms">Incoterms</Label>
+                      <Input
+                        id="incoTerms"
+                        {...quotationForm.register("incoTerms")}
+                        placeholder="e.g., EXW, FOB, CIF"
+                        data-testid="input-inco-terms"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="paymentConditions">Payment Conditions</Label>
+                      <Textarea
+                        id="paymentConditions"
+                        {...quotationForm.register("paymentConditions")}
+                        placeholder="e.g., 30 days net, Payment upon delivery"
+                        data-testid="input-payment-conditions"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="deliveryConditions">Delivery Conditions</Label>
+                      <Textarea
+                        id="deliveryConditions"
+                        {...quotationForm.register("deliveryConditions")}
+                        placeholder="e.g., 2-3 weeks delivery time"
+                        data-testid="input-delivery-conditions"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Notes</Label>
+                      <Textarea
+                        id="notes"
+                        {...quotationForm.register("notes")}
+                        placeholder="Additional notes..."
+                        data-testid="input-notes"
+                      />
+                    </div>
                   </div>
-                  <div className="flex justify-between font-bold text-lg border-t pt-2">
-                    <span>Total:</span>
-                    <span>€{quotationForm.watch("totalAmount")}</span>
+                )
+              },
+              {
+                id: "financial",
+                label: "Financial",
+                content: (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Financial Summary</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                        <Label>Subtotal</Label>
+                        <p className="text-2xl font-bold">€{quotationForm.watch("subtotal")}</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                        <Label>Tax (21%)</Label>
+                        <p className="text-2xl font-bold">€{quotationForm.watch("taxAmount")}</p>
+                      </div>
+                      <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200">
+                        <Label>Total</Label>
+                        <p className="text-2xl font-bold text-orange-600">€{quotationForm.watch("totalAmount")}</p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                      💡 <strong>Tip:</strong> De totalen worden automatisch berekend op basis van de offerte regels die je toevoegt.
+                    </div>
                   </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="conditions" className="space-y-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="incoTerms">Incoterms</Label>
-                  <Input
-                    id="incoTerms"
-                    {...quotationForm.register("incoTerms")}
-                    placeholder="e.g., EXW, FOB, CIF"
-                    data-testid="input-inco-terms"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="paymentConditions">Payment Conditions</Label>
-                  <Textarea
-                    id="paymentConditions"
-                    {...quotationForm.register("paymentConditions")}
-                    placeholder="e.g., 30 days net, Payment upon delivery"
-                    data-testid="input-payment-conditions"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="deliveryConditions">Delivery Conditions</Label>
-                  <Textarea
-                    id="deliveryConditions"
-                    {...quotationForm.register("deliveryConditions")}
-                    placeholder="e.g., 2-3 weeks delivery time"
-                    data-testid="input-delivery-conditions"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    {...quotationForm.register("notes")}
-                    placeholder="Additional notes..."
-                    data-testid="input-notes"
-                  />
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+                )
+              },
+              {
+                id: "documents",
+                label: "Documents",
+                content: (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Document Management</h3>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                      <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <p className="text-gray-600 mb-4">Upload documents related to this quotation</p>
+                      <div className="space-x-2">
+                        <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+                          <Plus className="inline mr-2 h-4 w-4" />
+                          Upload Document
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+            ]}
+          />
         </CardContent>
       </Card>
     </div>
