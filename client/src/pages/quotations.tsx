@@ -77,8 +77,16 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
 
   // Combined loading state to prevent partial renders
   const isLoading = quotationsLoading || customersLoading;
+  
+  // Loading states combined to prevent partial renders
 
-  // Stabilized column configuration for quotations table - prevents flicker
+  // Customer name lookup - memoized to prevent re-creation
+  const getCustomerName = React.useCallback((customerId: string) => {
+    const customer = customers?.find((c: Customer) => c.id === customerId);
+    return customer?.name || 'Unknown Customer';
+  }, [customers]);
+
+  // Stabilized column configuration for quotations table - prevents flicker  
   const baseColumns: ColumnConfig[] = React.useMemo(() => [
     createIdColumn('quotationNumber', 'Quotation #'),
     { 
@@ -88,11 +96,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       width: 200, 
       filterable: true, 
       sortable: true,
-      renderCell: (value: string) => {
-        // Use stable reference - avoid dependency on customers array
-        const customer = customers?.find((c: Customer) => c.id === value);
-        return customer?.name || 'Unknown Customer';
-      }
+      renderCell: getCustomerName
     },
     { 
       key: 'quotationDate', 
@@ -142,21 +146,10 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       filterable: true, 
       sortable: true 
     },
-  ], []); // Removed customers dependency to prevent flicker
+  ], [getCustomerName]); // Stable dependency
 
-  // Create stable columns with current customer data - prevent frequent re-calc
-  const defaultColumns = React.useMemo(() => {
-    const customerMap = new Map(customers.map(c => [c.id, c.name]));
-    return baseColumns.map(col => {
-      if (col.key === 'customerId') {
-        return {
-          ...col,
-          renderCell: (value: string) => customerMap.get(value) || 'Unknown Customer'
-        };
-      }
-      return col;
-    });
-  }, [baseColumns, customers]);
+  // Use base columns directly - no need for additional processing
+  const defaultColumns = baseColumns;
 
   // Default column configuration for quotation items
   const defaultItemColumns: ColumnConfig[] = [
@@ -490,11 +483,16 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   const watchQuantity = itemForm.watch("quantity");
   const watchUnitPrice = itemForm.watch("unitPrice");
 
-  // Auto-calculate line total
+  // Auto-calculate line total - Fix potential infinite loop
   React.useEffect(() => {
     const lineTotal = calculateLineTotal(watchQuantity || 1, watchUnitPrice || "0.00");
-    itemForm.setValue("lineTotal", lineTotal);
-  }, [watchQuantity, watchUnitPrice, itemForm]);
+    const currentTotal = itemForm.getValues("lineTotal");
+    if (currentTotal !== lineTotal) {
+      itemForm.setValue("lineTotal", lineTotal);
+    }
+  }, [watchQuantity, watchUnitPrice]);
+
+  // Debug removed - component should now be stable
 
   return (
     <div className="p-6">
