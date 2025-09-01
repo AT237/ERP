@@ -9,13 +9,16 @@ import { FormTabLayout } from '@/components/layouts/FormTabLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff } from "lucide-react";
+import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, ChevronsUpDown, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
@@ -173,11 +176,13 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
     mutationFn: async (data: QuotationFormData) => {
       const processedData = {
         ...data,
-        quotationDate: data.quotationDate ? new Date(data.quotationDate) : new Date(),
-        validUntil: data.validUntil ? new Date(data.validUntil) : undefined,
-        subtotal: parseFloat(data.subtotal),
-        taxAmount: parseFloat(data.taxAmount || "0"),
-        totalAmount: parseFloat(data.totalAmount),
+        // Keep dates as timestamp strings for Drizzle
+        quotationDate: data.quotationDate || new Date().toISOString(),
+        validUntil: data.validUntil || undefined,
+        // Keep decimal values as strings for Drizzle decimal fields
+        subtotal: data.subtotal,
+        taxAmount: data.taxAmount || "0",
+        totalAmount: data.totalAmount,
       };
       const response = await apiRequest("POST", "/api/quotations", processedData);
       return response.json();
@@ -451,6 +456,48 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
           </div>
         </CardHeader>
         <CardContent>
+          {/* Fixed Information Section */}
+          <Card className="mb-6 border-orange-200 dark:border-orange-700">
+            <CardHeader>
+              <CardTitle className="text-lg text-orange-800 dark:text-orange-200">Quotation Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-500">Quotation Number</Label>
+                  <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-md border">
+                    <span className="font-mono text-sm">Auto-generated (Q-YYYY-NNN)</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-500">Revision Number</Label>
+                  <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-md border">
+                    <span className="font-mono text-sm">V1.0 (Auto-generated)</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select 
+                    value={quotationForm.watch("status")} 
+                    onValueChange={(value) => quotationForm.setValue("status", value)}
+                  >
+                    <SelectTrigger data-testid="select-status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="sent">Sent</SelectItem>
+                      <SelectItem value="order">Order</SelectItem>
+                      <SelectItem value="declined">Declined</SelectItem>
+                      <SelectItem value="revised">Revised</SelectItem>
+                      <SelectItem value="expired">Expired</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <FormTabLayout
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -463,42 +510,49 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
                     {/* General Information */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="quotationNumber">Quotation Number</Label>
-                        <Input
-                          id="quotationNumber"
-                          value="Auto-generated (Q-YYYY-NNN)"
-                          disabled
-                          className="bg-gray-100 dark:bg-gray-800 text-gray-500"
-                          data-testid="input-quotation-number"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="revisionNumber">Revision Number</Label>
-                        <Input
-                          id="revisionNumber"
-                          value="V1.0 (Auto-generated)"
-                          disabled
-                          className="bg-gray-100 dark:bg-gray-800 text-gray-500"
-                          data-testid="input-revision-number"
-                        />
-                      </div>
-                      <div className="space-y-2">
                         <Label htmlFor="customerId">Customer</Label>
-                        <Select 
-                          value={quotationForm.watch("customerId")} 
-                          onValueChange={(value) => quotationForm.setValue("customerId", value)}
-                        >
-                          <SelectTrigger data-testid="select-customer">
-                            <SelectValue placeholder="Select customer" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {customers.map((customer) => (
-                              <SelectItem key={customer.id} value={customer.id}>
-                                {customer.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between"
+                              data-testid="select-customer"
+                            >
+                              {quotationForm.watch("customerId")
+                                ? customers.find((customer) => customer.id === quotationForm.watch("customerId"))?.name
+                                : "Select customer..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput placeholder="Search customers..." />
+                              <CommandList>
+                                <CommandEmpty>No customer found.</CommandEmpty>
+                                <CommandGroup>
+                                  {customers.map((customer) => (
+                                    <CommandItem
+                                      key={customer.id}
+                                      value={customer.name}
+                                      onSelect={() => {
+                                        quotationForm.setValue("customerId", customer.id);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          quotationForm.watch("customerId") === customer.id ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {customer.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="quotationDate">Quotation Date</Label>
@@ -517,25 +571,6 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
                           {...quotationForm.register("validUntil")}
                           data-testid="input-valid-until"
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="status">Status</Label>
-                        <Select 
-                          value={quotationForm.watch("status")} 
-                          onValueChange={(value) => quotationForm.setValue("status", value)}
-                        >
-                          <SelectTrigger data-testid="select-status">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="draft">Draft</SelectItem>
-                            <SelectItem value="sent">Sent</SelectItem>
-                            <SelectItem value="order">Order</SelectItem>
-                            <SelectItem value="declined">Declined</SelectItem>
-                            <SelectItem value="revised">Revised</SelectItem>
-                            <SelectItem value="expired">Expired</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                       <div className="col-span-2 space-y-2">
                         <Label htmlFor="description">Quotation description</Label>
