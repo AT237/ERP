@@ -176,9 +176,9 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
     mutationFn: async (data: QuotationFormData) => {
       const processedData = {
         ...data,
-        // Keep dates as timestamp strings for Drizzle
-        quotationDate: data.quotationDate || new Date().toISOString(),
-        validUntil: data.validUntil || undefined,
+        // Convert date strings to Date objects for backend
+        quotationDate: data.quotationDate ? new Date(data.quotationDate) : new Date(),
+        validUntil: data.validUntil ? new Date(data.validUntil) : undefined,
         // Keep decimal values as strings for Drizzle decimal fields
         subtotal: data.subtotal,
         taxAmount: data.taxAmount || "0",
