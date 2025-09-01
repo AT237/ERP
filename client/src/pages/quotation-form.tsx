@@ -99,6 +99,7 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
   const [quotationItems, setQuotationItems] = useState<QuotationItem[]>([]);
+  const [memos, setMemos] = useState<Memo[]>([]);
   const { toast } = useToast();
 
   // Data table state for quotation items
