@@ -472,7 +472,10 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({ id: tru
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, supplierNumber: true, createdAt: true, deletedAt: true });
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({ id: true, createdAt: true });
 export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, createdAt: true });
-export const insertQuotationSchema = createInsertSchema(quotations).omit({ id: true, createdAt: true });
+export const insertQuotationSchema = createInsertSchema(quotations).omit({ id: true, createdAt: true }).extend({
+  quotationDate: z.string().optional(),
+  validUntil: z.string().optional(),
+});
 export const insertQuotationItemSchema = createInsertSchema(quotationItems).omit({ id: true });
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({ id: true, createdAt: true });
 export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({ id: true });

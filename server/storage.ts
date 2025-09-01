@@ -412,17 +412,20 @@ export class DatabaseStorage implements IStorage {
     const quotationNumber = `Q-${currentYear}-${nextNumber.toString().padStart(3, '0')}`;
     
     // Set validity to 30 days from quotation date if not provided
-    let validUntil = quotation.validUntil;
-    if (!validUntil && quotation.quotationDate) {
+    let validUntilDate: Date | undefined;
+    if (quotation.validUntil) {
+      validUntilDate = new Date(quotation.validUntil);
+    } else if (quotation.quotationDate) {
       const quoteDate = new Date(quotation.quotationDate);
       quoteDate.setDate(quoteDate.getDate() + 30);
-      validUntil = quoteDate;
+      validUntilDate = quoteDate;
     }
     
     const [newQuotation] = await db.insert(quotations).values({
       ...quotation,
       quotationNumber,
-      validUntil,
+      quotationDate: quotation.quotationDate ? new Date(quotation.quotationDate) : new Date(),
+      validUntil: validUntilDate,
       revisionNumber: quotation.revisionNumber || "V1.0"
     }).returning();
     return newQuotation;

@@ -454,19 +454,19 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Quotation Number</Label>
-                  <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded border">
+                  <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded border">
                     <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>Q-2025-001</span>
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Revision Number</Label>
-                  <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded border">
+                  <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded border">
                     <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>V1.0</span>
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Status</Label>
-                  <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded border">
+                  <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded border">
                     <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>Draft</span>
                   </div>
                 </div>

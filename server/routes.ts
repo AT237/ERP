@@ -371,16 +371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/quotations", async (req, res) => {
     try {
       console.log("Received quotation data:", JSON.stringify(req.body, null, 2));
-      
-      // Convert date strings to Date objects before validation
-      const processedBody = {
-        ...req.body,
-        quotationDate: req.body.quotationDate ? new Date(req.body.quotationDate) : new Date(),
-        validUntil: req.body.validUntil ? new Date(req.body.validUntil) : undefined,
-      };
-      
-      console.log("Processed quotation data:", JSON.stringify(processedBody, null, 2));
-      const quotationData = insertQuotationSchema.parse(processedBody);
+      const quotationData = insertQuotationSchema.parse(req.body);
       const quotation = await storage.createQuotation(quotationData);
       res.status(201).json(quotation);
     } catch (error) {
