@@ -262,7 +262,7 @@ export default function Layout({ children }: LayoutProps) {
 
       if (activeTab.id === 'quotations') {
         // Import and render Quotations component directly
-        const QuotationsPage = lazy(() => import('../pages/quotations'));
+        const QuotationsPage = lazy(() => import('../pages/quotations-simple'));
         return (
           <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
             <QuotationsPage onCreateNew={handleFormClick} />
