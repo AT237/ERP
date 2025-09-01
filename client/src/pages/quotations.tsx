@@ -41,108 +41,6 @@ const quotationItemFormSchema = insertQuotationItemSchema.extend({
 type QuotationFormData = z.infer<typeof quotationFormSchema>;
 type QuotationItemFormData = z.infer<typeof quotationItemFormSchema>;
 
-// Default column configuration for quotations table
-const defaultColumns: ColumnConfig[] = [
-  createIdColumn('quotationNumber', 'Quotation #'),
-  { 
-    key: 'customerId', 
-    label: 'Customer', 
-    visible: true, 
-    width: 200, 
-    filterable: true, 
-    sortable: true,
-    renderCell: (value: string) => value
-  },
-  { 
-    key: 'quotationDate', 
-    label: 'Quote Date', 
-    visible: true, 
-    width: 120, 
-    filterable: true, 
-    sortable: true,
-    renderCell: (value: string) => value ? format(new Date(value), 'dd-MM-yyyy') : ''
-  },
-  { 
-    key: 'validUntil', 
-    label: 'Valid Until', 
-    visible: true, 
-    width: 120, 
-    filterable: true, 
-    sortable: true,
-    renderCell: (value: string) => value ? format(new Date(value), 'dd-MM-yyyy') : ''
-  },
-  { 
-    key: 'totalAmount', 
-    label: 'Total Amount', 
-    visible: true, 
-    width: 120, 
-    filterable: true, 
-    sortable: true,
-    renderCell: (value: string) => `€${value || "0.00"}`
-  },
-  { 
-    key: 'status', 
-    label: 'Status', 
-    visible: true, 
-    width: 100, 
-    filterable: true, 
-    sortable: true,
-    renderCell: (value: string) => (
-      <Badge variant={value === 'draft' ? 'secondary' : value === 'sent' ? 'default' : 'outline'}>
-        {value || 'draft'}
-      </Badge>
-    )
-  },
-  { 
-    key: 'revisionNumber', 
-    label: 'Revision', 
-    visible: true, 
-    width: 100, 
-    filterable: true, 
-    sortable: true 
-  },
-];
-
-// Default column configuration for quotation items
-const defaultItemColumns: ColumnConfig[] = [
-  createIdColumn('id', 'Line ID'),
-  { 
-    key: 'description', 
-    label: 'Description', 
-    visible: true, 
-    width: 300, 
-    filterable: true, 
-    sortable: true 
-  },
-  { 
-    key: 'quantity', 
-    label: 'Quantity', 
-    visible: true, 
-    width: 100, 
-    filterable: true, 
-    sortable: true,
-    renderCell: (value: number) => value?.toString() || "0"
-  },
-  { 
-    key: 'unitPrice', 
-    label: 'Unit Price', 
-    visible: true, 
-    width: 120, 
-    filterable: true, 
-    sortable: true,
-    renderCell: (value: string) => `€${value || "0.00"}`
-  },
-  { 
-    key: 'lineTotal', 
-    label: 'Line Total', 
-    visible: true, 
-    width: 120, 
-    filterable: true, 
-    sortable: true,
-    renderCell: (value: string) => `€${value || "0.00"}`
-  },
-];
-
 interface QuotationsProps {
   onCreateNew?: (formInfo: {id: string, name: string, formType: string, parentId?: string}) => void;
 }
@@ -157,18 +55,6 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
   const { toast } = useToast();
 
-  // Data table state
-  const tableState = useDataTable({ 
-    defaultColumns,
-    tableKey: 'quotations'
-  });
-
-  // Data table state for quotation items
-  const itemTableState = useDataTable({ 
-    defaultColumns: defaultItemColumns,
-    tableKey: 'quotation-items'
-  });
-
   // Fetch data
   const { data: quotations = [], isLoading } = useQuery<Quotation[]>({
     queryKey: ["/api/quotations"],
@@ -180,6 +66,123 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
 
   const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory"],
+  });
+
+  // Default column configuration for quotations table
+  const defaultColumns: ColumnConfig[] = React.useMemo(() => [
+    createIdColumn('quotationNumber', 'Quotation #'),
+    { 
+      key: 'customerId', 
+      label: 'Customer', 
+      visible: true, 
+      width: 200, 
+      filterable: true, 
+      sortable: true,
+      renderCell: (value: string) => {
+        const customer = customers?.find((c: Customer) => c.id === value);
+        return customer?.name || 'Unknown Customer';
+      }
+    },
+    { 
+      key: 'quotationDate', 
+      label: 'Quote Date', 
+      visible: true, 
+      width: 120, 
+      filterable: true, 
+      sortable: true,
+      renderCell: (value: string) => value ? format(new Date(value), 'dd-MM-yyyy') : ''
+    },
+    { 
+      key: 'validUntil', 
+      label: 'Valid Until', 
+      visible: true, 
+      width: 120, 
+      filterable: true, 
+      sortable: true,
+      renderCell: (value: string) => value ? format(new Date(value), 'dd-MM-yyyy') : ''
+    },
+    { 
+      key: 'totalAmount', 
+      label: 'Total Amount', 
+      visible: true, 
+      width: 120, 
+      filterable: true, 
+      sortable: true,
+      renderCell: (value: string) => `€${value || "0.00"}`
+    },
+    { 
+      key: 'status', 
+      label: 'Status', 
+      visible: true, 
+      width: 100, 
+      filterable: true, 
+      sortable: true,
+      renderCell: (value: string) => (
+        <Badge variant={value === 'draft' ? 'secondary' : value === 'sent' ? 'default' : 'outline'}>
+          {value || 'draft'}
+        </Badge>
+      )
+    },
+    { 
+      key: 'revisionNumber', 
+      label: 'Revision', 
+      visible: true, 
+      width: 100, 
+      filterable: true, 
+      sortable: true 
+    },
+  ], [customers]);
+
+  // Default column configuration for quotation items
+  const defaultItemColumns: ColumnConfig[] = [
+    createIdColumn('id', 'Line ID'),
+    { 
+      key: 'description', 
+      label: 'Description', 
+      visible: true, 
+      width: 300, 
+      filterable: true, 
+      sortable: true 
+    },
+    { 
+      key: 'quantity', 
+      label: 'Quantity', 
+      visible: true, 
+      width: 100, 
+      filterable: true, 
+      sortable: true,
+      renderCell: (value: number) => value?.toString() || "0"
+    },
+    { 
+      key: 'unitPrice', 
+      label: 'Unit Price', 
+      visible: true, 
+      width: 120, 
+      filterable: true, 
+      sortable: true,
+      renderCell: (value: string) => `€${value || "0.00"}`
+    },
+    { 
+      key: 'lineTotal', 
+      label: 'Line Total', 
+      visible: true, 
+      width: 120, 
+      filterable: true, 
+      sortable: true,
+      renderCell: (value: string) => `€${value || "0.00"}`
+    },
+  ];
+
+  // Data table state
+  const tableState = useDataTable({ 
+    defaultColumns,
+    tableKey: 'quotations'
+  });
+
+  // Data table state for quotation items
+  const itemTableState = useDataTable({ 
+    defaultColumns: defaultItemColumns,
+    tableKey: 'quotation-items'
   });
 
   const { data: quotationItems = [], isLoading: isLoadingItems } = useQuery<QuotationItem[]>({
@@ -397,7 +400,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     quotationForm.reset({
       ...quotation,
       quotationDate: quotation.quotationDate ? format(new Date(quotation.quotationDate), 'yyyy-MM-dd') : '',
-      validUntil: quotation.validUntil ? format(new Date(quotation.validUntil), 'yyyy-MM-dd') : undefined,
+      validUntil: quotation.validUntil ? format(new Date(quotation.validUntil), 'yyyy-MM-dd') : '',
       subtotal: quotation.subtotal?.toString() || "0.00",
       taxAmount: quotation.taxAmount?.toString() || "0.00",
       totalAmount: quotation.totalAmount?.toString() || "0.00",
@@ -468,21 +471,13 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     itemForm.setValue("lineTotal", lineTotal);
   }, [watchQuantity, watchUnitPrice, itemForm]);
 
-  // Render custom cell content that includes customers data
-  const renderCellWithCustomers = (value: any, row: Quotation, column: ColumnConfig) => {
-    if (column.renderCell) {
-      return column.renderCell(value, row);
-    }
-    return value;
-  };
-
   return (
     <div className="p-6">
       <DataTableLayout
         data={quotations}
         isLoading={isLoading}
-        columns={tableState.columns}
-        setColumns={tableState.setColumns}
+        columns={defaultColumns}
+        setColumns={() => {}}
         searchTerm={tableState.searchTerm}
         setSearchTerm={tableState.setSearchTerm}
         filters={tableState.filters}
