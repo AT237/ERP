@@ -8,7 +8,7 @@ import Dashboard from "@/pages/dashboard";
 import Inventory from "@/pages/inventory";
 import Suppliers from "@/pages/suppliers";
 import ContactPersons from "@/pages/contact-persons";
-import Quotations from "@/pages/quotations";
+import Quotations from "@/pages/quotations-simple";
 import Invoices from "@/pages/invoices";
 import Projects from "@/pages/projects";
 import WorkOrders from "@/pages/work-orders";
