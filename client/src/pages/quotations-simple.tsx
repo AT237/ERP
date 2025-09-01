@@ -98,7 +98,14 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   };
 
   const handleView = (quotation: Quotation) => {
-    console.log('View:', quotation.quotationNumber);
+    if (onCreateNew) {
+      onCreateNew({
+        id: `edit-quotation-${quotation.id}`,
+        name: `Edit ${quotation.quotationNumber}`,
+        formType: 'quotation',
+        parentId: 'quotations'
+      });
+    }
   };
 
   const handleEdit = (quotation: Quotation) => {

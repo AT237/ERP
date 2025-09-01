@@ -354,16 +354,24 @@ export default function Layout({ children }: LayoutProps) {
       // Handle form tabs
       if (activeTab.formType === 'quotation') {
         const QuotationForm = lazy(() => import('@/pages/quotation-form'));
+        // Extract quotationId from tab.id if editing
+        const quotationId = activeTab.id.startsWith('edit-quotation-') 
+          ? activeTab.id.replace('edit-quotation-', '') 
+          : undefined;
+        
         return (
           <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
-            <QuotationForm onSave={() => {
-              // Return to quotations tab after save
-              const quotationsTab = tabs.find(tab => tab.id === 'quotations');
-              if (quotationsTab) {
-                setActiveTabId('quotations');
-                closeTab(activeTab.id);
-              }
-            }} />
+            <QuotationForm 
+              quotationId={quotationId}
+              onSave={() => {
+                // Return to quotations tab after save
+                const quotationsTab = tabs.find(tab => tab.id === 'quotations');
+                if (quotationsTab) {
+                  setActiveTabId('quotations');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
           </Suspense>
         );
       }

@@ -432,7 +432,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateQuotation(id: string, quotation: Partial<InsertQuotation>): Promise<Quotation> {
-    const [updatedQuotation] = await db.update(quotations).set(quotation).where(eq(quotations.id, id)).returning();
+    const updateData: any = { ...quotation };
+    if (updateData.quotationDate && typeof updateData.quotationDate === 'string') {
+      updateData.quotationDate = new Date(updateData.quotationDate);
+    }
+    if (updateData.validUntil && typeof updateData.validUntil === 'string') {
+      updateData.validUntil = new Date(updateData.validUntil);
+    }
+    const [updatedQuotation] = await db.update(quotations).set(updateData).where(eq(quotations.id, id)).returning();
     return updatedQuotation;
   }
 

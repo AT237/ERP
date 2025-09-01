@@ -120,6 +120,18 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
     queryKey: ["/api/inventory"],
   });
 
+  // Fetch existing quotation if editing
+  const { data: existingQuotation, isLoading: quotationLoading } = useQuery<Quotation>({
+    queryKey: ["/api/quotations", quotationId],
+    enabled: !!quotationId,
+  });
+
+  // Fetch existing quotation items if editing
+  const { data: existingQuotationItems = [] } = useQuery<QuotationItem[]>({
+    queryKey: ["/api/quotations", quotationId, "items"],
+    enabled: !!quotationId,
+  });
+
   // Forms
   const quotationForm = useForm<QuotationFormData>({
     resolver: zodResolver(quotationFormSchema),
@@ -140,6 +152,29 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
       deliveryConditions: "",
     },
   });
+
+  // Load existing quotation data when editing
+  useEffect(() => {
+    if (existingQuotation && !quotationLoading) {
+      quotationForm.reset({
+        quotationNumber: existingQuotation.quotationNumber,
+        customerId: existingQuotation.customerId,
+        description: existingQuotation.description || "",
+        revisionNumber: existingQuotation.revisionNumber || "V1.0",
+        status: existingQuotation.status || "draft",
+        quotationDate: existingQuotation.quotationDate ? format(new Date(existingQuotation.quotationDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+        validUntil: existingQuotation.validUntil ? format(new Date(existingQuotation.validUntil), 'yyyy-MM-dd') : "",
+        subtotal: existingQuotation.subtotal?.toString() || "0.00",
+        taxAmount: existingQuotation.taxAmount?.toString() || "0.00",
+        totalAmount: existingQuotation.totalAmount?.toString() || "0.00",
+        notes: existingQuotation.notes || "",
+        incoTerms: existingQuotation.incoTerms || "",
+        paymentConditions: existingQuotation.paymentConditions || "",
+        deliveryConditions: existingQuotation.deliveryConditions || "",
+      });
+      setQuotationItems(existingQuotationItems);
+    }
+  }, [existingQuotation, existingQuotationItems, quotationLoading, quotationForm]);
 
   const itemForm = useForm<QuotationItemFormData>({
     resolver: zodResolver(quotationItemFormSchema),
@@ -455,19 +490,25 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Quotation Number</Label>
                   <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded border">
-                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>Q-2025-001</span>
+                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>
+                      {quotationForm.watch("quotationNumber") === "Auto-generated" ? "Q-2025-001" : quotationForm.watch("quotationNumber")}
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Revision Number</Label>
                   <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded border">
-                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>V1.0</span>
+                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>
+                      {quotationForm.watch("revisionNumber")}
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Status</Label>
                   <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded border">
-                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>Draft</span>
+                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>
+                      {quotationForm.watch("status") ? quotationForm.watch("status")?.charAt(0).toUpperCase() + quotationForm.watch("status")?.slice(1) : "Draft"}
+                    </span>
                   </div>
                 </div>
               </div>
