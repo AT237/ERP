@@ -37,10 +37,10 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
           ))}
         </TabsList>
 
-        {/* Tab Content - With orange border and smooth transitions */}
-        <div className="border-2 border-orange-200 dark:border-orange-700 rounded-lg bg-white dark:bg-gray-900 p-6 transition-smooth">
+        {/* Tab Content - With orange border and consistent height */}
+        <div className="border-2 border-orange-200 dark:border-orange-700 rounded-lg bg-white dark:bg-gray-900 p-6 transition-smooth min-h-[400px]">
           {tabs.map((tab) => (
-            <TabsContent key={tab.id} value={tab.id} className="mt-0 transition-smooth">
+            <TabsContent key={tab.id} value={tab.id} className="mt-0 transition-smooth h-full">
               {tab.content}
             </TabsContent>
           ))}
