@@ -458,10 +458,7 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
         <CardContent>
           {/* Fixed Information Section */}
           <Card className="mb-6 border-orange-200 dark:border-orange-700">
-            <CardHeader>
-              <CardTitle className="text-lg text-orange-800 dark:text-orange-200">Quotation Information</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Quotation Number</Label>
