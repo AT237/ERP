@@ -174,17 +174,8 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
   // Mutations
   const createQuotationMutation = useMutation({
     mutationFn: async (data: QuotationFormData) => {
-      const processedData = {
-        ...data,
-        // Convert date strings to Date objects for backend
-        quotationDate: data.quotationDate ? new Date(data.quotationDate) : new Date(),
-        validUntil: data.validUntil ? new Date(data.validUntil) : undefined,
-        // Keep decimal values as strings for Drizzle decimal fields
-        subtotal: data.subtotal,
-        taxAmount: data.taxAmount || "0",
-        totalAmount: data.totalAmount,
-      };
-      const response = await apiRequest("POST", "/api/quotations", processedData);
+      // Send data as-is, let backend handle date conversion
+      const response = await apiRequest("POST", "/api/quotations", data);
       return response.json();
     },
     onSuccess: () => {
@@ -195,10 +186,11 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
       });
       onSave();
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Quotation creation error:", error);
       toast({
         title: "Error",
-        description: "Failed to create quotation",
+        description: error?.error || error?.message || "Failed to create quotation",
         variant: "destructive",
       });
     },
