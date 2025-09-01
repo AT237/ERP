@@ -144,20 +144,19 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     },
   ], []); // Removed customers dependency to prevent flicker
 
-  // Create stable columns with current customer data
-  const defaultColumns = React.useMemo(() => 
-    baseColumns.map(col => {
+  // Create stable columns with current customer data - prevent frequent re-calc
+  const defaultColumns = React.useMemo(() => {
+    const customerMap = new Map(customers.map(c => [c.id, c.name]));
+    return baseColumns.map(col => {
       if (col.key === 'customerId') {
         return {
           ...col,
-          renderCell: (value: string) => {
-            const customer = customers?.find((c: Customer) => c.id === value);
-            return customer?.name || 'Unknown Customer';
-          }
+          renderCell: (value: string) => customerMap.get(value) || 'Unknown Customer'
         };
       }
       return col;
-    }), [baseColumns, customers]);
+    });
+  }, [baseColumns, customers]);
 
   // Default column configuration for quotation items
   const defaultItemColumns: ColumnConfig[] = [
@@ -390,8 +389,8 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     },
   });
 
-  // Event handlers
-  const handleAddQuotation = () => {
+  // Event handlers - memoized to prevent flicker
+  const handleAddQuotation = React.useCallback(() => {
     if (onCreateNew) {
       onCreateNew({
         id: 'new-quotation',
@@ -420,9 +419,9 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       setEditingQuotation(null);
       setShowQuotationDialog(true);
     }
-  };
+  }, [onCreateNew, quotationForm]);
 
-  const handleEditQuotation = (quotation: Quotation) => {
+  const handleEditQuotation = React.useCallback((quotation: Quotation) => {
     quotationForm.reset({
       ...quotation,
       quotationDate: quotation.quotationDate ? format(new Date(quotation.quotationDate), 'yyyy-MM-dd') : undefined,
@@ -433,13 +432,13 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     });
     setEditingQuotation(quotation);
     setShowQuotationDialog(true);
-  };
+  }, [quotationForm]);
 
-  const handleViewQuotation = (quotation: Quotation) => {
+  const handleViewQuotation = React.useCallback((quotation: Quotation) => {
     setSelectedQuotation(quotation);
     setActiveTab("general");
     setShowDetailDialog(true);
-  };
+  }, []);
 
   const handleSaveQuotation = (data: QuotationFormData) => {
     if (editingQuotation) {
@@ -449,11 +448,11 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     }
   };
 
-  const handleDeleteQuotation = (quotation: Quotation) => {
+  const handleDeleteQuotation = React.useCallback((quotation: Quotation) => {
     if (window.confirm(`Are you sure you want to delete quotation ${quotation.quotationNumber}?`)) {
       deleteQuotationMutation.mutate(quotation.id);
     }
-  };
+  }, [deleteQuotationMutation]);
 
   const handleAddItem = () => {
     if (!selectedQuotation) {
@@ -502,8 +501,8 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       <DataTableLayout
         data={quotations}
         isLoading={isLoading}
-        columns={defaultColumns}
-        setColumns={() => {}}
+        columns={tableState.columns}
+        setColumns={tableState.setColumns}
         searchTerm={tableState.searchTerm}
         setSearchTerm={tableState.setSearchTerm}
         filters={tableState.filters}
@@ -516,26 +515,24 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
         selectedRows={tableState.selectedRows}
         setSelectedRows={tableState.setSelectedRows}
         onToggleRowSelection={tableState.toggleRowSelection}
-        onToggleAllRows={() => {
+        onToggleAllRows={React.useCallback(() => {
           const allIds = quotations.map(quotation => quotation.id);
           tableState.toggleAllRows(allIds);
-        }}
+        }, [quotations, tableState.toggleAllRows])}
         onRowDoubleClick={handleViewQuotation}
         getRowId={(quotation: Quotation) => quotation.id}
         entityName="Quotation"
         entityNamePlural="Quotations"
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
-        headerActions={[
-          {
-            key: 'add',
-            label: 'Add Quotation',
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleAddQuotation,
-            variant: 'default'
-          }
-        ]}
-        rowActions={(quotation: Quotation) => [
+        headerActions={React.useMemo(() => [{
+          key: 'add',
+          label: 'Add Quotation',
+          icon: <Plus className="h-4 w-4" />,
+          onClick: handleAddQuotation,
+          variant: 'default'
+        }], [handleAddQuotation])}
+        rowActions={React.useCallback((quotation: Quotation) => [
           {
             key: 'view',
             label: 'View',
@@ -557,7 +554,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
             onClick: () => handleDeleteQuotation(quotation),
             variant: 'destructive'
           }
-        ]}
+        ], [handleViewQuotation, handleEditQuotation, handleDeleteQuotation])}
         addEditDialog={{
           isOpen: showQuotationDialog,
           onOpenChange: setShowQuotationDialog,
