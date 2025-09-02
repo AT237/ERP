@@ -487,7 +487,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 },
                 {
                   label: "Status",
-                  value: quotationForm.watch("status") ? quotationForm.watch("status")?.charAt(0).toUpperCase() + quotationForm.watch("status")?.slice(1) : "Draft"
+                  value: (() => {
+                    const status = quotationForm.watch("status");
+                    return status ? status.charAt(0).toUpperCase() + status.slice(1) : "Draft";
+                  })()
                 }
               ]}
             />
