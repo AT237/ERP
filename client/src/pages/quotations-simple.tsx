@@ -101,7 +101,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     if (onCreateNew) {
       onCreateNew({
         id: `edit-quotation-${quotation.id}`,
-        name: `Edit ${quotation.quotationNumber}`,
+        name: quotation.quotationNumber,
         formType: 'quotation',
         parentId: 'quotations'
       });
