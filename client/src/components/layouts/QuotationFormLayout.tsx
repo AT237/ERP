@@ -716,11 +716,20 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
           {/* Quotation Items - Always Visible */}
           <div className="mt-8 space-y-4">
-            <div className="flex items-center justify-between">
-              <Button onClick={handleAddItem} data-testid="button-add-item">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Item
-              </Button>
+            {/* Header with Title and Actions - matching DataTableLayout pattern */}
+            <div className="relative p-2">
+              {/* Title Section */}
+              <div className="absolute left-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-2 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10 w-fit">
+                <h3 className="text-xl font-bold text-orange-800 dark:text-orange-200 whitespace-nowrap">Quotation Items</h3>
+              </div>
+              
+              {/* Actions Section - starts at fixed coordinate */}
+              <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+                <Button onClick={handleAddItem} data-testid="button-add-item" size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Item
+                </Button>
+              </div>
             </div>
             
             <DataTableLayout
