@@ -458,13 +458,15 @@ export function DataTableLayout<T = any>({
   return (
     <>
       <div className="space-y-4">
-        {/* Title Section - Left aligned */}
-        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-2 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10 w-fit">
-          <h2 className="text-xl font-bold text-orange-800 dark:text-orange-200 whitespace-nowrap">{entityNamePlural}</h2>
-        </div>
-        
-        {/* Actions Section - Left aligned */}
-        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2 w-fit">
+        {/* Header with Title and Controls - original layout for search/filter */}
+        <div className="relative p-2">
+          {/* Title Section - Left aligned */}
+          <div className="absolute left-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-2 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10 w-fit">
+            <h2 className="text-xl font-bold text-orange-800 dark:text-orange-200 whitespace-nowrap">{entityNamePlural}</h2>
+          </div>
+          
+          {/* Actions Section - Right of title like original */}
+          <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
             {/* Search */}
             <div className="relative">
               <Input
@@ -611,6 +613,7 @@ export function DataTableLayout<T = any>({
               </DropdownMenu>
             )}
           </div>
+        </div>
       </div>
 
       <div className="space-y-4">
