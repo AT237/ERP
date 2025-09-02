@@ -492,12 +492,23 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               ]}
             />
             <div className="flex gap-2">
-              <Button variant="outline" onClick={onSave}>
-                <X className="mr-2 h-4 w-4" />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={onSave}
+                className="h-8 text-xs"
+                data-testid="button-cancel"
+              >
+                <X size={14} className="mr-1" />
                 Cancel
               </Button>
-              <Button onClick={quotationForm.handleSubmit(handleSaveQuotation)}>
-                <Save className="mr-2 h-4 w-4" />
+              <Button 
+                size="sm"
+                onClick={quotationForm.handleSubmit(handleSaveQuotation)}
+                className="h-8 text-xs bg-green-600 text-white hover:bg-green-700"
+                data-testid="button-save"
+              >
+                <Save size={14} className="mr-1" />
                 Save Quotation
               </Button>
             </div>
