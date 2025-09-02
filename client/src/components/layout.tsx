@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { X } from "lucide-react";
+import { X, Menu } from "lucide-react";
 import Sidebar from "./sidebar";
 
 import SectionInfoPanel from "./section-info-panel";
@@ -389,6 +389,8 @@ export default function Layout({ children }: LayoutProps) {
     return children; // dashboard content
   };
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Top Logo Bar */}
@@ -415,10 +417,40 @@ export default function Layout({ children }: LayoutProps) {
       </div>
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar onSectionClick={handleSectionClick} onMenuClick={handleMenuClick} />
+        {/* Mobile Trigger Bar - always visible on mobile */}
+        <div className="md:hidden fixed left-0 top-[100px] bottom-0 z-30 w-12 bg-orange-500 border-r border-orange-600 flex flex-col items-center py-4">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-md hover:bg-orange-600 text-white transition-colors"
+            data-testid="mobile-menu-trigger"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
         
-        {/* Right Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile Menu Overlay */}
+        {mobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 z-40 bg-black bg-opacity-50" onClick={() => setMobileMenuOpen(false)}>
+            <div className="fixed left-0 top-[100px] bottom-0 w-64 bg-white border-r border-border" onClick={(e) => e.stopPropagation()}>
+              <div className="h-full overflow-y-auto">
+                <Sidebar onSectionClick={(section) => {
+                  handleSectionClick(section);
+                  setMobileMenuOpen(false);
+                }} onMenuClick={(menuItem) => {
+                  handleMenuClick(menuItem);
+                  setMobileMenuOpen(false);
+                }} />
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="hidden md:block">
+          <Sidebar onSectionClick={handleSectionClick} onMenuClick={handleMenuClick} />
+        </div>
+        
+        {/* Right Content Area - adjust margin for mobile trigger */}
+        <div className="flex-1 flex flex-col overflow-hidden md:ml-0 ml-12">
           {/* Tab Bar - Now at the very top of right area */}
           <div className="bg-gray-50 px-4 border-b-0 h-[62px] flex items-end">
             <div className="flex items-end space-x-1 overflow-x-auto">
