@@ -711,7 +711,6 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
           {/* Quotation Items - Always Visible */}
           <div className="mt-8 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200">Quotation Lines</h3>
               <Button onClick={handleAddItem} data-testid="button-add-item">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Item
