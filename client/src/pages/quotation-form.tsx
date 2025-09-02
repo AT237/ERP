@@ -469,7 +469,24 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>New Quotation</CardTitle>
+            {/* Quotation Info Header */}
+            <div className="flex items-center gap-6 bg-orange-50 dark:bg-orange-900/20 p-3 rounded border border-orange-200 dark:border-orange-700">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-orange-800 dark:text-orange-200" style={{fontFamily: 'Arial, sans-serif'}}>
+                  {quotationForm.watch("quotationNumber") === "Auto-generated" ? "Q-2025-001" : quotationForm.watch("quotationNumber")}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-orange-800 dark:text-orange-200" style={{fontFamily: 'Arial, sans-serif'}}>
+                  {quotationForm.watch("revisionNumber")}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-orange-800 dark:text-orange-200" style={{fontFamily: 'Arial, sans-serif'}}>
+                  {quotationForm.watch("status") ? quotationForm.watch("status")?.charAt(0).toUpperCase() + quotationForm.watch("status")?.slice(1) : "Draft"}
+                </span>
+              </div>
+            </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={onSave}>
                 <X className="mr-2 h-4 w-4" />
@@ -483,37 +500,6 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
           </div>
         </CardHeader>
         <CardContent>
-          {/* Fixed Information Section */}
-          <Card className="mb-6 border-orange-200 dark:border-orange-700">
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Quotation Number</Label>
-                  <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded border">
-                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>
-                      {quotationForm.watch("quotationNumber") === "Auto-generated" ? "Q-2025-001" : quotationForm.watch("quotationNumber")}
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Revision Number</Label>
-                  <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded border">
-                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>
-                      {quotationForm.watch("revisionNumber")}
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-500" style={{fontFamily: 'Arial, sans-serif'}}>Status</Label>
-                  <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded border">
-                    <span className="text-sm text-blue-700 dark:text-blue-300" style={{fontFamily: 'Arial, sans-serif'}}>
-                      {quotationForm.watch("status") ? quotationForm.watch("status")?.charAt(0).toUpperCase() + quotationForm.watch("status")?.slice(1) : "Draft"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           <FormTabLayout
             activeTab={activeTab}
