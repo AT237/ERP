@@ -63,6 +63,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
   const [quotationItems, setQuotationItems] = useState<QuotationItem[]>([]);
   const [memos, setMemos] = useState<Memo[]>([]);
+  const [nextQuotationNumber, setNextQuotationNumber] = useState<string>("Q-2025-001");
   const { toast } = useToast();
 
   // Data table state for quotation items
@@ -129,6 +130,12 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     enabled: !!quotationId,
   });
 
+  // Fetch all quotations to calculate next number for new quotations
+  const { data: allQuotations = [] } = useQuery<Quotation[]>({
+    queryKey: ["/api/quotations"],
+    enabled: !quotationId, // Only fetch when creating new quotation
+  });
+
   // Forms
   const quotationForm = useForm<QuotationFormData>({
     resolver: zodResolver(quotationFormSchema),
@@ -160,6 +167,28 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       lineTotal: "0.00",
     },
   });
+
+  // Calculate next quotation number for new quotations
+  useEffect(() => {
+    if (!quotationId && allQuotations.length >= 0) {
+      const currentYear = new Date().getFullYear();
+      
+      // Filter quotations for current year and find the highest number
+      const currentYearQuotations = allQuotations
+        .filter(q => q.quotationNumber && q.quotationNumber.startsWith(`Q-${currentYear}`))
+        .map(q => {
+          const match = q.quotationNumber?.match(/Q-(\d{4})-(\d{3})/);
+          return match ? parseInt(match[2]) : 0;
+        })
+        .filter(num => !isNaN(num));
+      
+      const lastNumber = currentYearQuotations.length > 0 ? Math.max(...currentYearQuotations) : 0;
+      const nextNumber = lastNumber + 1;
+      const newQuotationNumber = `Q-${currentYear}-${nextNumber.toString().padStart(3, '0')}`;
+      
+      setNextQuotationNumber(newQuotationNumber);
+    }
+  }, [allQuotations, quotationId]);
 
   // Load existing quotation data when editing
   useEffect(() => {
@@ -450,7 +479,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               fields={[
                 {
                   label: "Quotation Number",
-                  value: quotationForm.watch("quotationNumber") === "Auto-generated" ? "Q-2025-001" : quotationForm.watch("quotationNumber")
+                  value: quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber")
                 },
                 {
                   label: "Revision Number",
