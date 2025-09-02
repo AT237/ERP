@@ -39,8 +39,8 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
         </div>
       </div>
 
-      {/* Tab Content - Clean white background without borders */}
-      <div className="bg-white p-6 h-[500px] overflow-y-auto">
+      {/* Tab Content - With orange border to connect with active tab */}
+      <div className="border-2 border-orange-500 bg-white p-6 h-[500px] overflow-y-auto">
         {activeTabContent}
       </div>
     </div>

@@ -518,8 +518,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           </div>
         </div>
 
-        <Card>
-        <CardContent>
+        <Card className="border-0 shadow-none">
+        <CardContent className="p-0">
           <FormTabLayout
             activeTab={activeTab}
             onTabChange={setActiveTab}
