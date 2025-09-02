@@ -518,7 +518,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           </div>
         </div>
 
-        <Card className="border-0 shadow-none">
+        <Card className="border-0 shadow-none ml-2">
         <CardContent className="p-0">
           <FormTabLayout
             activeTab={activeTab}
