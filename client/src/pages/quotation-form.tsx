@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormTabLayout } from '@/components/layouts/FormTabLayout';
+import { InfoHeaderLayout } from '@/components/layouts/InfoHeaderLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
@@ -469,18 +470,22 @@ export default function QuotationForm({ onSave, quotationId }: QuotationFormProp
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            {/* Quotation Info Header */}
-            <div className="flex items-center gap-6 bg-orange-50 dark:bg-orange-900/20 px-4 py-3 rounded-lg border border-orange-200 dark:border-orange-700">
-              <span className="text-lg font-bold text-orange-800 dark:text-orange-200">
-                {quotationForm.watch("quotationNumber") === "Auto-generated" ? "Q-2025-001" : quotationForm.watch("quotationNumber")}
-              </span>
-              <span className="text-lg font-bold text-orange-800 dark:text-orange-200">
-                {quotationForm.watch("revisionNumber")}
-              </span>
-              <span className="text-lg font-bold text-orange-800 dark:text-orange-200">
-                {quotationForm.watch("status") ? quotationForm.watch("status")?.charAt(0).toUpperCase() + quotationForm.watch("status")?.slice(1) : "Draft"}
-              </span>
-            </div>
+            <InfoHeaderLayout 
+              fields={[
+                {
+                  label: "Quotation Number",
+                  value: quotationForm.watch("quotationNumber") === "Auto-generated" ? "Q-2025-001" : quotationForm.watch("quotationNumber")
+                },
+                {
+                  label: "Revision Number",
+                  value: quotationForm.watch("revisionNumber")
+                },
+                {
+                  label: "Status",
+                  value: quotationForm.watch("status") ? quotationForm.watch("status")?.charAt(0).toUpperCase() + quotationForm.watch("status")?.slice(1) : "Draft"
+                }
+              ]}
+            />
             <div className="flex gap-2">
               <Button variant="outline" onClick={onSave}>
                 <X className="mr-2 h-4 w-4" />
