@@ -616,8 +616,8 @@ export function DataTableLayout<T = any>({
         </div>
       </div>
 
-      <div className="space-y-4">
-        {/* Active Filters - Left aligned */}
+      <div className="space-y-4 ml-2">
+        {/* Active Filters - Left aligned with title */}
         <div className="min-h-[2rem] flex items-start">
           {filters.length > 0 && (
             <div className="flex flex-wrap gap-1">
@@ -646,13 +646,13 @@ export function DataTableLayout<T = any>({
           )}
         </div>
 
-        {/* Results count - Left aligned */}
+        {/* Results count - Left aligned with title */}
         <div className="text-xs text-muted-foreground py-1">
           {sortedData.length} of {data.length} {entityNamePlural.toLowerCase()}
           {selectedRows.length > 0 && ` • ${selectedRows.length} selected`}
         </div>
 
-        {/* Compact Table with Resizable Columns */}
+        {/* Table - Left aligned with title */}
         <div className="rounded-lg overflow-hidden border-0">
           <DndContext
             sensors={sensors}
