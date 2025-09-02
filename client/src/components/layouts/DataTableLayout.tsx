@@ -458,15 +458,15 @@ export function DataTableLayout<T = any>({
   return (
     <>
       <div className="space-y-4">
-        {/* Header with Title and Controls - matching original customer layout */}
-        <div className="relative p-2">
+        {/* Header with Title and Controls - left aligned */}
+        <div className="space-y-4">
           {/* Title Section */}
-          <div className="absolute left-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-2 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10 w-fit">
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-2 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10 w-fit">
             <h2 className="text-xl font-bold text-orange-800 dark:text-orange-200 whitespace-nowrap">{entityNamePlural}</h2>
           </div>
           
-          {/* Actions Section - starts at fixed coordinate */}
-          <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+          {/* Actions Section - left aligned */}
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2 w-fit">
             {/* Search */}
             <div className="relative">
               <Input
@@ -617,7 +617,7 @@ export function DataTableLayout<T = any>({
       </div>
 
       <div className="space-y-4">
-        {/* Active Filters - Compact */}
+        {/* Active Filters - Left aligned */}
         <div className="min-h-[2rem] flex items-start">
           {filters.length > 0 && (
             <div className="flex flex-wrap gap-1">
@@ -646,7 +646,7 @@ export function DataTableLayout<T = any>({
           )}
         </div>
 
-        {/* Compact Results count */}
+        {/* Results count - Left aligned */}
         <div className="text-xs text-muted-foreground py-1">
           {sortedData.length} of {data.length} {entityNamePlural.toLowerCase()}
           {selectedRows.length > 0 && ` • ${selectedRows.length} selected`}
