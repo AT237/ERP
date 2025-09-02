@@ -1,5 +1,4 @@
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface FormTab {
   id: string;
@@ -15,37 +14,35 @@ interface FormTabLayoutProps {
 }
 
 export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: FormTabLayoutProps) {
-  return (
-    <div className={`space-y-4 ${className}`}>
-      <Tabs value={activeTab} onValueChange={onTabChange}>
-        {/* Tab Navigation - Styled like main navigation */}
-        <TabsList className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg h-auto tab-transition">
-          {tabs.map((tab) => (
-            <TabsTrigger
-              key={tab.id}
-              value={tab.id}
-              className="
-                relative px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200
-                data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md
-                data-[state=inactive]:text-gray-600 dark:data-[state=inactive]:text-gray-300
-                data-[state=inactive]:hover:bg-gray-200 dark:data-[state=inactive]:hover:bg-gray-700
-                min-w-[120px] text-center
-              "
-            >
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+  const activeTabContent = tabs.find(tab => tab.id === activeTab)?.content;
 
-        {/* Tab Content - With orange border and fixed height */}
-        <div className="border-2 border-orange-200 dark:border-orange-700 rounded-lg bg-white dark:bg-gray-900 p-6 transition-smooth h-[500px] overflow-y-auto">
+  return (
+    <div className={`space-y-0 ${className}`}>
+      {/* Tab Bar - Exact copy of main layout styling */}
+      <div className="bg-gray-50 px-4 border-b-0 h-[62px] flex items-end">
+        <div className="flex items-end space-x-1 overflow-x-auto">
           {tabs.map((tab) => (
-            <TabsContent key={tab.id} value={tab.id} className="mt-0 transition-smooth h-full">
-              {tab.content}
-            </TabsContent>
+            <div
+              key={tab.id}
+              className={`flex items-center gap-1 px-3 py-2 rounded-t-lg transition-colors cursor-pointer min-w-0 font-sans ${
+                activeTab === tab.id
+                  ? 'bg-orange-500 text-white relative z-10 border-2 border-orange-500 border-b-orange-500'
+                  : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200 mb-[2px]'
+              }`}
+              onClick={() => onTabChange(tab.id)}
+              data-testid={`form-tab-${tab.id}`}
+              style={{ fontFamily: 'Arial, sans-serif' }}
+            >
+              <span className="text-xs font-medium truncate max-w-32">{tab.label}</span>
+            </div>
           ))}
         </div>
-      </Tabs>
+      </div>
+
+      {/* Tab Content - With orange border to connect with active tab */}
+      <div className="border-2 border-orange-500 bg-white rounded-lg p-6 h-[500px] overflow-y-auto">
+        {activeTabContent}
+      </div>
     </div>
   );
 }
