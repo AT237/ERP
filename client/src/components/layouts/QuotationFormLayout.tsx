@@ -472,48 +472,53 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
   return (
     <div className="p-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <InfoHeaderLayout 
-              fields={[
-                {
-                  label: "Quotation Number",
-                  value: quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber")
-                },
-                {
-                  label: "Revision Number",
-                  value: quotationForm.watch("revisionNumber")
-                },
-                {
-                  label: "Status",
-                  value: quotationForm.watch("status") ? quotationForm.watch("status")?.charAt(0).toUpperCase() + quotationForm.watch("status")?.slice(1) : "Draft"
-                }
-              ]}
-            />
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={onSave}
-                className="h-8 text-xs"
-                data-testid="button-cancel"
-              >
-                <X size={14} className="mr-1" />
-                Cancel
-              </Button>
-              <Button 
-                size="sm"
-                onClick={quotationForm.handleSubmit(handleSaveQuotation)}
-                className="h-8 text-xs bg-green-600 text-white hover:bg-green-700"
-                data-testid="button-save"
-              >
-                <Save size={14} className="mr-1" />
-                Save Quotation
-              </Button>
-            </div>
+      <div className="space-y-4">
+        {/* Header with Title and Controls - matching DataTableLayout */}
+        <div className="relative p-2">
+          {/* Title Section */}
+          <InfoHeaderLayout 
+            fields={[
+              {
+                label: "Quotation Number",
+                value: quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber")
+              },
+              {
+                label: "Revision Number",
+                value: quotationForm.watch("revisionNumber")
+              },
+              {
+                label: "Status",
+                value: quotationForm.watch("status") ? (quotationForm.watch("status") || "").charAt(0).toUpperCase() + (quotationForm.watch("status") || "").slice(1) : "Draft"
+              }
+            ]}
+            className="absolute left-2 w-fit"
+          />
+          
+          {/* Actions Section - starts at fixed coordinate like DataTableLayout */}
+          <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={onSave}
+              className="h-8 text-xs"
+              data-testid="button-cancel"
+            >
+              <X size={14} className="mr-1" />
+              Cancel
+            </Button>
+            <Button 
+              size="sm"
+              onClick={quotationForm.handleSubmit(handleSaveQuotation)}
+              className="h-8 text-xs bg-green-600 text-white hover:bg-green-700"
+              data-testid="button-save"
+            >
+              <Save size={14} className="mr-1" />
+              Save Quotation
+            </Button>
           </div>
-        </CardHeader>
+        </div>
+
+        <Card>
         <CardContent>
           <FormTabLayout
             activeTab={activeTab}
@@ -837,6 +842,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
