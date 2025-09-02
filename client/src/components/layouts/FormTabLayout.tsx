@@ -18,8 +18,8 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
 
   return (
     <div className={`space-y-0 ${className}`}>
-      {/* Tab Bar - Exact copy of main layout styling */}
-      <div className="bg-gray-50 px-4 border-b-0 h-[62px] flex items-end">
+      {/* Tab Bar - With white background */}
+      <div className="bg-white px-4 border-b-0 h-[62px] flex items-end">
         <div className="flex items-end space-x-1 overflow-x-auto">
           {tabs.map((tab) => (
             <div
@@ -39,8 +39,8 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
         </div>
       </div>
 
-      {/* Tab Content - With orange border to connect with active tab */}
-      <div className="border-2 border-orange-500 bg-white rounded-lg p-6 h-[500px] overflow-y-auto">
+      {/* Tab Content - Clean white background without borders */}
+      <div className="bg-white p-6 h-[500px] overflow-y-auto">
         {activeTabContent}
       </div>
     </div>

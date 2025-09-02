@@ -730,8 +730,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             ]}
           />
 
-          {/* Quotation Items - Always Visible */}
-          <div className="mt-8 space-y-4">
+          {/* Quotation Items - Left aligned with title */}
+          <div className="mt-8 space-y-4 ml-2">
             <div className="flex items-center justify-between">
               <Button onClick={handleAddItem} data-testid="button-add-item">
                 <Plus className="mr-2 h-4 w-4" />
