@@ -18,13 +18,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, ChevronsUpDown, Check } from "lucide-react";
+import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, ChevronsUpDown, Check, Printer, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import type { Quotation, InsertQuotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
+import jsPDF from 'jspdf';
 
 // Memo interface
 interface Memo {
@@ -360,6 +361,129 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     quotationForm.setValue("totalAmount", totalAmount.toFixed(2));
   };
 
+  // PDF and Email functionality
+  const generatePDF = (title: string) => {
+    const doc = new jsPDF();
+    
+    // Company header
+    doc.setFontSize(20);
+    doc.text('ATE Solutions B.V.', 20, 30);
+    
+    doc.setFontSize(12);
+    doc.text(title, 20, 50);
+    
+    // Quotation details
+    const quotationNumber = quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber");
+    doc.text(`Quotation Number: ${quotationNumber}`, 20, 70);
+    doc.text(`Date: ${format(new Date(), 'dd-MM-yyyy')}`, 20, 80);
+    doc.text(`Valid Until: ${quotationForm.watch("validUntil") ? format(new Date(quotationForm.watch("validUntil")), 'dd-MM-yyyy') : 'N/A'}`, 20, 90);
+    
+    // Customer info
+    const customer = customers.find(c => c.id === quotationForm.watch("customerId"));
+    if (customer) {
+      doc.text(`Customer: ${customer.name}`, 20, 110);
+      if (customer.email) doc.text(`Email: ${customer.email}`, 20, 120);
+      if (customer.phone) doc.text(`Phone: ${customer.phone}`, 20, 130);
+    }
+    
+    // Items table header
+    doc.text('Items:', 20, 150);
+    doc.text('Description', 20, 160);
+    doc.text('Qty', 120, 160);
+    doc.text('Unit Price', 140, 160);
+    doc.text('Total', 170, 160);
+    
+    // Draw line under header
+    doc.line(20, 165, 190, 165);
+    
+    // Items
+    let yPos = 175;
+    quotationItems.forEach((item) => {
+      doc.text(item.description || '', 20, yPos);
+      doc.text(item.quantity?.toString() || '0', 120, yPos);
+      doc.text(`€${item.unitPrice || '0.00'}`, 140, yPos);
+      doc.text(`€${item.lineTotal || '0.00'}`, 170, yPos);
+      yPos += 10;
+    });
+    
+    // Total
+    const total = quotationItems.reduce((sum, item) => sum + parseFloat(item.lineTotal || '0'), 0);
+    doc.line(20, yPos + 5, 190, yPos + 5);
+    doc.text(`Total: €${total.toFixed(2)}`, 170, yPos + 15);
+    
+    return doc;
+  };
+
+  const handlePrintDraft = () => {
+    try {
+      const pdf = generatePDF('DRAFT QUOTATION');
+      pdf.save(`draft-quotation-${nextQuotationNumber}.pdf`);
+      
+      toast({
+        title: "Success",
+        description: "Draft PDF generated successfully",
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSendQuotation = () => {
+    try {
+      // First save the quotation if needed
+      const formData = quotationForm.getValues();
+      
+      // Generate PDF
+      const pdf = generatePDF('QUOTATION');
+      const pdfBlob = pdf.output('blob');
+      
+      // Create a temporary URL for the PDF
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Get customer email
+      const customer = customers.find(c => c.id === formData.customerId);
+      const customerEmail = customer?.email || '';
+      
+      // Create mailto link
+      const quotationNumber = quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber");
+      const subject = encodeURIComponent(`Quotation ${quotationNumber} - ATE Solutions B.V.`);
+      const body = encodeURIComponent(`Dear ${customer?.name || 'Customer'},
+
+Please find attached our quotation ${quotationNumber}.
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+ATE Solutions B.V.`);
+      
+      const mailtoLink = `mailto:${customerEmail}?subject=${subject}&body=${body}`;
+      
+      // Open Outlook
+      window.open(mailtoLink, '_blank');
+      
+      // Download PDF separately since mailto can't attach files
+      pdf.save(`quotation-${quotationNumber}.pdf`);
+      
+      toast({
+        title: "Email Prepared",
+        description: "Outlook opened with email draft. PDF downloaded separately for attachment.",
+      });
+      
+    } catch (error) {
+      console.error("Error sending quotation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to prepare quotation email",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Memo card component
   const MemoCard = ({ memo, index, onUpdate, onDelete, onInsertTimestamp }: {
     memo: Memo;
@@ -507,6 +631,16 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               Cancel
             </Button>
             <Button 
+              variant="outline"
+              size="sm"
+              onClick={handlePrintDraft}
+              className="h-8 text-xs"
+              data-testid="button-print-draft"
+            >
+              <Printer size={14} className="mr-1" />
+              Print Draft
+            </Button>
+            <Button 
               size="sm"
               onClick={quotationForm.handleSubmit(handleSaveQuotation)}
               className="h-8 text-xs bg-green-600 text-white hover:bg-green-700"
@@ -514,6 +648,15 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             >
               <Save size={14} className="mr-1" />
               Save Quotation
+            </Button>
+            <Button 
+              size="sm"
+              onClick={handleSendQuotation}
+              className="h-8 text-xs bg-blue-600 text-white hover:bg-blue-700"
+              data-testid="button-send-quotation"
+            >
+              <Send size={14} className="mr-1" />
+              Send Quotation
             </Button>
           </div>
         </div>
