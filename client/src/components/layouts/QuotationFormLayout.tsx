@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
@@ -65,6 +66,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [quotationItems, setQuotationItems] = useState<QuotationItem[]>([]);
   const [memos, setMemos] = useState<Memo[]>([]);
   const [nextQuotationNumber, setNextQuotationNumber] = useState<string>("Q-2025-001");
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string>("");
   const { toast } = useToast();
 
   // Data table state for quotation items
@@ -415,35 +418,23 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     return doc;
   };
 
-  const downloadPDFMobile = (pdf: jsPDF, filename: string) => {
-    // Create blob and URL
+  const displayPDF = (pdf: jsPDF, filename: string) => {
+    // Create blob and URL for preview
     const pdfBlob = pdf.output('blob');
     const pdfUrl = URL.createObjectURL(pdfBlob);
     
-    // Check if we're on mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Show in modal for Replit preview mode
+    setPdfBlobUrl(pdfUrl);
+    setShowPDFPreview(true);
     
-    if (isMobile) {
-      // On mobile, open PDF in new window for viewing/downloading
-      const newWindow = window.open(pdfUrl, '_blank');
-      
-      if (!newWindow) {
-        // Fallback: create download link and trigger click
-        const link = document.createElement('a');
-        link.href = pdfUrl;
-        link.download = filename;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } else {
-      // Desktop: use jsPDF save method
-      pdf.save(filename);
-    }
-    
-    // Clean up URL after a delay
-    setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
+    // Also try to trigger download as fallback
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handlePrintDraft = () => {
@@ -451,11 +442,11 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       const pdf = generatePDF('DRAFT QUOTATION');
       const filename = `draft-quotation-${nextQuotationNumber}.pdf`;
       
-      downloadPDFMobile(pdf, filename);
+      displayPDF(pdf, filename);
       
       toast({
         title: "Success", 
-        description: "Draft PDF generated successfully",
+        description: "Draft PDF opened for viewing and download",
       });
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -500,9 +491,9 @@ ATE Solutions B.V.`);
       // Open Outlook
       window.open(mailtoLink, '_blank');
       
-      // Download PDF separately since mailto can't attach files
+      // Show PDF for preview and download
       const filename = `quotation-${quotationNumber}.pdf`;
-      downloadPDFMobile(pdf, filename);
+      displayPDF(pdf, filename);
       
       toast({
         title: "Email Prepared",
@@ -1021,6 +1012,38 @@ ATE Solutions B.V.`);
         </CardContent>
       </Card>
       </div>
+
+      {/* PDF Preview Modal */}
+      <Dialog open={showPDFPreview} onOpenChange={setShowPDFPreview}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>PDF Preview</DialogTitle>
+          </DialogHeader>
+          {pdfBlobUrl && (
+            <div className="w-full h-[70vh]">
+              <iframe 
+                src={pdfBlobUrl} 
+                className="w-full h-full border rounded-md"
+                title="PDF Preview"
+              />
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowPDFPreview(false)}>
+              Close
+            </Button>
+            <Button onClick={() => {
+              const link = document.createElement('a');
+              link.href = pdfBlobUrl;
+              link.download = `quotation-${nextQuotationNumber}.pdf`;
+              link.click();
+            }}>
+              <Download className="mr-2 h-4 w-4" />
+              Download PDF
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
