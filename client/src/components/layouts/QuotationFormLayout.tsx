@@ -376,7 +376,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     const quotationNumber = quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber");
     doc.text(`Quotation Number: ${quotationNumber}`, 20, 70);
     doc.text(`Date: ${format(new Date(), 'dd-MM-yyyy')}`, 20, 80);
-    doc.text(`Valid Until: ${quotationForm.watch("validUntil") ? format(new Date(quotationForm.watch("validUntil")), 'dd-MM-yyyy') : 'N/A'}`, 20, 90);
+    const validUntilValue = quotationForm.watch("validUntil");
+    doc.text(`Valid Until: ${validUntilValue ? format(new Date(validUntilValue), 'dd-MM-yyyy') : 'N/A'}`, 20, 90);
     
     // Customer info
     const customer = customers.find(c => c.id === quotationForm.watch("customerId"));
@@ -414,13 +415,46 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     return doc;
   };
 
+  const downloadPDFMobile = (pdf: jsPDF, filename: string) => {
+    // Create blob and URL
+    const pdfBlob = pdf.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    
+    // Check if we're on mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // On mobile, open PDF in new window for viewing/downloading
+      const newWindow = window.open(pdfUrl, '_blank');
+      
+      if (!newWindow) {
+        // Fallback: create download link and trigger click
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } else {
+      // Desktop: use jsPDF save method
+      pdf.save(filename);
+    }
+    
+    // Clean up URL after a delay
+    setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
+  };
+
   const handlePrintDraft = () => {
     try {
       const pdf = generatePDF('DRAFT QUOTATION');
-      pdf.save(`draft-quotation-${nextQuotationNumber}.pdf`);
+      const filename = `draft-quotation-${nextQuotationNumber}.pdf`;
+      
+      downloadPDFMobile(pdf, filename);
       
       toast({
-        title: "Success",
+        title: "Success", 
         description: "Draft PDF generated successfully",
       });
     } catch (error) {
@@ -467,7 +501,8 @@ ATE Solutions B.V.`);
       window.open(mailtoLink, '_blank');
       
       // Download PDF separately since mailto can't attach files
-      pdf.save(`quotation-${quotationNumber}.pdf`);
+      const filename = `quotation-${quotationNumber}.pdf`;
+      downloadPDFMobile(pdf, filename);
       
       toast({
         title: "Email Prepared",
