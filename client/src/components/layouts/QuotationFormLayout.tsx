@@ -364,56 +364,207 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     quotationForm.setValue("totalAmount", totalAmount.toFixed(2));
   };
 
+  // Helper function to convert number to words
+  const numberToWords = (amount: number): string => {
+    const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+    const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+    const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+    const thousands = ['', 'thousand', 'million', 'billion'];
+
+    if (amount === 0) return 'zero euro';
+
+    const euros = Math.floor(amount);
+    const cents = Math.round((amount - euros) * 100);
+
+    const convertHundreds = (num: number): string => {
+      let result = '';
+      if (num >= 100) {
+        result += ones[Math.floor(num / 100)] + ' hundred ';
+        num %= 100;
+      }
+      if (num >= 20) {
+        result += tens[Math.floor(num / 10)] + ' ';
+        num %= 10;
+      } else if (num >= 10) {
+        result += teens[num - 10] + ' ';
+        return result;
+      }
+      if (num > 0) {
+        result += ones[num] + ' ';
+      }
+      return result;
+    };
+
+    const convertNumber = (num: number): string => {
+      if (num === 0) return '';
+      let result = '';
+      let thousandIndex = 0;
+      
+      while (num > 0) {
+        const chunk = num % 1000;
+        if (chunk !== 0) {
+          result = convertHundreds(chunk) + thousands[thousandIndex] + ' ' + result;
+        }
+        num = Math.floor(num / 1000);
+        thousandIndex++;
+      }
+      return result.trim();
+    };
+
+    let result = convertNumber(euros) + ' euro';
+    if (cents > 0) {
+      result += ' and ' + convertNumber(cents) + ' cent';
+    }
+    
+    return result.charAt(0).toUpperCase() + result.slice(1);
+  };
+
   // PDF and Email functionality
   const generatePDF = (title: string) => {
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
     
-    // Company header
-    doc.setFontSize(20);
-    doc.text('ATE Solutions B.V.', 20, 30);
+    // Header - Date (top right)
+    doc.setFontSize(11);
+    doc.text(`Date: ${format(new Date(), 'dd-MM-yyyy')}`, pageWidth - 20, 20, { align: 'right' });
     
-    doc.setFontSize(12);
-    doc.text(title, 20, 50);
-    
-    // Quotation details
+    // Main title (centered)
     const quotationNumber = quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber");
-    doc.text(`Quotation Number: ${quotationNumber}`, 20, 70);
-    doc.text(`Date: ${format(new Date(), 'dd-MM-yyyy')}`, 20, 80);
-    const validUntilValue = quotationForm.watch("validUntil");
-    doc.text(`Valid Until: ${validUntilValue ? format(new Date(validUntilValue), 'dd-MM-yyyy') : 'N/A'}`, 20, 90);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`QUOTATION ${quotationNumber}`, pageWidth / 2, 35, { align: 'center' });
     
-    // Customer info
+    // Supplier and Customer info (two columns)
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Supplier: ATE Solutions B.V.', 20, 50);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text('Oude Telgterweg 255', 20, 60);
+    doc.text('3853PG, ERMELO', 20, 67);
+    doc.text('0031 682332087', 20, 74);
+    doc.text('info@atesolutions.nl', 20, 81);
+    doc.text('VAT no. NL 8656 38792 B01', 20, 88);
+    doc.text('C.o.c. no. 91385415', 20, 95);
+    doc.text('IBAN: NL28INGB 0102962979', 20, 102);
+    doc.text('The Netherlands', 20, 109);
+    
+    // Customer info (right column)
     const customer = customers.find(c => c.id === quotationForm.watch("customerId"));
     if (customer) {
-      doc.text(`Customer: ${customer.name}`, 20, 110);
-      if (customer.email) doc.text(`Email: ${customer.email}`, 20, 120);
-      if (customer.phone) doc.text(`Phone: ${customer.phone}`, 20, 130);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Customer: ${customer.name}`, 120, 50);
+      doc.setFont('helvetica', 'normal');
+      
+      // Add customer information with proper spacing
+      let customerYPos = 60;
+      if (customer.email) {
+        doc.text(customer.email, 120, customerYPos);
+        customerYPos += 7;
+      }
+      if (customer.phone) {
+        doc.text(customer.phone, 120, customerYPos);
+        customerYPos += 7;
+      }
+      if (customer.mobile) {
+        doc.text(customer.mobile, 120, customerYPos);
+        customerYPos += 7;
+      }
+      
+      // Add customer number if available
+      if (customer.customerNumber) {
+        doc.text(`Customer No: ${customer.customerNumber}`, 120, customerYPos);
+      }
     }
     
-    // Items table header
-    doc.text('Items:', 20, 150);
-    doc.text('Description', 20, 160);
-    doc.text('Qty', 120, 160);
-    doc.text('Unit Price', 140, 160);
-    doc.text('Total', 170, 160);
+    // Quotation description
+    const description = quotationForm.watch("description");
+    if (description) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Quotation description:', 20, 125);
+      doc.setFont('helvetica', 'normal');
+      doc.text(description, 20, 135);
+    }
     
-    // Draw line under header
-    doc.line(20, 165, 190, 165);
+    // Items table
+    let yPos = 155;
+    
+    // Table headers
+    doc.setFont('helvetica', 'bold');
+    doc.text('Position', 20, yPos);
+    doc.text('Description', 40, yPos);
+    doc.text('Quantity', 120, yPos);
+    doc.text('Unit Price:', 140, yPos);
+    doc.text('Total Price:', 170, yPos);
+    
+    // Line under headers
+    doc.line(20, yPos + 2, 190, yPos + 2);
+    
+    yPos += 10;
+    doc.setFont('helvetica', 'normal');
     
     // Items
-    let yPos = 175;
-    quotationItems.forEach((item) => {
-      doc.text(item.description || '', 20, yPos);
-      doc.text(item.quantity?.toString() || '0', 120, yPos);
-      doc.text(`€${item.unitPrice || '0.00'}`, 140, yPos);
-      doc.text(`€${item.lineTotal || '0.00'}`, 170, yPos);
-      yPos += 10;
+    quotationItems.forEach((item, index) => {
+      const position = String(index + 1).padStart(3, '0');
+      doc.text(position, 20, yPos);
+      
+      // Description (with word wrap)
+      const description = item.description || '';
+      const splitDescription = doc.splitTextToSize(description, 75);
+      doc.text(splitDescription, 40, yPos);
+      
+      doc.text(`${item.quantity || 0} Pcs.`, 120, yPos);
+      doc.text(`€ ${parseFloat(item.unitPrice || '0').toLocaleString('nl-NL', {minimumFractionDigits: 2})}`, 140, yPos);
+      doc.text(`€ ${parseFloat(item.lineTotal || '0').toLocaleString('nl-NL', {minimumFractionDigits: 2})}`, 170, yPos);
+      
+      yPos += Math.max(10, splitDescription.length * 5);
     });
     
     // Total
+    yPos += 10;
     const total = quotationItems.reduce((sum, item) => sum + parseFloat(item.lineTotal || '0'), 0);
-    doc.line(20, yPos + 5, 190, yPos + 5);
-    doc.text(`Total: €${total.toFixed(2)}`, 170, yPos + 15);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total:', 140, yPos);
+    doc.text(`€ ${total.toLocaleString('nl-NL', {minimumFractionDigits: 2})}`, 170, yPos);
+    
+    // Amount in words
+    yPos += 15;
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Amount in words: ${numberToWords(total)}`, 20, yPos);
+    
+    // Notes
+    const notes = quotationForm.watch("notes");
+    if (notes) {
+      yPos += 15;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Notes:', 20, yPos);
+      yPos += 7;
+      doc.setFont('helvetica', 'normal');
+      const splitNotes = doc.splitTextToSize(notes, 170);
+      doc.text(splitNotes, 20, yPos);
+      yPos += splitNotes.length * 5;
+    }
+    
+    // Payment conditions, Delivery, etc.
+    yPos += 20;
+    const paymentConditions = quotationForm.watch("paymentConditions") || "Payment within 30 days";
+    const deliveryConditions = quotationForm.watch("deliveryConditions") || "Ex Works";
+    const validUntilValue = quotationForm.watch("validUntil");
+    const validity = validUntilValue ? `${Math.ceil((new Date(validUntilValue).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} Days` : "30 Days";
+    
+    doc.text(`Payment conditions: ${paymentConditions}`, 20, yPos);
+    doc.text(`Delivery: ${deliveryConditions}`, 20, yPos + 7);
+    doc.text('Delivery time: To be discussed', 20, yPos + 14);
+    doc.text(`Validity: ${validity}`, 20, yPos + 21);
+    
+    // Signature
+    yPos += 40;
+    doc.text('Kind regards, A. Tomassen', 20, yPos);
+    
+    // Footer
+    yPos += 20;
+    doc.setFontSize(9);
+    doc.text('Our general terms and conditions apply to all our deliveries.', 20, yPos);
     
     return doc;
   };
