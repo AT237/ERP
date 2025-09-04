@@ -68,6 +68,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [nextQuotationNumber, setNextQuotationNumber] = useState<string>("Q-2025-001");
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string>("");
+  const [currentPDF, setCurrentPDF] = useState<jsPDF | null>(null);
   const { toast } = useToast();
 
   // Data table state for quotation items
@@ -569,35 +570,22 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     return doc;
   };
 
-  const displayPDF = (pdf: jsPDF, filename: string) => {
-    // Create blob and URL for preview
-    const pdfBlob = pdf.output('blob');
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    
-    // Show in modal for Replit preview mode
-    setPdfBlobUrl(pdfUrl);
-    setShowPDFPreview(true);
-    
-    // Also try to trigger download as fallback
-    const link = document.createElement('a');
-    link.href = pdfUrl;
-    link.download = filename;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handlePrintDraft = () => {
+  const handlePreview = () => {
     try {
       const pdf = generatePDF('DRAFT QUOTATION');
-      const filename = `draft-quotation-${nextQuotationNumber}.pdf`;
+      setCurrentPDF(pdf);
       
-      displayPDF(pdf, filename);
+      // Create blob and URL for preview
+      const pdfBlob = pdf.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Show in modal
+      setPdfBlobUrl(pdfUrl);
+      setShowPDFPreview(true);
       
       toast({
         title: "Success", 
-        description: "Draft PDF opened for viewing and download",
+        description: "PDF preview opened",
       });
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -609,6 +597,32 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   };
 
+  const handleSavePDF = () => {
+    if (currentPDF) {
+      const filename = `draft-quotation-${nextQuotationNumber}.pdf`;
+      currentPDF.save(filename);
+      toast({
+        title: "Success",
+        description: "PDF saved successfully",
+      });
+    }
+  };
+
+  const handlePrintPDF = () => {
+    if (pdfBlobUrl) {
+      const printWindow = window.open(pdfBlobUrl, '_blank');
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
+      toast({
+        title: "Success",
+        description: "PDF opened for printing",
+      });
+    }
+  };
+
   const handleSendQuotation = () => {
     try {
       // First save the quotation if needed
@@ -616,10 +630,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       
       // Generate PDF
       const pdf = generatePDF('QUOTATION');
-      const pdfBlob = pdf.output('blob');
-      
-      // Create a temporary URL for the PDF
-      const pdfUrl = URL.createObjectURL(pdfBlob);
       
       // Get customer email
       const customer = customers.find(c => c.id === formData.customerId);
@@ -642,13 +652,16 @@ ATE Solutions B.V.`);
       // Open Outlook
       window.open(mailtoLink, '_blank');
       
-      // Show PDF for preview and download
-      const filename = `quotation-${quotationNumber}.pdf`;
-      displayPDF(pdf, filename);
+      // Show PDF for preview
+      setCurrentPDF(pdf);
+      const emailPdfBlob = pdf.output('blob');
+      const emailPdfUrl = URL.createObjectURL(emailPdfBlob);
+      setPdfBlobUrl(emailPdfUrl);
+      setShowPDFPreview(true);
       
       toast({
         title: "Email Prepared",
-        description: "Outlook opened with email draft. PDF downloaded separately for attachment.",
+        description: "Outlook opened with email draft. PDF preview opened for attachment.",
       });
       
     } catch (error) {
@@ -810,12 +823,12 @@ ATE Solutions B.V.`);
             <Button 
               variant="outline"
               size="sm"
-              onClick={handlePrintDraft}
+              onClick={handlePreview}
               className="h-8 text-xs"
-              data-testid="button-print-draft"
+              data-testid="button-preview"
             >
-              <Printer size={14} className="mr-1" />
-              Print Draft
+              <Eye size={14} className="mr-1" />
+              Preview
             </Button>
             <Button 
               size="sm"
@@ -1171,7 +1184,7 @@ ATE Solutions B.V.`);
             <DialogTitle>PDF Preview</DialogTitle>
           </DialogHeader>
           {pdfBlobUrl && (
-            <div className="w-full h-[70vh]">
+            <div className="w-full h-[70vh] mb-4">
               <iframe 
                 src={pdfBlobUrl} 
                 className="w-full h-full border rounded-md"
@@ -1179,19 +1192,20 @@ ATE Solutions B.V.`);
               />
             </div>
           )}
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button variant="outline" onClick={() => setShowPDFPreview(false)}>
               Close
             </Button>
-            <Button onClick={() => {
-              const link = document.createElement('a');
-              link.href = pdfBlobUrl;
-              link.download = `quotation-${nextQuotationNumber}.pdf`;
-              link.click();
-            }}>
-              <Download className="mr-2 h-4 w-4" />
-              Download PDF
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handlePrintPDF}>
+                <Printer className="mr-2 h-4 w-4" />
+                Print
+              </Button>
+              <Button onClick={handleSavePDF}>
+                <Download className="mr-2 h-4 w-4" />
+                Save PDF
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
