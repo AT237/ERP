@@ -159,8 +159,8 @@ export default function Projects() {
       description: project.description || "",
       customerId: project.customerId || "",
       status: project.status || "planning",
-      startDate: project.startDate ? format(new Date(project.startDate), "yyyy-MM-dd") : undefined,
-      endDate: project.endDate ? format(new Date(project.endDate), "yyyy-MM-dd") : undefined,
+      startDate: project.startDate ? format(new Date(project.startDate), "yyyy-MM-dd") as any : undefined,
+      endDate: project.endDate ? format(new Date(project.endDate), "yyyy-MM-dd") as any : undefined,
       totalValue: project.totalValue || "",
       progress: project.progress?.toString() || "0",
     });
@@ -292,7 +292,7 @@ export default function Projects() {
                 <div>
                   <Label htmlFor="customerId">Customer</Label>
                   <SelectWithAdd
-                    value={form.watch("customerId")}
+                    value={form.watch("customerId") || ""}
                     onValueChange={(value) => form.setValue("customerId", value)}
                     placeholder="Select customer"
                     addFormTitle="Add New Customer"
@@ -316,7 +316,7 @@ export default function Projects() {
                 <div>
                   <Label htmlFor="status">Status</Label>
                   <Select 
-                    value={form.watch("status")} 
+                    value={form.watch("status") || ""} 
                     onValueChange={(value) => form.setValue("status", value)}
                   >
                     <SelectTrigger data-testid="select-status">

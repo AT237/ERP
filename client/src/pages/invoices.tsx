@@ -161,7 +161,7 @@ export default function Invoices() {
       invoiceNumber: invoice.invoiceNumber,
       customerId: invoice.customerId,
       status: invoice.status || "pending",
-      dueDate: invoice.dueDate ? format(new Date(invoice.dueDate), "yyyy-MM-dd") : undefined,
+      dueDate: invoice.dueDate ? format(new Date(invoice.dueDate), "yyyy-MM-dd") as any : undefined,
       subtotal: invoice.subtotal,
       taxAmount: invoice.taxAmount || "0",
       totalAmount: invoice.totalAmount,
@@ -316,7 +316,7 @@ export default function Invoices() {
                 <div>
                   <Label htmlFor="status">Status</Label>
                   <Select 
-                    value={form.watch("status")} 
+                    value={form.watch("status") || ""} 
                     onValueChange={(value) => form.setValue("status", value)}
                   >
                     <SelectTrigger data-testid="select-status">
