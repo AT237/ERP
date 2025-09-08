@@ -10,7 +10,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -159,8 +159,8 @@ export default function Projects() {
       description: project.description || "",
       customerId: project.customerId || "",
       status: project.status || "planning",
-      startDate: project.startDate ? format(new Date(project.startDate), "yyyy-MM-dd") as any : undefined,
-      endDate: project.endDate ? format(new Date(project.endDate), "yyyy-MM-dd") as any : undefined,
+      startDate: project.startDate ? format(new Date(project.startDate), "yyyy-MM-dd") : undefined,
+      endDate: project.endDate ? format(new Date(project.endDate), "yyyy-MM-dd") : undefined,
       totalValue: project.totalValue || "",
       progress: project.progress?.toString() || "0",
     });
@@ -256,9 +256,6 @@ export default function Projects() {
               <DialogTitle>
                 {editingProject ? "Edit Project" : "Create New Project"}
               </DialogTitle>
-              <DialogDescription>
-                {editingProject ? "Update project information and details." : "Create a new project to track your work."}
-              </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -292,7 +289,7 @@ export default function Projects() {
                 <div>
                   <Label htmlFor="customerId">Customer</Label>
                   <SelectWithAdd
-                    value={form.watch("customerId") || ""}
+                    value={form.watch("customerId")}
                     onValueChange={(value) => form.setValue("customerId", value)}
                     placeholder="Select customer"
                     addFormTitle="Add New Customer"
@@ -316,7 +313,7 @@ export default function Projects() {
                 <div>
                   <Label htmlFor="status">Status</Label>
                   <Select 
-                    value={form.watch("status") || ""} 
+                    value={form.watch("status")} 
                     onValueChange={(value) => form.setValue("status", value)}
                   >
                     <SelectTrigger data-testid="select-status">

@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
@@ -1182,9 +1182,6 @@ ATE Solutions B.V.`);
         <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>PDF Preview</DialogTitle>
-            <DialogDescription>
-              Preview your quotation PDF before saving or printing. Use the buttons below to save or print the document.
-            </DialogDescription>
           </DialogHeader>
           {pdfBlobUrl && (
             <div className="w-full h-[70vh] mb-4">

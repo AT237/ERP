@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -161,7 +161,7 @@ export default function Invoices() {
       invoiceNumber: invoice.invoiceNumber,
       customerId: invoice.customerId,
       status: invoice.status || "pending",
-      dueDate: invoice.dueDate ? format(new Date(invoice.dueDate), "yyyy-MM-dd") as any : undefined,
+      dueDate: invoice.dueDate ? format(new Date(invoice.dueDate), "yyyy-MM-dd") : undefined,
       subtotal: invoice.subtotal,
       taxAmount: invoice.taxAmount || "0",
       totalAmount: invoice.totalAmount,
@@ -260,9 +260,6 @@ export default function Invoices() {
               <DialogTitle>
                 {editingInvoice ? "Edit Invoice" : "Create New Invoice"}
               </DialogTitle>
-              <DialogDescription>
-                {editingInvoice ? "Update invoice information and details." : "Create a new invoice for your customer."}
-              </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -316,7 +313,7 @@ export default function Invoices() {
                 <div>
                   <Label htmlFor="status">Status</Label>
                   <Select 
-                    value={form.watch("status") || ""} 
+                    value={form.watch("status")} 
                     onValueChange={(value) => form.setValue("status", value)}
                   >
                     <SelectTrigger data-testid="select-status">

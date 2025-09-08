@@ -5,7 +5,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
 
 interface SelectWithAddProps {
@@ -57,9 +57,6 @@ export function SelectWithAdd({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{addFormTitle}</DialogTitle>
-            <DialogDescription>
-              Fill in the form below to add a new item to your system.
-            </DialogDescription>
           </DialogHeader>
           {addFormContent}
         </DialogContent>
