@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DollarSign, FolderOpen, Package, ShoppingCart, Plus, 
-  Check, AlertTriangle, Clock, File, Users, 
+import {
+  DollarSign, FolderOpen, Package, ShoppingCart, Plus,
+  Check, AlertTriangle, Clock, File, Users,
   Filter, ArrowUp, ExternalLink
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import DatabaseMaintenance from '../components/database-maintenance';
 
 interface DashboardStats {
   totalRevenue: number;
@@ -76,7 +77,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -96,7 +97,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -116,7 +117,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -137,7 +138,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
@@ -146,12 +147,12 @@ export default function Dashboard() {
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <img 
-              src="https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=300" 
-              alt="Professional business office with team working" 
-              className="rounded-lg w-full h-48 object-cover mb-4" 
+            <img
+              src="https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=300"
+              alt="Professional business office with team working"
+              className="rounded-lg w-full h-48 object-cover mb-4"
             />
-            
+
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -162,7 +163,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">2 minutes ago</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center flex-shrink-0">
                   <Plus className="text-blue-600 dark:text-blue-400" size={16} />
@@ -172,7 +173,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">15 minutes ago</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center flex-shrink-0">
                   <AlertTriangle className="text-orange-600 dark:text-orange-400" size={16} />
@@ -182,7 +183,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">1 hour ago</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center flex-shrink-0">
                   <File className="text-purple-600 dark:text-purple-400" size={16} />
@@ -195,57 +196,57 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* Quick Actions */}
         <Card>
           <CardHeader className="border-b border-border">
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-3">
-            <img 
-              src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=200" 
-              alt="Modern corporate office workspace" 
-              className="rounded-lg w-full h-32 object-cover mb-4" 
+            <img
+              src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=200"
+              alt="Modern corporate office workspace"
+              className="rounded-lg w-full h-32 object-cover mb-4"
             />
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               className="w-full justify-start"
               data-testid="button-create-invoice"
             >
               <Plus className="mr-3 text-blue-600" size={16} />
               Create New Invoice
             </Button>
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               className="w-full justify-start"
               data-testid="button-generate-quotation"
             >
               <File className="mr-3 text-green-600" size={16} />
               Generate Quotation
             </Button>
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               className="w-full justify-start"
               data-testid="button-add-stock"
             >
               <Package className="mr-3 text-orange-600" size={16} />
               Add Stock Item
             </Button>
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               className="w-full justify-start"
               data-testid="button-new-customer"
             >
               <Users className="mr-3 text-purple-600" size={16} />
               New Customer
             </Button>
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               className="w-full justify-start"
               data-testid="button-view-reports"
             >
@@ -282,6 +283,12 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Database Maintenance Section */}
+      <div className="border-t pt-6">
+        <h2 className="text-xl font-semibold mb-4">Database Maintenance</h2>
+        <DatabaseMaintenance />
+      </div>
     </div>
   );
 }

@@ -10,6 +10,8 @@ import {
   insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
   insertVatRateSchema, insertCitySchema, insertStatusSchema
 } from "@shared/schema";
+import { Request, Response } from 'express';
+import { db, checkDatabaseStatus, unlockDatabase } from './db';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard routes
@@ -893,6 +895,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: "Failed to create status" });
     }
   });
+
+  // Database maintenance endpoints
+  app.post('/api/database/unlock', async (req: Request, res: Response) => {
+    try {
+      const success = unlockDatabase();
+      if (success) {
+        res.json({ success: true, message: 'Database unlocked successfully' });
+      } else {
+        res.status(500).json({ success: false, message: 'Failed to unlock database' });
+      }
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  app.get('/api/database/status', async (req: Request, res: Response) => {
+    try {
+      const status = checkDatabaseStatus();
+      res.json({ connected: status });
+    } catch (error) {
+      res.status(500).json({ connected: false, error: error.message });
+    }
+  });
+
+  // Add more routes as needed
 
   const httpServer = createServer(app);
   return httpServer;
