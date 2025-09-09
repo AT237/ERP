@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function DatabaseMaintenance() {
-  const [isChecking, setIsChecking] = = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
