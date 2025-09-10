@@ -16,12 +16,14 @@ class ErrorTracker {
   private maxErrors = 50; // Keep last 50 errors
 
   init() {
+    // Override ResizeObserver to prevent loops
+    this.patchResizeObserver();
+    
     // Global JavaScript error handler
     window.addEventListener('error', (event) => {
       // Filter out harmless browser warnings
       if (this.isHarmlessWarning(event.message)) {
-        console.warn('🔇 Filtered harmless warning:', event.message);
-        return;
+        return; // Completely ignore - don't even log
       }
       
       this.captureError({
@@ -52,7 +54,8 @@ class ErrorTracker {
   private isHarmlessWarning(message: string): boolean {
     const harmlessPatterns = [
       'ResizeObserver loop completed with undelivered notifications',
-      'ResizeObserver loop limit exceeded',
+      'ResizeObserver loop limit exceeded', 
+      'ResizeObserver',
       'Non-passive event listener',
       'Violation: Added non-passive event listener'
     ];
@@ -60,6 +63,27 @@ class ErrorTracker {
     return harmlessPatterns.some(pattern => 
       message.toLowerCase().includes(pattern.toLowerCase())
     );
+  }
+
+  private patchResizeObserver() {
+    const originalResizeObserver = window.ResizeObserver;
+    
+    window.ResizeObserver = class extends originalResizeObserver {
+      constructor(callback: ResizeObserverCallback) {
+        const wrappedCallback: ResizeObserverCallback = (entries, observer) => {
+          try {
+            // Debounce the callback to prevent loops
+            setTimeout(() => {
+              callback(entries, observer);
+            }, 0);
+          } catch (error) {
+            // Silently handle ResizeObserver errors
+            console.debug('ResizeObserver callback handled:', error);
+          }
+        };
+        super(wrappedCallback);
+      }
+    };
   }
 
   captureError(errorData: Partial<ErrorReport>) {

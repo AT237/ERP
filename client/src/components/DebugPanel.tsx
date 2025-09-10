@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-// import { ScrollArea } from '@/components/ui/scroll-area'; // Removed to prevent ResizeObserver loops
+import { StableScrollArea } from '@/components/ui/stable-scroll-area';
 import { errorTracker } from '@/utils/errorTracking';
 import { Bug, X, Trash2, Download, RefreshCw } from 'lucide-react';
 
@@ -84,7 +84,7 @@ export function DebugPanel() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-72 overflow-y-auto overflow-x-hidden pr-2" style={{scrollbarWidth: 'thin'}}>
+        <StableScrollArea maxHeight="18rem" className="pr-2">
           {errors.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <Bug className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -122,7 +122,7 @@ export function DebugPanel() {
               ))}
             </div>
           )}
-        </div>
+        </StableScrollArea>
       </CardContent>
     </Card>
   );
