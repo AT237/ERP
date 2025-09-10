@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+// import { ScrollArea } from '@/components/ui/scroll-area'; // Removed to prevent ResizeObserver loops
 import { errorTracker } from '@/utils/errorTracking';
 import { Bug, X, Trash2, Download, RefreshCw } from 'lucide-react';
 
@@ -84,7 +84,7 @@ export function DebugPanel() {
         </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-72">
+        <div className="h-72 overflow-y-auto overflow-x-hidden pr-2" style={{scrollbarWidth: 'thin'}}>
           {errors.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <Bug className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -106,14 +106,14 @@ export function DebugPanel() {
                       {new Date(error.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
-                  <p className="font-medium">{error.message}</p>
+                  <p className="font-medium break-words">{error.message}</p>
                   {error.context && (
-                    <p className="text-muted-foreground">{error.context}</p>
+                    <p className="text-muted-foreground break-words">{error.context}</p>
                   )}
                   {error.stack && (
                     <details className="mt-1">
                       <summary className="cursor-pointer text-orange-600">Stack</summary>
-                      <pre className="mt-1 text-xs overflow-auto max-h-20 bg-muted p-1 rounded">
+                      <pre className="mt-1 text-xs overflow-auto max-h-20 bg-muted p-1 rounded whitespace-pre-wrap break-words">
                         {error.stack}
                       </pre>
                     </details>
@@ -122,7 +122,7 @@ export function DebugPanel() {
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
