@@ -325,76 +325,9 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     handleUpdateMemo(memoId, { content: newContent });
   };
 
-  // Item functionality
-  const handleAddItem = () => {
-    setEditingItem(null);
-    setItemType(null);
-    setSelectedInventoryItem(null);
-    itemForm.reset({
-      quotationId: "",
-      description: "",
-      quantity: 1,
-      unitPrice: "0.00", 
-      lineTotal: "0.00",
-    });
-    setShowItemDialog(true);
-  };
+  // Item functionality - handleAddItem is now replaced by direct item type handlers in headerActions
 
   const renderItemDialog = () => {
-    if (!itemType) {
-      // Item type selection screen
-      return (
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground mb-6">
-            Selecteer het type item dat je wilt toevoegen:
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              className="h-20 flex flex-col gap-2 border-orange-200 hover:border-orange-300 hover:bg-orange-50"
-              onClick={() => setItemType('database')}
-              data-testid="button-select-database-item"
-            >
-              <Package className="h-6 w-6 text-orange-600" />
-              <span className="text-sm font-medium">Artikel uit database</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-20 flex flex-col gap-2 border-orange-200 hover:border-orange-300 hover:bg-orange-50"
-              onClick={() => setItemType('new')}
-              data-testid="button-select-new-item"
-            >
-              <Plus className="h-6 w-6 text-orange-600" />
-              <span className="text-sm font-medium">Nieuw artikel</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-20 flex flex-col gap-2 border-orange-200 hover:border-orange-300 hover:bg-orange-50"
-              onClick={() => setItemType('onetime')}
-              data-testid="button-select-onetime-item"
-            >
-              <FileText className="h-6 w-6 text-orange-600" />
-              <span className="text-sm font-medium">Eenmalig artikel</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-20 flex flex-col gap-2 border-orange-200 hover:border-orange-300 hover:bg-orange-50"
-              onClick={() => setItemType('text')}
-              data-testid="button-select-text-item"
-            >
-              <Type className="h-6 w-6 text-orange-600" />
-              <span className="text-sm font-medium">Tekst regel</span>
-            </Button>
-          </div>
-          <div className="flex justify-end">
-            <Button variant="outline" onClick={() => setShowItemDialog(false)}>
-              Annuleren
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
     // Render specific form based on selected type
     switch (itemType) {
       case 'database':
