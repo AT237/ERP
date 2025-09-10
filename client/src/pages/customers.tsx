@@ -62,16 +62,6 @@ export default function Customers() {
     queryKey: ["/api/customer-contacts"],
   });
 
-  // Enhanced Debug: Log contact data with error tracking
-  console.group("📞 Contact Persons Debug");
-  console.log("Loading state:", contactsLoading);
-  console.log("Contact data:", customerContacts);
-  console.log("Contact count:", customerContacts?.length || 0);
-  console.log("API endpoint working:", !!customerContacts);
-  if (customerContacts && customerContacts.length > 0) {
-    console.log("First contact example:", customerContacts[0]);
-  }
-  console.groupEnd();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
