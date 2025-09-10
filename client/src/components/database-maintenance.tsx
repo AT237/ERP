@@ -7,7 +7,6 @@ import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function DatabaseMaintenance() {
   const [isChecking, setIsChecking] = useState(false);
-  const [isUnlocking, setIsUnlocking] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -32,28 +31,6 @@ export default function DatabaseMaintenance() {
     }
   };
 
-  const unlockDatabase = async () => {
-    setIsUnlocking(true);
-    try {
-      const response = await fetch('/api/database/unlock', {
-        method: 'POST',
-      });
-      const data = await response.json();
-      
-      if (data.success) {
-        setStatus('success');
-        setMessage('Database unlocked successfully. History retention should now be editable.');
-      } else {
-        setStatus('error');
-        setMessage(data.message || 'Failed to unlock database');
-      }
-    } catch (error) {
-      setStatus('error');
-      setMessage('Failed to unlock database');
-    } finally {
-      setIsUnlocking(false);
-    }
-  };
 
   return (
     <Card className="w-full max-w-2xl">
@@ -63,7 +40,7 @@ export default function DatabaseMaintenance() {
           Database Maintenance
         </CardTitle>
         <CardDescription>
-          Tools to resolve database issues and unlock frozen settings
+          Check database connection status
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -86,14 +63,6 @@ export default function DatabaseMaintenance() {
           >
             {isChecking && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
             Check Database Status
-          </Button>
-          
-          <Button 
-            onClick={unlockDatabase} 
-            disabled={isUnlocking}
-          >
-            {isUnlocking && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
-            Unlock Database
           </Button>
         </div>
       </CardContent>
