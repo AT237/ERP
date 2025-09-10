@@ -1,109 +1,199 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table";
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
-} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInventoryItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, Package, AlertTriangle, Search } from "lucide-react";
+import { Package, Edit, Trash2, Plus, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
 import type { InventoryItem, InsertInventoryItem } from "@shared/schema";
 import { z } from "zod";
+import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
+import { useDataTable } from '@/hooks/useDataTable';
+import imageCompression from 'browser-image-compression';
 
-const formSchema = insertInventoryItemSchema.extend({
-  unitPrice: z.string().min(1, "Unit price is required"),
-  currentStock: z.string().min(1, "Current stock is required"),
-  minimumStock: z.string().min(1, "Minimum stock is required"),
+const inventoryFormSchema = insertInventoryItemSchema.extend({
+  unitPrice: z.string().min(1, "Prijs is verplicht"),
+  costPrice: z.string().min(1, "Kostprijs is verplicht"),
+  margin: z.string().optional(),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type InventoryFormData = z.infer<typeof inventoryFormSchema>;
+
+const defaultColumns: ColumnConfig[] = [
+  createIdColumn('sku', 'SKU'),
+  { key: 'name', label: 'Name', visible: true, width: 200, filterable: true, sortable: true },
+  { key: 'category', label: 'Category', visible: true, width: 120, filterable: true, sortable: true },
+  { key: 'unitPrice', label: 'Selling Price', visible: true, width: 120, filterable: false, sortable: true },
+  { key: 'costPrice', label: 'Cost Price', visible: true, width: 120, filterable: false, sortable: true },
+  { key: 'margin', label: 'Margin %', visible: true, width: 100, filterable: false, sortable: true },
+  { key: 'currentStock', label: 'Stock', visible: true, width: 80, filterable: false, sortable: true },
+  { key: 'minimumStock', label: 'Min Stock', visible: true, width: 80, filterable: false, sortable: true },
+  { key: 'status', label: 'Status', visible: true, width: 100, filterable: true, sortable: true },
+  { key: 'isComposite', label: 'Composite', visible: true, width: 100, filterable: false, sortable: true },
+];
 
 export default function Inventory() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string>("");
   const { toast } = useToast();
 
-  const { data: items, isLoading } = useQuery<InventoryItem[]>({
+  // Data table state  
+  const tableState = useDataTable({ 
+    defaultColumns
+  });
+
+  // Data fetching
+  const { data: items = [], isLoading } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory"],
   });
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  // Form setup
+  const form = useForm<InventoryFormData>({
+    resolver: zodResolver(inventoryFormSchema),
     defaultValues: {
       name: "",
       sku: "",
       description: "",
-      category: "",
+      category: "General",
       unit: "pcs",
-      unitPrice: "",
-      currentStock: "",
-      minimumStock: "",
+      unitPrice: "0.00",
+      costPrice: "0.00",
+      margin: "0.00",
+      currentStock: 0,
+      minimumStock: 0,
       status: "active",
+      image: "",
+      isComposite: false,
     },
   });
 
+  // Watch for price changes to auto-calculate margin
+  const watchedCostPrice = form.watch("costPrice");
+  const watchedUnitPrice = form.watch("unitPrice");
+
+  // Calculate margin
+  const calculateMargin = (costPrice: string, unitPrice: string) => {
+    const cost = parseFloat(costPrice) || 0;
+    const selling = parseFloat(unitPrice) || 0;
+    if (cost === 0) return "0.00";
+    const margin = ((selling - cost) / cost) * 100;
+    return margin.toFixed(2);
+  };
+
+  // Auto-calculate margin when prices change
+  useEffect(() => {
+    if (watchedCostPrice && watchedUnitPrice) {
+      const margin = calculateMargin(watchedCostPrice, watchedUnitPrice);
+      form.setValue("margin", margin);
+    }
+  }, [watchedCostPrice, watchedUnitPrice, form]);
+
+  // Image upload handler
+  const handleImageUpload = async (file: File) => {
+    try {
+      setUploadingImage(true);
+      
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+      };
+      
+      const compressedFile = await imageCompression(file, options);
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64String = e.target?.result as string;
+        setPreviewImage(base64String);
+        form.setValue('image', base64String);
+      };
+      reader.readAsDataURL(compressedFile);
+      
+      toast({
+        title: "Succes",
+        description: `Afbeelding gecomprimeerd van ${(file.size / 1024 / 1024).toFixed(2)}MB naar ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
+      });
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      toast({
+        title: "Fout",
+        description: "Kan afbeelding niet verwerken",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Mutations
   const createMutation = useMutation({
-    mutationFn: async (data: InsertInventoryItem) => {
-      const response = await apiRequest("POST", "/api/inventory", data);
+    mutationFn: async (data: InventoryFormData) => {
+      const response = await apiRequest("POST", "/api/inventory", {
+        ...data,
+        // Convert strings to numbers for decimal fields
+        unitPrice: parseFloat(data.unitPrice || '0').toString(),
+        costPrice: parseFloat(data.costPrice || '0').toString(),
+        margin: parseFloat(data.margin || '0').toString()
+      });
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      setIsDialogOpen(false);
+      setShowDialog(false);
+      setPreviewImage("");
       form.reset();
       setEditingItem(null);
       toast({
-        title: "Success",
-        description: "Inventory item created successfully",
+        title: "Succes",
+        description: "Artikel toegevoegd",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to create inventory item",
+        title: "Fout",
+        description: "Kan artikel niet toevoegen",
         variant: "destructive",
       });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertInventoryItem> }) => {
-      const response = await apiRequest("PUT", `/api/inventory/${id}`, data);
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InventoryFormData> }) => {
+      const response = await apiRequest("PUT", `/api/inventory/${id}`, {
+        ...data,
+        unitPrice: parseFloat(data.unitPrice || '0').toString(),
+        costPrice: parseFloat(data.costPrice || '0').toString(),
+        margin: parseFloat(data.margin || '0').toString()
+      });
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      setIsDialogOpen(false);
+      setShowDialog(false);
+      setPreviewImage("");
       form.reset();
       setEditingItem(null);
       toast({
-        title: "Success",
-        description: "Inventory item updated successfully",
+        title: "Succes",
+        description: "Artikel bijgewerkt",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to update inventory item",
+        title: "Fout",
+        description: "Kan artikel niet bijwerken",
         variant: "destructive",
       });
     },
@@ -115,33 +205,26 @@ export default function Inventory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
-        title: "Success",
-        description: "Inventory item deleted successfully",
+        title: "Succes",
+        description: "Artikel verwijderd",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to delete inventory item",
+        title: "Fout",
+        description: "Kan artikel niet verwijderen",
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    const submitData: InsertInventoryItem = {
-      ...data,
-      unitPrice: data.unitPrice,
-      currentStock: parseInt(data.currentStock),
-      minimumStock: parseInt(data.minimumStock),
-    };
-
+  // Handlers
+  const onSubmit = (data: InventoryFormData) => {
     if (editingItem) {
-      updateMutation.mutate({ id: editingItem.id, data: submitData });
+      updateMutation.mutate({ id: editingItem.id, data });
     } else {
-      createMutation.mutate(submitData);
+      createMutation.mutate(data);
     }
   };
 
@@ -151,338 +234,371 @@ export default function Inventory() {
       name: item.name,
       sku: item.sku,
       description: item.description || "",
-      category: item.category || "",
+      category: item.category || "General",
       unit: item.unit || "pcs",
-      unitPrice: item.unitPrice,
-      currentStock: item.currentStock?.toString() || "",
-      minimumStock: item.minimumStock?.toString() || "",
+      unitPrice: item.unitPrice || "0.00",
+      costPrice: item.costPrice || "0.00",
+      margin: item.margin || "0.00",
+      currentStock: item.currentStock || 0,
+      minimumStock: item.minimumStock || 0,
       status: item.status || "active",
+      image: item.image || "",
+      isComposite: item.isComposite || false,
     });
-    setIsDialogOpen(true);
+    if (item.image) {
+      setPreviewImage(item.image);
+    }
+    setShowDialog(true);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this item?")) {
+    if (confirm("Weet je zeker dat je dit artikel wilt verwijderen?")) {
       deleteMutation.mutate(id);
     }
   };
 
   const handleNewItem = () => {
     setEditingItem(null);
+    setPreviewImage("");
     form.reset();
-    setIsDialogOpen(true);
+    setShowDialog(true);
   };
 
-  const filteredItems = items?.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.category?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-
-  const getStockStatus = (item: InventoryItem) => {
-    if (item.currentStock === 0) {
-      return { label: "Out of Stock", variant: "destructive" as const };
-    }
-    if (item.currentStock <= item.minimumStock) {
-      return { label: "Low Stock", variant: "secondary" as const };
-    }
-    return { label: "In Stock", variant: "default" as const };
+  // Keep raw data for sorting, formatting handled in display
+  const renderTableData = (items: InventoryItem[]) => {
+    return items.map((item) => ({
+      ...item,
+      unitPrice: item.unitPrice || '0.00',
+      costPrice: item.costPrice || '0.00', 
+      margin: item.margin || '0.00',
+      currentStock: item.currentStock || 0,
+      minimumStock: item.minimumStock || 0,
+      status: item.status || 'active',
+      isComposite: item.isComposite || false,
+    }));
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-6 space-y-6">
-      {/* Header with Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+  // Form content
+  const renderFormContent = () => (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      {/* Basic Information */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-orange-600">Basisinformatie</h3>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Naam *</Label>
             <Input
-              placeholder="Search inventory..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-64"
-              data-testid="input-search-inventory"
+              id="name"
+              {...form.register("name")}
+              placeholder="Artikelnaam"
+              data-testid="input-inventory-name"
+            />
+            {form.formState.errors.name && (
+              <p className="text-sm text-red-600">{form.formState.errors.name.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sku">SKU *</Label>
+            <Input
+              id="sku"
+              {...form.register("sku")}
+              placeholder="SKU/Artikelcode"
+              data-testid="input-inventory-sku"
+            />
+            {form.formState.errors.sku && (
+              <p className="text-sm text-red-600">{form.formState.errors.sku.message}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Beschrijving</Label>
+          <Textarea
+            id="description"
+            {...form.register("description")}
+            placeholder="Beschrijving van het artikel"
+            data-testid="input-inventory-description"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="category">Categorie</Label>
+            <Select 
+              onValueChange={(value) => form.setValue("category", value)}
+              value={form.watch("category") || "General"}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecteer categorie" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="General">Algemeen</SelectItem>
+                <SelectItem value="Electronics">Elektronica</SelectItem>
+                <SelectItem value="Hardware">Hardware</SelectItem>
+                <SelectItem value="Software">Software</SelectItem>
+                <SelectItem value="Services">Diensten</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="unit">Eenheid</Label>
+            <Select 
+              onValueChange={(value) => form.setValue("unit", value)}
+              value={form.watch("unit") || "pcs"}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pcs">Stuks</SelectItem>
+                <SelectItem value="kg">Kilogram</SelectItem>
+                <SelectItem value="m">Meter</SelectItem>
+                <SelectItem value="l">Liter</SelectItem>
+                <SelectItem value="box">Doos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Image Upload */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-orange-600">Afbeelding</h3>
+        
+        <div className="space-y-2">
+          <Label htmlFor="image">Productafbeelding</Label>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            {previewImage ? (
+              <div className="space-y-2">
+                <img 
+                  src={previewImage} 
+                  alt="Preview" 
+                  className="mx-auto h-32 w-32 object-cover rounded-lg"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setPreviewImage("");
+                    form.setValue("image", "");
+                  }}
+                >
+                  Verwijderen
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="text-gray-500">
+                  Sleep een afbeelding hierheen of klik om te selecteren
+                </div>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(file);
+                  }}
+                  disabled={uploadingImage}
+                  className="cursor-pointer"
+                  data-testid="input-inventory-image"
+                />
+                {uploadingImage && <div className="text-sm text-orange-600">Comprimeren...</div>}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-orange-600">Prijzen</h3>
+        
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="costPrice">Kostprijs (€) *</Label>
+            <Input
+              id="costPrice"
+              type="number"
+              step="0.01"
+              min="0"
+              {...form.register("costPrice")}
+              placeholder="0.00"
+              data-testid="input-inventory-costPrice"
+            />
+            {form.formState.errors.costPrice && (
+              <p className="text-sm text-red-600">{form.formState.errors.costPrice.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="unitPrice">Verkoopprijs (€) *</Label>
+            <Input
+              id="unitPrice"
+              type="number"
+              step="0.01"
+              min="0"
+              {...form.register("unitPrice")}
+              placeholder="0.00"
+              data-testid="input-inventory-unitPrice"
+            />
+            {form.formState.errors.unitPrice && (
+              <p className="text-sm text-red-600">{form.formState.errors.unitPrice.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="margin">Marge (%)</Label>
+            <Input
+              id="margin"
+              {...form.register("margin")}
+              placeholder="0.00"
+              readOnly
+              className="bg-gray-50"
+              data-testid="input-inventory-margin"
             />
           </div>
         </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleNewItem} data-testid="button-add-inventory-item">
-              <Plus className="mr-2" size={16} />
-              Add Item
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {editingItem ? "Edit Inventory Item" : "Add New Inventory Item"}
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                Form to {editingItem ? "edit existing inventory item" : "add new inventory item"}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Item Name *</Label>
-                  <Input
-                    id="name"
-                    {...form.register("name")}
-                    placeholder="Enter item name"
-                    data-testid="input-item-name"
-                  />
-                  {form.formState.errors.name && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.name.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="sku">SKU Code *</Label>
-                  <Input
-                    id="sku"
-                    {...form.register("sku")}
-                    placeholder="SKU-XXXX"
-                    data-testid="input-sku"
-                  />
-                  {form.formState.errors.sku && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.sku.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select 
-                    value={form.watch("category")} 
-                    onValueChange={(value) => form.setValue("category", value)}
-                  >
-                    <SelectTrigger data-testid="select-category">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="hardware">Hardware</SelectItem>
-                      <SelectItem value="electronics">Electronics</SelectItem>
-                      <SelectItem value="materials">Materials</SelectItem>
-                      <SelectItem value="tools">Tools</SelectItem>
-                      <SelectItem value="supplies">Supplies</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="unit">Unit</Label>
-                  <Select 
-                    value={form.watch("unit")} 
-                    onValueChange={(value) => form.setValue("unit", value)}
-                  >
-                    <SelectTrigger data-testid="select-unit">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pcs">Pieces</SelectItem>
-                      <SelectItem value="kg">Kilograms</SelectItem>
-                      <SelectItem value="m">Meters</SelectItem>
-                      <SelectItem value="l">Liters</SelectItem>
-                      <SelectItem value="box">Box</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="unitPrice">Unit Price *</Label>
-                  <Input
-                    id="unitPrice"
-                    {...form.register("unitPrice")}
-                    placeholder="0.00"
-                    type="number"
-                    step="0.01"
-                    data-testid="input-unit-price"
-                  />
-                  {form.formState.errors.unitPrice && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.unitPrice.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="currentStock">Current Stock *</Label>
-                  <Input
-                    id="currentStock"
-                    {...form.register("currentStock")}
-                    placeholder="0"
-                    type="number"
-                    data-testid="input-current-stock"
-                  />
-                  {form.formState.errors.currentStock && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.currentStock.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="minimumStock">Minimum Stock *</Label>
-                  <Input
-                    id="minimumStock"
-                    {...form.register("minimumStock")}
-                    placeholder="10"
-                    type="number"
-                    data-testid="input-minimum-stock"
-                  />
-                  {form.formState.errors.minimumStock && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.minimumStock.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  {...form.register("description")}
-                  placeholder="Enter item description..."
-                  rows={3}
-                  data-testid="textarea-description"
-                />
-              </div>
-              
-              <div className="flex space-x-3">
-                <Button 
-                  type="submit" 
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  data-testid="button-save-item"
-                >
-                  {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : "Save Item"}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                  data-testid="button-cancel"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
 
-      {/* Inventory Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Package className="mr-2" size={20} />
-            Inventory Items ({filteredItems.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item Name</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Current Stock</TableHead>
-                  <TableHead>Min Stock</TableHead>
-                  <TableHead>Unit Price</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredItems.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      No inventory items found. Create your first item to get started.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredItems.map((item) => {
-                    const stockStatus = getStockStatus(item);
-                    return (
-                      <TableRow key={item.id} data-testid={`row-item-${item.id}`}>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell>{item.sku}</TableCell>
-                        <TableCell className="capitalize">{item.category || "—"}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <span>{item.currentStock}</span>
-                            {item.currentStock <= item.minimumStock && (
-                              <AlertTriangle className="text-orange-500" size={16} />
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{item.minimumStock}</TableCell>
-                        <TableCell>${item.unitPrice}</TableCell>
-                        <TableCell>
-                          <Badge variant={stockStatus.variant}>{stockStatus.label}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(item)}
-                              data-testid={`button-edit-${item.id}`}
-                            >
-                              <Edit size={14} />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDelete(item.id)}
-                              data-testid={`button-delete-${item.id}`}
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+      {/* Stock Information */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-orange-600">Voorraad</h3>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="currentStock">Huidige voorraad</Label>
+            <Input
+              id="currentStock"
+              type="number"
+              min="0"
+              {...form.register("currentStock", { valueAsNumber: true })}
+              placeholder="0"
+              data-testid="input-inventory-currentStock"
+            />
           </div>
-        </CardContent>
-      </Card>
-    </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="minimumStock">Minimum voorraad</Label>
+            <Input
+              id="minimumStock"
+              type="number"
+              min="0"
+              {...form.register("minimumStock", { valueAsNumber: true })}
+              placeholder="0"
+              data-testid="input-inventory-minimumStock"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Composite Article Option */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-orange-600">Samengesteld artikel</h3>
+        
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="isComposite"
+            checked={form.watch("isComposite") || false}
+            onCheckedChange={(checked) => form.setValue("isComposite", !!checked)}
+            data-testid="checkbox-inventory-isComposite"
+          />
+          <Label htmlFor="isComposite">
+            Dit artikel bestaat uit andere artikelen
+          </Label>
+        </div>
+        
+        {form.watch("isComposite") && (
+          <div className="p-4 bg-orange-50 rounded-lg">
+            <p className="text-sm text-orange-700">
+              Componenten kunnen worden toegevoegd na het aanmaken van dit artikel.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="flex gap-2 justify-end pt-4 border-t">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setShowDialog(false);
+            setPreviewImage("");
+            form.reset();
+          }}
+          disabled={createMutation.isPending || updateMutation.isPending}
+        >
+          Annuleren
+        </Button>
+        <Button
+          type="submit"
+          disabled={createMutation.isPending || updateMutation.isPending}
+          className="bg-orange-600 hover:bg-orange-700"
+        >
+          {(createMutation.isPending || updateMutation.isPending) ? "Opslaan..." : "Opslaan"}
+        </Button>
+      </div>
+    </form>
+  );
+
+  return (
+    <DataTableLayout
+      title="Inventory Management"
+      entityName="Product"
+      entityNamePlural="Products"
+      data={renderTableData(items)}
+      columns={tableState.columns}
+      setColumns={tableState.setColumns}
+      isLoading={isLoading}
+      searchTerm={tableState.searchTerm}
+      setSearchTerm={tableState.setSearchTerm}
+      filters={tableState.filters}
+      setFilters={tableState.setFilters}
+      sortConfig={tableState.sortConfig}
+      setSortConfig={tableState.setSortConfig}
+      selectedRows={tableState.selectedRows}
+      setSelectedRows={tableState.setSelectedRows}
+      currentPage={tableState.currentPage}
+      setCurrentPage={tableState.setCurrentPage}
+      pageSize={tableState.pageSize}
+      setPageSize={tableState.setPageSize}
+      applyFiltersAndSearch={tableState.applyFiltersAndSearch}
+      applySorting={tableState.applySorting}
+      headerActions={[
+        {
+          key: 'add-inventory',
+          label: 'Add Item',
+          icon: <Plus className="h-4 w-4" />,
+          onClick: handleNewItem,
+          variant: 'default' as const
+        }
+      ]}
+      rowActions={(row: InventoryItem) => [
+        {
+          key: 'edit',
+          label: 'Edit',
+          icon: <Edit className="h-4 w-4" />,
+          onClick: () => handleEdit(row),
+          variant: 'ghost' as const
+        },
+        {
+          key: 'delete',
+          label: 'Delete',
+          icon: <Trash2 className="h-4 w-4" />,
+          onClick: () => handleDelete(row.id),
+          variant: 'ghost' as const,
+          className: 'text-red-600 hover:text-red-700'
+        }
+      ]}
+      addEditDialog={{
+        isOpen: showDialog,
+        onOpenChange: setShowDialog,
+        title: editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item',
+        content: renderFormContent()
+      }}
+    />
   );
 }

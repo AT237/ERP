@@ -123,7 +123,7 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
     return data.filter(item => {
       // Apply search term
       if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
+        const searchLower = (searchTerm ?? '').toString().toLowerCase();
         const searchMatch = Object.values(item).some(value => {
           if (value === null || value === undefined) return false;
           return String(value).toLowerCase().includes(searchLower);
@@ -134,8 +134,8 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
       // Apply column filters
       return filters.every(filter => {
         const value = item[filter.column];
-        const filterValue = filter.value.toLowerCase();
-        const itemValue = value ? String(value).toLowerCase() : '';
+        const filterValue = (filter.value ?? '').toString().toLowerCase();
+        const itemValue = (value ?? '').toString().toLowerCase();
 
         switch (filter.type) {
           case 'contains':
