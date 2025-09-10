@@ -9,6 +9,7 @@ import { InfoHeaderLayout } from '@/components/layouts/InfoHeaderLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -44,6 +45,7 @@ const quotationFormSchema = insertQuotationSchema.extend({
   totalAmount: z.string().min(1, "Total amount is required"),
   quotationDate: z.string().optional(),
   validUntil: z.string().optional(),
+  isBudgetQuotation: z.boolean().optional(),
 });
 
 const quotationItemFormSchema = insertQuotationItemSchema.extend({
@@ -934,6 +936,24 @@ ATE Solutions B.V.`);
                           {...quotationForm.register("description")}
                           data-testid="input-description"
                         />
+                      </div>
+                      <div className="col-span-2 space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="isBudgetQuotation"
+                            checked={quotationForm.watch("isBudgetQuotation") || false}
+                            onCheckedChange={(checked) => {
+                              quotationForm.setValue("isBudgetQuotation", checked === true);
+                            }}
+                            data-testid="checkbox-budget-quotation"
+                          />
+                          <Label 
+                            htmlFor="isBudgetQuotation" 
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Budget quotation
+                          </Label>
+                        </div>
                       </div>
                     </div>
                   </div>
