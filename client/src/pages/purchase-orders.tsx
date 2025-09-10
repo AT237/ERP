@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
 } from "@/components/ui/dialog";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -259,6 +259,9 @@ export default function PurchaseOrders() {
               <DialogTitle>
                 {editingPurchaseOrder ? "Edit Purchase Order" : "Create New Purchase Order"}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Form to {editingPurchaseOrder ? "edit existing purchase order" : "create new purchase order"}
+              </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

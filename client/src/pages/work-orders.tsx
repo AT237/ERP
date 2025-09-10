@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
 } from "@/components/ui/dialog";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -271,6 +271,9 @@ export default function WorkOrders() {
               <DialogTitle>
                 {editingWorkOrder ? "Edit Work Order" : "Create New Work Order"}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Form to {editingWorkOrder ? "edit existing work order" : "create new work order"}
+              </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

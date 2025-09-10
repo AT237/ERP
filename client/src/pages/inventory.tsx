@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
 } from "@/components/ui/dialog";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -241,6 +241,9 @@ export default function Inventory() {
               <DialogTitle>
                 {editingItem ? "Edit Inventory Item" : "Add New Inventory Item"}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Form to {editingItem ? "edit existing inventory item" : "add new inventory item"}
+              </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
