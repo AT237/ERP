@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
 } from "@/components/ui/dialog";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -260,6 +260,9 @@ export default function Invoices() {
               <DialogTitle>
                 {editingInvoice ? "Edit Invoice" : "Create New Invoice"}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Form to {editingInvoice ? "edit existing invoice" : "create new invoice"}
+              </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

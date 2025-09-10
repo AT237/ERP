@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
 } from "@/components/ui/dialog";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -264,6 +264,9 @@ export default function PackingLists() {
               <DialogTitle>
                 {editingPackingList ? "Edit Packing List" : "Create New Packing List"}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Form to {editingPackingList ? "edit existing packing list" : "create new packing list"}
+              </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
