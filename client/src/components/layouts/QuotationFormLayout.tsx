@@ -452,28 +452,12 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 variant="outline"
                 className="h-6 w-6 p-0 border-orange-300 text-orange-600 hover:bg-orange-50"
                 onClick={() => {
-                  const description = itemForm.watch('description') || '';
-                  const unitPrice = itemForm.watch('unitPrice') || '0.00';
-                  
-                  // Create a simple SKU from description
-                  const sku = description.substring(0, 3).toUpperCase() + '-' + Date.now().toString().slice(-4);
-                  
-                  createInventoryItemMutation.mutate({
-                    name: description.substring(0, 50), // Use first 50 chars as name
-                    description: description,
-                    unitPrice: unitPrice,
-                    sku: sku,
-                    category: 'General'
-                  });
+                  // Navigate to inventory page to add new item
+                  window.open('/inventory', '_blank');
                 }}
-                title="Voeg toe aan database"
-                disabled={createInventoryItemMutation.isPending}
+                title="Ga naar inventory om artikel toe te voegen"
               >
-                {createInventoryItemMutation.isPending ? (
-                  <div className="animate-spin h-3 w-3 border border-orange-600 border-t-transparent rounded-full" />
-                ) : (
-                  <Plus className="h-3 w-3" />
-                )}
+                <Plus className="h-3 w-3" />
               </Button>
             )}
           </div>
@@ -491,7 +475,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           />
           {shouldShowPlusButton && (
             <p className="text-xs text-orange-600">
-              Dit artikel staat niet in de database. Klik op + om toe te voegen.
+              Dit artikel staat niet in de database. Klik op + om naar inventory te gaan.
             </p>
           )}
         </div>
@@ -1582,25 +1566,6 @@ ATE Solutions B.V.`);
                     setShowItemDialog(true);
                   },
                   variant: 'default' as const
-                },
-                {
-                  key: 'add-new-item',
-                  label: 'Nieuw artikel',
-                  icon: <Plus className="h-4 w-4" />,
-                  onClick: () => {
-                    setItemType('new');
-                    setEditingItem(null);
-                    setSelectedInventoryItem(null);
-                    itemForm.reset({
-                      quotationId: "",
-                      description: "",
-                      quantity: 1,
-                      unitPrice: "0.00", 
-                      lineTotal: "0.00",
-                    });
-                    setShowItemDialog(true);
-                  },
-                  variant: 'outline' as const
                 },
                 {
                   key: 'add-onetime-item',
