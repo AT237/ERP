@@ -1091,6 +1091,7 @@ ATE Solutions B.V.`);
               entityNamePlural="Quotation Items"
               applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
               applySorting={itemTableState.applySorting}
+              compact={true}
               headerActions={[
                 {
                   key: 'add-item',

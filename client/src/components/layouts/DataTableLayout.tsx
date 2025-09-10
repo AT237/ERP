@@ -182,6 +182,9 @@ export interface DataTableLayoutProps<T = any> {
   // Filter and search function
   applyFiltersAndSearch: (data: T[], searchTerm: string, filters: ColumnFilter[]) => T[];
   applySorting: (data: T[], sortConfig: SortConfig) => T[];
+  
+  // Layout options
+  compact?: boolean; // Removes header padding for embedded use
 }
 
 const filterOptions = [
@@ -289,6 +292,7 @@ export function DataTableLayout<T = any>({
   applySorting,
   onDuplicate,
   onExport,
+  compact = false,
 }: DataTableLayoutProps<T>) {
   
   const [showColumnDialog, setShowColumnDialog] = useState(false);
@@ -460,9 +464,9 @@ export function DataTableLayout<T = any>({
     <>
       <div className="space-y-4">
         {/* Header with Title and Controls - original layout for search/filter */}
-        <div className="relative p-2">
+        <div className={`relative ${compact ? 'p-0' : 'p-2'}`}>
           {/* Title Section - Left aligned */}
-          <div className="absolute left-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-2 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10 w-fit">
+          <div className={`absolute ${compact ? 'left-0' : 'left-2'} bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-2 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/10 w-fit`}>
             <h2 className="text-xl font-bold text-orange-800 dark:text-orange-200 whitespace-nowrap">{entityNamePlural}</h2>
           </div>
           
