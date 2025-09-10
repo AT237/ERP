@@ -71,6 +71,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string>("");
   const [currentPDF, setCurrentPDF] = useState<jsPDF | null>(null);
+  const [itemType, setItemType] = useState<'database' | 'new' | 'onetime' | 'text' | null>(null);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem | null>(null);
   const { toast } = useToast();
 
   // Data table state for quotation items
@@ -317,6 +319,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   // Item functionality
   const handleAddItem = () => {
     setEditingItem(null);
+    setItemType(null);
+    setSelectedInventoryItem(null);
     itemForm.reset({
       quotationId: "",
       description: "",
