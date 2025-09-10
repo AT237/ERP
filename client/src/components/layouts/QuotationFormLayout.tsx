@@ -20,7 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, ChevronsUpDown, Check, Printer, Send, Copy } from "lucide-react";
+import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, ChevronsUpDown, Check, Printer, Send, Copy, Package2 as Package, Type, ArrowLeft, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
@@ -329,6 +329,411 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       lineTotal: "0.00",
     });
     setShowItemDialog(true);
+  };
+
+  const renderItemDialog = () => {
+    if (!itemType) {
+      // Item type selection screen
+      return (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground mb-6">
+            Selecteer het type item dat je wilt toevoegen:
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="outline"
+              className="h-20 flex flex-col gap-2 border-orange-200 hover:border-orange-300 hover:bg-orange-50"
+              onClick={() => setItemType('database')}
+              data-testid="button-select-database-item"
+            >
+              <Package className="h-6 w-6 text-orange-600" />
+              <span className="text-sm font-medium">Artikel uit database</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-20 flex flex-col gap-2 border-orange-200 hover:border-orange-300 hover:bg-orange-50"
+              onClick={() => setItemType('new')}
+              data-testid="button-select-new-item"
+            >
+              <Plus className="h-6 w-6 text-orange-600" />
+              <span className="text-sm font-medium">Nieuw artikel</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-20 flex flex-col gap-2 border-orange-200 hover:border-orange-300 hover:bg-orange-50"
+              onClick={() => setItemType('onetime')}
+              data-testid="button-select-onetime-item"
+            >
+              <FileText className="h-6 w-6 text-orange-600" />
+              <span className="text-sm font-medium">Eenmalig artikel</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-20 flex flex-col gap-2 border-orange-200 hover:border-orange-300 hover:bg-orange-50"
+              onClick={() => setItemType('text')}
+              data-testid="button-select-text-item"
+            >
+              <Type className="h-6 w-6 text-orange-600" />
+              <span className="text-sm font-medium">Tekst regel</span>
+            </Button>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => setShowItemDialog(false)}>
+              Annuleren
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Render specific form based on selected type
+    switch (itemType) {
+      case 'database':
+        return renderDatabaseItemForm();
+      case 'new':
+        return renderNewItemForm();
+      case 'onetime':
+        return renderOnetimeItemForm();
+      case 'text':
+        return renderTextItemForm();
+      default:
+        return null;
+    }
+  };
+
+  const renderDatabaseItemForm = () => {
+    return (
+      <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setItemType(null)}
+            className="text-orange-600 hover:text-orange-700"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Terug
+          </Button>
+          <span className="text-sm text-muted-foreground">Artikel uit database</span>
+        </div>
+        
+        <div className="space-y-2">
+          <Label>Selecteer artikel</Label>
+          <Select onValueChange={(value) => {
+            const item = inventoryItems.find(i => i.id === value);
+            if (item) {
+              setSelectedInventoryItem(item);
+              itemForm.setValue('description', item.description || '');
+              itemForm.setValue('unitPrice', item.price?.toString() || '0.00');
+              // Recalculate line total
+              const quantity = itemForm.watch('quantity') || 1;
+              const lineTotal = (quantity * parseFloat(item.price?.toString() || '0')).toFixed(2);
+              itemForm.setValue('lineTotal', lineTotal);
+            }
+          }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Kies een artikel..." />
+            </SelectTrigger>
+            <SelectContent>
+              {inventoryItems.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.name} - €{item.price}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Beschrijving</Label>
+          <Textarea
+            id="description"
+            {...itemForm.register("description")}
+            data-testid="input-item-description"
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="quantity">Aantal</Label>
+            <Input
+              id="quantity"
+              type="number"
+              {...itemForm.register("quantity", { valueAsNumber: true })}
+              onChange={(e) => {
+                const unitPrice = itemForm.watch("unitPrice") || "0";
+                const quantity = e.target.value;
+                const lineTotal = (parseFloat(quantity || "1") * parseFloat(unitPrice)).toFixed(2);
+                itemForm.setValue("lineTotal", lineTotal);
+              }}
+              data-testid="input-quantity"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="unitPrice">Eenheidsprijs (€)</Label>
+            <Input
+              id="unitPrice"
+              type="number"
+              step="0.01"
+              {...itemForm.register("unitPrice")}
+              onChange={(e) => {
+                const quantity = itemForm.watch("quantity") || 1;
+                const unitPrice = e.target.value;
+                const lineTotal = (quantity * parseFloat(unitPrice || "0")).toFixed(2);
+                itemForm.setValue("lineTotal", lineTotal);
+              }}
+              data-testid="input-unit-price"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lineTotal">Regeltotaal (€)</Label>
+            <Input
+              id="lineTotal"
+              type="number"
+              step="0.01"
+              {...itemForm.register("lineTotal")}
+              readOnly
+              className="bg-gray-50"
+              data-testid="input-line-total"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
+            Annuleren
+          </Button>
+          <Button type="submit">
+            Artikel toevoegen
+          </Button>
+        </div>
+      </form>
+    );
+  };
+
+  const renderNewItemForm = () => {
+    return (
+      <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setItemType(null)}
+            className="text-orange-600 hover:text-orange-700"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Terug
+          </Button>
+          <span className="text-sm text-muted-foreground">Nieuw artikel aanmaken</span>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Beschrijving</Label>
+          <Textarea
+            id="description"
+            {...itemForm.register("description")}
+            placeholder="Voer artikel beschrijving in..."
+            data-testid="input-item-description"
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="quantity">Aantal</Label>
+            <Input
+              id="quantity"
+              type="number"
+              {...itemForm.register("quantity", { valueAsNumber: true })}
+              onChange={(e) => {
+                const unitPrice = itemForm.watch("unitPrice") || "0";
+                const quantity = e.target.value;
+                const lineTotal = (parseFloat(quantity || "1") * parseFloat(unitPrice)).toFixed(2);
+                itemForm.setValue("lineTotal", lineTotal);
+              }}
+              data-testid="input-quantity"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="unitPrice">Eenheidsprijs (€)</Label>
+            <Input
+              id="unitPrice"
+              type="number"
+              step="0.01"
+              {...itemForm.register("unitPrice")}
+              onChange={(e) => {
+                const quantity = itemForm.watch("quantity") || 1;
+                const unitPrice = e.target.value;
+                const lineTotal = (quantity * parseFloat(unitPrice || "0")).toFixed(2);
+                itemForm.setValue("lineTotal", lineTotal);
+              }}
+              data-testid="input-unit-price"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lineTotal">Regeltotaal (€)</Label>
+            <Input
+              id="lineTotal"
+              type="number"
+              step="0.01"
+              {...itemForm.register("lineTotal")}
+              readOnly
+              className="bg-gray-50"
+              data-testid="input-line-total"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
+            Annuleren
+          </Button>
+          <Button type="submit">
+            Artikel toevoegen
+          </Button>
+        </div>
+      </form>
+    );
+  };
+
+  const renderOnetimeItemForm = () => {
+    return (
+      <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setItemType(null)}
+            className="text-orange-600 hover:text-orange-700"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Terug
+          </Button>
+          <span className="text-sm text-muted-foreground">Eenmalig artikel</span>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Beschrijving</Label>
+          <Textarea
+            id="description"
+            {...itemForm.register("description")}
+            placeholder="Voer eenmalige artikel beschrijving in..."
+            data-testid="input-item-description"
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="quantity">Aantal</Label>
+            <Input
+              id="quantity"
+              type="number"
+              {...itemForm.register("quantity", { valueAsNumber: true })}
+              onChange={(e) => {
+                const unitPrice = itemForm.watch("unitPrice") || "0";
+                const quantity = e.target.value;
+                const lineTotal = (parseFloat(quantity || "1") * parseFloat(unitPrice)).toFixed(2);
+                itemForm.setValue("lineTotal", lineTotal);
+              }}
+              data-testid="input-quantity"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="unitPrice">Eenheidsprijs (€)</Label>
+            <Input
+              id="unitPrice"
+              type="number"
+              step="0.01"
+              {...itemForm.register("unitPrice")}
+              onChange={(e) => {
+                const quantity = itemForm.watch("quantity") || 1;
+                const unitPrice = e.target.value;
+                const lineTotal = (quantity * parseFloat(unitPrice || "0")).toFixed(2);
+                itemForm.setValue("lineTotal", lineTotal);
+              }}
+              data-testid="input-unit-price"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lineTotal">Regeltotaal (€)</Label>
+            <Input
+              id="lineTotal"
+              type="number"
+              step="0.01"
+              {...itemForm.register("lineTotal")}
+              readOnly
+              className="bg-gray-50"
+              data-testid="input-line-total"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
+            Annuleren
+          </Button>
+          <Button type="submit">
+            Artikel toevoegen
+          </Button>
+        </div>
+      </form>
+    );
+  };
+
+  const renderTextItemForm = () => {
+    return (
+      <form onSubmit={itemForm.handleSubmit((data) => {
+        const newItem: QuotationItem = {
+          id: Math.random().toString(36).substr(2, 9),
+          quotationId: quotationId || "",
+          itemId: null,
+          description: data.description,
+          quantity: 0, // Text items have no quantity
+          unitPrice: "0.00", // Text items have no price
+          lineTotal: "0.00", // Text items don't affect totals
+        };
+        
+        setQuotationItems(prev => [...prev, newItem]);
+        setShowItemDialog(false);
+        itemForm.reset();
+      })} className="space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setItemType(null)}
+            className="text-orange-600 hover:text-orange-700"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Terug
+          </Button>
+          <span className="text-sm text-muted-foreground">Tekst regel</span>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Tekst</Label>
+          <Textarea
+            id="description"
+            {...itemForm.register("description")}
+            placeholder="Voer tekst in (geen prijs berekening)..."
+            data-testid="input-item-description"
+            rows={4}
+          />
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
+            Annuleren
+          </Button>
+          <Button type="submit">
+            Tekst toevoegen
+          </Button>
+        </div>
+      </form>
+    );
   };
 
   const handleSaveItem = (data: QuotationItemFormData) => {
@@ -1155,65 +1560,7 @@ ATE Solutions B.V.`);
                 isOpen: showItemDialog,
                 onOpenChange: setShowItemDialog,
                 title: 'Add Item',
-                content: (
-                  <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        {...itemForm.register("description")}
-                        data-testid="input-item-description"
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="quantity">Quantity</Label>
-                        <Input
-                          id="quantity"
-                          type="number"
-                          {...itemForm.register("quantity", { valueAsNumber: true })}
-                          data-testid="input-quantity"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="unitPrice">Unit Price (€)</Label>
-                        <Input
-                          id="unitPrice"
-                          type="number"
-                          step="0.01"
-                          {...itemForm.register("unitPrice")}
-                          onChange={(e) => {
-                            const quantity = itemForm.watch("quantity") || 1;
-                            const unitPrice = e.target.value;
-                            const lineTotal = (quantity * parseFloat(unitPrice || "0")).toFixed(2);
-                            itemForm.setValue("lineTotal", lineTotal);
-                          }}
-                          data-testid="input-unit-price"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lineTotal">Line Total (€)</Label>
-                        <Input
-                          id="lineTotal"
-                          type="number"
-                          step="0.01"
-                          {...itemForm.register("lineTotal")}
-                          readOnly
-                          className="bg-gray-50"
-                          data-testid="input-line-total"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit">
-                        Add Item
-                      </Button>
-                    </div>
-                  </form>
-                )
+                content: renderItemDialog()
               }}
             />
           </div>
