@@ -14,6 +14,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -802,6 +803,9 @@ export function DataTableLayout<T = any>({
                   {addEditDialog.title}
                 </DialogTitle>
               </div>
+              <DialogDescription className="sr-only">
+                Form to {addEditDialog.title.toLowerCase()}
+              </DialogDescription>
               <div className="w-full h-px bg-gray-300 mt-4"></div>
             </DialogHeader>
             {addEditDialog.content}
@@ -819,6 +823,9 @@ export function DataTableLayout<T = any>({
                   {detailDialog.title}
                 </DialogTitle>
               </div>
+              <DialogDescription className="sr-only">
+                Detailed view of {detailDialog.title.toLowerCase()}
+              </DialogDescription>
               <div className="w-full h-px bg-gray-300 mt-4"></div>
             </DialogHeader>
             {detailDialog.content}

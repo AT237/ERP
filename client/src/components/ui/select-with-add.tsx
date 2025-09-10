@@ -5,7 +5,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
 } from "@/components/ui/dialog";
 
 interface SelectWithAddProps {
@@ -57,6 +57,9 @@ export function SelectWithAdd({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{addFormTitle}</DialogTitle>
+            <DialogDescription className="sr-only">
+              Form to {addFormTitle.toLowerCase()}
+            </DialogDescription>
           </DialogHeader>
           {addFormContent}
         </DialogContent>
