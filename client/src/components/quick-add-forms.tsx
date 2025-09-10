@@ -188,6 +188,8 @@ export function QuickAddContactPerson({ onSuccess, onClose, customerId }: QuickA
       ...data,
       customerId: customerId || "",
       isPrimary: false,
+      mobile: [],
+      dateOfBirth: null,
     });
   };
 

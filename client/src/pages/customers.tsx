@@ -58,8 +58,15 @@ export default function Customers() {
     queryKey: ["/api/customers"],
   });
 
-  const { data: customerContacts } = useQuery<CustomerContact[]>({
+  const { data: customerContacts, isLoading: contactsLoading } = useQuery<CustomerContact[]>({
     queryKey: ["/api/customer-contacts"],
+  });
+
+  // Debug: Log contact data
+  console.log("📞 Contact Persons Debug:", {
+    contactsLoading,
+    customerContacts,
+    contactCount: customerContacts?.length || 0
   });
 
   const form = useForm<FormData>({
@@ -524,11 +531,21 @@ export default function Customers() {
                       />
                     }
                   >
-                    {customerContacts?.map((contact) => (
-                      <SelectItem key={contact.id} value={contact.id}>
-                        {contact.firstName} {contact.lastName} ({contact.email})
+                    {contactsLoading ? (
+                      <SelectItem value="loading" disabled>
+                        Loading contacts...
                       </SelectItem>
-                    ))}
+                    ) : customerContacts && customerContacts.length > 0 ? (
+                      customerContacts.map((contact) => (
+                        <SelectItem key={contact.id} value={contact.id}>
+                          {contact.firstName} {contact.lastName} ({contact.email})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-contacts" disabled>
+                        No contact persons found
+                      </SelectItem>
+                    )}
                   </SelectWithAdd>
                 </div>
               </div>
