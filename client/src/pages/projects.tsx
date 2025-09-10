@@ -33,6 +33,8 @@ import { format } from "date-fns";
 const formSchema = insertProjectSchema.extend({
   totalValue: z.string().optional(),
   progress: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -159,8 +161,8 @@ export default function Projects() {
       description: project.description || "",
       customerId: project.customerId || "",
       status: project.status || "planning",
-      startDate: project.startDate ? format(new Date(project.startDate), "yyyy-MM-dd") : "",
-      endDate: project.endDate ? format(new Date(project.endDate), "yyyy-MM-dd") : "",
+      startDate: project.startDate ? format(new Date(project.startDate), "yyyy-MM-dd") : undefined,
+      endDate: project.endDate ? format(new Date(project.endDate), "yyyy-MM-dd") : undefined,
       totalValue: project.totalValue || "",
       progress: project.progress?.toString() || "0",
     });
