@@ -22,8 +22,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, Users, Search, Mail, Phone, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SelectWithAdd } from "@/components/ui/select-with-add";
+import { QuickAddContactPerson } from "@/components/quick-add-forms";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Customer, InsertCustomer } from "@shared/schema";
+import type { Customer, InsertCustomer, CustomerContact } from "@shared/schema";
 import { z } from "zod";
 
 const formSchema = insertCustomerSchema.extend({
@@ -41,6 +43,7 @@ const formSchema = insertCustomerSchema.extend({
   primaryContactMobile: z.string().optional(),
   primaryContactPosition: z.string().optional(),
   contactPersonEmail: z.string().email().optional(),
+  selectedContactPersonId: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -53,6 +56,10 @@ export default function Customers() {
 
   const { data: customers, isLoading } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
+  });
+
+  const { data: customerContacts } = useQuery<CustomerContact[]>({
+    queryKey: ["/api/customer-contacts"],
   });
 
   const form = useForm<FormData>({
@@ -557,6 +564,32 @@ export default function Customers() {
               {/* Business Settings */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">Business Settings</h3>
+                
+                <div>
+                  <Label htmlFor="selectedContactPersonId">Contact Persons</Label>
+                  <SelectWithAdd
+                    value={form.watch("selectedContactPersonId") || ""}
+                    onValueChange={(value) => form.setValue("selectedContactPersonId", value)}
+                    placeholder="Select existing contact persons"
+                    addFormTitle="Add New Contact Person"
+                    testId="select-contact-persons"
+                    addFormContent={
+                      <QuickAddContactPerson 
+                        onSuccess={(contactId) => {
+                          form.setValue("selectedContactPersonId", contactId);
+                        }}
+                        customerId={editingCustomer?.id}
+                      />
+                    }
+                  >
+                    {customerContacts?.map((contact) => (
+                      <SelectItem key={contact.id} value={contact.id}>
+                        {contact.firstName} {contact.lastName} ({contact.email})
+                      </SelectItem>
+                    ))}
+                  </SelectWithAdd>
+                </div>
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="paymentTerms">Payment Terms (Days)</Label>

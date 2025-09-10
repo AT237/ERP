@@ -114,6 +114,10 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
     );
   }, []);
 
+  const clearSelection = useCallback(() => {
+    setSelectedRows([]);
+  }, []);
+
   // Memoized filter/search functions to prevent unnecessary calculations
   const applyFiltersAndSearch = useCallback(<T extends Record<string, any>>(data: T[]): T[] => {
     return data.filter(item => {
@@ -210,6 +214,7 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
     handleSort,
     toggleRowSelection,
     toggleAllRows,
+    clearSelection,
     
     // Processing functions
     applyFiltersAndSearch,
