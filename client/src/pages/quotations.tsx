@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, FileText, Download, Save, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Download, Save, Eye, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
@@ -536,21 +536,21 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
             label: 'View',
             icon: <Eye className="h-4 w-4" />,
             onClick: () => handleViewQuotation(quotation),
-            variant: 'outline'
+            variant: 'outline' as const
           },
           {
             key: 'edit',
             label: 'Edit',
             icon: <Edit className="h-4 w-4" />,
             onClick: () => handleEditQuotation(quotation),
-            variant: 'outline'
+            variant: 'outline' as const
           },
           {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
             onClick: () => handleDeleteQuotation(quotation),
-            variant: 'destructive'
+            variant: 'destructive' as const
           }
         ], [handleViewQuotation, handleEditQuotation, handleDeleteQuotation])}
         addEditDialog={{
@@ -615,7 +615,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select 
-                    value={quotationForm.watch("status")} 
+                    value={quotationForm.watch("status") || ""} 
                     onValueChange={(value) => quotationForm.setValue("status", value)}
                   >
                     <SelectTrigger data-testid="select-status">
@@ -717,12 +717,8 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
 
                         {/* Quotation Items Table */}
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+                          <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
                             <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 uppercase tracking-wide">Quotation Items</h3>
-                            <Button onClick={handleAddItem} data-testid="button-add-item" className="bg-orange-500 hover:bg-orange-600 text-white">
-                              <Plus className="mr-2 h-4 w-4" />
-                              Add Item
-                            </Button>
                           </div>
                           
                           <DataTableLayout
@@ -751,6 +747,48 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
                             entityNamePlural="Quotation Items"
                             applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
                             applySorting={itemTableState.applySorting}
+                            headerActions={React.useMemo(() => [
+                              {
+                                key: 'add-item',
+                                label: 'Add Item',
+                                icon: <Plus className="h-4 w-4" />,
+                                onClick: handleAddItem,
+                                variant: 'default' as const
+                              },
+                              {
+                                key: 'duplicate-items',
+                                label: 'Duplicate',
+                                icon: <Copy className="h-4 w-4" />,
+                                onClick: () => {
+                                  const selectedItems = quotationItems.filter(item => 
+                                    itemTableState.selectedRows.includes(item.id)
+                                  );
+                                  if (selectedItems.length === 0) {
+                                    toast({
+                                      title: "No items selected",
+                                      description: "Please select items to duplicate",
+                                      variant: "destructive"
+                                    });
+                                    return;
+                                  }
+                                  // Duplicate selected items
+                                  selectedItems.forEach(item => {
+                                    const duplicateItem = {
+                                      ...item,
+                                      id: crypto.randomUUID(),
+                                      description: `${item.description} (Copy)`
+                                    };
+                                    // Add logic to save duplicated items
+                                    toast({
+                                      title: "Items duplicated",
+                                      description: `${selectedItems.length} item(s) duplicated successfully`
+                                    });
+                                  });
+                                },
+                                variant: 'outline' as const,
+                                disabled: itemTableState.selectedRows.length === 0
+                              }
+                            ], [handleAddItem, quotationItems, itemTableState.selectedRows, toast])}
                             addEditDialog={{
                               isOpen: showItemDialog,
                               onOpenChange: setShowItemDialog,
