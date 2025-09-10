@@ -50,7 +50,7 @@ import { Filter, ChevronDown, Plus, Search, Settings, Eye, EyeOff, GripVertical,
 import { createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertCustomerSchema, type InsertCustomer, type Customer } from "@shared/schema";
+import { insertCustomerSchema, type InsertCustomer, type Customer, type CustomerContact } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -213,6 +213,11 @@ export default function CustomerTable() {
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Fetch customer contacts for the dropdown
+  const { data: customerContacts, isLoading: contactsLoading } = useQuery<CustomerContact[]>({
+    queryKey: ["/api/customer-contacts"],
+  });
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -1199,9 +1204,21 @@ export default function CustomerTable() {
                       <SelectValue placeholder="Select existing contact persons" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="john-doe">John Doe - Sales Manager</SelectItem>
-                      <SelectItem value="jane-smith">Jane Smith - Project Manager</SelectItem>
-                      <SelectItem value="mike-jones">Mike Jones - Technical Lead</SelectItem>
+                      {contactsLoading ? (
+                        <SelectItem value="loading" disabled>
+                          Loading contacts...
+                        </SelectItem>
+                      ) : customerContacts && customerContacts.length > 0 ? (
+                        customerContacts.map((contact) => (
+                          <SelectItem key={contact.id} value={contact.id}>
+                            {contact.firstName} {contact.lastName} - {contact.position}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-contacts" disabled>
+                          No contact persons found
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                   <Button
