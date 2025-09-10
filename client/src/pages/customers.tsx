@@ -519,6 +519,7 @@ export default function Customers() {
                           form.setValue("selectedContactPersonId", contactId);
                           queryClient.invalidateQueries({ queryKey: ["/api/customer-contacts"] });
                         }}
+                        onClose={() => {}}
                         customerId={editingCustomer?.id}
                       />
                     }

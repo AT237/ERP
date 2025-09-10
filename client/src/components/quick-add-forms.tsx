@@ -192,7 +192,7 @@ export function QuickAddContactPerson({ onSuccess, onClose, customerId }: QuickA
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="contact-first-name">First Name *</Label>

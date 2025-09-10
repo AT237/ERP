@@ -5,8 +5,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
-} from "@/components/ui/dialog";
+  Popover, PopoverContent, PopoverTrigger 
+} from "@/components/ui/popover";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface SelectWithAddProps {
   value?: string;
@@ -27,7 +28,7 @@ export function SelectWithAdd({
   addFormContent,
   testId,
 }: SelectWithAddProps) {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isAddPopoverOpen, setIsAddPopoverOpen] = useState(false);
 
   return (
     <div className="flex space-x-2">
@@ -42,8 +43,8 @@ export function SelectWithAdd({
         </Select>
       </div>
       
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogTrigger asChild>
+      <Popover open={isAddPopoverOpen} onOpenChange={setIsAddPopoverOpen}>
+        <PopoverTrigger asChild>
           <Button 
             type="button"
             variant="outline" 
@@ -53,17 +54,18 @@ export function SelectWithAdd({
           >
             <Plus className="h-4 w-4" />
           </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{addFormTitle}</DialogTitle>
-            <DialogDescription className="sr-only">
-              Form to {addFormTitle.toLowerCase()}
-            </DialogDescription>
-          </DialogHeader>
-          {addFormContent}
-        </DialogContent>
-      </Dialog>
+        </PopoverTrigger>
+        <PopoverContent className="w-96 p-0" align="end">
+          <Card className="border-0 shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">{addFormTitle}</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {addFormContent}
+            </CardContent>
+          </Card>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
