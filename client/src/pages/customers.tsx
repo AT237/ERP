@@ -631,17 +631,17 @@ export default function Customers() {
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
-            <Table>
+            <Table className="table-fixed w-full">
               <TableHeader className="bg-orange-50 dark:bg-orange-900/20">
                 <TableRow>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Company Name</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Email</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Phone</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Mobile</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Language</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Payment Terms</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Status</TableHead>
-                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200">Actions</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200 w-1/5">Company Name</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200 w-1/6">Email</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200 w-1/8">Phone</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200 w-1/8">Mobile</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200 w-16">Language</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200 w-20">Payment Terms</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200 w-16">Status</TableHead>
+                  <TableHead className="whitespace-nowrap uppercase font-semibold text-xs text-orange-800 dark:text-orange-200 w-20">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -654,7 +654,7 @@ export default function Customers() {
                 ) : (
                   filteredCustomers.map((customer) => (
                     <TableRow key={customer.id} data-testid={`row-customer-${customer.id}`} className="text-sm font-normal">
-                      <TableCell className="font-medium">{customer.name}</TableCell>
+                      <TableCell className="font-medium truncate pr-2" title={customer.name}>{customer.name}</TableCell>
                       <TableCell>
                         {customer.email ? (
                           <div className="flex items-center space-x-2">
