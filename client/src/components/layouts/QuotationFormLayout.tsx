@@ -1064,7 +1064,7 @@ ATE Solutions B.V.`);
           />
 
           {/* Quotation Items - Left aligned with title */}
-          <div className="mt-8 space-y-4">
+          <div className="mt-8 space-y-4" style={{ marginLeft: '-350px' }}>
             <DataTableLayout
               data={quotationItems}
               isLoading={false}
