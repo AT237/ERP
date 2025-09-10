@@ -53,8 +53,17 @@ const quotationItemFormSchema = insertQuotationItemSchema.extend({
   lineTotal: z.string().min(1, "Line total is required"),
 });
 
+const inventoryItemFormSchema = z.object({
+  name: z.string().min(1, "Naam is verplicht"),
+  description: z.string().optional(),
+  sku: z.string().min(1, "SKU is verplicht"),
+  unitPrice: z.string().min(1, "Prijs is verplicht"),
+  category: z.string().optional(),
+});
+
 type QuotationFormData = z.infer<typeof quotationFormSchema>;
 type QuotationItemFormData = z.infer<typeof quotationItemFormSchema>;
+type InventoryItemFormData = z.infer<typeof inventoryItemFormSchema>;
 
 interface QuotationFormLayoutProps {
   onSave: () => void;
@@ -73,7 +82,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [currentPDF, setCurrentPDF] = useState<jsPDF | null>(null);
   const [itemType, setItemType] = useState<'database' | 'new' | 'onetime' | 'text' | null>(null);
   const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem | null>(null);
-  const [isAddingNewToDatabase, setIsAddingNewToDatabase] = useState(false);
+  const [showAddInventoryDialog, setShowAddInventoryDialog] = useState(false);
   const { toast } = useToast();
 
   // Data table state for quotation items
@@ -178,6 +187,17 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     },
   });
 
+  const inventoryForm = useForm<InventoryItemFormData>({
+    resolver: zodResolver(inventoryItemFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      sku: "",
+      unitPrice: "0.00",
+      category: "General",
+    },
+  });
+
   // Calculate next quotation number for new quotations
   useEffect(() => {
     if (!quotationId && allQuotations.length >= 0) {
@@ -225,7 +245,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
   // Mutations
   const createInventoryItemMutation = useMutation({
-    mutationFn: async (data: { name: string; description: string; unitPrice: string; sku: string; category?: string }) => {
+    mutationFn: async (data: InventoryItemFormData) => {
       const response = await fetch('/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -249,15 +269,18 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       
       // Auto-select the newly created item
       setSelectedInventoryItem(newItem);
-      itemForm.setValue('description', newItem.description || '');
+      itemForm.setValue('description', newItem.name || newItem.description || '');
       itemForm.setValue('unitPrice', newItem.unitPrice || '0.00');
+      itemForm.setValue('itemId', newItem.id);
       
       // Recalculate line total
       const quantity = itemForm.watch('quantity') || 1;
       const lineTotal = (quantity * parseFloat(newItem.unitPrice || '0')).toFixed(2);
       itemForm.setValue('lineTotal', lineTotal);
       
-      setIsAddingNewToDatabase(false);
+      // Close dialog and reset form
+      setShowAddInventoryDialog(false);
+      inventoryForm.reset();
     },
     onError: (error) => {
       console.error('Error creating inventory item:', error);
@@ -422,8 +445,9 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               const item = inventoryItems.find(i => i.id === value);
               if (item) {
                 setSelectedInventoryItem(item);
-                itemForm.setValue('description', item.description || '');
+                itemForm.setValue('description', item.name || item.description || '');
                 itemForm.setValue('unitPrice', item.unitPrice || '0.00');
+                itemForm.setValue('itemId', item.id);
                 // Recalculate line total
                 const quantity = itemForm.watch('quantity') || 1;
                 const lineTotal = (quantity * parseFloat(item.unitPrice || '0')).toFixed(2);
@@ -446,11 +470,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               size="sm"
               variant="outline"
               className="h-9 w-9 p-0 border-orange-300 text-orange-600 hover:bg-orange-50"
-              onClick={() => {
-                // Navigate to inventory page to add new item
-                window.open('/inventory', '_blank');
-              }}
-              title="Ga naar inventory om artikel toe te voegen"
+              onClick={() => setShowAddInventoryDialog(true)}
+              title="Artikel toevoegen aan database"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -1667,6 +1688,110 @@ ATE Solutions B.V.`);
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Inventory Item Dialog */}
+      <Dialog open={showAddInventoryDialog} onOpenChange={setShowAddInventoryDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Artikel toevoegen</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={inventoryForm.handleSubmit((data) => createInventoryItemMutation.mutate(data))} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="inventory-name">Naam *</Label>
+              <Input
+                id="inventory-name"
+                {...inventoryForm.register("name")}
+                placeholder="Artikelnaam"
+                data-testid="input-inventory-name"
+              />
+              {inventoryForm.formState.errors.name && (
+                <p className="text-sm text-red-600">{inventoryForm.formState.errors.name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="inventory-sku">SKU *</Label>
+              <Input
+                id="inventory-sku"
+                {...inventoryForm.register("sku")}
+                placeholder="SKU/Artikelcode"
+                data-testid="input-inventory-sku"
+              />
+              {inventoryForm.formState.errors.sku && (
+                <p className="text-sm text-red-600">{inventoryForm.formState.errors.sku.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="inventory-description">Beschrijving</Label>
+              <Textarea
+                id="inventory-description"
+                {...inventoryForm.register("description")}
+                placeholder="Beschrijving van het artikel"
+                data-testid="input-inventory-description"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="inventory-unitPrice">Prijs (€) *</Label>
+                <Input
+                  id="inventory-unitPrice"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...inventoryForm.register("unitPrice")}
+                  placeholder="0.00"
+                  data-testid="input-inventory-unitPrice"
+                />
+                {inventoryForm.formState.errors.unitPrice && (
+                  <p className="text-sm text-red-600">{inventoryForm.formState.errors.unitPrice.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="inventory-category">Categorie</Label>
+                <Select 
+                  onValueChange={(value) => inventoryForm.setValue("category", value)}
+                  defaultValue="General"
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecteer categorie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="General">Algemeen</SelectItem>
+                    <SelectItem value="Electronics">Elektronica</SelectItem>
+                    <SelectItem value="Hardware">Hardware</SelectItem>
+                    <SelectItem value="Software">Software</SelectItem>
+                    <SelectItem value="Services">Diensten</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowAddInventoryDialog(false);
+                  inventoryForm.reset();
+                }}
+                disabled={createInventoryItemMutation.isPending}
+              >
+                Annuleren
+              </Button>
+              <Button
+                type="submit"
+                disabled={createInventoryItemMutation.isPending}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                {createInventoryItemMutation.isPending ? "Toevoegen..." : "Artikel toevoegen"}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
