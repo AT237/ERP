@@ -18,6 +18,12 @@ class ErrorTracker {
   init() {
     // Global JavaScript error handler
     window.addEventListener('error', (event) => {
+      // Filter out harmless browser warnings
+      if (this.isHarmlessWarning(event.message)) {
+        console.warn('🔇 Filtered harmless warning:', event.message);
+        return;
+      }
+      
       this.captureError({
         type: 'javascript',
         message: event.message,
@@ -41,6 +47,19 @@ class ErrorTracker {
     });
 
     console.log('🔍 Error Tracking System Initialized');
+  }
+
+  private isHarmlessWarning(message: string): boolean {
+    const harmlessPatterns = [
+      'ResizeObserver loop completed with undelivered notifications',
+      'ResizeObserver loop limit exceeded',
+      'Non-passive event listener',
+      'Violation: Added non-passive event listener'
+    ];
+    
+    return harmlessPatterns.some(pattern => 
+      message.toLowerCase().includes(pattern.toLowerCase())
+    );
   }
 
   captureError(errorData: Partial<ErrorReport>) {
