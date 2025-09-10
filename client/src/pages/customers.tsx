@@ -505,78 +505,19 @@ export default function Customers() {
               {/* Primary Contact Person */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">Primary Contact Person</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="primaryContactName">Contact Name</Label>
-                    <Input
-                      id="primaryContactName"
-                      {...form.register("primaryContactName")}
-                      placeholder="John Doe"
-                      data-testid="input-primary-contact-name"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="primaryContactPosition">Position</Label>
-                    <Input
-                      id="primaryContactPosition"
-                      {...form.register("primaryContactPosition")}
-                      placeholder="Manager"
-                      data-testid="input-primary-contact-position"
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="primaryContactEmail">Contact Email</Label>
-                    <Input
-                      id="primaryContactEmail"
-                      type="email"
-                      {...form.register("primaryContactEmail")}
-                      placeholder="john@company.com"
-                      data-testid="input-primary-contact-email"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="primaryContactPhone">Contact Phone</Label>
-                    <Input
-                      id="primaryContactPhone"
-                      {...form.register("primaryContactPhone")}
-                      placeholder="+31 20 123 4567"
-                      data-testid="input-primary-contact-phone"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="primaryContactMobile">Contact Mobile</Label>
-                    <Input
-                      id="primaryContactMobile"
-                      {...form.register("primaryContactMobile")}
-                      placeholder="+31 6 12 34 56 78"
-                      data-testid="input-primary-contact-mobile"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Business Settings */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">Business Settings</h3>
-                
                 <div>
-                  <Label htmlFor="selectedContactPersonId">Contact Persons</Label>
+                  <Label htmlFor="selectedContactPersonId">Contact Person</Label>
                   <SelectWithAdd
                     value={form.watch("selectedContactPersonId") || ""}
                     onValueChange={(value) => form.setValue("selectedContactPersonId", value)}
-                    placeholder="Select existing contact persons"
+                    placeholder="Select or add contact person"
                     addFormTitle="Add New Contact Person"
-                    testId="select-contact-persons"
+                    testId="select-primary-contact"
                     addFormContent={
                       <QuickAddContactPerson 
                         onSuccess={(contactId) => {
                           form.setValue("selectedContactPersonId", contactId);
+                          queryClient.invalidateQueries({ queryKey: ["/api/customer-contacts"] });
                         }}
                         customerId={editingCustomer?.id}
                       />
@@ -589,6 +530,12 @@ export default function Customers() {
                     ))}
                   </SelectWithAdd>
                 </div>
+              </div>
+
+              {/* Business Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">Business Settings</h3>
+                
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
