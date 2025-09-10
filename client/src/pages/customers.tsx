@@ -62,12 +62,16 @@ export default function Customers() {
     queryKey: ["/api/customer-contacts"],
   });
 
-  // Debug: Log contact data
-  console.log("📞 Contact Persons Debug:", {
-    contactsLoading,
-    customerContacts,
-    contactCount: customerContacts?.length || 0
-  });
+  // Enhanced Debug: Log contact data with error tracking
+  console.group("📞 Contact Persons Debug");
+  console.log("Loading state:", contactsLoading);
+  console.log("Contact data:", customerContacts);
+  console.log("Contact count:", customerContacts?.length || 0);
+  console.log("API endpoint working:", !!customerContacts);
+  if (customerContacts && customerContacts.length > 0) {
+    console.log("First contact example:", customerContacts[0]);
+  }
+  console.groupEnd();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -331,8 +335,8 @@ export default function Customers() {
               <DialogTitle>
                 {editingCustomer ? "Edit Customer" : "Add New Customer"}
               </DialogTitle>
-              <DialogDescription className="sr-only">
-                Form to {editingCustomer ? "edit existing customer" : "add new customer"}
+              <DialogDescription>
+                {editingCustomer ? "Update customer information and contact details" : "Create a new customer with contact information"}
               </DialogDescription>
             </DialogHeader>
             
