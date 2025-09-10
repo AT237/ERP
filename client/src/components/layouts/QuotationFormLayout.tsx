@@ -417,50 +417,48 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         
         <div className="space-y-2">
           <Label>Selecteer artikel</Label>
-          <Select onValueChange={(value) => {
-            const item = inventoryItems.find(i => i.id === value);
-            if (item) {
-              setSelectedInventoryItem(item);
-              itemForm.setValue('description', item.description || '');
-              itemForm.setValue('unitPrice', item.unitPrice || '0.00');
-              // Recalculate line total
-              const quantity = itemForm.watch('quantity') || 1;
-              const lineTotal = (quantity * parseFloat(item.unitPrice || '0')).toFixed(2);
-              itemForm.setValue('lineTotal', lineTotal);
-            }
-          }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Kies een artikel..." />
-            </SelectTrigger>
-            <SelectContent>
-              {inventoryItems.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.name} - €{item.unitPrice}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select onValueChange={(value) => {
+              const item = inventoryItems.find(i => i.id === value);
+              if (item) {
+                setSelectedInventoryItem(item);
+                itemForm.setValue('description', item.description || '');
+                itemForm.setValue('unitPrice', item.unitPrice || '0.00');
+                // Recalculate line total
+                const quantity = itemForm.watch('quantity') || 1;
+                const lineTotal = (quantity * parseFloat(item.unitPrice || '0')).toFixed(2);
+                itemForm.setValue('lineTotal', lineTotal);
+              }
+            }}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Kies een artikel..." />
+              </SelectTrigger>
+              <SelectContent>
+                {inventoryItems.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.name} - €{item.unitPrice}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-9 w-9 p-0 border-orange-300 text-orange-600 hover:bg-orange-50"
+              onClick={() => {
+                // Navigate to inventory page to add new item
+                window.open('/inventory', '_blank');
+              }}
+              title="Ga naar inventory om artikel toe te voegen"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="description" className="flex-1">Beschrijving</Label>
-            {shouldShowPlusButton && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-6 w-6 p-0 border-orange-300 text-orange-600 hover:bg-orange-50"
-                onClick={() => {
-                  // Navigate to inventory page to add new item
-                  window.open('/inventory', '_blank');
-                }}
-                title="Ga naar inventory om artikel toe te voegen"
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
+          <Label htmlFor="description">Beschrijving</Label>
           <Textarea
             id="description"
             {...itemForm.register("description")}
@@ -473,11 +471,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               }
             }}
           />
-          {shouldShowPlusButton && (
-            <p className="text-xs text-orange-600">
-              Dit artikel staat niet in de database. Klik op + om naar inventory te gaan.
-            </p>
-          )}
         </div>
 
         <div className="grid grid-cols-3 gap-4">
