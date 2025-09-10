@@ -253,10 +253,19 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
   const updateQuotationMutation = useMutation({
     mutationFn: async (data: QuotationFormData) => {
+      const processedData = {
+        ...data,
+        quotationDate: data.quotationDate ? new Date(data.quotationDate) : new Date(),
+        validUntil: data.validUntil ? new Date(data.validUntil) : undefined,
+        subtotal: parseFloat(data.subtotal),
+        taxAmount: parseFloat(data.taxAmount || "0"),
+        totalAmount: parseFloat(data.totalAmount),
+      };
+      
       const response = await fetch(`/api/quotations/${quotationId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(processedData),
       });
       if (!response.ok) throw new Error('Failed to update quotation');
       return response.json();
