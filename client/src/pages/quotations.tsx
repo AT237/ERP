@@ -717,9 +717,9 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
 
                         {/* Quotation Items Table */}
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold">Quotation Lines</h3>
-                            <Button onClick={handleAddItem} data-testid="button-add-item">
+                          <div className="flex items-center justify-between bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+                            <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 uppercase tracking-wide">Quotation Items</h3>
+                            <Button onClick={handleAddItem} data-testid="button-add-item" className="bg-orange-500 hover:bg-orange-600 text-white">
                               <Plus className="mr-2 h-4 w-4" />
                               Add Item
                             </Button>
