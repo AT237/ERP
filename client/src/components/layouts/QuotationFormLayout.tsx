@@ -1937,7 +1937,7 @@ ATE Solutions B.V.`);
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="inventory-isComposite"
-                  checked={inventoryForm.watch("isComposite")}
+                  checked={inventoryForm.watch("isComposite") || false}
                   onCheckedChange={(checked) => inventoryForm.setValue("isComposite", !!checked)}
                   data-testid="checkbox-inventory-isComposite"
                 />
