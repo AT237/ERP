@@ -73,6 +73,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [currentPDF, setCurrentPDF] = useState<jsPDF | null>(null);
   const [itemType, setItemType] = useState<'database' | 'new' | 'onetime' | 'text' | null>(null);
   const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem | null>(null);
+  const [isAddingNewToDatabase, setIsAddingNewToDatabase] = useState(false);
   const { toast } = useToast();
 
   // Data table state for quotation items
@@ -223,6 +224,51 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   }, [existingQuotation, existingQuotationItems, quotationLoading, quotationForm]);
 
   // Mutations
+  const createInventoryItemMutation = useMutation({
+    mutationFn: async (data: { name: string; description: string; unitPrice: string; sku: string; category?: string }) => {
+      const response = await fetch('/api/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          currentStock: 0,
+          minimumStock: 0,
+          unit: 'st',
+          status: 'active'
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to create inventory item');
+      return response.json();
+    },
+    onSuccess: (newItem) => {
+      toast({
+        title: "Succes",
+        description: "Artikel toegevoegd aan database",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+      
+      // Auto-select the newly created item
+      setSelectedInventoryItem(newItem);
+      itemForm.setValue('description', newItem.description || '');
+      itemForm.setValue('unitPrice', newItem.unitPrice || '0.00');
+      
+      // Recalculate line total
+      const quantity = itemForm.watch('quantity') || 1;
+      const lineTotal = (quantity * parseFloat(newItem.unitPrice || '0')).toFixed(2);
+      itemForm.setValue('lineTotal', lineTotal);
+      
+      setIsAddingNewToDatabase(false);
+    },
+    onError: (error) => {
+      console.error('Error creating inventory item:', error);
+      toast({
+        title: "Fout",
+        description: "Kan artikel niet toevoegen aan database",
+        variant: "destructive",
+      });
+    },
+  });
+
   const createQuotationMutation = useMutation({
     mutationFn: async (data: QuotationFormData) => {
       const response = await fetch('/api/quotations', {
@@ -344,6 +390,12 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   };
 
   const renderDatabaseItemForm = () => {
+    const currentDescription = itemForm.watch('description') || '';
+    const isItemInDatabase = inventoryItems.some(item => 
+      item.description?.toLowerCase().includes(currentDescription.toLowerCase()) && currentDescription.length > 3
+    );
+    const shouldShowPlusButton = currentDescription.length > 3 && !isItemInDatabase && !selectedInventoryItem;
+
     return (
       <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
         <div className="flex items-center gap-2 mb-4">
@@ -351,7 +403,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             type="button" 
             variant="ghost" 
             size="sm" 
-            onClick={() => setItemType(null)}
+            onClick={() => {
+              setShowItemDialog(false);
+              setItemType(null);
+            }}
             className="text-orange-600 hover:text-orange-700"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
@@ -388,12 +443,57 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Beschrijving</Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="description" className="flex-1">Beschrijving</Label>
+            {shouldShowPlusButton && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-6 w-6 p-0 border-orange-300 text-orange-600 hover:bg-orange-50"
+                onClick={() => {
+                  const description = itemForm.watch('description') || '';
+                  const unitPrice = itemForm.watch('unitPrice') || '0.00';
+                  
+                  // Create a simple SKU from description
+                  const sku = description.substring(0, 3).toUpperCase() + '-' + Date.now().toString().slice(-4);
+                  
+                  createInventoryItemMutation.mutate({
+                    name: description.substring(0, 50), // Use first 50 chars as name
+                    description: description,
+                    unitPrice: unitPrice,
+                    sku: sku,
+                    category: 'General'
+                  });
+                }}
+                title="Voeg toe aan database"
+                disabled={createInventoryItemMutation.isPending}
+              >
+                {createInventoryItemMutation.isPending ? (
+                  <div className="animate-spin h-3 w-3 border border-orange-600 border-t-transparent rounded-full" />
+                ) : (
+                  <Plus className="h-3 w-3" />
+                )}
+              </Button>
+            )}
+          </div>
           <Textarea
             id="description"
             {...itemForm.register("description")}
             data-testid="input-item-description"
+            placeholder="Typ om te zoeken of voer nieuwe beschrijving in..."
+            onChange={(e) => {
+              // Reset selected item when description changes
+              if (selectedInventoryItem) {
+                setSelectedInventoryItem(null);
+              }
+            }}
           />
+          {shouldShowPlusButton && (
+            <p className="text-xs text-orange-600">
+              Dit artikel staat niet in de database. Klik op + om toe te voegen.
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-3 gap-4">
