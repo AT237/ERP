@@ -19,7 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, ChevronsUpDown, Check, Printer, Send } from "lucide-react";
+import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, ChevronsUpDown, Check, Printer, Send, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
@@ -1065,13 +1065,6 @@ ATE Solutions B.V.`);
 
           {/* Quotation Items - Left aligned with title */}
           <div className="mt-8 space-y-4 ml-2">
-            <div className="flex items-center justify-between">
-              <Button onClick={handleAddItem} data-testid="button-add-item">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Item
-              </Button>
-            </div>
-            
             <DataTableLayout
               data={quotationItems}
               isLoading={false}
@@ -1098,6 +1091,32 @@ ATE Solutions B.V.`);
               entityNamePlural="Quotation Items"
               applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
               applySorting={itemTableState.applySorting}
+              headerActions={[
+                {
+                  key: 'add-item',
+                  label: 'Add Item',
+                  icon: <Plus className="h-4 w-4" />,
+                  onClick: handleAddItem,
+                  variant: 'default' as const
+                },
+                {
+                  key: 'duplicate-items',
+                  label: 'Duplicate',
+                  icon: <Copy className="h-4 w-4" />,
+                  onClick: () => {
+                    const selectedItems = quotationItems.filter(item => 
+                      itemTableState.selectedRows.includes(item.id)
+                    );
+                    if (selectedItems.length === 0) {
+                      // Show toast notification
+                      return;
+                    }
+                    // Duplicate selected items logic here
+                  },
+                  variant: 'outline' as const,
+                  disabled: itemTableState.selectedRows.length === 0
+                }
+              ]}
               rowActions={(item: QuotationItem) => [
                 {
                   key: 'delete',
