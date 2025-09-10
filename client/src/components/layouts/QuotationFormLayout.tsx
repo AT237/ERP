@@ -434,10 +434,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             if (item) {
               setSelectedInventoryItem(item);
               itemForm.setValue('description', item.description || '');
-              itemForm.setValue('unitPrice', item.price?.toString() || '0.00');
+              itemForm.setValue('unitPrice', item.unitPrice || '0.00');
               // Recalculate line total
               const quantity = itemForm.watch('quantity') || 1;
-              const lineTotal = (quantity * parseFloat(item.price?.toString() || '0')).toFixed(2);
+              const lineTotal = (quantity * parseFloat(item.unitPrice || '0')).toFixed(2);
               itemForm.setValue('lineTotal', lineTotal);
             }
           }}>
@@ -447,7 +447,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             <SelectContent>
               {inventoryItems.map((item) => (
                 <SelectItem key={item.id} value={item.id}>
-                  {item.name} - €{item.price}
+                  {item.name} - €{item.unitPrice}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -1532,11 +1532,80 @@ ATE Solutions B.V.`);
               compact={true}
               headerActions={[
                 {
-                  key: 'add-item',
-                  label: 'Add Item',
-                  icon: <Plus className="h-4 w-4" />,
-                  onClick: handleAddItem,
+                  key: 'add-database-item',
+                  label: 'Database artikel',
+                  icon: <Package className="h-4 w-4" />,
+                  onClick: () => {
+                    setItemType('database');
+                    setEditingItem(null);
+                    setSelectedInventoryItem(null);
+                    itemForm.reset({
+                      quotationId: "",
+                      description: "",
+                      quantity: 1,
+                      unitPrice: "0.00", 
+                      lineTotal: "0.00",
+                    });
+                    setShowItemDialog(true);
+                  },
                   variant: 'default' as const
+                },
+                {
+                  key: 'add-new-item',
+                  label: 'Nieuw artikel',
+                  icon: <Plus className="h-4 w-4" />,
+                  onClick: () => {
+                    setItemType('new');
+                    setEditingItem(null);
+                    setSelectedInventoryItem(null);
+                    itemForm.reset({
+                      quotationId: "",
+                      description: "",
+                      quantity: 1,
+                      unitPrice: "0.00", 
+                      lineTotal: "0.00",
+                    });
+                    setShowItemDialog(true);
+                  },
+                  variant: 'outline' as const
+                },
+                {
+                  key: 'add-onetime-item',
+                  label: 'Eenmalig artikel',
+                  icon: <FileText className="h-4 w-4" />,
+                  onClick: () => {
+                    setItemType('onetime');
+                    setEditingItem(null);
+                    setSelectedInventoryItem(null);
+                    itemForm.reset({
+                      quotationId: "",
+                      description: "",
+                      quantity: 1,
+                      unitPrice: "0.00", 
+                      lineTotal: "0.00",
+                    });
+                    setShowItemDialog(true);
+                  },
+                  variant: 'outline' as const
+                },
+                {
+                  key: 'add-text-item',
+                  label: 'Tekst regel',
+                  icon: <Type className="h-4 w-4" />,
+                  onClick: () => {
+                    setItemType('text');
+                    setEditingItem(null);
+                    setSelectedInventoryItem(null);
+                    itemForm.reset({
+                      quotationId: "",
+                      description: "",
+                      quantity: 1,
+                      unitPrice: "0.00", 
+                      lineTotal: "0.00",
+                    });
+                    setShowItemDialog(true);
+                  },
+                  variant: 'outline' as const
                 },
                 {
                   key: 'duplicate-items',
