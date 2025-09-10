@@ -340,7 +340,8 @@ export default function Customers() {
               </DialogDescription>
             </DialogHeader>
             
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="max-h-[70vh] overflow-y-auto pr-2" style={{scrollBehavior: 'smooth'}}>
               {/* Company Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">Company Information</h3>
@@ -597,7 +598,8 @@ export default function Customers() {
                 </div>
               </div>
               
-              <div className="flex space-x-3 pt-4 border-t">
+              </div>
+              <div className="flex space-x-3 pt-4 border-t mt-4">
                 <Button 
                   type="submit" 
                   disabled={createMutation.isPending || updateMutation.isPending}
