@@ -24,10 +24,12 @@ import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, C
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Quotation, InsertQuotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem } from "@shared/schema";
+import type { Quotation, InsertQuotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem, InsertInventoryItem } from "@shared/schema";
+import { insertInventoryItemSchema } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
 import jsPDF from 'jspdf';
+import imageCompression from 'browser-image-compression';
 
 // Memo interface
 interface Memo {
@@ -53,12 +55,10 @@ const quotationItemFormSchema = insertQuotationItemSchema.extend({
   lineTotal: z.string().min(1, "Line total is required"),
 });
 
-const inventoryItemFormSchema = z.object({
-  name: z.string().min(1, "Naam is verplicht"),
-  description: z.string().optional(),
-  sku: z.string().min(1, "SKU is verplicht"),
+const inventoryItemFormSchema = insertInventoryItemSchema.extend({
   unitPrice: z.string().min(1, "Prijs is verplicht"),
-  category: z.string().optional(),
+  costPrice: z.string().min(1, "Kostprijs is verplicht"),
+  margin: z.string().optional(),
 });
 
 type QuotationFormData = z.infer<typeof quotationFormSchema>;
@@ -83,6 +83,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [itemType, setItemType] = useState<'database' | 'new' | 'onetime' | 'text' | null>(null);
   const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem | null>(null);
   const [showAddInventoryDialog, setShowAddInventoryDialog] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string>("");
   const { toast } = useToast();
 
   // Data table state for quotation items
@@ -194,9 +196,26 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       description: "",
       sku: "",
       unitPrice: "0.00",
+      costPrice: "0.00",
+      margin: "0.00",
       category: "General",
+      image: "",
+      isComposite: false,
+      unit: "pcs",
+      status: "active",
     },
   });
+
+  // Watch for price changes to auto-calculate margin
+  const watchedCostPrice = inventoryForm.watch("costPrice");
+  const watchedUnitPrice = inventoryForm.watch("unitPrice");
+
+  React.useEffect(() => {
+    if (watchedCostPrice && watchedUnitPrice) {
+      const margin = calculateMargin(watchedCostPrice, watchedUnitPrice);
+      inventoryForm.setValue("margin", margin);
+    }
+  }, [watchedCostPrice, watchedUnitPrice, inventoryForm]);
 
   // Calculate next quotation number for new quotations
   useEffect(() => {
@@ -243,6 +262,54 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   }, [existingQuotation, existingQuotationItems, quotationLoading, quotationForm]);
 
+  // Image upload function
+  const handleImageUpload = async (file: File) => {
+    try {
+      setUploadingImage(true);
+      
+      // Compress the image
+      const options = {
+        maxSizeMB: 1, // Max 1MB
+        maxWidthOrHeight: 800, // Max dimensions
+        useWebWorker: true,
+      };
+      
+      const compressedFile = await imageCompression(file, options);
+      
+      // Convert to base64 for storage (in real app, upload to cloud storage)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64String = e.target?.result as string;
+        setPreviewImage(base64String);
+        inventoryForm.setValue('image', base64String);
+      };
+      reader.readAsDataURL(compressedFile);
+      
+      toast({
+        title: "Succes",
+        description: `Afbeelding gecomprimeerd van ${(file.size / 1024 / 1024).toFixed(2)}MB naar ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
+      });
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      toast({
+        title: "Fout",
+        description: "Kan afbeelding niet verwerken",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Calculate margin when prices change
+  const calculateMargin = (costPrice: string, unitPrice: string) => {
+    const cost = parseFloat(costPrice) || 0;
+    const selling = parseFloat(unitPrice) || 0;
+    if (cost === 0) return "0.00";
+    const margin = ((selling - cost) / cost) * 100;
+    return margin.toFixed(2);
+  };
+
   // Mutations
   const createInventoryItemMutation = useMutation({
     mutationFn: async (data: InventoryItemFormData) => {
@@ -253,8 +320,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           ...data,
           currentStock: 0,
           minimumStock: 0,
-          unit: 'st',
-          status: 'active'
+          // Convert strings to numbers for decimal fields
+          unitPrice: parseFloat(data.unitPrice || '0').toString(),
+          costPrice: parseFloat(data.costPrice || '0').toString(),
+          margin: parseFloat(data.margin || '0').toString()
         }),
       });
       if (!response.ok) throw new Error('Failed to create inventory item');
@@ -280,6 +349,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       
       // Close dialog and reset form
       setShowAddInventoryDialog(false);
+      setPreviewImage("");
       inventoryForm.reset();
     },
     onError: (error) => {
@@ -1693,62 +1763,51 @@ ATE Solutions B.V.`);
 
       {/* Add Inventory Item Dialog */}
       <Dialog open={showAddInventoryDialog} onOpenChange={setShowAddInventoryDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Artikel toevoegen</DialogTitle>
           </DialogHeader>
-          <form onSubmit={inventoryForm.handleSubmit((data) => createInventoryItemMutation.mutate(data))} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="inventory-name">Naam *</Label>
-              <Input
-                id="inventory-name"
-                {...inventoryForm.register("name")}
-                placeholder="Artikelnaam"
-                data-testid="input-inventory-name"
-              />
-              {inventoryForm.formState.errors.name && (
-                <p className="text-sm text-red-600">{inventoryForm.formState.errors.name.message}</p>
-              )}
-            </div>
+          <form onSubmit={inventoryForm.handleSubmit((data) => createInventoryItemMutation.mutate(data))} className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-orange-600">Basisinformatie</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="inventory-name">Naam *</Label>
+                  <Input
+                    id="inventory-name"
+                    {...inventoryForm.register("name")}
+                    placeholder="Artikelnaam"
+                    data-testid="input-inventory-name"
+                  />
+                  {inventoryForm.formState.errors.name && (
+                    <p className="text-sm text-red-600">{inventoryForm.formState.errors.name.message}</p>
+                  )}
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="inventory-sku">SKU *</Label>
-              <Input
-                id="inventory-sku"
-                {...inventoryForm.register("sku")}
-                placeholder="SKU/Artikelcode"
-                data-testid="input-inventory-sku"
-              />
-              {inventoryForm.formState.errors.sku && (
-                <p className="text-sm text-red-600">{inventoryForm.formState.errors.sku.message}</p>
-              )}
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="inventory-sku">SKU *</Label>
+                  <Input
+                    id="inventory-sku"
+                    {...inventoryForm.register("sku")}
+                    placeholder="SKU/Artikelcode"
+                    data-testid="input-inventory-sku"
+                  />
+                  {inventoryForm.formState.errors.sku && (
+                    <p className="text-sm text-red-600">{inventoryForm.formState.errors.sku.message}</p>
+                  )}
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="inventory-description">Beschrijving</Label>
-              <Textarea
-                id="inventory-description"
-                {...inventoryForm.register("description")}
-                placeholder="Beschrijving van het artikel"
-                data-testid="input-inventory-description"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="inventory-unitPrice">Prijs (€) *</Label>
-                <Input
-                  id="inventory-unitPrice"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...inventoryForm.register("unitPrice")}
-                  placeholder="0.00"
-                  data-testid="input-inventory-unitPrice"
+                <Label htmlFor="inventory-description">Beschrijving</Label>
+                <Textarea
+                  id="inventory-description"
+                  {...inventoryForm.register("description")}
+                  placeholder="Beschrijving van het artikel"
+                  data-testid="input-inventory-description"
                 />
-                {inventoryForm.formState.errors.unitPrice && (
-                  <p className="text-sm text-red-600">{inventoryForm.formState.errors.unitPrice.message}</p>
-                )}
               </div>
 
               <div className="space-y-2">
@@ -1771,12 +1830,138 @@ ATE Solutions B.V.`);
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end pt-4">
+            {/* Image Upload */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-orange-600">Afbeelding</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="inventory-image">Productafbeelding</Label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  {previewImage ? (
+                    <div className="space-y-2">
+                      <img 
+                        src={previewImage} 
+                        alt="Preview" 
+                        className="mx-auto h-32 w-32 object-cover rounded-lg"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setPreviewImage("");
+                          inventoryForm.setValue("image", "");
+                        }}
+                      >
+                        Verwijderen
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="text-gray-500">
+                        Sleep een afbeelding hierheen of klik om te selecteren
+                      </div>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(file);
+                        }}
+                        disabled={uploadingImage}
+                        className="cursor-pointer"
+                        data-testid="input-inventory-image"
+                      />
+                      {uploadingImage && <div className="text-sm text-orange-600">Comprimeren...</div>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Pricing */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-orange-600">Prijzen</h3>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="inventory-costPrice">Kostprijs (€) *</Label>
+                  <Input
+                    id="inventory-costPrice"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    {...inventoryForm.register("costPrice")}
+                    placeholder="0.00"
+                    data-testid="input-inventory-costPrice"
+                  />
+                  {inventoryForm.formState.errors.costPrice && (
+                    <p className="text-sm text-red-600">{inventoryForm.formState.errors.costPrice.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="inventory-unitPrice">Verkoopprijs (€) *</Label>
+                  <Input
+                    id="inventory-unitPrice"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    {...inventoryForm.register("unitPrice")}
+                    placeholder="0.00"
+                    data-testid="input-inventory-unitPrice"
+                  />
+                  {inventoryForm.formState.errors.unitPrice && (
+                    <p className="text-sm text-red-600">{inventoryForm.formState.errors.unitPrice.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="inventory-margin">Marge (%)</Label>
+                  <Input
+                    id="inventory-margin"
+                    {...inventoryForm.register("margin")}
+                    placeholder="0.00"
+                    readOnly
+                    className="bg-gray-50"
+                    data-testid="input-inventory-margin"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Composite Article Option */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-orange-600">Samengesteld artikel</h3>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="inventory-isComposite"
+                  checked={inventoryForm.watch("isComposite")}
+                  onCheckedChange={(checked) => inventoryForm.setValue("isComposite", !!checked)}
+                  data-testid="checkbox-inventory-isComposite"
+                />
+                <Label htmlFor="inventory-isComposite">
+                  Dit artikel bestaat uit andere artikelen
+                </Label>
+              </div>
+              
+              {inventoryForm.watch("isComposite") && (
+                <div className="p-4 bg-orange-50 rounded-lg">
+                  <p className="text-sm text-orange-700">
+                    Na het aanmaken van dit artikel kun je componenten toevoegen via de inventory pagina.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 justify-end pt-4 border-t">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
                   setShowAddInventoryDialog(false);
+                  setPreviewImage("");
                   inventoryForm.reset();
                 }}
                 disabled={createInventoryItemMutation.isPending}

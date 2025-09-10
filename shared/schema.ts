@@ -93,9 +93,22 @@ export const inventoryItems = pgTable("inventory_items", {
   category: text("category"),
   unit: text("unit").default("pcs"),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }).default('0'),
+  margin: decimal("margin", { precision: 5, scale: 2 }).default('0'), // percentage
+  image: text("image"), // URL or file path for product image
   currentStock: integer("current_stock").default(0),
   minimumStock: integer("minimum_stock").default(0),
+  isComposite: boolean("is_composite").default(false), // true if made from other items
   status: text("status").default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Inventory components table for composite items
+export const inventoryComponents = pgTable("inventory_components", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  parentItemId: varchar("parent_item_id").references(() => inventoryItems.id).notNull(),
+  componentItemId: varchar("component_item_id").references(() => inventoryItems.id).notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).notNull(), // Amount of component needed
   createdAt: timestamp("created_at").defaultNow(),
 });
 
