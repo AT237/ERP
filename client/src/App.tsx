@@ -30,10 +30,7 @@ function Router() {
         <Route path="/inventory" component={Inventory} />
         <Route path="/suppliers" component={Suppliers} />
         <Route path="/contacts" component={ContactPersons} />
-        <Route path="/quotations" component={() => <Quotations onCreateNew={(formInfo) => {
-          // TODO: Navigate to proper quotation form
-          window.location.href = `/quotation-form${formInfo.id !== 'new-quotation' ? '/' + formInfo.id.split('-').pop() : ''}`;
-        }} />} />
+        <Route path="/quotations" component={Quotations} />
         <Route path="/invoices" component={Invoices} />
         <Route path="/projects" component={Projects} />
         <Route path="/work-orders" component={WorkOrders} />
