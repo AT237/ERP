@@ -124,6 +124,9 @@ function SortableNavItem({ item, sectionId, isEditMode, onMenuClick }: { item: a
   const [location] = useLocation();
   const IconComponent = item.icon;
   const isActive = location === item.href;
+  
+  // Ensure IconComponent is a valid React component
+  const isValidComponent = typeof IconComponent === 'function';
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -160,7 +163,7 @@ function SortableNavItem({ item, sectionId, isEditMode, onMenuClick }: { item: a
             ? "bg-orange-500 text-white" 
             : "bg-orange-400 text-white hover:bg-orange-500"
         )}>
-          {IconComponent && <IconComponent size={14} />}
+          {isValidComponent ? <IconComponent size={14} /> : <div className="w-3.5 h-3.5 bg-current rounded opacity-50" />}
         </div>
         <span className="text-sm font-medium">{item.name}</span>
       </button>
