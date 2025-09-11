@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { X, Menu } from "lucide-react";
+import { useLocation } from "wouter";
 import Sidebar from "./sidebar";
 
 import SectionInfoPanel from "./section-info-panel";
@@ -26,11 +27,71 @@ interface Tab {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  // FIXED: Remove timer that was causing flicker every second
+  const [location] = useLocation();
+  
+  // Get page name from route
+  const getPageInfo = (path: string) => {
+    switch (path) {
+      case '/':
+      case '/dashboard':
+        return { id: 'dashboard', name: 'Dashboard' };
+      case '/inventory':
+        return { id: 'inventory', name: 'Stock Management' };
+      case '/suppliers':
+        return { id: 'suppliers', name: 'Suppliers' };
+      case '/contacts':
+        return { id: 'contacts', name: 'Contact Persons' };
+      case '/quotations':
+        return { id: 'quotations', name: 'Quotations' };
+      case '/invoices':
+        return { id: 'invoices', name: 'Invoices' };
+      case '/projects':
+        return { id: 'projects', name: 'Projects' };
+      case '/work-orders':
+        return { id: 'work-orders', name: 'Work Orders' };
+      case '/purchase-orders':
+        return { id: 'purchase-orders', name: 'Purchase Orders' };
+      case '/packing-lists':
+        return { id: 'packing-lists', name: 'Packing Lists' };
+      case '/reports':
+        return { id: 'reports', name: 'Reports' };
+      default:
+        return { id: 'page', name: 'Page' };
+    }
+  };
+
+  const currentPage = getPageInfo(location);
+  
   const [tabs, setTabs] = useState<Tab[]>([
-    { id: 'dashboard', name: 'Dashboard', type: 'page', content: children }
+    { id: currentPage.id, name: currentPage.name, type: 'page', content: children }
   ]);
-  const [activeTabId, setActiveTabId] = useState('dashboard');
+  const [activeTabId, setActiveTabId] = useState(currentPage.id);
+  
+  // Update tab when route changes
+  useEffect(() => {
+    const pageInfo = getPageInfo(location);
+    const existingTab = tabs.find(tab => tab.id === pageInfo.id);
+    
+    if (!existingTab) {
+      // Add new tab for the page
+      const newTab: Tab = {
+        id: pageInfo.id,
+        name: pageInfo.name,
+        type: 'page',
+        content: children
+      };
+      setTabs(prevTabs => [...prevTabs, newTab]);
+    } else {
+      // Update existing tab content
+      setTabs(prevTabs => 
+        prevTabs.map(tab => 
+          tab.id === pageInfo.id ? { ...tab, content: children } : tab
+        )
+      );
+    }
+    
+    setActiveTabId(pageInfo.id);
+  }, [location, children]);
 
   // Get current time only when needed, no interval
   const getCurrentTime = () => new Date();
@@ -386,7 +447,7 @@ export default function Layout({ children }: LayoutProps) {
       );
     }
     
-    return children; // dashboard content
+    return activeTab.content || children; // page content
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
