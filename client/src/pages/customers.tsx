@@ -158,7 +158,7 @@ export default function Customers() {
       taxId: customer.taxId || "",
       bankAccount: customer.bankAccount || "",
       language: customer.language || "nl",
-      paymentTerms: customer.paymentTerms || "30",
+      paymentTerms: customer.paymentTerms?.toString() || "30",
       status: customer.status || "active",
     });
     setShowDialog(true);
@@ -363,7 +363,8 @@ export default function Customers() {
   );
 
   return (
-    <DataTableLayout
+    <div className="p-6">
+      <DataTableLayout
       title="Customer Management"
       entityName="Customer"
       entityNamePlural="Customers"
@@ -391,18 +392,18 @@ export default function Customers() {
           variant: 'default' as const
         }
       ]}
-      rowActions={[
+      rowActions={(row: Customer) => [
         {
           key: 'edit',
           label: 'Edit',
           icon: <Edit className="h-4 w-4" />,
-          onClick: (row: Customer) => handleEdit(row)
+          onClick: () => handleEdit(row)
         },
         {
           key: 'delete',
           label: 'Delete',
           icon: <Trash2 className="h-4 w-4" />,
-          onClick: (row: Customer) => handleDelete(row.id),
+          onClick: () => handleDelete(row.id),
           className: 'text-red-600 hover:text-red-700'
         }
       ]}
@@ -413,5 +414,6 @@ export default function Customers() {
         content: renderFormContent()
       }}
     />
+    </div>
   );
 }

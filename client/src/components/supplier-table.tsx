@@ -367,7 +367,8 @@ export default function SupplierTable() {
   ];
 
   return (
-    <DataTableLayout
+    <div className="p-6">
+      <DataTableLayout
       // Data
       data={suppliers}
       isLoading={isLoading}
@@ -545,5 +546,6 @@ export default function SupplierTable() {
       onExport={handleExport}
       onDuplicate={handleDuplicate}
     />
+    </div>
   );
 }
