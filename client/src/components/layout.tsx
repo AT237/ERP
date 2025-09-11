@@ -138,6 +138,16 @@ export default function Layout({ children }: LayoutProps) {
     }
   };
 
+  // Listen for global form tab open events
+  useEffect(() => {
+    const handleOpenFormTab = (e: CustomEvent) => {
+      handleFormClick(e.detail);
+    };
+    
+    window.addEventListener('open-form-tab', handleOpenFormTab as EventListener);
+    return () => window.removeEventListener('open-form-tab', handleOpenFormTab as EventListener);
+  }, []);
+
   const handleMenuClick = (menuItem: {id: string, name: string, route?: string}) => {
     // Navigate to the route instead of creating a tab
     if (menuItem.route) {

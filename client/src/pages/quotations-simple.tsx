@@ -74,19 +74,26 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     tableKey: 'quotations-simple'
   });
 
+  // Helper function to open form tab via event system
+  const openFormTab = (formInfo: {id: string, name: string, formType: string, parentId?: string}) => {
+    window.dispatchEvent(new CustomEvent('open-form-tab', { detail: formInfo }));
+  };
+
   // Simple handlers
   const handleAdd = () => {
+    const formInfo = {
+      id: 'new-quotation',
+      name: 'New Quotation',
+      formType: 'quotation',
+      parentId: 'quotations'
+    };
+    
     if (onCreateNew) {
-      onCreateNew({
-        id: 'new-quotation',
-        name: 'New Quotation',
-        formType: 'quotation',
-        parentId: 'quotations'
-      });
+      onCreateNew(formInfo);
     } else {
-      // Fallback: navigate to quotation form
-      console.log('Navigating to new quotation form');
-      window.location.href = '/quotation-form';
+      // Fallback: use event system to open form tab
+      console.log('Opening new quotation form via event system');
+      openFormTab(formInfo);
     }
   };
 
@@ -102,17 +109,19 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   };
 
   const handleView = (quotation: Quotation) => {
+    const formInfo = {
+      id: `edit-quotation-${quotation.id}`,
+      name: `${quotation.quotationNumber} ${quotation.revisionNumber || 'V1.0'}`,
+      formType: 'quotation',
+      parentId: 'quotations'
+    };
+    
     if (onCreateNew) {
-      onCreateNew({
-        id: `edit-quotation-${quotation.id}`,
-        name: quotation.quotationNumber,
-        formType: 'quotation',
-        parentId: 'quotations'
-      });
+      onCreateNew(formInfo);
     } else {
-      // Fallback: navigate to quotation form for editing
-      console.log(`Navigating to edit quotation ${quotation.quotationNumber}`);
-      window.location.href = `/quotation-form/${quotation.id}`;
+      // Fallback: use event system to open form tab
+      console.log(`Opening quotation ${quotation.quotationNumber} via event system`);
+      openFormTab(formInfo);
     }
   };
 
