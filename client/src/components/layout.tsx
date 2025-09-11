@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { X, Menu } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import Sidebar from "./sidebar";
 
 import SectionInfoPanel from "./section-info-panel";
@@ -27,7 +27,7 @@ interface Tab {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   
   // Get page name from route
   const getPageInfo = (path: string) => {
@@ -137,26 +137,9 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const handleMenuClick = (menuItem: {id: string, name: string, route?: string}) => {
-    // Check if tab already exists - prevent unnecessary state updates
-    const existingTab = tabs.find(tab => tab.id === menuItem.id);
-    
-    if (existingTab) {
-      // Only switch if not already active - prevents flicker
-      if (activeTabId !== menuItem.id) {
-        setActiveTabId(menuItem.id);
-      }
-    } else {
-      // Create new tab for menu item with optimized update
-      const newTab: Tab = {
-        id: menuItem.id,
-        name: menuItem.name,
-        type: 'menu',
-        menuRoute: menuItem.route
-      };
-      
-      // Batch state updates to prevent flicker
-      setTabs(prevTabs => [...prevTabs, newTab]);
-      setActiveTabId(menuItem.id);
+    // Navigate to the route instead of creating a tab
+    if (menuItem.route) {
+      navigate(menuItem.route);
     }
   };
 
