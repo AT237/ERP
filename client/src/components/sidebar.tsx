@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import {
   DndContext,
@@ -257,6 +257,9 @@ export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
   
+  // Ref to track last saved collapsed sections to prevent unnecessary saves
+  const lastSavedCollapsedSections = useRef<Record<string, boolean>>({});
+  
   // For demo purposes, using admin user ID. In real app, get from auth context
   const userId = "admin";
 
@@ -275,7 +278,17 @@ export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user-preferences", userId] });
+      // Use setQueryData to update cache without refetch to prevent flicker
+      queryClient.setQueryData(["/api/user-preferences", userId], (oldData: any) => {
+        if (oldData) {
+          return {
+            ...oldData,
+            navigationOrder: navigation,
+            collapsedSections: lastSavedCollapsedSections.current,
+          };
+        }
+        return oldData;
+      });
     },
     onError: (error: any) => {
       console.error("Failed to save preferences:", error);
@@ -309,14 +322,21 @@ export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
     };
     setCollapsedSections(newCollapsedSections);
     
-    // Only save collapsed sections immediately, not navigation order
+    // Only save if collapsed sections actually changed from what we last saved
     if (!isEditMode) {
-      setTimeout(() => {
-        savePreferences.mutate({
-          navigationOrder: navigation,
-          collapsedSections: newCollapsedSections,
-        });
-      }, 500);
+      const hasChanged = JSON.stringify(lastSavedCollapsedSections.current) !== JSON.stringify(newCollapsedSections);
+      
+      if (hasChanged) {
+        setTimeout(() => {
+          // Update tracking ref BEFORE making the save
+          lastSavedCollapsedSections.current = newCollapsedSections;
+          
+          savePreferences.mutate({
+            navigationOrder: navigation,
+            collapsedSections: newCollapsedSections,
+          });
+        }, 300); // Reduced timeout for better responsiveness
+      }
     }
   };
 
