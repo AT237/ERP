@@ -1,3 +1,4 @@
+import React, { Suspense } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -30,8 +31,8 @@ function Router() {
         <Route path="/suppliers" component={Suppliers} />
         <Route path="/contacts" component={ContactPersons} />
         <Route path="/quotations" component={() => <Quotations onCreateNew={(formInfo) => {
-          console.log('Quotation action:', formInfo);
-          alert(`${formInfo.name} functionality will be implemented soon`);
+          // TODO: Navigate to proper quotation form
+          window.location.href = `/quotation-form${formInfo.id !== 'new-quotation' ? '/' + formInfo.id.split('-').pop() : ''}`;
         }} />} />
         <Route path="/invoices" component={Invoices} />
         <Route path="/projects" component={Projects} />
@@ -39,6 +40,24 @@ function Router() {
         <Route path="/purchase-orders" component={PurchaseOrders} />
         <Route path="/packing-lists" component={PackingLists} />
         <Route path="/reports" component={Reports} />
+        <Route path="/quotation-form" component={() => {
+          const QuotationForm = React.lazy(() => import('./pages/quotation-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <QuotationForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/quotation-form/:id">
+          {(params) => {
+            const QuotationForm = React.lazy(() => import('./pages/quotation-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <QuotationForm onSave={() => window.history.back()} quotationId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </Layout>
