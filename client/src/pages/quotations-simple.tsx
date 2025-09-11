@@ -98,13 +98,19 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   };
 
   const handleRevise = (quotation: Quotation) => {
+    const formInfo = {
+      id: `revise-quotation-${quotation.id}`,
+      name: `Revise ${quotation.quotationNumber}`,
+      formType: 'quotation',
+      parentId: 'quotations'
+    };
+    
     if (onCreateNew) {
-      onCreateNew({
-        id: `revise-quotation-${quotation.id}`,
-        name: `Revise ${quotation.quotationNumber}`,
-        formType: 'quotation-revision',
-        parentId: 'quotations'
-      });
+      onCreateNew(formInfo);
+    } else {
+      // Fallback: use event system to open form tab
+      console.log(`Opening quotation revision ${quotation.quotationNumber} via event system`);
+      openFormTab(formInfo);
     }
   };
 

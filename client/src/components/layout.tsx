@@ -141,12 +141,31 @@ export default function Layout({ children }: LayoutProps) {
   // Listen for global form tab open events
   useEffect(() => {
     const handleOpenFormTab = (e: CustomEvent) => {
-      handleFormClick(e.detail);
+      const formInfo = e.detail;
+      // Check if tab already exists
+      const existingTab = tabs.find(tab => tab.id === formInfo.id);
+      
+      if (existingTab) {
+        // Switch to existing tab
+        setActiveTabId(formInfo.id);
+      } else {
+        // Create new tab for form
+        const newTab = {
+          id: formInfo.id,
+          name: formInfo.name,
+          type: 'form' as const,
+          formType: formInfo.formType,
+          parentId: formInfo.parentId
+        };
+        
+        setTabs(prevTabs => [...prevTabs, newTab]);
+        setActiveTabId(formInfo.id);
+      }
     };
     
     window.addEventListener('open-form-tab', handleOpenFormTab as EventListener);
     return () => window.removeEventListener('open-form-tab', handleOpenFormTab as EventListener);
-  }, []);
+  }, [tabs]);
 
   const handleMenuClick = (menuItem: {id: string, name: string, route?: string}) => {
     // Navigate to the route instead of creating a tab
@@ -179,6 +198,13 @@ export default function Layout({ children }: LayoutProps) {
 
   // Handle tab click to navigate to the correct route
   const handleTabClick = (tab: Tab) => {
+    // Only navigate for page/menu/section tabs, not form tabs
+    if (tab.type === 'form') {
+      // For form tabs, just set as active without navigation
+      setActiveTabId(tab.id);
+      return;
+    }
+    
     // Get the route for this tab based on its ID
     const getRouteForTab = (tabId: string) => {
       switch (tabId) {
