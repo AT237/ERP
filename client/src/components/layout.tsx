@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { X, Menu } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -71,6 +71,9 @@ export default function Layout({ children }: LayoutProps) {
     { id: currentPage.id, name: currentPage.name, type: 'page', content: children }
   ]);
   const [activeTabId, setActiveTabId] = useState(currentPage.id);
+  
+  // Ref to track last saved values to prevent unnecessary saves
+  const lastSavedTab = useRef<{tabId: string, tabType: string} | null>(null);
 
   // Load user preferences
   const { data: preferences } = useQuery({
@@ -110,18 +113,28 @@ export default function Layout({ children }: LayoutProps) {
   useEffect(() => {
     const activeTab = tabs.find(tab => tab.id === activeTabId);
     if (activeTab && preferences !== undefined) {
-      const saveTimeout = setTimeout(() => {
-        savePreferences.mutate({
-          lastActiveTab: activeTabId,
-          lastActiveTabType: activeTab.type,
-          navigationOrder: preferences?.navigationOrder || null,
-          collapsedSections: preferences?.collapsedSections || {},
-        });
-      }, 1000); // Save after 1 second of no changes
+      // Only save if the tab actually changed from what we last saved
+      const shouldSave = !lastSavedTab.current || 
+        lastSavedTab.current.tabId !== activeTabId || 
+        lastSavedTab.current.tabType !== activeTab.type;
+        
+      if (shouldSave) {
+        const saveTimeout = setTimeout(() => {
+          // Update our tracking ref BEFORE making the save
+          lastSavedTab.current = { tabId: activeTabId, tabType: activeTab.type };
+          
+          savePreferences.mutate({
+            lastActiveTab: activeTabId,
+            lastActiveTabType: activeTab.type,
+            navigationOrder: (preferences as any)?.navigationOrder || null,
+            collapsedSections: (preferences as any)?.collapsedSections || {},
+          });
+        }, 500); // Reduced timeout to 500ms for better responsiveness
 
-      return () => clearTimeout(saveTimeout);
+        return () => clearTimeout(saveTimeout);
+      }
     }
-  }, [activeTabId, tabs, preferences, savePreferences]);
+  }, [activeTabId, tabs]); // Only depend on activeTabId and tabs, not preferences
 
   // Update tab when route changes
   useEffect(() => {
