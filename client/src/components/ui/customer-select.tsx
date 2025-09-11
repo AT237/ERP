@@ -104,7 +104,12 @@ export function CustomerSelect({
   });
 
   const handleCreateCustomer = (data: CustomerFormData) => {
-    createCustomerMutation.mutate(data);
+    // Convert paymentTerms to number before sending to backend
+    const processedData = {
+      ...data,
+      paymentTerms: parseInt(data.paymentTerms, 10)
+    };
+    createCustomerMutation.mutate(processedData);
   };
 
   const selectedCustomer = customersTyped.find(customer => customer.id === value);
