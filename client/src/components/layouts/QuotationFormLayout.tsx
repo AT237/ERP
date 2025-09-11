@@ -1402,7 +1402,7 @@ ATE Solutions B.V.`);
                 content: (
                   <div className="space-y-6">
                     {/* General Information */}
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="customerId">Customer</Label>
                         <CustomerSelect
@@ -1412,25 +1412,23 @@ ATE Solutions B.V.`);
                           testId="select-customer"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="quotationDate">Quotation Date</Label>
-                          <Input
-                            id="quotationDate"
-                            type="date"
-                            {...quotationForm.register("quotationDate")}
-                            data-testid="input-quotation-date"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="validUntil">Valid Until</Label>
-                          <Input
-                            id="validUntil"
-                            type="date"
-                            {...quotationForm.register("validUntil")}
-                            data-testid="input-valid-until"
-                          />
-                        </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="quotationDate">Quotation Date</Label>
+                        <Input
+                          id="quotationDate"
+                          type="date"
+                          {...quotationForm.register("quotationDate")}
+                          data-testid="input-quotation-date"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="validUntil">Valid Until</Label>
+                        <Input
+                          id="validUntil"
+                          type="date"
+                          {...quotationForm.register("validUntil")}
+                          data-testid="input-valid-until"
+                        />
                       </div>
                       <div className="col-span-2 space-y-2">
                         <Label htmlFor="description">Quotation description</Label>
