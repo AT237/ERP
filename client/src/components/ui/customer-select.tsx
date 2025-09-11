@@ -195,17 +195,7 @@ export function CustomerSelect({
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              Add New Customer
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowAddDialog(false)}
-                className="h-6 w-6"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </DialogTitle>
+            <DialogTitle>Add New Customer</DialogTitle>
           </DialogHeader>
           
           <form onSubmit={customerForm.handleSubmit(handleCreateCustomer as any)} className="space-y-4">
