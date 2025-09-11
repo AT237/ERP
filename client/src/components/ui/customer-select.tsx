@@ -111,85 +111,85 @@ export function CustomerSelect({
 
   return (
     <>
-      <div className="flex space-x-2">
-        <div className="flex-1">
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className={cn("w-full justify-between", className)}
-                data-testid={testId}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className={cn("w-full justify-between", className)}
+            data-testid={testId}
+          >
+            {selectedCustomer ? selectedCustomer.name : placeholder}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0" align="start">
+          <Command
+            filter={(value, search) => {
+              // Custom filter logic for "contains" search
+              const customer = customersTyped.find(c => c.name === value);
+              if (!customer) return 0;
+              
+              const searchLower = search.toLowerCase();
+              return (
+                customer.name?.toLowerCase().includes(searchLower) ||
+                customer.email?.toLowerCase().includes(searchLower) ||
+                customer.phone?.toLowerCase().includes(searchLower) ||
+                customer.city?.toLowerCase().includes(searchLower)
+              ) ? 1 : 0;
+            }}
+          >
+            <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+              <CommandInput 
+                placeholder="Search customers..." 
+                className="flex-1 border-0 bg-transparent outline-none focus:ring-0"
+              />
+              <Button 
+                type="button"
+                variant="ghost" 
+                size="icon"
+                className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                onClick={() => setShowAddDialog(true)}
+                data-testid={`${testId}-add-button`}
               >
-                {selectedCustomer ? selectedCustomer.name : placeholder}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <Plus className="h-4 w-4" />
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0" align="start">
-              <Command
-                filter={(value, search) => {
-                  // Custom filter logic for "contains" search
-                  const customer = customersTyped.find(c => c.name === value);
-                  if (!customer) return 0;
-                  
-                  const searchLower = search.toLowerCase();
-                  return (
-                    customer.name?.toLowerCase().includes(searchLower) ||
-                    customer.email?.toLowerCase().includes(searchLower) ||
-                    customer.phone?.toLowerCase().includes(searchLower) ||
-                    customer.city?.toLowerCase().includes(searchLower)
-                  ) ? 1 : 0;
-                }}
-              >
-                <CommandInput placeholder="Search customers..." />
-                <CommandList>
-                  <CommandEmpty>No customer found.</CommandEmpty>
-                  <CommandGroup>
-                    {customersTyped.map((customer) => (
-                      <CommandItem
-                        key={customer.id}
-                        value={customer.name}
-                        onSelect={() => {
-                          onValueChange?.(customer.id);
-                          setOpen(false);
-                        }}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center">
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              value === customer.id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          <div>
-                            <div className="font-medium">{customer.name}</div>
-                            {customer.city && (
-                              <div className="text-sm text-muted-foreground">{customer.city}</div>
-                            )}
-                          </div>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
-        
-        <Button 
-          type="button"
-          variant="outline" 
-          size="icon"
-          className="flex-shrink-0 border-orange-200 hover:border-orange-300 hover:bg-orange-50"
-          onClick={() => setShowAddDialog(true)}
-          data-testid={`${testId}-add-button`}
-        >
-          <Plus className="h-4 w-4 text-orange-600" />
-        </Button>
-      </div>
+            </div>
+            <CommandList>
+              <CommandEmpty>No customer found.</CommandEmpty>
+              <CommandGroup>
+                {customersTyped.map((customer) => (
+                  <CommandItem
+                    key={customer.id}
+                    value={customer.name}
+                    onSelect={() => {
+                      onValueChange?.(customer.id);
+                      setOpen(false);
+                    }}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center">
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value === customer.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div>
+                        <div className="font-medium">{customer.name}</div>
+                        {customer.city && (
+                          <div className="text-sm text-muted-foreground">{customer.city}</div>
+                        )}
+                      </div>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
 
       {/* Add Customer Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
