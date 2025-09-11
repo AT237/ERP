@@ -490,6 +490,10 @@ export const insertProjectSchema = createInsertSchema(projects).omit({ id: true,
 export const insertQuotationSchema = createInsertSchema(quotations).omit({ id: true, createdAt: true }).extend({
   quotationDate: z.string().optional(),
   validUntil: z.string().optional(),
+  subtotal: z.string().optional(),
+  taxAmount: z.string().optional(), 
+  totalAmount: z.string().optional(),
+  validityDays: z.number().optional(), // Virtual field for date calculations
 });
 export const insertQuotationItemSchema = createInsertSchema(quotationItems).omit({ id: true });
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({ id: true, createdAt: true });

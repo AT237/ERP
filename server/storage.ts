@@ -433,6 +433,10 @@ export class DatabaseStorage implements IStorage {
 
   async updateQuotation(id: string, quotation: Partial<InsertQuotation>): Promise<Quotation> {
     const updateData: any = { ...quotation };
+    
+    // Remove virtual fields that don't exist in database
+    delete updateData.validityDays;
+    
     if (updateData.quotationDate && typeof updateData.quotationDate === 'string') {
       updateData.quotationDate = new Date(updateData.quotationDate);
     }

@@ -447,10 +447,20 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
   const handleSaveQuotation = (data: QuotationFormData) => {
     console.log('Received quotation data:', data);
+    
+    // Convert number fields to strings as expected by backend
+    const processedData = {
+      ...data,
+      subtotal: typeof data.subtotal === 'number' ? data.subtotal.toString() : data.subtotal,
+      taxAmount: typeof data.taxAmount === 'number' ? data.taxAmount.toString() : data.taxAmount,
+      totalAmount: typeof data.totalAmount === 'number' ? data.totalAmount.toString() : data.totalAmount,
+      validityDays: data.validityDays ? parseInt(data.validityDays.toString(), 10) : undefined
+    };
+    
     if (quotationId) {
-      updateQuotationMutation.mutate(data);
+      updateQuotationMutation.mutate(processedData);
     } else {
-      createQuotationMutation.mutate(data);
+      createQuotationMutation.mutate(processedData);
     }
   };
 
