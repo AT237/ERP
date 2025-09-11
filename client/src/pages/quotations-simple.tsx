@@ -84,9 +84,9 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
         parentId: 'quotations'
       });
     } else {
-      // Fallback: show alert or console log when onCreateNew is not provided
-      console.log('Add new quotation functionality not available in this context');
-      alert('Add quotation functionality is not available in this view');
+      // Fallback: navigate to quotation form
+      console.log('Navigating to new quotation form');
+      window.location.href = '/quotation-form';
     }
   };
 
@@ -110,9 +110,9 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
         parentId: 'quotations'
       });
     } else {
-      // Fallback: show alert or console log when onCreateNew is not provided
-      console.log('View quotation functionality not available in this context');
-      alert(`View functionality for quotation ${quotation.quotationNumber} is not available in this view`);
+      // Fallback: navigate to quotation form for editing
+      console.log(`Navigating to edit quotation ${quotation.quotationNumber}`);
+      window.location.href = `/quotation-form/${quotation.id}`;
     }
   };
 
