@@ -21,6 +21,7 @@ import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, ChevronsUpDown, Check, Printer, Send, Copy, Package2 as Package, Type, ArrowLeft, Search } from "lucide-react";
+import { CustomerSelect } from "@/components/ui/customer-select";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
@@ -1404,48 +1405,12 @@ ATE Solutions B.V.`);
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="customerId">Customer</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className="w-full justify-between"
-                              data-testid="select-customer"
-                            >
-                              {quotationForm.watch("customerId")
-                                ? customers.find((customer) => customer.id === quotationForm.watch("customerId"))?.name
-                                : "Select customer..."}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
-                            <Command>
-                              <CommandInput placeholder="Search customers..." />
-                              <CommandList>
-                                <CommandEmpty>No customer found.</CommandEmpty>
-                                <CommandGroup>
-                                  {customers.map((customer) => (
-                                    <CommandItem
-                                      key={customer.id}
-                                      value={customer.name}
-                                      onSelect={() => {
-                                        quotationForm.setValue("customerId", customer.id);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          quotationForm.watch("customerId") === customer.id ? "opacity-100" : "opacity-0"
-                                        )}
-                                      />
-                                      {customer.name}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                        <CustomerSelect
+                          value={quotationForm.watch("customerId")}
+                          onValueChange={(value) => quotationForm.setValue("customerId", value)}
+                          placeholder="Select customer..."
+                          testId="select-customer"
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="quotationDate">Quotation Date</Label>
