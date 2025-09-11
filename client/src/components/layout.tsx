@@ -165,6 +165,45 @@ export default function Layout({ children }: LayoutProps) {
     }
   };
 
+  // Handle tab click to navigate to the correct route
+  const handleTabClick = (tab: Tab) => {
+    // Get the route for this tab based on its ID
+    const getRouteForTab = (tabId: string) => {
+      switch (tabId) {
+        case 'dashboard':
+          return '/dashboard';
+        case 'inventory':
+          return '/inventory';
+        case 'suppliers':
+          return '/suppliers';
+        case 'contacts':
+          return '/contacts';
+        case 'quotations':
+          return '/quotations';
+        case 'invoices':
+          return '/invoices';
+        case 'projects':
+          return '/projects';
+        case 'work-orders':
+          return '/work-orders';
+        case 'purchase-orders':
+          return '/purchase-orders';
+        case 'packing-lists':
+          return '/packing-lists';
+        case 'reports':
+          return '/reports';
+        default:
+          return '/dashboard';
+      }
+    };
+
+    const route = getRouteForTab(tab.id);
+    if (route !== location) {
+      navigate(route);
+    }
+    setActiveTabId(tab.id);
+  };
+
   const closeTab = (tabId: string) => {
     setTabs(prevTabs => {
       const newTabs = prevTabs.filter(tab => tab.id !== tabId);
@@ -506,7 +545,7 @@ export default function Layout({ children }: LayoutProps) {
                       ? 'bg-orange-500 text-white relative z-10 border-2 border-orange-500 border-b-orange-500'
                       : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200 mb-[2px]'
                   }`}
-                  onClick={() => setActiveTabId(tab.id)}
+                  onClick={() => handleTabClick(tab)}
                   onMouseDown={(e) => {
                     // Middle mouse button (scroll wheel click) to close tab
                     if (e.button === 1) {
