@@ -1,6 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { X, Menu } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import Sidebar from "./sidebar";
 
 import SectionInfoPanel from "./section-info-panel";
@@ -28,6 +30,7 @@ interface Tab {
 
 export default function Layout({ children }: LayoutProps) {
   const [location, navigate] = useLocation();
+  const userId = "admin"; // TODO: Get from auth context
   
   // Get page name from route
   const getPageInfo = (path: string) => {
@@ -68,7 +71,58 @@ export default function Layout({ children }: LayoutProps) {
     { id: currentPage.id, name: currentPage.name, type: 'page', content: children }
   ]);
   const [activeTabId, setActiveTabId] = useState(currentPage.id);
+
+  // Load user preferences
+  const { data: preferences } = useQuery({
+    queryKey: ["/api/user-preferences", userId],
+  });
+
+  // Save user preferences
+  const savePreferences = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", `/api/user-preferences`, {
+        userId,
+        lastActiveTab: data.lastActiveTab,
+        lastActiveTabType: data.lastActiveTabType,
+        navigationOrder: data.navigationOrder,
+        collapsedSections: data.collapsedSections,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user-preferences", userId] });
+    },
+    onError: (error: any) => {
+      console.error("Failed to save last view:", error);
+    },
+  });
   
+  // Restore last active tab from preferences
+  useEffect(() => {
+    if (preferences?.lastActiveTab && preferences?.lastActiveTabType) {
+      // Only restore if it's not a page tab (to avoid conflicts with routing)
+      if (preferences.lastActiveTabType !== 'page') {
+        setActiveTabId(preferences.lastActiveTab);
+      }
+    }
+  }, [preferences]);
+
+  // Save active tab when it changes (debounced)
+  useEffect(() => {
+    const activeTab = tabs.find(tab => tab.id === activeTabId);
+    if (activeTab && preferences !== undefined) {
+      const saveTimeout = setTimeout(() => {
+        savePreferences.mutate({
+          lastActiveTab: activeTabId,
+          lastActiveTabType: activeTab.type,
+          navigationOrder: preferences?.navigationOrder || null,
+          collapsedSections: preferences?.collapsedSections || {},
+        });
+      }, 1000); // Save after 1 second of no changes
+
+      return () => clearTimeout(saveTimeout);
+    }
+  }, [activeTabId, tabs, preferences, savePreferences]);
+
   // Update tab when route changes
   useEffect(() => {
     const pageInfo = getPageInfo(location);

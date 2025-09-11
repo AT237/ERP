@@ -19,6 +19,8 @@ export const userPreferences = pgTable("user_preferences", {
   userId: varchar("user_id").references(() => users.id),
   navigationOrder: jsonb("navigation_order"),
   collapsedSections: jsonb("collapsed_sections"),
+  lastActiveTab: varchar("last_active_tab", { length: 255 }),
+  lastActiveTabType: varchar("last_active_tab_type", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
