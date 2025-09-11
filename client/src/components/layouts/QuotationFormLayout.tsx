@@ -262,6 +262,23 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   }, [existingQuotation, existingQuotationItems, quotationLoading, quotationForm]);
 
+  // Set document title based on quotation data
+  useEffect(() => {
+    if (existingQuotation) {
+      // For existing quotations: show quotation number and revision
+      const title = `${existingQuotation.quotationNumber} ${existingQuotation.revisionNumber || 'V1.0'}`;
+      document.title = title;
+    } else if (!quotationId) {
+      // For new quotations: show "New Quotation" with the next quotation number
+      document.title = `New Quotation - ${nextQuotationNumber}`;
+    }
+    
+    // Cleanup: reset title when component unmounts
+    return () => {
+      document.title = 'Business Management System';
+    };
+  }, [existingQuotation, quotationId, nextQuotationNumber]);
+
   // Image upload function
   const handleImageUpload = async (file: File) => {
     try {
