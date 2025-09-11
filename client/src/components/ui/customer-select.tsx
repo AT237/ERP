@@ -148,18 +148,20 @@ export function CustomerSelect({
             <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
               <CommandInput 
                 placeholder="Search customers..." 
-                className="flex-1 border-0 bg-transparent outline-none focus:ring-0"
+                className="flex-1 border-0 bg-transparent outline-none focus:ring-0 pr-2"
               />
-              <Button 
-                type="button"
-                variant="ghost" 
-                size="icon"
-                className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                onClick={() => setShowAddDialog(true)}
-                data-testid={`${testId}-add-button`}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              <div className="flex-shrink-0 ml-auto">
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  size="icon"
+                  className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                  onClick={() => setShowAddDialog(true)}
+                  data-testid={`${testId}-add-button`}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <CommandList>
               <CommandEmpty>No customer found.</CommandEmpty>
