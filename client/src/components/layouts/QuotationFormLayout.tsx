@@ -1412,23 +1412,62 @@ ATE Solutions B.V.`);
                           testId="select-customer"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="quotationDate">Quotation Date</Label>
-                        <Input
-                          id="quotationDate"
-                          type="date"
-                          {...quotationForm.register("quotationDate")}
-                          data-testid="input-quotation-date"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="validUntil">Valid Until</Label>
-                        <Input
-                          id="validUntil"
-                          type="date"
-                          {...quotationForm.register("validUntil")}
-                          data-testid="input-valid-until"
-                        />
+                      <div className="col-span-2">
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="quotationDate">Quotation Date</Label>
+                            <Input
+                              id="quotationDate"
+                              type="date"
+                              {...quotationForm.register("quotationDate")}
+                              onChange={(e) => {
+                                quotationForm.setValue("quotationDate", e.target.value);
+                                // Auto-calculate valid until date
+                                const validityDays = quotationForm.watch("validityDays") || 30;
+                                if (e.target.value && validityDays) {
+                                  const quotationDate = new Date(e.target.value);
+                                  const validUntilDate = new Date(quotationDate);
+                                  validUntilDate.setDate(quotationDate.getDate() + parseInt(validityDays.toString()));
+                                  quotationForm.setValue("validUntil", validUntilDate.toISOString().split('T')[0]);
+                                }
+                              }}
+                              data-testid="input-quotation-date"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="validityDays">Validity (days)</Label>
+                            <Input
+                              id="validityDays"
+                              type="number"
+                              min="1"
+                              defaultValue="30"
+                              {...quotationForm.register("validityDays")}
+                              onChange={(e) => {
+                                quotationForm.setValue("validityDays", e.target.value);
+                                // Auto-calculate valid until date
+                                const quotationDate = quotationForm.watch("quotationDate");
+                                if (quotationDate && e.target.value) {
+                                  const date = new Date(quotationDate);
+                                  const validUntilDate = new Date(date);
+                                  validUntilDate.setDate(date.getDate() + parseInt(e.target.value));
+                                  quotationForm.setValue("validUntil", validUntilDate.toISOString().split('T')[0]);
+                                }
+                              }}
+                              data-testid="input-validity-days"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="validUntil">Valid Until</Label>
+                            <Input
+                              id="validUntil"
+                              type="date"
+                              {...quotationForm.register("validUntil")}
+                              className="bg-gray-50 dark:bg-gray-800"
+                              readOnly
+                              data-testid="input-valid-until"
+                            />
+                          </div>
+                        </div>
                       </div>
                       <div className="col-span-2 space-y-2">
                         <Label htmlFor="description">Quotation description</Label>
