@@ -83,6 +83,10 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
         formType: 'quotation',
         parentId: 'quotations'
       });
+    } else {
+      // Fallback: show alert or console log when onCreateNew is not provided
+      console.log('Add new quotation functionality not available in this context');
+      alert('Add quotation functionality is not available in this view');
     }
   };
 
@@ -105,6 +109,10 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
         formType: 'quotation',
         parentId: 'quotations'
       });
+    } else {
+      // Fallback: show alert or console log when onCreateNew is not provided
+      console.log('View quotation functionality not available in this context');
+      alert(`View functionality for quotation ${quotation.quotationNumber} is not available in this view`);
     }
   };
 
