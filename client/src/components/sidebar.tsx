@@ -160,7 +160,7 @@ function SortableNavItem({ item, sectionId, isEditMode, onMenuClick }: { item: a
             ? "bg-orange-500 text-white" 
             : "bg-orange-400 text-white hover:bg-orange-500"
         )}>
-          <IconComponent size={14} />
+          {IconComponent && <IconComponent size={14} />}
         </div>
         <span className="text-sm font-medium">{item.name}</span>
       </button>
