@@ -6,6 +6,7 @@ import { DebugPanel } from "@/components/DebugPanel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
+import Customers from "@/pages/customers";
 import Inventory from "@/pages/inventory";
 import Suppliers from "@/pages/suppliers";
 import ContactPersons from "@/pages/contact-persons";
@@ -24,6 +25,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/dashboard" component={Dashboard} />
+        <Route path="/customers" component={Customers} />
         <Route path="/inventory" component={Inventory} />
         <Route path="/suppliers" component={Suppliers} />
         <Route path="/contacts" component={ContactPersons} />

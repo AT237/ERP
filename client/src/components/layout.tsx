@@ -35,6 +35,8 @@ export default function Layout({ children }: LayoutProps) {
       case '/':
       case '/dashboard':
         return { id: 'dashboard', name: 'Dashboard' };
+      case '/customers':
+        return { id: 'customers', name: 'Customers' };
       case '/inventory':
         return { id: 'inventory', name: 'Stock Management' };
       case '/suppliers':
@@ -172,6 +174,8 @@ export default function Layout({ children }: LayoutProps) {
       switch (tabId) {
         case 'dashboard':
           return '/dashboard';
+        case 'customers':
+          return '/customers';
         case 'inventory':
           return '/inventory';
         case 'suppliers':
