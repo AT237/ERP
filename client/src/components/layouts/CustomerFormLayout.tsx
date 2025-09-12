@@ -179,6 +179,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   id="name"
                   {...form.register("name")}
                   placeholder="Bedrijfsnaam"
+                  autoComplete="off"
                   data-testid="input-customer-name"
                 />
                 {form.formState.errors.name && (
