@@ -149,7 +149,16 @@ export default function Customers() {
   };
 
   const handleEdit = (customer: Customer) => {
-    window.location.href = `/customer-form/${customer.id}`;
+    // Dispatch custom event to open customer edit form in new tab
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: `edit-customer-${customer.id}`,
+        name: `Edit Customer: ${customer.name}`,
+        formType: 'customer',
+        parentId: customer.id
+      }
+    });
+    window.dispatchEvent(event);
   };
 
   const handleDelete = (id: string) => {
@@ -159,7 +168,15 @@ export default function Customers() {
   };
 
   const handleNewCustomer = () => {
-    window.location.href = '/customer-form';
+    // Dispatch custom event to open customer form in new tab
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: 'new-customer',
+        name: 'New Customer',
+        formType: 'customer'
+      }
+    });
+    window.dispatchEvent(event);
   };
 
   // Render table data with proper formatting

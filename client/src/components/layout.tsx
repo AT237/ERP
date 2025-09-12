@@ -566,6 +566,30 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
+      if (activeTab.formType === 'customer') {
+        const CustomerForm = lazy(() => import('@/pages/customer-form'));
+        // Extract customerId from tab.id if editing
+        const customerId = activeTab.id.startsWith('edit-customer-') 
+          ? activeTab.id.replace('edit-customer-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <CustomerForm 
+              customerId={customerId}
+              onSave={() => {
+                // Return to customers tab after save
+                const customersTab = tabs.find(tab => tab.id === 'customers');
+                if (customersTab) {
+                  setActiveTabId('customers');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
       // Default form placeholder
       return (
         <div className="p-6">
