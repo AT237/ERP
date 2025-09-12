@@ -174,6 +174,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       status: "draft",
       quotationDate: format(new Date(), 'yyyy-MM-dd'),
       validUntil: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), // 30 days from now
+      validityDays: 30,
       subtotal: "0.00",
       taxAmount: "0.00",
       totalAmount: "0.00",
@@ -1470,13 +1471,14 @@ ATE Solutions B.V.`);
                               defaultValue="30"
                               {...quotationForm.register("validityDays")}
                               onChange={(e) => {
-                                quotationForm.setValue("validityDays", e.target.value);
+                                const daysValue = parseInt(e.target.value, 10);
+                                quotationForm.setValue("validityDays", daysValue);
                                 // Auto-calculate valid until date
                                 const quotationDate = quotationForm.watch("quotationDate");
                                 if (quotationDate && e.target.value) {
                                   const date = new Date(quotationDate);
                                   const validUntilDate = new Date(date);
-                                  validUntilDate.setDate(date.getDate() + parseInt(e.target.value));
+                                  validUntilDate.setDate(date.getDate() + daysValue);
                                   quotationForm.setValue("validUntil", validUntilDate.toISOString().split('T')[0]);
                                 }
                               }}
