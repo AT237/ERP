@@ -7,7 +7,7 @@ import {
   insertInvoiceSchema, insertInvoiceItemSchema, insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema, insertWorkOrderSchema, insertPackingListSchema,
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
-  insertAddressSchema, insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
+  insertAddressSchema, insertCountrySchema, insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
   insertVatRateSchema, insertCitySchema, insertStatusSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
@@ -231,6 +231,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting address:", error);
       res.status(500).json({ message: "Failed to delete address" });
+    }
+  });
+
+  // Country routes
+  app.get("/api/countries", async (req, res) => {
+    try {
+      const { q } = req.query;
+      let countries;
+      if (q && typeof q === 'string') {
+        countries = await storage.searchCountries(q);
+      } else {
+        countries = await storage.getCountries();
+      }
+      res.json(countries);
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+      res.status(500).json({ message: "Failed to fetch countries" });
+    }
+  });
+
+  app.get("/api/countries/:id", async (req, res) => {
+    try {
+      const country = await storage.getCountry(req.params.id);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      res.json(country);
+    } catch (error) {
+      console.error("Error fetching country:", error);
+      res.status(500).json({ message: "Failed to fetch country" });
+    }
+  });
+
+  app.get("/api/countries/by-code/:code", async (req, res) => {
+    try {
+      const country = await storage.getCountryByCode(req.params.code);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      res.json(country);
+    } catch (error) {
+      console.error("Error fetching country:", error);
+      res.status(500).json({ message: "Failed to fetch country" });
+    }
+  });
+
+  app.post("/api/countries", async (req, res) => {
+    try {
+      const countryData = insertCountrySchema.parse(req.body);
+      const country = await storage.createCountry(countryData);
+      res.status(201).json(country);
+    } catch (error) {
+      console.error("Error creating country:", error);
+      res.status(400).json({ message: "Failed to create country" });
+    }
+  });
+
+  app.patch("/api/countries/:id", async (req, res) => {
+    try {
+      const countryData = insertCountrySchema.partial().parse(req.body);
+      const country = await storage.updateCountry(req.params.id, countryData);
+      res.json(country);
+    } catch (error) {
+      console.error("Error updating country:", error);
+      res.status(400).json({ message: "Failed to update country" });
+    }
+  });
+
+  app.delete("/api/countries/:id", async (req, res) => {
+    try {
+      await storage.deleteCountry(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting country:", error);
+      res.status(500).json({ message: "Failed to delete country" });
     }
   });
 

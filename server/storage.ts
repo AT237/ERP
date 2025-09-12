@@ -32,6 +32,7 @@ export interface IStorage {
   getCountries(): Promise<Country[]>;
   getCountry(id: string): Promise<Country | undefined>;
   getCountryByCode(code: string): Promise<Country | undefined>;
+  searchCountries(query: string): Promise<Country[]>;
   createCountry(country: InsertCountry): Promise<Country>;
   updateCountry(id: string, country: Partial<InsertCountry>): Promise<Country>;
   deleteCountry(id: string): Promise<void>;
@@ -245,6 +246,15 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCountry(id: string): Promise<void> {
     await db.delete(countries).where(eq(countries.id, id));
+  }
+
+  async searchCountries(query: string): Promise<Country[]> {
+    return await db.select().from(countries)
+      .where(or(
+        ilike(countries.name, `%${query}%`),
+        ilike(countries.code, `%${query}%`)
+      ))
+      .orderBy(countries.name);
   }
 
   // Customer methods
