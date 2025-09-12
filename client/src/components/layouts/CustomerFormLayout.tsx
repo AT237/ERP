@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { AddressSelectWithAdd } from "@/components/ui/address-select-with-add";
 import { ContactPersonSelectWithAdd } from "@/components/ui/contact-person-select-with-add";
+import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
@@ -19,18 +20,39 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Save, ArrowLeft, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Customer, InsertCustomer } from "@shared/schema";
+import type { Customer, InsertCustomer, Country } from "@shared/schema";
 import { z } from "zod";
 
-// Use the same schema as in customers.tsx
-const customerFormSchema = insertCustomerSchema.extend({
-  paymentTerms: z.string().min(1, "Betalingsvoorwaarden zijn verplicht"),
+// Base form schema for customer data
+const baseCustomerFormSchema = insertCustomerSchema.extend({
+  paymentTerms: z.string().min(1, "Betalingsvoorwaarden zijn verplicht").transform(val => parseInt(val, 10)),
   kvkNummer: z.string().optional().refine((val) => !val || /^\d{8}$/.test(val), {
     message: "KVK nummer moet 8 cijfers bevatten"
   }),
+  countryCode: z.string().optional(),
+  areaCode: z.string().optional(),
 });
 
-type CustomerFormData = z.infer<typeof customerFormSchema>;
+// Create dynamic schema based on country requirements
+const createCustomerFormSchema = (countryRequirements?: { requiresBtw?: boolean; requiresAreaCode?: boolean }) => {
+  // Start with base schema, but override specific fields based on requirements
+  const schemaFields = {
+    ...baseCustomerFormSchema.shape,
+    taxId: countryRequirements?.requiresBtw 
+      ? z.string().min(1, "BTW nummer is verplicht voor dit land")
+      : z.string().optional().nullable(),
+    areaCode: countryRequirements?.requiresAreaCode
+      ? z.string().min(1, "Area code is verplicht voor dit land")
+      : z.string().optional(),
+  };
+  
+  return z.object(schemaFields);
+};
+
+// Use a flexible type for form data to handle dynamic validation
+type FormFieldValues = {
+  [key: string]: any;
+};
 
 interface CustomerFormLayoutProps {
   onSave: () => void;
@@ -49,15 +71,29 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
   const [activeTab, setActiveTab] = useState("general");
   const [memos, setMemos] = useState<Memo[]>([]);
   const [newMemo, setNewMemo] = useState({ title: "", content: "", isInternal: false });
+  const [currentCountryRequirements, setCurrentCountryRequirements] = useState<{ requiresBtw?: boolean; requiresAreaCode?: boolean }>({});
   const { toast } = useToast();
   const isEditing = !!customerId;
 
-  // Form setup
-  const form = useForm<CustomerFormData>({
-    resolver: zodResolver(customerFormSchema),
+  // Create schema dynamically based on current country requirements
+  const customerFormSchema = useMemo(() => {
+    console.log("🔄 Creating new validation schema", currentCountryRequirements);
+    return createCustomerFormSchema(currentCountryRequirements);
+  }, [currentCountryRequirements]);
+
+  // Form setup with dynamic resolver - use key to force recreation when schema changes
+  const formKey = useMemo(() => {
+    return `form-${JSON.stringify(currentCountryRequirements)}`;
+  }, [currentCountryRequirements]);
+
+  const form = useForm({
+    resolver: zodResolver(customerFormSchema as any),
+    mode: 'onBlur', // Validate on blur for better UX
     defaultValues: {
       name: "",
       kvkNummer: "",
+      countryCode: "",
+      areaCode: "",
       email: "",
       phone: "",
       mobile: "",
@@ -77,12 +113,63 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
     enabled: !!customerId,
   });
 
+  // Fetch country data when countryCode changes
+  const currentCountryCode = form.watch("countryCode");
+  const { data: countryData, isLoading: isLoadingCountry } = useQuery({
+    queryKey: ["/api/countries/by-code", currentCountryCode],
+    queryFn: async () => {
+      if (!currentCountryCode) return null;
+      const response = await fetch(`/api/countries/by-code/${currentCountryCode}`);
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!currentCountryCode,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Update validation schema when country changes
+  useEffect(() => {
+    if (countryData) {
+      const newRequirements = {
+        requiresBtw: countryData.requiresBtw || false,
+        requiresAreaCode: countryData.requiresAreaCode || false,
+      };
+      console.log("🌍 Country data updated", { country: countryData.name, requirements: newRequirements });
+      
+      // Only update if requirements actually changed
+      const currentReq = JSON.stringify(currentCountryRequirements);
+      const newReq = JSON.stringify(newRequirements);
+      if (currentReq !== newReq) {
+        setCurrentCountryRequirements(newRequirements);
+        
+        // Force form re-validation with new schema
+        setTimeout(() => {
+          form.clearErrors();
+          // Trigger validation for fields that might now be required
+          if (newRequirements.requiresBtw) {
+            form.trigger('taxId');
+          }
+          if (newRequirements.requiresAreaCode) {
+            form.trigger('areaCode');
+          }
+        }, 100);
+      }
+    } else if (!currentCountryCode) {
+      console.log("🌍 No country selected, resetting requirements");
+      // Reset to base schema when no country selected
+      setCurrentCountryRequirements({});
+      form.clearErrors();
+    }
+  }, [countryData, currentCountryCode, form, currentCountryRequirements]);
+
   // Update form when customer data loads
   useEffect(() => {
     if (customer) {
       form.reset({
         name: customer.name || "",
         kvkNummer: customer.kvkNummer || "",
+        countryCode: customer.countryCode || "",
+        areaCode: customer.areaCode || "",
         email: customer.email || "",
         phone: customer.phone || "",
         mobile: customer.mobile || "",
@@ -99,7 +186,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: async (data: CustomerFormData) => {
+    mutationFn: async (data: any) => {
       const response = await apiRequest("POST", "/api/customers", data);
       return response.json();
     },
@@ -122,7 +209,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: CustomerFormData) => {
+    mutationFn: async (data: any) => {
       const response = await apiRequest("PUT", `/api/customers/${customerId}`, data);
       return response.json();
     },
@@ -146,11 +233,23 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
   });
 
   // Form handlers
-  const onSubmit = (data: CustomerFormData) => {
+  const onSubmit = (data: any) => {
+    console.log("💾 Form submission data before transformation:", data);
+    
+    // Transform the data to match expected types
+    const transformedData = {
+      ...data,
+      // Ensure paymentTerms is a number (schema should handle this, but be explicit)
+      paymentTerms: typeof data.paymentTerms === 'string' ? parseInt(data.paymentTerms, 10) : data.paymentTerms,
+    };
+    
+    console.log("💾 Form submission data after transformation:", transformedData);
+    console.log("💾 paymentTerms type:", typeof transformedData.paymentTerms, "value:", transformedData.paymentTerms);
+    
     if (isEditing) {
-      updateMutation.mutate(data);
+      updateMutation.mutate(transformedData);
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(transformedData);
     }
   };
 
@@ -215,13 +314,27 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="taxId">BTW-nummer</Label>
+                <Label htmlFor="taxId">
+                  BTW-nummer
+                  {currentCountryRequirements.requiresBtw && (
+                    <span className="text-red-600 ml-1">*</span>
+                  )}
+                </Label>
                 <Input
                   id="taxId"
                   {...form.register("taxId")}
                   placeholder="NL123456789B01"
                   data-testid="input-customer-taxId"
+                  className={currentCountryRequirements.requiresBtw ? "border-orange-300 focus:border-orange-500" : ""}
                 />
+                {currentCountryRequirements.requiresBtw && (
+                  <p className="text-sm text-orange-600">
+                    BTW nummer is verplicht voor {countryData?.name || 'dit land'}
+                  </p>
+                )}
+                {form.formState.errors.taxId && (
+                  <p className="text-sm text-red-600">{form.formState.errors.taxId.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -243,12 +356,49 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               </div>
             </div>
 
+            {/* Country and Area Code Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="countryCode">Land</Label>
+                <CountrySelectWithAdd
+                  value={form.watch("countryCode") || ""}
+                  onValueChange={(value) => form.setValue("countryCode", value)}
+                  placeholder="Selecteer land..."
+                  testId="select-customer-country"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="areaCode">
+                  Area Code
+                  {currentCountryRequirements.requiresAreaCode && (
+                    <span className="text-red-600 ml-1">*</span>
+                  )}
+                </Label>
+                <Input
+                  id="areaCode"
+                  {...form.register("areaCode")}
+                  placeholder={currentCountryCode === 'ET' ? '+251' : '+31'}
+                  data-testid="input-customer-areaCode"
+                  className={currentCountryRequirements.requiresAreaCode ? "border-orange-300 focus:border-orange-500" : ""}
+                />
+                {currentCountryRequirements.requiresAreaCode && (
+                  <p className="text-sm text-orange-600">
+                    Area code is verplicht voor {countryData?.name || 'dit land'}
+                  </p>
+                )}
+                {form.formState.errors.areaCode && (
+                  <p className="text-sm text-red-600">{form.formState.errors.areaCode.message}</p>
+                )}
+              </div>
+            </div>
+
             {/* Address Selection */}
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="addressId">Adres</Label>
                 <AddressSelectWithAdd
-                  value={form.watch("addressId")}
+                  value={form.watch("addressId") || ""}
                   onValueChange={(value) => form.setValue("addressId", value)}
                   placeholder="Selecteer adres..."
                   testId="select-customer-address"
@@ -261,7 +411,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               <div className="space-y-2">
                 <Label htmlFor="contactPersonEmail">Contactpersoon</Label>
                 <ContactPersonSelectWithAdd
-                  value={form.watch("contactPersonEmail")}
+                  value={form.watch("contactPersonEmail") || ""}
                   onValueChange={(value) => form.setValue("contactPersonEmail", value)}
                   customerId={customerId}
                   placeholder="Selecteer contactpersoon..."

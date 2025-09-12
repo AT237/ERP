@@ -85,7 +85,7 @@ export function CountrySelectWithAdd({
         description: "Country created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/countries"] });
-      onValueChange?.(newCountry.id);
+      onValueChange?.(newCountry.code);
       setShowAddDialog(false);
       countryForm.reset();
     },
@@ -106,7 +106,7 @@ export function CountrySelectWithAdd({
     return `${country.name} (${country.code})`;
   };
 
-  const selectedCountry = countries.find(country => country.id === value);
+  const selectedCountry = countries.find(country => country.code === value);
 
   return (
     <>
@@ -156,9 +156,10 @@ export function CountrySelectWithAdd({
                 {countries.map((country) => (
                   <CommandItem
                     key={country.id}
-                    value={country.id}
+                    value={country.code}
                     onSelect={() => {
-                      onValueChange?.(country.id);
+                      console.log("🌍 Country selected:", { code: country.code, name: country.name, requirements: { btw: country.requiresBtw, areaCode: country.requiresAreaCode } });
+                      onValueChange?.(country.code);
                       setOpen(false);
                     }}
                     className="flex items-center"
@@ -166,7 +167,7 @@ export function CountrySelectWithAdd({
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        value === country.id ? "opacity-100" : "opacity-0"
+                        value === country.code ? "opacity-100" : "opacity-0"
                       )}
                     />
                     <div>
