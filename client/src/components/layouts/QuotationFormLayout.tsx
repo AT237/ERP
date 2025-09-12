@@ -42,13 +42,18 @@ interface Memo {
 }
 
 // Form schemas
-const quotationFormSchema = insertQuotationSchema.extend({
+const quotationFormSchema = insertQuotationSchema.omit({
+  subtotal: true,
+  taxAmount: true, 
+  totalAmount: true,
+}).extend({
   subtotal: z.string().min(1, "Subtotal is required"),
   taxAmount: z.string().optional(),
   totalAmount: z.string().min(1, "Total amount is required"),
   quotationDate: z.string().optional(),
   validUntil: z.string().optional(),
   isBudgetQuotation: z.boolean().optional(),
+  validityDays: z.number().optional(),
 });
 
 const quotationItemFormSchema = insertQuotationItemSchema.extend({
@@ -456,9 +461,9 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     // Convert number fields to strings as expected by backend
     const processedData = {
       ...data,
-      subtotal: typeof data.subtotal === 'number' ? data.subtotal.toString() : data.subtotal,
-      taxAmount: typeof data.taxAmount === 'number' ? data.taxAmount.toString() : data.taxAmount,
-      totalAmount: typeof data.totalAmount === 'number' ? data.totalAmount.toString() : data.totalAmount,
+      subtotal: typeof (data as any).subtotal === 'number' ? (data as any).subtotal.toString() : (data as any).subtotal,
+      taxAmount: typeof (data as any).taxAmount === 'number' ? (data as any).taxAmount.toString() : (data as any).taxAmount,
+      totalAmount: typeof (data as any).totalAmount === 'number' ? (data as any).totalAmount.toString() : (data as any).totalAmount,
       validityDays: data.validityDays ? parseInt(data.validityDays.toString(), 10) : undefined
     };
     
