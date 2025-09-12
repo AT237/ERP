@@ -276,6 +276,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         status: existingQuotation.status || "draft",
         quotationDate: existingQuotation.quotationDate ? format(new Date(existingQuotation.quotationDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
         validUntil: existingQuotation.validUntil ? format(new Date(existingQuotation.validUntil), 'yyyy-MM-dd') : "",
+        validityDays: existingQuotation.validityDays || 30,
         subtotal: existingQuotation.subtotal?.toString() || "0.00",
         taxAmount: existingQuotation.taxAmount?.toString() || "0.00",
         totalAmount: existingQuotation.totalAmount?.toString() || "0.00",
