@@ -769,7 +769,7 @@ export default function Layout({ children }: LayoutProps) {
                   data-testid={`tab-${tab.id}`}
                   style={{ fontFamily: 'Arial, sans-serif' }}
                 >
-                  <span className="text-xs font-medium truncate max-w-24">{tab.name}</span>
+                  <span className="text-xl font-bold truncate max-w-56">{tab.name}</span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
