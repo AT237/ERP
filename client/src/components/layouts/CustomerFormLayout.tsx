@@ -72,6 +72,12 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
   const [memos, setMemos] = useState<Memo[]>([]);
   const [newMemo, setNewMemo] = useState({ title: "", content: "", isInternal: false });
   const [currentCountryRequirements, setCurrentCountryRequirements] = useState<{ requiresBtw?: boolean; requiresAreaCode?: boolean }>({});
+  
+  // Change tracking state
+  const [originalValues, setOriginalValues] = useState<FormFieldValues>({});
+  const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
   const { toast } = useToast();
   const isEditing = !!customerId;
 
@@ -106,6 +112,44 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       status: "active",
     },
   });
+
+  // Change tracking helpers
+  const compareValues = (original: any, current: any) => {
+    if (typeof original !== typeof current) return false;
+    if (original === null || current === null) return original === current;
+    return String(original).trim() === String(current).trim();
+  };
+
+  const checkForChanges = () => {
+    const currentValues = form.getValues();
+    const modifiedFieldsSet = new Set<string>();
+    let hasChanges = false;
+
+    // Compare each field with original values
+    Object.keys(originalValues).forEach(fieldName => {
+      const originalValue = originalValues[fieldName];
+      const currentValue = currentValues[fieldName as keyof typeof currentValues];
+      
+      if (!compareValues(originalValue, currentValue)) {
+        modifiedFieldsSet.add(fieldName);
+        hasChanges = true;
+      }
+    });
+
+    setModifiedFields(modifiedFieldsSet);
+    setHasUnsavedChanges(hasChanges);
+    
+    return hasChanges;
+  };
+
+  // Get CSS class for field based on whether it's modified
+  const getFieldClassName = (fieldName: string, baseClassName: string = "") => {
+    const isModified = modifiedFields.has(fieldName);
+    if (isModified) {
+      return `${baseClassName} ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950`.trim();
+    }
+    return baseClassName;
+  };
 
   // Load customer data if editing
   const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer>({
@@ -162,10 +206,10 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
     }
   }, [countryData, currentCountryCode, form, currentCountryRequirements]);
 
-  // Update form when customer data loads
+  // Update form when customer data loads and store original values for change tracking
   useEffect(() => {
     if (customer) {
-      form.reset({
+      const formData = {
         name: customer.name || "",
         kvkNummer: customer.kvkNummer || "",
         countryCode: customer.countryCode || "",
@@ -180,9 +224,38 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
         language: customer.language || "nl",
         paymentTerms: customer.paymentTerms?.toString() || "30",
         status: customer.status || "active",
-      });
+      };
+      
+      form.reset(formData);
+      
+      // Store original values for change tracking
+      setOriginalValues(formData);
+      setModifiedFields(new Set());
+      setHasUnsavedChanges(false);
+    } else {
+      // For new customer, store default values as original
+      const defaultFormData = form.getValues();
+      setOriginalValues(defaultFormData);
+      setModifiedFields(new Set());
+      setHasUnsavedChanges(false);
     }
   }, [customer, form]);
+
+  // Watch for changes in form values and update change tracking
+  const watchedValues = form.watch();
+  useEffect(() => {
+    if (Object.keys(originalValues).length > 0) {
+      checkForChanges();
+    }
+  }, [watchedValues]);
+
+  // Communicate unsaved changes status to parent Layout
+  useEffect(() => {
+    const tabId = customerId ? `edit-customer-${customerId}` : 'new-customer';
+    window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+      detail: { tabId, hasUnsavedChanges }
+    }));
+  }, [hasUnsavedChanges, customerId]);
 
   // Mutations
   const createMutation = useMutation({
@@ -291,6 +364,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   placeholder="Bedrijfsnaam"
                   autoComplete="off"
                   data-testid="input-customer-name"
+                  className={getFieldClassName("name")}
                 />
                 {form.formState.errors.name && (
                   <p className="text-sm text-red-600">{form.formState.errors.name.message}</p>
@@ -305,6 +379,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   placeholder="12345678"
                   maxLength={8}
                   data-testid="input-customer-kvk-nummer"
+                  className={getFieldClassName("kvkNummer")}
                 />
                 {form.formState.errors.kvkNummer && (
                   <p className="text-sm text-red-600">{form.formState.errors.kvkNummer.message}</p>
@@ -325,7 +400,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   {...form.register("taxId")}
                   placeholder="NL123456789B01"
                   data-testid="input-customer-taxId"
-                  className={currentCountryRequirements.requiresBtw ? "border-orange-300 focus:border-orange-500" : ""}
+                  className={getFieldClassName("taxId", currentCountryRequirements.requiresBtw ? "border-orange-300 focus:border-orange-500" : "")}
                 />
                 {currentCountryRequirements.requiresBtw && (
                   <p className="text-sm text-orange-600">
@@ -439,6 +514,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   {...form.register("bankAccount")}
                   placeholder="NL91ABNA0417164300"
                   data-testid="input-customer-bankAccount"
+                  className={getFieldClassName("bankAccount")}
                 />
               </div>
 
@@ -517,6 +593,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   {...form.register("email")}
                   placeholder="info@bedrijf.nl"
                   data-testid="input-customer-email"
+                  className={getFieldClassName("email")}
                 />
               </div>
 
@@ -527,6 +604,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   {...form.register("phone")}
                   placeholder="+31 20 123 4567"
                   data-testid="input-customer-phone"
+                  className={getFieldClassName("phone")}
                 />
               </div>
             </div>
@@ -539,6 +617,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   {...form.register("mobile")}
                   placeholder="+31 6 12345678"
                   data-testid="input-customer-mobile"
+                  className={getFieldClassName("mobile")}
                 />
               </div>
             </div>

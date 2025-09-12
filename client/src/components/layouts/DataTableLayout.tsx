@@ -471,7 +471,7 @@ export function DataTableLayout<T = any>({
           </div>
           
           {/* Actions Section - Right of title like original */}
-          <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+          <div className="ml-[350px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
             {/* Search */}
             <div className="relative">
               <Input
@@ -754,7 +754,7 @@ export function DataTableLayout<T = any>({
                             ? 'bg-muted/50' 
                             : isEven 
                               ? 'bg-white dark:bg-gray-950' 
-                              : 'bg-gray-50 dark:bg-gray-900/50'
+                              : 'bg-white dark:bg-gray-900/50'
                         }`}
                         style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
                         onDoubleClick={() => onRowDoubleClick?.(row)}

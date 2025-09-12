@@ -4,6 +4,16 @@ import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import Sidebar from "./sidebar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import SectionInfoPanel from "./section-info-panel";
 import { CustomerProvider } from "@/contexts/CustomerContext";
@@ -72,6 +82,11 @@ export default function Layout({ children }: LayoutProps) {
   ]);
   const [activeTabId, setActiveTabId] = useState(currentPage.id);
   
+  // Unsaved changes tracking
+  const [tabsWithUnsavedChanges, setTabsWithUnsavedChanges] = useState<Set<string>>(new Set());
+  const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
+  const [pendingCloseTabId, setPendingCloseTabId] = useState<string | null>(null);
+  
   // Ref to track last saved values to prevent unnecessary saves
   const lastSavedTab = useRef<{tabId: string, tabType: string} | null>(null);
 
@@ -135,6 +150,27 @@ export default function Layout({ children }: LayoutProps) {
       }
     }
   }, [activeTabId, tabs]); // Only depend on activeTabId and tabs, not preferences
+
+  // Listen for unsaved changes events from form components
+  useEffect(() => {
+    const handleUnsavedChanges = (event: CustomEvent) => {
+      const { tabId, hasUnsavedChanges } = event.detail;
+      setTabsWithUnsavedChanges(prev => {
+        const newSet = new Set(prev);
+        if (hasUnsavedChanges) {
+          newSet.add(tabId);
+        } else {
+          newSet.delete(tabId);
+        }
+        return newSet;
+      });
+    };
+
+    window.addEventListener('tab-unsaved-changes', handleUnsavedChanges as EventListener);
+    return () => {
+      window.removeEventListener('tab-unsaved-changes', handleUnsavedChanges as EventListener);
+    };
+  }, []);
 
   // Update tab when route changes
   useEffect(() => {
@@ -312,6 +348,18 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const closeTab = (tabId: string) => {
+    // Check if tab has unsaved changes
+    if (tabsWithUnsavedChanges.has(tabId)) {
+      setPendingCloseTabId(tabId);
+      setShowUnsavedChangesDialog(true);
+      return;
+    }
+    
+    // If no unsaved changes, proceed with closing
+    performCloseTab(tabId);
+  };
+
+  const performCloseTab = (tabId: string) => {
     setTabs(prevTabs => {
       const newTabs = prevTabs.filter(tab => tab.id !== tabId);
       
@@ -328,6 +376,26 @@ export default function Layout({ children }: LayoutProps) {
       
       return newTabs;
     });
+    
+    // Clean up unsaved changes tracking
+    setTabsWithUnsavedChanges(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(tabId);
+      return newSet;
+    });
+  };
+
+  const handleConfirmCloseTab = () => {
+    if (pendingCloseTabId) {
+      performCloseTab(pendingCloseTabId);
+      setPendingCloseTabId(null);
+    }
+    setShowUnsavedChangesDialog(false);
+  };
+
+  const handleCancelCloseTab = () => {
+    setPendingCloseTabId(null);
+    setShowUnsavedChangesDialog(false);
   };
 
   const motivationalMessages = [
@@ -730,6 +798,26 @@ export default function Layout({ children }: LayoutProps) {
           </main>
         </div>
       </div>
+      
+      {/* Unsaved Changes Confirmation Dialog */}
+      <AlertDialog open={showUnsavedChangesDialog} onOpenChange={setShowUnsavedChangesDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Niet-opgeslagen wijzigingen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je hebt niet-opgeslagen wijzigingen in dit tabblad. Weet je zeker dat je dit tabblad wilt sluiten zonder op te slaan?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelCloseTab}>
+              Annuleren
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCloseTab} className="bg-orange-600 hover:bg-orange-700">
+              Sluiten zonder opslaan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
