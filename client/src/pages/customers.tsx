@@ -61,7 +61,7 @@ export default function Customers() {
     const event = new CustomEvent('open-form-tab', {
       detail: {
         id: `edit-customer-${customer.id}`,
-        name: `Edit Customer: ${customer.name}`,
+        name: `${formatCustomerNumber(customer.customerNumber)}`,
         formType: 'customer',
         parentId: customer.id
       }
@@ -112,6 +112,7 @@ export default function Customers() {
   const renderTableData = (customers: Customer[]) => {
     return customers.map((customer) => ({
       ...customer,
+      customerNumber: formatCustomerNumber(customer.customerNumber),
       name: customer.name,
       email: customer.email || '',
       phone: customer.phone || '',
