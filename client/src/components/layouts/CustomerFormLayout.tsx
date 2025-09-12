@@ -416,11 +416,11 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
   const headerFields: InfoField[] = [
     {
       label: "Customer ID",
-      value: customerId ? customer?.customerNumber || customerId.slice(0, 8) : 'Nieuw'
+      value: customerId ? customer?.customerNumber || customerId.slice(0, 8) : 'New customer'
     },
     {
       label: "Status", 
-      value: isEditing ? "Edit" : "New"
+      value: isEditing ? "Edit" : "Draft"
     }
   ];
 
