@@ -418,9 +418,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         ...data,
         quotationDate: data.quotationDate ? new Date(data.quotationDate) : new Date(),
         validUntil: data.validUntil ? new Date(data.validUntil) : undefined,
-        subtotal: parseFloat(data.subtotal),
-        taxAmount: parseFloat(data.taxAmount || "0"),
-        totalAmount: parseFloat(data.totalAmount),
+        // Keep as strings as expected by backend schema
+        subtotal: data.subtotal,
+        taxAmount: data.taxAmount || "0",
+        totalAmount: data.totalAmount,
       };
       
       const response = await fetch(`/api/quotations/${quotationId}`, {
