@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, X, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Popover, PopoverContent, PopoverTrigger 
@@ -8,37 +8,8 @@ import {
 import { 
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList 
 } from "@/components/ui/command";
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle 
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertCustomerSchema } from "@shared/schema";
+import { CustomerEditorDialog } from "@/components/layouts/CustomerEditorDialog";
 import { cn } from "@/lib/utils";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
-
-const customerFormSchema = insertCustomerSchema.omit({ id: true }).extend({
-  name: z.string().min(1, "Company name is required"),
-  email: z.string().optional(),
-  phone: z.string().optional(),
-  language: z.string().optional(),
-  paymentTerms: z.string().min(1, "Payment terms is required"),
-  street: z.string().optional(),
-  houseNumber: z.string().optional(),
-  postalCode: z.string().optional(),
-  city: z.string().optional(),
-  country: z.string().optional(),
-  primaryContactName: z.string().optional(),
-  primaryContactEmail: z.string().optional(),
-  primaryContactPhone: z.string().optional(),
-});
-
-type CustomerFormData = z.infer<typeof customerFormSchema>;
 
 interface CustomerSelectProps {
   value?: string;
@@ -60,225 +31,146 @@ export function CustomerSelect({
   customers: externalCustomers
 }: CustomerSelectProps) {
   const [open, setOpen] = useState(false);
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [showEditorDialog, setShowEditorDialog] = useState(false);
+  const [editorMode, setEditorMode] = useState<'create' | 'edit'>('create');
+  const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
 
   // Load customers only when not provided externally
   const { data: internalCustomers = [] } = useQuery({
     queryKey: ["/api/customers"],
-    enabled: !externalCustomers, // Only fetch if no external customers provided
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !externalCustomers && (open || !!onOpen), // Only load when popover opens or onOpen is provided
+    staleTime: 30000,
     refetchOnWindowFocus: false,
   });
 
-  // Use external customers if provided, otherwise use internal query
+  // Use external customers if provided, otherwise use internal
   const customers = externalCustomers || internalCustomers;
-  const customersTyped = customers as Array<{
-    id: string;
-    name: string;
-    email?: string;
-    phone?: string;
-    city?: string;
-  }>;
 
-  // Customer form
-  const customerForm = useForm<CustomerFormData>({
-    resolver: zodResolver(customerFormSchema),
-    defaultValues: {
-      language: "nl",
-      paymentTerms: "30",
-      country: "Nederland",
-    },
-  });
+  const selectedCustomer = customers.find(customer => customer.id === value);
 
-  // Create customer mutation
-  const createCustomerMutation = useMutation({
-    mutationFn: async (data: CustomerFormData) => {
-      const response = await apiRequest("POST", "/api/customers", data);
-      return response.json();
-    },
-    onSuccess: (newCustomer) => {
-      toast({
-        title: "Success",
-        description: "Customer created successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
-      onValueChange?.(newCustomer.id);
-      setShowAddDialog(false);
-      customerForm.reset();
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create customer",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Edit customer mutation
-  const editCustomerMutation = useMutation({
-    mutationFn: async (data: CustomerFormData & { id: string }) => {
-      const response = await apiRequest("PUT", `/api/customers/${data.id}`, data);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Customer updated successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
-      setShowEditDialog(false);
-      setEditingCustomer(null);
-      customerForm.reset();
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update customer",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleCreateCustomer = (data: CustomerFormData) => {
-    createCustomerMutation.mutate(data);
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (newOpen && onOpen) {
+      onOpen(); // Trigger lazy loading callback
+    }
   };
 
-  const handleEditCustomer = (data: CustomerFormData) => {
-    if (!editingCustomer) return;
-    const processedData = {
-      ...data,
-      id: editingCustomer,
-    };
-    editCustomerMutation.mutate(processedData);
-  };
-
-  const openEditDialog = (customer: any) => {
-    setEditingCustomer(customer.id);
-    // Pre-populate form with customer data
-    customerForm.reset({
-      name: customer.name || "",
-      email: customer.email || "",
-      phone: customer.phone || "",
-      street: customer.street || "",
-      houseNumber: customer.houseNumber || "",
-      postalCode: customer.postalCode || "",
-      city: customer.city || "",
-      country: customer.country || "Nederland",
-      language: customer.language || "nl",
-      paymentTerms: customer.paymentTerms?.toString() || "30",
-      primaryContactName: customer.primaryContactName || "",
-      primaryContactEmail: customer.primaryContactEmail || "",
-      primaryContactPhone: customer.primaryContactPhone || "",
-    });
-    setShowEditDialog(true);
+  const handleCustomerSelect = (customerId: string) => {
+    onValueChange?.(customerId);
     setOpen(false);
   };
 
-  const selectedCustomer = customersTyped.find(customer => customer.id === value);
+  const handleCreateCustomer = () => {
+    setEditorMode('create');
+    setEditingCustomerId(null);
+    setShowEditorDialog(true);
+    setOpen(false);
+  };
+
+  const handleEditCustomer = (customerId: string) => {
+    setEditorMode('edit');
+    setEditingCustomerId(customerId);
+    setShowEditorDialog(true);
+    setOpen(false);
+  };
+
+  const handleEditorSuccess = (customerId: string) => {
+    onValueChange?.(customerId);
+    setShowEditorDialog(false);
+    setEditingCustomerId(null);
+  };
 
   return (
     <>
-      <Popover open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (isOpen && onOpen) {
-          onOpen(); // Trigger lazy loading when popover opens
-        }
-      }}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className={cn("w-full justify-between", className)}
+            className={cn("justify-between", className)}
             data-testid={testId}
           >
-            {selectedCustomer ? selectedCustomer.name : placeholder}
+            <div className="flex items-center gap-2">
+              {selectedCustomer ? (
+                <div className="flex flex-col items-start">
+                  <span className="font-medium">{selectedCustomer.name}</span>
+                  {selectedCustomer.city && (
+                    <span className="text-xs text-gray-500">{selectedCustomer.city}</span>
+                  )}
+                </div>
+              ) : (
+                placeholder
+              )}
+            </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent 
-          className="p-0 max-h-[300px]" 
-          align="start" 
-          sideOffset={4}
-          style={{ width: 'var(--radix-popover-trigger-width)' }}
-        >
-          <Command
-            filter={(value, search) => {
-              // Custom filter logic for "contains" search
-              const customer = customersTyped.find(c => c.name === value);
-              if (!customer) return 0;
-              
-              const searchLower = search.toLowerCase();
-              return (
-                customer.name?.toLowerCase().includes(searchLower) ||
-                customer.email?.toLowerCase().includes(searchLower) ||
-                customer.phone?.toLowerCase().includes(searchLower) ||
-                customer.city?.toLowerCase().includes(searchLower)
-              ) ? 1 : 0;
-            }}
-          >
-            <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-              <CommandInput 
-                placeholder="Search customers..." 
-                className="flex-1 border-0 bg-transparent outline-none focus:ring-0 pr-2"
-              />
-              <div className="flex-shrink-0 ml-auto">
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="icon"
-                  className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                  onClick={() => setShowAddDialog(true)}
-                  data-testid={`${testId}-add-button`}
+        <PopoverContent className="w-[400px] p-0">
+          <Command>
+            <CommandInput placeholder="Search customers..." />
+            <CommandList>
+              <CommandEmpty>
+                <div className="flex flex-col items-center gap-2 py-4">
+                  <p className="text-sm text-muted-foreground">No customers found</p>
+                  <Button
+                    size="sm"
+                    onClick={handleCreateCustomer}
+                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                    data-testid="button-create-customer-from-empty"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Customer
+                  </Button>
+                </div>
+              </CommandEmpty>
+              <CommandGroup>
+                {/* Add Customer Button */}
+                <CommandItem
+                  onSelect={handleCreateCustomer}
+                  className="flex items-center gap-2 text-orange-600 bg-orange-50 hover:bg-orange-100"
+                  data-testid="button-add-customer"
                 >
                   <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <CommandList>
-              <CommandEmpty>No customer found.</CommandEmpty>
-              <CommandGroup>
-                {customersTyped.map((customer) => (
+                  <span className="font-medium">Add New Customer</span>
+                </CommandItem>
+
+                {/* Customer List */}
+                {customers.map((customer) => (
                   <CommandItem
                     key={customer.id}
-                    value={customer.name}
-                    onSelect={() => {
-                      onValueChange?.(customer.id);
-                      setOpen(false);
-                    }}
-                    className="flex items-center justify-between"
+                    value={`${customer.name} ${customer.email || ''} ${customer.city || ''}`}
+                    onSelect={() => handleCustomerSelect(customer.id)}
+                    className="flex items-center justify-between group"
+                    data-testid={`option-customer-${customer.id}`}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-2">
                       <Check
                         className={cn(
                           "mr-2 h-4 w-4",
                           value === customer.id ? "opacity-100" : "opacity-0"
                         )}
                       />
-                      <div>
-                        <div className="font-medium">{customer.name}</div>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{customer.name}</span>
                         {customer.city && (
-                          <div className="text-sm text-muted-foreground">{customer.city}</div>
+                          <span className="text-xs text-gray-500">{customer.city}</span>
                         )}
                       </div>
                     </div>
+                    
+                    {/* Edit Button */}
                     <Button
-                      type="button"
+                      size="sm"
                       variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
                       onClick={(e) => {
-                        e.preventDefault();
                         e.stopPropagation();
-                        openEditDialog(customer);
+                        handleEditCustomer(customer.id);
                       }}
-                      data-testid={`${testId}-edit-${customer.id}`}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 hover:bg-orange-100"
+                      data-testid={`button-edit-customer-${customer.id}`}
                     >
-                      <Search className="h-3 w-3" />
+                      <Search className="h-3 w-3 text-orange-600" />
                     </Button>
                   </CommandItem>
                 ))}
@@ -288,375 +180,14 @@ export function CustomerSelect({
         </PopoverContent>
       </Popover>
 
-      {/* Add Customer Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add New Customer</DialogTitle>
-          </DialogHeader>
-          
-          <form onSubmit={customerForm.handleSubmit(handleCreateCustomer)} className="space-y-4">
-            {/* Basic Information */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Company Name *</Label>
-                <Input
-                  id="name"
-                  {...customerForm.register("name")}
-                  data-testid="input-customer-name"
-                />
-                {customerForm.formState.errors.name && (
-                  <p className="text-sm text-red-600">{customerForm.formState.errors.name.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="language">Language</Label>
-                <Select 
-                  onValueChange={(value) => customerForm.setValue("language", value)}
-                  value={customerForm.watch("language") || "nl"}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nl">Nederlands</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="de">Deutsch</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...customerForm.register("email")}
-                  data-testid="input-customer-email"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  {...customerForm.register("phone")}
-                  data-testid="input-customer-phone"
-                />
-              </div>
-            </div>
-
-            {/* Address */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="street">Street</Label>
-                <Input
-                  id="street"
-                  {...customerForm.register("street")}
-                  data-testid="input-customer-street"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="houseNumber">House No.</Label>
-                <Input
-                  id="houseNumber"
-                  {...customerForm.register("houseNumber")}
-                  data-testid="input-customer-house-number"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="postalCode">Postal Code</Label>
-                <Input
-                  id="postalCode"
-                  {...customerForm.register("postalCode")}
-                  data-testid="input-customer-postal-code"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  {...customerForm.register("city")}
-                  data-testid="input-customer-city"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
-                <Input
-                  id="country"
-                  {...customerForm.register("country")}
-                  data-testid="input-customer-country"
-                />
-              </div>
-            </div>
-
-            {/* Payment Terms */}
-            <div className="space-y-2">
-              <Label htmlFor="paymentTerms">Payment Terms *</Label>
-              <Select 
-                onValueChange={(value) => customerForm.setValue("paymentTerms", value)}
-                value={customerForm.watch("paymentTerms") || "30"}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">7 days</SelectItem>
-                  <SelectItem value="14">14 days</SelectItem>
-                  <SelectItem value="30">30 days</SelectItem>
-                  <SelectItem value="45">45 days</SelectItem>
-                  <SelectItem value="60">60 days</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Primary Contact */}
-            <div className="space-y-4">
-              <h4 className="font-medium">Primary Contact (Optional)</h4>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="primaryContactName">Name</Label>
-                  <Input
-                    id="primaryContactName"
-                    {...customerForm.register("primaryContactName")}
-                    data-testid="input-primary-contact-name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="primaryContactEmail">Email</Label>
-                  <Input
-                    id="primaryContactEmail"
-                    type="email"
-                    {...customerForm.register("primaryContactEmail")}
-                    data-testid="input-primary-contact-email"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="primaryContactPhone">Phone</Label>
-                  <Input
-                    id="primaryContactPhone"
-                    {...customerForm.register("primaryContactPhone")}
-                    data-testid="input-primary-contact-phone"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setShowAddDialog(false)}
-                data-testid="button-cancel-customer"
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={createCustomerMutation.isPending}
-                data-testid="button-save-customer"
-              >
-                {createCustomerMutation.isPending ? "Creating..." : "Create Customer"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Customer Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Customer</DialogTitle>
-          </DialogHeader>
-          
-          <form onSubmit={customerForm.handleSubmit(handleEditCustomer)} className="space-y-4">
-            {/* Basic Information */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Company Name *</Label>
-                <Input
-                  id="edit-name"
-                  {...customerForm.register("name")}
-                  data-testid="input-edit-customer-name"
-                />
-                {customerForm.formState.errors.name && (
-                  <p className="text-sm text-red-600">{customerForm.formState.errors.name.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-language">Language</Label>
-                <Select 
-                  onValueChange={(value) => customerForm.setValue("language", value)}
-                  value={customerForm.watch("language") || "nl"}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nl">Nederlands</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="de">Deutsch</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-email">Email</Label>
-                <Input
-                  id="edit-email"
-                  type="email"
-                  {...customerForm.register("email")}
-                  data-testid="input-edit-customer-email"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-phone">Phone</Label>
-                <Input
-                  id="edit-phone"
-                  {...customerForm.register("phone")}
-                  data-testid="input-edit-customer-phone"
-                />
-              </div>
-            </div>
-
-            {/* Address */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="edit-street">Street</Label>
-                <Input
-                  id="edit-street"
-                  {...customerForm.register("street")}
-                  data-testid="input-edit-customer-street"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-houseNumber">House No.</Label>
-                <Input
-                  id="edit-houseNumber"
-                  {...customerForm.register("houseNumber")}
-                  data-testid="input-edit-customer-house-number"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-postalCode">Postal Code</Label>
-                <Input
-                  id="edit-postalCode"
-                  {...customerForm.register("postalCode")}
-                  data-testid="input-edit-customer-postal-code"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-city">City</Label>
-                <Input
-                  id="edit-city"
-                  {...customerForm.register("city")}
-                  data-testid="input-edit-customer-city"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-country">Country</Label>
-                <Input
-                  id="edit-country"
-                  {...customerForm.register("country")}
-                  data-testid="input-edit-customer-country"
-                />
-              </div>
-            </div>
-
-            {/* Payment Terms */}
-            <div className="space-y-2">
-              <Label htmlFor="edit-paymentTerms">Payment Terms *</Label>
-              <Select 
-                onValueChange={(value) => customerForm.setValue("paymentTerms", value)}
-                value={customerForm.watch("paymentTerms") || "30"}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">7 days</SelectItem>
-                  <SelectItem value="14">14 days</SelectItem>
-                  <SelectItem value="30">30 days</SelectItem>
-                  <SelectItem value="45">45 days</SelectItem>
-                  <SelectItem value="60">60 days</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Primary Contact */}
-            <div className="space-y-4">
-              <h4 className="font-medium">Primary Contact (Optional)</h4>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-primaryContactName">Name</Label>
-                  <Input
-                    id="edit-primaryContactName"
-                    {...customerForm.register("primaryContactName")}
-                    data-testid="input-edit-primary-contact-name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-primaryContactEmail">Email</Label>
-                  <Input
-                    id="edit-primaryContactEmail"
-                    type="email"
-                    {...customerForm.register("primaryContactEmail")}
-                    data-testid="input-edit-primary-contact-email"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-primaryContactPhone">Phone</Label>
-                  <Input
-                    id="edit-primaryContactPhone"
-                    {...customerForm.register("primaryContactPhone")}
-                    data-testid="input-edit-primary-contact-phone"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setShowEditDialog(false);
-                  setEditingCustomer(null);
-                  customerForm.reset();
-                }}
-                data-testid="button-cancel-edit-customer"
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={editCustomerMutation.isPending}
-                data-testid="button-save-edit-customer"
-              >
-                {editCustomerMutation.isPending ? "Updating..." : "Update Customer"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Customer Editor Dialog */}
+      <CustomerEditorDialog
+        open={showEditorDialog}
+        onOpenChange={setShowEditorDialog}
+        mode={editorMode}
+        customerId={editingCustomerId || undefined}
+        onSuccess={handleEditorSuccess}
+      />
     </>
   );
 }
