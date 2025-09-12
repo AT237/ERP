@@ -411,30 +411,6 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
     }
   ];
 
-  const headerActions = [
-    {
-      key: 'back',
-      label: 'Terug',
-      icon: <ArrowLeft className="h-4 w-4" />,
-      onClick: onSave,
-      variant: 'outline' as const
-    },
-    {
-      key: 'save',
-      label: isEditing ? 'Bijwerken' : 'Opslaan',
-      icon: <Save className="h-4 w-4" />,
-      onClick: form.handleSubmit(onSubmit),
-      variant: 'default' as const,
-      disabled: createMutation.isPending || updateMutation.isPending
-    }
-  ];
-
-  const headerInfo = [
-    {
-      label: 'Customer ID',
-      value: customerId || 'Nieuw'
-    }
-  ];
 
   if (isLoadingCustomer) {
     return <div className="p-6">Loading...</div>;
@@ -442,43 +418,57 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-b">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-orange-800 dark:text-orange-200">
-            {isEditing ? 'Edit Customer' : 'Add Customer'}
-          </h1>
-          <div className="flex gap-2">
-            {headerActions.map((action) => (
-              <Button
-                key={action.key}
-                onClick={action.onClick}
-                variant={action.variant}
-                disabled={action.disabled}
-                className={action.variant === 'default' ? 'bg-orange-600 hover:bg-orange-700' : ''}
-              >
-                {action.icon}
-                {action.label}
-              </Button>
-            ))}
-          </div>
+      {/* Header with InfoHeaderLayout and Action Buttons */}
+      <div className="flex justify-between items-center p-4 bg-orange-50 dark:bg-orange-900/20 border-b">
+        {/* Title and Status Info */}
+        <InfoHeaderLayout
+          fields={[
+            {
+              label: "Customer ID",
+              value: customerId ? customer?.customerNumber || customerId.slice(0, 8) : 'Nieuw'
+            },
+            {
+              label: "Status",
+              value: isEditing ? "Edit" : "New"
+            }
+          ]}
+          className="absolute left-2 w-fit"
+        />
+        
+        {/* Actions Section - starts at fixed coordinate like QuotationFormLayout */}
+        <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={onSave}
+            className="h-8 text-xs"
+            data-testid="button-cancel"
+          >
+            <ArrowLeft size={14} className="mr-1" />
+            Cancel
+          </Button>
+          <Button 
+            size="sm"
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={createMutation.isPending || updateMutation.isPending}
+            className="h-8 text-xs bg-green-600 text-white hover:bg-green-700"
+            data-testid="button-save"
+          >
+            <Save size={14} className="mr-1" />
+            {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : (isEditing ? "Update Customer" : "Save Customer")}
+          </Button>
         </div>
-        <InfoHeaderLayout fields={headerInfo} />
       </div>
-      
-      <div className="flex-1 p-6">
-        <Card>
-          <CardHeader className="bg-orange-50 dark:bg-orange-900/20">
-            <FormTabLayout
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
-          </CardHeader>
-          <CardContent className="p-6">
-            {tabs.find(tab => tab.id === activeTab)?.content}
-          </CardContent>
-        </Card>
-      </div>
+
+      <Card className="border-0 shadow-none ml-2">
+        <CardContent className="p-0">
+          <FormTabLayout
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            tabs={tabs}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
