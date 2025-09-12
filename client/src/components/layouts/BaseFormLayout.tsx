@@ -40,22 +40,43 @@ export function BaseFormLayout({
   onTabChange,
   isLoading = false
 }: BaseFormLayoutProps) {
+  // Show skeleton instead of loading spinner to prevent flicker
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
-          <p className="text-muted-foreground">Loading...</p>
+      <div className="p-6">
+        <div className="space-y-4">
+          {/* Header Skeleton - maintains exact layout structure */}
+          <div className="relative p-2 h-16">
+            <div className="absolute left-2 w-fit">
+              <div className="flex items-center gap-6 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 h-12 w-64 animate-pulse"></div>
+            </div>
+            <div className="ml-[350px] bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 h-10 w-80 animate-pulse"></div>
+          </div>
+
+          {/* Content Skeleton */}
+          <Card className="border-0 shadow-none ml-2">
+            <CardContent className="p-0">
+              <div className="bg-white px-4 border-b-0 h-[62px] flex items-end">
+                <div className="flex items-end space-x-1">
+                  <div className="bg-gray-100 dark:bg-gray-800 rounded-t-lg px-3 py-2 h-8 w-16 animate-pulse"></div>
+                  <div className="bg-gray-100 dark:bg-gray-800 rounded-t-lg px-3 py-2 h-8 w-20 animate-pulse"></div>
+                </div>
+              </div>
+              <div className="border-2 border-orange-500 bg-white p-6 h-[400px] flex items-center justify-center">
+                <div className="text-gray-400">Loading...</div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6" style={{ minHeight: '100vh' }}>
       <div className="space-y-4">
         {/* Header with Title and Controls - exact original quotation layout */}
-        <div className="relative p-2">
+        <div className="relative p-2" style={{ minHeight: '64px' }}>
           {/* Title Section */}
           <InfoHeaderLayout 
             fields={headerFields}
@@ -87,7 +108,7 @@ export function BaseFormLayout({
           </div>
         </div>
 
-        {/* Main Content Area - exact original structure */}
+        {/* Main Content Area - exact original structure with stable dimensions */}
         <Card className="border-0 shadow-none ml-2">
           <CardContent className="p-0">
             <FormTabLayout
