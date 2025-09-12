@@ -53,36 +53,38 @@ export function BaseFormLayout({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header with InfoHeaderLayout and Action Buttons */}
-      <div className="flex justify-between items-center p-4 bg-orange-50 dark:bg-orange-900/20 border-b">
-        {/* Title and Status Info */}
-        <InfoHeaderLayout
-          fields={headerFields}
-          className="absolute left-2 w-fit"
-        />
-        
-        {/* Actions Section - starts at fixed coordinate for consistency */}
-        <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
-          {actionButtons.map((button) => (
-            <Button
-              key={button.key}
-              variant={button.variant || 'outline'}
-              size="sm"
-              onClick={button.onClick}
-              disabled={button.disabled || button.loading}
-              className={`h-8 text-xs ${button.className || ''} ${
-                button.variant === 'default' ? 'bg-green-600 text-white hover:bg-green-700' : ''
-              }`}
-              data-testid={button.testId || `button-${button.key}`}
-            >
-              {button.loading ? (
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
-              ) : (
-                button.icon && <span className="mr-1">{button.icon}</span>
-              )}
-              {button.loading ? 'Loading...' : button.label}
-            </Button>
-          ))}
+      {/* Header matching QuotationFormLayout structure */}
+      <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-b">
+        <div className="relative p-2">
+          {/* Title Section */}
+          <InfoHeaderLayout 
+            fields={headerFields}
+            className="absolute left-2 w-fit"
+          />
+          
+          {/* Actions Section - starts at fixed coordinate like QuotationFormLayout */}
+          <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+            {actionButtons.map((button) => (
+              <Button
+                key={button.key}
+                variant={button.variant || 'outline'}
+                size="sm"
+                onClick={button.onClick}
+                disabled={button.disabled || button.loading}
+                className={`h-8 text-xs ${button.className || ''} ${
+                  button.variant === 'default' ? 'bg-green-600 text-white hover:bg-green-700' : ''
+                }`}
+                data-testid={button.testId || `button-${button.key}`}
+              >
+                {button.loading ? (
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
+                ) : (
+                  button.icon && <span className="mr-1">{button.icon}</span>
+                )}
+                {button.loading ? 'Loading...' : button.label}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
