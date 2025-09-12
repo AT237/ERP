@@ -415,7 +415,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    const supplierNumber = `CRED-${nextNumber.toString().padStart(5, '0')}`;
+    const supplierNumber = `CRED-${nextNumber.toString().padStart(3, '0')}`;
     
     const [newSupplier] = await db.insert(suppliers).values({
       ...supplier,
