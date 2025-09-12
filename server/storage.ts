@@ -231,13 +231,13 @@ export class DatabaseStorage implements IStorage {
     
     let nextNumber = 1;
     if (lastCustomer.length > 0 && lastCustomer[0].customerNumber) {
-      const match = lastCustomer[0].customerNumber.match(/DEB-(\d+)/);
+      const match = lastCustomer[0].customerNumber.match(/CRED-(\d+)/);
       if (match) {
         nextNumber = parseInt(match[1]) + 1;
       }
     }
     
-    const customerNumber = `DEB-${nextNumber.toString().padStart(5, '0')}`;
+    const customerNumber = `CRED-${nextNumber.toString().padStart(4, '0')}`;
     
     const [newCustomer] = await db.insert(customers).values({
       ...customer,
