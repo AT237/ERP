@@ -69,15 +69,15 @@ export default function Customers() {
     window.dispatchEvent(event);
   };
 
-  // Format customer number to CRED-XXXX format
+  // Format customer number to DEB-XXXX format
   const formatCustomerNumber = (customerNumber: string) => {
     // Extract number from customerNumber if it exists, otherwise use a default
     const num = customerNumber ? customerNumber.replace(/\D/g, '') : '0001';
-    return `CRED-${num.padStart(3, '0')}`;
+    return `DEB-${num.padStart(3, '0')}`;
   };
 
   const handleRowDoubleClick = (customer: Customer) => {
-    // Dispatch custom event to open customer edit form in new tab with CRED formatting
+    // Dispatch custom event to open customer edit form in new tab with DEB formatting
     const formattedNumber = formatCustomerNumber(customer.customerNumber);
     const event = new CustomEvent('open-form-tab', {
       detail: {
@@ -118,7 +118,7 @@ export default function Customers() {
       phone: customer.phone || '',
       mobile: customer.mobile || '',
       taxId: customer.taxId || '',
-      paymentTerms: `${customer.paymentTerms || '30'} dagen`,
+      paymentTerms: customer.paymentTerms || 30,
       status: customer.status || 'actief',
     }));
   };
