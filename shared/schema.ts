@@ -69,6 +69,7 @@ export const customers = pgTable("customers", {
   kvkNummer: text("kvk_nummer"), // Dutch Chamber of Commerce number
   countryCode: text("country_code").references(() => countries.code), // Country code reference
   areaCode: text("area_code"), // Area code for countries that require it
+  generalEmail: text("general_email"), // General email address
   email: text("email"),
   phone: text("phone"),
   mobile: text("mobile"),
@@ -76,6 +77,8 @@ export const customers = pgTable("customers", {
   contactPersonEmail: text("contact_person_email"),
   taxId: text("tax_id"),
   bankAccount: text("bank_account"),
+  invoiceEmail: text("invoice_email"), // Email for invoices
+  invoiceNotes: text("invoice_notes"), // Notes for invoice handling
   language: text("language").default("nl"),
   paymentTerms: integer("payment_terms").default(30),
   status: text("status").default("active"),

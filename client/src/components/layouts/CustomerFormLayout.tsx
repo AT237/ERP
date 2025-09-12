@@ -214,6 +214,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
         kvkNummer: customer.kvkNummer || "",
         countryCode: customer.countryCode || "",
         areaCode: customer.areaCode || "",
+        generalEmail: customer.generalEmail || "",
         email: customer.email || "",
         phone: customer.phone || "",
         mobile: customer.mobile || "",
@@ -221,6 +222,8 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
         contactPersonEmail: customer.contactPersonEmail || "",
         taxId: customer.taxId || "",
         bankAccount: customer.bankAccount || "",
+        invoiceEmail: customer.invoiceEmail || "",
+        invoiceNotes: customer.invoiceNotes || "",
         language: customer.language || "nl",
         paymentTerms: customer.paymentTerms?.toString() || "30",
         status: customer.status || "active",
@@ -468,6 +471,21 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               </div>
             </div>
 
+            {/* General Email */}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="generalEmail">Algemene email</Label>
+                <Input
+                  id="generalEmail"
+                  type="email"
+                  {...form.register("generalEmail")}
+                  placeholder="algemeen@bedrijf.nl"
+                  data-testid="input-customer-general-email"
+                  className={getFieldClassName("generalEmail")}
+                />
+              </div>
+            </div>
+
             {/* Address Selection */}
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
@@ -477,20 +495,6 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   onValueChange={(value) => form.setValue("addressId", value)}
                   placeholder="Selecteer adres..."
                   testId="select-customer-address"
-                />
-              </div>
-            </div>
-
-            {/* Contact Person Selection */}
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="contactPersonEmail">Contactpersoon</Label>
-                <ContactPersonSelectWithAdd
-                  value={form.watch("contactPersonEmail") || ""}
-                  onValueChange={(value) => form.setValue("contactPersonEmail", value)}
-                  customerId={customerId}
-                  placeholder="Selecteer contactpersoon..."
-                  testId="select-customer-contact-person"
                 />
               </div>
             </div>
@@ -518,6 +522,34 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="invoiceEmail">Email voor facturen</Label>
+                <Input
+                  id="invoiceEmail"
+                  type="email"
+                  {...form.register("invoiceEmail")}
+                  placeholder="facturen@bedrijf.nl"
+                  data-testid="input-customer-invoice-email"
+                  className={getFieldClassName("invoiceEmail")}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="invoiceNotes">Notities voor facturatie</Label>
+                <Textarea
+                  id="invoiceNotes"
+                  {...form.register("invoiceNotes")}
+                  placeholder="Opmerkingen en notities voor factuurbehandeling..."
+                  rows={3}
+                  data-testid="textarea-customer-invoice-notes"
+                  className={getFieldClassName("invoiceNotes")}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="paymentTerms">Betalingsvoorwaarden *</Label>
                 <Select 
@@ -618,6 +650,20 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   placeholder="+31 6 12345678"
                   data-testid="input-customer-mobile"
                   className={getFieldClassName("mobile")}
+                />
+              </div>
+            </div>
+
+            {/* Contact Person Selection */}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="contactPersonEmail">Contactpersoon</Label>
+                <ContactPersonSelectWithAdd
+                  value={form.watch("contactPersonEmail") || ""}
+                  onValueChange={(value) => form.setValue("contactPersonEmail", value)}
+                  customerId={customerId}
+                  placeholder="Selecteer contactpersoon..."
+                  testId="select-customer-contact-person"
                 />
               </div>
             </div>
