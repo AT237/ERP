@@ -447,6 +447,11 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
   const handleSaveQuotation = (data: QuotationFormData) => {
     console.log('Received quotation data:', data);
+    console.log('Data types:', {
+      subtotal: typeof data.subtotal,
+      taxAmount: typeof data.taxAmount,
+      totalAmount: typeof data.totalAmount
+    });
     
     // Convert number fields to strings as expected by backend
     const processedData = {
@@ -456,6 +461,13 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       totalAmount: typeof data.totalAmount === 'number' ? data.totalAmount.toString() : data.totalAmount,
       validityDays: data.validityDays ? parseInt(data.validityDays.toString(), 10) : undefined
     };
+    
+    console.log('Processed data:', processedData);
+    console.log('Processed data types:', {
+      subtotal: typeof processedData.subtotal,
+      taxAmount: typeof processedData.taxAmount,
+      totalAmount: typeof processedData.totalAmount
+    });
     
     if (quotationId) {
       updateQuotationMutation.mutate(processedData);
