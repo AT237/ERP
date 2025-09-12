@@ -557,14 +557,20 @@ export default function Inventory() {
       setSearchTerm={tableState.setSearchTerm}
       filters={tableState.filters}
       setFilters={tableState.setFilters}
+      onAddFilter={tableState.addFilter}
+      onUpdateFilter={tableState.updateFilter}
+      onRemoveFilter={tableState.removeFilter}
       sortConfig={tableState.sortConfig}
-      setSortConfig={tableState.setSortConfig}
+      onSort={tableState.handleSort}
       selectedRows={tableState.selectedRows}
       setSelectedRows={tableState.setSelectedRows}
-      currentPage={tableState.currentPage}
-      setCurrentPage={tableState.setCurrentPage}
-      pageSize={tableState.pageSize}
-      setPageSize={tableState.setPageSize}
+      onToggleRowSelection={tableState.toggleRowSelection}
+      onToggleAllRows={() => {
+        const allIds = items.map(item => item.id);
+        tableState.toggleAllRows(allIds);
+      }}
+      onRowDoubleClick={handleEdit}
+      getRowId={(row: InventoryItem) => row.id}
       applyFiltersAndSearch={tableState.applyFiltersAndSearch}
       applySorting={tableState.applySorting}
       headerActions={[

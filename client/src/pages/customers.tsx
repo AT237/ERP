@@ -161,6 +161,22 @@ export default function Customers() {
     window.dispatchEvent(event);
   };
 
+  const handleRowDoubleClick = (customer: Customer) => {
+    setEditingCustomer(customer);
+    form.reset({
+      name: customer.name,
+      email: customer.email || "",
+      phone: customer.phone || "",
+      mobile: customer.mobile || "",
+      taxId: customer.taxId || "",
+      bankAccount: customer.bankAccount || "",
+      language: customer.language || "nl",
+      paymentTerms: customer.paymentTerms || "30",
+      status: customer.status || "active",
+    });
+    setShowDialog(true);
+  };
+
   const handleDelete = (id: string) => {
     if (confirm("Weet je zeker dat je deze klant wilt verwijderen?")) {
       deleteMutation.mutate(id);
@@ -379,10 +395,19 @@ export default function Customers() {
       setSearchTerm={tableState.setSearchTerm}
       filters={tableState.filters}
       setFilters={tableState.setFilters}
+      onAddFilter={tableState.addFilter}
+      onUpdateFilter={tableState.updateFilter}
+      onRemoveFilter={tableState.removeFilter}
       sortConfig={tableState.sortConfig}
-      setSortConfig={tableState.setSortConfig}
+      onSort={tableState.handleSort}
       selectedRows={tableState.selectedRows}
       setSelectedRows={tableState.setSelectedRows}
+      onToggleRowSelection={tableState.toggleRowSelection}
+      onToggleAllRows={() => {
+        const allIds = customers.map(c => c.id);
+        tableState.toggleAllRows(allIds);
+      }}
+      onRowDoubleClick={handleRowDoubleClick}
       getRowId={(row: Customer) => row.id}
       applyFiltersAndSearch={tableState.applyFiltersAndSearch}
       applySorting={tableState.applySorting}
