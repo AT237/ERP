@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Customer, InsertCustomer, Country } from "@shared/schema";
 import { z } from "zod";
 
-// Base form schema for customer data
+// Base form schema for customer data - include all fields from insertCustomerSchema
 const baseCustomerFormSchema = insertCustomerSchema.extend({
   paymentTerms: z.string().min(1, "Betalingsvoorwaarden zijn verplicht").transform(val => parseInt(val, 10)),
   kvkNummer: z.string().optional().refine((val) => !val || /^\d{8}$/.test(val), {
@@ -99,6 +99,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       kvkNummer: "",
       countryCode: "",
       areaCode: "",
+      generalEmail: "",
       email: "",
       phone: "",
       mobile: "",
@@ -106,6 +107,8 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       contactPersonEmail: "",
       taxId: "",
       bankAccount: "",
+      invoiceEmail: "",
+      invoiceNotes: "",
       language: "nl",
       paymentTerms: "30",
       status: "active",
@@ -141,8 +144,10 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
     return hasChanges;
   };
 
-  // Get CSS class for field based on whether it's modified
+  // Get CSS class for field based on whether it's modified - only when tracking enabled
   const getFieldClassName = (fieldName: string, baseClassName: string = "") => {
+    if (suppressTracking) return baseClassName;
+    
     const isModified = modifiedFields.has(fieldName);
     if (isModified) {
       return `${baseClassName} ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950`.trim();
@@ -156,7 +161,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
     enabled: !!customerId,
   });
 
-  // Fetch country data when countryCode changes
+  // Fetch country data when countryCode changes - use specific field watch
   const currentCountryCode = form.watch("countryCode");
   const { data: countryData, isLoading: isLoadingCountry } = useQuery({
     queryKey: ["/api/countries/by-code", currentCountryCode],
@@ -170,7 +175,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Update validation schema when country changes
+  // Update validation schema when country changes - no imperative triggers, rely on remount
   useEffect(() => {
     if (countryData) {
       const newRequirements = {
@@ -182,32 +187,25 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       const currentReq = JSON.stringify(currentCountryRequirements);
       const newReq = JSON.stringify(newRequirements);
       if (currentReq !== newReq) {
+        setSuppressTracking(true);
         setCurrentCountryRequirements(newRequirements);
-        
-        // Force form re-validation with new schema
-        setTimeout(() => {
-          form.clearErrors();
-          // Trigger validation for fields that might now be required
-          if (newRequirements.requiresBtw) {
-            form.trigger('taxId');
-          }
-          if (newRequirements.requiresAreaCode) {
-            form.trigger('areaCode');
-          }
-        }, 100);
+        // Tracking will be re-enabled when formKey changes (handled in separate effect)
       }
     } else if (!currentCountryCode) {
       // Reset to base schema when no country selected - only if not already empty
       const isEmpty = Object.keys(currentCountryRequirements).length === 0;
       if (!isEmpty) {
+        setSuppressTracking(true);
         setCurrentCountryRequirements({});
-        form.clearErrors();
+        // Tracking will be re-enabled when formKey changes (handled in separate effect)
       }
     }
-  }, [countryData, currentCountryCode, form]);
+  }, [countryData, currentCountryCode]);
 
   // Update form when customer data loads and store original values for change tracking
   useEffect(() => {
+    setSuppressTracking(true);
+    
     if (customer) {
       const formData = {
         name: customer.name || "",
@@ -242,15 +240,61 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       setModifiedFields(new Set());
       setHasUnsavedChanges(false);
     }
+    
+    // Re-enable tracking after form is stable
+    setTimeout(() => setSuppressTracking(false), 100);
   }, [customer, form]);
 
-  // Watch for changes in form values and update change tracking
-  const watchedValues = form.watch();
+  // Add suppression flag for tracking during initialization
+  const [suppressTracking, setSuppressTracking] = useState(true);
+  
+  // Re-enable tracking when formKey changes (after form remount)
   useEffect(() => {
-    if (Object.keys(originalValues).length > 0) {
-      checkForChanges();
-    }
-  }, [watchedValues]);
+    // Skip initial mount
+    if (Object.keys(originalValues).length === 0) return;
+    
+    setSuppressTracking(true);
+    // Re-enable tracking after remount is complete
+    const timeout = setTimeout(() => {
+      setSuppressTracking(false);
+    }, 150);
+    
+    return () => clearTimeout(timeout);
+  }, [formKey]);
+  
+  // Throttled change checking - only when tracking is enabled
+  const [checkScheduled, setCheckScheduled] = useState(false);
+  const scheduleChangeCheck = useCallback(() => {
+    if (suppressTracking || checkScheduled) return;
+    
+    setCheckScheduled(true);
+    setTimeout(() => {
+      if (!suppressTracking && Object.keys(originalValues).length > 0) {
+        checkForChanges();
+      }
+      setCheckScheduled(false);
+    }, 200);
+  }, [suppressTracking, checkScheduled, originalValues, checkForChanges]);
+
+  // Watch for changes in specific form values and update change tracking (throttled)
+  // Use specific field subscriptions to avoid re-rendering on every field change
+  const nameValue = form.watch("name");
+  const kvkNummerValue = form.watch("kvkNummer");
+  const taxIdValue = form.watch("taxId");
+  const languageValue = form.watch("language");
+  const areaCodeValue = form.watch("areaCode");
+  const addressIdValue = form.watch("addressId");
+  const bankAccountValue = form.watch("bankAccount");
+  const paymentTermsValue = form.watch("paymentTerms");
+  const statusValue = form.watch("status");
+  const emailValue = form.watch("email");
+  const phoneValue = form.watch("phone");
+  const mobileValue = form.watch("mobile");
+  const contactPersonEmailValue = form.watch("contactPersonEmail");
+  
+  useEffect(() => {
+    scheduleChangeCheck();
+  }, [nameValue, kvkNummerValue, taxIdValue, languageValue, areaCodeValue, addressIdValue, bankAccountValue, paymentTermsValue, statusValue, emailValue, phoneValue, mobileValue, contactPersonEmailValue, scheduleChangeCheck]);
 
   // Communicate unsaved changes status to parent Layout
   useEffect(() => {
@@ -353,7 +397,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       id: "general",
       label: "General",
       content: (
-        <div className="space-y-6">
+        <div key={formKey} className="space-y-6">
           {/* Company Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-orange-600">Bedrijfsinformatie</h3>
@@ -506,7 +550,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       id: "financial",
       label: "Financial",
       content: (
-        <div className="space-y-6">
+        <div key={formKey} className="space-y-6">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-orange-600">Financiële informatie</h3>
             
@@ -612,7 +656,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       id: "contact",
       label: "Contact",
       content: (
-        <div className="space-y-6">
+        <div key={formKey} className="space-y-6">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-orange-600">Contactinformatie</h3>
             
@@ -675,7 +719,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       id: "memo",
       label: "Memo",
       content: (
-        <div className="space-y-6">
+        <div key={formKey} className="space-y-6">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-orange-600">Notities</h3>
             
@@ -785,14 +829,21 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
     }
   ];
 
+  // Re-enable tracking when form key changes (remount)
+  useEffect(() => {
+    setTimeout(() => setSuppressTracking(false), 50);
+  }, [formKey]);
+
   return (
-    <BaseFormLayout
-      headerFields={headerFields}
-      actionButtons={actionButtons}
-      tabs={tabs}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      isLoading={isLoadingCustomer}
-    />
+    <div key={formKey}>
+      <BaseFormLayout
+        headerFields={headerFields}
+        actionButtons={actionButtons}
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        isLoading={isLoadingCustomer}
+      />
+    </div>
   );
 }
