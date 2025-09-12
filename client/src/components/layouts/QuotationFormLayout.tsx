@@ -175,6 +175,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       quotationDate: format(new Date(), 'yyyy-MM-dd'),
       validUntil: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), // 30 days from now
       validityDays: 30,
+      isBudgetQuotation: false,
       subtotal: "0.00",
       taxAmount: "0.00",
       totalAmount: "0.00",
@@ -277,6 +278,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         quotationDate: existingQuotation.quotationDate ? format(new Date(existingQuotation.quotationDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
         validUntil: existingQuotation.validUntil ? format(new Date(existingQuotation.validUntil), 'yyyy-MM-dd') : "",
         validityDays: existingQuotation.validityDays || 30,
+        isBudgetQuotation: existingQuotation.isBudgetQuotation || false,
         subtotal: existingQuotation.subtotal?.toString() || "0.00",
         taxAmount: existingQuotation.taxAmount?.toString() || "0.00",
         totalAmount: existingQuotation.totalAmount?.toString() || "0.00",

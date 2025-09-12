@@ -140,6 +140,7 @@ export const quotations = pgTable("quotations", {
   revisionNumber: text("revision_number").default("V1.0"),
   validUntil: timestamp("valid_until"),
   validityDays: integer("validity_days").default(30),
+  isBudgetQuotation: boolean("is_budget_quotation").default(false),
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
   taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0"),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
