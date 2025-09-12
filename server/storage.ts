@@ -1,7 +1,7 @@
 import {
   users, customers, suppliers, inventoryItems, projects, quotations, quotationItems,
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, workOrders,
-  packingLists, packingListItems, userPreferences, customerContacts,
+  packingLists, packingListItems, userPreferences, customerContacts, addresses,
   unitsOfMeasure, paymentTerms, incoterms, vatRates, cities, statuses,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type InventoryItem, type InsertInventoryItem,
@@ -446,6 +446,85 @@ export class DatabaseStorage implements IStorage {
 
   async deleteQuotation(id: string): Promise<void> {
     await db.delete(quotations).where(eq(quotations.id, id));
+  }
+
+  async getQuotationDetails(id: string): Promise<{
+    quotation: Quotation,
+    items: QuotationItem[],
+    customer: { id: string; name: string; email?: string; phone?: string; city?: string }
+  } | undefined> {
+    // Get quotation with customer and address info in one query
+    const [quotationWithCustomer] = await db
+      .select({
+        // Quotation fields
+        id: quotations.id,
+        quotationNumber: quotations.quotationNumber,
+        customerId: quotations.customerId,
+        projectId: quotations.projectId,
+        status: quotations.status,
+        quotationDate: quotations.quotationDate,
+        description: quotations.description,
+        revisionNumber: quotations.revisionNumber,
+        validUntil: quotations.validUntil,
+        validityDays: quotations.validityDays,
+        isBudgetQuotation: quotations.isBudgetQuotation,
+        subtotal: quotations.subtotal,
+        taxAmount: quotations.taxAmount,
+        totalAmount: quotations.totalAmount,
+        notes: quotations.notes,
+        incoTerms: quotations.incoTerms,
+        paymentConditions: quotations.paymentConditions,
+        deliveryConditions: quotations.deliveryConditions,
+        createdAt: quotations.createdAt,
+        // Customer fields
+        customerName: customers.name,
+        customerEmail: customers.email,
+        customerPhone: customers.phone,
+        // Address fields
+        addressCity: addresses.city,
+      })
+      .from(quotations)
+      .leftJoin(customers, eq(quotations.customerId, customers.id))
+      .leftJoin(addresses, eq(customers.addressId, addresses.id))
+      .where(eq(quotations.id, id));
+
+    if (!quotationWithCustomer) return undefined;
+
+    // Get quotation items
+    const items = await db.select().from(quotationItems).where(eq(quotationItems.quotationId, id));
+
+    // Structure the response
+    const quotation: Quotation = {
+      id: quotationWithCustomer.id,
+      quotationNumber: quotationWithCustomer.quotationNumber,
+      customerId: quotationWithCustomer.customerId,
+      projectId: quotationWithCustomer.projectId,
+      status: quotationWithCustomer.status,
+      quotationDate: quotationWithCustomer.quotationDate,
+      description: quotationWithCustomer.description,
+      revisionNumber: quotationWithCustomer.revisionNumber,
+      validUntil: quotationWithCustomer.validUntil,
+      validityDays: quotationWithCustomer.validityDays,
+      isBudgetQuotation: quotationWithCustomer.isBudgetQuotation,
+      subtotal: quotationWithCustomer.subtotal,
+      taxAmount: quotationWithCustomer.taxAmount,
+      totalAmount: quotationWithCustomer.totalAmount,
+      notes: quotationWithCustomer.notes,
+      incoTerms: quotationWithCustomer.incoTerms,
+      paymentConditions: quotationWithCustomer.paymentConditions,
+      deliveryConditions: quotationWithCustomer.deliveryConditions,
+      createdAt: quotationWithCustomer.createdAt,
+    };
+
+    const customer = {
+      id: quotationWithCustomer.customerId!,
+      name: quotationWithCustomer.customerName!,
+      email: quotationWithCustomer.customerEmail || undefined,
+      phone: quotationWithCustomer.customerPhone || undefined,
+      city: quotationWithCustomer.addressCity || undefined,
+    };
+
+    return { quotation, items, customer };
   }
 
   async getQuotationItems(quotationId: string): Promise<QuotationItem[]> {

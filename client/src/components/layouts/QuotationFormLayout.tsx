@@ -136,26 +136,40 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     tableKey: 'quotation-form-items'
   });
 
-  // Fetch data
+  // Lazy load customers only when needed
+  const [shouldLoadCustomers, setShouldLoadCustomers] = useState(false);
   const { data: customers = [] } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
+    enabled: shouldLoadCustomers,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
+  // Lazy load inventory only when needed  
+  const [shouldLoadInventory, setShouldLoadInventory] = useState(false);
   const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory"],
+    enabled: shouldLoadInventory,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
-  // Fetch existing quotation if editing
-  const { data: existingQuotation, isLoading: quotationLoading } = useQuery<Quotation>({
-    queryKey: ["/api/quotations", quotationId],
+  // Fetch existing quotation details (combined: quotation + items + customer) if editing
+  const { data: quotationDetails, isLoading: quotationLoading } = useQuery<{
+    quotation: Quotation,
+    items: QuotationItem[],
+    customer: { id: string; name: string; email?: string; phone?: string; city?: string }
+  }>({
+    queryKey: ["/api/quotations", quotationId, "details"],
     enabled: !!quotationId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: false,
   });
 
-  // Fetch existing quotation items if editing
-  const { data: existingQuotationItems = [] } = useQuery<QuotationItem[]>({
-    queryKey: ["/api/quotations", quotationId, "items"],
-    enabled: !!quotationId,
-  });
+  // Extract data from combined response
+  const existingQuotation = quotationDetails?.quotation;
+  const existingQuotationItems = quotationDetails?.items || [];
+  const quotationCustomer = quotationDetails?.customer;
 
   // Fetch all quotations to calculate next number for new quotations
   const { data: allQuotations = [] } = useQuery<Quotation[]>({
@@ -1438,6 +1452,8 @@ ATE Solutions B.V.`);
                           onValueChange={(value) => quotationForm.setValue("customerId", value)}
                           placeholder="Select customer..."
                           testId="select-customer"
+                          onOpen={() => setShouldLoadCustomers(true)}
+                          customers={customers}
                         />
                       </div>
                       <div className="col-span-2">

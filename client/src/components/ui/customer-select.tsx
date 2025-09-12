@@ -46,6 +46,8 @@ interface CustomerSelectProps {
   placeholder?: string;
   testId?: string;
   className?: string;
+  onOpen?: () => void; // Callback to trigger lazy loading
+  customers?: Array<{ id: string; name: string; email?: string; phone?: string; city?: string }>; // Optional external customers data
 }
 
 export function CustomerSelect({
@@ -53,7 +55,9 @@ export function CustomerSelect({
   onValueChange,
   placeholder = "Select customer...",
   testId = "select-customer",
-  className
+  className,
+  onOpen,
+  customers: externalCustomers
 }: CustomerSelectProps) {
   const [open, setOpen] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -61,11 +65,16 @@ export function CustomerSelect({
   const [editingCustomer, setEditingCustomer] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Load customers  
-  const { data: customers = [] } = useQuery({
+  // Load customers only when not provided externally
+  const { data: internalCustomers = [] } = useQuery({
     queryKey: ["/api/customers"],
+    enabled: !externalCustomers, // Only fetch if no external customers provided
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
+  // Use external customers if provided, otherwise use internal query
+  const customers = externalCustomers || internalCustomers;
   const customersTyped = customers as Array<{
     id: string;
     name: string;
@@ -173,7 +182,12 @@ export function CustomerSelect({
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (isOpen && onOpen) {
+          onOpen(); // Trigger lazy loading when popover opens
+        }
+      }}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
