@@ -83,7 +83,6 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
 
   // Create schema dynamically based on current country requirements
   const customerFormSchema = useMemo(() => {
-    console.log("🔄 Creating new validation schema", currentCountryRequirements);
     return createCustomerFormSchema(currentCountryRequirements);
   }, [currentCountryRequirements]);
 
@@ -178,7 +177,6 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
         requiresBtw: countryData.requiresBtw || false,
         requiresAreaCode: countryData.requiresAreaCode || false,
       };
-      console.log("🌍 Country data updated", { country: countryData.name, requirements: newRequirements });
       
       // Only update if requirements actually changed
       const currentReq = JSON.stringify(currentCountryRequirements);
@@ -199,12 +197,14 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
         }, 100);
       }
     } else if (!currentCountryCode) {
-      console.log("🌍 No country selected, resetting requirements");
-      // Reset to base schema when no country selected
-      setCurrentCountryRequirements({});
-      form.clearErrors();
+      // Reset to base schema when no country selected - only if not already empty
+      const isEmpty = Object.keys(currentCountryRequirements).length === 0;
+      if (!isEmpty) {
+        setCurrentCountryRequirements({});
+        form.clearErrors();
+      }
     }
-  }, [countryData, currentCountryCode, form, currentCountryRequirements]);
+  }, [countryData, currentCountryCode, form]);
 
   // Update form when customer data loads and store original values for change tracking
   useEffect(() => {
