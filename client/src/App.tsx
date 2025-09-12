@@ -55,6 +55,24 @@ function Router() {
             );
           }}
         </Route>
+        <Route path="/customer-form" component={() => {
+          const CustomerForm = React.lazy(() => import('./pages/customer-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <CustomerForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/customer-form/:id">
+          {(params) => {
+            const CustomerForm = React.lazy(() => import('./pages/customer-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <CustomerForm onSave={() => window.history.back()} customerId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </Layout>

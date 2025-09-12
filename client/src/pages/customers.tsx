@@ -149,19 +149,7 @@ export default function Customers() {
   };
 
   const handleEdit = (customer: Customer) => {
-    setEditingCustomer(customer);
-    form.reset({
-      name: customer.name,
-      email: customer.email || "",
-      phone: customer.phone || "",
-      mobile: customer.mobile || "",
-      taxId: customer.taxId || "",
-      bankAccount: customer.bankAccount || "",
-      language: customer.language || "nl",
-      paymentTerms: customer.paymentTerms?.toString() || "30",
-      status: customer.status || "active",
-    });
-    setShowDialog(true);
+    window.location.href = `/customer-form/${customer.id}`;
   };
 
   const handleDelete = (id: string) => {
@@ -171,9 +159,7 @@ export default function Customers() {
   };
 
   const handleNewCustomer = () => {
-    setEditingCustomer(null);
-    form.reset();
-    setShowDialog(true);
+    window.location.href = '/customer-form';
   };
 
   // Render table data with proper formatting
