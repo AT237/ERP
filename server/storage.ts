@@ -11,7 +11,7 @@ import {
   type PurchaseOrderItem, type InsertPurchaseOrderItem, type WorkOrder, type InsertWorkOrder,
   type PackingList, type InsertPackingList, type PackingListItem, type InsertPackingListItem,
   type UserPreferences, type InsertUserPreferences, type CustomerContact, type InsertCustomerContact,
-  type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentTerm, type InsertPaymentTerm,
+  type Address, type InsertAddress, type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentTerm, type InsertPaymentTerm,
   type Incoterm, type InsertIncoterm, type VatRate, type InsertVatRate,
   type City, type InsertCity, type Status, type InsertStatus
 } from "@shared/schema";
@@ -35,10 +35,19 @@ export interface IStorage {
   updateCustomer(id: string, customer: Partial<InsertCustomer>): Promise<Customer>;
   deleteCustomer(id: string): Promise<void>;
 
+  // Address methods
+  getAddresses(): Promise<Address[]>;
+  getAddress(id: string): Promise<Address | undefined>;
+  searchAddresses(query: string): Promise<Address[]>;
+  createAddress(address: InsertAddress): Promise<Address>;
+  updateAddress(id: string, address: Partial<InsertAddress>): Promise<Address>;
+  deleteAddress(id: string): Promise<void>;
+
   // Customer Contact methods
   getCustomerContacts(): Promise<CustomerContact[]>;
   getCustomerContact(id: string): Promise<CustomerContact | undefined>;
   getCustomerContactsByCustomer(customerId: string): Promise<CustomerContact[]>;
+  searchCustomerContacts(query: string, customerId?: string): Promise<CustomerContact[]>;
   createCustomerContact(contact: InsertCustomerContact): Promise<CustomerContact>;
   updateCustomerContact(id: string, contact: Partial<InsertCustomerContact>): Promise<CustomerContact>;
   deleteCustomerContact(id: string): Promise<void>;
@@ -275,8 +284,61 @@ export class DatabaseStorage implements IStorage {
     return updatedContact;
   }
 
+  async searchCustomerContacts(query: string, customerId?: string): Promise<CustomerContact[]> {
+    let whereCondition = or(
+      ilike(customerContacts.firstName, `%${query}%`),
+      ilike(customerContacts.lastName, `%${query}%`),
+      ilike(customerContacts.email, `%${query}%`),
+      ilike(customerContacts.position, `%${query}%`)
+    );
+
+    if (customerId) {
+      whereCondition = and(eq(customerContacts.customerId, customerId), whereCondition);
+    }
+
+    return await db.select().from(customerContacts)
+      .where(whereCondition)
+      .orderBy(desc(customerContacts.isPrimary), desc(customerContacts.createdAt));
+  }
+
   async deleteCustomerContact(id: string): Promise<void> {
     await db.delete(customerContacts).where(eq(customerContacts.id, id));
+  }
+
+  // Address methods
+  async getAddresses(): Promise<Address[]> {
+    return await db.select().from(addresses).orderBy(desc(addresses.createdAt));
+  }
+
+  async getAddress(id: string): Promise<Address | undefined> {
+    const [address] = await db.select().from(addresses).where(eq(addresses.id, id));
+    return address || undefined;
+  }
+
+  async searchAddresses(query: string): Promise<Address[]> {
+    return await db.select().from(addresses)
+      .where(or(
+        ilike(addresses.street, `%${query}%`),
+        ilike(addresses.houseNumber, `%${query}%`),
+        ilike(addresses.postalCode, `%${query}%`),
+        ilike(addresses.city, `%${query}%`),
+        ilike(addresses.country, `%${query}%`)
+      ))
+      .orderBy(desc(addresses.createdAt));
+  }
+
+  async createAddress(address: InsertAddress): Promise<Address> {
+    const [newAddress] = await db.insert(addresses).values(address).returning();
+    return newAddress;
+  }
+
+  async updateAddress(id: string, address: Partial<InsertAddress>): Promise<Address> {
+    const [updatedAddress] = await db.update(addresses).set(address).where(eq(addresses.id, id)).returning();
+    return updatedAddress;
+  }
+
+  async deleteAddress(id: string): Promise<void> {
+    await db.delete(addresses).where(eq(addresses.id, id));
   }
 
   // Supplier methods

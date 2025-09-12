@@ -56,6 +56,7 @@ export const customers = pgTable("customers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   customerNumber: text("customer_number").notNull().unique(),
   name: text("name").notNull(),
+  kvkNummer: text("kvk_nummer"), // Dutch Chamber of Commerce number
   email: text("email"),
   phone: text("phone"),
   mobile: text("mobile"),

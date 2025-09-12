@@ -7,7 +7,7 @@ import {
   insertInvoiceSchema, insertInvoiceItemSchema, insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema, insertWorkOrderSchema, insertPackingListSchema,
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
-  insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
+  insertAddressSchema, insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
   insertVatRateSchema, insertCitySchema, insertStatusSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
@@ -155,6 +155,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting customer contact:", error);
       res.status(500).json({ message: "Failed to delete customer contact" });
+    }
+  });
+
+  app.get("/api/customer-contacts/search", async (req, res) => {
+    try {
+      const { q, customerId } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Search query 'q' is required" });
+      }
+      const contacts = await storage.searchCustomerContacts(q, customerId as string | undefined);
+      res.json(contacts);
+    } catch (error) {
+      console.error("Error searching customer contacts:", error);
+      res.status(500).json({ message: "Failed to search customer contacts" });
+    }
+  });
+
+  // Address routes
+  app.get("/api/addresses", async (req, res) => {
+    try {
+      const { q } = req.query;
+      let addresses;
+      if (q && typeof q === 'string') {
+        addresses = await storage.searchAddresses(q);
+      } else {
+        addresses = await storage.getAddresses();
+      }
+      res.json(addresses);
+    } catch (error) {
+      console.error("Error fetching addresses:", error);
+      res.status(500).json({ message: "Failed to fetch addresses" });
+    }
+  });
+
+  app.get("/api/addresses/:id", async (req, res) => {
+    try {
+      const address = await storage.getAddress(req.params.id);
+      if (!address) {
+        return res.status(404).json({ message: "Address not found" });
+      }
+      res.json(address);
+    } catch (error) {
+      console.error("Error fetching address:", error);
+      res.status(500).json({ message: "Failed to fetch address" });
+    }
+  });
+
+  app.post("/api/addresses", async (req, res) => {
+    try {
+      const addressData = insertAddressSchema.parse(req.body);
+      const address = await storage.createAddress(addressData);
+      res.status(201).json(address);
+    } catch (error) {
+      console.error("Error creating address:", error);
+      res.status(400).json({ message: "Failed to create address" });
+    }
+  });
+
+  app.patch("/api/addresses/:id", async (req, res) => {
+    try {
+      const addressData = insertAddressSchema.partial().parse(req.body);
+      const address = await storage.updateAddress(req.params.id, addressData);
+      res.json(address);
+    } catch (error) {
+      console.error("Error updating address:", error);
+      res.status(400).json({ message: "Failed to update address" });
+    }
+  });
+
+  app.delete("/api/addresses/:id", async (req, res) => {
+    try {
+      await storage.deleteAddress(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting address:", error);
+      res.status(500).json({ message: "Failed to delete address" });
     }
   });
 

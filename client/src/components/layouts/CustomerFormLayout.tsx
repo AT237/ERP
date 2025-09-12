@@ -10,6 +10,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { AddressSelectWithAdd } from "@/components/ui/address-select-with-add";
+import { ContactPersonSelectWithAdd } from "@/components/ui/contact-person-select-with-add";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
@@ -23,6 +25,9 @@ import { z } from "zod";
 // Use the same schema as in customers.tsx
 const customerFormSchema = insertCustomerSchema.extend({
   paymentTerms: z.string().min(1, "Betalingsvoorwaarden zijn verplicht"),
+  kvkNummer: z.string().optional().refine((val) => !val || /^\d{8}$/.test(val), {
+    message: "KVK nummer moet 8 cijfers bevatten"
+  }),
 });
 
 type CustomerFormData = z.infer<typeof customerFormSchema>;
@@ -52,9 +57,12 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
       name: "",
+      kvkNummer: "",
       email: "",
       phone: "",
       mobile: "",
+      addressId: "",
+      contactPersonEmail: "",
       taxId: "",
       bankAccount: "",
       language: "nl",
@@ -74,9 +82,12 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
     if (customer) {
       form.reset({
         name: customer.name || "",
+        kvkNummer: customer.kvkNummer || "",
         email: customer.email || "",
         phone: customer.phone || "",
         mobile: customer.mobile || "",
+        addressId: customer.addressId || "",
+        contactPersonEmail: customer.contactPersonEmail || "",
         taxId: customer.taxId || "",
         bankAccount: customer.bankAccount || "",
         language: customer.language || "nl",
@@ -188,6 +199,22 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="kvkNummer">KVK-nummer</Label>
+                <Input
+                  id="kvkNummer"
+                  {...form.register("kvkNummer")}
+                  placeholder="12345678"
+                  maxLength={8}
+                  data-testid="input-customer-kvk-nummer"
+                />
+                {form.formState.errors.kvkNummer && (
+                  <p className="text-sm text-red-600">{form.formState.errors.kvkNummer.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label htmlFor="taxId">BTW-nummer</Label>
                 <Input
                   id="taxId"
@@ -196,9 +223,6 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   data-testid="input-customer-taxId"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
 
               <div className="space-y-2">
                 <Label htmlFor="language">Taal</Label>
@@ -216,6 +240,33 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                     <SelectItem value="fr">Français</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            {/* Address Selection */}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="addressId">Adres</Label>
+                <AddressSelectWithAdd
+                  value={form.watch("addressId")}
+                  onValueChange={(value) => form.setValue("addressId", value)}
+                  placeholder="Selecteer adres..."
+                  testId="select-customer-address"
+                />
+              </div>
+            </div>
+
+            {/* Contact Person Selection */}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="contactPersonEmail">Contactpersoon</Label>
+                <ContactPersonSelectWithAdd
+                  value={form.watch("contactPersonEmail")}
+                  onValueChange={(value) => form.setValue("contactPersonEmail", value)}
+                  customerId={customerId}
+                  placeholder="Selecteer contactpersoon..."
+                  testId="select-customer-contact-person"
+                />
               </div>
             </div>
           </div>
