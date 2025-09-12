@@ -52,9 +52,9 @@ export function BaseFormLayout({
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header matching QuotationFormLayout structure */}
-      <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-b">
+    <div className="p-6">
+      <div className="space-y-4">
+        {/* Header with Title and Controls - exact original quotation layout */}
         <div className="relative p-2">
           {/* Title Section */}
           <InfoHeaderLayout 
@@ -62,7 +62,7 @@ export function BaseFormLayout({
             className="absolute left-2 w-fit"
           />
           
-          {/* Actions Section - starts at fixed coordinate like QuotationFormLayout */}
+          {/* Actions Section - starts at fixed coordinate like original quotation */}
           <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
             {actionButtons.map((button) => (
               <Button
@@ -86,18 +86,18 @@ export function BaseFormLayout({
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Main Content Area */}
-      <Card className="border-0 shadow-none ml-2">
-        <CardContent className="p-0">
-          <FormTabLayout
-            activeTab={activeTab}
-            onTabChange={onTabChange}
-            tabs={tabs}
-          />
-        </CardContent>
-      </Card>
+        {/* Main Content Area - exact original structure */}
+        <Card className="border-0 shadow-none ml-2">
+          <CardContent className="p-0">
+            <FormTabLayout
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              tabs={tabs}
+            />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
