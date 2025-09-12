@@ -334,6 +334,18 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                 </Select>
               </div>
             </div>
+
+            {/* Openstaande posten informatieveld */}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="openstaandePosten">Openstaande posten voor deze klant</Label>
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
+                  <p className="text-sm text-gray-600 dark:text-gray-400" data-testid="text-openstaande-posten">
+                    {isEditing ? "€ 0,00 (wordt geladen uit externe tabel)" : "€ 0,00 (geen openstaande posten voor nieuwe klant)"}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )
