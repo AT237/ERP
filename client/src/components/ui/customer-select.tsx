@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, X } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Popover, PopoverContent, PopoverTrigger 
@@ -23,6 +23,10 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
 const customerFormSchema = insertCustomerSchema.omit({ id: true }).extend({
+  name: z.string().min(1, "Company name is required"),
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  language: z.string().optional(),
   paymentTerms: z.string().min(1, "Payment terms is required"),
   street: z.string().optional(),
   houseNumber: z.string().optional(),
@@ -53,6 +57,8 @@ export function CustomerSelect({
 }: CustomerSelectProps) {
   const [open, setOpen] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Load customers  
@@ -103,13 +109,64 @@ export function CustomerSelect({
     },
   });
 
+  // Edit customer mutation
+  const editCustomerMutation = useMutation({
+    mutationFn: async (data: CustomerFormData & { id: string }) => {
+      const response = await apiRequest("PUT", `/api/customers/${data.id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Customer updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      setShowEditDialog(false);
+      setEditingCustomer(null);
+      customerForm.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update customer",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateCustomer = (data: CustomerFormData) => {
-    // Convert paymentTerms to number before sending to backend
+    createCustomerMutation.mutate(data);
+  };
+
+  const handleEditCustomer = (data: CustomerFormData) => {
+    if (!editingCustomer) return;
     const processedData = {
       ...data,
-      paymentTerms: parseInt(data.paymentTerms, 10)
+      id: editingCustomer,
     };
-    createCustomerMutation.mutate(processedData);
+    editCustomerMutation.mutate(processedData);
+  };
+
+  const openEditDialog = (customer: any) => {
+    setEditingCustomer(customer.id);
+    // Pre-populate form with customer data
+    customerForm.reset({
+      name: customer.name || "",
+      email: customer.email || "",
+      phone: customer.phone || "",
+      street: customer.street || "",
+      houseNumber: customer.houseNumber || "",
+      postalCode: customer.postalCode || "",
+      city: customer.city || "",
+      country: customer.country || "Nederland",
+      language: customer.language || "nl",
+      paymentTerms: customer.paymentTerms?.toString() || "30",
+      primaryContactName: customer.primaryContactName || "",
+      primaryContactEmail: customer.primaryContactEmail || "",
+      primaryContactPhone: customer.primaryContactPhone || "",
+    });
+    setShowEditDialog(true);
+    setOpen(false);
   };
 
   const selectedCustomer = customersTyped.find(customer => customer.id === value);
@@ -195,6 +252,20 @@ export function CustomerSelect({
                         )}
                       </div>
                     </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openEditDialog(customer);
+                      }}
+                      data-testid={`${testId}-edit-${customer.id}`}
+                    >
+                      <Search className="h-3 w-3" />
+                    </Button>
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -210,7 +281,7 @@ export function CustomerSelect({
             <DialogTitle>Add New Customer</DialogTitle>
           </DialogHeader>
           
-          <form onSubmit={customerForm.handleSubmit(handleCreateCustomer as any)} className="space-y-4">
+          <form onSubmit={customerForm.handleSubmit(handleCreateCustomer)} className="space-y-4">
             {/* Basic Information */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -380,6 +451,193 @@ export function CustomerSelect({
                 data-testid="button-save-customer"
               >
                 {createCustomerMutation.isPending ? "Creating..." : "Create Customer"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Customer Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Customer</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={customerForm.handleSubmit(handleEditCustomer)} className="space-y-4">
+            {/* Basic Information */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Company Name *</Label>
+                <Input
+                  id="edit-name"
+                  {...customerForm.register("name")}
+                  data-testid="input-edit-customer-name"
+                />
+                {customerForm.formState.errors.name && (
+                  <p className="text-sm text-red-600">{customerForm.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-language">Language</Label>
+                <Select 
+                  onValueChange={(value) => customerForm.setValue("language", value)}
+                  value={customerForm.watch("language") || "nl"}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nl">Nederlands</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="de">Deutsch</SelectItem>
+                    <SelectItem value="fr">Français</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Contact Information */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  {...customerForm.register("email")}
+                  data-testid="input-edit-customer-email"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-phone">Phone</Label>
+                <Input
+                  id="edit-phone"
+                  {...customerForm.register("phone")}
+                  data-testid="input-edit-customer-phone"
+                />
+              </div>
+            </div>
+
+            {/* Address */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="edit-street">Street</Label>
+                <Input
+                  id="edit-street"
+                  {...customerForm.register("street")}
+                  data-testid="input-edit-customer-street"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-houseNumber">House No.</Label>
+                <Input
+                  id="edit-houseNumber"
+                  {...customerForm.register("houseNumber")}
+                  data-testid="input-edit-customer-house-number"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-postalCode">Postal Code</Label>
+                <Input
+                  id="edit-postalCode"
+                  {...customerForm.register("postalCode")}
+                  data-testid="input-edit-customer-postal-code"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-city">City</Label>
+                <Input
+                  id="edit-city"
+                  {...customerForm.register("city")}
+                  data-testid="input-edit-customer-city"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-country">Country</Label>
+                <Input
+                  id="edit-country"
+                  {...customerForm.register("country")}
+                  data-testid="input-edit-customer-country"
+                />
+              </div>
+            </div>
+
+            {/* Payment Terms */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-paymentTerms">Payment Terms *</Label>
+              <Select 
+                onValueChange={(value) => customerForm.setValue("paymentTerms", value)}
+                value={customerForm.watch("paymentTerms") || "30"}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 days</SelectItem>
+                  <SelectItem value="14">14 days</SelectItem>
+                  <SelectItem value="30">30 days</SelectItem>
+                  <SelectItem value="45">45 days</SelectItem>
+                  <SelectItem value="60">60 days</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Primary Contact */}
+            <div className="space-y-4">
+              <h4 className="font-medium">Primary Contact (Optional)</h4>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-primaryContactName">Name</Label>
+                  <Input
+                    id="edit-primaryContactName"
+                    {...customerForm.register("primaryContactName")}
+                    data-testid="input-edit-primary-contact-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-primaryContactEmail">Email</Label>
+                  <Input
+                    id="edit-primaryContactEmail"
+                    type="email"
+                    {...customerForm.register("primaryContactEmail")}
+                    data-testid="input-edit-primary-contact-email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-primaryContactPhone">Phone</Label>
+                  <Input
+                    id="edit-primaryContactPhone"
+                    {...customerForm.register("primaryContactPhone")}
+                    data-testid="input-edit-primary-contact-phone"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-2 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setShowEditDialog(false);
+                  setEditingCustomer(null);
+                  customerForm.reset();
+                }}
+                data-testid="button-cancel-edit-customer"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+                disabled={editCustomerMutation.isPending}
+                data-testid="button-save-edit-customer"
+              >
+                {editCustomerMutation.isPending ? "Updating..." : "Update Customer"}
               </Button>
             </div>
           </form>
