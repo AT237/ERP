@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface InfoField {
+export interface InfoField {
   label: string;
   value: string | React.ReactNode;
 }

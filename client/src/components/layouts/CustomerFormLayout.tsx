@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormTabLayout } from '@/components/layouts/FormTabLayout';
-import { InfoHeaderLayout } from '@/components/layouts/InfoHeaderLayout';
+import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
+import type { InfoField } from './InfoHeaderLayout';
+import type { FormTab } from './FormTabLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
@@ -412,63 +411,48 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
   ];
 
 
-  if (isLoadingCustomer) {
-    return <div className="p-6">Loading...</div>;
-  }
+  // Create header fields for BaseFormLayout
+  const headerFields: InfoField[] = [
+    {
+      label: "Customer ID",
+      value: customerId ? customer?.customerNumber || customerId.slice(0, 8) : 'Nieuw'
+    },
+    {
+      label: "Status", 
+      value: isEditing ? "Edit" : "New"
+    }
+  ];
+
+  // Create action buttons for BaseFormLayout
+  const actionButtons: ActionButton[] = [
+    {
+      key: 'cancel',
+      label: 'Cancel',
+      icon: <ArrowLeft size={14} />,
+      onClick: onSave,
+      variant: 'outline',
+      testId: 'button-cancel'
+    },
+    {
+      key: 'save',
+      label: isEditing ? 'Update Customer' : 'Save Customer',
+      icon: <Save size={14} />,
+      onClick: form.handleSubmit(onSubmit),
+      variant: 'default',
+      disabled: createMutation.isPending || updateMutation.isPending,
+      loading: createMutation.isPending || updateMutation.isPending,
+      testId: 'button-save'
+    }
+  ];
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header with InfoHeaderLayout and Action Buttons */}
-      <div className="flex justify-between items-center p-4 bg-orange-50 dark:bg-orange-900/20 border-b">
-        {/* Title and Status Info */}
-        <InfoHeaderLayout
-          fields={[
-            {
-              label: "Customer ID",
-              value: customerId ? customer?.customerNumber || customerId.slice(0, 8) : 'Nieuw'
-            },
-            {
-              label: "Status",
-              value: isEditing ? "Edit" : "New"
-            }
-          ]}
-          className="absolute left-2 w-fit"
-        />
-        
-        {/* Actions Section - starts at fixed coordinate like QuotationFormLayout */}
-        <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={onSave}
-            className="h-8 text-xs"
-            data-testid="button-cancel"
-          >
-            <ArrowLeft size={14} className="mr-1" />
-            Cancel
-          </Button>
-          <Button 
-            size="sm"
-            onClick={form.handleSubmit(onSubmit)}
-            disabled={createMutation.isPending || updateMutation.isPending}
-            className="h-8 text-xs bg-green-600 text-white hover:bg-green-700"
-            data-testid="button-save"
-          >
-            <Save size={14} className="mr-1" />
-            {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : (isEditing ? "Update Customer" : "Save Customer")}
-          </Button>
-        </div>
-      </div>
-
-      <Card className="border-0 shadow-none ml-2">
-        <CardContent className="p-0">
-          <FormTabLayout
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            tabs={tabs}
-          />
-        </CardContent>
-      </Card>
-    </div>
+    <BaseFormLayout
+      headerFields={headerFields}
+      actionButtons={actionButtons}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      isLoading={isLoadingCustomer}
+    />
   );
 }

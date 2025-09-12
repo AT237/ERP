@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface FormTab {
+export interface FormTab {
   id: string;
   label: string;
   content: React.ReactNode;
