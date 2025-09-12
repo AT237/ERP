@@ -265,7 +265,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       });
       setQuotationItems(existingQuotationItems);
     }
-  }, [existingQuotation, existingQuotationItems, quotationLoading, quotationForm]);
+  }, [existingQuotation, existingQuotationItems, quotationLoading]);
 
   // Set document title based on quotation data
   useEffect(() => {
@@ -451,32 +451,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   });
 
   const handleSaveQuotation = (data: QuotationFormData) => {
-    console.log('Received quotation data:', data);
-    console.log('Data types:', {
-      subtotal: typeof data.subtotal,
-      taxAmount: typeof data.taxAmount,
-      totalAmount: typeof data.totalAmount
-    });
-    
-    // Convert number fields to strings as expected by backend
-    const processedData = {
-      ...data,
-      subtotal: typeof (data as any).subtotal === 'number' ? (data as any).subtotal.toString() : (data as any).subtotal,
-      taxAmount: typeof (data as any).taxAmount === 'number' ? (data as any).taxAmount.toString() : (data as any).taxAmount,
-      totalAmount: typeof (data as any).totalAmount === 'number' ? (data as any).totalAmount.toString() : (data as any).totalAmount,
-    };
-    
-    console.log('Processed data:', processedData);
-    console.log('Processed data types:', {
-      subtotal: typeof processedData.subtotal,
-      taxAmount: typeof processedData.taxAmount,
-      totalAmount: typeof processedData.totalAmount
-    });
-    
     if (quotationId) {
-      updateQuotationMutation.mutate(processedData);
+      updateQuotationMutation.mutate(data);
     } else {
-      createQuotationMutation.mutate(processedData);
+      createQuotationMutation.mutate(data);
     }
   };
 
