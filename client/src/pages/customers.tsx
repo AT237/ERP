@@ -73,7 +73,7 @@ export default function Customers() {
   const formatCustomerNumber = (customerNumber: string) => {
     // Extract number from customerNumber if it exists, otherwise use a default
     const num = customerNumber ? customerNumber.replace(/\D/g, '') : '0001';
-    return `CRED-${num.padStart(4, '0')}`;
+    return `CRED-${num.padStart(3, '0')}`;
   };
 
   const handleRowDoubleClick = (customer: Customer) => {
@@ -82,7 +82,7 @@ export default function Customers() {
     const event = new CustomEvent('open-form-tab', {
       detail: {
         id: `edit-customer-${customer.id}`,
-        name: `${formattedNumber}: ${customer.name}`,
+        name: `${formattedNumber}`,
         formType: 'customer',
         parentId: customer.id
       }
