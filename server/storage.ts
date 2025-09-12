@@ -284,7 +284,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    const customerNumber = `DEB-${nextNumber.toString().padStart(3, '0')}`;
+    const customerNumber = `DEB-${nextNumber.toString().padStart(4, '0')}`;
     
     const [newCustomer] = await db.insert(customers).values({
       ...customer,

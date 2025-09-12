@@ -73,7 +73,7 @@ export default function Customers() {
   const formatCustomerNumber = (customerNumber: string) => {
     // Extract number from customerNumber if it exists, otherwise use a default
     const num = customerNumber ? customerNumber.replace(/\D/g, '') : '0001';
-    return `DEB-${num.padStart(3, '0')}`;
+    return `DEB-${num.padStart(4, '0')}`;
   };
 
   const handleRowDoubleClick = (customer: Customer) => {
