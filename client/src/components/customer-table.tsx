@@ -653,15 +653,15 @@ export default function CustomerTable() {
         // Customer Details Section
         ['Customer Details:'],
         ['Name:', customer.name],
-        ['Customer ID:', customer.customerNumber || '-'],
-        ['Email:', customer.email || '-'],
-        ['Phone:', customer.phone || '-'],
-        ['Mobile:', customer.mobile || '-'],
-        ['Tax ID:', customer.taxId || '-'],
-        ['Bank Account:', customer.bankAccount || '-'],
+        ['Customer ID:', customer.customerNumber || ''],
+        ['Email:', customer.email || ''],
+        ['Phone:', customer.phone || ''],
+        ['Mobile:', customer.mobile || ''],
+        ['Tax ID:', customer.taxId || ''],
+        ['Bank Account:', customer.bankAccount || ''],
         ['Payment Terms:', `${customer.paymentTerms} days`],
         ['Status:', (customer.status || 'active').toUpperCase()],
-        ['Created:', customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('nl-NL') : '-'],
+        ['Created:', customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('nl-NL') : ''],
         [''], // Empty row
         
         // Statistics Section

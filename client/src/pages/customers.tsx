@@ -113,10 +113,10 @@ export default function Customers() {
     return customers.map((customer) => ({
       ...customer,
       name: customer.name,
-      email: customer.email || 'Geen email',
-      phone: customer.phone || 'Geen telefoon',
-      mobile: customer.mobile || 'Geen mobiel',
-      taxId: customer.taxId || 'Geen BTW-nr',
+      email: customer.email || '',
+      phone: customer.phone || '',
+      mobile: customer.mobile || '',
+      taxId: customer.taxId || '',
       paymentTerms: `${customer.paymentTerms || '30'} dagen`,
       status: customer.status || 'actief',
     }));

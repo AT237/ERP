@@ -62,7 +62,7 @@ const defaultColumns: ColumnConfig[] = [
     width: 100, 
     filterable: true, 
     sortable: true,
-    renderCell: (value: string) => value ? new Date(value).toLocaleDateString('nl-NL') : '-'
+    renderCell: (value: string) => value ? new Date(value).toLocaleDateString('nl-NL') : ''
   },
 ];
 

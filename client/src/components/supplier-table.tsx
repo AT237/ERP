@@ -61,7 +61,7 @@ const defaultColumns: ColumnConfig[] = [
     width: 100, 
     filterable: true, 
     sortable: true,
-    renderCell: (value: string) => value ? new Date(value).toLocaleDateString('nl-NL') : '-'
+    renderCell: (value: string) => value ? new Date(value).toLocaleDateString('nl-NL') : ''
   },
 ];
 
@@ -490,7 +490,7 @@ export default function SupplierTable() {
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium text-gray-600">Created:</span>
-                    <span>{selectedSupplierForReport.createdAt ? new Date(selectedSupplierForReport.createdAt).toLocaleDateString('en-US') : '-'}</span>
+                    <span>{selectedSupplierForReport.createdAt ? new Date(selectedSupplierForReport.createdAt).toLocaleDateString('en-US') : ''}</span>
                   </div>
                 </div>
               </div>

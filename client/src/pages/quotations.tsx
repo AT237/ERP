@@ -694,13 +694,13 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
                           <div>
                             <Label>Quotation Date</Label>
                             <p className="text-sm mt-1">
-                              {selectedQuotation.quotationDate ? format(new Date(selectedQuotation.quotationDate), 'dd-MM-yyyy') : '-'}
+                              {selectedQuotation.quotationDate ? format(new Date(selectedQuotation.quotationDate), 'dd-MM-yyyy') : ''}
                             </p>
                           </div>
                           <div>
                             <Label>Valid Until</Label>
                             <p className="text-sm mt-1">
-                              {selectedQuotation.validUntil ? format(new Date(selectedQuotation.validUntil), 'dd-MM-yyyy') : '-'}
+                              {selectedQuotation.validUntil ? format(new Date(selectedQuotation.validUntil), 'dd-MM-yyyy') : ''}
                             </p>
                           </div>
                           <div>
@@ -711,7 +711,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
                           </div>
                           <div className="col-span-2">
                             <Label>Description</Label>
-                            <p className="text-sm mt-1">{selectedQuotation.description || '-'}</p>
+                            <p className="text-sm mt-1">{selectedQuotation.description || ''}</p>
                           </div>
                         </div>
 
@@ -932,11 +932,11 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
                             </div>
                             <div>
                               <Label>Created Date</Label>
-                              <p className="text-sm">{selectedQuotation.quotationDate ? format(new Date(selectedQuotation.quotationDate), 'dd-MM-yyyy') : '-'}</p>
+                              <p className="text-sm">{selectedQuotation.quotationDate ? format(new Date(selectedQuotation.quotationDate), 'dd-MM-yyyy') : ''}</p>
                             </div>
                             <div>
                               <Label>Valid Until</Label>
-                              <p className="text-sm">{selectedQuotation.validUntil ? format(new Date(selectedQuotation.validUntil), 'dd-MM-yyyy') : '-'}</p>
+                              <p className="text-sm">{selectedQuotation.validUntil ? format(new Date(selectedQuotation.validUntil), 'dd-MM-yyyy') : ''}</p>
                             </div>
                           </div>
                         </div>
