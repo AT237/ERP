@@ -224,6 +224,25 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   }, [watchedCostPrice, watchedUnitPrice, inventoryForm]);
 
+  // Watch for changes in quotation date and validity days to auto-calculate valid until
+  const watchedQuotationDate = quotationForm.watch("quotationDate");
+  const watchedValidityDays = quotationForm.watch("validityDays");
+
+  React.useEffect(() => {
+    if (watchedQuotationDate && watchedValidityDays) {
+      const quotationDate = new Date(watchedQuotationDate);
+      const validUntilDate = new Date(quotationDate);
+      validUntilDate.setDate(quotationDate.getDate() + watchedValidityDays);
+      const validUntilString = validUntilDate.toISOString().split('T')[0];
+      
+      // Only update if the calculated date is different from current value
+      const currentValidUntil = quotationForm.getValues("validUntil");
+      if (currentValidUntil !== validUntilString) {
+        quotationForm.setValue("validUntil", validUntilString, { shouldTouch: false, shouldDirty: false });
+      }
+    }
+  }, [watchedQuotationDate, watchedValidityDays]);
+
   // Calculate next quotation number for new quotations
   useEffect(() => {
     if (!quotationId && allQuotations.length >= 0) {
@@ -1426,17 +1445,6 @@ ATE Solutions B.V.`);
                               id="quotationDate"
                               type="date"
                               {...quotationForm.register("quotationDate")}
-                              onChange={(e) => {
-                                quotationForm.setValue("quotationDate", e.target.value);
-                                // Auto-calculate valid until date
-                                const validityDays = quotationForm.watch("validityDays") || 30;
-                                if (e.target.value && validityDays) {
-                                  const quotationDate = new Date(e.target.value);
-                                  const validUntilDate = new Date(quotationDate);
-                                  validUntilDate.setDate(quotationDate.getDate() + parseInt(validityDays.toString()));
-                                  quotationForm.setValue("validUntil", validUntilDate.toISOString().split('T')[0]);
-                                }
-                              }}
                               data-testid="input-quotation-date"
                             />
                           </div>
@@ -1448,18 +1456,6 @@ ATE Solutions B.V.`);
                               min="1"
                               defaultValue="30"
                               {...quotationForm.register("validityDays", { valueAsNumber: true })}
-                              onChange={(e) => {
-                                const daysValue = parseInt(e.target.value, 10);
-                                quotationForm.setValue("validityDays", daysValue);
-                                // Auto-calculate valid until date
-                                const quotationDate = quotationForm.watch("quotationDate");
-                                if (quotationDate && e.target.value) {
-                                  const date = new Date(quotationDate);
-                                  const validUntilDate = new Date(date);
-                                  validUntilDate.setDate(date.getDate() + daysValue);
-                                  quotationForm.setValue("validUntil", validUntilDate.toISOString().split('T')[0]);
-                                }
-                              }}
                               data-testid="input-validity-days"
                             />
                           </div>
