@@ -1,7 +1,7 @@
 import {
   users, customers, suppliers, inventoryItems, projects, quotations, quotationItems,
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, workOrders,
-  packingLists, packingListItems, userPreferences, customerContacts, addresses,
+  packingLists, packingListItems, userPreferences, customerContacts, addresses, countries,
   unitsOfMeasure, paymentTerms, incoterms, vatRates, cities, statuses,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type InventoryItem, type InsertInventoryItem,
@@ -11,7 +11,7 @@ import {
   type PurchaseOrderItem, type InsertPurchaseOrderItem, type WorkOrder, type InsertWorkOrder,
   type PackingList, type InsertPackingList, type PackingListItem, type InsertPackingListItem,
   type UserPreferences, type InsertUserPreferences, type CustomerContact, type InsertCustomerContact,
-  type Address, type InsertAddress, type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentTerm, type InsertPaymentTerm,
+  type Address, type InsertAddress, type Country, type InsertCountry, type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentTerm, type InsertPaymentTerm,
   type Incoterm, type InsertIncoterm, type VatRate, type InsertVatRate,
   type City, type InsertCity, type Status, type InsertStatus
 } from "@shared/schema";
@@ -27,6 +27,14 @@ export interface IStorage {
   // User Preferences methods
   getUserPreferences(userId: string): Promise<UserPreferences | undefined>;
   saveUserPreferences(preferences: InsertUserPreferences): Promise<UserPreferences>;
+
+  // Country methods
+  getCountries(): Promise<Country[]>;
+  getCountry(id: string): Promise<Country | undefined>;
+  getCountryByCode(code: string): Promise<Country | undefined>;
+  createCountry(country: InsertCountry): Promise<Country>;
+  updateCountry(id: string, country: Partial<InsertCountry>): Promise<Country>;
+  deleteCountry(id: string): Promise<void>;
 
   // Customer methods
   getCustomers(): Promise<Customer[]>;
@@ -208,6 +216,35 @@ export class DatabaseStorage implements IStorage {
       const [created] = await db.insert(userPreferences).values(preferences).returning();
       return created;
     }
+  }
+
+  // Country methods
+  async getCountries(): Promise<Country[]> {
+    return await db.select().from(countries).orderBy(countries.name);
+  }
+
+  async getCountry(id: string): Promise<Country | undefined> {
+    const [country] = await db.select().from(countries).where(eq(countries.id, id));
+    return country || undefined;
+  }
+
+  async getCountryByCode(code: string): Promise<Country | undefined> {
+    const [country] = await db.select().from(countries).where(eq(countries.code, code));
+    return country || undefined;
+  }
+
+  async createCountry(country: InsertCountry): Promise<Country> {
+    const [newCountry] = await db.insert(countries).values(country).returning();
+    return newCountry;
+  }
+
+  async updateCountry(id: string, country: Partial<InsertCountry>): Promise<Country> {
+    const [updatedCountry] = await db.update(countries).set(country).where(eq(countries.id, id)).returning();
+    return updatedCountry;
+  }
+
+  async deleteCountry(id: string): Promise<void> {
+    await db.delete(countries).where(eq(countries.id, id));
   }
 
   // Customer methods
@@ -484,11 +521,23 @@ export class DatabaseStorage implements IStorage {
     }
     
     const [newQuotation] = await db.insert(quotations).values({
-      ...quotation,
+      customerId: quotation.customerId,
       quotationNumber,
+      projectId: quotation.projectId,
+      status: quotation.status || "draft",
       quotationDate: quotation.quotationDate ? new Date(quotation.quotationDate) : new Date(),
+      description: quotation.description,
+      revisionNumber: quotation.revisionNumber || "V1.0",
       validUntil: validUntilDate,
-      revisionNumber: quotation.revisionNumber || "V1.0"
+      validityDays: quotation.validityDays || 30,
+      isBudgetQuotation: quotation.isBudgetQuotation || false,
+      subtotal: quotation.subtotal || "0",
+      taxAmount: quotation.taxAmount || "0",
+      totalAmount: quotation.totalAmount || "0",
+      notes: quotation.notes,
+      incoTerms: quotation.incoTerms,
+      paymentConditions: quotation.paymentConditions,
+      deliveryConditions: quotation.deliveryConditions
     }).returning();
     return newQuotation;
   }
@@ -917,6 +966,44 @@ export class DatabaseStorage implements IStorage {
   async deleteStatus(id: string): Promise<void> {
     await db.update(statuses).set({ isActive: false }).where(eq(statuses.id, id));
   }
+
+  // Initialize basic country data
+  async initializeCountries(): Promise<void> {
+    try {
+      // Check if countries already exist
+      const existingCountries = await this.getCountries();
+      if (existingCountries.length > 0) {
+        return; // Countries already initialized
+      }
+
+      // Add basic country data
+      const basicCountries = [
+        {
+          code: "NL",
+          name: "Netherlands",
+          requiresBtw: true,
+          requiresAreaCode: false
+        },
+        {
+          code: "ET",
+          name: "Ethiopia", 
+          requiresBtw: false,
+          requiresAreaCode: true
+        }
+      ];
+
+      for (const country of basicCountries) {
+        await this.createCountry(country);
+      }
+
+      console.log('Basic country data initialized successfully');
+    } catch (error) {
+      console.error('Error initializing country data:', error);
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
+
+// Initialize basic data when storage is created
+storage.initializeCountries();

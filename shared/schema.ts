@@ -25,6 +25,16 @@ export const userPreferences = pgTable("user_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Countries table for country management with validation rules
+export const countries = pgTable("countries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(), // ISO country code (NL, ET, etc.)
+  name: text("name").notNull(), // Country name
+  requiresBtw: boolean("requires_btw").default(false), // If BTW number is required
+  requiresAreaCode: boolean("requires_area_code").default(false), // If area code is required
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Addresses table for reusable addresses
 export const addresses = pgTable("addresses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -57,6 +67,8 @@ export const customers = pgTable("customers", {
   customerNumber: text("customer_number").notNull().unique(),
   name: text("name").notNull(),
   kvkNummer: text("kvk_nummer"), // Dutch Chamber of Commerce number
+  countryCode: text("country_code").references(() => countries.code), // Country code reference
+  areaCode: text("area_code"), // Area code for countries that require it
   email: text("email"),
   phone: text("phone"),
   mobile: text("mobile"),
@@ -478,6 +490,7 @@ export const packingListItemsRelations = relations(packingListItems, ({ one }) =
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCountrySchema = createInsertSchema(countries).omit({ id: true, createdAt: true });
 export const insertAddressSchema = createInsertSchema(addresses).omit({ id: true, createdAt: true });
 export const insertCustomerContactSchema = createInsertSchema(customerContacts).omit({ id: true, createdAt: true }).extend({
   mobile: z.array(
@@ -520,6 +533,8 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+export type Country = typeof countries.$inferSelect;
+export type InsertCountry = z.infer<typeof insertCountrySchema>;
 export type Address = typeof addresses.$inferSelect;
 export type InsertAddress = z.infer<typeof insertAddressSchema>;
 export type CustomerContact = typeof customerContacts.$inferSelect;
