@@ -474,7 +474,6 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
               <Label htmlFor="countryCode" className="text-sm font-medium pt-2">Land</Label>
               <div>
