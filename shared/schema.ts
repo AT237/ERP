@@ -89,7 +89,7 @@ export const customers = pgTable("customers", {
 // Suppliers table
 export const suppliers = pgTable("suppliers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  supplierNumber: text("supplier_number").notNull().unique(),
+  supplierNumber: text("supplier_number").notNull().unique().default(sql`CONCAT('CRED-', LPAD(nextval('supplier_number_seq')::text, 3, '0'))`),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
