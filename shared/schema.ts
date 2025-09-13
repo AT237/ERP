@@ -64,7 +64,7 @@ export const customerContacts = pgTable("customer_contacts", {
 // Customers table
 export const customers = pgTable("customers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  customerNumber: text("customer_number").notNull().unique(),
+  customerNumber: text("customer_number").notNull().unique().default(sql`CONCAT('DEB-', LPAD(nextval('customer_number_seq')::text, 4, '0'))`),
   name: text("name").notNull(),
   kvkNummer: text("kvk_nummer"), // Dutch Chamber of Commerce number
   countryCode: text("country_code").references(() => countries.code), // Country code reference
