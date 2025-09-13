@@ -399,19 +399,32 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       content: (
         <div key={formKey} className="space-y-6">
           <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
-            <Label htmlFor="name" className="text-sm font-medium text-right pt-2">Bedrijfsnaam *</Label>
-            <div>
-              <Input
-                id="name"
-                {...form.register("name")}
-                placeholder="Bedrijfsnaam"
-                autoComplete="off"
-                data-testid="input-customer-name"
-                className={getFieldClassName("name")}
-              />
-              {form.formState.errors.name && (
-                <p className="text-sm text-red-600 mt-1">{form.formState.errors.name.message}</p>
-              )}
+            <div className="text-sm font-medium text-right pt-2">
+              <span>Bedrijfsnaam *</span>
+              <span className="ml-12">Land</span>
+            </div>
+            <div className="grid grid-cols-[30%_1fr] gap-6">
+              <div>
+                <Input
+                  id="name"
+                  {...form.register("name")}
+                  placeholder="Bedrijfsnaam"
+                  autoComplete="off"
+                  data-testid="input-customer-name"
+                  className={getFieldClassName("name")}
+                />
+                {form.formState.errors.name && (
+                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div>
+                <CountrySelectWithAdd
+                  value={form.watch("countryCode") || ""}
+                  onValueChange={(value) => form.setValue("countryCode", value)}
+                  placeholder="Selecteer land..."
+                  testId="select-customer-country"
+                />
+              </div>
             </div>
 
             <Label htmlFor="kvkNummer" className="text-sm font-medium text-right pt-2">KVK-nummer</Label>
@@ -447,36 +460,28 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               </Select>
             </div>
 
-            <div className="text-sm font-medium text-right pt-2">
-              <span>Land</span>
-              <span className="ml-8">BTW-nummer{currentCountryRequirements.requiresBtw && <span className="text-red-600 ml-1">*</span>}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <CountrySelectWithAdd
-                  value={form.watch("countryCode") || ""}
-                  onValueChange={(value) => form.setValue("countryCode", value)}
-                  placeholder="Selecteer land..."
-                  testId="select-customer-country"
-                />
-              </div>
-              <div>
-                <Input
-                  id="taxId"
-                  {...form.register("taxId")}
-                  placeholder="NL123456789B01"
-                  data-testid="input-customer-taxId"
-                  className={getFieldClassName("taxId", currentCountryRequirements.requiresBtw ? "border-orange-300 focus:border-orange-500" : "")}
-                />
-                {currentCountryRequirements.requiresBtw && (
-                  <p className="text-sm text-orange-600 mt-1">
-                    BTW nummer is verplicht voor {countryData?.name || 'dit land'}
-                  </p>
-                )}
-                {form.formState.errors.taxId && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.taxId.message}</p>
-                )}
-              </div>
+            <Label htmlFor="taxId" className="text-sm font-medium text-right pt-2">
+              BTW-nummer
+              {currentCountryRequirements.requiresBtw && (
+                <span className="text-red-600 ml-1">*</span>
+              )}
+            </Label>
+            <div>
+              <Input
+                id="taxId"
+                {...form.register("taxId")}
+                placeholder="NL123456789B01"
+                data-testid="input-customer-taxId"
+                className={getFieldClassName("taxId", currentCountryRequirements.requiresBtw ? "border-orange-300 focus:border-orange-500" : "")}
+              />
+              {currentCountryRequirements.requiresBtw && (
+                <p className="text-sm text-orange-600 mt-1">
+                  BTW nummer is verplicht voor {countryData?.name || 'dit land'}
+                </p>
+              )}
+              {form.formState.errors.taxId && (
+                <p className="text-sm text-red-600 mt-1">{form.formState.errors.taxId.message}</p>
+              )}
             </div>
 
             <Label htmlFor="areaCode" className="text-sm font-medium text-right pt-2">
