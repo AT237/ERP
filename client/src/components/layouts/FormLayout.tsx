@@ -131,18 +131,18 @@ export function FormLayout({
   };
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-6">
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-8">
       {sections.map((section, sectionIndex) => (
-        <div key={sectionIndex} className="space-y-4">
+        <div key={sectionIndex} className="space-y-6">
           <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2 w-full min-w-[300px]">
             {section.title}
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {section.fields.map((field) => (
-              <div key={field.key} className="flex items-center gap-4">
+              <div key={field.key} className="flex items-start gap-6">
                 <Label 
                   htmlFor={field.key} 
-                  className="w-32 text-right"
+                  className="w-36 text-left pt-2 font-medium"
                 >
                   {field.label} {field.required && '*'}
                 </Label>
@@ -161,7 +161,16 @@ export function FormLayout({
       ))}
 
       {/* Form Actions */}
-      <div className="flex items-center justify-end space-x-4 pt-6 border-t">
+      <div className="flex items-center justify-start space-x-4 pt-8 border-t mt-8">
+        <Button
+          type="submit"
+          className={submitVariant === 'default' ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
+          variant={submitVariant}
+          disabled={isSubmitting}
+          data-testid="button-form-submit"
+        >
+          {submitLabel}
+        </Button>
         <Button
           type="button"
           variant="outline"
@@ -169,15 +178,6 @@ export function FormLayout({
           data-testid="button-form-cancel"
         >
           {cancelLabel}
-        </Button>
-        <Button
-          type="submit"
-          className={submitVariant === 'default' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
-          variant={submitVariant}
-          disabled={isSubmitting}
-          data-testid="button-form-submit"
-        >
-          {submitLabel}
         </Button>
       </div>
     </form>
