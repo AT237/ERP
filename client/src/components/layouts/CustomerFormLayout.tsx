@@ -400,7 +400,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
         <div key={formKey} className="space-y-6">
           <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
             <Label htmlFor="name" className="text-sm font-medium text-right pt-2">Bedrijfsnaam *</Label>
-            <div className="grid grid-cols-[30%_auto_30%] gap-4 items-center">
+            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
               <div>
                 <Input
                   id="name"
@@ -428,7 +428,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
             </div>
 
             <Label htmlFor="kvkNummer" className="text-sm font-medium text-right pt-2">KVK-nummer</Label>
-            <div>
+            <div className="w-[30%]">
               <Input
                 id="kvkNummer"
                 {...form.register("kvkNummer")}
@@ -443,7 +443,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
             </div>
 
             <Label htmlFor="language" className="text-sm font-medium text-right pt-2">Taal</Label>
-            <div>
+            <div className="w-[30%]">
               <Select 
                 onValueChange={(value) => form.setValue("language", value)}
                 value={form.watch("language") || "nl"}
@@ -466,7 +466,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                 <span className="text-red-600 ml-1">*</span>
               )}
             </Label>
-            <div>
+            <div className="w-[30%]">
               <Input
                 id="taxId"
                 {...form.register("taxId")}
@@ -490,7 +490,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                 <span className="text-red-600 ml-1">*</span>
               )}
             </Label>
-            <div>
+            <div className="w-[30%]">
               <Input
                 id="areaCode"
                 {...form.register("areaCode")}
@@ -509,7 +509,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
             </div>
 
             <Label htmlFor="generalEmail" className="text-sm font-medium text-right pt-2">Algemene email</Label>
-            <div>
+            <div className="w-[30%]">
               <Input
                 id="generalEmail"
                 type="email"
@@ -521,7 +521,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
             </div>
 
             <Label htmlFor="addressId" className="text-sm font-medium text-right pt-2">Adres</Label>
-            <div>
+            <div className="w-[30%]">
               <AddressSelectWithAdd
                 value={form.watch("addressId") || ""}
                 onValueChange={(value) => form.setValue("addressId", value)}
