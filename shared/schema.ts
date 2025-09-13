@@ -235,7 +235,7 @@ export const purchaseOrderItems = pgTable("purchase_order_items", {
 // Work orders table
 export const workOrders = pgTable("work_orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  orderNumber: text("order_number").notNull().unique().default(sql`generate_work_order_number()`),
+  orderNumber: text("order_number").notNull().unique().default(sql`CONCAT('WO-', LPAD(nextval('work_order_number_seq')::text, 4, '0'))`),
   projectId: varchar("project_id").references(() => projects.id),
   title: text("title").notNull(),
   description: text("description"),
@@ -253,7 +253,7 @@ export const workOrders = pgTable("work_orders", {
 // Packing lists table
 export const packingLists = pgTable("packing_lists", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  packingNumber: text("packing_number").notNull().unique().default(sql`generate_packing_list_number()`),
+  packingNumber: text("packing_number").notNull().unique().default(sql`CONCAT('PL-', LPAD(nextval('packing_list_number_seq')::text, 4, '0'))`),
   invoiceId: varchar("invoice_id").references(() => invoices.id),
   projectId: varchar("project_id").references(() => projects.id),
   customerId: varchar("customer_id").references(() => customers.id).notNull(),
