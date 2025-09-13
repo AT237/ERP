@@ -398,9 +398,9 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       label: "General",
       content: (
         <div key={formKey} className="space-y-6">
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium text-right">Bedrijfsnaam *</Label>
+          <div className="grid grid-cols-[240px_1fr] items-start gap-x-8 gap-y-6">
+            <Label htmlFor="name" className="text-sm font-medium text-right pt-2">Bedrijfsnaam *</Label>
+            <div>
               <Input
                 id="name"
                 {...form.register("name")}
@@ -414,8 +414,8 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="kvkNummer" className="text-sm font-medium text-right">KVK-nummer</Label>
+            <Label htmlFor="kvkNummer" className="text-sm font-medium text-right pt-2">KVK-nummer</Label>
+            <div>
               <Input
                 id="kvkNummer"
                 {...form.register("kvkNummer")}
@@ -429,13 +429,13 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="taxId" className="text-sm font-medium text-right">
-                BTW-nummer
-                {currentCountryRequirements.requiresBtw && (
-                  <span className="text-red-600 ml-1">*</span>
-                )}
-              </Label>
+            <Label htmlFor="taxId" className="text-sm font-medium text-right pt-2">
+              BTW-nummer
+              {currentCountryRequirements.requiresBtw && (
+                <span className="text-red-600 ml-1">*</span>
+              )}
+            </Label>
+            <div>
               <Input
                 id="taxId"
                 {...form.register("taxId")}
@@ -453,8 +453,8 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="language" className="text-sm font-medium text-right">Taal</Label>
+            <Label htmlFor="language" className="text-sm font-medium text-right pt-2">Taal</Label>
+            <div>
               <Select 
                 onValueChange={(value) => form.setValue("language", value)}
                 value={form.watch("language") || "nl"}
@@ -471,8 +471,8 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="countryCode" className="text-sm font-medium text-right">Land</Label>
+            <Label htmlFor="countryCode" className="text-sm font-medium text-right pt-2">Land</Label>
+            <div>
               <CountrySelectWithAdd
                 value={form.watch("countryCode") || ""}
                 onValueChange={(value) => form.setValue("countryCode", value)}
@@ -481,13 +481,13 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="areaCode" className="text-sm font-medium text-right">
-                Area Code
-                {currentCountryRequirements.requiresAreaCode && (
-                  <span className="text-red-600 ml-1">*</span>
-                )}
-              </Label>
+            <Label htmlFor="areaCode" className="text-sm font-medium text-right pt-2">
+              Area Code
+              {currentCountryRequirements.requiresAreaCode && (
+                <span className="text-red-600 ml-1">*</span>
+              )}
+            </Label>
+            <div>
               <Input
                 id="areaCode"
                 {...form.register("areaCode")}
@@ -505,8 +505,8 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="generalEmail" className="text-sm font-medium text-right">Algemene email</Label>
+            <Label htmlFor="generalEmail" className="text-sm font-medium text-right pt-2">Algemene email</Label>
+            <div>
               <Input
                 id="generalEmail"
                 type="email"
@@ -517,8 +517,8 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="addressId" className="text-sm font-medium text-right">Adres</Label>
+            <Label htmlFor="addressId" className="text-sm font-medium text-right pt-2">Adres</Label>
+            <div>
               <AddressSelectWithAdd
                 value={form.watch("addressId") || ""}
                 onValueChange={(value) => form.setValue("addressId", value)}
