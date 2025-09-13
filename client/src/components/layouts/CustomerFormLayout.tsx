@@ -399,11 +399,8 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       content: (
         <div key={formKey} className="space-y-6">
           <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
-            <div className="text-sm font-medium text-right pt-2">
-              <span>Bedrijfsnaam *</span>
-              <span className="ml-12">Country</span>
-            </div>
-            <div className="grid grid-cols-[30%_30%] gap-6">
+            <Label htmlFor="name" className="text-sm font-medium text-right pt-2">Bedrijfsnaam *</Label>
+            <div className="grid grid-cols-[30%_auto_30%] gap-4 items-center">
               <div>
                 <Input
                   id="name"
@@ -416,6 +413,9 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                 {form.formState.errors.name && (
                   <p className="text-sm text-red-600 mt-1">{form.formState.errors.name.message}</p>
                 )}
+              </div>
+              <div className="text-sm font-medium text-right pt-2">
+                Country
               </div>
               <div>
                 <CountrySelectWithAdd
