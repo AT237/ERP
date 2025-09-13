@@ -534,12 +534,10 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       label: "Financial",
       content: (
         <div key={formKey} className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-orange-600">Financiële informatie</h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="bankAccount">Bankrekeningnummer</Label>
+          <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
+            <Label htmlFor="bankAccount" className="text-sm font-medium text-right pt-2">Bankrekeningnummer</Label>
+            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
+              <div>
                 <Input
                   id="bankAccount"
                   {...form.register("bankAccount")}
@@ -548,9 +546,10 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   className={getFieldClassName("bankAccount")}
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="invoiceEmail">Email voor facturen</Label>
+              <div className="text-sm font-medium text-right pt-2">
+                Email voor facturen
+              </div>
+              <div>
                 <Input
                   id="invoiceEmail"
                   type="email"
@@ -562,23 +561,9 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="invoiceNotes">Notities voor facturatie</Label>
-                <Textarea
-                  id="invoiceNotes"
-                  {...form.register("invoiceNotes")}
-                  placeholder="Opmerkingen en notities voor factuurbehandeling..."
-                  rows={3}
-                  data-testid="textarea-customer-invoice-notes"
-                  className={getFieldClassName("invoiceNotes")}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="paymentTerms">Betalingsvoorwaarden *</Label>
+            <Label htmlFor="paymentTerms" className="text-sm font-medium text-right pt-2">Betalingsvoorwaarden *</Label>
+            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
+              <div>
                 <Select 
                   onValueChange={(value) => form.setValue("paymentTerms", value)}
                   value={form.watch("paymentTerms") || "30"}
@@ -598,11 +583,10 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
                   <p className="text-sm text-red-600">{form.formState.errors.paymentTerms.message}</p>
                 )}
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+              <div className="text-sm font-medium text-right pt-2">
+                Status
+              </div>
+              <div>
                 <Select 
                   onValueChange={(value) => form.setValue("status", value)}
                   value={form.watch("status") || "active"}
@@ -620,15 +604,24 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
               </div>
             </div>
 
-            {/* Openstaande posten informatieveld */}
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="openstaandePosten">Openstaande posten voor deze klant</Label>
-                <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
-                  <p className="text-sm text-gray-600 dark:text-gray-400" data-testid="text-openstaande-posten">
-                    {isEditing ? "€ 0,00 (wordt geladen uit externe tabel)" : "€ 0,00 (geen openstaande posten voor nieuwe klant)"}
-                  </p>
-                </div>
+            <Label htmlFor="invoiceNotes" className="text-sm font-medium text-right pt-2">Notities voor facturatie</Label>
+            <div>
+              <Textarea
+                id="invoiceNotes"
+                {...form.register("invoiceNotes")}
+                placeholder="Opmerkingen en notities voor factuurbehandeling..."
+                rows={3}
+                data-testid="textarea-customer-invoice-notes"
+                className={getFieldClassName("invoiceNotes")}
+              />
+            </div>
+
+            <Label htmlFor="openstaandePosten" className="text-sm font-medium text-right pt-2">Openstaande posten</Label>
+            <div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
+                <p className="text-sm text-gray-600 dark:text-gray-400" data-testid="text-openstaande-posten">
+                  {isEditing ? "€ 0,00 (wordt geladen uit externe tabel)" : "€ 0,00 (geen openstaande posten voor nieuwe klant)"}
+                </p>
               </div>
             </div>
           </div>
