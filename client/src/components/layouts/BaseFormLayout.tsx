@@ -75,15 +75,6 @@ export function BaseFormLayout({
   return (
     <div className="p-6" style={{ minHeight: '100vh' }}>
       <div className="space-y-4">
-        {/* Header with Title only */}
-        <div className="relative p-2" style={{ minHeight: '64px' }}>
-          {/* Title Section */}
-          <InfoHeaderLayout 
-            fields={headerFields}
-            className="absolute left-2 w-fit"
-          />
-        </div>
-
         {/* Main Content Area - exact original structure with stable dimensions */}
         <Card className="border-0 shadow-none ml-2">
           <CardContent className="p-0">
