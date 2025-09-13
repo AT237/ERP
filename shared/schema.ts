@@ -133,6 +133,7 @@ export const inventoryComponents = pgTable("inventory_components", {
 // Projects table
 export const projects = pgTable("projects", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectNumber: text("project_number").notNull().unique().default(sql`CONCAT('PR-', LPAD(nextval('project_number_seq')::text, 4, '0'))`),
   name: text("name").notNull(),
   description: text("description"),
   customerId: varchar("customer_id").references(() => customers.id),
@@ -182,7 +183,7 @@ export const quotationItems = pgTable("quotation_items", {
 // Invoices table
 export const invoices = pgTable("invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  invoiceNumber: text("invoice_number").notNull().unique().default(sql`generate_invoice_number()`),
+  invoiceNumber: text("invoice_number").notNull().unique().default(sql`generate_ci_number()`),
   customerId: varchar("customer_id").references(() => customers.id).notNull(),
   quotationId: varchar("quotation_id").references(() => quotations.id),
   projectId: varchar("project_id").references(() => projects.id),
@@ -205,6 +206,22 @@ export const invoiceItems = pgTable("invoice_items", {
   quantity: integer("quantity").notNull(),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+});
+
+// Proforma invoices table
+export const proformaInvoices = pgTable("proforma_invoices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  proformaNumber: text("proforma_number").notNull().unique().default(sql`generate_proforma_invoice_number()`),
+  customerId: varchar("customer_id").references(() => customers.id).notNull(),
+  quotationId: varchar("quotation_id").references(() => quotations.id),
+  projectId: varchar("project_id").references(() => projects.id),
+  status: text("status").default("pending"),
+  dueDate: timestamp("due_date"),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Purchase orders table
@@ -505,7 +522,7 @@ export const insertCustomerContactSchema = createInsertSchema(customerContacts).
 export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, customerNumber: true, createdAt: true, deletedAt: true });
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, supplierNumber: true, createdAt: true, deletedAt: true });
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({ id: true, createdAt: true });
-export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, createdAt: true });
+export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, projectNumber: true, createdAt: true });
 export const insertQuotationSchema = createInsertSchema(quotations).omit({ id: true, createdAt: true }).extend({
   quotationDate: z.string().optional(),
   validUntil: z.string().optional(),
@@ -517,6 +534,7 @@ export const insertQuotationSchema = createInsertSchema(quotations).omit({ id: t
 export const insertQuotationItemSchema = createInsertSchema(quotationItems).omit({ id: true });
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({ id: true, createdAt: true });
 export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({ id: true });
+export const insertProformaInvoiceSchema = createInsertSchema(proformaInvoices).omit({ id: true, createdAt: true });
 export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit({ id: true, createdAt: true });
 export const insertPurchaseOrderItemSchema = createInsertSchema(purchaseOrderItems).omit({ id: true });
 export const insertWorkOrderSchema = createInsertSchema(workOrders).omit({ id: true, createdAt: true });
@@ -558,6 +576,8 @@ export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type InvoiceItem = typeof invoiceItems.$inferSelect;
 export type InsertInvoiceItem = z.infer<typeof insertInvoiceItemSchema>;
+export type ProformaInvoice = typeof proformaInvoices.$inferSelect;
+export type InsertProformaInvoice = z.infer<typeof insertProformaInvoiceSchema>;
 export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
 export type InsertPurchaseOrder = z.infer<typeof insertPurchaseOrderSchema>;
 export type PurchaseOrderItem = typeof purchaseOrderItems.$inferSelect;
