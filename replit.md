@@ -66,6 +66,20 @@ The application uses **PostgreSQL** as the primary database with **Drizzle ORM**
 - **Migrations**: Drizzle Kit for database migrations and schema updates
 - **Connection**: Neon Database serverless PostgreSQL with connection pooling
 - **Validation**: Drizzle-Zod integration for runtime type validation
+- **Automatic Numbering**: All business entities use database sequences for secure, concurrent number generation
+
+### Database Sequence Standards
+All business entities now use database-generated sequences for automatic numbering:
+
+- **Customers**: DEB-0001, DEB-0002, etc. (PostgreSQL sequence)
+- **Suppliers**: CRED-001, CRED-002, etc. (PostgreSQL sequence)
+- **Quotations**: Q-2025-001, Q-2025-002, etc. (Year-based function)
+- **Invoices**: INV-2025-001, INV-2025-002, etc. (Year-based function)
+- **Purchase Orders**: PO-2025-001, PO-2025-002, etc. (Year-based function)
+- **Work Orders**: WO-2025-001, WO-2025-002, etc. (Year-based function)
+- **Packing Lists**: PACK-2025-001, PACK-2025-002, etc. (Year-based function)
+
+This ensures thread-safe, unique numbering without application-level complexity and eliminates race conditions during concurrent operations.
 
 The database schema includes tables for users, customers, suppliers, inventory items, projects, quotations, invoices, purchase orders, work orders, and packing lists with proper relationships and foreign key constraints.
 
