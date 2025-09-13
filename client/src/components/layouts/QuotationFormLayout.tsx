@@ -944,10 +944,9 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       label: "General",
       content: (
         <div className="space-y-6">
-          {/* General Information */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="customerId">Customer</Label>
+          <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
+            <Label htmlFor="customerId" className="text-sm font-medium text-right pt-2">Customer</Label>
+            <div className="w-[30%]">
               <CustomerSelect
                 value={quotationForm.watch("customerId")}
                 onValueChange={(value) => quotationForm.setValue("customerId", value)}
@@ -957,50 +956,55 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 customers={customers}
               />
             </div>
-            <div className="col-span-2">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="quotationDate">Quotation Date</Label>
-                  <Input
-                    id="quotationDate"
-                    type="date"
-                    {...quotationForm.register("quotationDate")}
-                    data-testid="input-quotation-date"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="validityDays">Validity (days)</Label>
-                  <Input
-                    id="validityDays"
-                    type="number"
-                    min="1"
-                    defaultValue="30"
-                    {...quotationForm.register("validityDays", { valueAsNumber: true })}
-                    data-testid="input-validity-days"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="validUntil">Valid Until</Label>
-                  <Input
-                    id="validUntil"
-                    type="date"
-                    {...quotationForm.register("validUntil")}
-                    className="bg-gray-50 dark:bg-gray-800"
-                    readOnly
-                    data-testid="input-valid-until"
-                  />
-                </div>
+
+            <Label htmlFor="quotationDate" className="text-sm font-medium text-right pt-2">Quotation Date</Label>
+            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
+              <div>
+                <Input
+                  id="quotationDate"
+                  type="date"
+                  {...quotationForm.register("quotationDate")}
+                  data-testid="input-quotation-date"
+                />
+              </div>
+              <div className="text-sm font-medium text-right pt-2">
+                Validity (days)
+              </div>
+              <div>
+                <Input
+                  id="validityDays"
+                  type="number"
+                  min="1"
+                  defaultValue="30"
+                  {...quotationForm.register("validityDays", { valueAsNumber: true })}
+                  data-testid="input-validity-days"
+                />
               </div>
             </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="description">Quotation description</Label>
+
+            <Label htmlFor="validUntil" className="text-sm font-medium text-right pt-2">Valid Until</Label>
+            <div className="w-[30%]">
+              <Input
+                id="validUntil"
+                type="date"
+                {...quotationForm.register("validUntil")}
+                className="bg-gray-50 dark:bg-gray-800"
+                readOnly
+                data-testid="input-valid-until"
+              />
+            </div>
+
+            <Label htmlFor="description" className="text-sm font-medium text-right pt-2">Quotation description</Label>
+            <div>
               <Textarea
                 id="description"
                 {...quotationForm.register("description")}
                 data-testid="input-description"
               />
             </div>
-            <div className="col-span-2 space-y-2">
+
+            <Label htmlFor="isBudgetQuotation" className="text-sm font-medium text-right pt-2">Budget quotation</Label>
+            <div>
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="isBudgetQuotation"
@@ -1171,20 +1175,30 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       id: "financial",
       label: "Financial",
       content: (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Financial Summary</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <Label>Subtotal</Label>
-              <p className="text-2xl font-bold">€{quotationForm.watch("subtotal") || "0.00"}</p>
+        <div className="space-y-6">
+          <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
+            <Label className="text-sm font-medium text-right pt-2">Subtotal</Label>
+            <div className="w-[30%]">
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <p className="text-2xl font-bold">€{quotationForm.watch("subtotal") || "0.00"}</p>
+              </div>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <Label>Tax (21%)</Label>
-              <p className="text-2xl font-bold">€{quotationForm.watch("taxAmount") || "0.00"}</p>
-            </div>
-            <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200">
-              <Label>Total</Label>
-              <p className="text-2xl font-bold text-orange-800 dark:text-orange-200">€{quotationForm.watch("totalAmount") || "0.00"}</p>
+
+            <Label className="text-sm font-medium text-right pt-2">Tax (21%)</Label>
+            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
+              <div>
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                  <p className="text-2xl font-bold">€{quotationForm.watch("taxAmount") || "0.00"}</p>
+                </div>
+              </div>
+              <div className="text-sm font-medium text-right pt-2">
+                Total
+              </div>
+              <div>
+                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200">
+                  <p className="text-2xl font-bold text-orange-800 dark:text-orange-200">€{quotationForm.watch("totalAmount") || "0.00"}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
