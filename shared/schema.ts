@@ -182,7 +182,7 @@ export const quotationItems = pgTable("quotation_items", {
 // Invoices table
 export const invoices = pgTable("invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  invoiceNumber: text("invoice_number").notNull().unique(),
+  invoiceNumber: text("invoice_number").notNull().unique().default(sql`generate_invoice_number()`),
   customerId: varchar("customer_id").references(() => customers.id).notNull(),
   quotationId: varchar("quotation_id").references(() => quotations.id),
   projectId: varchar("project_id").references(() => projects.id),
@@ -210,7 +210,7 @@ export const invoiceItems = pgTable("invoice_items", {
 // Purchase orders table
 export const purchaseOrders = pgTable("purchase_orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  orderNumber: text("order_number").notNull().unique(),
+  orderNumber: text("order_number").notNull().unique().default(sql`generate_purchase_order_number()`),
   supplierId: varchar("supplier_id").references(() => suppliers.id).notNull(),
   status: text("status").default("pending"),
   orderDate: timestamp("order_date").defaultNow(),
@@ -235,7 +235,7 @@ export const purchaseOrderItems = pgTable("purchase_order_items", {
 // Work orders table
 export const workOrders = pgTable("work_orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  orderNumber: text("order_number").notNull().unique(),
+  orderNumber: text("order_number").notNull().unique().default(sql`generate_work_order_number()`),
   projectId: varchar("project_id").references(() => projects.id),
   title: text("title").notNull(),
   description: text("description"),
@@ -253,7 +253,7 @@ export const workOrders = pgTable("work_orders", {
 // Packing lists table
 export const packingLists = pgTable("packing_lists", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  packingNumber: text("packing_number").notNull().unique(),
+  packingNumber: text("packing_number").notNull().unique().default(sql`generate_packing_list_number()`),
   invoiceId: varchar("invoice_id").references(() => invoices.id),
   projectId: varchar("project_id").references(() => projects.id),
   customerId: varchar("customer_id").references(() => customers.id).notNull(),
