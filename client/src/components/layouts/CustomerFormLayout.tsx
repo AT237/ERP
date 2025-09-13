@@ -398,7 +398,7 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       label: "General",
       content: (
         <div key={formKey} className="space-y-6">
-          <div className="grid grid-cols-[180px_1fr] items-start gap-x-6 gap-y-6">
+          <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
             <Label htmlFor="name" className="text-sm font-medium text-right pt-2">Bedrijfsnaam *</Label>
             <div>
               <Input
