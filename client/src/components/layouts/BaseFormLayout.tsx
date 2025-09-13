@@ -75,37 +75,13 @@ export function BaseFormLayout({
   return (
     <div className="p-6" style={{ minHeight: '100vh' }}>
       <div className="space-y-4">
-        {/* Header with Title and Controls - exact original quotation layout */}
+        {/* Header with Title only */}
         <div className="relative p-2" style={{ minHeight: '64px' }}>
           {/* Title Section */}
           <InfoHeaderLayout 
             fields={headerFields}
             className="absolute left-2 w-fit"
           />
-          
-          {/* Actions Section - starts at fixed coordinate like original quotation */}
-          <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
-            {actionButtons.map((button) => (
-              <Button
-                key={button.key}
-                variant={button.variant || 'outline'}
-                size="sm"
-                onClick={button.onClick}
-                disabled={button.disabled || button.loading}
-                className={`h-8 text-xs ${button.className || ''} ${
-                  button.variant === 'default' ? 'bg-green-600 text-white hover:bg-green-700' : ''
-                }`}
-                data-testid={button.testId || `button-${button.key}`}
-              >
-                {button.loading ? (
-                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
-                ) : (
-                  button.icon && <span className="mr-1">{button.icon}</span>
-                )}
-                {button.loading ? 'Loading...' : button.label}
-              </Button>
-            ))}
-          </div>
         </div>
 
         {/* Main Content Area - exact original structure with stable dimensions */}
@@ -118,6 +94,30 @@ export function BaseFormLayout({
             />
           </CardContent>
         </Card>
+
+        {/* Actions Section - moved below the orange border */}
+        <div className="ml-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+          {actionButtons.map((button) => (
+            <Button
+              key={button.key}
+              variant={button.variant || 'outline'}
+              size="sm"
+              onClick={button.onClick}
+              disabled={button.disabled || button.loading}
+              className={`h-8 text-xs ${button.className || ''} ${
+                button.variant === 'default' ? 'bg-green-600 text-white hover:bg-green-700' : ''
+              }`}
+              data-testid={button.testId || `button-${button.key}`}
+            >
+              {button.loading ? (
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
+              ) : (
+                button.icon && <span className="mr-1">{button.icon}</span>
+              )}
+              {button.loading ? 'Loading...' : button.label}
+            </Button>
+          ))}
+        </div>
       </div>
     </div>
   );
