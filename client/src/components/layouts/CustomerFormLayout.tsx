@@ -397,139 +397,134 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       id: "general",
       label: "General",
       content: (
-        <div key={formKey} className="space-y-10">
-          {/* Company Information */}
-          <div className="space-y-8">
-            <h3 className="text-lg font-semibold text-orange-600 border-b border-orange-200 pb-2">Bedrijfsinformatie</h3>
-            
-            <div className="grid grid-cols-[240px_1fr] items-start gap-x-8 gap-y-10">
-              <Label htmlFor="name" className="text-sm font-medium pt-2">Bedrijfsnaam *</Label>
-              <div>
-                <Input
-                  id="name"
-                  {...form.register("name")}
-                  placeholder="Bedrijfsnaam"
-                  autoComplete="off"
-                  data-testid="input-customer-name"
-                  className={getFieldClassName("name")}
-                />
-                {form.formState.errors.name && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.name.message}</p>
-                )}
-              </div>
+        <div key={formKey} className="space-y-6">
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium text-right">Bedrijfsnaam *</Label>
+              <Input
+                id="name"
+                {...form.register("name")}
+                placeholder="Bedrijfsnaam"
+                autoComplete="off"
+                data-testid="input-customer-name"
+                className={getFieldClassName("name")}
+              />
+              {form.formState.errors.name && (
+                <p className="text-sm text-red-600 mt-1">{form.formState.errors.name.message}</p>
+              )}
+            </div>
 
-              <Label htmlFor="kvkNummer" className="text-sm font-medium pt-2">KVK-nummer</Label>
-              <div>
-                <Input
-                  id="kvkNummer"
-                  {...form.register("kvkNummer")}
-                  placeholder="12345678"
-                  maxLength={8}
-                  data-testid="input-customer-kvk-nummer"
-                  className={getFieldClassName("kvkNummer")}
-                />
-                {form.formState.errors.kvkNummer && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.kvkNummer.message}</p>
-                )}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="kvkNummer" className="text-sm font-medium text-right">KVK-nummer</Label>
+              <Input
+                id="kvkNummer"
+                {...form.register("kvkNummer")}
+                placeholder="12345678"
+                maxLength={8}
+                data-testid="input-customer-kvk-nummer"
+                className={getFieldClassName("kvkNummer")}
+              />
+              {form.formState.errors.kvkNummer && (
+                <p className="text-sm text-red-600 mt-1">{form.formState.errors.kvkNummer.message}</p>
+              )}
+            </div>
 
-              <Label htmlFor="taxId" className="text-sm font-medium pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="taxId" className="text-sm font-medium text-right">
                 BTW-nummer
                 {currentCountryRequirements.requiresBtw && (
                   <span className="text-red-600 ml-1">*</span>
                 )}
               </Label>
-              <div>
-                <Input
-                  id="taxId"
-                  {...form.register("taxId")}
-                  placeholder="NL123456789B01"
-                  data-testid="input-customer-taxId"
-                  className={getFieldClassName("taxId", currentCountryRequirements.requiresBtw ? "border-orange-300 focus:border-orange-500" : "")}
-                />
-                {currentCountryRequirements.requiresBtw && (
-                  <p className="text-sm text-orange-600 mt-1">
-                    BTW nummer is verplicht voor {countryData?.name || 'dit land'}
-                  </p>
-                )}
-                {form.formState.errors.taxId && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.taxId.message}</p>
-                )}
-              </div>
+              <Input
+                id="taxId"
+                {...form.register("taxId")}
+                placeholder="NL123456789B01"
+                data-testid="input-customer-taxId"
+                className={getFieldClassName("taxId", currentCountryRequirements.requiresBtw ? "border-orange-300 focus:border-orange-500" : "")}
+              />
+              {currentCountryRequirements.requiresBtw && (
+                <p className="text-sm text-orange-600 mt-1">
+                  BTW nummer is verplicht voor {countryData?.name || 'dit land'}
+                </p>
+              )}
+              {form.formState.errors.taxId && (
+                <p className="text-sm text-red-600 mt-1">{form.formState.errors.taxId.message}</p>
+              )}
+            </div>
 
-              <Label htmlFor="language" className="text-sm font-medium pt-2">Taal</Label>
-              <div>
-                <Select 
-                  onValueChange={(value) => form.setValue("language", value)}
-                  value={form.watch("language") || "nl"}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nl">Nederlands</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="de">Deutsch</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="language" className="text-sm font-medium text-right">Taal</Label>
+              <Select 
+                onValueChange={(value) => form.setValue("language", value)}
+                value={form.watch("language") || "nl"}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nl">Nederlands</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <Label htmlFor="countryCode" className="text-sm font-medium pt-2">Land</Label>
-              <div>
-                <CountrySelectWithAdd
-                  value={form.watch("countryCode") || ""}
-                  onValueChange={(value) => form.setValue("countryCode", value)}
-                  placeholder="Selecteer land..."
-                  testId="select-customer-country"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="countryCode" className="text-sm font-medium text-right">Land</Label>
+              <CountrySelectWithAdd
+                value={form.watch("countryCode") || ""}
+                onValueChange={(value) => form.setValue("countryCode", value)}
+                placeholder="Selecteer land..."
+                testId="select-customer-country"
+              />
+            </div>
 
-              <Label htmlFor="areaCode" className="text-sm font-medium pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="areaCode" className="text-sm font-medium text-right">
                 Area Code
                 {currentCountryRequirements.requiresAreaCode && (
                   <span className="text-red-600 ml-1">*</span>
                 )}
               </Label>
-              <div>
-                <Input
-                  id="areaCode"
-                  {...form.register("areaCode")}
-                  placeholder={currentCountryCode === 'ET' ? '+251' : '+31'}
-                  data-testid="input-customer-areaCode"
-                  className={currentCountryRequirements.requiresAreaCode ? "border-orange-300 focus:border-orange-500" : ""}
-                />
-                {currentCountryRequirements.requiresAreaCode && (
-                  <p className="text-sm text-orange-600 mt-1">
-                    Area code is verplicht voor {countryData?.name || 'dit land'}
-                  </p>
-                )}
-                {form.formState.errors.areaCode && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.areaCode.message}</p>
-                )}
-              </div>
+              <Input
+                id="areaCode"
+                {...form.register("areaCode")}
+                placeholder={currentCountryCode === 'ET' ? '+251' : '+31'}
+                data-testid="input-customer-areaCode"
+                className={currentCountryRequirements.requiresAreaCode ? "border-orange-300 focus:border-orange-500" : ""}
+              />
+              {currentCountryRequirements.requiresAreaCode && (
+                <p className="text-sm text-orange-600 mt-1">
+                  Area code is verplicht voor {countryData?.name || 'dit land'}
+                </p>
+              )}
+              {form.formState.errors.areaCode && (
+                <p className="text-sm text-red-600 mt-1">{form.formState.errors.areaCode.message}</p>
+              )}
+            </div>
 
-              <Label htmlFor="generalEmail" className="text-sm font-medium pt-2">Algemene email</Label>
-              <div>
-                <Input
-                  id="generalEmail"
-                  type="email"
-                  {...form.register("generalEmail")}
-                  placeholder="algemeen@bedrijf.nl"
-                  data-testid="input-customer-general-email"
-                  className={getFieldClassName("generalEmail")}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="generalEmail" className="text-sm font-medium text-right">Algemene email</Label>
+              <Input
+                id="generalEmail"
+                type="email"
+                {...form.register("generalEmail")}
+                placeholder="algemeen@bedrijf.nl"
+                data-testid="input-customer-general-email"
+                className={getFieldClassName("generalEmail")}
+              />
+            </div>
 
-              <Label htmlFor="addressId" className="text-sm font-medium pt-2">Adres</Label>
-              <div>
-                <AddressSelectWithAdd
-                  value={form.watch("addressId") || ""}
-                  onValueChange={(value) => form.setValue("addressId", value)}
-                  placeholder="Selecteer adres..."
-                  testId="select-customer-address"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="addressId" className="text-sm font-medium text-right">Adres</Label>
+              <AddressSelectWithAdd
+                value={form.watch("addressId") || ""}
+                onValueChange={(value) => form.setValue("addressId", value)}
+                placeholder="Selecteer adres..."
+                testId="select-customer-address"
+              />
             </div>
           </div>
         </div>
