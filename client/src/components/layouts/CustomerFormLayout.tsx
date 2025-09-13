@@ -401,9 +401,9 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
           <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
             <div className="text-sm font-medium text-right pt-2">
               <span>Bedrijfsnaam *</span>
-              <span className="ml-12">Land</span>
+              <span className="ml-12">Country</span>
             </div>
-            <div className="grid grid-cols-[30%_1fr] gap-6">
+            <div className="grid grid-cols-[30%_30%] gap-6">
               <div>
                 <Input
                   id="name"
