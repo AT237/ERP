@@ -74,6 +74,7 @@ All business entities now use database-generated sequences for automatic numberi
 - **Customers**: DEB-0001, DEB-0002, etc. (PostgreSQL sequence)
 - **Suppliers**: CRED-001, CRED-002, etc. (PostgreSQL sequence)
 - **Projects**: PR-0001, PR-0002, etc. (PostgreSQL sequence)
+- **Quotation Requests**: QR-2025-001, QR-2025-002, etc. (Year-based function)
 - **Quotations**: Q-2025-001, Q-2025-002, etc. (Year-based function)
 - **Invoices**: CI-2025-001, CI-2025-002, etc. (Year-based function)
 - **Proforma Invoices**: PRI-2025-001, PRI-2025-002, etc. (Year-based function)

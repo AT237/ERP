@@ -180,6 +180,24 @@ export const quotationItems = pgTable("quotation_items", {
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
 });
 
+// Quotation requests table
+export const quotationRequests = pgTable("quotation_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestNumber: text("request_number").notNull().unique().default(sql`generate_quotation_request_number()`),
+  customerId: varchar("customer_id").references(() => customers.id).notNull(),
+  projectId: varchar("project_id").references(() => projects.id),
+  status: text("status").default("pending"),
+  requestDate: timestamp("request_date").defaultNow(),
+  dueDate: timestamp("due_date"),
+  title: text("title").notNull(),
+  description: text("description"),
+  requirements: text("requirements"),
+  estimatedBudget: decimal("estimated_budget", { precision: 10, scale: 2 }),
+  priority: text("priority").default("medium"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Invoices table
 export const invoices = pgTable("invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -532,6 +550,11 @@ export const insertQuotationSchema = createInsertSchema(quotations).omit({ id: t
   validityDays: z.number().optional(), // Virtual field for date calculations
 });
 export const insertQuotationItemSchema = createInsertSchema(quotationItems).omit({ id: true });
+export const insertQuotationRequestSchema = createInsertSchema(quotationRequests).omit({ id: true, createdAt: true }).extend({
+  requestDate: z.string().optional(),
+  dueDate: z.string().optional(),
+  estimatedBudget: z.string().optional()
+});
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({ id: true, createdAt: true });
 export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({ id: true });
 export const insertProformaInvoiceSchema = createInsertSchema(proformaInvoices).omit({ id: true, createdAt: true });
@@ -572,6 +595,8 @@ export type Quotation = typeof quotations.$inferSelect;
 export type InsertQuotation = z.infer<typeof insertQuotationSchema>;
 export type QuotationItem = typeof quotationItems.$inferSelect;
 export type InsertQuotationItem = z.infer<typeof insertQuotationItemSchema>;
+export type QuotationRequest = typeof quotationRequests.$inferSelect;
+export type InsertQuotationRequest = z.infer<typeof insertQuotationRequestSchema>;
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type InvoiceItem = typeof invoiceItems.$inferSelect;
