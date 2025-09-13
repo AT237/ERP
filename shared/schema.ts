@@ -147,7 +147,7 @@ export const projects = pgTable("projects", {
 // Quotations table
 export const quotations = pgTable("quotations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  quotationNumber: text("quotation_number").notNull().unique(),
+  quotationNumber: text("quotation_number").notNull().unique().default(sql`generate_quotation_number()`),
   customerId: varchar("customer_id").references(() => customers.id).notNull(),
   projectId: varchar("project_id").references(() => projects.id),
   status: text("status").default("draft"),
