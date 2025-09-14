@@ -1247,7 +1247,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       />
 
       {/* Quotation Items Table */}
-      <div className="mt-6 border-t border-orange-200 pt-6">
+      <div className="mt-2 border-t border-orange-200 pt-4">
         <div className="mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Quotation Items</h2>
         </div>

@@ -75,7 +75,39 @@ export function BaseFormLayout({
   return (
     <div className="p-6" style={{ minHeight: '100vh' }}>
       <div className="space-y-4">
-        {/* Main Content Area - exact original structure with stable dimensions */}
+        {/* Header with Info Fields and Action Buttons */}
+        <div className="relative p-2">
+          {/* Info Header */}
+          <div className="absolute left-2 w-fit">
+            <InfoHeaderLayout fields={headerFields} />
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+            {actionButtons.map((button) => (
+              <Button
+                key={button.key}
+                variant={button.variant || 'outline'}
+                size="sm"
+                onClick={button.onClick}
+                disabled={button.disabled || button.loading}
+                className={`h-8 text-xs ${button.className || ''} ${
+                  button.variant === 'default' ? 'bg-green-600 text-white hover:bg-green-700' : ''
+                }`}
+                data-testid={button.testId || `button-${button.key}`}
+              >
+                {button.loading ? (
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
+                ) : (
+                  button.icon && <span className="mr-1">{button.icon}</span>
+                )}
+                {button.loading ? 'Loading...' : button.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Content Area */}
         <Card className="border-0 shadow-none ml-2">
           <CardContent className="p-0">
             <FormTabLayout
@@ -85,30 +117,6 @@ export function BaseFormLayout({
             />
           </CardContent>
         </Card>
-
-        {/* Actions Section - moved below the orange border */}
-        <div className="ml-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
-          {actionButtons.map((button) => (
-            <Button
-              key={button.key}
-              variant={button.variant || 'outline'}
-              size="sm"
-              onClick={button.onClick}
-              disabled={button.disabled || button.loading}
-              className={`h-8 text-xs ${button.className || ''} ${
-                button.variant === 'default' ? 'bg-green-600 text-white hover:bg-green-700' : ''
-              }`}
-              data-testid={button.testId || `button-${button.key}`}
-            >
-              {button.loading ? (
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
-              ) : (
-                button.icon && <span className="mr-1">{button.icon}</span>
-              )}
-              {button.loading ? 'Loading...' : button.label}
-            </Button>
-          ))}
-        </div>
       </div>
     </div>
   );
