@@ -76,7 +76,7 @@ export function BaseFormLayout({
 
   return (
     <div className="p-6" style={{ minHeight: '100vh' }}>
-      <div className="space-y-4">
+      <div className="space-y-2">
         {/* Header with Info Fields and Action Buttons */}
         <div className="relative p-2">
           {/* Info Header - only show if there are fields */}
