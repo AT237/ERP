@@ -40,7 +40,7 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
       </div>
 
       {/* Tab Content - With orange border to connect with active tab */}
-      <div className="border-2 border-orange-500 bg-white p-6 h-[500px] overflow-y-auto rounded-lg">
+      <div className="border-2 border-orange-500 bg-white p-3 h-[500px] overflow-y-auto rounded-lg">
         {activeTabContent}
       </div>
     </div>
