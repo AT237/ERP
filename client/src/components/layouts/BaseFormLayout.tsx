@@ -83,7 +83,7 @@ export function BaseFormLayout({
           </div>
           
           {/* Action Buttons */}
-          <div className="ml-[350px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+          <div className="ml-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
             {actionButtons.map((button) => (
               <Button
                 key={button.key}
