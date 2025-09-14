@@ -32,6 +32,7 @@ import { z } from "zod";
 import { format } from "date-fns";
 import jsPDF from 'jspdf';
 import imageCompression from 'browser-image-compression';
+import companyLogo from '@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg';
 
 // Memo interface
 interface Memo {
@@ -533,7 +534,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       quantity: data.quantity,
       unitPrice: data.unitPrice,
       lineTotal: data.lineTotal,
-      itemId: data.itemId,
+      itemId: data.itemId || null,
     };
 
     if (editingItem) {
@@ -701,65 +702,179 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     );
   };
 
-  // Simple PDF generation for preview functionality
-  const generateSimplePDF = () => {
+  // Helper function to convert image URL to DataURL
+  const imageUrlToDataUrl = (url: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const img = new Image();
+          
+          img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx?.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+          };
+          
+          img.onerror = () => reject(new Error('Failed to load image'));
+          img.src = URL.createObjectURL(blob);
+        })
+        .catch(reject);
+    });
+  };
+
+  // PDF generation function with proper logo loading
+  const generateProfessionalPDF = async (): Promise<jsPDF> => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    let yPos = 20;
     
-    // Header
-    doc.setFontSize(16);
+    // Add company logo with proper conversion
+    try {
+      const logoDataUrl = await imageUrlToDataUrl(companyLogo);
+      doc.addImage(logoDataUrl, 'JPEG', 20, yPos, 40, 30);
+    } catch (error) {
+      console.warn('Could not add logo to PDF:', error);
+      // Continue without logo
+    }
+    
+    // Company info (right side)
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('ATE Solutions', pageWidth - 60, yPos + 10);
+    doc.text('Your Address Line 1', pageWidth - 60, yPos + 16);
+    doc.text('Your Address Line 2', pageWidth - 60, yPos + 22);
+    doc.text('Phone: +31 123 456 789', pageWidth - 60, yPos + 28);
+    doc.text('Email: info@atesolutions.nl', pageWidth - 60, yPos + 34);
+    
+    yPos += 60;
+    
+    // Quotation header
+    doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     const quotationNumber = quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber");
-    doc.text(`QUOTATION ${quotationNumber}`, pageWidth / 2, 30, { align: 'center' });
+    doc.text(`QUOTATION ${quotationNumber}`, 20, yPos);
     
-    // Basic info
-    doc.setFontSize(12);
+    yPos += 20;
+    
+    // Quotation details (left column)
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Date: ${format(new Date(), 'dd-MM-yyyy')}`, 20, 50);
+    doc.text(`Date: ${format(new Date(), 'dd-MM-yyyy')}`, 20, yPos);
+    doc.text(`Valid until: ${quotationForm.watch("validUntil") || 'N/A'}`, 20, yPos + 8);
+    doc.text(`Validity: ${quotationForm.watch("validityDays") || 30} days`, 20, yPos + 16);
     
-    // Customer
-    const customer = customers.find(c => c.id === quotationForm.watch("customerId"));
+    // Customer details (right column) - use quotationCustomer if available, fallback to customers array
+    const customer = quotationCustomer || customers.find(c => c.id === quotationForm.watch("customerId"));
     if (customer) {
-      doc.text(`Customer: ${customer.name}`, 20, 65);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Bill to:', pageWidth - 80, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(customer.name, pageWidth - 80, yPos + 8);
+      // Handle different customer object structures
+      const customerNumber = 'customerNumber' in customer ? customer.customerNumber : '';
+      const phone = customer.phone || '';
+      const email = 'generalEmail' in customer ? customer.generalEmail : customer.email;
+      doc.text(customerNumber || '', pageWidth - 80, yPos + 16);
+      doc.text(phone || '', pageWidth - 80, yPos + 24);
+      doc.text(email || '', pageWidth - 80, yPos + 32);
     }
+    
+    yPos += 50;
     
     // Description
     const description = quotationForm.watch("description");
     if (description) {
-      doc.text(`Description: ${description}`, 20, 80);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Description:', 20, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(description, 20, yPos + 8);
+      yPos += 20;
     }
     
-    // Items table header
-    let yPos = 100;
+    // Items table
+    yPos += 10;
+    
+    // Table header
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, yPos - 5, pageWidth - 40, 12, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.text('Description', 20, yPos);
-    doc.text('Qty', 120, yPos);
-    doc.text('Price', 140, yPos);
-    doc.text('Total', 170, yPos);
+    doc.setFontSize(9);
+    doc.text('Description', 25, yPos + 2);
+    doc.text('Qty', 130, yPos + 2);
+    doc.text('Unit Price', 150, yPos + 2);
+    doc.text('Line Total', 180, yPos + 2);
+    
+    // Table lines
+    doc.line(20, yPos + 5, pageWidth - 20, yPos + 5);
+    yPos += 15;
     
     // Items
-    yPos += 10;
     doc.setFont('helvetica', 'normal');
-    quotationItems.forEach((item) => {
-      doc.text(item.description || '', 20, yPos);
-      doc.text((item.quantity || 0).toString(), 120, yPos);
-      doc.text(`€${item.unitPrice || '0.00'}`, 140, yPos);
-      doc.text(`€${item.lineTotal || '0.00'}`, 170, yPos);
-      yPos += 10;
+    doc.setFontSize(9);
+    quotationItems.forEach((item, index) => {
+      if (yPos > pageHeight - 50) {
+        doc.addPage();
+        yPos = 30;
+      }
+      
+      // Alternate row background
+      if (index % 2 === 1) {
+        doc.setFillColor(250, 250, 250);
+        doc.rect(20, yPos - 5, pageWidth - 40, 12, 'F');
+      }
+      
+      doc.text(item.description || '', 25, yPos + 2);
+      doc.text((item.quantity || 0).toString(), 130, yPos + 2);
+      doc.text(`€${parseFloat(item.unitPrice || '0').toFixed(2)}`, 150, yPos + 2);
+      doc.text(`€${parseFloat(item.lineTotal || '0').toFixed(2)}`, 180, yPos + 2);
+      yPos += 12;
     });
     
-    // Total
-    yPos += 10;
-    const total = quotationForm.watch("totalAmount");
+    // Table footer line
+    doc.line(20, yPos, pageWidth - 20, yPos);
+    yPos += 20;
+    
+    // Totals section
+    const subtotal = parseFloat(quotationForm.watch("subtotal") || '0');
+    const taxAmount = parseFloat(quotationForm.watch("taxAmount") || '0');
+    const totalAmount = parseFloat(quotationForm.watch("totalAmount") || '0');
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text('Subtotal:', 140, yPos);
+    doc.text(`€${subtotal.toFixed(2)}`, 180, yPos);
+    yPos += 8;
+    
+    doc.text('Tax (21%):', 140, yPos);
+    doc.text(`€${taxAmount.toFixed(2)}`, 180, yPos);
+    yPos += 8;
+    
     doc.setFont('helvetica', 'bold');
-    doc.text(`Total: €${total || '0.00'}`, 140, yPos);
+    doc.text('Total:', 140, yPos);
+    doc.text(`€${totalAmount.toFixed(2)}`, 180, yPos);
+    
+    // Footer
+    yPos = pageHeight - 30;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Thank you for your business!', 20, yPos);
+    doc.text('Payment terms: 30 days net', 20, yPos + 6);
     
     return doc;
   };
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     try {
-      const pdf = generateSimplePDF();
+      // Ensure customers are loaded if needed
+      if (!quotationCustomer && !shouldLoadCustomers) {
+        setShouldLoadCustomers(true);
+      }
+      
+      const pdf = await generateProfessionalPDF();
       setCurrentPDF(pdf);
       
       // Create blob and URL for preview
@@ -784,13 +899,31 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   };
 
-  const handleSavePDF = () => {
-    if (currentPDF) {
-      const filename = `quotation-${nextQuotationNumber}.pdf`;
-      currentPDF.save(filename);
+  const handleSavePDF = async () => {
+    try {
+      let pdf = currentPDF;
+      if (!pdf) {
+        // Generate PDF if not already generated
+        if (!quotationCustomer && !shouldLoadCustomers) {
+          setShouldLoadCustomers(true);
+        }
+        pdf = await generateProfessionalPDF();
+        setCurrentPDF(pdf);
+      }
+      
+      const quotationNumber = quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber");
+      const filename = `quotation-${quotationNumber}.pdf`;
+      pdf.save(filename);
       toast({
         title: "Success",
         description: "PDF saved successfully",
+      });
+    } catch (error) {
+      console.error("Error saving PDF:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save PDF",
+        variant: "destructive",
       });
     }
   };
@@ -953,7 +1086,13 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 placeholder="Select customer..."
                 testId="select-customer"
                 onOpen={() => setShouldLoadCustomers(true)}
-                customers={customers}
+                customers={customers.map(c => ({ 
+                  id: c.id, 
+                  name: c.name, 
+                  email: c.generalEmail || undefined, 
+                  phone: c.phone || undefined, 
+                  city: c.addressId || undefined 
+                }))}
               />
             </div>
 
@@ -1023,116 +1162,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               </div>
             </div>
           </div>
-        </div>
-      )
-    },
-    {
-      id: "items",
-      label: "Items",
-      content: (
-        <div className="space-y-4">
-          <DataTableLayout
-            data={quotationItems}
-            isLoading={false}
-            columns={itemTableState.columns}
-            setColumns={itemTableState.setColumns}
-            searchTerm={itemTableState.searchTerm}
-            setSearchTerm={itemTableState.setSearchTerm}
-            filters={itemTableState.filters}
-            setFilters={itemTableState.setFilters}
-            onAddFilter={itemTableState.addFilter}
-            onUpdateFilter={itemTableState.updateFilter}
-            onRemoveFilter={itemTableState.removeFilter}
-            sortConfig={itemTableState.sortConfig}
-            onSort={itemTableState.handleSort}
-            selectedRows={itemTableState.selectedRows}
-            setSelectedRows={itemTableState.setSelectedRows}
-            onToggleRowSelection={itemTableState.toggleRowSelection}
-            onToggleAllRows={() => {
-              const allIds = quotationItems.map(item => item.id);
-              itemTableState.toggleAllRows(allIds);
-            }}
-            getRowId={(item: QuotationItem) => item.id}
-            entityName="Quotation Item"
-            entityNamePlural="Quotation Items"
-            applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
-            applySorting={itemTableState.applySorting}
-            compact={true}
-            headerActions={[
-              {
-                key: 'add-onetime-item',
-                label: 'Add Item',
-                icon: <Plus className="h-4 w-4" />,
-                onClick: () => {
-                  setItemType('onetime');
-                  setEditingItem(null);
-                  setSelectedInventoryItem(null);
-                  itemForm.reset({
-                    quotationId: quotationId || "",
-                    description: "",
-                    quantity: 1,
-                    unitPrice: "0.00", 
-                    lineTotal: "0.00",
-                  });
-                  setShowItemDialog(true);
-                },
-                variant: 'default' as const
-              },
-              {
-                key: 'add-text-item',
-                label: 'Add Text Line',
-                icon: <Type className="h-4 w-4" />,
-                onClick: () => {
-                  setItemType('text');
-                  setEditingItem(null);
-                  setSelectedInventoryItem(null);
-                  itemForm.reset({
-                    quotationId: quotationId || "",
-                    description: "",
-                    quantity: 1,
-                    unitPrice: "0.00", 
-                    lineTotal: "0.00",
-                  });
-                  setShowItemDialog(true);
-                },
-                variant: 'outline' as const
-              }
-            ]}
-            rowActions={(item: QuotationItem) => [
-              {
-                key: 'edit',
-                label: 'Edit',
-                icon: <FileText className="h-4 w-4" />,
-                onClick: () => {
-                  setEditingItem(item);
-                  itemForm.reset({
-                    quotationId: item.quotationId,
-                    description: item.description,
-                    quantity: item.quantity,
-                    unitPrice: item.unitPrice,
-                    lineTotal: item.lineTotal,
-                    itemId: item.itemId,
-                  });
-                  setItemType('onetime'); // Default to onetime for editing
-                  setShowItemDialog(true);
-                },
-                variant: 'outline'
-              },
-              {
-                key: 'delete',
-                label: 'Delete',
-                icon: <X className="h-4 w-4" />,
-                onClick: () => handleDeleteItem(item),
-                variant: 'destructive'
-              }
-            ]}
-            addEditDialog={{
-              isOpen: showItemDialog,
-              onOpenChange: setShowItemDialog,
-              title: editingItem ? 'Edit Item' : 'Add Item',
-              content: renderItemDialog()
-            }}
-          />
         </div>
       )
     },
@@ -1216,6 +1245,115 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         onTabChange={setActiveTab}
         isLoading={quotationLoading}
       />
+
+      {/* Quotation Items Table */}
+      <div className="mt-6 border-t border-orange-200 pt-6">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Quotation Items</h2>
+        </div>
+        <DataTableLayout
+          data={quotationItems}
+          isLoading={false}
+          columns={itemTableState.columns}
+          setColumns={itemTableState.setColumns}
+          searchTerm={itemTableState.searchTerm}
+          setSearchTerm={itemTableState.setSearchTerm}
+          filters={itemTableState.filters}
+          setFilters={itemTableState.setFilters}
+          onAddFilter={itemTableState.addFilter}
+          onUpdateFilter={itemTableState.updateFilter}
+          onRemoveFilter={itemTableState.removeFilter}
+          sortConfig={itemTableState.sortConfig}
+          onSort={itemTableState.handleSort}
+          selectedRows={itemTableState.selectedRows}
+          setSelectedRows={itemTableState.setSelectedRows}
+          onToggleRowSelection={itemTableState.toggleRowSelection}
+          onToggleAllRows={() => {
+            const allIds = quotationItems.map(item => item.id);
+            itemTableState.toggleAllRows(allIds);
+          }}
+          getRowId={(item: QuotationItem) => item.id}
+          entityName="Quotation Item"
+          entityNamePlural="Quotation Items"
+          applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
+          applySorting={itemTableState.applySorting}
+          compact={true}
+          headerActions={[
+            {
+              key: 'add-onetime-item',
+              label: 'Add Item',
+              icon: <Plus className="h-4 w-4" />,
+              onClick: () => {
+                setItemType('onetime');
+                setEditingItem(null);
+                setSelectedInventoryItem(null);
+                itemForm.reset({
+                  quotationId: quotationId || "",
+                  description: "",
+                  quantity: 1,
+                  unitPrice: "0.00", 
+                  lineTotal: "0.00",
+                });
+                setShowItemDialog(true);
+              },
+              variant: 'default' as const
+            },
+            {
+              key: 'add-text-item',
+              label: 'Add Text Line',
+              icon: <Type className="h-4 w-4" />,
+              onClick: () => {
+                setItemType('text');
+                setEditingItem(null);
+                setSelectedInventoryItem(null);
+                itemForm.reset({
+                  quotationId: quotationId || "",
+                  description: "",
+                  quantity: 1,
+                  unitPrice: "0.00", 
+                  lineTotal: "0.00",
+                });
+                setShowItemDialog(true);
+              },
+              variant: 'outline' as const
+            }
+          ]}
+          rowActions={(item: QuotationItem) => [
+            {
+              key: 'edit',
+              label: 'Edit',
+              icon: <FileText className="h-4 w-4" />,
+              onClick: () => {
+                setEditingItem(item);
+                itemForm.reset({
+                  quotationId: item.quotationId,
+                  description: item.description,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  lineTotal: item.lineTotal,
+                  itemId: item.itemId,
+                });
+                setItemType('onetime'); // Default to onetime for editing
+                setShowItemDialog(true);
+              },
+              variant: 'outline'
+            },
+            {
+              key: 'delete',
+              label: 'Delete',
+              icon: <X className="h-4 w-4" />,
+              onClick: () => handleDeleteItem(item),
+              variant: 'destructive'
+            }
+          ]}
+          addEditDialog={{
+            isOpen: showItemDialog,
+            onOpenChange: setShowItemDialog,
+            title: editingItem ? 'Edit Item' : 'Add Item',
+            content: renderItemDialog()
+          }}
+        />
+      </div>
 
       {/* PDF Preview Modal */}
       <Dialog open={showPDFPreview} onOpenChange={setShowPDFPreview}>
