@@ -1234,11 +1234,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       />
 
       {/* Quotation Items Table */}
-      <div className="p-6">
-        <div className="ml-2">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Quotation Items</h2>
-          </div>
+      <div className="ml-2">
         <DataTableLayout
           data={quotationItems}
           isLoading={false}
@@ -1341,7 +1337,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             content: renderItemDialog()
           }}
         />
-        </div>
       </div>
 
       {/* PDF Preview Modal */}
