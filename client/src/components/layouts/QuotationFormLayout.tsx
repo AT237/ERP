@@ -1026,21 +1026,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     );
   };
 
-  // Create header fields for BaseFormLayout
-  const headerFields: InfoField[] = [
-    {
-      label: "Quotation Number",
-      value: quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber")
-    },
-    {
-      label: "Revision Number",
-      value: quotationForm.watch("revisionNumber")
-    },
-    {
-      label: "Status", 
-      value: quotationForm.watch("status") ? (quotationForm.watch("status") || "").charAt(0).toUpperCase() + (quotationForm.watch("status") || "").slice(1) : "Draft"
-    }
-  ];
+  // Create header fields for BaseFormLayout - empty to remove orange header
+  const headerFields: InfoField[] = [];
 
   // Create action buttons for BaseFormLayout
   const actionButtons: ActionButton[] = [
