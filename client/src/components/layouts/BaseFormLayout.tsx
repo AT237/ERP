@@ -47,10 +47,12 @@ export function BaseFormLayout({
         <div className="space-y-4">
           {/* Header Skeleton - maintains exact layout structure */}
           <div className="relative p-2 h-16">
-            <div className="absolute left-2 w-fit">
-              <div className="flex items-center gap-6 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 h-12 w-64 animate-pulse"></div>
-            </div>
-            <div className="ml-[350px] bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 h-10 w-80 animate-pulse"></div>
+            {headerFields.length > 0 && (
+              <div className="absolute left-2 w-fit">
+                <div className="flex items-center gap-6 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 h-12 w-64 animate-pulse"></div>
+              </div>
+            )}
+            <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 h-10 w-80 animate-pulse"></div>
           </div>
 
           {/* Content Skeleton */}
@@ -77,13 +79,15 @@ export function BaseFormLayout({
       <div className="space-y-4">
         {/* Header with Info Fields and Action Buttons */}
         <div className="relative p-2">
-          {/* Info Header */}
-          <div className="absolute left-2 w-fit">
-            <InfoHeaderLayout fields={headerFields} />
-          </div>
+          {/* Info Header - only show if there are fields */}
+          {headerFields.length > 0 && (
+            <div className="absolute left-2 w-fit">
+              <InfoHeaderLayout fields={headerFields} />
+            </div>
+          )}
           
           {/* Action Buttons */}
-          <div className="ml-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
             {actionButtons.map((button) => (
               <Button
                 key={button.key}
