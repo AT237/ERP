@@ -17,7 +17,7 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
   const activeTabContent = tabs.find(tab => tab.id === activeTab)?.content;
 
   return (
-    <div className={`space-y-0 ${className}`}>
+    <div className={`-space-y-px ${className}`}>
       {/* Tab Bar - With white background */}
       <div className="bg-white px-4 border-b-0 h-[62px] flex items-end">
         <div className="flex items-end space-x-1 overflow-x-auto">
@@ -40,7 +40,7 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
       </div>
 
       {/* Tab Content - With orange border to connect with active tab */}
-      <div className="border-2 border-orange-500 bg-white p-6 h-[500px] overflow-y-auto rounded-lg">
+      <div className="border border-orange-500 bg-white p-6 h-[500px] overflow-y-auto rounded-lg">
         {activeTabContent}
       </div>
     </div>
