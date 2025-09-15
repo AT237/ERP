@@ -77,8 +77,22 @@ export function BaseFormLayout({
   return (
     <div className="p-6">
       <div className="space-y-2">
+        {/* Main Content Area */}
+        <Card className="border-0 shadow-none">
+          <CardContent className="p-0">
+            <FormTabLayout
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              tabs={tabs}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Everything below tabs in aligned block */}
+      <div className="px-4 space-y-2">
         {/* Header with Info Fields and Action Buttons */}
-        <div className="relative pt-2 pb-0 ml-2">
+        <div className="relative pt-2 pb-0">
           {/* Info Header - only show if there are fields */}
           {headerFields.length > 0 && (
             <div className="absolute left-2 w-fit">
@@ -110,17 +124,6 @@ export function BaseFormLayout({
             ))}
           </div>
         </div>
-
-        {/* Main Content Area */}
-        <Card className="border-0 shadow-none ml-2">
-          <CardContent className="p-0">
-            <FormTabLayout
-              activeTab={activeTab}
-              onTabChange={onTabChange}
-              tabs={tabs}
-            />
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
