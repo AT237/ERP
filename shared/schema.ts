@@ -270,7 +270,7 @@ export const purchaseOrderItems = pgTable("purchase_order_items", {
 // Sales orders table
 export const salesOrders = pgTable("sales_orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  orderNumber: text("order_number").notNull().unique().default(sql`generate_sales_order_number()`),
+  orderNumber: text("order_number").notNull().unique(),
   customerId: varchar("customer_id").references(() => customers.id).notNull(),
   status: text("status").default("pending"),
   orderDate: timestamp("order_date").defaultNow(),
