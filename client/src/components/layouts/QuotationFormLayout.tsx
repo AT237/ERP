@@ -1234,7 +1234,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       />
 
       {/* Quotation Items Table */}
-      <div className="px-4 py-4 bg-white">
+      <div className="px-6 py-4 bg-white">
         <DataTableLayout
           data={quotationItems}
           isLoading={false}
