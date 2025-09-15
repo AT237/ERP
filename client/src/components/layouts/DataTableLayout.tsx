@@ -466,7 +466,7 @@ export function DataTableLayout<T = any>({
         {/* Header with Controls - left aligned without title section */}
         <div className={`${compact ? 'p-0' : 'p-2'}`}>
           {/* Actions Section - Left aligned */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2 w-fit">
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2 w-fit">
             {/* Search */}
             <div className="relative">
               <Input
