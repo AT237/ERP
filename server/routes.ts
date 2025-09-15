@@ -5,7 +5,8 @@ import {
   insertCustomerSchema, insertSupplierSchema, insertInventoryItemSchema,
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
   insertInvoiceSchema, insertInvoiceItemSchema, insertPurchaseOrderSchema,
-  insertPurchaseOrderItemSchema, insertWorkOrderSchema, insertPackingListSchema,
+  insertPurchaseOrderItemSchema, insertSalesOrderSchema, insertSalesOrderItemSchema,
+  insertWorkOrderSchema, insertPackingListSchema,
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertAddressSchema, insertCountrySchema, insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
   insertVatRateSchema, insertCitySchema, insertStatusSchema
@@ -768,6 +769,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting purchase order:", error);
       res.status(500).json({ message: "Failed to delete purchase order" });
+    }
+  });
+
+  // Sales Order routes
+  app.get("/api/sales-orders", async (req, res) => {
+    try {
+      const orders = await storage.getSalesOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching sales orders:", error);
+      res.status(500).json({ message: "Failed to fetch sales orders" });
+    }
+  });
+
+  app.get("/api/sales-orders/:id", async (req, res) => {
+    try {
+      const order = await storage.getSalesOrder(req.params.id);
+      if (!order) {
+        return res.status(404).json({ message: "Sales order not found" });
+      }
+      res.json(order);
+    } catch (error) {
+      console.error("Error fetching sales order:", error);
+      res.status(500).json({ message: "Failed to fetch sales order" });
+    }
+  });
+
+  app.get("/api/sales-orders/:id/items", async (req, res) => {
+    try {
+      const items = await storage.getSalesOrderItems(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching sales order items:", error);
+      res.status(500).json({ message: "Failed to fetch sales order items" });
+    }
+  });
+
+  app.post("/api/sales-orders", async (req, res) => {
+    try {
+      const orderData = insertSalesOrderSchema.parse(req.body);
+      const order = await storage.createSalesOrder(orderData);
+      res.status(201).json(order);
+    } catch (error) {
+      console.error("Error creating sales order:", error);
+      res.status(400).json({ message: "Failed to create sales order" });
+    }
+  });
+
+  app.post("/api/sales-orders/:id/items", async (req, res) => {
+    try {
+      const itemData = insertSalesOrderItemSchema.parse({
+        ...req.body,
+        salesOrderId: req.params.id
+      });
+      const item = await storage.addSalesOrderItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error adding sales order item:", error);
+      res.status(400).json({ message: "Failed to add sales order item" });
+    }
+  });
+
+  app.put("/api/sales-orders/:id", async (req, res) => {
+    try {
+      const orderData = insertSalesOrderSchema.partial().parse(req.body);
+      const order = await storage.updateSalesOrder(req.params.id, orderData);
+      res.json(order);
+    } catch (error) {
+      console.error("Error updating sales order:", error);
+      res.status(400).json({ message: "Failed to update sales order" });
+    }
+  });
+
+  app.patch("/api/sales-orders/:id", async (req, res) => {
+    try {
+      const orderData = insertSalesOrderSchema.partial().parse(req.body);
+      const order = await storage.updateSalesOrder(req.params.id, orderData);
+      res.json(order);
+    } catch (error) {
+      console.error("Error updating sales order:", error);
+      res.status(400).json({ message: "Failed to update sales order" });
+    }
+  });
+
+  app.put("/api/sales-orders/:id/items/:itemId", async (req, res) => {
+    try {
+      const itemData = insertSalesOrderItemSchema.partial().parse(req.body);
+      const item = await storage.updateSalesOrderItem(req.params.itemId, itemData);
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating sales order item:", error);
+      res.status(400).json({ message: "Failed to update sales order item" });
+    }
+  });
+
+  app.delete("/api/sales-orders/:id", async (req, res) => {
+    try {
+      await storage.deleteSalesOrder(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting sales order:", error);
+      res.status(500).json({ message: "Failed to delete sales order" });
+    }
+  });
+
+  app.delete("/api/sales-orders/:id/items/:itemId", async (req, res) => {
+    try {
+      await storage.deleteSalesOrderItem(req.params.itemId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting sales order item:", error);
+      res.status(500).json({ message: "Failed to delete sales order item" });
     }
   });
 

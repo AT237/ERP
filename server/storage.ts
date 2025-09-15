@@ -1,6 +1,6 @@
 import {
   users, customers, suppliers, inventoryItems, projects, quotations, quotationItems,
-  invoices, invoiceItems, purchaseOrders, purchaseOrderItems, workOrders,
+  invoices, invoiceItems, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries,
   unitsOfMeasure, paymentTerms, incoterms, vatRates, cities, statuses,
   type User, type InsertUser, type Customer, type InsertCustomer,
@@ -8,7 +8,8 @@ import {
   type Project, type InsertProject, type Quotation, type InsertQuotation,
   type QuotationItem, type InsertQuotationItem, type Invoice, type InsertInvoice,
   type InvoiceItem, type InsertInvoiceItem, type PurchaseOrder, type InsertPurchaseOrder,
-  type PurchaseOrderItem, type InsertPurchaseOrderItem, type WorkOrder, type InsertWorkOrder,
+  type PurchaseOrderItem, type InsertPurchaseOrderItem, type SalesOrder, type InsertSalesOrder,
+  type SalesOrderItem, type InsertSalesOrderItem, type WorkOrder, type InsertWorkOrder,
   type PackingList, type InsertPackingList, type PackingListItem, type InsertPackingListItem,
   type UserPreferences, type InsertUserPreferences, type CustomerContact, type InsertCustomerContact,
   type Address, type InsertAddress, type Country, type InsertCountry, type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentTerm, type InsertPaymentTerm,
@@ -115,6 +116,17 @@ export interface IStorage {
   addPurchaseOrderItem(item: InsertPurchaseOrderItem): Promise<PurchaseOrderItem>;
   updatePurchaseOrderItem(id: string, item: Partial<InsertPurchaseOrderItem>): Promise<PurchaseOrderItem>;
   deletePurchaseOrderItem(id: string): Promise<void>;
+
+  // Sales Order methods
+  getSalesOrders(): Promise<SalesOrder[]>;
+  getSalesOrder(id: string): Promise<SalesOrder | undefined>;
+  createSalesOrder(order: InsertSalesOrder): Promise<SalesOrder>;
+  updateSalesOrder(id: string, order: Partial<InsertSalesOrder>): Promise<SalesOrder>;
+  deleteSalesOrder(id: string): Promise<void>;
+  getSalesOrderItems(orderId: string): Promise<SalesOrderItem[]>;
+  addSalesOrderItem(item: InsertSalesOrderItem): Promise<SalesOrderItem>;
+  updateSalesOrderItem(id: string, item: Partial<InsertSalesOrderItem>): Promise<SalesOrderItem>;
+  deleteSalesOrderItem(id: string): Promise<void>;
 
   // Work Order methods
   getWorkOrders(): Promise<WorkOrder[]>;
@@ -693,6 +705,48 @@ export class DatabaseStorage implements IStorage {
 
   async deletePurchaseOrderItem(id: string): Promise<void> {
     await db.delete(purchaseOrderItems).where(eq(purchaseOrderItems.id, id));
+  }
+
+  // Sales Order methods
+  async getSalesOrders(): Promise<SalesOrder[]> {
+    return await db.select().from(salesOrders).orderBy(desc(salesOrders.createdAt));
+  }
+
+  async getSalesOrder(id: string): Promise<SalesOrder | undefined> {
+    const [order] = await db.select().from(salesOrders).where(eq(salesOrders.id, id));
+    return order || undefined;
+  }
+
+  async createSalesOrder(order: InsertSalesOrder): Promise<SalesOrder> {
+    const [newOrder] = await db.insert(salesOrders).values(order).returning();
+    return newOrder;
+  }
+
+  async updateSalesOrder(id: string, order: Partial<InsertSalesOrder>): Promise<SalesOrder> {
+    const [updatedOrder] = await db.update(salesOrders).set(order).where(eq(salesOrders.id, id)).returning();
+    return updatedOrder;
+  }
+
+  async deleteSalesOrder(id: string): Promise<void> {
+    await db.delete(salesOrders).where(eq(salesOrders.id, id));
+  }
+
+  async getSalesOrderItems(orderId: string): Promise<SalesOrderItem[]> {
+    return await db.select().from(salesOrderItems).where(eq(salesOrderItems.salesOrderId, orderId));
+  }
+
+  async addSalesOrderItem(item: InsertSalesOrderItem): Promise<SalesOrderItem> {
+    const [newItem] = await db.insert(salesOrderItems).values(item).returning();
+    return newItem;
+  }
+
+  async updateSalesOrderItem(id: string, item: Partial<InsertSalesOrderItem>): Promise<SalesOrderItem> {
+    const [updatedItem] = await db.update(salesOrderItems).set(item).where(eq(salesOrderItems.id, id)).returning();
+    return updatedItem;
+  }
+
+  async deleteSalesOrderItem(id: string): Promise<void> {
+    await db.delete(salesOrderItems).where(eq(salesOrderItems.id, id));
   }
 
   // Work Order methods
