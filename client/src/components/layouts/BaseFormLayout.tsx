@@ -78,7 +78,7 @@ export function BaseFormLayout({
     <div className="p-6">
       <div className="space-y-2">
         {/* Header with Info Fields and Action Buttons */}
-        <div className="relative pt-2 px-2 pb-0 ml-2">
+        <div className="relative pt-2 pb-0 ml-2">
           {/* Info Header - only show if there are fields */}
           {headerFields.length > 0 && (
             <div className="absolute left-2 w-fit">
