@@ -67,7 +67,7 @@ export default function Layout({ children }: LayoutProps) {
       case '/purchase-orders':
         return { id: 'purchase-orders', name: 'Purchase Orders' };
       case '/sales-orders':
-        return { id: 'sales-orders', name: 'Paga' };
+        return { id: 'sales-orders', name: 'Order' };
       case '/packing-lists':
         return { id: 'packing-lists', name: 'Packing Lists' };
       case '/reports':
