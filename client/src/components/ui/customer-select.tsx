@@ -47,7 +47,7 @@ interface CustomerSelectProps {
   testId?: string;
   className?: string;
   onOpen?: () => void; // Callback to trigger lazy loading
-  customers?: Array<{ id: string; customerNumber: string; name: string; email?: string; phone?: string; city?: string }>; // Optional external customers data
+  customers?: Array<{ id: string; customerNumber: string; name: string; email?: string; phone?: string }>; // Optional external customers data
 }
 
 export function CustomerSelect({
@@ -81,7 +81,6 @@ export function CustomerSelect({
     name: string;
     email?: string;
     phone?: string;
-    city?: string;
   }>;
 
   // Customer form
@@ -217,8 +216,7 @@ export function CustomerSelect({
               return (
                 customer.name?.toLowerCase().includes(searchLower) ||
                 customer.email?.toLowerCase().includes(searchLower) ||
-                customer.phone?.toLowerCase().includes(searchLower) ||
-                customer.city?.toLowerCase().includes(searchLower)
+                customer.phone?.toLowerCase().includes(searchLower)
               ) ? 1 : 0;
             }}
           >
@@ -262,9 +260,6 @@ export function CustomerSelect({
                       />
                       <div>
                         <div className="font-medium">{customer.name}</div>
-                        {customer.city && (
-                          <div className="text-sm text-muted-foreground">{customer.city}</div>
-                        )}
                       </div>
                     </div>
                     <Button
