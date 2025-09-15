@@ -438,6 +438,11 @@ export default function Layout({ children }: LayoutProps) {
         } else {
           // If no tabs left, clear active tab to show welcome screen
           setActiveTabId('');
+          // Navigate to dashboard to clear sidebar highlighting
+          // Use setTimeout to avoid setState during render warnings
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 0);
         }
       }
       
