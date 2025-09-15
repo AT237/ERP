@@ -356,14 +356,16 @@ export default function Layout({ children }: LayoutProps) {
       return;
     }
     
-    // For page/menu tabs, navigate to the route and let URL drive the activeTabId
+    // For page/menu tabs, navigate to the route and ensure tab becomes active
     if (tab.type === 'page' || tab.type === 'menu') {
       // Use menuRoute if available, otherwise get route by ID
       const route = tab.menuRoute || getRouteForTab(tab.id);
       if (route !== location) {
+        setActiveTabId(tab.id); // immediate UX feedback
         navigate(route);
+      } else {
+        setActiveTabId(tab.id); // ensure activation when URL unchanged
       }
-      // Don't set activeTabId manually - let the useEffect([location]) handle it
       return;
     }
   };
