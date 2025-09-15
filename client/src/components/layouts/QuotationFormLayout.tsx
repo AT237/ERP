@@ -1234,7 +1234,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       />
 
       {/* Quotation Items Table */}
-      <DataTableLayout
+      <div className="px-4 py-4 bg-white">
+        <DataTableLayout
           data={quotationItems}
           isLoading={false}
           columns={itemTableState.columns}
@@ -1336,6 +1337,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             content: renderItemDialog()
           }}
         />
+      </div>
 
       {/* PDF Preview Modal */}
       <Dialog open={showPDFPreview} onOpenChange={setShowPDFPreview}>
