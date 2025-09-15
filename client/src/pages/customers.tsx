@@ -9,7 +9,7 @@ import { useDataTable } from '@/hooks/useDataTable';
 
 
 const defaultColumns: ColumnConfig[] = [
-  createIdColumn('id', 'Customer ID'),
+  createIdColumn('customerNumber', 'Customer ID'),
   { key: 'name', label: 'Company Name', visible: true, width: 200, filterable: true, sortable: true },
   { key: 'email', label: 'Email', visible: true, width: 180, filterable: true, sortable: true },
   { key: 'phone', label: 'Phone', visible: true, width: 120, filterable: false, sortable: true },
