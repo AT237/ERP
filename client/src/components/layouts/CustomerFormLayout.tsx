@@ -784,16 +784,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
 
 
   // Create header fields for BaseFormLayout
-  const headerFields: InfoField[] = [
-    {
-      label: "Customer ID",
-      value: customerId ? customer?.customerNumber || customerId.slice(0, 8) : 'New customer'
-    },
-    {
-      label: "Status", 
-      value: isEditing ? "Edit" : "Draft"
-    }
-  ];
+  const headerFields: InfoField[] = [];
 
   // Create action buttons for BaseFormLayout
   const actionButtons: ActionButton[] = [
