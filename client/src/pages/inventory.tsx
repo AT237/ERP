@@ -546,7 +546,6 @@ export default function Inventory() {
 
   return (
     <DataTableLayout
-      title="Inventory Management"
       entityName="Product"
       entityNamePlural="Products"
       data={renderTableData(items)}
@@ -588,15 +587,14 @@ export default function Inventory() {
           label: 'Edit',
           icon: <Edit className="h-4 w-4" />,
           onClick: () => handleEdit(row),
-          variant: 'ghost' as const
+          variant: 'outline' as const
         },
         {
           key: 'delete',
           label: 'Delete',
           icon: <Trash2 className="h-4 w-4" />,
           onClick: () => handleDelete(row.id),
-          variant: 'ghost' as const,
-          className: 'text-red-600 hover:text-red-700'
+          variant: 'destructive' as const
         }
       ]}
       addEditDialog={{

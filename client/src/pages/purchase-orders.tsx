@@ -33,6 +33,8 @@ const formSchema = insertPurchaseOrderSchema.extend({
   subtotal: z.string().min(1, "Subtotal is required"),
   taxAmount: z.string().optional(),
   totalAmount: z.string().min(1, "Total amount is required"),
+  orderDate: z.string().optional(),
+  expectedDate: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -161,7 +163,7 @@ export default function PurchaseOrders() {
       supplierId: purchaseOrder.supplierId,
       status: purchaseOrder.status || "pending",
       orderDate: purchaseOrder.orderDate ? format(new Date(purchaseOrder.orderDate), "yyyy-MM-dd") : new Date().toISOString().split('T')[0],
-      expectedDate: purchaseOrder.expectedDate ? format(new Date(purchaseOrder.expectedDate), "yyyy-MM-dd") : undefined,
+      expectedDate: purchaseOrder.expectedDate ? format(new Date(purchaseOrder.expectedDate), "yyyy-MM-dd") : "",
       subtotal: purchaseOrder.subtotal,
       taxAmount: purchaseOrder.taxAmount || "0",
       totalAmount: purchaseOrder.totalAmount,
@@ -315,7 +317,7 @@ export default function PurchaseOrders() {
                 <div>
                   <Label htmlFor="status">Status</Label>
                   <Select 
-                    value={form.watch("status")} 
+                    value={form.watch("status") || "pending"} 
                     onValueChange={(value) => form.setValue("status", value)}
                   >
                     <SelectTrigger data-testid="select-status">
