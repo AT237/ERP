@@ -72,6 +72,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'packing-lists', name: 'Packing Lists' };
       case '/reports':
         return { id: 'reports', name: 'Reports' };
+      case '/welcome':
+        return { id: 'welcome', name: 'Welcome' };
       default:
         return { id: 'page', name: 'Page' };
     }
@@ -181,6 +183,13 @@ export default function Layout({ children }: LayoutProps) {
   // Update tab when route changes
   useEffect(() => {
     const pageInfo = getPageInfo(location);
+    
+    // Don't create tabs or set active tab for the welcome route
+    // This is a neutral route used when all tabs are closed
+    if (pageInfo.id === 'welcome') {
+      return;
+    }
+    
     const existingTab = tabs.find(tab => tab.id === pageInfo.id);
     
     if (!existingTab) {
@@ -438,10 +447,11 @@ export default function Layout({ children }: LayoutProps) {
         } else {
           // If no tabs left, clear active tab to show welcome screen
           setActiveTabId('');
-          // Navigate to dashboard to clear sidebar highlighting
+          // Navigate to a neutral route that doesn't correspond to any menu item
+          // This prevents the dashboard from being highlighted when all tabs are closed
           // Use setTimeout to avoid setState during render warnings
           setTimeout(() => {
-            navigate('/dashboard');
+            navigate('/welcome');
           }, 0);
         }
       }
