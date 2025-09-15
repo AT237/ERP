@@ -197,7 +197,7 @@ export function CustomerSelect({
             className={cn("w-full justify-between", className)}
             data-testid={testId}
           >
-            {selectedCustomer ? `${selectedCustomer.customerNumber} - ${selectedCustomer.name}` : placeholder}
+            {selectedCustomer ? selectedCustomer.name : placeholder}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -210,12 +210,11 @@ export function CustomerSelect({
           <Command
             filter={(value, search) => {
               // Custom filter logic for "contains" search
-              const customer = customersTyped.find(c => `${c.customerNumber} - ${c.name}` === value);
+              const customer = customersTyped.find(c => c.name === value);
               if (!customer) return 0;
               
               const searchLower = search.toLowerCase();
               return (
-                customer.customerNumber?.toLowerCase().includes(searchLower) ||
                 customer.name?.toLowerCase().includes(searchLower) ||
                 customer.email?.toLowerCase().includes(searchLower) ||
                 customer.phone?.toLowerCase().includes(searchLower) ||
@@ -247,7 +246,7 @@ export function CustomerSelect({
                 {customersTyped.map((customer) => (
                   <CommandItem
                     key={customer.id}
-                    value={`${customer.customerNumber} - ${customer.name}`}
+                    value={customer.name}
                     onSelect={() => {
                       onValueChange?.(customer.id);
                       setOpen(false);
@@ -262,7 +261,7 @@ export function CustomerSelect({
                         )}
                       />
                       <div>
-                        <div className="font-medium">{customer.customerNumber} - {customer.name}</div>
+                        <div className="font-medium">{customer.name}</div>
                         {customer.city && (
                           <div className="text-sm text-muted-foreground">{customer.city}</div>
                         )}
