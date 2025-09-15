@@ -428,9 +428,24 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   }, [quotationForm]);
 
   const handleViewQuotation = React.useCallback((quotation: Quotation) => {
-    setSelectedQuotation(quotation);
-    setActiveTab("general");
-    setShowDetailDialog(true);
+    // Primary approach: Use global tab system via event dispatch
+    const formInfo = {
+      id: `view-quotation-${quotation.id}`,
+      name: `View ${quotation.quotationNumber}`,
+      formType: 'quotation',
+      parentId: quotation.id
+    };
+    
+    try {
+      // Dispatch event to open quotation view tab
+      window.dispatchEvent(new CustomEvent('open-form-tab', { detail: formInfo }));
+    } catch (error) {
+      // Fallback: Use existing dialog approach if event dispatch fails
+      console.warn('Failed to open quotation via tab system, falling back to dialog:', error);
+      setSelectedQuotation(quotation);
+      setActiveTab("general");
+      setShowDetailDialog(true);
+    }
   }, []);
 
   const handleSaveQuotation = (data: QuotationFormData) => {
