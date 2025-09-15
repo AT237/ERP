@@ -81,13 +81,13 @@ export function BaseFormLayout({
         <div className="relative pt-2 pb-0 px-4">
           {/* Info Header - only show if there are fields */}
           {headerFields.length > 0 && (
-            <div className="absolute left-2 w-fit">
+            <div className="absolute left-6 w-fit">
               <InfoHeaderLayout fields={headerFields} />
             </div>
           )}
           
           {/* Action Buttons */}
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2 mx-4">
             {actionButtons.map((button) => (
               <Button
                 key={button.key}
