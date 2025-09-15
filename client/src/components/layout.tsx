@@ -91,6 +91,9 @@ export default function Layout({ children }: LayoutProps) {
   
   // Ref to track last saved values to prevent unnecessary saves
   const lastSavedTab = useRef<{tabId: string, tabType: string} | null>(null);
+  
+  // Ref to track if we've already restored preferences to prevent overriding user selections
+  const hasRestoredPreferences = useRef(false);
 
   // Load user preferences
   const { data: preferences } = useQuery({
@@ -116,13 +119,14 @@ export default function Layout({ children }: LayoutProps) {
     },
   });
   
-  // Restore last active tab from preferences
+  // Restore last active tab from preferences - only once on initial load
   useEffect(() => {
-    if (preferences && typeof preferences === 'object' && preferences !== null && 'lastActiveTab' in preferences && 'lastActiveTabType' in preferences) {
+    if (preferences && typeof preferences === 'object' && preferences !== null && 'lastActiveTab' in preferences && 'lastActiveTabType' in preferences && !hasRestoredPreferences.current) {
       // Only restore if it's not a page tab (to avoid conflicts with routing)
       if ((preferences as any).lastActiveTabType !== 'page') {
         setActiveTabId((preferences as any).lastActiveTab as string);
       }
+      hasRestoredPreferences.current = true;
     }
   }, [preferences]);
 
@@ -244,34 +248,40 @@ export default function Layout({ children }: LayoutProps) {
     }
   };
 
-  // Listen for global form tab open events
+  // Listen for global form tab open events - stable listener with functional updates
   useEffect(() => {
     const handleOpenFormTab = (e: CustomEvent) => {
       const formInfo = e.detail;
-      // Check if tab already exists
-      const existingTab = tabs.find(tab => tab.id === formInfo.id);
       
-      if (existingTab) {
-        // Switch to existing tab
-        setActiveTabId(formInfo.id);
-      } else {
-        // Create new tab for form
-        const newTab = {
-          id: formInfo.id,
-          name: formInfo.name,
-          type: 'form' as const,
-          formType: formInfo.formType,
-          parentId: formInfo.parentId
-        };
+      // Use functional state updates to avoid stale closures
+      setTabs(prevTabs => {
+        // Check if tab already exists
+        const existingTab = prevTabs.find(tab => tab.id === formInfo.id);
         
-        setTabs(prevTabs => [...prevTabs, newTab]);
-        setActiveTabId(formInfo.id);
-      }
+        if (existingTab) {
+          // Tab exists, don't modify tabs
+          return prevTabs;
+        } else {
+          // Create new tab for form
+          const newTab = {
+            id: formInfo.id,
+            name: formInfo.name,
+            type: 'form' as const,
+            formType: formInfo.formType,
+            parentId: formInfo.parentId
+          };
+          
+          return [...prevTabs, newTab];
+        }
+      });
+      
+      // Always set as active (whether existing or new)
+      setActiveTabId(formInfo.id);
     };
     
     window.addEventListener('open-form-tab', handleOpenFormTab as EventListener);
     return () => window.removeEventListener('open-form-tab', handleOpenFormTab as EventListener);
-  }, [tabs]);
+  }, []); // Empty dependency array for stable listener
 
   const handleMenuClick = (menuItem: {id: string, name: string, route?: string}) => {
     // Navigate to the route instead of creating a tab
