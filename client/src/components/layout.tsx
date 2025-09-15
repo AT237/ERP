@@ -286,7 +286,28 @@ export default function Layout({ children }: LayoutProps) {
   const handleMenuClick = (menuItem: {id: string, name: string, route?: string}) => {
     // Navigate to the route instead of creating a tab
     if (menuItem.route) {
-      navigate(menuItem.route);
+      if (menuItem.route !== location) {
+        navigate(menuItem.route);
+      } else {
+        // If route already matches, ensure page tab exists by creating it if missing
+        const pageInfo = getPageInfo(menuItem.route);
+        const existingTab = tabs.find(tab => tab.id === pageInfo.id);
+        
+        if (!existingTab) {
+          // Create the page tab if it doesn't exist
+          const newTab: Tab = {
+            id: pageInfo.id,
+            name: pageInfo.name,
+            type: 'page',
+            menuRoute: menuItem.route,
+            content: children
+          };
+          setTabs(prevTabs => [...prevTabs, newTab]);
+        }
+        
+        // Ensure the page tab is active
+        setActiveTabId(pageInfo.id);
+      }
     }
   };
 
@@ -385,14 +406,35 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const performCloseTab = (tabId: string) => {
+    const tabToClose = tabs.find(tab => tab.id === tabId);
+    const tabIndex = tabs.findIndex(tab => tab.id === tabId);
+    
     setTabs(prevTabs => {
       const newTabs = prevTabs.filter(tab => tab.id !== tabId);
       
-      // If we're closing the active tab, switch to first remaining tab or dashboard
+      // If we're closing the active tab, switch to next appropriate tab
       if (activeTabId === tabId) {
-        const remainingTabs = newTabs;
-        if (remainingTabs.length > 0) {
-          setActiveTabId(remainingTabs[0].id);
+        if (newTabs.length > 0) {
+          // Calculate next active tab - prefer neighbor of closed tab, fallback to first
+          let nextActiveTab;
+          if (tabIndex > 0 && tabIndex < newTabs.length + 1) {
+            // Try to get the tab that was to the right, or left if at the end
+            nextActiveTab = newTabs[Math.min(tabIndex, newTabs.length - 1)];
+          } else {
+            // Fallback to first tab
+            nextActiveTab = newTabs[0];
+          }
+          
+          setActiveTabId(nextActiveTab.id);
+          
+          // If the closed tab was a page tab and the new active tab is also a page tab,
+          // navigate to keep URL and sidebar highlighting synchronized
+          if (tabToClose?.type === 'page' && nextActiveTab.type === 'page') {
+            const route = nextActiveTab.menuRoute || getRouteForTab(nextActiveTab.id);
+            if (route !== location) {
+              navigate(route);
+            }
+          }
         } else {
           // If no tabs left, clear active tab to show welcome screen
           setActiveTabId('');
