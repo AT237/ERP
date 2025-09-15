@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Check, ChevronsUpDown, Plus, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
-const customerFormSchema = insertCustomerSchema.omit({ id: true }).extend({
+const customerFormSchema = insertCustomerSchema.extend({
   name: z.string().min(1, "Company name is required"),
   email: z.string().optional(),
   phone: z.string().optional(),
@@ -48,6 +48,7 @@ interface CustomerSelectProps {
   className?: string;
   onOpen?: () => void; // Callback to trigger lazy loading
   customers?: Array<{ id: string; customerNumber: string; name: string; email?: string; phone?: string }>; // Optional external customers data
+  parentId?: string; // ID of the parent tab that opened this select
 }
 
 export function CustomerSelect({
@@ -57,7 +58,8 @@ export function CustomerSelect({
   testId = "select-customer",
   className,
   onOpen,
-  customers: externalCustomers
+  customers: externalCustomers,
+  parentId
 }: CustomerSelectProps) {
   const [open, setOpen] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -178,6 +180,26 @@ export function CustomerSelect({
     setOpen(false);
   };
 
+  // Listen for entity-created events to auto-select newly created customer
+  // Only react to events scoped to this specific CustomerSelect instance
+  useEffect(() => {
+    const handleEntityCreated = (event: CustomEvent) => {
+      const { entityType, entity, parentId: eventParentId } = event.detail;
+      
+      // Only handle customer creation events that are scoped to this component
+      const myParentId = parentId || testId;
+      if (entityType === 'customer' && entity?.id && eventParentId === myParentId) {
+        // Auto-select the newly created customer
+        onValueChange?.(entity.id);
+      }
+    };
+
+    window.addEventListener('entity-created', handleEntityCreated as EventListener);
+    return () => {
+      window.removeEventListener('entity-created', handleEntityCreated as EventListener);
+    };
+  }, [onValueChange, parentId, testId]);
+
   const selectedCustomer = customersTyped.find(customer => customer.id === value);
 
   return (
@@ -231,8 +253,22 @@ export function CustomerSelect({
                   variant="ghost" 
                   size="icon"
                   className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                  onClick={() => setShowAddDialog(true)}
-                  data-testid={`${testId}-add-button`}
+                  onClick={() => {
+                    // Generate unique tab ID using timestamp to prevent collisions
+                    const uniqueTabId = `customer-new-${Date.now()}`;
+                    
+                    // Dispatch event to open new customer form tab with parentId for scoping
+                    window.dispatchEvent(new CustomEvent('open-form-tab', {
+                      detail: {
+                        id: uniqueTabId,
+                        name: 'New Customer',
+                        formType: 'customer',
+                        parentId: parentId || testId // Use parentId if provided, otherwise fall back to testId
+                      }
+                    }));
+                    setOpen(false); // Close the dropdown
+                  }}
+                  data-testid={`button-add-customer-${parentId || testId}`}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>

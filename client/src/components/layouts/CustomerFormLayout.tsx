@@ -57,6 +57,7 @@ type FormFieldValues = {
 interface CustomerFormLayoutProps {
   onSave: () => void;
   customerId?: string;
+  parentId?: string; // ID of the parent tab that opened this form
 }
 
 interface Memo {
@@ -67,7 +68,7 @@ interface Memo {
   createdAt: Date;
 }
 
-export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutProps) {
+export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFormLayoutProps) {
   const [activeTab, setActiveTab] = useState("general");
   const [memos, setMemos] = useState<Memo[]>([]);
   const [newMemo, setNewMemo] = useState({ title: "", content: "", isInternal: false });
@@ -310,13 +311,24 @@ export function CustomerFormLayout({ onSave, customerId }: CustomerFormLayoutPro
       const response = await apiRequest("POST", "/api/customers", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (newCustomer) => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
         title: "Succes",
         description: "Klant toegevoegd",
       });
+      
+      // Dispatch scoped entity-created event for CustomerSelect to auto-select the new customer
+      // Include parentId to scope this event to the originating CustomerSelect component
+      window.dispatchEvent(new CustomEvent('entity-created', {
+        detail: {
+          entityType: 'customer',
+          entity: newCustomer,
+          parentId: parentId // Scope to originating component
+        }
+      }));
+      
       onSave();
     },
     onError: () => {

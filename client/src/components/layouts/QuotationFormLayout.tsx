@@ -1075,10 +1075,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 onOpen={() => setShouldLoadCustomers(true)}
                 customers={customers.map(c => ({ 
                   id: c.id, 
+                  customerNumber: c.customerNumber || '', 
                   name: c.name, 
                   email: c.generalEmail || undefined, 
-                  phone: c.phone || undefined, 
-                  city: c.addressId || undefined 
+                  phone: c.phone || undefined 
                 }))}
               />
             </div>

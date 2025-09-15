@@ -118,10 +118,10 @@ export default function Layout({ children }: LayoutProps) {
   
   // Restore last active tab from preferences
   useEffect(() => {
-    if (preferences?.lastActiveTab && preferences?.lastActiveTabType) {
+    if (preferences && typeof preferences === 'object' && preferences !== null && 'lastActiveTab' in preferences && 'lastActiveTabType' in preferences) {
       // Only restore if it's not a page tab (to avoid conflicts with routing)
-      if (preferences.lastActiveTabType !== 'page') {
-        setActiveTabId(preferences.lastActiveTab);
+      if ((preferences as any).lastActiveTabType !== 'page') {
+        setActiveTabId((preferences as any).lastActiveTab as string);
       }
     }
   }, [preferences]);
@@ -143,8 +143,8 @@ export default function Layout({ children }: LayoutProps) {
           savePreferences.mutate({
             lastActiveTab: activeTabId,
             lastActiveTabType: activeTab.type,
-            navigationOrder: (preferences as any)?.navigationOrder || null,
-            collapsedSections: (preferences as any)?.collapsedSections || {},
+            navigationOrder: (preferences && typeof preferences === 'object' && preferences !== null && 'navigationOrder' in preferences) ? (preferences as any).navigationOrder : null,
+            collapsedSections: (preferences && typeof preferences === 'object' && preferences !== null && 'collapsedSections' in preferences) ? (preferences as any).collapsedSections : {},
           });
         }, 500); // Reduced timeout to 500ms for better responsiveness
 
@@ -660,6 +660,7 @@ export default function Layout({ children }: LayoutProps) {
           <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
             <CustomerForm 
               customerId={customerId}
+              parentId={activeTab.parentId}
               onSave={() => {
                 // Return to customers tab after save
                 const customersTab = tabs.find(tab => tab.id === 'customers');
