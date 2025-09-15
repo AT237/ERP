@@ -185,6 +185,7 @@ export default function Layout({ children }: LayoutProps) {
         id: pageInfo.id,
         name: pageInfo.name,
         type: 'page',
+        menuRoute: location,
         content: children
       };
       setTabs(prevTabs => [...prevTabs, newTab]);
@@ -192,7 +193,7 @@ export default function Layout({ children }: LayoutProps) {
       // Update existing tab content
       setTabs(prevTabs => 
         prevTabs.map(tab => 
-          tab.id === pageInfo.id ? { ...tab, content: children } : tab
+          tab.id === pageInfo.id ? { ...tab, content: children, menuRoute: location } : tab
         )
       );
     }
@@ -303,52 +304,62 @@ export default function Layout({ children }: LayoutProps) {
 
   // Handle tab click to navigate to the correct route
   const handleTabClick = (tab: Tab) => {
-    // Only navigate for page/menu/section tabs, not form tabs
+    // For form tabs, just set as active without navigation
     if (tab.type === 'form') {
-      // For form tabs, just set as active without navigation
       setActiveTabId(tab.id);
       return;
     }
     
-    // Get the route for this tab based on its ID
-    const getRouteForTab = (tabId: string) => {
-      switch (tabId) {
-        case 'dashboard':
-          return '/dashboard';
-        case 'customers':
-          return '/customers';
-        case 'inventory':
-          return '/inventory';
-        case 'suppliers':
-          return '/suppliers';
-        case 'contacts':
-          return '/contacts';
-        case 'quotations':
-          return '/quotations';
-        case 'invoices':
-          return '/invoices';
-        case 'projects':
-          return '/projects';
-        case 'work-orders':
-          return '/work-orders';
-        case 'purchase-orders':
-          return '/purchase-orders';
-        case 'sales-orders':
-          return '/sales-orders';
-        case 'packing-lists':
-          return '/packing-lists';
-        case 'reports':
-          return '/reports';
-        default:
-          return '/dashboard';
-      }
-    };
-
-    const route = getRouteForTab(tab.id);
-    if (route !== location) {
-      navigate(route);
+    // For section tabs, just set as active without navigation
+    if (tab.type === 'section') {
+      setActiveTabId(tab.id);
+      return;
     }
-    setActiveTabId(tab.id);
+    
+    // For page/menu tabs, navigate to the route and let URL drive the activeTabId
+    if (tab.type === 'page' || tab.type === 'menu') {
+      // Use menuRoute if available, otherwise get route by ID
+      const route = tab.menuRoute || getRouteForTab(tab.id);
+      if (route !== location) {
+        navigate(route);
+      }
+      // Don't set activeTabId manually - let the useEffect([location]) handle it
+      return;
+    }
+  };
+  
+  // Helper function to get route for tab ID
+  const getRouteForTab = (tabId: string) => {
+    switch (tabId) {
+      case 'dashboard':
+        return '/dashboard';
+      case 'customers':
+        return '/customers';
+      case 'inventory':
+        return '/inventory';
+      case 'suppliers':
+        return '/suppliers';
+      case 'contacts':
+        return '/contacts';
+      case 'quotations':
+        return '/quotations';
+      case 'invoices':
+        return '/invoices';
+      case 'projects':
+        return '/projects';
+      case 'work-orders':
+        return '/work-orders';
+      case 'purchase-orders':
+        return '/purchase-orders';
+      case 'sales-orders':
+        return '/sales-orders';
+      case 'packing-lists':
+        return '/packing-lists';
+      case 'reports':
+        return '/reports';
+      default:
+        return '/dashboard';
+    }
   };
 
   const closeTab = (tabId: string) => {
