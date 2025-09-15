@@ -267,6 +267,31 @@ export const purchaseOrderItems = pgTable("purchase_order_items", {
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
 });
 
+// Sales orders table
+export const salesOrders = pgTable("sales_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderNumber: text("order_number").notNull().unique().default(sql`generate_sales_order_number()`),
+  customerId: varchar("customer_id").references(() => customers.id).notNull(),
+  status: text("status").default("pending"),
+  orderDate: timestamp("order_date").defaultNow(),
+  expectedDeliveryDate: timestamp("expected_delivery_date"),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Sales order items table
+export const salesOrderItems = pgTable("sales_order_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id).notNull(),
+  itemId: varchar("item_id").references(() => inventoryItems.id).notNull(),
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+});
+
 // Work orders table
 export const workOrders = pgTable("work_orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -395,6 +420,7 @@ export const customersRelations = relations(customers, ({ one, many }) => ({
   projects: many(projects),
   quotations: many(quotations),
   invoices: many(invoices),
+  salesOrders: many(salesOrders),
   packingLists: many(packingLists),
 }));
 
@@ -406,6 +432,7 @@ export const inventoryItemsRelations = relations(inventoryItems, ({ many }) => (
   quotationItems: many(quotationItems),
   invoiceItems: many(invoiceItems),
   purchaseOrderItems: many(purchaseOrderItems),
+  salesOrderItems: many(salesOrderItems),
   packingListItems: many(packingListItems),
 }));
 
@@ -491,6 +518,25 @@ export const purchaseOrderItemsRelations = relations(purchaseOrderItems, ({ one 
   }),
 }));
 
+export const salesOrdersRelations = relations(salesOrders, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [salesOrders.customerId],
+    references: [customers.id],
+  }),
+  items: many(salesOrderItems),
+}));
+
+export const salesOrderItemsRelations = relations(salesOrderItems, ({ one }) => ({
+  salesOrder: one(salesOrders, {
+    fields: [salesOrderItems.salesOrderId],
+    references: [salesOrders.id],
+  }),
+  item: one(inventoryItems, {
+    fields: [salesOrderItems.itemId],
+    references: [inventoryItems.id],
+  }),
+}));
+
 export const workOrdersRelations = relations(workOrders, ({ one }) => ({
   project: one(projects, {
     fields: [workOrders.projectId],
@@ -560,6 +606,8 @@ export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({ i
 export const insertProformaInvoiceSchema = createInsertSchema(proformaInvoices).omit({ id: true, createdAt: true });
 export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit({ id: true, createdAt: true });
 export const insertPurchaseOrderItemSchema = createInsertSchema(purchaseOrderItems).omit({ id: true });
+export const insertSalesOrderSchema = createInsertSchema(salesOrders).omit({ id: true, createdAt: true });
+export const insertSalesOrderItemSchema = createInsertSchema(salesOrderItems).omit({ id: true });
 export const insertWorkOrderSchema = createInsertSchema(workOrders).omit({ id: true, createdAt: true });
 export const insertPackingListSchema = createInsertSchema(packingLists).omit({ id: true, createdAt: true });
 export const insertPackingListItemSchema = createInsertSchema(packingListItems).omit({ id: true });
@@ -607,6 +655,10 @@ export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
 export type InsertPurchaseOrder = z.infer<typeof insertPurchaseOrderSchema>;
 export type PurchaseOrderItem = typeof purchaseOrderItems.$inferSelect;
 export type InsertPurchaseOrderItem = z.infer<typeof insertPurchaseOrderItemSchema>;
+export type SalesOrder = typeof salesOrders.$inferSelect;
+export type InsertSalesOrder = z.infer<typeof insertSalesOrderSchema>;
+export type SalesOrderItem = typeof salesOrderItems.$inferSelect;
+export type InsertSalesOrderItem = z.infer<typeof insertSalesOrderItemSchema>;
 export type WorkOrder = typeof workOrders.$inferSelect;
 export type InsertWorkOrder = z.infer<typeof insertWorkOrderSchema>;
 export type PackingList = typeof packingLists.$inferSelect;
