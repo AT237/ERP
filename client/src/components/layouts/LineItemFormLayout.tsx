@@ -3,9 +3,9 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
+import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createCustomRow } from './LayoutForm2';
+import type { ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
-import type { FormTab } from './FormTabLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
@@ -62,11 +62,10 @@ interface LineItemFormLayoutProps {
 }
 
 export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }: LineItemFormLayoutProps) {
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeSection, setActiveSection] = useState("general");
   
   // Change tracking state
   const [originalValues, setOriginalValues] = useState<Partial<LineItemFormData>>({});
-  const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   // Snippet selection state
@@ -97,42 +96,10 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     },
   });
 
-  // Change tracking helpers
-  const compareValues = (original: any, current: any) => {
-    if (typeof original !== typeof current) return false;
-    if (original === null || current === null) return original === current;
-    return String(original).trim() === String(current).trim();
-  };
-
-  const checkForChanges = () => {
-    const currentValues = form.getValues();
-    const modifiedFieldsSet = new Set<string>();
-    let hasChanges = false;
-
-    Object.keys(originalValues).forEach(fieldName => {
-      const originalValue = originalValues[fieldName as keyof LineItemFormData];
-      const currentValue = currentValues[fieldName as keyof LineItemFormData];
-      
-      if (!compareValues(originalValue, currentValue)) {
-        modifiedFieldsSet.add(fieldName);
-        hasChanges = true;
-      }
-    });
-
-    setModifiedFields(modifiedFieldsSet);
+  // Change tracking callback
+  const handleChangesDetected = useCallback((hasChanges: boolean, modifiedFields: Set<string>) => {
     setHasUnsavedChanges(hasChanges);
-    
-    return hasChanges;
-  };
-
-  // Get CSS class for field based on whether it's modified
-  const getFieldClassName = (fieldName: string, baseClassName: string = "") => {
-    const isModified = modifiedFields.has(fieldName);
-    if (isModified) {
-      return `${baseClassName} ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950`.trim();
-    }
-    return baseClassName;
-  };
+  }, []);
 
   // Load line item data if editing
   const { data: lineItem, isLoading: isLoadingLineItem } = useQuery<QuotationItem>({
@@ -180,31 +147,20 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       
       form.reset(formData);
       setOriginalValues(formData);
-      setModifiedFields(new Set());
       setHasUnsavedChanges(false);
     } else {
       // For new line item, store default values as original
       const defaultFormData = form.getValues();
       setOriginalValues(defaultFormData);
-      setModifiedFields(new Set());
       setHasUnsavedChanges(false);
     }
   }, [lineItem, form, quotationId]);
 
-  // Watch for form changes and update change tracking
-  const descriptionValue = form.watch("description");
+  // Watch form values for calculations and change tracking
+  const lineTypeValue = form.watch("lineType");
   const quantityValue = form.watch("quantity");
   const unitPriceValue = form.watch("unitPrice");
   const lineTotalValue = form.watch("lineTotal");
-  const lineTypeValue = form.watch("lineType");
-  const descriptionInternalValue = form.watch("descriptionInternal");
-  const descriptionExternalValue = form.watch("descriptionExternal");
-  
-  useEffect(() => {
-    if (Object.keys(originalValues).length > 0) {
-      checkForChanges();
-    }
-  }, [descriptionValue, quantityValue, unitPriceValue, lineTotalValue, lineTypeValue, descriptionInternalValue, descriptionExternalValue]);
 
   // Available snippet categories
   const SNIPPET_CATEGORIES = [
@@ -438,98 +394,88 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     { value: 'charges', label: 'Toeslag' },
   ];
 
-  // Tab content
-  const generalTabContent = (
-    <div className="space-y-6">
-      {/* Line Type Selection */}
-      <div className="space-y-2">
-        <Label htmlFor="lineType">Regeltype</Label>
-        <Select
-          value={form.watch("lineType") || undefined}
-          onValueChange={(value) => {
-            form.setValue("lineType", value);
-            console.log("Selected line type:", value);
-          }}
-        >
-          <SelectTrigger 
-            className={getFieldClassName("lineType")}
-            data-testid="select-line-type"
-          >
-            <SelectValue placeholder="Selecteer regeltype" />
-          </SelectTrigger>
-          <SelectContent>
-            {lineTypeOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+  // Form field definitions
+  const formFields: FormField2<LineItemFormData>[] = [
+    {
+      key: 'lineType',
+      label: 'Regeltype',
+      type: 'select',
+      options: lineTypeOptions,
+      setValue: (value: string) => form.setValue('lineType', value),
+      watch: () => form.watch('lineType'),
+      validation: {
+        isRequired: true,
+        error: form.formState.errors.lineType?.message
+      },
+      testId: 'select-line-type'
+    },
+    {
+      key: 'position',
+      label: 'Positie',
+      type: 'number',
+      register: form.register('position', { valueAsNumber: true }),
+      validation: {
+        error: form.formState.errors.position?.message
+      },
+      testId: 'input-position'
+    },
+    {
+      key: 'quantity',
+      label: 'Aantal',
+      type: 'number',
+      register: form.register('quantity', { valueAsNumber: true }),
+      validation: {
+        isRequired: true,
+        error: form.formState.errors.quantity?.message
+      },
+      testId: 'input-quantity'
+    },
+    {
+      key: 'unitPrice',
+      label: 'Prijs per eenheid',
+      type: 'number',
+      register: form.register('unitPrice'),
+      validation: {
+        isRequired: true,
+        error: form.formState.errors.unitPrice?.message
+      },
+      testId: 'input-unit-price'
+    },
+    {
+      key: 'lineTotal',
+      label: 'Regel totaal',
+      type: 'text',
+      register: form.register('lineTotal'),
+      disabled: true,
+      className: 'bg-gray-50 dark:bg-gray-800',
+      validation: {
+        error: form.formState.errors.lineTotal?.message
+      },
+      testId: 'input-line-total'
+    },
+    {
+      key: 'descriptionInternal',
+      label: 'Beschrijving intern',
+      type: 'textarea',
+      placeholder: 'Interne beschrijving (niet zichtbaar op offerte)',
+      rows: 3,
+      register: form.register('descriptionInternal'),
+      validation: {
+        error: form.formState.errors.descriptionInternal?.message
+      },
+      testId: 'textarea-description-internal'
+    }
+  ];
 
-      {/* Position */}
-      <div className="space-y-2">
-        <Label htmlFor="position">Positie</Label>
-        <Input
-          id="position"
-          type="number"
-          {...form.register("position", { valueAsNumber: true })}
-          className={getFieldClassName("position")}
-          data-testid="input-position"
-        />
-      </div>
-
-      {/* Quantity */}
-      <div className="space-y-2">
-        <Label htmlFor="quantity">Aantal</Label>
-        <Input
-          id="quantity"
-          type="number"
-          {...form.register("quantity", { valueAsNumber: true })}
-          className={getFieldClassName("quantity")}
-          data-testid="input-quantity"
-        />
-      </div>
-
-      {/* Unit Price */}
-      <div className="space-y-2">
-        <Label htmlFor="unitPrice">Prijs per eenheid</Label>
-        <Input
-          id="unitPrice"
-          type="number"
-          step="0.01"
-          {...form.register("unitPrice")}
-          className={getFieldClassName("unitPrice")}
-          data-testid="input-unit-price"
-        />
-      </div>
-
-      {/* Line Total (read-only) */}
-      <div className="space-y-2">
-        <Label htmlFor="lineTotal">Regel totaal</Label>
-        <Input
-          id="lineTotal"
-          {...form.register("lineTotal")}
-          readOnly
-          className={`${getFieldClassName("lineTotal")} bg-gray-50 dark:bg-gray-800`}
-          data-testid="input-line-total"
-        />
-      </div>
-
-      {/* Description Internal */}
-      <div className="space-y-2">
-        <Label htmlFor="descriptionInternal">Beschrijving intern</Label>
-        <Textarea
-          id="descriptionInternal"
-          {...form.register("descriptionInternal")}
-          placeholder="Interne beschrijving (niet zichtbaar op offerte)"
-          className={getFieldClassName("descriptionInternal")}
-          rows={3}
-          data-testid="textarea-description-internal"
-        />
-      </div>
-
-      {/* Description External */}
+  // Create custom description external field with snippet integration
+  const createDescriptionExternalField = (): FormField2<LineItemFormData> => ({
+    key: 'descriptionExternal',
+    label: 'Beschrijving extern',
+    type: 'custom',
+    validation: {
+      error: form.formState.errors.descriptionExternal?.message
+    },
+    customComponent: (
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="descriptionExternal">Beschrijving extern</Label>
@@ -551,7 +497,6 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
           id="descriptionExternal"
           {...form.register("descriptionExternal")}
           placeholder={form.watch("lineType") === "text" ? "Tekst (gebruik \"Uit bibliotheek\" voor herbruikbare tekstblokken)" : "Externe beschrijving (zichtbaar op offerte)"}
-          className={getFieldClassName("descriptionExternal")}
           rows={3}
           data-testid="textarea-description-external"
         />
@@ -562,8 +507,27 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
           </div>
         )}
       </div>
-    </div>
-  );
+    ),
+    testId: 'field-description-external'
+  });
+
+  // Form sections
+  const formSections: FormSection2<LineItemFormData>[] = [
+    {
+      id: 'general',
+      label: 'Algemeen',
+      rows: [
+        createFieldRow(formFields[0]), // lineType
+        createFieldRow(formFields[1]), // position
+        createFieldRow(formFields[2]), // quantity
+        createFieldRow(formFields[3]), // unitPrice
+        createFieldRow(formFields[4]), // lineTotal
+        createFieldRow(formFields[5]), // descriptionInternal
+        createFieldRow(createDescriptionExternalField()) // descriptionExternal with snippet integration
+      ]
+    }
+  ];
+
 
   // Snippet Selection Dialog
   const snippetSelectionDialog = (
@@ -685,23 +649,21 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     </Dialog>
   );
 
-  // Tabs configuration
-  const tabs: FormTab[] = [
-    {
-      id: 'general',
-      label: 'Algemeen',
-      content: generalTabContent
-    },
-  ];
-
   return (
     <>
-      <BaseFormLayout
-        headerFields={headerFields}
+      <LayoutForm2<LineItemFormData>
+        sections={formSections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        form={form}
+        onSubmit={onSubmit}
         actionButtons={actionButtons}
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+        headerFields={headerFields}
+        changeTracking={{
+          enabled: true,
+          onChangesDetected: handleChangesDetected
+        }}
+        originalValues={originalValues}
         isLoading={isLoadingLineItem}
       />
       {snippetSelectionDialog}

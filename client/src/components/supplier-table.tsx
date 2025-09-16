@@ -9,7 +9,7 @@ import { Plus } from "lucide-react";
 
 // Import our reusable layouts
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
-import { FormLayout, FormSection } from '@/components/layouts/FormLayout';
+import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
 import { useDataTable } from '@/hooks/useDataTable';
 
 // Form schema
@@ -82,6 +82,7 @@ export default function SupplierTable() {
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [selectedSupplierForReport, setSelectedSupplierForReport] = useState<Supplier | null>(null);
+  const [activeSection, setActiveSection] = useState("general");
 
   // Form setup
   const form = useForm<FormData>({
@@ -270,75 +271,87 @@ export default function SupplierTable() {
   };
 
   // Define form sections for the add/edit dialog
-  const formSections: FormSection[] = [
+  const formSections: FormSection2<FormData>[] = [
     {
-      title: "Company Information",
-      fields: [
-        {
+      id: "general",
+      label: "Supplier Details",
+      rows: [
+        createSectionHeaderRow("Company Information"),
+        createFieldRow({
           key: "name",
           label: "Company Name",
           type: "text",
           placeholder: "Enter company name",
-          required: true,
           register: form.register("name"),
-          error: form.formState.errors.name?.message,
-          'data-testid': "input-supplier-name"
-        },
-        {
+          validation: {
+            isRequired: true,
+            error: form.formState.errors.name?.message
+          },
+          testId: "input-supplier-name"
+        }),
+        createFieldRow({
           key: "taxId",
           label: "Tax ID",
           type: "text",
           placeholder: "Tax identification number",
           register: form.register("taxId"),
-          'data-testid': "input-supplier-tax-id"
-        },
-        {
+          validation: {
+            error: form.formState.errors.taxId?.message
+          },
+          testId: "input-supplier-tax-id"
+        }),
+        createFieldRow({
           key: "address",
           label: "Address",
           type: "text",
           placeholder: "Company address",
           register: form.register("address"),
-          'data-testid': "input-supplier-address"
-        }
-      ]
-    },
-    {
-      title: "Contact Information",
-      fields: [
-        {
+          validation: {
+            error: form.formState.errors.address?.message
+          },
+          testId: "input-supplier-address"
+        }),
+        
+        createSectionHeaderRow("Contact Information", "mt-6"),
+        createFieldRow({
           key: "contactPerson",
           label: "Contact Person",
           type: "text",
           placeholder: "Main contact person",
           register: form.register("contactPerson"),
-          'data-testid': "input-supplier-contact-person"
-        },
-        {
+          validation: {
+            error: form.formState.errors.contactPerson?.message
+          },
+          testId: "input-supplier-contact-person"
+        }),
+        createFieldRow({
           key: "email",
           label: "Email Address",
           type: "email",
           placeholder: "company@example.com",
           register: form.register("email"),
-          'data-testid': "input-supplier-email"
-        },
-        {
+          validation: {
+            error: form.formState.errors.email?.message
+          },
+          testId: "input-supplier-email"
+        }),
+        createFieldRow({
           key: "phone",
           label: "Phone Number",
           type: "tel",
           placeholder: "+31 20 123 4567",
           register: form.register("phone"),
-          'data-testid': "input-supplier-phone"
-        }
-      ]
-    },
-    {
-      title: "Business Settings",
-      fields: [
-        {
+          validation: {
+            error: form.formState.errors.phone?.message
+          },
+          testId: "input-supplier-phone"
+        }),
+        
+        createSectionHeaderRow("Business Settings", "mt-6"),
+        createFieldRow({
           key: "paymentTerms",
           label: "Payment Terms",
           type: "select",
-          required: true,
           options: [
             { value: "0", label: "Immediate payment" },
             { value: "14", label: "14 days" },
@@ -347,10 +360,14 @@ export default function SupplierTable() {
             { value: "90", label: "90 days" }
           ],
           setValue: (value: string) => form.setValue("paymentTerms", value),
-          error: form.formState.errors.paymentTerms?.message,
-          'data-testid': "select-supplier-payment-terms"
-        },
-        {
+          watch: () => form.watch("paymentTerms"),
+          validation: {
+            isRequired: true,
+            error: form.formState.errors.paymentTerms?.message
+          },
+          testId: "select-supplier-payment-terms"
+        }),
+        createFieldRow({
           key: "status",
           label: "Status",
           type: "select",
@@ -360,8 +377,12 @@ export default function SupplierTable() {
             { value: "prospect", label: "Prospect" }
           ],
           setValue: (value: string) => form.setValue("status", value),
-          'data-testid': "select-supplier-status"
-        }
+          watch: () => form.watch("status"),
+          validation: {
+            error: form.formState.errors.status?.message
+          },
+          testId: "select-supplier-status"
+        })
       ]
     }
   ];
@@ -414,16 +435,38 @@ export default function SupplierTable() {
         onOpenChange: setShowAddSupplierDialog,
         title: editingSupplier ? "Edit Supplier" : "Add New Supplier",
         content: (
-          <FormLayout
-            sections={formSections}
-            onSubmit={form.handleSubmit(onSubmit)}
-            onCancel={() => setShowAddSupplierDialog(false)}
-            submitLabel={editingSupplier 
-              ? (updateSupplierMutation.isPending ? "Updating..." : "Update Supplier")
-              : (createSupplierMutation.isPending ? "Adding..." : "Add Supplier")
-            }
-            isSubmitting={createSupplierMutation.isPending || updateSupplierMutation.isPending}
-          />
+          <div className="p-6">
+            <LayoutForm2<FormData>
+              sections={formSections}
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+              form={form}
+              onSubmit={onSubmit}
+              actionButtons={[
+                {
+                  key: 'cancel',
+                  label: 'Cancel',
+                  onClick: () => setShowAddSupplierDialog(false),
+                  variant: 'outline',
+                  testId: 'button-cancel-supplier'
+                },
+                {
+                  key: 'save',
+                  label: editingSupplier 
+                    ? (updateSupplierMutation.isPending ? "Updating..." : "Update Supplier")
+                    : (createSupplierMutation.isPending ? "Adding..." : "Add Supplier"),
+                  onClick: form.handleSubmit(onSubmit),
+                  variant: 'default',
+                  loading: createSupplierMutation.isPending || updateSupplierMutation.isPending,
+                  testId: 'button-save-supplier'
+                }
+              ]}
+              changeTracking={{
+                enabled: false // No change tracking for table forms
+              }}
+              isLoading={false}
+            />
+          </div>
         )
       }}
       

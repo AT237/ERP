@@ -9,7 +9,7 @@ import { Plus, Mail, Phone, Minus } from "lucide-react";
 
 // Import our reusable layouts
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
-import { FormLayout, FormSection } from '@/components/layouts/FormLayout';
+import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
 import { useDataTable } from '@/hooks/useDataTable';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -160,6 +160,7 @@ export default function ContactPersonsTable() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [mobileNumbers, setMobileNumbers] = useState<string[]>([""]);
+  const [activeSection, setActiveSection] = useState("general");
 
   // Initialize data table state
   const dataTableState = useDataTable({ 
@@ -366,43 +367,53 @@ export default function ContactPersonsTable() {
 
 
   // Form sections
-  const formSections: FormSection[] = [
+  const formSections: FormSection2<FormData>[] = [
     {
-      title: "Contact Information",
-      fields: [
-        {
+      id: "general",
+      label: "Contact Person Details",
+      rows: [
+        createSectionHeaderRow("Contact Information"),
+        createFieldRow({
           key: "firstName",
           label: "First Name",
           type: "text",
-          required: true,
           register: form.register("firstName"),
-          error: form.formState.errors.firstName?.message,
-          'data-testid': "input-first-name"
-        },
-        {
+          validation: {
+            isRequired: true,
+            error: form.formState.errors.firstName?.message
+          },
+          testId: "input-first-name"
+        }),
+        createFieldRow({
           key: "lastName",
           label: "Last Name",
           type: "text",
-          required: true,
           register: form.register("lastName"),
-          error: form.formState.errors.lastName?.message,
-          'data-testid': "input-last-name"
-        },
-        {
+          validation: {
+            isRequired: true,
+            error: form.formState.errors.lastName?.message
+          },
+          testId: "input-last-name"
+        }),
+        createFieldRow({
           key: "dateOfBirth",
           label: "Date of Birth",
-          type: "date",
+          type: "text",
           placeholder: "DD-MM-YYYY",
           register: form.register("dateOfBirth"),
-          error: form.formState.errors.dateOfBirth?.message,
-          'data-testid': "input-date-of-birth"
-        },
-        {
+          validation: {
+            error: form.formState.errors.dateOfBirth?.message
+          },
+          testId: "input-date-of-birth"
+        }),
+        createFieldRow({
           key: "mobile",
           label: "Mobile Numbers",
           type: "custom",
-          error: form.formState.errors.mobile?.message,
-          'data-testid': "input-mobile-numbers",
+          validation: {
+            error: form.formState.errors.mobile?.message
+          },
+          testId: "input-mobile-numbers",
           customComponent: (
             <div className="space-y-2">
               {mobileNumbers.map((number, index) => (
@@ -448,28 +459,29 @@ export default function ContactPersonsTable() {
               )}
             </div>
           )
-        }
-      ]
-    },
-    {
-      title: "Contact Details",
-      fields: [
-        {
+        }),
+        
+        createSectionHeaderRow("Contact Details", "mt-6"),
+        createFieldRow({
           key: "email",
           label: "Email Address",
           type: "email",
           register: form.register("email"),
-          error: form.formState.errors.email?.message,
-          'data-testid': "input-contact-email"
-        },
-        {
+          validation: {
+            error: form.formState.errors.email?.message
+          },
+          testId: "input-contact-email"
+        }),
+        createFieldRow({
           key: "phone",
           label: "Phone Number",
           type: "tel",
           register: form.register("phone"),
-          error: form.formState.errors.phone?.message,
-          'data-testid': "input-contact-phone"
-        }
+          validation: {
+            error: form.formState.errors.phone?.message
+          },
+          testId: "input-contact-phone"
+        })
       ]
     }
   ];
@@ -541,19 +553,41 @@ export default function ContactPersonsTable() {
         onOpenChange: setShowAddDialog,
         title: editingContact ? "Edit Contact Person" : "Add New Contact Person",
         content: (
-          <FormLayout
-            sections={formSections}
-            onSubmit={form.handleSubmit(onSubmit)}
-            onCancel={() => {
-              setShowAddDialog(false);
-              setEditingContact(null);
-            }}
-            submitLabel={editingContact 
-              ? (updateContactMutation.isPending ? "Updating..." : "Update Contact Person")
-              : (createContactMutation.isPending ? "Adding..." : "Add Contact Person")
-            }
-            isSubmitting={createContactMutation.isPending || updateContactMutation.isPending}
-          />
+          <div className="p-6">
+            <LayoutForm2<FormData>
+              sections={formSections}
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+              form={form}
+              onSubmit={onSubmit}
+              actionButtons={[
+                {
+                  key: 'cancel',
+                  label: 'Cancel',
+                  onClick: () => {
+                    setShowAddDialog(false);
+                    setEditingContact(null);
+                  },
+                  variant: 'outline',
+                  testId: 'button-cancel-contact'
+                },
+                {
+                  key: 'save',
+                  label: editingContact 
+                    ? (updateContactMutation.isPending ? "Updating..." : "Update Contact Person")
+                    : (createContactMutation.isPending ? "Adding..." : "Add Contact Person"),
+                  onClick: form.handleSubmit(onSubmit),
+                  variant: 'default',
+                  loading: createContactMutation.isPending || updateContactMutation.isPending,
+                  testId: 'button-save-contact'
+                }
+              ]}
+              changeTracking={{
+                enabled: false // No change tracking for table forms
+              }}
+              isLoading={false}
+            />
+          </div>
         )
       }}
       
