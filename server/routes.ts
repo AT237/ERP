@@ -9,7 +9,7 @@ import {
   insertWorkOrderSchema, insertPackingListSchema,
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertAddressSchema, insertCountrySchema, insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
-  insertVatRateSchema, insertCitySchema, insertStatusSchema
+  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { db, checkDatabaseStatus } from './db';
@@ -1171,6 +1171,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating status:", error);
       res.status(400).json({ message: "Failed to create status" });
+    }
+  });
+
+  // Text Snippets Management routes
+  app.get("/api/text-snippets", async (req, res) => {
+    try {
+      const { category } = req.query;
+      let snippets;
+      if (category && typeof category === 'string') {
+        snippets = await storage.getTextSnippetsByCategory(category);
+      } else {
+        snippets = await storage.getTextSnippets();
+      }
+      res.json(snippets);
+    } catch (error) {
+      console.error("Error fetching text snippets:", error);
+      res.status(500).json({ message: "Failed to fetch text snippets" });
+    }
+  });
+
+  app.get("/api/text-snippets/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Search query 'q' is required" });
+      }
+      const snippets = await storage.searchTextSnippets(q);
+      res.json(snippets);
+    } catch (error) {
+      console.error("Error searching text snippets:", error);
+      res.status(500).json({ message: "Failed to search text snippets" });
+    }
+  });
+
+  app.get("/api/text-snippets/:id", async (req, res) => {
+    try {
+      const snippet = await storage.getTextSnippet(req.params.id);
+      if (!snippet) {
+        return res.status(404).json({ message: "Text snippet not found" });
+      }
+      res.json(snippet);
+    } catch (error) {
+      console.error("Error fetching text snippet:", error);
+      res.status(500).json({ message: "Failed to fetch text snippet" });
+    }
+  });
+
+  app.post("/api/text-snippets", async (req, res) => {
+    try {
+      const snippetData = insertTextSnippetSchema.parse(req.body);
+      const snippet = await storage.createTextSnippet(snippetData);
+      res.status(201).json(snippet);
+    } catch (error) {
+      console.error("Error creating text snippet:", error);
+      res.status(400).json({ message: "Failed to create text snippet" });
+    }
+  });
+
+  app.put("/api/text-snippets/:id", async (req, res) => {
+    try {
+      const snippetData = insertTextSnippetSchema.partial().parse(req.body);
+      const snippet = await storage.updateTextSnippet(req.params.id, snippetData);
+      res.json(snippet);
+    } catch (error) {
+      console.error("Error updating text snippet:", error);
+      res.status(400).json({ message: "Failed to update text snippet" });
+    }
+  });
+
+  app.patch("/api/text-snippets/:id", async (req, res) => {
+    try {
+      const snippetData = insertTextSnippetSchema.partial().parse(req.body);
+      const snippet = await storage.updateTextSnippet(req.params.id, snippetData);
+      res.json(snippet);
+    } catch (error) {
+      console.error("Error updating text snippet:", error);
+      res.status(400).json({ message: "Failed to update text snippet" });
+    }
+  });
+
+  app.delete("/api/text-snippets/:id", async (req, res) => {
+    try {
+      await storage.deleteTextSnippet(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting text snippet:", error);
+      res.status(500).json({ message: "Failed to delete text snippet" });
+    }
+  });
+
+  // Text Snippets Usage Tracking routes
+  app.post("/api/text-snippets/:id/use", async (req, res) => {
+    try {
+      const usageData = insertTextSnippetUsageSchema.parse({
+        ...req.body,
+        snippetId: req.params.id
+      });
+      const usage = await storage.recordSnippetUsage(usageData);
+      res.status(201).json(usage);
+    } catch (error) {
+      console.error("Error recording snippet usage:", error);
+      res.status(400).json({ message: "Failed to record snippet usage" });
+    }
+  });
+
+  app.get("/api/text-snippets/:id/usage", async (req, res) => {
+    try {
+      const usages = await storage.getSnippetUsages(req.params.id);
+      res.json(usages);
+    } catch (error) {
+      console.error("Error fetching snippet usage:", error);
+      res.status(500).json({ message: "Failed to fetch snippet usage" });
     }
   });
 
