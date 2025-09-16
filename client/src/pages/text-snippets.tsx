@@ -56,7 +56,7 @@ const LOCALES = [
 export default function TextSnippets() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingSnippet, setEditingSnippet] = useState<TextSnippet | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const { toast } = useToast();
 
   // Data fetching
@@ -327,7 +327,7 @@ export default function TextSnippets() {
   // Filter data by selected category
   const filteredData = React.useMemo(() => {
     let filtered = textSnippets;
-    if (selectedCategory) {
+    if (selectedCategory && selectedCategory !== "all") {
       filtered = filtered.filter(snippet => snippet.category === selectedCategory);
     }
     return filtered;
@@ -596,7 +596,7 @@ export default function TextSnippets() {
             <SelectValue placeholder="Filter by category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="" data-testid="option-all-categories">All Categories</SelectItem>
+            <SelectItem value="all" data-testid="option-all-categories">All Categories</SelectItem>
             {SNIPPET_CATEGORIES.map((category) => (
               <SelectItem 
                 key={category.value} 

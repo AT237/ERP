@@ -1,6 +1,6 @@
 # Overview
 
-This is a comprehensive business management system built as a full-stack web application. The system provides tools for managing inventory, customers, suppliers, projects, quotations, invoices, purchase orders, work orders, and packing lists. It includes a dashboard for business analytics and reporting capabilities. The application is designed for small to medium businesses that need to track their operations, inventory, and customer relationships in one centralized platform.
+This is a comprehensive business management system built as a full-stack web application. The system provides tools for managing inventory, customers, suppliers, projects, quotations, invoices, purchase orders, work orders, and packing lists. It includes a dashboard for business analytics and reporting capabilities, plus a complete **Text Snippets Management System** for reusable content across documents. The application is designed for small to medium businesses that need to track their operations, inventory, and customer relationships in one centralized platform.
 
 # User Preferences
 
@@ -85,6 +85,31 @@ All business entities now use database-generated sequences for automatic numberi
 This ensures thread-safe, unique numbering without application-level complexity and eliminates race conditions during concurrent operations.
 
 The database schema includes tables for users, customers, suppliers, inventory items, projects, quotations, invoices, purchase orders, work orders, and packing lists with proper relationships and foreign key constraints.
+
+### Text Snippets Management System
+A complete **hybrid text snippets architecture** has been implemented for reusable content across all business documents:
+
+**Architecture Pattern**: Hybrid model combining reusable templates with immutable document snapshots:
+- **Text Snippets Library**: Central repository (`text_snippets` table) for creating and managing reusable text content
+- **Document Snapshots**: When snippets are used, content is copied (snapshotted) into document line items
+- **Historical Integrity**: Original snippet changes never affect existing documents - snapshots remain frozen
+- **Usage Tracking**: Analytics via `text_snippet_usages` table without breaking document integrity
+
+**Database Implementation**:
+- **text_snippets table**: id, code, title, body, category, locale, version, isActive, createdAt, updatedAt
+- **text_snippet_usages table**: tracking where and when snippets are used across documents
+- **Enhanced item tables**: All document items (quotation_items, sales_order_items, invoice_items) now support:
+  - `lineType`: 'standard', 'unique', 'text', 'charges' for different line purposes
+  - `position`: ordering of lines within documents
+  - `sourceSnippetId` + `sourceSnippetVersion`: tracking original snippet without re-resolving
+  - Nullable `itemId` for text lines (no inventory reference needed)
+
+**Business Process Integration**:
+- **Document Creation**: Users can insert text snippets into quotations, orders, invoices via "From Library" interface
+- **Conversion Preservation**: Quotation → Sales Order → Invoice conversions preserve text lines exactly
+- **Content Independence**: Text becomes independent after insertion - no re-resolution during conversions
+- **Multi-language Support**: Snippets support different locales (Dutch, English, German, French)
+- **Category Organization**: Snippets organized by type (header, footer, disclaimer, terms, warranty, etc.)
 
 ## External Dependencies
 

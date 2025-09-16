@@ -72,7 +72,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   // Snippet selection state
   const [showSnippetDialog, setShowSnippetDialog] = useState(false);
   const [snippetSearchTerm, setSnippetSearchTerm] = useState("");
-  const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("");
+  const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("all");
   
   const { toast } = useToast();
   const isEditing = !!lineItemId;
@@ -208,7 +208,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
 
   // Available snippet categories
   const SNIPPET_CATEGORIES = [
-    { value: "", label: "All Categories" },
+    { value: "all", label: "All Categories" },
     { value: "general", label: "General" },
     { value: "header", label: "Header" },
     { value: "footer", label: "Footer" },
@@ -225,7 +225,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   const filteredSnippets = useMemo(() => {
     let snippets = snippetSearchTerm.trim() ? searchedSnippets : textSnippets;
     
-    if (selectedSnippetCategory) {
+    if (selectedSnippetCategory && selectedSnippetCategory !== "all") {
       snippets = snippets.filter(snippet => snippet.category === selectedSnippetCategory);
     }
     
