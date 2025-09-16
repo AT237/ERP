@@ -510,7 +510,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   // Debug removed - component should now be stable
 
   return (
-    <div className="p-6 px-10">
+    <div className="p-6">
       <DataTableLayout
         data={quotations}
         isLoading={isLoading}
