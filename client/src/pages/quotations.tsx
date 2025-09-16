@@ -463,6 +463,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     }
     
     // Navigate to the line item form page instead of showing dialog
+    console.log("ADD LINE clicked in quotations.tsx! selectedQuotation:", selectedQuotation?.id);
     console.log("Navigating to line item form:", `/quotations/${selectedQuotation.id}/items/new`);
     navigate(`/quotations/${selectedQuotation.id}/items/new`);
   };

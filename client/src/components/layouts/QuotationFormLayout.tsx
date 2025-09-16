@@ -1282,8 +1282,12 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               icon: <Plus className="h-4 w-4" />,
               onClick: () => {
                 // Navigate to the line item form page instead of showing dialog
+                console.log("ADD LINE clicked! quotationId:", quotationId);
                 if (quotationId) {
+                  console.log("Navigating to:", `/quotations/${quotationId}/items/new`);
                   navigate(`/quotations/${quotationId}/items/new`);
+                } else {
+                  console.log("No quotationId available!");
                 }
               },
               variant: 'default' as const
