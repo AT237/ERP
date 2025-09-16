@@ -1019,7 +1019,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             type="submit"
             className="bg-orange-600 hover:bg-orange-700"
           >
-            {editingItem ? 'Update Item' : 'Add Item'}
+            {editingItem ? 'Update Item' : 'ADD LINE'}
           </Button>
         </div>
       </form>
@@ -1264,7 +1264,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           headerActions={[
             {
               key: 'add-onetime-item',
-              label: 'Add Item',
+              label: 'ADD LINE',
               icon: <Plus className="h-4 w-4" />,
               onClick: () => {
                 setItemType('onetime');
@@ -1332,7 +1332,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           addEditDialog={{
             isOpen: showItemDialog,
             onOpenChange: setShowItemDialog,
-            title: editingItem ? 'Edit Item' : 'Add Item',
+            title: editingItem ? 'Edit Item' : 'ADD LINE',
             content: renderItemDialog()
           }}
         />
