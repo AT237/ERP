@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,8 +54,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   const [activeTab, setActiveTab] = useState("general");
-  const [showItemDialog, setShowItemDialog] = useState(false);
-  const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
+  const [, navigate] = useLocation();
   const { toast } = useToast();
 
   // Optimized data fetching with stable loading state
@@ -395,8 +395,6 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/quotations", selectedQuotation?.id, "items"] });
-      setShowItemDialog(false);
-      itemForm.reset();
       calculateQuotationTotals();
       toast({
         title: "Success",
@@ -503,16 +501,8 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       return;
     }
     
-    // Directly dispatch event to open line item form tab
-    const formInfo = {
-      id: `quotation-item-${Date.now()}`,
-      name: `Add Line Item - ${selectedQuotation?.quotationNumber || 'New'}`,
-      formType: 'quotation-item',
-      parentId: selectedQuotation?.id,
-      quotationId: selectedQuotation?.id
-    };
-    
-    window.dispatchEvent(new CustomEvent('open-form-tab', { detail: formInfo }));
+    // Navigate to the line item form page
+    navigate(`/quotations/${selectedQuotation.id}/items/new`);
   };
 
 
@@ -838,64 +828,6 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
                                 disabled: itemTableState.selectedRows.length === 0
                               }
                             ], [handleAddItem, quotationItems, itemTableState.selectedRows, toast])}
-                            addEditDialog={{
-                              isOpen: showItemDialog,
-                              onOpenChange: setShowItemDialog,
-                              title: editingItem ? 'Edit Item' : 'ADD LINE',
-                              content: (
-                                <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
-                                  <div className="space-y-2">
-                                    <Label htmlFor="description">Description</Label>
-                                    <Textarea
-                                      id="description"
-                                      {...itemForm.register("description")}
-                                      data-testid="input-item-description"
-                                    />
-                                  </div>
-                                  <div className="grid grid-cols-3 gap-4">
-                                    <div className="space-y-2">
-                                      <Label htmlFor="quantity">Quantity</Label>
-                                      <Input
-                                        id="quantity"
-                                        type="number"
-                                        {...itemForm.register("quantity", { valueAsNumber: true })}
-                                        data-testid="input-quantity"
-                                      />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label htmlFor="unitPrice">Unit Price (€)</Label>
-                                      <Input
-                                        id="unitPrice"
-                                        type="number"
-                                        step="0.01"
-                                        {...itemForm.register("unitPrice")}
-                                        data-testid="input-unit-price"
-                                      />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label htmlFor="lineTotal">Line Total (€)</Label>
-                                      <Input
-                                        id="lineTotal"
-                                        type="number"
-                                        step="0.01"
-                                        {...itemForm.register("lineTotal")}
-                                        readOnly
-                                        className="bg-muted"
-                                        data-testid="input-line-total"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-end gap-2">
-                                    <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
-                                      Cancel
-                                    </Button>
-                                    <Button type="submit" data-testid="button-save-item">
-                                      {editingItem ? 'Update' : 'Add'} Item
-                                    </Button>
-                                  </div>
-                                </form>
-                              )
-                            }}
                           />
                         </div>
 
