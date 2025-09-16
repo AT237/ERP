@@ -1232,9 +1232,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         onTabChange={setActiveTab}
         isLoading={quotationLoading}
       />
-
       {/* Quotation Items Table */}
-      <div className="px-6 py-4 bg-white">
+      <div className="px-6 py-4 bg-white ml-[15px] mr-[15px]">
         <DataTableLayout
           data={quotationItems}
           isLoading={false}
@@ -1338,7 +1337,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           }}
         />
       </div>
-
       {/* PDF Preview Modal */}
       <Dialog open={showPDFPreview} onOpenChange={setShowPDFPreview}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
