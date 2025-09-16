@@ -455,14 +455,15 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   const handleAddItem = () => {
     if (!selectedQuotation) {
       toast({
-        title: "Warning",
+        title: "Warning", 
         description: "Please select a quotation first",
         variant: "destructive",
       });
       return;
     }
     
-    // Navigate to the line item form page
+    // Navigate to the line item form page instead of showing dialog
+    console.log("Navigating to line item form:", `/quotations/${selectedQuotation.id}/items/new`);
     navigate(`/quotations/${selectedQuotation.id}/items/new`);
   };
 
