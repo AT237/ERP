@@ -56,6 +56,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [showLineTypeDialog, setShowLineTypeDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
+  const [selectedLineType, setSelectedLineType] = useState<string>("");
   const { toast } = useToast();
 
   // Optimized data fetching with stable loading state
@@ -481,19 +482,50 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   const handleLineTypeSelect = (lineType: string) => {
     console.log(`Selected line type: ${lineType}`);
     
+    // Store the selected line type
+    setSelectedLineType(lineType);
+    
     // Close the line type dialog
     setShowLineTypeDialog(false);
     
-    // Open the item form with default values based on line type
-    itemForm.reset({
-      quotationId: selectedQuotation?.id || "",
-      description: "",
-      quantity: 1,
-      unitPrice: "0.00",
-      lineTotal: "0.00",
-    });
-    setEditingItem(null);
-    setShowItemDialog(true);
+    // Generate unique tab ID using timestamp and line type
+    const uniqueTabId = `quotation-item-${lineType}-${Date.now()}`;
+    
+    // Get line type display name
+    const lineTypeNames = {
+      standard: 'Standard Item',
+      unique: 'Unique Item', 
+      text: 'Text Line',
+      charges: 'Charges'
+    };
+    
+    const formInfo = {
+      id: uniqueTabId,
+      name: `${lineTypeNames[lineType as keyof typeof lineTypeNames]} - ${selectedQuotation?.quotationNumber || 'New'}`,
+      formType: 'quotation-item',
+      parentId: selectedQuotation?.id,
+      lineType: lineType, // Pass line type information
+      quotationId: selectedQuotation?.id
+    };
+    
+    try {
+      // Dispatch event to open quotation item form tab
+      window.dispatchEvent(new CustomEvent('open-form-tab', { detail: formInfo }));
+    } catch (error) {
+      // Fallback: Use existing dialog approach if event dispatch fails
+      console.warn('Failed to open quotation item via tab system, falling back to dialog:', error);
+      
+      // Reset the item form with default values based on line type
+      itemForm.reset({
+        quotationId: selectedQuotation?.id || "",
+        description: "",
+        quantity: 1,
+        unitPrice: "0.00",
+        lineTotal: "0.00",
+      });
+      setEditingItem(null);
+      setShowItemDialog(true);
+    }
   };
 
   const handleSaveItem = (data: QuotationItemFormData) => {
