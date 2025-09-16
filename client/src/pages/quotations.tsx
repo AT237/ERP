@@ -154,6 +154,22 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   // Use base columns directly - no need for additional processing
   const defaultColumns = baseColumns;
 
+  // Helper function to format line type for display
+  const formatLineType = (lineType: string) => {
+    switch (lineType) {
+      case 'standard':
+        return 'Standard Item';
+      case 'unique':
+        return 'Unique Item';
+      case 'text':
+        return 'Text Line';
+      case 'charges':
+        return 'Charges';
+      default:
+        return 'Standard Item';
+    }
+  };
+
   // Default column configuration for quotation items
   const defaultItemColumns: ColumnConfig[] = [
     createIdColumn('id', 'Line ID'),
@@ -164,6 +180,19 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       width: 300, 
       filterable: true, 
       sortable: true 
+    },
+    { 
+      key: 'lineType', 
+      label: 'Type', 
+      visible: true, 
+      width: 120, 
+      filterable: true, 
+      sortable: true,
+      renderCell: (value: string) => (
+        <Badge variant="outline">
+          {formatLineType(value || 'standard')}
+        </Badge>
+      )
     },
     { 
       key: 'quantity', 
@@ -425,6 +454,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       subtotal: quotation.subtotal?.toString() || "0.00",
       taxAmount: quotation.taxAmount?.toString() || "0.00",
       totalAmount: quotation.totalAmount?.toString() || "0.00",
+      validityDays: quotation.validityDays ?? undefined,
     });
     setEditingQuotation(quotation);
     setShowQuotationDialog(true);

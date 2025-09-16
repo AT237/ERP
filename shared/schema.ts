@@ -178,6 +178,7 @@ export const quotationItems = pgTable("quotation_items", {
   quantity: integer("quantity").notNull(),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+  lineType: text("line_type").default("standard"), // 'standard', 'unique', 'text', 'charges'
 });
 
 // Quotation requests table
