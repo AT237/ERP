@@ -11,12 +11,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, FileText, Download, Save, Eye, Copy } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Download, Save, Eye, Copy, Package, Sparkles, Type, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
@@ -53,6 +54,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   const [activeTab, setActiveTab] = useState("general");
   const [showItemDialog, setShowItemDialog] = useState(false);
+  const [showLineTypeDialog, setShowLineTypeDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
   const { toast } = useToast();
 
@@ -472,8 +474,19 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       return;
     }
     
+    // Open line type selection dialog instead of directly opening form
+    setShowLineTypeDialog(true);
+  };
+
+  const handleLineTypeSelect = (lineType: string) => {
+    console.log(`Selected line type: ${lineType}`);
+    
+    // Close the line type dialog
+    setShowLineTypeDialog(false);
+    
+    // Open the item form with default values based on line type
     itemForm.reset({
-      quotationId: selectedQuotation.id,
+      quotationId: selectedQuotation?.id || "",
       description: "",
       quantity: 1,
       unitPrice: "0.00",
@@ -988,6 +1001,84 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
           ) : null
         }}
       />
+      
+      {/* Line Type Selection Dialog */}
+      <Dialog open={showLineTypeDialog} onOpenChange={setShowLineTypeDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Line Type</DialogTitle>
+            <DialogDescription>
+              Choose the type of line item you want to add to this quotation.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {/* Standard item */}
+            <Card 
+              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
+              onClick={() => handleLineTypeSelect('standard')}
+              data-testid="button-line-type-standard"
+            >
+              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
+                <Package className="h-8 w-8 text-orange-600" />
+                <h3 className="font-semibold text-sm">Standard Item</h3>
+                <p className="text-xs text-gray-600 text-center">Regular product or service with quantity and pricing</p>
+              </CardContent>
+            </Card>
+            
+            {/* Unique item */}
+            <Card 
+              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
+              onClick={() => handleLineTypeSelect('unique')}
+              data-testid="button-line-type-unique"
+            >
+              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
+                <Sparkles className="h-8 w-8 text-purple-600" />
+                <h3 className="font-semibold text-sm">Unique Item</h3>
+                <p className="text-xs text-gray-600 text-center">Custom or one-off item with special requirements</p>
+              </CardContent>
+            </Card>
+            
+            {/* Text line */}
+            <Card 
+              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
+              onClick={() => handleLineTypeSelect('text')}
+              data-testid="button-line-type-text"
+            >
+              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
+                <Type className="h-8 w-8 text-blue-600" />
+                <h3 className="font-semibold text-sm">Text Line</h3>
+                <p className="text-xs text-gray-600 text-center">Descriptive text or notes without pricing</p>
+              </CardContent>
+            </Card>
+            
+            {/* Charges */}
+            <Card 
+              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
+              onClick={() => handleLineTypeSelect('charges')}
+              data-testid="button-line-type-charges"
+            >
+              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
+                <DollarSign className="h-8 w-8 text-green-600" />
+                <h3 className="font-semibold text-sm">Charges</h3>
+                <p className="text-xs text-gray-600 text-center">Additional fees, shipping, or service charges</p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="flex justify-end">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setShowLineTypeDialog(false)}
+              data-testid="button-cancel-line-type"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
       </div>
     </div>
   );
