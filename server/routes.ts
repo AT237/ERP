@@ -612,6 +612,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Conversion endpoints - preserve text lines exactly during conversion
+  app.post("/api/quotations/:id/convert-to-sales-order", async (req, res) => {
+    try {
+      const salesOrder = await storage.convertQuotationToSalesOrder(req.params.id);
+      res.status(201).json({
+        message: "Quotation successfully converted to sales order",
+        salesOrder: salesOrder,
+        preservationNote: "All text lines and snippet references preserved exactly as-is"
+      });
+    } catch (error) {
+      console.error("Error converting quotation to sales order:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ 
+          message: "Failed to convert quotation to sales order", 
+          error: error.message 
+        });
+      } else {
+        res.status(400).json({ message: "Failed to convert quotation to sales order", error: "Unknown error" });
+      }
+    }
+  });
+
   // Invoice routes
   app.get("/api/invoices", async (req, res) => {
     try {
@@ -881,6 +903,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting sales order item:", error);
       res.status(500).json({ message: "Failed to delete sales order item" });
+    }
+  });
+
+  // Sales Order to Invoice conversion endpoint - preserve text lines exactly during conversion
+  app.post("/api/sales-orders/:id/convert-to-invoice", async (req, res) => {
+    try {
+      const invoice = await storage.convertSalesOrderToInvoice(req.params.id);
+      res.status(201).json({
+        message: "Sales order successfully converted to invoice",
+        invoice: invoice,
+        preservationNote: "All text lines and snippet references preserved exactly as-is"
+      });
+    } catch (error) {
+      console.error("Error converting sales order to invoice:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ 
+          message: "Failed to convert sales order to invoice", 
+          error: error.message 
+        });
+      } else {
+        res.status(400).json({ message: "Failed to convert sales order to invoice", error: "Unknown error" });
+      }
     }
   });
 

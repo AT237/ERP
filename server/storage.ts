@@ -199,6 +199,10 @@ export interface IStorage {
   deleteTextSnippet(id: string): Promise<void>;
   recordSnippetUsage(usage: InsertTextSnippetUsage): Promise<TextSnippetUsage>;
   getSnippetUsages(snippetId: string): Promise<TextSnippetUsage[]>;
+
+  // Conversion methods
+  convertQuotationToSalesOrder(quotationId: string): Promise<SalesOrder>;
+  convertSalesOrderToInvoice(salesOrderId: string): Promise<Invoice>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1054,6 +1058,96 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(textSnippetUsages)
       .where(eq(textSnippetUsages.snippetId, snippetId))
       .orderBy(desc(textSnippetUsages.usedAt));
+  }
+
+  // Conversion methods - preserve text lines exactly without re-resolving snippets
+  async convertQuotationToSalesOrder(quotationId: string): Promise<SalesOrder> {
+    // Get the quotation and its items
+    const quotation = await this.getQuotation(quotationId);
+    if (!quotation) {
+      throw new Error('Quotation not found');
+    }
+
+    const quotationItems = await this.getQuotationItems(quotationId);
+
+    // Create sales order from quotation
+    const salesOrderData: InsertSalesOrder = {
+      orderNumber: `SO-${Date.now()}`, // Generate unique sales order number
+      customerId: quotation.customerId,
+      status: "pending",
+      orderDate: new Date(),
+      expectedDeliveryDate: quotation.validUntil ? new Date(quotation.validUntil) : undefined,
+      subtotal: quotation.subtotal,
+      taxAmount: quotation.taxAmount,
+      totalAmount: quotation.totalAmount,
+      notes: quotation.notes,
+    };
+
+    const salesOrder = await this.createSalesOrder(salesOrderData);
+
+    // Copy all line items exactly, preserving text lines
+    for (const item of quotationItems) {
+      const salesOrderItem: InsertSalesOrderItem = {
+        salesOrderId: salesOrder.id,
+        itemId: item.itemId, // Nullable for text lines
+        description: item.description, // Copy description exactly as-is
+        quantity: item.quantity, // 0 for text lines
+        unitPrice: item.unitPrice, // "0.00" for text lines
+        lineTotal: item.lineTotal, // "0.00" for text lines
+        lineType: item.lineType, // Preserve lineType (standard, unique, text, charges)
+        position: item.position, // Maintain ordering
+        sourceSnippetId: item.sourceSnippetId, // Preserve snippet reference WITHOUT re-resolution
+        sourceSnippetVersion: item.sourceSnippetVersion, // Preserve version snapshot
+      };
+
+      await this.addSalesOrderItem(salesOrderItem);
+    }
+
+    return salesOrder;
+  }
+
+  async convertSalesOrderToInvoice(salesOrderId: string): Promise<Invoice> {
+    // Get the sales order and its items
+    const salesOrder = await this.getSalesOrder(salesOrderId);
+    if (!salesOrder) {
+      throw new Error('Sales order not found');
+    }
+
+    const salesOrderItems = await this.getSalesOrderItems(salesOrderId);
+
+    // Create invoice from sales order
+    const invoiceData: InsertInvoice = {
+      customerId: salesOrder.customerId,
+      status: "pending",
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      subtotal: salesOrder.subtotal,
+      taxAmount: salesOrder.taxAmount,
+      totalAmount: salesOrder.totalAmount,
+      paidAmount: "0",
+      notes: salesOrder.notes,
+    };
+
+    const invoice = await this.createInvoice(invoiceData);
+
+    // Copy all line items exactly, preserving text lines
+    for (const item of salesOrderItems) {
+      const invoiceItem: InsertInvoiceItem = {
+        invoiceId: invoice.id,
+        itemId: item.itemId, // Nullable for text lines
+        description: item.description, // Copy description exactly as-is (NO re-resolution)
+        quantity: item.quantity, // 0 for text lines
+        unitPrice: item.unitPrice, // "0.00" for text lines
+        lineTotal: item.lineTotal, // "0.00" for text lines
+        lineType: item.lineType, // Preserve lineType (standard, unique, text, charges)
+        position: item.position, // Maintain ordering
+        sourceSnippetId: item.sourceSnippetId, // Preserve snippet reference WITHOUT re-resolution
+        sourceSnippetVersion: item.sourceSnippetVersion, // Preserve version snapshot
+      };
+
+      await this.addInvoiceItem(invoiceItem);
+    }
+
+    return invoice;
   }
 
   // Initialize basic country data
