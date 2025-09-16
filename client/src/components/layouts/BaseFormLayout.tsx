@@ -112,7 +112,7 @@ export function BaseFormLayout({
         </div>
 
         {/* Main Content Area */}
-        <Card className="border-0 shadow-none">
+        <Card className="border-0 shadow-none mx-4">
           <CardContent className="p-0">
             <FormTabLayout
               activeTab={activeTab}
