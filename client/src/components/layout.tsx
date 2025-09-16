@@ -696,14 +696,6 @@ export default function Layout({ children }: LayoutProps) {
       // Handle form tabs
       if (activeTab.formType === 'quotation') {
         const QuotationForm = lazy(() => import('@/pages/quotation-form'));
-        // DEBUG: Log activeTab to see what's available
-        console.log('🔍 Debug activeTab for quotation:', {
-          id: activeTab.id,
-          parentId: activeTab.parentId,
-          formInfo: activeTab.formInfo,
-          entireTab: activeTab
-        });
-        
         // Extract quotationId from tab.id if editing OR from parentId
         const quotationId = activeTab.id.startsWith('edit-quotation-') 
           ? activeTab.id.replace('edit-quotation-', '') 
