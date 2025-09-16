@@ -93,8 +93,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [showAddInventoryDialog, setShowAddInventoryDialog] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>("");
-  const [showLineTypeDialog, setShowLineTypeDialog] = useState(false);
-  const [selectedLineType, setSelectedLineType] = useState<string>("");
   const { toast } = useToast();
 
   // Data table state for quotation items
@@ -537,7 +535,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       unitPrice: data.unitPrice,
       lineTotal: data.lineTotal,
       itemId: data.itemId || null,
-      lineType: data.lineType || selectedLineType || 'standard',
+      lineType: data.lineType || 'standard',
     };
 
     if (editingItem) {
@@ -954,83 +952,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   };
 
-  const handleLineTypeSelect = (lineType: string) => {
-    console.log(`Selected line type: ${lineType}`);
-    
-    // Store the selected line type
-    setSelectedLineType(lineType);
-    
-    // Close the line type dialog
-    setShowLineTypeDialog(false);
-    
-    // Generate unique tab ID using quotationId and timestamp
-    const quotationNumber = quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber");
-    const uniqueTabId = `new-line-item-${quotationId || 'new'}-${lineType}-${Date.now()}`;
-    
-    // Get line type display name
-    const lineTypeNames = {
-      standard: 'Standard Item',
-      unique: 'Unique Item', 
-      text: 'Text Line',
-      charges: 'Charges'
-    };
-    
-    // Create tab ID that will be used as the parent tab reference
-    const parentTabId = quotationId ? `edit-quotation-${quotationId}` : 'new-quotation';
-    
-    const formInfo = {
-      id: uniqueTabId,
-      name: `${lineTypeNames[lineType as keyof typeof lineTypeNames]} - ${quotationNumber || 'New Quotation'}`,
-      formType: 'quotation-item',
-      parentId: parentTabId,
-      lineType: lineType,
-      quotationId: quotationId || '',
-    };
-    
-    try {
-      // Dispatch event to open line item form tab
-      window.dispatchEvent(new CustomEvent('open-form-tab', { detail: formInfo }));
-    } catch (error) {
-      // Fallback: Use existing dialog approach if event dispatch fails
-      console.warn('Failed to open line item via tab system, falling back to dialog:', error);
-      
-      // Set the appropriate item type based on selection
-      let itemTypeMapping: 'database' | 'new' | 'onetime' | 'text' = 'onetime';
-      switch (lineType) {
-        case 'standard':
-          itemTypeMapping = 'onetime'; // Standard items use onetime form
-          break;
-        case 'unique':
-          itemTypeMapping = 'onetime'; // Unique items also use onetime form
-          break;
-        case 'text':
-          itemTypeMapping = 'text';
-          break;
-        case 'charges':
-          itemTypeMapping = 'onetime'; // Charges use onetime form
-          break;
-        default:
-          itemTypeMapping = 'onetime';
-      }
-      
-      // Reset the item form with default values based on line type
-      setItemType(itemTypeMapping);
-      setEditingItem(null);
-      setSelectedInventoryItem(null);
-      itemForm.reset({
-        quotationId: quotationId || "",
-        description: "",
-        quantity: lineType === 'text' ? 0 : 1,
-        unitPrice: lineType === 'text' ? "0.00" : "0.00",
-        lineTotal: "0.00",
-        lineType: lineType,
-        itemId: null,
-      });
-      
-      // Open the item form dialog
-      setShowItemDialog(true);
-    }
-  };
 
   const renderItemDialog = () => {
     if (!itemType) return null;
@@ -1364,8 +1285,9 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               label: 'ADD LINE',
               icon: <Plus className="h-4 w-4" />,
               onClick: () => {
-                // Open line type selection dialog instead of directly opening form
-                setShowLineTypeDialog(true);
+                // Open item dialog directly for adding new line
+                setItemType('onetime');
+                setShowItemDialog(true);
               },
               variant: 'default' as const
             }
@@ -1440,82 +1362,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         </DialogContent>
       </Dialog>
       
-      {/* Line Type Selection Dialog */}
-      <Dialog open={showLineTypeDialog} onOpenChange={setShowLineTypeDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select Line Type</DialogTitle>
-            <DialogDescription>
-              Choose the type of line item you want to add to this quotation.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid grid-cols-2 gap-4 py-4">
-            {/* Standard item */}
-            <Card 
-              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
-              onClick={() => handleLineTypeSelect('standard')}
-              data-testid="button-line-type-standard"
-            >
-              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
-                <Package className="h-8 w-8 text-orange-600" />
-                <h3 className="font-semibold text-sm">Standard Item</h3>
-                <p className="text-xs text-gray-600 text-center">Regular product or service with quantity and pricing</p>
-              </CardContent>
-            </Card>
-            
-            {/* Unique item */}
-            <Card 
-              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
-              onClick={() => handleLineTypeSelect('unique')}
-              data-testid="button-line-type-unique"
-            >
-              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
-                <Sparkles className="h-8 w-8 text-purple-600" />
-                <h3 className="font-semibold text-sm">Unique Item</h3>
-                <p className="text-xs text-gray-600 text-center">Custom or one-off item with special requirements</p>
-              </CardContent>
-            </Card>
-            
-            {/* Text line */}
-            <Card 
-              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
-              onClick={() => handleLineTypeSelect('text')}
-              data-testid="button-line-type-text"
-            >
-              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
-                <Type className="h-8 w-8 text-blue-600" />
-                <h3 className="font-semibold text-sm">Text Line</h3>
-                <p className="text-xs text-gray-600 text-center">Descriptive text or notes without pricing</p>
-              </CardContent>
-            </Card>
-            
-            {/* Charges */}
-            <Card 
-              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
-              onClick={() => handleLineTypeSelect('charges')}
-              data-testid="button-line-type-charges"
-            >
-              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
-                <DollarSign className="h-8 w-8 text-green-600" />
-                <h3 className="font-semibold text-sm">Charges</h3>
-                <p className="text-xs text-gray-600 text-center">Additional fees, shipping, or service charges</p>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="flex justify-end">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setShowLineTypeDialog(false)}
-              data-testid="button-cancel-line-type"
-            >
-              Cancel
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

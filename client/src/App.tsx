@@ -11,7 +11,7 @@ import Customers from "@/pages/customers";
 import Inventory from "@/pages/inventory";
 import Suppliers from "@/pages/suppliers";
 import ContactPersons from "@/pages/contact-persons";
-import Quotations from "@/pages/quotations-simple";
+import Quotations from "@/pages/quotations";
 import Invoices from "@/pages/invoices";
 import Projects from "@/pages/projects";
 import WorkOrders from "@/pages/work-orders";

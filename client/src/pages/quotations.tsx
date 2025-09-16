@@ -54,9 +54,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   const [activeTab, setActiveTab] = useState("general");
   const [showItemDialog, setShowItemDialog] = useState(false);
-  const [showLineTypeDialog, setShowLineTypeDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
-  const [selectedLineType, setSelectedLineType] = useState<string>("");
   const { toast } = useToast();
 
   // Optimized data fetching with stable loading state
@@ -505,58 +503,18 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       return;
     }
     
-    // Open line type selection dialog instead of directly opening form
-    setShowLineTypeDialog(true);
-  };
-
-  const handleLineTypeSelect = (lineType: string) => {
-    console.log(`Selected line type: ${lineType}`);
-    
-    // Store the selected line type
-    setSelectedLineType(lineType);
-    
-    // Close the line type dialog
-    setShowLineTypeDialog(false);
-    
-    // Generate unique tab ID using timestamp and line type
-    const uniqueTabId = `quotation-item-${lineType}-${Date.now()}`;
-    
-    // Get line type display name
-    const lineTypeNames = {
-      standard: 'Standard Item',
-      unique: 'Unique Item', 
-      text: 'Text Line',
-      charges: 'Charges'
-    };
-    
+    // Directly dispatch event to open line item form tab
     const formInfo = {
-      id: uniqueTabId,
-      name: `${lineTypeNames[lineType as keyof typeof lineTypeNames]} - ${selectedQuotation?.quotationNumber || 'New'}`,
+      id: `quotation-item-${Date.now()}`,
+      name: `Add Line Item - ${selectedQuotation?.quotationNumber || 'New'}`,
       formType: 'quotation-item',
       parentId: selectedQuotation?.id,
-      lineType: lineType, // Pass line type information
       quotationId: selectedQuotation?.id
     };
     
-    try {
-      // Dispatch event to open quotation item form tab
-      window.dispatchEvent(new CustomEvent('open-form-tab', { detail: formInfo }));
-    } catch (error) {
-      // Fallback: Use existing dialog approach if event dispatch fails
-      console.warn('Failed to open quotation item via tab system, falling back to dialog:', error);
-      
-      // Reset the item form with default values based on line type
-      itemForm.reset({
-        quotationId: selectedQuotation?.id || "",
-        description: "",
-        quantity: 1,
-        unitPrice: "0.00",
-        lineTotal: "0.00",
-      });
-      setEditingItem(null);
-      setShowItemDialog(true);
-    }
+    window.dispatchEvent(new CustomEvent('open-form-tab', { detail: formInfo }));
   };
+
 
   const handleSaveItem = (data: QuotationItemFormData) => {
     createItemMutation.mutate(data);
@@ -1064,82 +1022,6 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
         }}
       />
       
-      {/* Line Type Selection Dialog */}
-      <Dialog open={showLineTypeDialog} onOpenChange={setShowLineTypeDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select Line Type</DialogTitle>
-            <DialogDescription>
-              Choose the type of line item you want to add to this quotation.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid grid-cols-2 gap-4 py-4">
-            {/* Standard item */}
-            <Card 
-              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
-              onClick={() => handleLineTypeSelect('standard')}
-              data-testid="button-line-type-standard"
-            >
-              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
-                <Package className="h-8 w-8 text-orange-600" />
-                <h3 className="font-semibold text-sm">Standard Item</h3>
-                <p className="text-xs text-gray-600 text-center">Regular product or service with quantity and pricing</p>
-              </CardContent>
-            </Card>
-            
-            {/* Unique item */}
-            <Card 
-              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
-              onClick={() => handleLineTypeSelect('unique')}
-              data-testid="button-line-type-unique"
-            >
-              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
-                <Sparkles className="h-8 w-8 text-purple-600" />
-                <h3 className="font-semibold text-sm">Unique Item</h3>
-                <p className="text-xs text-gray-600 text-center">Custom or one-off item with special requirements</p>
-              </CardContent>
-            </Card>
-            
-            {/* Text line */}
-            <Card 
-              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
-              onClick={() => handleLineTypeSelect('text')}
-              data-testid="button-line-type-text"
-            >
-              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
-                <Type className="h-8 w-8 text-blue-600" />
-                <h3 className="font-semibold text-sm">Text Line</h3>
-                <p className="text-xs text-gray-600 text-center">Descriptive text or notes without pricing</p>
-              </CardContent>
-            </Card>
-            
-            {/* Charges */}
-            <Card 
-              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-2 hover:border-orange-300" 
-              onClick={() => handleLineTypeSelect('charges')}
-              data-testid="button-line-type-charges"
-            >
-              <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
-                <DollarSign className="h-8 w-8 text-green-600" />
-                <h3 className="font-semibold text-sm">Charges</h3>
-                <p className="text-xs text-gray-600 text-center">Additional fees, shipping, or service charges</p>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="flex justify-end">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setShowLineTypeDialog(false)}
-              data-testid="button-cancel-line-type"
-            >
-              Cancel
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
       
       </div>
     </div>
