@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,8 +81,7 @@ interface QuotationFormLayoutProps {
 
 export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayoutProps) {
   const [activeTab, setActiveTab] = useState("general");
-  const [showItemDialog, setShowItemDialog] = useState(false);
-  const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
+  const [, navigate] = useLocation();
   const [quotationItems, setQuotationItems] = useState<QuotationItem[]>([]);
   const [memos, setMemos] = useState<Memo[]>([]);
   const [nextQuotationNumber, setNextQuotationNumber] = useState<string>("Q-2025-001");
@@ -546,9 +546,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       setQuotationItems(prev => [...prev, newItem]);
     }
 
-    setShowItemDialog(false);
-    setEditingItem(null);
-    setItemType(null);
+    // Item saved, dialog removed - now uses tab navigation
     itemForm.reset({
       quotationId: quotationId || "",
       description: "",
@@ -1017,9 +1015,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             type="button"
             variant="outline"
             onClick={() => {
-              setShowItemDialog(false);
-              setItemType(null);
-              setEditingItem(null);
+              // Cancel functionality removed - now uses tab navigation
               itemForm.reset({
                 quotationId: quotationId || "",
                 description: "",
@@ -1285,9 +1281,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               label: 'ADD LINE',
               icon: <Plus className="h-4 w-4" />,
               onClick: () => {
-                // Open item dialog directly for adding new line
-                setItemType('onetime');
-                setShowItemDialog(true);
+                // Navigate to the line item form page instead of showing dialog
+                if (quotationId) {
+                  navigate(`/quotations/${quotationId}/items/new`);
+                }
               },
               variant: 'default' as const
             }
@@ -1308,8 +1305,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                   itemId: item.itemId,
                   lineType: item.lineType || "standard",
                 });
-                setItemType('onetime'); // Default to onetime for editing
-                setShowItemDialog(true);
+                // Edit functionality will be implemented via edit routes later
+                console.log("Edit item:", item.id);
               },
               variant: 'outline'
             },
@@ -1321,12 +1318,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               variant: 'destructive'
             }
           ]}
-          addEditDialog={{
-            isOpen: showItemDialog,
-            onOpenChange: setShowItemDialog,
-            title: editingItem ? 'Edit Item' : 'ADD LINE',
-            content: renderItemDialog()
-          }}
         />
       </div>
       {/* PDF Preview Modal */}
