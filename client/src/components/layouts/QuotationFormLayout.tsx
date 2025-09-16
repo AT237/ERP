@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,22 +13,18 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, ChevronsUpDown, Check, Printer, Send, Copy, Package2 as Package, Type, ArrowLeft, Search, Sparkles, DollarSign } from "lucide-react";
+import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, Printer } from "lucide-react";
 import { CustomerSelect } from "@/components/ui/customer-select";
 import { useToast } from "@/hooks/use-toast";
-import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
+import { DataTableLayout, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Quotation, InsertQuotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem, InsertInventoryItem } from "@shared/schema";
+import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem } from "@shared/schema";
 import { insertInventoryItemSchema } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
