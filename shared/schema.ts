@@ -173,12 +173,15 @@ export const quotations = pgTable("quotations", {
 export const quotationItems = pgTable("quotation_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   quotationId: varchar("quotation_id").references(() => quotations.id).notNull(),
-  itemId: varchar("item_id").references(() => inventoryItems.id),
+  itemId: varchar("item_id").references(() => inventoryItems.id), // Nullable for text lines
   description: text("description").notNull(),
-  quantity: integer("quantity").notNull(),
-  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
-  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+  quantity: integer("quantity").default(0), // 0 for text lines
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
   lineType: text("line_type").default("standard"), // 'standard', 'unique', 'text', 'charges'
+  position: integer("position").default(0), // Order of items in document
+  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id), // Link to text snippet
+  sourceSnippetVersion: integer("source_snippet_version"), // Version of snippet when used
 });
 
 // Quotation requests table
@@ -220,11 +223,15 @@ export const invoices = pgTable("invoices", {
 export const invoiceItems = pgTable("invoice_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   invoiceId: varchar("invoice_id").references(() => invoices.id).notNull(),
-  itemId: varchar("item_id").references(() => inventoryItems.id),
+  itemId: varchar("item_id").references(() => inventoryItems.id), // Nullable for text lines
   description: text("description").notNull(),
-  quantity: integer("quantity").notNull(),
-  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
-  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+  quantity: integer("quantity").default(0), // 0 for text lines
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
+  lineType: text("line_type").default("standard"), // 'standard', 'unique', 'text', 'charges'
+  position: integer("position").default(0), // Order of items in document
+  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id), // Link to text snippet
+  sourceSnippetVersion: integer("source_snippet_version"), // Version of snippet when used
 });
 
 // Proforma invoices table
@@ -287,10 +294,15 @@ export const salesOrders = pgTable("sales_orders", {
 export const salesOrderItems = pgTable("sales_order_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   salesOrderId: varchar("sales_order_id").references(() => salesOrders.id).notNull(),
-  itemId: varchar("item_id").references(() => inventoryItems.id).notNull(),
-  quantity: integer("quantity").notNull(),
-  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
-  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+  itemId: varchar("item_id").references(() => inventoryItems.id), // Nullable for text lines
+  description: text("description").notNull(),
+  quantity: integer("quantity").default(0), // 0 for text lines
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
+  lineType: text("line_type").default("standard"), // 'standard', 'unique', 'text', 'charges'
+  position: integer("position").default(0), // Order of items in document
+  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id), // Link to text snippet
+  sourceSnippetVersion: integer("source_snippet_version"), // Version of snippet when used
 });
 
 // Work orders table
@@ -387,6 +399,31 @@ export const cities = pgTable("cities", {
   region: text("region"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Text snippets table for reusable text content
+export const textSnippets = pgTable("text_snippets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(), // Short identifier like "WELCOME", "DISCLAIMER"
+  title: text("title").notNull(), // Human readable name
+  body: text("body").notNull(), // The actual text content
+  category: text("category").default("general"), // "header", "footer", "disclaimer", "terms", etc.
+  locale: text("locale").default("nl"), // Language code
+  version: integer("version").default(1),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Text snippet usage tracking table
+export const textSnippetUsages = pgTable("text_snippet_usages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  snippetId: varchar("snippet_id").references(() => textSnippets.id).notNull(),
+  docType: text("doc_type").notNull(), // "quotation", "sales_order", "invoice", etc.
+  docId: varchar("doc_id").notNull(), // Reference to the document
+  docLineId: varchar("doc_line_id").notNull(), // Reference to the specific line item
+  versionUsed: integer("version_used").notNull(), // Version of snippet when it was used
+  usedAt: timestamp("used_at").defaultNow(),
 });
 
 export const statuses = pgTable("statuses", {
@@ -561,6 +598,20 @@ export const packingListsRelations = relations(packingLists, ({ one, many }) => 
   items: many(packingListItems),
 }));
 
+export const textSnippetsRelations = relations(textSnippets, ({ many }) => ({
+  usages: many(textSnippetUsages),
+  quotationItems: many(quotationItems),
+  salesOrderItems: many(salesOrderItems),
+  invoiceItems: many(invoiceItems),
+}));
+
+export const textSnippetUsagesRelations = relations(textSnippetUsages, ({ one }) => ({
+  snippet: one(textSnippets, {
+    fields: [textSnippetUsages.snippetId],
+    references: [textSnippets.id],
+  }),
+}));
+
 export const packingListItemsRelations = relations(packingListItems, ({ one }) => ({
   packingList: one(packingLists, {
     fields: [packingListItems.packingListId],
@@ -621,6 +672,10 @@ export const insertVatRateSchema = createInsertSchema(vatRates).omit({ id: true,
 export const insertCitySchema = createInsertSchema(cities).omit({ id: true, createdAt: true });
 export const insertStatusSchema = createInsertSchema(statuses).omit({ id: true, createdAt: true });
 
+// Text Snippets insert schemas
+export const insertTextSnippetSchema = createInsertSchema(textSnippets).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTextSnippetUsageSchema = createInsertSchema(textSnippetUsages).omit({ id: true, usedAt: true });
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -680,3 +735,9 @@ export type City = typeof cities.$inferSelect;
 export type InsertCity = z.infer<typeof insertCitySchema>;
 export type Status = typeof statuses.$inferSelect;
 export type InsertStatus = z.infer<typeof insertStatusSchema>;
+
+// Text Snippets types
+export type TextSnippet = typeof textSnippets.$inferSelect;
+export type InsertTextSnippet = z.infer<typeof insertTextSnippetSchema>;
+export type TextSnippetUsage = typeof textSnippetUsages.$inferSelect;
+export type InsertTextSnippetUsage = z.infer<typeof insertTextSnippetUsageSchema>;
