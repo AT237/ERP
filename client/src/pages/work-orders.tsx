@@ -12,6 +12,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
 } from "@/components/ui/dialog";
 import { SelectWithAdd } from "@/components/ui/select-with-add";
+import { SelectItem } from "@/components/ui/select";
 import { QuickAddProject } from "@/components/quick-add-forms";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -313,9 +314,9 @@ export default function WorkOrders() {
                           }
                         >
                           {projects?.map((project) => (
-                            <div key={project.id} value={project.id}>
+                            <SelectItem key={project.id} value={project.id}>
                               {project.name}
-                            </div>
+                            </SelectItem>
                           ))}
                         </SelectWithAdd>
                       )
@@ -336,74 +337,83 @@ export default function WorkOrders() {
                       key: 'description',
                       label: 'Description',
                       type: 'textarea',
-                      rows: 3,
-                      placeholder: 'Detailed description...',
+                      placeholder: 'Work order description...',
                       register: form.register('description'),
                       testId: 'textarea-description'
-                    }),
+                    })
+                  ]
+                },
+                {
+                  id: 'details',
+                  label: 'Assignment & Status',
+                  rows: [
+                    createSectionHeaderRow<FormData>('Assignment'),
                     createFieldRow<FormData>({
                       key: 'assignedTo',
                       label: 'Assigned To',
                       type: 'text',
-                      placeholder: 'Employee name or ID...',
+                      placeholder: 'Employee name',
                       register: form.register('assignedTo'),
                       testId: 'input-assigned-to'
                     }),
-
-                    createSectionHeaderRow<FormData>('Status & Scheduling'),
                     createFieldRow<FormData>({
                       key: 'status',
                       label: 'Status',
                       type: 'select',
+                      placeholder: 'Select status',
                       options: [
                         { value: 'pending', label: 'Pending' },
                         { value: 'in-progress', label: 'In Progress' },
                         { value: 'completed', label: 'Completed' },
                         { value: 'cancelled', label: 'Cancelled' }
                       ],
+                      watch: form.watch('status'),
                       setValue: (value) => form.setValue('status', value),
-                      watch: () => form.watch('status'),
                       testId: 'select-status'
                     }),
                     createFieldRow<FormData>({
                       key: 'priority',
                       label: 'Priority',
                       type: 'select',
+                      placeholder: 'Select priority',
                       options: [
                         { value: 'low', label: 'Low' },
                         { value: 'medium', label: 'Medium' },
                         { value: 'high', label: 'High' }
                       ],
+                      watch: form.watch('priority'),
                       setValue: (value) => form.setValue('priority', value),
-                      watch: () => form.watch('priority'),
                       testId: 'select-priority'
-                    }),
+                    })
+                  ]
+                },
+                {
+                  id: 'schedule',
+                  label: 'Schedule & Hours',
+                  rows: [
+                    createSectionHeaderRow<FormData>('Timeline'),
                     createFieldRow<FormData>({
                       key: 'startDate',
                       label: 'Start Date',
-                      type: 'text',
-                      placeholder: 'YYYY-MM-DD',
+                      type: 'date',
                       register: form.register('startDate'),
                       testId: 'input-start-date'
                     }),
                     createFieldRow<FormData>({
                       key: 'dueDate',
                       label: 'Due Date',
-                      type: 'text',
-                      placeholder: 'YYYY-MM-DD',
+                      type: 'date',
                       register: form.register('dueDate'),
                       testId: 'input-due-date'
                     }),
                     createFieldRow<FormData>({
                       key: 'completedDate',
                       label: 'Completed Date',
-                      type: 'text',
-                      placeholder: 'YYYY-MM-DD',
+                      type: 'date',
                       register: form.register('completedDate'),
                       testId: 'input-completed-date'
                     }),
-
-                    createSectionHeaderRow<FormData>('Time Tracking'),
+                    createSectionHeaderRow<FormData>('Hours Tracking'),
                     createFieldRow<FormData>({
                       key: 'estimatedHours',
                       label: 'Estimated Hours',
@@ -446,20 +456,78 @@ export default function WorkOrders() {
                 }
               ]}
             />
-                    id="orderNumber"
-                    {...form.register("orderNumber")}
-                    placeholder="WO-2024-0001"
-                    data-testid="input-order-number"
-                  />
-                  {form.formState.errors.orderNumber && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.orderNumber.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="projectId">Project</Label>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Work Orders</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order Number</TableHead>
+                    <TableHead>Project</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {workOrders?.map((workOrder) => (
+                    <TableRow key={workOrder.id}>
+                      <TableCell className="font-medium">
+                        {workOrder.orderNumber}
+                      </TableCell>
+                      <TableCell>
+                        {projects?.find(p => p.id === workOrder.projectId)?.name || 'Unknown'}
+                      </TableCell>
+                      <TableCell>{workOrder.title}</TableCell>
+                      <TableCell>{workOrder.status}</TableCell>
+                      <TableCell>{workOrder.priority}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(workOrder)}
+                            data-testid={`button-edit-${workOrder.id}`}
+                          >
+                            <Edit size={14} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(workOrder.id)}
+                            data-testid={`button-delete-${workOrder.id}`}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+                  icon: <Save size={14} />,
+                  onClick: form.handleSubmit(onSubmit),
+                  variant: 'default',
+                  testId: 'button-save'
+                }
+              ]}
+            />
                   <SelectWithAdd
                     value={form.watch("projectId")}
                     onValueChange={(value) => form.setValue("projectId", value)}
