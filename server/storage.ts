@@ -2,7 +2,7 @@ import {
   users, customers, suppliers, inventoryItems, projects, quotations, quotationItems,
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries,
-  unitsOfMeasure, paymentTerms, incoterms, vatRates, cities, statuses,
+  unitsOfMeasure, paymentTerms, incoterms, vatRates, cities, statuses, textSnippets, textSnippetUsages,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type InventoryItem, type InsertInventoryItem,
   type Project, type InsertProject, type Quotation, type InsertQuotation,
@@ -14,7 +14,8 @@ import {
   type UserPreferences, type InsertUserPreferences, type CustomerContact, type InsertCustomerContact,
   type Address, type InsertAddress, type Country, type InsertCountry, type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentTerm, type InsertPaymentTerm,
   type Incoterm, type InsertIncoterm, type VatRate, type InsertVatRate,
-  type City, type InsertCity, type Status, type InsertStatus
+  type City, type InsertCity, type Status, type InsertStatus,
+  type TextSnippet, type InsertTextSnippet, type TextSnippetUsage, type InsertTextSnippetUsage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, or, ilike } from "drizzle-orm";
@@ -186,6 +187,18 @@ export interface IStorage {
   createStatus(status: InsertStatus): Promise<Status>;
   updateStatus(id: string, status: Partial<InsertStatus>): Promise<Status>;
   deleteStatus(id: string): Promise<void>;
+
+  // Text Snippet methods
+  getTextSnippets(): Promise<TextSnippet[]>;
+  getTextSnippet(id: string): Promise<TextSnippet | undefined>;
+  getTextSnippetByCode(code: string): Promise<TextSnippet | undefined>;
+  searchTextSnippets(query: string): Promise<TextSnippet[]>;
+  getTextSnippetsByCategory(category: string): Promise<TextSnippet[]>;
+  createTextSnippet(snippet: InsertTextSnippet): Promise<TextSnippet>;
+  updateTextSnippet(id: string, snippet: Partial<InsertTextSnippet>): Promise<TextSnippet>;
+  deleteTextSnippet(id: string): Promise<void>;
+  recordSnippetUsage(usage: InsertTextSnippetUsage): Promise<TextSnippetUsage>;
+  getSnippetUsages(snippetId: string): Promise<TextSnippetUsage[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -974,6 +987,73 @@ export class DatabaseStorage implements IStorage {
 
   async deleteStatus(id: string): Promise<void> {
     await db.update(statuses).set({ isActive: false }).where(eq(statuses.id, id));
+  }
+
+  // Text Snippet methods
+  async getTextSnippets(): Promise<TextSnippet[]> {
+    return await db.select().from(textSnippets)
+      .where(eq(textSnippets.isActive, true))
+      .orderBy(textSnippets.category, textSnippets.title);
+  }
+
+  async getTextSnippet(id: string): Promise<TextSnippet | undefined> {
+    const [snippet] = await db.select().from(textSnippets).where(eq(textSnippets.id, id));
+    return snippet || undefined;
+  }
+
+  async getTextSnippetByCode(code: string): Promise<TextSnippet | undefined> {
+    const [snippet] = await db.select().from(textSnippets)
+      .where(and(eq(textSnippets.code, code), eq(textSnippets.isActive, true)));
+    return snippet || undefined;
+  }
+
+  async searchTextSnippets(query: string): Promise<TextSnippet[]> {
+    return await db.select().from(textSnippets)
+      .where(and(
+        eq(textSnippets.isActive, true),
+        or(
+          ilike(textSnippets.code, `%${query}%`),
+          ilike(textSnippets.title, `%${query}%`),
+          ilike(textSnippets.body, `%${query}%`),
+          ilike(textSnippets.category, `%${query}%`)
+        )
+      ))
+      .orderBy(textSnippets.category, textSnippets.title);
+  }
+
+  async getTextSnippetsByCategory(category: string): Promise<TextSnippet[]> {
+    return await db.select().from(textSnippets)
+      .where(and(eq(textSnippets.category, category), eq(textSnippets.isActive, true)))
+      .orderBy(textSnippets.title);
+  }
+
+  async createTextSnippet(snippet: InsertTextSnippet): Promise<TextSnippet> {
+    const [newSnippet] = await db.insert(textSnippets).values(snippet).returning();
+    return newSnippet;
+  }
+
+  async updateTextSnippet(id: string, snippet: Partial<InsertTextSnippet>): Promise<TextSnippet> {
+    const updateData = {
+      ...snippet,
+      updatedAt: sql`NOW()`
+    };
+    const [updatedSnippet] = await db.update(textSnippets).set(updateData).where(eq(textSnippets.id, id)).returning();
+    return updatedSnippet;
+  }
+
+  async deleteTextSnippet(id: string): Promise<void> {
+    await db.update(textSnippets).set({ isActive: false }).where(eq(textSnippets.id, id));
+  }
+
+  async recordSnippetUsage(usage: InsertTextSnippetUsage): Promise<TextSnippetUsage> {
+    const [newUsage] = await db.insert(textSnippetUsages).values(usage).returning();
+    return newUsage;
+  }
+
+  async getSnippetUsages(snippetId: string): Promise<TextSnippetUsage[]> {
+    return await db.select().from(textSnippetUsages)
+      .where(eq(textSnippetUsages.snippetId, snippetId))
+      .orderBy(desc(textSnippetUsages.usedAt));
   }
 
   // Initialize basic country data
