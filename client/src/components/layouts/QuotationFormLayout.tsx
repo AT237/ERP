@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
 import type { FormTab } from './FormTabLayout';
-import { FormLayout, type FormSection, type FormField } from './FormLayout';
+import { LayoutForm2, type FormSection2, type FormRow, type FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow, createCustomRow, type ChangeTrackingConfig } from './LayoutForm2';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
@@ -1041,17 +1041,18 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     );
   };
 
-  // Create form sections for FormLayout
-  const createQuotationFormSections = (): FormSection[] => {
+  // Create form sections for LayoutForm2
+  const createQuotationFormSections = (): FormSection2<QuotationFormData>[] => {
     return [
       {
-        title: "Basic Information",
-        fields: [
-          {
+        id: "general",
+        label: "General",
+        rows: [
+          createSectionHeaderRow("Basic Information", "mb-6"),
+          createFieldRow({
             key: "customerId",
             label: "Customer",
             type: "custom",
-            required: true,
             customComponent: (
               <CustomerSelect
                 value={quotationForm.watch("customerId")}
@@ -1068,23 +1069,49 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 }))}
               />
             ),
-            error: quotationForm.formState.errors.customerId?.message,
-            "data-testid": "field-customer"
-          },
-          {
-            key: "quotationDate",
-            label: "Quotation Date",
-            type: "date",
-            required: true,
-            register: quotationForm.register("quotationDate"),
-            error: quotationForm.formState.errors.quotationDate?.message,
-            "data-testid": "input-quotation-date"
-          },
-          {
+            validation: {
+              error: quotationForm.formState.errors.customerId?.message,
+              isRequired: true
+            },
+            testId: "field-customer",
+            wrapperClassName: "w-[30%]"
+          }),
+          createFieldsRow([
+            {
+              key: "quotationDate",
+              label: "Quotation Date",
+              type: "text",
+              placeholder: "YYYY-MM-DD",
+              register: quotationForm.register("quotationDate"),
+              validation: {
+                error: quotationForm.formState.errors.quotationDate?.message,
+                isRequired: true
+              },
+              testId: "input-quotation-date"
+            },
+            {
+              key: "status",
+              label: "Status",
+              type: "select",
+              options: [
+                { value: "draft", label: "Draft" },
+                { value: "sent", label: "Sent" },
+                { value: "accepted", label: "Accepted" },
+                { value: "rejected", label: "Rejected" },
+                { value: "expired", label: "Expired" }
+              ],
+              setValue: (value) => quotationForm.setValue("status", value),
+              watch: () => quotationForm.watch("status"),
+              validation: {
+                error: quotationForm.formState.errors.status?.message
+              },
+              testId: "select-status"
+            }
+          ]),
+          createFieldRow({
             key: "validityDays",
             label: "Validity (days)",
             type: "custom",
-            required: true,
             customComponent: (
               <div className="flex gap-4 items-center">
                 <div className="w-32">
@@ -1101,7 +1128,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                   <span>Valid Until:</span>
                   <Input
                     id="validUntil"
-                    type="date"
+                    type="text"
                     {...quotationForm.register("validUntil")}
                     className="bg-gray-50 dark:bg-gray-800 w-40"
                     readOnly
@@ -1110,24 +1137,25 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 </div>
               </div>
             ),
-            error: quotationForm.formState.errors.validityDays?.message,
-            "data-testid": "field-validity"
-          },
-          {
+            validation: {
+              error: quotationForm.formState.errors.validityDays?.message,
+              isRequired: true
+            },
+            testId: "field-validity"
+          }),
+          createFieldRow({
             key: "description",
             label: "Quotation description",
-            type: "custom",
-            customComponent: (
-              <Textarea
-                id="description"
-                {...quotationForm.register("description")}
-                data-testid="input-description"
-              />
-            ),
-            error: quotationForm.formState.errors.description?.message,
-            "data-testid": "field-description"
-          },
-          {
+            type: "textarea",
+            rows: 3,
+            register: quotationForm.register("description"),
+            validation: {
+              error: quotationForm.formState.errors.description?.message
+            },
+            testId: "input-description",
+            wrapperClassName: "w-[60%]"
+          }),
+          createFieldRow({
             key: "isBudgetQuotation",
             label: "Budget quotation",
             type: "custom",
@@ -1149,18 +1177,108 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 </Label>
               </div>
             ),
-            error: quotationForm.formState.errors.isBudgetQuotation?.message,
-            "data-testid": "field-budget-quotation"
-          }
+            validation: {
+              error: quotationForm.formState.errors.isBudgetQuotation?.message
+            },
+            testId: "field-budget-quotation"
+          })
+        ]
+      },
+      {
+        id: "memo",
+        label: "Memo",
+        rows: [
+          createCustomRow(
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-orange-600">Memo Management</h3>
+                <Button onClick={handleAddMemo} variant="outline" size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Memo
+                </Button>
+              </div>
+              
+              {memos.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <MessageSquare className="mx-auto h-12 w-12 mb-4 text-gray-300" />
+                  <p>No memos created yet. Click "New Memo" to add one.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {memos.map((memo, index) => (
+                    <MemoCard
+                      key={memo.id}
+                      memo={memo}
+                      index={index}
+                      onUpdate={(updatedMemo) => handleUpdateMemo(memo.id, updatedMemo)}
+                      onDelete={() => handleDeleteMemo(memo.id)}
+                      onInsertTimestamp={(content) => handleInsertTimestamp(memo.id, content)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        ]
+      },
+      {
+        id: "financial",
+        label: "Financial",
+        rows: [
+          createSectionHeaderRow("Financial Summary", "mb-6"),
+          createFieldRow({
+            key: "subtotal",
+            label: "Subtotal",
+            type: "display",
+            displayValue: (
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <p className="text-2xl font-bold">€{quotationForm.watch("subtotal") || "0.00"}</p>
+              </div>
+            ),
+            testId: "text-subtotal"
+          }),
+          createFieldsRow([
+            {
+              key: "taxAmount",
+              label: "Tax (21%)",
+              type: "display",
+              displayValue: (
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                  <p className="text-2xl font-bold">€{quotationForm.watch("taxAmount") || "0.00"}</p>
+                </div>
+              ),
+              testId: "text-tax"
+            },
+            {
+              key: "totalAmount",
+              label: "Total",
+              type: "display",
+              displayValue: (
+                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200">
+                  <p className="text-2xl font-bold text-orange-800 dark:text-orange-200">€{quotationForm.watch("totalAmount") || "0.00"}</p>
+                </div>
+              ),
+              testId: "text-total"
+            }
+          ])
         ]
       }
     ];
   };
 
-  // Create header fields for BaseFormLayout - empty to remove orange header
-  const headerFields: InfoField[] = [];
+  // Create header fields for LayoutForm2
+  const headerFields: InfoField[] = [
+    {
+      label: 'Quotation Number',
+      value: quotationId ? existingQuotation?.quotationNumber || 'Loading...' : nextQuotationNumber
+    },
+    {
+      label: 'Customer',
+      value: quotationCustomer?.name || 'No customer selected'
+    }
+  ];
 
-  // Create action buttons for BaseFormLayout
+  // Create action buttons for LayoutForm2
   const actionButtons: ActionButton[] = [
     {
       key: 'cancel',
@@ -1188,100 +1306,16 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   ];
 
-  // Create tabs for BaseFormLayout
-  const tabs: FormTab[] = [
-    {
-      id: "general",
-      label: "General",
-      content: (
-        <FormLayout
-          sections={createQuotationFormSections()}
-          onSubmit={() => {}}
-          onCancel={() => {}}
-          submitLabel=""
-          cancelLabel=""
-          isSubmitting={false}
-        />
-      )
-    },
-    {
-      id: "memo",
-      label: "Memo",
-      content: (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200">Memo Management</h3>
-            <Button onClick={handleAddMemo} variant="outline" size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              New Memo
-            </Button>
-          </div>
-          
-          {memos.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <MessageSquare className="mx-auto h-12 w-12 mb-4 text-gray-300" />
-              <p>No memos created yet. Click "New Memo" to add one.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {memos.map((memo, index) => (
-                <MemoCard
-                  key={memo.id}
-                  memo={memo}
-                  index={index}
-                  onUpdate={(updatedMemo) => handleUpdateMemo(memo.id, updatedMemo)}
-                  onDelete={() => handleDeleteMemo(memo.id)}
-                  onInsertTimestamp={(content) => handleInsertTimestamp(memo.id, content)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )
-    },
-    {
-      id: "financial",
-      label: "Financial",
-      content: (
-        <div className="space-y-6">
-          <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
-            <Label className="text-sm font-medium text-right pt-2">Subtotal</Label>
-            <div className="w-[30%]">
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                <p className="text-2xl font-bold">€{quotationForm.watch("subtotal") || "0.00"}</p>
-              </div>
-            </div>
-
-            <Label className="text-sm font-medium text-right pt-2">Tax (21%)</Label>
-            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
-              <div>
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                  <p className="text-2xl font-bold">€{quotationForm.watch("taxAmount") || "0.00"}</p>
-                </div>
-              </div>
-              <div className="text-sm font-medium text-right pt-2">
-                Total
-              </div>
-              <div>
-                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200">
-                  <p className="text-2xl font-bold text-orange-800 dark:text-orange-200">€{quotationForm.watch("totalAmount") || "0.00"}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-  ];
-
   return (
     <div className="h-full">
-      <BaseFormLayout
-        headerFields={headerFields}
+      <LayoutForm2
+        sections={createQuotationFormSections()}
+        activeSection={activeTab}
+        onSectionChange={setActiveTab}
+        form={quotationForm}
+        onSubmit={handleSaveQuotation}
         actionButtons={actionButtons}
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+        headerFields={headerFields}
         isLoading={quotationLoading}
       />
       {/* Quotation Items Table */}
