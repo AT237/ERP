@@ -743,6 +743,36 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
+      if (activeTab.formType === 'line-item' || activeTab.formType === 'quotation-item') {
+        const LineItemFormLayoutComponent = lazy(() => import('@/components/layouts/LineItemFormLayout').then(module => ({ default: module.LineItemFormLayout })));
+        // Extract lineItemId and quotationId from tab.id
+        // Format: 'edit-line-item-{lineItemId}' or 'quotation-item-{lineType}-{timestamp}'
+        const isEditing = activeTab.id.startsWith('edit-line-item-');
+        const lineItemId = isEditing ? activeTab.id.replace('edit-line-item-', '') : undefined;
+        // For new items, get quotationId from parentId or tab data
+        const quotationId = isEditing ? undefined : (activeTab.parentId || (activeTab as any).quotationId);
+        
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <LineItemFormLayoutComponent 
+              lineItemId={lineItemId}
+              quotationId={quotationId}
+              parentId={activeTab.parentId}
+              onSave={() => {
+                // Return to parent tab after save (typically quotation form or quotations list)
+                if (activeTab.parentId) {
+                  const parentTab = tabs.find(tab => tab.id === activeTab.parentId);
+                  if (parentTab) {
+                    setActiveTabId(activeTab.parentId);
+                    closeTab(activeTab.id);
+                  }
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
       // Default form placeholder
       return (
         <div className="p-6">

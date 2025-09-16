@@ -36,7 +36,7 @@ function Router() {
         <Route path="/projects" component={Projects} />
         <Route path="/work-orders" component={WorkOrders} />
         <Route path="/purchase-orders" component={PurchaseOrders} />
-        <Route path="/sales-orders" component={SalesOrders} />
+        <Route path="/sales-orders" component={() => <SalesOrders />} />
         <Route path="/packing-lists" component={PackingLists} />
         <Route path="/reports" component={Reports} />
         <Route path="/quotation-form" component={() => {

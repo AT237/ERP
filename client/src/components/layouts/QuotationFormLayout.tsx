@@ -963,41 +963,73 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     // Close the line type dialog
     setShowLineTypeDialog(false);
     
-    // Set the appropriate item type based on selection
-    let itemTypeMapping: 'database' | 'new' | 'onetime' | 'text' = 'onetime';
-    switch (lineType) {
-      case 'standard':
-        itemTypeMapping = 'onetime'; // Standard items use onetime form
-        break;
-      case 'unique':
-        itemTypeMapping = 'onetime'; // Unique items also use onetime form
-        break;
-      case 'text':
-        itemTypeMapping = 'text';
-        break;
-      case 'charges':
-        itemTypeMapping = 'onetime'; // Charges use onetime form
-        break;
-      default:
-        itemTypeMapping = 'onetime';
-    }
+    // Generate unique tab ID using quotationId and timestamp
+    const quotationNumber = quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber");
+    const uniqueTabId = `new-line-item-${quotationId || 'new'}-${lineType}-${Date.now()}`;
     
-    // Reset the item form with default values based on line type
-    setItemType(itemTypeMapping);
-    setEditingItem(null);
-    setSelectedInventoryItem(null);
-    itemForm.reset({
-      quotationId: quotationId || "",
-      description: "",
-      quantity: lineType === 'text' ? 0 : 1,
-      unitPrice: lineType === 'text' ? "0.00" : "0.00",
-      lineTotal: "0.00",
+    // Get line type display name
+    const lineTypeNames = {
+      standard: 'Standard Item',
+      unique: 'Unique Item', 
+      text: 'Text Line',
+      charges: 'Charges'
+    };
+    
+    // Create tab ID that will be used as the parent tab reference
+    const parentTabId = quotationId ? `edit-quotation-${quotationId}` : 'new-quotation';
+    
+    const formInfo = {
+      id: uniqueTabId,
+      name: `${lineTypeNames[lineType as keyof typeof lineTypeNames]} - ${quotationNumber || 'New Quotation'}`,
+      formType: 'quotation-item',
+      parentId: parentTabId,
       lineType: lineType,
-      itemId: null,
-    });
+      quotationId: quotationId || '',
+    };
     
-    // Open the item form dialog
-    setShowItemDialog(true);
+    try {
+      // Dispatch event to open line item form tab
+      window.dispatchEvent(new CustomEvent('open-form-tab', { detail: formInfo }));
+    } catch (error) {
+      // Fallback: Use existing dialog approach if event dispatch fails
+      console.warn('Failed to open line item via tab system, falling back to dialog:', error);
+      
+      // Set the appropriate item type based on selection
+      let itemTypeMapping: 'database' | 'new' | 'onetime' | 'text' = 'onetime';
+      switch (lineType) {
+        case 'standard':
+          itemTypeMapping = 'onetime'; // Standard items use onetime form
+          break;
+        case 'unique':
+          itemTypeMapping = 'onetime'; // Unique items also use onetime form
+          break;
+        case 'text':
+          itemTypeMapping = 'text';
+          break;
+        case 'charges':
+          itemTypeMapping = 'onetime'; // Charges use onetime form
+          break;
+        default:
+          itemTypeMapping = 'onetime';
+      }
+      
+      // Reset the item form with default values based on line type
+      setItemType(itemTypeMapping);
+      setEditingItem(null);
+      setSelectedInventoryItem(null);
+      itemForm.reset({
+        quotationId: quotationId || "",
+        description: "",
+        quantity: lineType === 'text' ? 0 : 1,
+        unitPrice: lineType === 'text' ? "0.00" : "0.00",
+        lineTotal: "0.00",
+        lineType: lineType,
+        itemId: null,
+      });
+      
+      // Open the item form dialog
+      setShowItemDialog(true);
+    }
   };
 
   const renderItemDialog = () => {
