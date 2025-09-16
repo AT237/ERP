@@ -77,6 +77,26 @@ function Router() {
             );
           }}
         </Route>
+        <Route path="/quotations/:quotationId/items/new">
+          {(params) => {
+            const LineItemForm = React.lazy(() => import('./pages/line-item-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <LineItemForm onSave={() => window.history.back()} quotationId={params.quotationId} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        <Route path="/quotations/:quotationId/items/:itemId">
+          {(params) => {
+            const LineItemForm = React.lazy(() => import('./pages/line-item-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <LineItemForm onSave={() => window.history.back()} quotationId={params.quotationId} itemId={params.itemId} />
+              </Suspense>
+            );
+          }}
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </Layout>
