@@ -19,6 +19,7 @@ import PurchaseOrders from "@/pages/purchase-orders";
 import SalesOrders from "@/pages/sales-orders";
 import PackingLists from "@/pages/packing-lists";
 import Reports from "@/pages/reports";
+import TextSnippets from "@/pages/text-snippets";
 import Layout from "@/components/layout";
 
 function Router() {
@@ -39,6 +40,7 @@ function Router() {
         <Route path="/sales-orders" component={() => <SalesOrders />} />
         <Route path="/packing-lists" component={PackingLists} />
         <Route path="/reports" component={Reports} />
+        <Route path="/text-snippets" component={TextSnippets} />
         <Route path="/quotation-form" component={() => {
           const QuotationForm = React.lazy(() => import('./pages/quotation-form'));
           return (

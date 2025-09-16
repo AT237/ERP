@@ -23,7 +23,7 @@ import {
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact,
   ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search, ChevronsDown, ChevronsUp,
-  Ruler, Calendar, Plane, Percent, MapPin, Tag
+  Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -69,6 +69,7 @@ const defaultNavigation = [
     name: "Master Data",
     collapsible: true,
     items: [
+      { id: "text-snippets", name: "Text Snippets", href: "/text-snippets", icon: BookOpen },
       { id: "uom", name: "Units of Measure", href: "/master-data/uom", icon: Ruler },
       { id: "payment-terms", name: "Payment Terms", href: "/master-data/payment-terms", icon: Calendar },
       { id: "incoterms", name: "Incoterms", href: "/master-data/incoterms", icon: Plane },
