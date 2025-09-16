@@ -1,141 +1,151 @@
 # Overview
 
-This is a comprehensive business management system built as a full-stack web application. The system provides tools for managing inventory, customers, suppliers, projects, quotations, invoices, purchase orders, work orders, and packing lists. It includes a dashboard for business analytics and reporting capabilities, plus a complete **Text Snippets Management System** for reusable content across documents. The application is designed for small to medium businesses that need to track their operations, inventory, and customer relationships in one centralized platform.
+This project is a full-stack web application designed as a comprehensive business management system for small to medium businesses. It centralizes the management of inventory, customers, suppliers, projects, quotations, invoices, purchase orders, work orders, and packing lists. Key capabilities include a business analytics dashboard, reporting features, and a robust Text Snippets Management System for reusable content. A core achievement is 100% form consistency across all business forms, ensuring a professional and uniform user experience. The business vision is to provide a single, integrated platform that streamlines operations and enhances productivity for SMEs, offering significant market potential by consolidating disparate business functions into one intuitive system.
 
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
 
-# System Architecture
+# Recent Changes
 
-## Frontend Architecture
-The frontend is built with **React 18** using TypeScript and follows a component-based architecture. Key architectural decisions include:
+## September 16, 2025 - LayoutForm2 Standardization Project Complete
 
-- **Routing**: Uses Wouter for lightweight client-side routing with declarative route definitions
-- **UI Framework**: Implements shadcn/ui components with Radix UI primitives for accessible, customizable components
-- **Styling**: Tailwind CSS with CSS custom properties for theming and consistent design system
-- **State Management**: React Query (TanStack Query) for server state management with optimistic updates and caching
-- **Forms**: React Hook Form with Zod validation for type-safe form handling
-- **Build Tool**: Vite for fast development and optimized production builds
+Successfully completed comprehensive LayoutForm2 standardization across all business forms, achieving 100% visual and behavioral consistency.
 
-The frontend follows a modular structure with shared components, page-specific components, and utility functions organized in separate directories.
+### Converted Forms (19+ total):
+**Page-Level Forms:**
+- customers.tsx, suppliers.tsx, projects.tsx, quotations.tsx, invoices.tsx
+- purchase-orders.tsx, work-orders.tsx, packing-lists.tsx, inventory.tsx
+- text-snippets.tsx
 
-### Reusable Layout System
-A comprehensive layout system has been implemented to ensure consistency across different data management interfaces:
+**Table Component Forms:**
+- LineItemFormLayout.tsx, supplier-table.tsx, contact-persons-table.tsx
+- masterdata-table.tsx
 
-- **DataTableLayout**: A fully-featured table component with search, filtering, sorting, column management, drag & drop reordering, row selection, and dialog support for CRUD operations
-- **FormLayout**: A structured form component with section-based organization, multiple field types, automatic error handling, and standardized styling
-- **useDataTable Hook**: Custom hook for managing table state including columns, filters, sorting, and row selection
-- **Type Safety**: Full TypeScript support with generic types for different data entities
+**Quick-Add Forms:**
+- quick-add-forms.tsx (Customer, Contact, Supplier, Project forms)
 
-### Standardized Styling System
-All data tables now follow a consistent visual design:
+**UI Component Forms:**
+- address-select-with-add.tsx, country-select-with-add.tsx
+- contact-person-select-with-add.tsx
 
-- **Orange Theme**: Headers use `bg-orange-50 dark:bg-orange-900/20` with `text-orange-800 dark:text-orange-200` text
-- **Orange Title Blocks**: Fixed positioning at 350px from left edge for consistent action menu placement
-- **ID Column Helper**: `createIdColumn()` function provides automatic `font-mono text-xs` styling for monospace ID displays
-- **Grip Icons**: Standardized size (`h-3 w-3`) and positioning with orange hover states
-- **Typography**: Uppercase, font-semibold headers with consistent spacing (`gap-1`, `p-0.5`)
+**Layout Components:**
+- CustomerTableWithLayout.tsx
 
-Usage example for new tables:
+### Migration Success:
+- All forms now use consistent two-column layouts with orange theming
+- Preserved all existing functionality (validations, mutations, complex features)
+- Achieved professional business application appearance
+- Enhanced developer experience with standardized patterns
+
+# Development Guidelines
+
+## Using LayoutForm2 for New Forms
+
+### Basic Import Pattern:
 ```typescript
-import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
+import { LayoutForm2, FormSection2, createFieldRow, createSectionHeaderRow } from "@/components/layouts/LayoutForm2";
+```
 
-const defaultColumns: ColumnConfig[] = [
-  createIdColumn('invoiceNumber', 'Invoice ID'), // Automatic monospace styling
-  { key: 'name', label: 'Name', visible: true, width: 200, filterable: true, sortable: true },
+### Essential Form Setup:
+```typescript
+const [activeSection, setActiveSection] = useState("basic");
+const form = useForm<FormData>({
+  resolver: zodResolver(insertSchema),
+  defaultValues: defaultFormData
+});
+
+const sections: FormSection2<FormData>[] = [
+  {
+    id: "basic",
+    title: "Basic Information", 
+    icon: User,
+    rows: [
+      createSectionHeaderRow("Contact Details"),
+      createFieldRow("name", "text", "Name", true),
+      createFieldRow("email", "email", "Email", true)
+    ]
+  }
 ];
 ```
 
-This system is used across customer, supplier, inventory, and other data management interfaces to provide a consistent user experience and reduce code duplication.
+### Helper Functions:
+- `createFieldRow(field, type, label, required)` - Standard form fields
+- `createFieldsRow([field1, field2])` - Multi-column rows  
+- `createSectionHeaderRow(title)` - Visual section separators
+
+### Form Validation & Mutations:
+```typescript
+const mutation = useMutation({
+  mutationFn: (data) => apiRequest(`/api/endpoint`, { method: 'POST', body: data }),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/endpoint'] });
+    toast({ title: "Success!" });
+  }
+});
+```
+
+# System Architecture
+
+## Frontend Architecture
+The frontend is built with **React 18** and **TypeScript**, following a component-based architecture. It uses **Wouter** for routing, **shadcn/ui** components with **Radix UI** primitives for UI, and **Tailwind CSS** with CSS custom properties for styling, featuring an orange theme. **React Query** manages server state, and **React Hook Form** with **Zod** validation handles form processing. The standardized **LayoutForm2** component ensures type-safe and consistent form handling across all application forms. **Vite** is used for fast development and optimized builds.
+
+### Reusable Layout System
+A comprehensive layout system ensures consistency across data management interfaces:
+- **DataTableLayout**: Provides features like search, filtering, sorting, column management, drag & drop, row selection, and CRUD operations.
+- **LayoutForm2**: A standardized form layout component applied across all 19+ business forms, guaranteeing visual and behavioral consistency with an orange-themed design, two-column layouts, and change tracking.
+- **useDataTable Hook**: Custom hook for managing table state.
+- **Type Safety**: Full TypeScript support with generic types is implemented throughout.
+
+### Standardized Styling System
+All data tables and forms adhere to a consistent visual design, emphasizing an orange theme for headers, titles, and interactive elements, along with standardized typography, spacing, and required field indicators.
+
+### LayoutForm2 Standardization
+The application has achieved 100% form consistency by standardizing all forms using **LayoutForm2**. This means all 19+ unique form layouts were replaced with a single configurable component, resulting in unified developer experience, professional visual consistency, type-safe architecture, enhanced maintainability, and a future-proof design where new forms automatically inherit consistent styling and behavior.
+
+## LayoutForm2 Architecture
+
+The LayoutForm2 component provides a comprehensive form layout system with:
+- **Visual Consistency**: Orange-themed headers, professional spacing, two-column grid layouts
+- **Change Tracking**: Automatic detection of modified fields with visual indicators
+- **Section Management**: Tab-based navigation with active section highlighting  
+- **Type Safety**: Full TypeScript support with generic FormData types
+- **Helper Functions**: Standardized field creation with createFieldRow, createFieldsRow, createSectionHeaderRow
+- **Validation Integration**: Seamless react-hook-form and Zod schema support
+- **Custom Components**: Support for complex custom field types via customComponent prop
 
 ## Backend Architecture
-The backend uses **Node.js with Express.js** in a RESTful API pattern:
-
-- **Framework**: Express.js with TypeScript for type safety
-- **API Design**: RESTful endpoints organized by resource (customers, inventory, projects, etc.)
-- **Request Handling**: Middleware-based architecture with JSON parsing, CORS handling, and error management
-- **Development**: Hot reload with tsx for development efficiency
-- **Build Process**: esbuild for fast production builds with ES modules
+The backend uses **Node.js with Express.js** in a RESTful API pattern, implemented with TypeScript. It features a middleware-based architecture for request handling, hot reload with `tsx` for development, and `esbuild` for fast production builds.
 
 ## Data Storage
-The application uses **PostgreSQL** as the primary database with **Drizzle ORM** for type-safe database operations:
-
-- **ORM**: Drizzle ORM chosen for its TypeScript-first approach and performance
-- **Schema Management**: Centralized schema definitions in shared directory for consistency between frontend and backend
-- **Migrations**: Drizzle Kit for database migrations and schema updates
-- **Connection**: Neon Database serverless PostgreSQL with connection pooling
-- **Validation**: Drizzle-Zod integration for runtime type validation
-- **Automatic Numbering**: All business entities use database sequences for secure, concurrent number generation
-
-### Database Sequence Standards
-All business entities now use database-generated sequences for automatic numbering:
-
-- **Customers**: DEB-0001, DEB-0002, etc. (PostgreSQL sequence)
-- **Suppliers**: CRED-001, CRED-002, etc. (PostgreSQL sequence)
-- **Projects**: PR-0001, PR-0002, etc. (PostgreSQL sequence)
-- **Quotation Requests**: QR-2025-001, QR-2025-002, etc. (Year-based function)
-- **Quotations**: Q-2025-001, Q-2025-002, etc. (Year-based function)
-- **Invoices**: CI-2025-001, CI-2025-002, etc. (Year-based function)
-- **Proforma Invoices**: PRI-2025-001, PRI-2025-002, etc. (Year-based function)
-- **Purchase Orders**: PO-2025-001, PO-2025-002, etc. (Year-based function)
-- **Work Orders**: WO-0001, WO-0002, etc. (PostgreSQL sequence)
-- **Packing Lists**: PL-0001, PL-0002, etc. (PostgreSQL sequence)
-
-This ensures thread-safe, unique numbering without application-level complexity and eliminates race conditions during concurrent operations.
-
-The database schema includes tables for users, customers, suppliers, inventory items, projects, quotations, invoices, purchase orders, work orders, and packing lists with proper relationships and foreign key constraints.
+**PostgreSQL** is the primary database, managed with **Drizzle ORM** for type-safe operations. **Drizzle Kit** handles schema management and migrations. **Neon Database** provides serverless PostgreSQL hosting. **Drizzle-Zod** is used for runtime type validation, and database sequences generate unique, concurrent numbers for all business entities (e.g., DEB-0001, Q-2025-001).
 
 ### Text Snippets Management System
-A complete **hybrid text snippets architecture** has been implemented for reusable content across all business documents:
+This system uses a hybrid architecture:
+- **Text Snippets Library**: A `text_snippets` table stores reusable content with multi-language and category support.
+- **Document Snapshots**: Snippet content is snapshotted when used in documents (quotations, invoices) to ensure historical integrity.
+- **Usage Tracking**: A `text_snippet_usages` table tracks where snippets are applied.
+- **Integration**: Document item tables support various `lineType` values (`standard`, `unique`, `text`, `charges`) and track `sourceSnippetId` and `sourceSnippetVersion`.
 
-**Architecture Pattern**: Hybrid model combining reusable templates with immutable document snapshots:
-- **Text Snippets Library**: Central repository (`text_snippets` table) for creating and managing reusable text content
-- **Document Snapshots**: When snippets are used, content is copied (snapshotted) into document line items
-- **Historical Integrity**: Original snippet changes never affect existing documents - snapshots remain frozen
-- **Usage Tracking**: Analytics via `text_snippet_usages` table without breaking document integrity
+# External Dependencies
 
-**Database Implementation**:
-- **text_snippets table**: id, code, title, body, category, locale, version, isActive, createdAt, updatedAt
-- **text_snippet_usages table**: tracking where and when snippets are used across documents
-- **Enhanced item tables**: All document items (quotation_items, sales_order_items, invoice_items) now support:
-  - `lineType`: 'standard', 'unique', 'text', 'charges' for different line purposes
-  - `position`: ordering of lines within documents
-  - `sourceSnippetId` + `sourceSnippetVersion`: tracking original snippet without re-resolving
-  - Nullable `itemId` for text lines (no inventory reference needed)
+## Database & Infrastructure
+- **Neon Database**: Serverless PostgreSQL hosting.
+- **Drizzle ORM**: TypeScript ORM.
+- **Drizzle Kit**: Database migration tool.
 
-**Business Process Integration**:
-- **Document Creation**: Users can insert text snippets into quotations, orders, invoices via "From Library" interface
-- **Conversion Preservation**: Quotation → Sales Order → Invoice conversions preserve text lines exactly
-- **Content Independence**: Text becomes independent after insertion - no re-resolution during conversions
-- **Multi-language Support**: Snippets support different locales (Dutch, English, German, French)
-- **Category Organization**: Snippets organized by type (header, footer, disclaimer, terms, warranty, etc.)
+## Frontend Libraries
+- **React Query**: Server state management.
+- **Wouter**: Routing library.
+- **shadcn/ui**: UI component library.
+- **Radix UI**: Primitive components.
+- **React Hook Form**: Form state management.
+- **Zod**: Schema validation.
+- **Tailwind CSS**: CSS framework.
+- **Lucide React**: Icon library.
+- **date-fns**: Date manipulation.
 
-## External Dependencies
-
-### Database & Infrastructure
-- **Neon Database**: Serverless PostgreSQL database hosting
-- **Drizzle ORM**: TypeScript ORM for database operations
-- **Drizzle Kit**: Database migration and schema management tool
-
-### Frontend Libraries
-- **React Query**: Server state management and caching
-- **Wouter**: Lightweight routing library
-- **shadcn/ui**: Pre-built UI component library
-- **Radix UI**: Primitive components for accessibility
-- **React Hook Form**: Form state management
-- **Zod**: Schema validation
-- **Tailwind CSS**: Utility-first CSS framework
-- **Lucide React**: Icon library
-- **date-fns**: Date manipulation utilities
-
-### Backend Libraries
-- **Express.js**: Web application framework
-- **tsx**: TypeScript execution for development
-- **esbuild**: JavaScript bundler for production builds
-
-### Development Tools
-- **Vite**: Frontend build tool and development server
-- **TypeScript**: Static type checking
-- **PostCSS**: CSS processing
-- **Replit integrations**: Development environment plugins and error handling
+## Backend Libraries
+- **Express.js**: Web application framework.
+- **tsx**: TypeScript execution for development.
+- **esbuild**: JavaScript bundler.
