@@ -265,16 +265,6 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     },
   });
 
-  const itemForm = useForm<QuotationItemFormData>({
-    resolver: zodResolver(quotationItemFormSchema),
-    defaultValues: {
-      quotationId: "",
-      description: "",
-      quantity: 1,
-      unitPrice: "0.00",
-      lineTotal: "0.00",
-    },
-  });
 
   // Helper functions
   const calculateLineTotal = (quantity: number, unitPrice: string) => {
@@ -380,35 +370,6 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     },
   });
 
-  const createItemMutation = useMutation({
-    mutationFn: async (data: QuotationItemFormData) => {
-      const processedData = {
-        ...data,
-        unitPrice: parseFloat(data.unitPrice),
-        lineTotal: parseFloat(data.lineTotal),
-      };
-      const quotationId = selectedQuotation?.id || data.quotationId;
-      if (!quotationId) throw new Error('No quotation selected');
-      
-      const response = await apiRequest("POST", `/api/quotations/${quotationId}/items`, processedData);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/quotations", selectedQuotation?.id, "items"] });
-      calculateQuotationTotals();
-      toast({
-        title: "Success",
-        description: "Quotation item added successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add quotation item",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Event handlers - memoized to prevent flicker
   const handleAddQuotation = React.useCallback(() => {
@@ -506,9 +467,6 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   };
 
 
-  const handleSaveItem = (data: QuotationItemFormData) => {
-    createItemMutation.mutate(data);
-  };
 
   const handleGeneratePDF = () => {
     toast({
@@ -516,19 +474,6 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       description: "PDF generation will be implemented soon",
     });
   };
-
-  // Update line total when quantity or unit price changes
-  const watchQuantity = itemForm.watch("quantity");
-  const watchUnitPrice = itemForm.watch("unitPrice");
-
-  // Auto-calculate line total - Fix potential infinite loop
-  React.useEffect(() => {
-    const lineTotal = calculateLineTotal(watchQuantity || 1, watchUnitPrice || "0.00");
-    const currentTotal = itemForm.getValues("lineTotal");
-    if (currentTotal !== lineTotal) {
-      itemForm.setValue("lineTotal", lineTotal);
-    }
-  }, [watchQuantity, watchUnitPrice]);
 
   // Debug removed - component should now be stable
 
