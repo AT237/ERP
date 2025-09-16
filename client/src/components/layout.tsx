@@ -696,10 +696,18 @@ export default function Layout({ children }: LayoutProps) {
       // Handle form tabs
       if (activeTab.formType === 'quotation') {
         const QuotationForm = lazy(() => import('@/pages/quotation-form'));
-        // Extract quotationId from tab.id if editing
+        // DEBUG: Log activeTab to see what's available
+        console.log('🔍 Debug activeTab for quotation:', {
+          id: activeTab.id,
+          parentId: activeTab.parentId,
+          formInfo: activeTab.formInfo,
+          entireTab: activeTab
+        });
+        
+        // Extract quotationId from tab.id if editing OR from parentId
         const quotationId = activeTab.id.startsWith('edit-quotation-') 
           ? activeTab.id.replace('edit-quotation-', '') 
-          : undefined;
+          : activeTab.parentId;
         
         return (
           <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
