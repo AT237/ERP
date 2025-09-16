@@ -766,7 +766,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
                             headerActions={React.useMemo(() => [
                               {
                                 key: 'add-item',
-                                label: 'Add Item',
+                                label: 'ADD LINE',
                                 icon: <Plus className="h-4 w-4" />,
                                 onClick: handleAddItem,
                                 variant: 'default' as const
@@ -808,7 +808,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
                             addEditDialog={{
                               isOpen: showItemDialog,
                               onOpenChange: setShowItemDialog,
-                              title: editingItem ? 'Edit Item' : 'Add Item',
+                              title: editingItem ? 'Edit Item' : 'ADD LINE',
                               content: (
                                 <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
                                   <div className="space-y-2">
