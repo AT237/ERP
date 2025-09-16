@@ -5,11 +5,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema, type InsertCustomer, type Customer } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Plus, Mail } from "lucide-react";
+import { Plus, Mail, Building, Phone, CreditCard } from "lucide-react";
 
 // Import our reusable layouts
 import { DataTableLayout, ColumnConfig } from '@/components/layouts/DataTableLayout';
-import { FormLayout, FormSection } from '@/components/layouts/FormLayout';
+import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
+import type { ActionButton } from '@/components/layouts/BaseFormLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 
 // Form schema
@@ -69,6 +70,7 @@ const defaultColumns: ColumnConfig[] = [
 export default function CustomerTableWithLayout() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [activeSection, setActiveSection] = useState("company");
   
   // Use our data table hook
   const dataTableState = useDataTable({
@@ -247,76 +249,87 @@ export default function CustomerTableWithLayout() {
     dataTableState.toggleAllRows(allRowIds);
   };
 
-  // Define form sections for the add/edit dialog
-  const formSections: FormSection[] = [
+  // Create form sections for LayoutForm2
+  const createFormSections = (): FormSection2<FormData>[] => [
     {
-      title: "Company Information",
-      fields: [
-        {
+      id: "company",
+      label: "Company Information", 
+      icon: <Building className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
           key: "name",
           label: "Company Name",
           type: "text",
           placeholder: "Enter company name",
-          required: true,
           register: form.register("name"),
-          error: form.formState.errors.name?.message,
-          'data-testid': "input-customer-name"
-        },
-        {
+          validation: {
+            error: form.formState.errors.name?.message,
+            isRequired: true
+          },
+          testId: "input-customer-name"
+        } as FormField2<FormData>),
+        createFieldRow({
           key: "taxId",
           label: "Tax ID",
           type: "text",
           placeholder: "Tax identification number",
           register: form.register("taxId"),
-          'data-testid': "input-customer-tax-id"
-        }
+          testId: "input-customer-tax-id"
+        } as FormField2<FormData>)
       ]
     },
     {
-      title: "Contact Information",
-      fields: [
-        {
+      id: "contact",
+      label: "Contact Information",
+      icon: <Phone className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
           key: "email",
           label: "Email Address",
           type: "email",
           placeholder: "company@example.com",
           register: form.register("email"),
-          'data-testid': "input-customer-email"
-        },
-        {
-          key: "phone",
-          label: "Phone Number",
-          type: "tel",
-          placeholder: "+31 20 123 4567",
-          register: form.register("phone"),
-          'data-testid': "input-customer-phone"
-        },
-        {
-          key: "mobile",
-          label: "Mobile Number",
-          type: "tel",
-          placeholder: "+31 6 12 34 56 78",
-          register: form.register("mobile"),
-          'data-testid': "input-customer-mobile"
-        },
-        {
+          testId: "input-customer-email"
+        } as FormField2<FormData>),
+        createFieldsRow([
+          {
+            key: "phone",
+            label: "Phone Number",
+            type: "tel",
+            placeholder: "+31 20 123 4567",
+            register: form.register("phone"),
+            testId: "input-customer-phone",
+            width: "50%"
+          } as FormField2<FormData>,
+          {
+            key: "mobile",
+            label: "Mobile Number",
+            type: "tel",
+            placeholder: "+31 6 12 34 56 78",
+            register: form.register("mobile"),
+            testId: "input-customer-mobile",
+            width: "50%"
+          } as FormField2<FormData>
+        ]),
+        createFieldRow({
           key: "bankAccount",
           label: "Bank Account",
           type: "text",
           placeholder: "NL91 ABNA 0417 1643 00",
           register: form.register("bankAccount"),
-          'data-testid': "input-customer-bank-account"
-        }
+          testId: "input-customer-bank-account"
+        } as FormField2<FormData>)
       ]
     },
     {
-      title: "Business Settings",
-      fields: [
-        {
+      id: "business",
+      label: "Business Settings",
+      icon: <CreditCard className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
           key: "paymentTerms",
           label: "Payment Terms",
           type: "select",
-          required: true,
           options: [
             { value: "0", label: "Immediate payment" },
             { value: "14", label: "14 days" },
@@ -324,36 +337,64 @@ export default function CustomerTableWithLayout() {
             { value: "60", label: "60 days" },
             { value: "90", label: "90 days" }
           ],
-          setValue: (value: string) => form.setValue("paymentTerms", value),
-          error: form.formState.errors.paymentTerms?.message,
-          'data-testid': "select-payment-terms"
-        },
-        {
-          key: "status",
-          label: "Status",
-          type: "select",
-          options: [
-            { value: "active", label: "Active" },
-            { value: "inactive", label: "Inactive" },
-            { value: "prospect", label: "Prospect" }
-          ],
-          setValue: (value: string) => form.setValue("status", value),
-          'data-testid': "select-customer-status"
-        },
-        {
-          key: "language",
-          label: "Language",
-          type: "select",
-          options: [
-            { value: "en", label: "English" },
-            { value: "nl", label: "Dutch" },
-            { value: "de", label: "German" },
-            { value: "fr", label: "French" }
-          ],
-          setValue: (value: string) => form.setValue("language", value),
-          'data-testid': "select-customer-language"
-        }
+          setValue: (value) => form.setValue("paymentTerms", value),
+          watch: () => form.watch("paymentTerms"),
+          validation: {
+            error: form.formState.errors.paymentTerms?.message,
+            isRequired: true
+          },
+          testId: "select-payment-terms"
+        } as FormField2<FormData>),
+        createFieldsRow([
+          {
+            key: "status",
+            label: "Status",
+            type: "select",
+            options: [
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" },
+              { value: "prospect", label: "Prospect" }
+            ],
+            setValue: (value) => form.setValue("status", value),
+            watch: () => form.watch("status"),
+            testId: "select-customer-status",
+            width: "50%"
+          } as FormField2<FormData>,
+          {
+            key: "language",
+            label: "Language",
+            type: "select",
+            options: [
+              { value: "en", label: "English" },
+              { value: "nl", label: "Dutch" },
+              { value: "de", label: "German" },
+              { value: "fr", label: "French" }
+            ],
+            setValue: (value) => form.setValue("language", value),
+            watch: () => form.watch("language"),
+            testId: "select-customer-language",
+            width: "50%"
+          } as FormField2<FormData>
+        ])
       ]
+    }
+  ];
+
+  // Create action buttons
+  const createActionButtons = (): ActionButton[] => [
+    {
+      label: "Cancel",
+      variant: "outline",
+      onClick: () => setShowAddCustomerDialog(false),
+      disabled: createCustomerMutation.isPending || updateCustomerMutation.isPending
+    },
+    {
+      label: editingCustomer 
+        ? (updateCustomerMutation.isPending ? "Updating..." : "Update Customer")
+        : (createCustomerMutation.isPending ? "Adding..." : "Add Customer"),
+      variant: "default",
+      onClick: () => form.handleSubmit(onSubmit)(),
+      disabled: createCustomerMutation.isPending || updateCustomerMutation.isPending
     }
   ];
 
@@ -404,15 +445,14 @@ export default function CustomerTableWithLayout() {
         onOpenChange: setShowAddCustomerDialog,
         title: editingCustomer ? "Edit Customer" : "Add New Customer",
         content: (
-          <FormLayout
-            sections={formSections}
-            onSubmit={form.handleSubmit(onSubmit)}
-            onCancel={() => setShowAddCustomerDialog(false)}
-            submitLabel={editingCustomer 
-              ? (updateCustomerMutation.isPending ? "Updating..." : "Update Customer")
-              : (createCustomerMutation.isPending ? "Adding..." : "Add Customer")
-            }
-            isSubmitting={createCustomerMutation.isPending || updateCustomerMutation.isPending}
+          <LayoutForm2<FormData>
+            sections={createFormSections()}
+            activeSection={activeSection}
+            onSectionChange={setActiveSection}
+            form={form}
+            onSubmit={onSubmit}
+            actionButtons={createActionButtons()}
+            isLoading={createCustomerMutation.isPending || updateCustomerMutation.isPending}
           />
         )
       }}

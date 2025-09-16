@@ -11,20 +11,17 @@ import {
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
 } from "@/components/ui/dialog";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
 import { SelectWithAdd } from "@/components/ui/select-with-add";
 import { QuickAddProject } from "@/components/quick-add-forms";
-import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertWorkOrderSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, ClipboardList, Search, Calendar, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, ClipboardList, Search, Calendar, Clock, Save, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LayoutForm2, createFieldRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
 import type { WorkOrder, InsertWorkOrder, Project } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -40,6 +37,7 @@ export default function WorkOrders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingWorkOrder, setEditingWorkOrder] = useState<WorkOrder | null>(null);
+  const [activeSection, setActiveSection] = useState('general');
   const { toast } = useToast();
 
   const { data: workOrders, isLoading } = useQuery<WorkOrder[]>({
@@ -276,11 +274,178 @@ export default function WorkOrders() {
               </DialogDescription>
             </DialogHeader>
             
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="orderNumber">Order Number *</Label>
-                  <Input
+            <LayoutForm2
+              sections={[
+                {
+                  id: 'general',
+                  label: 'Work Order Details',
+                  rows: [
+                    createSectionHeaderRow<FormData>('Basic Information'),
+                    createFieldRow<FormData>({
+                      key: 'orderNumber',
+                      label: 'Order Number',
+                      type: 'text',
+                      placeholder: 'WO-2024-0001',
+                      register: form.register('orderNumber'),
+                      validation: { 
+                        isRequired: true,
+                        error: form.formState.errors.orderNumber?.message 
+                      },
+                      testId: 'input-order-number'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'projectId',
+                      label: 'Project',
+                      type: 'custom',
+                      customComponent: (
+                        <SelectWithAdd
+                          value={form.watch("projectId")}
+                          onValueChange={(value) => form.setValue("projectId", value)}
+                          placeholder="Select project"
+                          addFormTitle="Add New Project"
+                          testId="select-project"
+                          addFormContent={
+                            <QuickAddProject 
+                              onSuccess={(projectId) => {
+                                form.setValue("projectId", projectId);
+                              }}
+                            />
+                          }
+                        >
+                          {projects?.map((project) => (
+                            <div key={project.id} value={project.id}>
+                              {project.name}
+                            </div>
+                          ))}
+                        </SelectWithAdd>
+                      )
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'title',
+                      label: 'Title',
+                      type: 'text',
+                      placeholder: 'Work order title...',
+                      register: form.register('title'),
+                      validation: { 
+                        isRequired: true,
+                        error: form.formState.errors.title?.message 
+                      },
+                      testId: 'input-title'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'description',
+                      label: 'Description',
+                      type: 'textarea',
+                      rows: 3,
+                      placeholder: 'Detailed description...',
+                      register: form.register('description'),
+                      testId: 'textarea-description'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'assignedTo',
+                      label: 'Assigned To',
+                      type: 'text',
+                      placeholder: 'Employee name or ID...',
+                      register: form.register('assignedTo'),
+                      testId: 'input-assigned-to'
+                    }),
+
+                    createSectionHeaderRow<FormData>('Status & Scheduling'),
+                    createFieldRow<FormData>({
+                      key: 'status',
+                      label: 'Status',
+                      type: 'select',
+                      options: [
+                        { value: 'pending', label: 'Pending' },
+                        { value: 'in-progress', label: 'In Progress' },
+                        { value: 'completed', label: 'Completed' },
+                        { value: 'cancelled', label: 'Cancelled' }
+                      ],
+                      setValue: (value) => form.setValue('status', value),
+                      watch: () => form.watch('status'),
+                      testId: 'select-status'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'priority',
+                      label: 'Priority',
+                      type: 'select',
+                      options: [
+                        { value: 'low', label: 'Low' },
+                        { value: 'medium', label: 'Medium' },
+                        { value: 'high', label: 'High' }
+                      ],
+                      setValue: (value) => form.setValue('priority', value),
+                      watch: () => form.watch('priority'),
+                      testId: 'select-priority'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'startDate',
+                      label: 'Start Date',
+                      type: 'text',
+                      placeholder: 'YYYY-MM-DD',
+                      register: form.register('startDate'),
+                      testId: 'input-start-date'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'dueDate',
+                      label: 'Due Date',
+                      type: 'text',
+                      placeholder: 'YYYY-MM-DD',
+                      register: form.register('dueDate'),
+                      testId: 'input-due-date'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'completedDate',
+                      label: 'Completed Date',
+                      type: 'text',
+                      placeholder: 'YYYY-MM-DD',
+                      register: form.register('completedDate'),
+                      testId: 'input-completed-date'
+                    }),
+
+                    createSectionHeaderRow<FormData>('Time Tracking'),
+                    createFieldRow<FormData>({
+                      key: 'estimatedHours',
+                      label: 'Estimated Hours',
+                      type: 'text',
+                      placeholder: '0',
+                      register: form.register('estimatedHours'),
+                      testId: 'input-estimated-hours'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'actualHours',
+                      label: 'Actual Hours',
+                      type: 'text',
+                      placeholder: '0',
+                      register: form.register('actualHours'),
+                      testId: 'input-actual-hours'
+                    })
+                  ]
+                }
+              ]}
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+              form={form}
+              onSubmit={onSubmit}
+              actionButtons={[
+                {
+                  key: 'cancel',
+                  label: 'Cancel',
+                  icon: <ArrowLeft size={14} />,
+                  onClick: () => setIsDialogOpen(false),
+                  variant: 'outline',
+                  testId: 'button-cancel'
+                },
+                {
+                  key: 'save',
+                  label: editingWorkOrder ? 'Update Work Order' : 'Create Work Order',
+                  icon: <Save size={14} />,
+                  onClick: form.handleSubmit(onSubmit),
+                  variant: 'default',
+                  testId: 'button-save'
+                }
+              ]}
+            />
                     id="orderNumber"
                     {...form.register("orderNumber")}
                     placeholder="WO-2024-0001"

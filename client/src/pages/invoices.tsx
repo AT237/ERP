@@ -11,20 +11,17 @@ import {
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
 } from "@/components/ui/dialog";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
 import { SelectWithAdd } from "@/components/ui/select-with-add";
 import { QuickAddCustomer } from "@/components/quick-add-forms";
-import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInvoiceSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, Receipt, Search, Calendar, DollarSign } from "lucide-react";
+import { Plus, Edit, Trash2, Receipt, Search, Calendar, DollarSign, Save, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LayoutForm2, createFieldRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
 import type { Invoice, InsertInvoice, Customer } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -34,6 +31,7 @@ const formSchema = insertInvoiceSchema.extend({
   taxAmount: z.string().optional(),
   totalAmount: z.string().min(1, "Total amount is required"),
   paidAmount: z.string().optional(),
+  dueDate: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -42,6 +40,7 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+  const [activeSection, setActiveSection] = useState('general');
   const { toast } = useToast();
 
   const { data: invoices, isLoading } = useQuery<Invoice[]>({
@@ -265,172 +264,155 @@ export default function Invoices() {
               </DialogDescription>
             </DialogHeader>
             
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="invoiceNumber">Invoice Number *</Label>
-                  <Input
-                    id="invoiceNumber"
-                    {...form.register("invoiceNumber")}
-                    placeholder="INV-2024-0001"
-                    data-testid="input-invoice-number"
-                  />
-                  {form.formState.errors.invoiceNumber && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.invoiceNumber.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="customerId">Customer *</Label>
-                  <SelectWithAdd
-                    value={form.watch("customerId")}
-                    onValueChange={(value) => form.setValue("customerId", value)}
-                    placeholder="Select customer"
-                    addFormTitle="Add New Customer"
-                    testId="select-customer"
-                    addFormContent={
-                      <QuickAddCustomer 
-                        onSuccess={(customerId) => {
-                          form.setValue("customerId", customerId);
-                        }}
-                      />
-                    }
-                  >
-                    {customers?.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectWithAdd>
-                  {form.formState.errors.customerId && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.customerId.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select 
-                    value={form.watch("status")} 
-                    onValueChange={(value) => form.setValue("status", value)}
-                  >
-                    <SelectTrigger data-testid="select-status">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="overdue">Overdue</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="dueDate">Due Date</Label>
-                  <Input
-                    id="dueDate"
-                    type="date"
-                    {...form.register("dueDate")}
-                    data-testid="input-due-date"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-4 gap-4">
-                <div>
-                  <Label htmlFor="subtotal">Subtotal *</Label>
-                  <Input
-                    id="subtotal"
-                    {...form.register("subtotal")}
-                    placeholder="0.00"
-                    type="number"
-                    step="0.01"
-                    data-testid="input-subtotal"
-                  />
-                  {form.formState.errors.subtotal && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.subtotal.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="taxAmount">Tax Amount</Label>
-                  <Input
-                    id="taxAmount"
-                    {...form.register("taxAmount")}
-                    placeholder="0.00"
-                    type="number"
-                    step="0.01"
-                    data-testid="input-tax-amount"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="totalAmount">Total Amount *</Label>
-                  <Input
-                    id="totalAmount"
-                    {...form.register("totalAmount")}
-                    placeholder="0.00"
-                    type="number"
-                    step="0.01"
-                    data-testid="input-total-amount"
-                  />
-                  {form.formState.errors.totalAmount && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.totalAmount.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="paidAmount">Paid Amount</Label>
-                  <Input
-                    id="paidAmount"
-                    {...form.register("paidAmount")}
-                    placeholder="0.00"
-                    type="number"
-                    step="0.01"
-                    data-testid="input-paid-amount"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  {...form.register("notes")}
-                  placeholder="Additional notes..."
-                  rows={3}
-                  data-testid="textarea-notes"
-                />
-              </div>
-              
-              <div className="flex space-x-3">
-                <Button 
-                  type="submit" 
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  data-testid="button-save-invoice"
-                >
-                  {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : "Save Invoice"}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                  data-testid="button-cancel"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
+            <LayoutForm2
+              sections={[
+                {
+                  id: 'general',
+                  label: 'Invoice Details',
+                  rows: [
+                    createSectionHeaderRow<FormData>('Basic Information'),
+                    createFieldRow<FormData>({
+                      key: 'invoiceNumber',
+                      label: 'Invoice Number',
+                      type: 'text',
+                      placeholder: 'INV-2024-0001',
+                      register: form.register('invoiceNumber'),
+                      validation: { 
+                        isRequired: true,
+                        error: form.formState.errors.invoiceNumber?.message 
+                      },
+                      testId: 'input-invoice-number'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'customerId',
+                      label: 'Customer',
+                      type: 'custom',
+                      validation: { 
+                        isRequired: true,
+                        error: form.formState.errors.customerId?.message 
+                      },
+                      customComponent: (
+                        <SelectWithAdd
+                          value={form.watch("customerId")}
+                          onValueChange={(value) => form.setValue("customerId", value)}
+                          placeholder="Select customer"
+                          addFormTitle="Add New Customer"
+                          testId="select-customer"
+                          addFormContent={
+                            <QuickAddCustomer 
+                              onSuccess={(customerId) => {
+                                form.setValue("customerId", customerId);
+                              }}
+                            />
+                          }
+                        >
+                          {customers?.map((customer) => (
+                            <div key={customer.id} value={customer.id}>
+                              {customer.name}
+                            </div>
+                          ))}
+                        </SelectWithAdd>
+                      )
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'status',
+                      label: 'Status',
+                      type: 'select',
+                      options: [
+                        { value: 'pending', label: 'Pending' },
+                        { value: 'paid', label: 'Paid' },
+                        { value: 'overdue', label: 'Overdue' },
+                        { value: 'cancelled', label: 'Cancelled' }
+                      ],
+                      setValue: (value) => form.setValue('status', value),
+                      watch: () => form.watch('status'),
+                      testId: 'select-status'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'dueDate',
+                      label: 'Due Date',
+                      type: 'text',
+                      placeholder: 'YYYY-MM-DD',
+                      register: form.register('dueDate'),
+                      testId: 'input-due-date'
+                    }),
+                    
+                    createSectionHeaderRow<FormData>('Financial Information'),
+                    createFieldRow<FormData>({
+                      key: 'subtotal',
+                      label: 'Subtotal',
+                      type: 'text',
+                      placeholder: '0.00',
+                      register: form.register('subtotal'),
+                      validation: { 
+                        isRequired: true,
+                        error: form.formState.errors.subtotal?.message 
+                      },
+                      testId: 'input-subtotal'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'taxAmount',
+                      label: 'Tax Amount',
+                      type: 'text',
+                      placeholder: '0.00',
+                      register: form.register('taxAmount'),
+                      testId: 'input-tax-amount'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'totalAmount',
+                      label: 'Total Amount',
+                      type: 'text',
+                      placeholder: '0.00',
+                      register: form.register('totalAmount'),
+                      validation: { 
+                        isRequired: true,
+                        error: form.formState.errors.totalAmount?.message 
+                      },
+                      testId: 'input-total-amount'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'paidAmount',
+                      label: 'Paid Amount',
+                      type: 'text',
+                      placeholder: '0.00',
+                      register: form.register('paidAmount'),
+                      testId: 'input-paid-amount'
+                    }),
+                    createFieldRow<FormData>({
+                      key: 'notes',
+                      label: 'Notes',
+                      type: 'textarea',
+                      rows: 3,
+                      placeholder: 'Additional notes...',
+                      register: form.register('notes'),
+                      testId: 'textarea-notes'
+                    })
+                  ]
+                }
+              ]}
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+              form={form}
+              onSubmit={onSubmit}
+              actionButtons={[
+                {
+                  key: 'cancel',
+                  label: 'Cancel',
+                  icon: <ArrowLeft size={14} />,
+                  onClick: () => setIsDialogOpen(false),
+                  variant: 'outline',
+                  testId: 'button-cancel'
+                },
+                {
+                  key: 'save',
+                  label: editingInvoice ? 'Update Invoice' : 'Create Invoice',
+                  icon: <Save size={14} />,
+                  onClick: form.handleSubmit(onSubmit),
+                  variant: 'default',
+                  testId: 'button-save'
+                }
+              ]}
+            />
           </DialogContent>
         </Dialog>
       </div>

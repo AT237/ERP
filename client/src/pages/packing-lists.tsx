@@ -28,6 +28,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { PackingList, InsertPackingList, Customer, Invoice, Project } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
+import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
+import type { ActionButton } from '@/components/layouts/BaseFormLayout';
 
 const formSchema = insertPackingListSchema.extend({
   weight: z.string().optional(),
@@ -39,6 +41,7 @@ export default function PackingLists() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPackingList, setEditingPackingList] = useState<PackingList | null>(null);
+  const [activeSection, setActiveSection] = useState("basic");
   const { toast } = useToast();
 
   const { data: packingLists, isLoading } = useQuery<PackingList[]>({
@@ -187,6 +190,247 @@ export default function PackingLists() {
     setIsDialogOpen(true);
   };
 
+  // Custom select components
+  const renderCustomerSelect = () => (
+    <SelectWithAdd
+      value={form.watch("customerId")}
+      onValueChange={(value) => form.setValue("customerId", value)}
+      placeholder="Select customer"
+      addFormTitle="Add New Customer"
+      testId="select-customer"
+      addFormContent={
+        <QuickAddCustomer 
+          onSuccess={(customerId) => {
+            form.setValue("customerId", customerId);
+          }}
+        />
+      }
+    >
+      {customers?.map((customer) => (
+        <SelectItem key={customer.id} value={customer.id}>
+          {customer.name}
+        </SelectItem>
+      ))}
+    </SelectWithAdd>
+  );
+
+  const renderInvoiceSelect = () => (
+    <Select 
+      value={form.watch("invoiceId")} 
+      onValueChange={(value) => form.setValue("invoiceId", value)}
+    >
+      <SelectTrigger data-testid="select-invoice">
+        <SelectValue placeholder="Select invoice" />
+      </SelectTrigger>
+      <SelectContent>
+        {invoices?.map((invoice) => (
+          <SelectItem key={invoice.id} value={invoice.id}>
+            {invoice.invoiceNumber}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  const renderProjectSelect = () => (
+    <SelectWithAdd
+      value={form.watch("projectId")}
+      onValueChange={(value) => form.setValue("projectId", value)}
+      placeholder="Select project"
+      addFormTitle="Add New Project"
+      testId="select-project"
+      addFormContent={
+        <QuickAddProject 
+          onSuccess={(projectId) => {
+            form.setValue("projectId", projectId);
+          }}
+        />
+      }
+    >
+      {projects?.map((project) => (
+        <SelectItem key={project.id} value={project.id}>
+          {project.name}
+        </SelectItem>
+      ))}
+    </SelectWithAdd>
+  );
+
+  // Create form sections
+  const createFormSections = (): FormSection2<FormData>[] => [
+    {
+      id: "basic",
+      label: "Basic Info",
+      icon: <Box className="h-4 w-4" />,
+      rows: [
+        createFieldsRow([
+          {
+            key: "packingNumber",
+            label: "Packing Number",
+            type: "text",
+            placeholder: "PL-2024-0001",
+            register: form.register("packingNumber"),
+            validation: {
+              error: form.formState.errors.packingNumber?.message,
+              isRequired: true
+            },
+            testId: "input-packing-number",
+            width: "50%"
+          } as FormField2<FormData>,
+          {
+            key: "status",
+            label: "Status",
+            type: "select",
+            options: [
+              { value: "pending", label: "Pending" },
+              { value: "packed", label: "Packed" },
+              { value: "shipped", label: "Shipped" },
+              { value: "delivered", label: "Delivered" }
+            ],
+            setValue: (value) => form.setValue("status", value),
+            watch: () => form.watch("status"),
+            testId: "select-status",
+            width: "50%"
+          } as FormField2<FormData>
+        ]),
+        createFieldRow({
+          key: "customerId",
+          label: "Customer",
+          type: "custom",
+          customComponent: renderCustomerSelect(),
+          validation: {
+            error: form.formState.errors.customerId?.message,
+            isRequired: true
+          },
+          testId: "select-customer"
+        } as FormField2<FormData>)
+      ]
+    },
+    {
+      id: "relations",
+      label: "Relations",
+      icon: <Package className="h-4 w-4" />,
+      rows: [
+        createFieldsRow([
+          {
+            key: "invoiceId",
+            label: "Invoice (Optional)",
+            type: "custom",
+            customComponent: renderInvoiceSelect(),
+            testId: "select-invoice",
+            width: "50%"
+          } as FormField2<FormData>,
+          {
+            key: "projectId",
+            label: "Project (Optional)",
+            type: "custom",
+            customComponent: renderProjectSelect(),
+            testId: "select-project",
+            width: "50%"
+          } as FormField2<FormData>
+        ])
+      ]
+    },
+    {
+      id: "shipping",
+      label: "Shipping",
+      icon: <Truck className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
+          key: "shippingAddress",
+          label: "Shipping Address",
+          type: "textarea",
+          placeholder: "Enter shipping address...",
+          register: form.register("shippingAddress"),
+          testId: "textarea-shipping-address",
+          rows: 3
+        } as FormField2<FormData>),
+        createFieldsRow([
+          {
+            key: "shippingMethod",
+            label: "Shipping Method",
+            type: "select",
+            options: [
+              { value: "standard", label: "Standard Shipping" },
+              { value: "express", label: "Express Shipping" },
+              { value: "overnight", label: "Overnight" },
+              { value: "freight", label: "Freight" },
+              { value: "pickup", label: "Customer Pickup" }
+            ],
+            setValue: (value) => form.setValue("shippingMethod", value),
+            watch: () => form.watch("shippingMethod"),
+            testId: "select-shipping-method",
+            width: "50%"
+          } as FormField2<FormData>,
+          {
+            key: "trackingNumber",
+            label: "Tracking Number",
+            type: "text",
+            placeholder: "Tracking number",
+            register: form.register("trackingNumber"),
+            testId: "input-tracking-number",
+            width: "50%"
+          } as FormField2<FormData>
+        ])
+      ]
+    },
+    {
+      id: "details",
+      label: "Details",
+      icon: <span className="text-xs font-bold">⚙</span>,
+      rows: [
+        createFieldsRow([
+          {
+            key: "weight",
+            label: "Weight (kg)",
+            type: "number",
+            placeholder: "0.00",
+            register: form.register("weight"),
+            testId: "input-weight",
+            width: "50%"
+          } as FormField2<FormData>,
+          {
+            key: "dimensions",
+            label: "Dimensions",
+            type: "text",
+            placeholder: "L x W x H",
+            register: form.register("dimensions"),
+            testId: "input-dimensions",
+            width: "50%"
+          } as FormField2<FormData>
+        ]),
+        createFieldRow({
+          key: "notes",
+          label: "Notes",
+          type: "textarea",
+          placeholder: "Additional notes...",
+          register: form.register("notes"),
+          testId: "textarea-notes",
+          rows: 3
+        } as FormField2<FormData>)
+      ]
+    }
+  ];
+
+  // Create action buttons
+  const createActionButtons = (): ActionButton[] => [
+    {
+      label: "Cancel",
+      variant: "outline",
+      onClick: () => {
+        setIsDialogOpen(false);
+        form.reset();
+        setEditingPackingList(null);
+      },
+      disabled: createMutation.isPending || updateMutation.isPending
+    },
+    {
+      label: (createMutation.isPending || updateMutation.isPending) ? "Saving..." : "Save Packing List",
+      variant: "default",
+      onClick: () => form.handleSubmit(onSubmit)(),
+      disabled: createMutation.isPending || updateMutation.isPending
+    }
+  ];
+
   const filteredPackingLists = packingLists?.filter(list =>
     list.packingNumber.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -269,211 +513,15 @@ export default function PackingLists() {
               </DialogDescription>
             </DialogHeader>
             
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="packingNumber">Packing Number *</Label>
-                  <Input
-                    id="packingNumber"
-                    {...form.register("packingNumber")}
-                    placeholder="PL-2024-0001"
-                    data-testid="input-packing-number"
-                  />
-                  {form.formState.errors.packingNumber && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.packingNumber.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="customerId">Customer *</Label>
-                  <SelectWithAdd
-                    value={form.watch("customerId")}
-                    onValueChange={(value) => form.setValue("customerId", value)}
-                    placeholder="Select customer"
-                    addFormTitle="Add New Customer"
-                    testId="select-customer"
-                    addFormContent={
-                      <QuickAddCustomer 
-                        onSuccess={(customerId) => {
-                          form.setValue("customerId", customerId);
-                        }}
-                      />
-                    }
-                  >
-                    {customers?.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectWithAdd>
-                  {form.formState.errors.customerId && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.customerId.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="invoiceId">Invoice (Optional)</Label>
-                  <Select 
-                    value={form.watch("invoiceId")} 
-                    onValueChange={(value) => form.setValue("invoiceId", value)}
-                  >
-                    <SelectTrigger data-testid="select-invoice">
-                      <SelectValue placeholder="Select invoice" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {invoices?.map((invoice) => (
-                        <SelectItem key={invoice.id} value={invoice.id}>
-                          {invoice.invoiceNumber}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="projectId">Project (Optional)</Label>
-                  <SelectWithAdd
-                    value={form.watch("projectId")}
-                    onValueChange={(value) => form.setValue("projectId", value)}
-                    placeholder="Select project"
-                    addFormTitle="Add New Project"
-                    testId="select-project"
-                    addFormContent={
-                      <QuickAddProject 
-                        onSuccess={(projectId) => {
-                          form.setValue("projectId", projectId);
-                        }}
-                      />
-                    }
-                  >
-                    {projects?.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectWithAdd>
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select 
-                  value={form.watch("status")} 
-                  onValueChange={(value) => form.setValue("status", value)}
-                >
-                  <SelectTrigger data-testid="select-status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="packed">Packed</SelectItem>
-                    <SelectItem value="shipped">Shipped</SelectItem>
-                    <SelectItem value="delivered">Delivered</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="shippingAddress">Shipping Address</Label>
-                <Textarea
-                  id="shippingAddress"
-                  {...form.register("shippingAddress")}
-                  placeholder="Enter shipping address..."
-                  rows={3}
-                  data-testid="textarea-shipping-address"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="shippingMethod">Shipping Method</Label>
-                  <Select 
-                    value={form.watch("shippingMethod")} 
-                    onValueChange={(value) => form.setValue("shippingMethod", value)}
-                  >
-                    <SelectTrigger data-testid="select-shipping-method">
-                      <SelectValue placeholder="Select method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="standard">Standard Shipping</SelectItem>
-                      <SelectItem value="express">Express Shipping</SelectItem>
-                      <SelectItem value="overnight">Overnight</SelectItem>
-                      <SelectItem value="freight">Freight</SelectItem>
-                      <SelectItem value="pickup">Customer Pickup</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="trackingNumber">Tracking Number</Label>
-                  <Input
-                    id="trackingNumber"
-                    {...form.register("trackingNumber")}
-                    placeholder="Tracking number"
-                    data-testid="input-tracking-number"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="weight">Weight (kg)</Label>
-                  <Input
-                    id="weight"
-                    {...form.register("weight")}
-                    placeholder="0.00"
-                    type="number"
-                    step="0.01"
-                    data-testid="input-weight"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="dimensions">Dimensions</Label>
-                  <Input
-                    id="dimensions"
-                    {...form.register("dimensions")}
-                    placeholder="L x W x H"
-                    data-testid="input-dimensions"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  {...form.register("notes")}
-                  placeholder="Additional notes..."
-                  rows={3}
-                  data-testid="textarea-notes"
-                />
-              </div>
-              
-              <div className="flex space-x-3">
-                <Button 
-                  type="submit" 
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  data-testid="button-save-packing-list"
-                >
-                  {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : "Save Packing List"}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                  data-testid="button-cancel"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
+            <LayoutForm2<FormData>
+              sections={createFormSections()}
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+              form={form}
+              onSubmit={onSubmit}
+              actionButtons={createActionButtons()}
+              isLoading={createMutation.isPending || updateMutation.isPending}
+            />
           </DialogContent>
         </Dialog>
       </div>

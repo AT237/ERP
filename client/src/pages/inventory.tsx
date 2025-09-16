@@ -20,6 +20,8 @@ import { z } from "zod";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import imageCompression from 'browser-image-compression';
+import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
+import type { ActionButton } from '@/components/layouts/BaseFormLayout';
 
 const inventoryFormSchema = insertInventoryItemSchema.extend({
   unitPrice: z.string().min(1, "Prijs is verplicht"),
@@ -47,6 +49,7 @@ export default function Inventory() {
   const [showDialog, setShowDialog] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>("");
+  const [activeSection, setActiveSection] = useState("basic");
   const { toast } = useToast();
 
   // Data table state  
@@ -278,270 +281,294 @@ export default function Inventory() {
     }));
   };
 
-  // Form content
-  const renderFormContent = () => (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      {/* Basic Information */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-orange-600">Basisinformatie</h3>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Naam *</Label>
-            <Input
-              id="name"
-              {...form.register("name")}
-              placeholder="Artikelnaam"
-              data-testid="input-inventory-name"
-            />
-            {form.formState.errors.name && (
-              <p className="text-sm text-red-600">{form.formState.errors.name.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="sku">SKU *</Label>
-            <Input
-              id="sku"
-              {...form.register("sku")}
-              placeholder="SKU/Artikelcode"
-              data-testid="input-inventory-sku"
-            />
-            {form.formState.errors.sku && (
-              <p className="text-sm text-red-600">{form.formState.errors.sku.message}</p>
-            )}
-          </div>
-        </div>
-
+  // Image upload component
+  const renderImageUpload = () => (
+    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+      {previewImage ? (
         <div className="space-y-2">
-          <Label htmlFor="description">Beschrijving</Label>
-          <Textarea
-            id="description"
-            {...form.register("description")}
-            placeholder="Beschrijving van het artikel"
-            data-testid="input-inventory-description"
+          <img 
+            src={previewImage} 
+            alt="Preview" 
+            className="mx-auto h-32 w-32 object-cover rounded-lg"
           />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setPreviewImage("");
+              form.setValue("image", "");
+            }}
+          >
+            Verwijderen
+          </Button>
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="category">Categorie</Label>
-            <Select 
-              onValueChange={(value) => form.setValue("category", value)}
-              value={form.watch("category") || "General"}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecteer categorie" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="General">Algemeen</SelectItem>
-                <SelectItem value="Electronics">Elektronica</SelectItem>
-                <SelectItem value="Hardware">Hardware</SelectItem>
-                <SelectItem value="Software">Software</SelectItem>
-                <SelectItem value="Services">Diensten</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="unit">Eenheid</Label>
-            <Select 
-              onValueChange={(value) => form.setValue("unit", value)}
-              value={form.watch("unit") || "pcs"}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pcs">Stuks</SelectItem>
-                <SelectItem value="kg">Kilogram</SelectItem>
-                <SelectItem value="m">Meter</SelectItem>
-                <SelectItem value="l">Liter</SelectItem>
-                <SelectItem value="box">Doos</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* Image Upload */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-orange-600">Afbeelding</h3>
-        
+      ) : (
         <div className="space-y-2">
-          <Label htmlFor="image">Productafbeelding</Label>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            {previewImage ? (
+          <div className="text-gray-500 dark:text-gray-400">
+            Sleep een afbeelding hierheen of klik om te selecteren
+          </div>
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleImageUpload(file);
+            }}
+            disabled={uploadingImage}
+            className="cursor-pointer"
+            data-testid="input-inventory-image"
+          />
+          {uploadingImage && <div className="text-sm text-orange-600">Comprimeren...</div>}
+        </div>
+      )}
+    </div>
+  );
+
+  // Composite info component
+  const renderCompositeInfo = () => (
+    form.watch("isComposite") ? (
+      <div className="p-4 bg-orange-50 dark:bg-orange-950 rounded-lg mt-2">
+        <p className="text-sm text-orange-700 dark:text-orange-300">
+          Componenten kunnen worden toegevoegd na het aanmaken van dit artikel.
+        </p>
+      </div>
+    ) : null
+  );
+
+  // Create form sections
+  const createFormSections = (): FormSection2<InventoryFormData>[] => [
+    {
+      id: "basic",
+      label: "Basisinformatie",
+      icon: <Package className="h-4 w-4" />,
+      rows: [
+        createFieldsRow([
+          {
+            key: "name",
+            label: "Naam",
+            type: "text",
+            placeholder: "Artikelnaam",
+            register: form.register("name"),
+            validation: {
+              error: form.formState.errors.name?.message,
+              isRequired: true
+            },
+            testId: "input-inventory-name",
+            width: "50%"
+          } as FormField2<InventoryFormData>,
+          {
+            key: "sku",
+            label: "SKU",
+            type: "text",
+            placeholder: "SKU/Artikelcode",
+            register: form.register("sku"),
+            validation: {
+              error: form.formState.errors.sku?.message,
+              isRequired: true
+            },
+            testId: "input-inventory-sku",
+            width: "50%"
+          } as FormField2<InventoryFormData>
+        ]),
+        createFieldRow({
+          key: "description",
+          label: "Beschrijving",
+          type: "textarea",
+          placeholder: "Beschrijving van het artikel",
+          register: form.register("description"),
+          testId: "input-inventory-description",
+          rows: 3
+        } as FormField2<InventoryFormData>),
+        createFieldsRow([
+          {
+            key: "category",
+            label: "Categorie",
+            type: "select",
+            options: [
+              { value: "General", label: "Algemeen" },
+              { value: "Electronics", label: "Elektronica" },
+              { value: "Hardware", label: "Hardware" },
+              { value: "Software", label: "Software" },
+              { value: "Services", label: "Diensten" }
+            ],
+            setValue: (value) => form.setValue("category", value),
+            watch: () => form.watch("category"),
+            testId: "select-inventory-category",
+            width: "50%"
+          } as FormField2<InventoryFormData>,
+          {
+            key: "unit",
+            label: "Eenheid",
+            type: "select",
+            options: [
+              { value: "pcs", label: "Stuks" },
+              { value: "kg", label: "Kilogram" },
+              { value: "m", label: "Meter" },
+              { value: "l", label: "Liter" },
+              { value: "box", label: "Doos" }
+            ],
+            setValue: (value) => form.setValue("unit", value),
+            watch: () => form.watch("unit"),
+            testId: "select-inventory-unit",
+            width: "50%"
+          } as FormField2<InventoryFormData>
+        ])
+      ]
+    },
+    {
+      id: "image",
+      label: "Afbeelding",
+      icon: <Image className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
+          key: "image",
+          label: "Productafbeelding",
+          type: "custom",
+          customComponent: renderImageUpload(),
+          testId: "custom-inventory-image"
+        } as FormField2<InventoryFormData>)
+      ]
+    },
+    {
+      id: "pricing",
+      label: "Prijzen",
+      icon: <span className="text-xs font-bold">€</span>,
+      rows: [
+        createFieldsRow([
+          {
+            key: "costPrice",
+            label: "Kostprijs (€)",
+            type: "number",
+            placeholder: "0.00",
+            register: form.register("costPrice"),
+            validation: {
+              error: form.formState.errors.costPrice?.message,
+              isRequired: true
+            },
+            testId: "input-inventory-costPrice",
+            width: "33%"
+          } as FormField2<InventoryFormData>,
+          {
+            key: "unitPrice",
+            label: "Verkoopprijs (€)",
+            type: "number",
+            placeholder: "0.00",
+            register: form.register("unitPrice"),
+            validation: {
+              error: form.formState.errors.unitPrice?.message,
+              isRequired: true
+            },
+            testId: "input-inventory-unitPrice",
+            width: "33%"
+          } as FormField2<InventoryFormData>,
+          {
+            key: "margin",
+            label: "Marge (%)",
+            type: "text",
+            placeholder: "0.00",
+            register: form.register("margin"),
+            disabled: true,
+            className: "bg-gray-50 dark:bg-gray-800",
+            testId: "input-inventory-margin",
+            width: "33%"
+          } as FormField2<InventoryFormData>
+        ])
+      ]
+    },
+    {
+      id: "stock",
+      label: "Voorraad",
+      icon: <span className="text-xs font-bold">#</span>,
+      rows: [
+        createFieldsRow([
+          {
+            key: "currentStock",
+            label: "Huidige voorraad",
+            type: "number",
+            placeholder: "0",
+            register: form.register("currentStock", { valueAsNumber: true }),
+            testId: "input-inventory-currentStock",
+            width: "50%"
+          } as FormField2<InventoryFormData>,
+          {
+            key: "minimumStock",
+            label: "Minimum voorraad",
+            type: "number",
+            placeholder: "0",
+            register: form.register("minimumStock", { valueAsNumber: true }),
+            testId: "input-inventory-minimumStock",
+            width: "50%"
+          } as FormField2<InventoryFormData>
+        ])
+      ]
+    },
+    {
+      id: "composite",
+      label: "Samengesteld",
+      icon: <span className="text-xs font-bold">⚙</span>,
+      rows: [
+        {
+          type: "custom",
+          customContent: (
+            <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
+              <Label className="text-sm font-medium text-right pt-2">
+                Samengesteld artikel
+              </Label>
               <div className="space-y-2">
-                <img 
-                  src={previewImage} 
-                  alt="Preview" 
-                  className="mx-auto h-32 w-32 object-cover rounded-lg"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setPreviewImage("");
-                    form.setValue("image", "");
-                  }}
-                >
-                  Verwijderen
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="text-gray-500">
-                  Sleep een afbeelding hierheen of klik om te selecteren
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isComposite"
+                    checked={form.watch("isComposite") || false}
+                    onCheckedChange={(checked) => form.setValue("isComposite", !!checked)}
+                    data-testid="checkbox-inventory-isComposite"
+                  />
+                  <Label htmlFor="isComposite" className="text-sm">
+                    Dit artikel bestaat uit andere artikelen
+                  </Label>
                 </div>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleImageUpload(file);
-                  }}
-                  disabled={uploadingImage}
-                  className="cursor-pointer"
-                  data-testid="input-inventory-image"
-                />
-                {uploadingImage && <div className="text-sm text-orange-600">Comprimeren...</div>}
+                {renderCompositeInfo()}
               </div>
-            )}
-          </div>
-        </div>
-      </div>
+            </div>
+          )
+        }
+      ]
+    }
+  ];
 
-      {/* Pricing */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-orange-600">Prijzen</h3>
-        
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="costPrice">Kostprijs (€) *</Label>
-            <Input
-              id="costPrice"
-              type="number"
-              step="0.01"
-              min="0"
-              {...form.register("costPrice")}
-              placeholder="0.00"
-              data-testid="input-inventory-costPrice"
-            />
-            {form.formState.errors.costPrice && (
-              <p className="text-sm text-red-600">{form.formState.errors.costPrice.message}</p>
-            )}
-          </div>
+  // Create action buttons
+  const createActionButtons = (): ActionButton[] => [
+    {
+      label: "Annuleren",
+      variant: "outline",
+      onClick: () => {
+        setShowDialog(false);
+        setPreviewImage("");
+        form.reset();
+        setEditingItem(null);
+      },
+      disabled: createMutation.isPending || updateMutation.isPending
+    },
+    {
+      label: (createMutation.isPending || updateMutation.isPending) ? "Opslaan..." : "Opslaan",
+      variant: "default",
+      onClick: () => form.handleSubmit(onSubmit)(),
+      disabled: createMutation.isPending || updateMutation.isPending,
+      className: "bg-orange-600 hover:bg-orange-700"
+    }
+  ];
 
-          <div className="space-y-2">
-            <Label htmlFor="unitPrice">Verkoopprijs (€) *</Label>
-            <Input
-              id="unitPrice"
-              type="number"
-              step="0.01"
-              min="0"
-              {...form.register("unitPrice")}
-              placeholder="0.00"
-              data-testid="input-inventory-unitPrice"
-            />
-            {form.formState.errors.unitPrice && (
-              <p className="text-sm text-red-600">{form.formState.errors.unitPrice.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="margin">Marge (%)</Label>
-            <Input
-              id="margin"
-              {...form.register("margin")}
-              placeholder="0.00"
-              readOnly
-              className="bg-gray-50"
-              data-testid="input-inventory-margin"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Stock Information */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-orange-600">Voorraad</h3>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="currentStock">Huidige voorraad</Label>
-            <Input
-              id="currentStock"
-              type="number"
-              min="0"
-              {...form.register("currentStock", { valueAsNumber: true })}
-              placeholder="0"
-              data-testid="input-inventory-currentStock"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="minimumStock">Minimum voorraad</Label>
-            <Input
-              id="minimumStock"
-              type="number"
-              min="0"
-              {...form.register("minimumStock", { valueAsNumber: true })}
-              placeholder="0"
-              data-testid="input-inventory-minimumStock"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Composite Article Option */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-orange-600">Samengesteld artikel</h3>
-        
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="isComposite"
-            checked={form.watch("isComposite") || false}
-            onCheckedChange={(checked) => form.setValue("isComposite", !!checked)}
-            data-testid="checkbox-inventory-isComposite"
-          />
-          <Label htmlFor="isComposite">
-            Dit artikel bestaat uit andere artikelen
-          </Label>
-        </div>
-        
-        {form.watch("isComposite") && (
-          <div className="p-4 bg-orange-50 rounded-lg">
-            <p className="text-sm text-orange-700">
-              Componenten kunnen worden toegevoegd na het aanmaken van dit artikel.
-            </p>
-          </div>
-        )}
-      </div>
-
-      <div className="flex gap-2 justify-end pt-4 border-t">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            setShowDialog(false);
-            setPreviewImage("");
-            form.reset();
-          }}
-          disabled={createMutation.isPending || updateMutation.isPending}
-        >
-          Annuleren
-        </Button>
-        <Button
-          type="submit"
-          disabled={createMutation.isPending || updateMutation.isPending}
-          className="bg-orange-600 hover:bg-orange-700"
-        >
-          {(createMutation.isPending || updateMutation.isPending) ? "Opslaan..." : "Opslaan"}
-        </Button>
-      </div>
-    </form>
+  // Form content using LayoutForm2
+  const renderFormContent = () => (
+    <LayoutForm2<InventoryFormData>
+      sections={createFormSections()}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      form={form}
+      onSubmit={onSubmit}
+      actionButtons={createActionButtons()}
+      isLoading={createMutation.isPending || updateMutation.isPending}
+    />
   );
 
   return (

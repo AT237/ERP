@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Search, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Popover, PopoverContent, PopoverTrigger 
@@ -21,6 +21,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import type { Address } from "@shared/schema";
+import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
+import type { ActionButton } from '@/components/layouts/BaseFormLayout';
 
 const addressFormSchema = insertAddressSchema.extend({
   street: z.string().min(1, "Street is required"),
@@ -50,6 +52,7 @@ export function AddressSelectWithAdd({
   const [open, setOpen] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSection, setActiveSection] = useState("address");
   const { toast } = useToast();
 
   // Load addresses with search
@@ -104,6 +107,97 @@ export function AddressSelectWithAdd({
   const handleCreateAddress = (data: AddressFormData) => {
     createAddressMutation.mutate(data);
   };
+
+  // Create form sections for address
+  const createAddressFormSections = (): FormSection2<AddressFormData>[] => [
+    {
+      id: "address",
+      label: "Address Details",
+      icon: <MapPin className="h-4 w-4" />,
+      rows: [
+        createFieldsRow([
+          {
+            key: "street",
+            label: "Street",
+            type: "text",
+            register: addressForm.register("street"),
+            validation: {
+              error: addressForm.formState.errors.street?.message,
+              isRequired: true
+            },
+            testId: "input-address-street",
+            width: "67%"
+          } as FormField2<AddressFormData>,
+          {
+            key: "houseNumber",
+            label: "House No.",
+            type: "text",
+            register: addressForm.register("houseNumber"),
+            validation: {
+              error: addressForm.formState.errors.houseNumber?.message,
+              isRequired: true
+            },
+            testId: "input-address-house-number",
+            width: "33%"
+          } as FormField2<AddressFormData>
+        ]),
+        createFieldsRow([
+          {
+            key: "postalCode",
+            label: "Postal Code",
+            type: "text",
+            register: addressForm.register("postalCode"),
+            validation: {
+              error: addressForm.formState.errors.postalCode?.message,
+              isRequired: true
+            },
+            testId: "input-address-postal-code",
+            width: "33%"
+          } as FormField2<AddressFormData>,
+          {
+            key: "city",
+            label: "City",
+            type: "text",
+            register: addressForm.register("city"),
+            validation: {
+              error: addressForm.formState.errors.city?.message,
+              isRequired: true
+            },
+            testId: "input-address-city",
+            width: "33%"
+          } as FormField2<AddressFormData>,
+          {
+            key: "country",
+            label: "Country",
+            type: "text",
+            register: addressForm.register("country"),
+            validation: {
+              error: addressForm.formState.errors.country?.message,
+              isRequired: true
+            },
+            testId: "input-address-country",
+            width: "33%"
+          } as FormField2<AddressFormData>
+        ])
+      ]
+    }
+  ];
+
+  // Create action buttons
+  const createActionButtons = (): ActionButton[] => [
+    {
+      label: "Cancel",
+      variant: "outline",
+      onClick: () => setShowAddDialog(false),
+      disabled: createAddressMutation.isPending
+    },
+    {
+      label: createAddressMutation.isPending ? "Creating..." : "Create Address",
+      variant: "default",
+      onClick: () => addressForm.handleSubmit(handleCreateAddress)(),
+      disabled: createAddressMutation.isPending
+    }
+  ];
 
   const formatAddress = (address: Address) => {
     return `${address.street} ${address.houseNumber}, ${address.postalCode} ${address.city}, ${address.country}`;
@@ -190,90 +284,15 @@ export function AddressSelectWithAdd({
             <DialogTitle>Add New Address</DialogTitle>
           </DialogHeader>
           
-          <form onSubmit={addressForm.handleSubmit(handleCreateAddress)} className="space-y-4">
-            {/* Street and House Number */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="street">Street *</Label>
-                <Input
-                  id="street"
-                  {...addressForm.register("street")}
-                  data-testid="input-address-street"
-                />
-                {addressForm.formState.errors.street && (
-                  <p className="text-sm text-red-600">{addressForm.formState.errors.street.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="houseNumber">House No. *</Label>
-                <Input
-                  id="houseNumber"
-                  {...addressForm.register("houseNumber")}
-                  data-testid="input-address-house-number"
-                />
-                {addressForm.formState.errors.houseNumber && (
-                  <p className="text-sm text-red-600">{addressForm.formState.errors.houseNumber.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Postal Code, City, Country */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="postalCode">Postal Code *</Label>
-                <Input
-                  id="postalCode"
-                  {...addressForm.register("postalCode")}
-                  data-testid="input-address-postal-code"
-                />
-                {addressForm.formState.errors.postalCode && (
-                  <p className="text-sm text-red-600">{addressForm.formState.errors.postalCode.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">City *</Label>
-                <Input
-                  id="city"
-                  {...addressForm.register("city")}
-                  data-testid="input-address-city"
-                />
-                {addressForm.formState.errors.city && (
-                  <p className="text-sm text-red-600">{addressForm.formState.errors.city.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="country">Country *</Label>
-                <Input
-                  id="country"
-                  {...addressForm.register("country")}
-                  data-testid="input-address-country"
-                />
-                {addressForm.formState.errors.country && (
-                  <p className="text-sm text-red-600">{addressForm.formState.errors.country.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setShowAddDialog(false)}
-                data-testid="button-cancel-address"
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={createAddressMutation.isPending}
-                data-testid="button-save-address"
-              >
-                {createAddressMutation.isPending ? "Creating..." : "Create Address"}
-              </Button>
-            </div>
-          </form>
+          <LayoutForm2<AddressFormData>
+            sections={createAddressFormSections()}
+            activeSection={activeSection}
+            onSectionChange={setActiveSection}
+            form={addressForm}
+            onSubmit={handleCreateAddress}
+            actionButtons={createActionButtons()}
+            isLoading={createAddressMutation.isPending}
+          />
         </DialogContent>
       </Dialog>
     </>

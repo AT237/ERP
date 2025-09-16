@@ -5,19 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSalesOrderSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Save, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { LayoutForm2, createFieldRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
 import type { SalesOrder, InsertSalesOrder, Customer } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -28,14 +25,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 
 // Form schema
 const salesOrderFormSchema = insertSalesOrderSchema.extend({
@@ -135,6 +124,7 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
   const [editingSalesOrder, setEditingSalesOrder] = useState<SalesOrder | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedSalesOrder, setSelectedSalesOrder] = useState<SalesOrder | null>(null);
+  const [activeSection, setActiveSection] = useState('general');
   const { toast } = useToast();
 
   // Data table state
@@ -405,135 +395,139 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
             </DialogDescription>
           </DialogHeader>
           
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="orderNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Order Number</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Auto-generated"
-                          disabled
-                          data-testid="input-order-number"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="customerId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Customer *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-customer">
-                            <SelectValue placeholder="Select customer" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {customers?.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id}>
-                              {customer.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+          <LayoutForm2
+            sections={[
+              {
+                id: 'general',
+                label: 'Sales Order Details',
+                rows: [
+                  createSectionHeaderRow<SalesOrderFormData>('Basic Information'),
+                  createFieldRow<SalesOrderFormData>({
+                    key: 'orderNumber',
+                    label: 'Order Number',
+                    type: 'text',
+                    placeholder: 'Auto-generated',
+                    disabled: true,
+                    register: form.register('orderNumber'),
+                    testId: 'input-order-number'
+                  }),
+                  createFieldRow<SalesOrderFormData>({
+                    key: 'customerId',
+                    label: 'Customer',
+                    type: 'select',
+                    options: customers?.map(customer => ({
+                      value: customer.id,
+                      label: customer.name
+                    })) || [],
+                    setValue: (value) => form.setValue('customerId', value),
+                    watch: () => form.watch('customerId'),
+                    validation: { 
+                      isRequired: true,
+                      error: form.formState.errors.customerId?.message 
+                    },
+                    testId: 'select-customer'
+                  }),
+                  createFieldRow<SalesOrderFormData>({
+                    key: 'status',
+                    label: 'Status',
+                    type: 'select',
+                    options: [
+                      { value: 'pending', label: 'Pending' },
+                      { value: 'confirmed', label: 'Confirmed' },
+                      { value: 'processing', label: 'Processing' },
+                      { value: 'shipped', label: 'Shipped' },
+                      { value: 'completed', label: 'Completed' },
+                      { value: 'cancelled', label: 'Cancelled' }
+                    ],
+                    setValue: (value) => form.setValue('status', value),
+                    watch: () => form.watch('status'),
+                    testId: 'select-status'
+                  }),
+                  createFieldRow<SalesOrderFormData>({
+                    key: 'orderDate',
+                    label: 'Order Date',
+                    type: 'text',
+                    placeholder: 'YYYY-MM-DD',
+                    register: form.register('orderDate'),
+                    testId: 'input-order-date'
+                  }),
+                  createFieldRow<SalesOrderFormData>({
+                    key: 'expectedDeliveryDate',
+                    label: 'Expected Delivery Date',
+                    type: 'text',
+                    placeholder: 'YYYY-MM-DD',
+                    register: form.register('expectedDeliveryDate'),
+                    testId: 'input-expected-delivery-date'
+                  }),
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-status">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="confirmed">Confirmed</SelectItem>
-                          <SelectItem value="processing">Processing</SelectItem>
-                          <SelectItem value="shipped">Shipped</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="orderDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Order Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          data-testid="input-order-date"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="expectedDeliveryDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expected Delivery Date</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        data-testid="input-expected-delivery-date"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="subtotal"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Subtotal *</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          {...field}
-                          placeholder="0.00"
-                          data-testid="input-subtotal"
-                        />
-                      </FormControl>
-                      <FormMessage />
+                  createSectionHeaderRow<SalesOrderFormData>('Financial Information'),
+                  createFieldRow<SalesOrderFormData>({
+                    key: 'subtotal',
+                    label: 'Subtotal',
+                    type: 'text',
+                    placeholder: '0.00',
+                    register: form.register('subtotal'),
+                    validation: { 
+                      isRequired: true,
+                      error: form.formState.errors.subtotal?.message 
+                    },
+                    testId: 'input-subtotal'
+                  }),
+                  createFieldRow<SalesOrderFormData>({
+                    key: 'taxAmount',
+                    label: 'Tax Amount',
+                    type: 'text',
+                    placeholder: '0.00',
+                    register: form.register('taxAmount'),
+                    testId: 'input-tax-amount'
+                  }),
+                  createFieldRow<SalesOrderFormData>({
+                    key: 'totalAmount',
+                    label: 'Total Amount',
+                    type: 'text',
+                    placeholder: '0.00',
+                    register: form.register('totalAmount'),
+                    validation: { 
+                      isRequired: true,
+                      error: form.formState.errors.totalAmount?.message 
+                    },
+                    testId: 'input-total-amount'
+                  }),
+                  createFieldRow<SalesOrderFormData>({
+                    key: 'notes',
+                    label: 'Notes',
+                    type: 'textarea',
+                    rows: 3,
+                    placeholder: 'Additional notes...',
+                    register: form.register('notes'),
+                    testId: 'textarea-notes'
+                  })
+                ]
+              }
+            ]}
+            activeSection={activeSection}
+            onSectionChange={setActiveSection}
+            form={form}
+            onSubmit={onSubmit}
+            actionButtons={[
+              {
+                key: 'cancel',
+                label: 'Cancel',
+                icon: <ArrowLeft size={14} />,
+                onClick: () => setShowDialog(false),
+                variant: 'outline',
+                testId: 'button-cancel'
+              },
+              {
+                key: 'save',
+                label: editingSalesOrder ? 'Update Sales Order' : 'Create Sales Order',
+                icon: <Save size={14} />,
+                onClick: form.handleSubmit(onSubmit),
+                variant: 'default',
+                testId: 'button-save'
+              }
+            ]}
+          />
                     </FormItem>
                   )}
                 />

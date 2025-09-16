@@ -29,6 +29,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Project, InsertProject, Customer } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
+import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
+import type { ActionButton } from '@/components/layouts/BaseFormLayout';
 
 const formSchema = insertProjectSchema.extend({
   totalValue: z.string().optional(),
@@ -43,6 +45,7 @@ export default function Projects() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [activeSection, setActiveSection] = useState("basic");
   const { toast } = useToast();
 
   const { data: projects, isLoading } = useQuery<Project[]>({
@@ -181,6 +184,175 @@ export default function Projects() {
     setIsDialogOpen(true);
   };
 
+  // Custom customer select component
+  const renderCustomerSelect = () => (
+    <SelectWithAdd
+      value={form.watch("customerId") || ""}
+      onValueChange={(value) => form.setValue("customerId", value)}
+      placeholder="Select customer"
+      addFormTitle="Add New Customer"
+      testId="select-customer"
+      addFormContent={
+        <QuickAddCustomer 
+          onSuccess={(customerId) => {
+            form.setValue("customerId", customerId);
+          }}
+        />
+      }
+    >
+      {customers?.map((customer) => (
+        <SelectItem key={customer.id} value={customer.id}>
+          {customer.name}
+        </SelectItem>
+      ))}
+    </SelectWithAdd>
+  );
+
+  // Create form sections
+  const createFormSections = (): FormSection2<FormData>[] => [
+    {
+      id: "basic",
+      label: "Basic Info",
+      icon: <FolderOpen className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
+          key: "name",
+          label: "Project Name",
+          type: "text",
+          placeholder: "Enter project name",
+          register: form.register("name"),
+          validation: {
+            error: form.formState.errors.name?.message,
+            isRequired: true
+          },
+          testId: "input-project-name"
+        } as FormField2<FormData>),
+        createFieldRow({
+          key: "description",
+          label: "Description",
+          type: "textarea",
+          placeholder: "Enter project description...",
+          register: form.register("description"),
+          testId: "textarea-description",
+          rows: 3
+        } as FormField2<FormData>),
+        createFieldsRow([
+          {
+            key: "customerId",
+            label: "Customer",
+            type: "custom",
+            customComponent: renderCustomerSelect(),
+            testId: "select-customer",
+            width: "50%"
+          } as FormField2<FormData>,
+          {
+            key: "status",
+            label: "Status",
+            type: "select",
+            options: [
+              { value: "planning", label: "Planning" },
+              { value: "in-progress", label: "In Progress" },
+              { value: "completed", label: "Completed" },
+              { value: "on-hold", label: "On Hold" }
+            ],
+            setValue: (value) => form.setValue("status", value),
+            watch: () => form.watch("status"),
+            testId: "select-status",
+            width: "50%"
+          } as FormField2<FormData>
+        ])
+      ]
+    },
+    {
+      id: "schedule",
+      label: "Schedule",
+      icon: <Calendar className="h-4 w-4" />,
+      rows: [
+        createFieldsRow([
+          {
+            key: "startDate",
+            label: "Start Date",
+            type: "text",
+            register: form.register("startDate"),
+            testId: "input-start-date",
+            width: "50%",
+            customComponent: (
+              <Input
+                id="startDate"
+                type="date"
+                {...form.register("startDate")}
+                data-testid="input-start-date"
+              />
+            )
+          } as FormField2<FormData>,
+          {
+            key: "endDate",
+            label: "End Date",
+            type: "text",
+            register: form.register("endDate"),
+            testId: "input-end-date",
+            width: "50%",
+            customComponent: (
+              <Input
+                id="endDate"
+                type="date"
+                {...form.register("endDate")}
+                data-testid="input-end-date"
+              />
+            )
+          } as FormField2<FormData>
+        ])
+      ]
+    },
+    {
+      id: "metrics",
+      label: "Metrics",
+      icon: <DollarSign className="h-4 w-4" />,
+      rows: [
+        createFieldsRow([
+          {
+            key: "totalValue",
+            label: "Total Value",
+            type: "number",
+            placeholder: "0.00",
+            register: form.register("totalValue"),
+            testId: "input-total-value",
+            width: "50%"
+          } as FormField2<FormData>,
+          {
+            key: "progress",
+            label: "Progress (%)",
+            type: "number",
+            placeholder: "0",
+            register: form.register("progress"),
+            testId: "input-progress",
+            width: "50%"
+          } as FormField2<FormData>
+        ])
+      ]
+    }
+  ];
+
+  // Create action buttons
+  const createActionButtons = (): ActionButton[] => [
+    {
+      label: "Cancel",
+      variant: "outline",
+      onClick: () => {
+        setIsDialogOpen(false);
+        form.reset();
+        setEditingProject(null);
+      },
+      disabled: createMutation.isPending || updateMutation.isPending
+    },
+    {
+      label: (createMutation.isPending || updateMutation.isPending) ? "Saving..." : "Save Project",
+      variant: "default",
+      onClick: () => form.handleSubmit(onSubmit)(),
+      disabled: createMutation.isPending || updateMutation.isPending
+    }
+  ];
+
   const filteredProjects = projects?.filter(project =>
     project.name.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -263,144 +435,15 @@ export default function Projects() {
               </DialogDescription>
             </DialogHeader>
             
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Project Name *</Label>
-                <Input
-                  id="name"
-                  {...form.register("name")}
-                  placeholder="Enter project name"
-                  data-testid="input-project-name"
-                />
-                {form.formState.errors.name && (
-                  <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.name.message}
-                  </p>
-                )}
-              </div>
-              
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  {...form.register("description")}
-                  placeholder="Enter project description..."
-                  rows={3}
-                  data-testid="textarea-description"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="customerId">Customer</Label>
-                  <SelectWithAdd
-                    value={form.watch("customerId") || ""}
-                    onValueChange={(value) => form.setValue("customerId", value)}
-                    placeholder="Select customer"
-                    addFormTitle="Add New Customer"
-                    testId="select-customer"
-                    addFormContent={
-                      <QuickAddCustomer 
-                        onSuccess={(customerId) => {
-                          form.setValue("customerId", customerId);
-                        }}
-                      />
-                    }
-                  >
-                    {customers?.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectWithAdd>
-                </div>
-                
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select 
-                    value={form.watch("status") || "planning"} 
-                    onValueChange={(value) => form.setValue("status", value)}
-                  >
-                    <SelectTrigger data-testid="select-status">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planning">Planning</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="on-hold">On Hold</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    {...form.register("startDate")}
-                    data-testid="input-start-date"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    {...form.register("endDate")}
-                    data-testid="input-end-date"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="totalValue">Total Value</Label>
-                  <Input
-                    id="totalValue"
-                    {...form.register("totalValue")}
-                    placeholder="0.00"
-                    type="number"
-                    step="0.01"
-                    data-testid="input-total-value"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="progress">Progress (%)</Label>
-                  <Input
-                    id="progress"
-                    {...form.register("progress")}
-                    placeholder="0"
-                    type="number"
-                    min="0"
-                    max="100"
-                    data-testid="input-progress"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex space-x-3">
-                <Button 
-                  type="submit" 
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  data-testid="button-save-project"
-                >
-                  {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : "Save Project"}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                  data-testid="button-cancel"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
+            <LayoutForm2<FormData>
+              sections={createFormSections()}
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+              form={form}
+              onSubmit={onSubmit}
+              actionButtons={createActionButtons()}
+              isLoading={createMutation.isPending || updateMutation.isPending}
+            />
           </DialogContent>
         </Dialog>
       </div>

@@ -11,6 +11,9 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertCustomer, InsertSupplier, InsertProject, InsertCustomerContact } from "@shared/schema";
 import { z } from "zod";
+import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
+import type { ActionButton } from '@/components/layouts/BaseFormLayout';
+import { Users, User, Building2, FolderOpen } from 'lucide-react';
 
 // Quick Add Customer Form
 const customerFormSchema = insertCustomerSchema.extend({
@@ -26,6 +29,7 @@ interface QuickAddCustomerProps {
 }
 
 export function QuickAddCustomer({ onSuccess, onClose }: QuickAddCustomerProps) {
+  const [activeSection, setActiveSection] = useState("customer");
   const { toast } = useToast();
   
   const form = useForm<CustomerFormData>({
@@ -65,67 +69,75 @@ export function QuickAddCustomer({ onSuccess, onClose }: QuickAddCustomerProps) 
     createMutation.mutate(data);
   };
 
+  // Create form sections for customer
+  const createCustomerFormSections = (): FormSection2<CustomerFormData>[] => [
+    {
+      id: "customer",
+      label: "Customer Info",
+      icon: <Users className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
+          key: "name",
+          label: "Customer Name",
+          type: "text",
+          placeholder: "Enter customer name",
+          register: form.register("name"),
+          validation: {
+            error: form.formState.errors.name?.message,
+            isRequired: true
+          },
+          testId: "input-quick-customer-name"
+        } as FormField2<CustomerFormData>),
+        createFieldRow({
+          key: "email",
+          label: "Email",
+          type: "email",
+          placeholder: "customer@example.com",
+          register: form.register("email"),
+          validation: {
+            error: form.formState.errors.email?.message,
+            isRequired: true
+          },
+          testId: "input-quick-customer-email"
+        } as FormField2<CustomerFormData>),
+        createFieldRow({
+          key: "phone",
+          label: "Phone",
+          type: "text",
+          placeholder: "Phone number",
+          register: form.register("phone"),
+          testId: "input-quick-customer-phone"
+        } as FormField2<CustomerFormData>)
+      ]
+    }
+  ];
+
+  // Create action buttons for customer
+  const createCustomerActionButtons = (): ActionButton[] => [
+    {
+      label: "Cancel",
+      variant: "outline",
+      onClick: () => onClose?.(),
+      disabled: createMutation.isPending
+    },
+    {
+      label: createMutation.isPending ? "Adding..." : "Add Customer",
+      variant: "default",
+      onClick: () => form.handleSubmit(onSubmit)(),
+      disabled: createMutation.isPending
+    }
+  ];
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <Label htmlFor="customer-name">Customer Name *</Label>
-        <Input
-          id="customer-name"
-          {...form.register("name")}
-          placeholder="Enter customer name"
-          data-testid="input-quick-customer-name"
-        />
-        {form.formState.errors.name && (
-          <p className="text-sm text-destructive mt-1">
-            {form.formState.errors.name.message}
-          </p>
-        )}
-      </div>
-      
-      <div>
-        <Label htmlFor="customer-email">Email *</Label>
-        <Input
-          id="customer-email"
-          type="email"
-          {...form.register("email")}
-          placeholder="customer@example.com"
-          data-testid="input-quick-customer-email"
-        />
-        {form.formState.errors.email && (
-          <p className="text-sm text-destructive mt-1">
-            {form.formState.errors.email.message}
-          </p>
-        )}
-      </div>
-      
-      <div>
-        <Label htmlFor="customer-phone">Phone</Label>
-        <Input
-          id="customer-phone"
-          {...form.register("phone")}
-          placeholder="Phone number"
-          data-testid="input-quick-customer-phone"
-        />
-      </div>
-      
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onClose}
-          data-testid="button-cancel-customer"
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit" 
-          disabled={createMutation.isPending}
-          data-testid="button-save-customer"
-        >
-          {createMutation.isPending ? "Adding..." : "Add Customer"}
-        </Button>
-      </div>
-    </form>
+    <LayoutForm2<CustomerFormData>
+      sections={createCustomerFormSections()}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      form={form}
+      onSubmit={onSubmit}
+      actionButtons={createCustomerActionButtons()}
+      isLoading={createMutation.isPending}
+    />
   );
 }
 
@@ -147,6 +159,7 @@ const contactPersonFormSchema = insertCustomerContactSchema.extend({
 type ContactPersonFormData = z.infer<typeof contactPersonFormSchema>;
 
 export function QuickAddContactPerson({ onSuccess, onClose, customerId }: QuickAddContactPersonProps) {
+  const [activeSection, setActiveSection] = useState("contact");
   const { toast } = useToast();
   
   const form = useForm<ContactPersonFormData>({
@@ -193,96 +206,103 @@ export function QuickAddContactPerson({ onSuccess, onClose, customerId }: QuickA
     });
   };
 
+  // Create form sections for contact person
+  const createContactFormSections = (): FormSection2<ContactPersonFormData>[] => [
+    {
+      id: "contact",
+      label: "Contact Info",
+      icon: <User className="h-4 w-4" />,
+      rows: [
+        createFieldsRow([
+          {
+            key: "firstName",
+            label: "First Name",
+            type: "text",
+            placeholder: "John",
+            register: form.register("firstName"),
+            validation: {
+              error: form.formState.errors.firstName?.message,
+              isRequired: true
+            },
+            testId: "input-quick-contact-first-name",
+            width: "50%"
+          } as FormField2<ContactPersonFormData>,
+          {
+            key: "lastName",
+            label: "Last Name",
+            type: "text",
+            placeholder: "Doe",
+            register: form.register("lastName"),
+            validation: {
+              error: form.formState.errors.lastName?.message,
+              isRequired: true
+            },
+            testId: "input-quick-contact-last-name",
+            width: "50%"
+          } as FormField2<ContactPersonFormData>
+        ]),
+        createFieldRow({
+          key: "email",
+          label: "Email",
+          type: "email",
+          placeholder: "john.doe@company.com",
+          register: form.register("email"),
+          validation: {
+            error: form.formState.errors.email?.message,
+            isRequired: true
+          },
+          testId: "input-quick-contact-email"
+        } as FormField2<ContactPersonFormData>),
+        createFieldsRow([
+          {
+            key: "phone",
+            label: "Phone",
+            type: "text",
+            placeholder: "+31 6 12345678",
+            register: form.register("phone"),
+            testId: "input-quick-contact-phone",
+            width: "50%"
+          } as FormField2<ContactPersonFormData>,
+          {
+            key: "position",
+            label: "Position",
+            type: "text",
+            placeholder: "Manager",
+            register: form.register("position"),
+            testId: "input-quick-contact-position",
+            width: "50%"
+          } as FormField2<ContactPersonFormData>
+        ])
+      ]
+    }
+  ];
+
+  // Create action buttons for contact person
+  const createContactActionButtons = (): ActionButton[] => [
+    {
+      label: "Cancel",
+      variant: "outline",
+      onClick: () => onClose?.(),
+      disabled: createMutation.isPending
+    },
+    {
+      label: createMutation.isPending ? "Adding..." : "Add Contact Person",
+      variant: "default",
+      onClick: () => form.handleSubmit(onSubmit)(),
+      disabled: createMutation.isPending
+    }
+  ];
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="contact-first-name">First Name *</Label>
-          <Input
-            id="contact-first-name"
-            {...form.register("firstName")}
-            placeholder="John"
-            data-testid="input-quick-contact-first-name"
-          />
-          {form.formState.errors.firstName && (
-            <p className="text-sm text-destructive mt-1">
-              {form.formState.errors.firstName.message}
-            </p>
-          )}
-        </div>
-        
-        <div>
-          <Label htmlFor="contact-last-name">Last Name *</Label>
-          <Input
-            id="contact-last-name"
-            {...form.register("lastName")}
-            placeholder="Doe"
-            data-testid="input-quick-contact-last-name"
-          />
-          {form.formState.errors.lastName && (
-            <p className="text-sm text-destructive mt-1">
-              {form.formState.errors.lastName.message}
-            </p>
-          )}
-        </div>
-      </div>
-      
-      <div>
-        <Label htmlFor="contact-email">Email *</Label>
-        <Input
-          id="contact-email"
-          type="email"
-          {...form.register("email")}
-          placeholder="john.doe@company.com"
-          data-testid="input-quick-contact-email"
-        />
-        {form.formState.errors.email && (
-          <p className="text-sm text-destructive mt-1">
-            {form.formState.errors.email.message}
-          </p>
-        )}
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="contact-phone">Phone</Label>
-          <Input
-            id="contact-phone"
-            {...form.register("phone")}
-            placeholder="+31 6 12345678"
-            data-testid="input-quick-contact-phone"
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="contact-position">Position</Label>
-          <Input
-            id="contact-position"
-            {...form.register("position")}
-            placeholder="Manager"
-            data-testid="input-quick-contact-position"
-          />
-        </div>
-      </div>
-      
-      <div className="flex space-x-2 pt-4">
-        <Button 
-          type="submit" 
-          disabled={createMutation.isPending}
-          data-testid="button-submit-contact"
-        >
-          {createMutation.isPending ? "Adding..." : "Add Contact Person"}
-        </Button>
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onClose}
-          data-testid="button-cancel-contact"
-        >
-          Cancel
-        </Button>
-      </div>
-    </form>
+    <LayoutForm2<ContactPersonFormData>
+      sections={createContactFormSections()}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      form={form}
+      onSubmit={onSubmit}
+      actionButtons={createContactActionButtons()}
+      isLoading={createMutation.isPending}
+    />
   );
 }
 
@@ -300,6 +320,7 @@ interface QuickAddSupplierProps {
 }
 
 export function QuickAddSupplier({ onSuccess, onClose }: QuickAddSupplierProps) {
+  const [activeSection, setActiveSection] = useState("supplier");
   const { toast } = useToast();
   
   const form = useForm<SupplierFormData>({
@@ -339,67 +360,75 @@ export function QuickAddSupplier({ onSuccess, onClose }: QuickAddSupplierProps) 
     createMutation.mutate(data);
   };
 
+  // Create form sections for supplier
+  const createSupplierFormSections = (): FormSection2<SupplierFormData>[] => [
+    {
+      id: "supplier",
+      label: "Supplier Info",
+      icon: <Building2 className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
+          key: "name",
+          label: "Supplier Name",
+          type: "text",
+          placeholder: "Enter supplier name",
+          register: form.register("name"),
+          validation: {
+            error: form.formState.errors.name?.message,
+            isRequired: true
+          },
+          testId: "input-quick-supplier-name"
+        } as FormField2<SupplierFormData>),
+        createFieldRow({
+          key: "email",
+          label: "Email",
+          type: "email",
+          placeholder: "supplier@example.com",
+          register: form.register("email"),
+          validation: {
+            error: form.formState.errors.email?.message,
+            isRequired: true
+          },
+          testId: "input-quick-supplier-email"
+        } as FormField2<SupplierFormData>),
+        createFieldRow({
+          key: "phone",
+          label: "Phone",
+          type: "text",
+          placeholder: "Phone number",
+          register: form.register("phone"),
+          testId: "input-quick-supplier-phone"
+        } as FormField2<SupplierFormData>)
+      ]
+    }
+  ];
+
+  // Create action buttons for supplier
+  const createSupplierActionButtons = (): ActionButton[] => [
+    {
+      label: "Cancel",
+      variant: "outline",
+      onClick: () => onClose?.(),
+      disabled: createMutation.isPending
+    },
+    {
+      label: createMutation.isPending ? "Adding..." : "Add Supplier",
+      variant: "default",
+      onClick: () => form.handleSubmit(onSubmit)(),
+      disabled: createMutation.isPending
+    }
+  ];
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <Label htmlFor="supplier-name">Supplier Name *</Label>
-        <Input
-          id="supplier-name"
-          {...form.register("name")}
-          placeholder="Enter supplier name"
-          data-testid="input-quick-supplier-name"
-        />
-        {form.formState.errors.name && (
-          <p className="text-sm text-destructive mt-1">
-            {form.formState.errors.name.message}
-          </p>
-        )}
-      </div>
-      
-      <div>
-        <Label htmlFor="supplier-email">Email *</Label>
-        <Input
-          id="supplier-email"
-          type="email"
-          {...form.register("email")}
-          placeholder="supplier@example.com"
-          data-testid="input-quick-supplier-email"
-        />
-        {form.formState.errors.email && (
-          <p className="text-sm text-destructive mt-1">
-            {form.formState.errors.email.message}
-          </p>
-        )}
-      </div>
-      
-      <div>
-        <Label htmlFor="supplier-phone">Phone</Label>
-        <Input
-          id="supplier-phone"
-          {...form.register("phone")}
-          placeholder="Phone number"
-          data-testid="input-quick-supplier-phone"
-        />
-      </div>
-      
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onClose}
-          data-testid="button-cancel-supplier"
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit" 
-          disabled={createMutation.isPending}
-          data-testid="button-save-supplier"
-        >
-          {createMutation.isPending ? "Adding..." : "Add Supplier"}
-        </Button>
-      </div>
-    </form>
+    <LayoutForm2<SupplierFormData>
+      sections={createSupplierFormSections()}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      form={form}
+      onSubmit={onSubmit}
+      actionButtons={createSupplierActionButtons()}
+      isLoading={createMutation.isPending}
+    />
   );
 }
 
@@ -416,6 +445,7 @@ interface QuickAddProjectProps {
 }
 
 export function QuickAddProject({ onSuccess, onClose }: QuickAddProjectProps) {
+  const [activeSection, setActiveSection] = useState("project");
   const { toast } = useToast();
   
   const form = useForm<ProjectFormData>({
@@ -456,51 +486,63 @@ export function QuickAddProject({ onSuccess, onClose }: QuickAddProjectProps) {
     createMutation.mutate(data);
   };
 
+  // Create form sections for project
+  const createProjectFormSections = (): FormSection2<ProjectFormData>[] => [
+    {
+      id: "project",
+      label: "Project Info",
+      icon: <FolderOpen className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
+          key: "name",
+          label: "Project Name",
+          type: "text",
+          placeholder: "Enter project name",
+          register: form.register("name"),
+          validation: {
+            error: form.formState.errors.name?.message,
+            isRequired: true
+          },
+          testId: "input-quick-project-name"
+        } as FormField2<ProjectFormData>),
+        createFieldRow({
+          key: "description",
+          label: "Description",
+          type: "textarea",
+          placeholder: "Enter project description",
+          register: form.register("description"),
+          testId: "textarea-quick-project-description",
+          rows: 3
+        } as FormField2<ProjectFormData>)
+      ]
+    }
+  ];
+
+  // Create action buttons for project
+  const createProjectActionButtons = (): ActionButton[] => [
+    {
+      label: "Cancel",
+      variant: "outline",
+      onClick: () => onClose?.(),
+      disabled: createMutation.isPending
+    },
+    {
+      label: createMutation.isPending ? "Adding..." : "Add Project",
+      variant: "default",
+      onClick: () => form.handleSubmit(onSubmit)(),
+      disabled: createMutation.isPending
+    }
+  ];
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <Label htmlFor="project-name">Project Name *</Label>
-        <Input
-          id="project-name"
-          {...form.register("name")}
-          placeholder="Enter project name"
-          data-testid="input-quick-project-name"
-        />
-        {form.formState.errors.name && (
-          <p className="text-sm text-destructive mt-1">
-            {form.formState.errors.name.message}
-          </p>
-        )}
-      </div>
-      
-      <div>
-        <Label htmlFor="project-description">Description</Label>
-        <Textarea
-          id="project-description"
-          {...form.register("description")}
-          placeholder="Enter project description"
-          rows={3}
-          data-testid="textarea-quick-project-description"
-        />
-      </div>
-      
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onClose}
-          data-testid="button-cancel-project"
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit" 
-          disabled={createMutation.isPending}
-          data-testid="button-save-project"
-        >
-          {createMutation.isPending ? "Adding..." : "Add Project"}
-        </Button>
-      </div>
-    </form>
+    <LayoutForm2<ProjectFormData>
+      sections={createProjectFormSections()}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      form={form}
+      onSubmit={onSubmit}
+      actionButtons={createProjectActionButtons()}
+      isLoading={createMutation.isPending}
+    />
   );
 }

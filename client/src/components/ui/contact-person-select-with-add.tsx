@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, User, Phone, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Popover, PopoverContent, PopoverTrigger 
@@ -22,6 +22,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import type { CustomerContact } from "@shared/schema";
+import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
+import type { ActionButton } from '@/components/layouts/BaseFormLayout';
 
 const contactFormSchema = insertCustomerContactSchema.extend({
   firstName: z.string().min(1, "First name is required"),
@@ -52,6 +54,7 @@ export function ContactPersonSelectWithAdd({
   const [open, setOpen] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSection, setActiveSection] = useState("personal");
   const { toast } = useToast();
 
   // Load contacts with search
@@ -122,6 +125,120 @@ export function ContactPersonSelectWithAdd({
   const handleCreateContact = (data: ContactFormData) => {
     createContactMutation.mutate(data);
   };
+
+  // Custom checkbox component
+  const renderPrimaryCheckbox = () => (
+    <div className="flex items-center space-x-2">
+      <Checkbox
+        id="isPrimary"
+        checked={contactForm.watch("isPrimary")}
+        onCheckedChange={(checked) => contactForm.setValue("isPrimary", checked as boolean)}
+        data-testid="checkbox-contact-is-primary"
+      />
+      <Label htmlFor="isPrimary" className="text-sm">
+        Set as primary contact
+      </Label>
+    </div>
+  );
+
+  // Create form sections for contact
+  const createContactFormSections = (): FormSection2<ContactFormData>[] => [
+    {
+      id: "personal",
+      label: "Personal Info",
+      icon: <User className="h-4 w-4" />,
+      rows: [
+        createFieldsRow([
+          {
+            key: "firstName",
+            label: "First Name",
+            type: "text",
+            register: contactForm.register("firstName"),
+            validation: {
+              error: contactForm.formState.errors.firstName?.message,
+              isRequired: true
+            },
+            testId: "input-contact-first-name",
+            width: "50%"
+          } as FormField2<ContactFormData>,
+          {
+            key: "lastName",
+            label: "Last Name",
+            type: "text",
+            register: contactForm.register("lastName"),
+            validation: {
+              error: contactForm.formState.errors.lastName?.message,
+              isRequired: true
+            },
+            testId: "input-contact-last-name",
+            width: "50%"
+          } as FormField2<ContactFormData>
+        ]),
+        createFieldRow({
+          key: "position",
+          label: "Position",
+          type: "text",
+          placeholder: "e.g. Manager, Director",
+          register: contactForm.register("position"),
+          testId: "input-contact-position"
+        } as FormField2<ContactFormData>)
+      ]
+    },
+    {
+      id: "contact",
+      label: "Contact Info",
+      icon: <Phone className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
+          key: "email",
+          label: "Email",
+          type: "email",
+          register: contactForm.register("email"),
+          validation: {
+            error: contactForm.formState.errors.email?.message
+          },
+          testId: "input-contact-email"
+        } as FormField2<ContactFormData>),
+        createFieldRow({
+          key: "phone",
+          label: "Phone",
+          type: "text",
+          register: contactForm.register("phone"),
+          testId: "input-contact-phone"
+        } as FormField2<ContactFormData>)
+      ]
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: <Star className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
+          key: "isPrimary",
+          label: "Primary Contact",
+          type: "custom",
+          customComponent: renderPrimaryCheckbox(),
+          testId: "checkbox-contact-is-primary"
+        } as FormField2<ContactFormData>)
+      ]
+    }
+  ];
+
+  // Create action buttons
+  const createActionButtons = (): ActionButton[] => [
+    {
+      label: "Cancel",
+      variant: "outline",
+      onClick: () => setShowAddDialog(false),
+      disabled: createContactMutation.isPending
+    },
+    {
+      label: createContactMutation.isPending ? "Creating..." : "Create Contact",
+      variant: "default",
+      onClick: () => contactForm.handleSubmit(handleCreateContact)(),
+      disabled: createContactMutation.isPending
+    }
+  ];
 
   const formatContact = (contact: CustomerContact) => {
     const name = `${contact.firstName} ${contact.lastName}`;
@@ -215,101 +332,15 @@ export function ContactPersonSelectWithAdd({
             <DialogTitle>Add New Contact Person</DialogTitle>
           </DialogHeader>
           
-          <form onSubmit={contactForm.handleSubmit(handleCreateContact)} className="space-y-4">
-            {/* Name */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
-                <Input
-                  id="firstName"
-                  {...contactForm.register("firstName")}
-                  data-testid="input-contact-first-name"
-                />
-                {contactForm.formState.errors.firstName && (
-                  <p className="text-sm text-red-600">{contactForm.formState.errors.firstName.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input
-                  id="lastName"
-                  {...contactForm.register("lastName")}
-                  data-testid="input-contact-last-name"
-                />
-                {contactForm.formState.errors.lastName && (
-                  <p className="text-sm text-red-600">{contactForm.formState.errors.lastName.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...contactForm.register("email")}
-                  data-testid="input-contact-email"
-                />
-                {contactForm.formState.errors.email && (
-                  <p className="text-sm text-red-600">{contactForm.formState.errors.email.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  {...contactForm.register("phone")}
-                  data-testid="input-contact-phone"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="position">Position</Label>
-                <Input
-                  id="position"
-                  {...contactForm.register("position")}
-                  placeholder="e.g. Manager, Director"
-                  data-testid="input-contact-position"
-                />
-              </div>
-            </div>
-
-            {/* Primary Contact */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isPrimary"
-                checked={contactForm.watch("isPrimary")}
-                onCheckedChange={(checked) => contactForm.setValue("isPrimary", checked as boolean)}
-                data-testid="checkbox-contact-is-primary"
-              />
-              <Label htmlFor="isPrimary" className="text-sm">
-                Set as primary contact
-              </Label>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setShowAddDialog(false)}
-                data-testid="button-cancel-contact"
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={createContactMutation.isPending}
-                data-testid="button-save-contact"
-              >
-                {createContactMutation.isPending ? "Creating..." : "Create Contact"}
-              </Button>
-            </div>
-          </form>
+          <LayoutForm2<ContactFormData>
+            sections={createContactFormSections()}
+            activeSection={activeSection}
+            onSectionChange={setActiveSection}
+            form={contactForm}
+            onSubmit={handleCreateContact}
+            actionButtons={createActionButtons()}
+            isLoading={createContactMutation.isPending}
+          />
         </DialogContent>
       </Dialog>
     </>
