@@ -464,7 +464,7 @@ export function DataTableLayout<T = any>({
     <>
       <div className="space-y-4">
         {/* Header with Controls - left aligned without title section */}
-        <div className={`${compact ? 'p-0 mx-0' : 'p-2 mx-8'}`}>
+        <div className={`${compact ? 'p-0 mx-0' : 'p-2'}`}>
           {/* Actions Section - Left aligned */}
           <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2 w-fit">
             {/* Search */}
@@ -616,7 +616,7 @@ export function DataTableLayout<T = any>({
         </div>
       </div>
 
-      <div className={`space-y-4 ${compact ? 'ml-0 mx-0' : 'ml-2 mx-8'}`}>
+      <div className={`space-y-4 ${compact ? 'ml-0 mx-0' : 'ml-2'}`}>
         {/* Active Filters - Left aligned with title */}
         <div className={`min-h-[2rem] flex items-start ${compact ? 'pl-0' : ''}`}>
           {filters.length > 0 && (
