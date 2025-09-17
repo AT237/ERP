@@ -8,6 +8,34 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+## September 17, 2025 - Table Layout Standardization Complete
+
+Successfully standardized all DataTableLayout tables to use consistent, clean layout without problematic border wrappers.
+
+### DataTableLayout System (Standardized):
+- **customers.tsx, suppliers.tsx** - Reference standard layout
+- **quotations.tsx, inventory.tsx** - Fixed by removing extra border div wrappers
+- **text-snippets.tsx, sales-orders.tsx** - Already compliant
+
+### Standard Layout Pattern:
+```tsx
+return (
+  <div className="p-6">
+    <DataTableLayout ... />
+  </div>
+);
+```
+
+### Custom Card+Table System (Unchanged):
+- **projects.tsx, packing-lists.tsx, invoices.tsx** 
+- **purchase-orders.tsx, work-orders.tsx**
+- These use their own layout with header images and Card components
+
+### Technical Fixes Applied:
+- Removed `LayoutForm2<FormData>` generic syntax to fix JSX parsing errors
+- Eliminated problematic double-div border wrappers from quotations and inventory pages
+- Achieved visual consistency across all DataTableLayout pages
+
 ## September 16, 2025 - LayoutForm2 Standardization Project Complete
 
 Successfully completed comprehensive LayoutForm2 standardization across all business forms, achieving 100% visual and behavioral consistency.
@@ -92,7 +120,20 @@ The frontend is built with **React 18** and **TypeScript**, following a componen
 
 ### Reusable Layout System
 A comprehensive layout system ensures consistency across data management interfaces:
-- **DataTableLayout**: Provides features like search, filtering, sorting, column management, drag & drop, row selection, and CRUD operations.
+
+#### Table Layout Systems
+**DataTableLayout System** (Standardized):
+- Used by: customers, suppliers, quotations, inventory, text-snippets, sales-orders
+- **Standard Pattern**: `<div className="p-6"><DataTableLayout ... /></div>`
+- Features: search, filtering, sorting, column management, drag & drop, row selection, CRUD operations
+- **Consistency Rule**: No extra border wrappers or nested div containers
+
+**Custom Card+Table System**:
+- Used by: projects, packing-lists, invoices, purchase-orders, work-orders  
+- Features: Header images, Card components, custom layouts per business context
+- Maintained separately for specialized business requirements
+
+#### Form Layout
 - **LayoutForm2**: A standardized form layout component applied across all 19+ business forms, guaranteeing visual and behavioral consistency with an orange-themed design, two-column layouts, and change tracking.
 - **useDataTable Hook**: Custom hook for managing table state.
 - **Type Safety**: Full TypeScript support with generic types is implemented throughout.
