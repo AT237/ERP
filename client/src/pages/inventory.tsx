@@ -573,8 +573,7 @@ export default function Inventory() {
 
   return (
     <div className="p-6">
-      <div className="ml-[38px] border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-950 p-4">
-        <DataTableLayout
+      <DataTableLayout
       entityName="Product"
       entityNamePlural="Products"
       data={renderTableData(items)}
@@ -633,7 +632,6 @@ export default function Inventory() {
         content: renderFormContent()
       }}
     />
-      </div>
     </div>
   );
 }

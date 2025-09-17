@@ -481,8 +481,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
 
   return (
     <div className="p-6">
-      <div className="ml-[38px] border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-950 p-4">
-        <DataTableLayout
+      <DataTableLayout
         data={quotations}
         isLoading={isLoading}
         columns={tableState.columns}
@@ -900,9 +899,6 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
           ) : null
         }}
       />
-      
-      
-      </div>
     </div>
   );
 }
