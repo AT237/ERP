@@ -651,7 +651,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
 
   return (
     <>
-      <LayoutForm2<LineItemFormData>
+      <LayoutForm2
         sections={formSections}
         activeSection={activeSection}
         onSectionChange={setActiveSection}

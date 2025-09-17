@@ -129,7 +129,7 @@ export function QuickAddCustomer({ onSuccess, onClose }: QuickAddCustomerProps) 
   ];
 
   return (
-    <LayoutForm2<CustomerFormData>
+    <LayoutForm2
       sections={createCustomerFormSections()}
       activeSection={activeSection}
       onSectionChange={setActiveSection}
@@ -294,7 +294,7 @@ export function QuickAddContactPerson({ onSuccess, onClose, customerId }: QuickA
   ];
 
   return (
-    <LayoutForm2<ContactPersonFormData>
+    <LayoutForm2
       sections={createContactFormSections()}
       activeSection={activeSection}
       onSectionChange={setActiveSection}
@@ -420,7 +420,7 @@ export function QuickAddSupplier({ onSuccess, onClose }: QuickAddSupplierProps) 
   ];
 
   return (
-    <LayoutForm2<SupplierFormData>
+    <LayoutForm2
       sections={createSupplierFormSections()}
       activeSection={activeSection}
       onSectionChange={setActiveSection}
@@ -535,7 +535,7 @@ export function QuickAddProject({ onSuccess, onClose }: QuickAddProjectProps) {
   ];
 
   return (
-    <LayoutForm2<ProjectFormData>
+    <LayoutForm2
       sections={createProjectFormSections()}
       activeSection={activeSection}
       onSectionChange={setActiveSection}

@@ -560,7 +560,7 @@ export default function Inventory() {
 
   // Form content using LayoutForm2
   const renderFormContent = () => (
-    <LayoutForm2<InventoryFormData>
+    <LayoutForm2
       sections={createFormSections()}
       activeSection={activeSection}
       onSectionChange={setActiveSection}

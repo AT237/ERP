@@ -445,7 +445,7 @@ export default function CustomerTableWithLayout() {
         onOpenChange: setShowAddCustomerDialog,
         title: editingCustomer ? "Edit Customer" : "Add New Customer",
         content: (
-          <LayoutForm2<FormData>
+          <LayoutForm2
             sections={createFormSections()}
             activeSection={activeSection}
             onSectionChange={setActiveSection}

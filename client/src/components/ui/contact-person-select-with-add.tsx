@@ -332,7 +332,7 @@ export function ContactPersonSelectWithAdd({
             <DialogTitle>Add New Contact Person</DialogTitle>
           </DialogHeader>
           
-          <LayoutForm2<ContactFormData>
+          <LayoutForm2
             sections={createContactFormSections()}
             activeSection={activeSection}
             onSectionChange={setActiveSection}

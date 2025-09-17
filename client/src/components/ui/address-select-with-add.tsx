@@ -284,7 +284,7 @@ export function AddressSelectWithAdd({
             <DialogTitle>Add New Address</DialogTitle>
           </DialogHeader>
           
-          <LayoutForm2<AddressFormData>
+          <LayoutForm2
             sections={createAddressFormSections()}
             activeSection={activeSection}
             onSectionChange={setActiveSection}

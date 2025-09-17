@@ -435,7 +435,7 @@ export default function Projects() {
               </DialogDescription>
             </DialogHeader>
             
-            <LayoutForm2<FormData>
+            <LayoutForm2
               sections={createFormSections()}
               activeSection={activeSection}
               onSectionChange={setActiveSection}

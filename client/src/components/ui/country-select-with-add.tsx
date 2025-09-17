@@ -306,7 +306,7 @@ export function CountrySelectWithAdd({
             <DialogTitle>Add New Country</DialogTitle>
           </DialogHeader>
           
-          <LayoutForm2<CountryFormData>
+          <LayoutForm2
             sections={createCountryFormSections()}
             activeSection={activeSection}
             onSectionChange={setActiveSection}

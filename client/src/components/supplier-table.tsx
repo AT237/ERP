@@ -436,7 +436,7 @@ export default function SupplierTable() {
         title: editingSupplier ? "Edit Supplier" : "Add New Supplier",
         content: (
           <div className="p-6">
-            <LayoutForm2<FormData>
+            <LayoutForm2
               sections={formSections}
               activeSection={activeSection}
               onSectionChange={setActiveSection}

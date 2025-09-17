@@ -554,7 +554,7 @@ export default function ContactPersonsTable() {
         title: editingContact ? "Edit Contact Person" : "Add New Contact Person",
         content: (
           <div className="p-6">
-            <LayoutForm2<FormData>
+            <LayoutForm2
               sections={formSections}
               activeSection={activeSection}
               onSectionChange={setActiveSection}

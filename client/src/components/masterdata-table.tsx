@@ -334,7 +334,7 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
               <DialogTitle>Add New {title.slice(0, -1)}</DialogTitle>
             </DialogHeader>
             <Form {...form}>
-              <LayoutForm2<any>
+              <LayoutForm2
                 sections={createDynamicFormSections()}
                 activeSection={activeSection}
                 onSectionChange={setActiveSection}

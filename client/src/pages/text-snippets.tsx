@@ -684,7 +684,7 @@ export default function TextSnippets() {
           </DialogHeader>
 
           <Form {...form}>
-            <LayoutForm2<TextSnippetFormData>
+            <LayoutForm2
               sections={createFormSections()}
               activeSection={activeSection}
               onSectionChange={setActiveSection}
