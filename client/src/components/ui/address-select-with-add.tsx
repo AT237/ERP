@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, Search, MapPin } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Search, MapPin, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { 
   Popover, PopoverContent, PopoverTrigger 
 } from "@/components/ui/popover";
@@ -186,16 +187,33 @@ export function AddressSelectWithAdd({
   // Create action buttons
   const createActionButtons = (): ActionButton[] => [
     {
+      key: "cancel",
       label: "Cancel",
       variant: "outline",
       onClick: () => setShowAddDialog(false),
       disabled: createAddressMutation.isPending
     },
     {
+      key: "submit",
       label: createAddressMutation.isPending ? "Creating..." : "Create Address",
       variant: "default",
       onClick: () => addressForm.handleSubmit(handleCreateAddress)(),
       disabled: createAddressMutation.isPending
+    }
+  ];
+
+  // Header fields with "Open full form" link
+  const createAddressHeaderFields = () => [
+    {
+      label: "Address Management",
+      value: (
+        <Link href="/masterdata-form/addresses" data-testid="link-open-address-management">
+          <Button variant="ghost" size="sm" className="h-auto p-0 text-orange-600 hover:text-orange-800">
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Manage addresses
+          </Button>
+        </Link>
+      )
     }
   ];
 
@@ -291,6 +309,7 @@ export function AddressSelectWithAdd({
             form={addressForm}
             onSubmit={handleCreateAddress}
             actionButtons={createActionButtons()}
+            headerFields={createAddressHeaderFields()}
             isLoading={createAddressMutation.isPending}
           />
         </DialogContent>

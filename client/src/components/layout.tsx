@@ -54,7 +54,7 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'inventory', name: 'Stock Management' };
       case '/suppliers':
         return { id: 'suppliers', name: 'Suppliers' };
-      case '/contacts':
+      case '/contact-persons':
         return { id: 'contacts', name: 'Contact Persons' };
       case '/quotations':
         return { id: 'quotations', name: 'Quotations' };
@@ -382,7 +382,7 @@ export default function Layout({ children }: LayoutProps) {
       case 'suppliers':
         return '/suppliers';
       case 'contacts':
-        return '/contacts';
+        return '/contact-persons';
       case 'quotations':
         return '/quotations';
       case 'invoices':

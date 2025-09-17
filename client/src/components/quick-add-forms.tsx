@@ -13,7 +13,8 @@ import type { InsertCustomer, InsertSupplier, InsertProject, InsertCustomerConta
 import { z } from "zod";
 import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
 import type { ActionButton } from '@/components/layouts/BaseFormLayout';
-import { Users, User, Building2, FolderOpen } from 'lucide-react';
+import { Users, User, Building2, FolderOpen, ExternalLink } from 'lucide-react';
+import { Link } from "wouter";
 
 // Quick Add Customer Form
 const customerFormSchema = insertCustomerSchema.extend({
@@ -115,16 +116,33 @@ export function QuickAddCustomer({ onSuccess, onClose }: QuickAddCustomerProps) 
   // Create action buttons for customer
   const createCustomerActionButtons = (): ActionButton[] => [
     {
+      key: "cancel",
       label: "Cancel",
       variant: "outline",
       onClick: () => onClose?.(),
       disabled: createMutation.isPending
     },
     {
+      key: "submit",
       label: createMutation.isPending ? "Adding..." : "Add Customer",
       variant: "default",
       onClick: () => form.handleSubmit(onSubmit)(),
       disabled: createMutation.isPending
+    }
+  ];
+
+  // Header fields with "Open full form" link
+  const createCustomerHeaderFields = () => [
+    {
+      label: "Full Customer Form",
+      value: (
+        <Link href="/customer-form" data-testid="link-open-full-customer-form">
+          <Button variant="ghost" size="sm" className="h-auto p-0 text-orange-600 hover:text-orange-800">
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Open full form
+          </Button>
+        </Link>
+      )
     }
   ];
 
@@ -136,6 +154,7 @@ export function QuickAddCustomer({ onSuccess, onClose }: QuickAddCustomerProps) 
       form={form}
       onSubmit={onSubmit}
       actionButtons={createCustomerActionButtons()}
+      headerFields={createCustomerHeaderFields()}
       isLoading={createMutation.isPending}
     />
   );
@@ -280,16 +299,33 @@ export function QuickAddContactPerson({ onSuccess, onClose, customerId }: QuickA
   // Create action buttons for contact person
   const createContactActionButtons = (): ActionButton[] => [
     {
+      key: "cancel",
       label: "Cancel",
       variant: "outline",
       onClick: () => onClose?.(),
       disabled: createMutation.isPending
     },
     {
+      key: "submit",
       label: createMutation.isPending ? "Adding..." : "Add Contact Person",
       variant: "default",
       onClick: () => form.handleSubmit(onSubmit)(),
       disabled: createMutation.isPending
+    }
+  ];
+
+  // Header fields with "Open full form" link
+  const createContactHeaderFields = () => [
+    {
+      label: "Contact Management",
+      value: (
+        <Link href="/contact-persons" data-testid="link-open-full-contact-form">
+          <Button variant="ghost" size="sm" className="h-auto p-0 text-orange-600 hover:text-orange-800">
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Manage contacts
+          </Button>
+        </Link>
+      )
     }
   ];
 
@@ -301,6 +337,7 @@ export function QuickAddContactPerson({ onSuccess, onClose, customerId }: QuickA
       form={form}
       onSubmit={onSubmit}
       actionButtons={createContactActionButtons()}
+      headerFields={createContactHeaderFields()}
       isLoading={createMutation.isPending}
     />
   );
@@ -406,16 +443,33 @@ export function QuickAddSupplier({ onSuccess, onClose }: QuickAddSupplierProps) 
   // Create action buttons for supplier
   const createSupplierActionButtons = (): ActionButton[] => [
     {
+      key: "cancel",
       label: "Cancel",
       variant: "outline",
       onClick: () => onClose?.(),
       disabled: createMutation.isPending
     },
     {
+      key: "submit",
       label: createMutation.isPending ? "Adding..." : "Add Supplier",
       variant: "default",
       onClick: () => form.handleSubmit(onSubmit)(),
       disabled: createMutation.isPending
+    }
+  ];
+
+  // Header fields with "Open full form" link
+  const createSupplierHeaderFields = () => [
+    {
+      label: "Full Supplier Form",
+      value: (
+        <Link href="/supplier-form" data-testid="link-open-full-supplier-form">
+          <Button variant="ghost" size="sm" className="h-auto p-0 text-orange-600 hover:text-orange-800">
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Open full form
+          </Button>
+        </Link>
+      )
     }
   ];
 
@@ -427,6 +481,7 @@ export function QuickAddSupplier({ onSuccess, onClose }: QuickAddSupplierProps) 
       form={form}
       onSubmit={onSubmit}
       actionButtons={createSupplierActionButtons()}
+      headerFields={createSupplierHeaderFields()}
       isLoading={createMutation.isPending}
     />
   );
@@ -521,16 +576,33 @@ export function QuickAddProject({ onSuccess, onClose }: QuickAddProjectProps) {
   // Create action buttons for project
   const createProjectActionButtons = (): ActionButton[] => [
     {
+      key: "cancel",
       label: "Cancel",
       variant: "outline",
       onClick: () => onClose?.(),
       disabled: createMutation.isPending
     },
     {
+      key: "submit",
       label: createMutation.isPending ? "Adding..." : "Add Project",
       variant: "default",
       onClick: () => form.handleSubmit(onSubmit)(),
       disabled: createMutation.isPending
+    }
+  ];
+
+  // Header fields with "Open full form" link
+  const createProjectHeaderFields = () => [
+    {
+      label: "Full Project Form",
+      value: (
+        <Link href="/project-form" data-testid="link-open-full-project-form">
+          <Button variant="ghost" size="sm" className="h-auto p-0 text-orange-600 hover:text-orange-800">
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Open full form
+          </Button>
+        </Link>
+      )
     }
   ];
 
@@ -542,6 +614,7 @@ export function QuickAddProject({ onSuccess, onClose }: QuickAddProjectProps) {
       form={form}
       onSubmit={onSubmit}
       actionButtons={createProjectActionButtons()}
+      headerFields={createProjectHeaderFields()}
       isLoading={createMutation.isPending}
     />
   );

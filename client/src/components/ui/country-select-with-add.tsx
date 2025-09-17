@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, Globe, Settings } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Globe, Settings, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { 
   Popover, PopoverContent, PopoverTrigger 
 } from "@/components/ui/popover";
@@ -207,16 +208,33 @@ export function CountrySelectWithAdd({
   // Create action buttons
   const createActionButtons = (): ActionButton[] => [
     {
+      key: "cancel",
       label: "Cancel",
       variant: "outline",
       onClick: () => setShowAddDialog(false),
       disabled: createCountryMutation.isPending
     },
     {
+      key: "submit",
       label: createCountryMutation.isPending ? "Creating..." : "Create Country",
       variant: "default",
       onClick: () => countryForm.handleSubmit(handleCreateCountry)(),
       disabled: createCountryMutation.isPending
+    }
+  ];
+
+  // Header fields with "Open full form" link
+  const createCountryHeaderFields = () => [
+    {
+      label: "Country Management",
+      value: (
+        <Link href="/masterdata-form/countries" data-testid="link-open-countries-management">
+          <Button variant="ghost" size="sm" className="h-auto p-0 text-orange-600 hover:text-orange-800">
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Manage countries
+          </Button>
+        </Link>
+      )
     }
   ];
 
@@ -313,6 +331,7 @@ export function CountrySelectWithAdd({
             form={countryForm}
             onSubmit={handleCreateCountry}
             actionButtons={createActionButtons()}
+            headerFields={createCountryHeaderFields()}
             isLoading={createCountryMutation.isPending}
           />
         </DialogContent>
