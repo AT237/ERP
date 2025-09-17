@@ -137,7 +137,6 @@ function Router() {
           }}
         </Route>
         
-        {/* Project form routes commented out - form file doesn't exist
         <Route path="/project-form" component={() => {
           const ProjectForm = React.lazy(() => import('./pages/project-form'));
           return (
@@ -156,7 +155,6 @@ function Router() {
             );
           }}
         </Route>
-        */}
         
         {/* Work order form routes commented out - form file doesn't exist
         <Route path="/work-order-form" component={() => {
@@ -223,6 +221,7 @@ function Router() {
         </Route>
         */}
         
+        {/* Packing list form routes commented out - form file doesn't exist yet
         <Route path="/packing-list-form" component={() => {
           const PackingListForm = React.lazy(() => import('./pages/packing-list-form'));
           return (
@@ -241,7 +240,9 @@ function Router() {
             );
           }}
         </Route>
+        */}
         
+        {/* Invoice form routes commented out - form file doesn't exist yet
         <Route path="/invoice-form" component={() => {
           const InvoiceForm = React.lazy(() => import('./pages/invoice-form'));
           return (
@@ -260,7 +261,9 @@ function Router() {
             );
           }}
         </Route>
+        */}
         
+        {/* Text snippet form routes commented out - form file doesn't exist yet
         <Route path="/text-snippet-form" component={() => {
           const TextSnippetForm = React.lazy(() => import('./pages/text-snippet-form'));
           return (
@@ -279,6 +282,7 @@ function Router() {
             );
           }}
         </Route>
+        */}
         
         <Route component={NotFound} />
       </Switch>

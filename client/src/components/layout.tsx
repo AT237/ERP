@@ -842,6 +842,7 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
+      /* Commented out - work-order-form file doesn't exist
       if (activeTab.formType === 'work-order') {
         const WorkOrderForm = lazy(() => import('@/pages/work-order-form'));
         const workOrderId = activeTab.id.startsWith('edit-work-order-') 
@@ -864,6 +865,7 @@ export default function Layout({ children }: LayoutProps) {
           </Suspense>
         );
       }
+      */
       
       /* Commented out - purchase-order-form file doesn't exist
       if (activeTab.formType === 'purchase-order') {
@@ -890,6 +892,7 @@ export default function Layout({ children }: LayoutProps) {
       }
       */
       
+      /* Commented out - sales-order-form file doesn't exist
       if (activeTab.formType === 'sales-order') {
         const SalesOrderForm = lazy(() => import('@/pages/sales-order-form'));
         const salesOrderId = activeTab.id.startsWith('edit-sales-order-') 
@@ -912,7 +915,9 @@ export default function Layout({ children }: LayoutProps) {
           </Suspense>
         );
       }
+      */
       
+      /* Commented out - packing-list-form file doesn't exist
       if (activeTab.formType === 'packing-list') {
         const PackingListForm = lazy(() => import('@/pages/packing-list-form'));
         const packingListId = activeTab.id.startsWith('edit-packing-list-') 
@@ -935,7 +940,9 @@ export default function Layout({ children }: LayoutProps) {
           </Suspense>
         );
       }
+      */
       
+      /* Commented out - invoice-form file doesn't exist
       if (activeTab.formType === 'invoice') {
         const InvoiceForm = lazy(() => import('@/pages/invoice-form'));
         const invoiceId = activeTab.id.startsWith('edit-invoice-') 
@@ -958,7 +965,9 @@ export default function Layout({ children }: LayoutProps) {
           </Suspense>
         );
       }
+      */
       
+      /* Commented out - text-snippet-form file doesn't exist
       if (activeTab.formType === 'text-snippet') {
         const TextSnippetForm = lazy(() => import('@/pages/text-snippet-form'));
         const textSnippetId = activeTab.id.startsWith('edit-text-snippet-') 
@@ -981,6 +990,7 @@ export default function Layout({ children }: LayoutProps) {
           </Suspense>
         );
       }
+      */
       
       // Default form placeholder
       return (
