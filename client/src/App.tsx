@@ -293,6 +293,35 @@ function Router() {
         </Route>
         */}
         
+        {/* Master Data Form Routes */}
+        <Route path="/masterdata-form/:type">
+          {(params) => {
+            const MasterDataForm = React.lazy(() => import('./pages/masterdata-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <MasterDataForm 
+                  type={params.type} 
+                  onSave={() => window.history.back()} 
+                />
+              </Suspense>
+            );
+          }}
+        </Route>
+        <Route path="/masterdata-form/:type/:id">
+          {(params) => {
+            const MasterDataForm = React.lazy(() => import('./pages/masterdata-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <MasterDataForm 
+                  type={params.type} 
+                  id={params.id}
+                  onSave={() => window.history.back()} 
+                />
+              </Suspense>
+            );
+          }}
+        </Route>
+        
         <Route component={NotFound} />
       </Switch>
     </Layout>

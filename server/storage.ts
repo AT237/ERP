@@ -159,31 +159,37 @@ export interface IStorage {
 
   // Master Data methods
   getUnitsOfMeasure(): Promise<UnitOfMeasure[]>;
+  getUnitOfMeasure(id: string): Promise<UnitOfMeasure | undefined>;
   createUnitOfMeasure(uom: InsertUnitOfMeasure): Promise<UnitOfMeasure>;
   updateUnitOfMeasure(id: string, uom: Partial<InsertUnitOfMeasure>): Promise<UnitOfMeasure>;
   deleteUnitOfMeasure(id: string): Promise<void>;
 
   getPaymentTerms(): Promise<PaymentTerm[]>;
+  getPaymentTerm(id: string): Promise<PaymentTerm | undefined>;
   createPaymentTerm(term: InsertPaymentTerm): Promise<PaymentTerm>;
   updatePaymentTerm(id: string, term: Partial<InsertPaymentTerm>): Promise<PaymentTerm>;
   deletePaymentTerm(id: string): Promise<void>;
 
   getIncoterms(): Promise<Incoterm[]>;
+  getIncoterm(id: string): Promise<Incoterm | undefined>;
   createIncoterm(incoterm: InsertIncoterm): Promise<Incoterm>;
   updateIncoterm(id: string, incoterm: Partial<InsertIncoterm>): Promise<Incoterm>;
   deleteIncoterm(id: string): Promise<void>;
 
   getVatRates(): Promise<VatRate[]>;
+  getVatRate(id: string): Promise<VatRate | undefined>;
   createVatRate(rate: InsertVatRate): Promise<VatRate>;
   updateVatRate(id: string, rate: Partial<InsertVatRate>): Promise<VatRate>;
   deleteVatRate(id: string): Promise<void>;
 
   getCities(): Promise<City[]>;
+  getCity(id: string): Promise<City | undefined>;
   createCity(city: InsertCity): Promise<City>;
   updateCity(id: string, city: Partial<InsertCity>): Promise<City>;
   deleteCity(id: string): Promise<void>;
 
   getStatuses(): Promise<Status[]>;
+  getStatus(id: string): Promise<Status | undefined>;
   createStatus(status: InsertStatus): Promise<Status>;
   updateStatus(id: string, status: Partial<InsertStatus>): Promise<Status>;
   deleteStatus(id: string): Promise<void>;
@@ -889,6 +895,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(unitsOfMeasure).where(eq(unitsOfMeasure.isActive, true)).orderBy(unitsOfMeasure.name);
   }
 
+  async getUnitOfMeasure(id: string): Promise<UnitOfMeasure | undefined> {
+    const [unit] = await db.select().from(unitsOfMeasure).where(eq(unitsOfMeasure.id, id));
+    return unit || undefined;
+  }
+
   async createUnitOfMeasure(uom: InsertUnitOfMeasure): Promise<UnitOfMeasure> {
     const [newUom] = await db.insert(unitsOfMeasure).values(uom).returning();
     return newUom;
@@ -905,6 +916,11 @@ export class DatabaseStorage implements IStorage {
 
   async getPaymentTerms(): Promise<PaymentTerm[]> {
     return await db.select().from(paymentTerms).where(eq(paymentTerms.isActive, true)).orderBy(paymentTerms.days);
+  }
+
+  async getPaymentTerm(id: string): Promise<PaymentTerm | undefined> {
+    const [term] = await db.select().from(paymentTerms).where(eq(paymentTerms.id, id));
+    return term || undefined;
   }
 
   async createPaymentTerm(term: InsertPaymentTerm): Promise<PaymentTerm> {
@@ -925,6 +941,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(incoterms).where(eq(incoterms.isActive, true)).orderBy(incoterms.code);
   }
 
+  async getIncoterm(id: string): Promise<Incoterm | undefined> {
+    const [incoterm] = await db.select().from(incoterms).where(eq(incoterms.id, id));
+    return incoterm || undefined;
+  }
+
   async createIncoterm(incoterm: InsertIncoterm): Promise<Incoterm> {
     const [newIncoterm] = await db.insert(incoterms).values(incoterm).returning();
     return newIncoterm;
@@ -941,6 +962,11 @@ export class DatabaseStorage implements IStorage {
 
   async getVatRates(): Promise<VatRate[]> {
     return await db.select().from(vatRates).where(eq(vatRates.isActive, true)).orderBy(vatRates.rate);
+  }
+
+  async getVatRate(id: string): Promise<VatRate | undefined> {
+    const [rate] = await db.select().from(vatRates).where(eq(vatRates.id, id));
+    return rate || undefined;
   }
 
   async createVatRate(rate: InsertVatRate): Promise<VatRate> {
@@ -961,6 +987,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(cities).where(eq(cities.isActive, true)).orderBy(cities.name);
   }
 
+  async getCity(id: string): Promise<City | undefined> {
+    const [city] = await db.select().from(cities).where(eq(cities.id, id));
+    return city || undefined;
+  }
+
   async createCity(city: InsertCity): Promise<City> {
     const [newCity] = await db.insert(cities).values(city).returning();
     return newCity;
@@ -977,6 +1008,11 @@ export class DatabaseStorage implements IStorage {
 
   async getStatuses(): Promise<Status[]> {
     return await db.select().from(statuses).where(eq(statuses.isActive, true)).orderBy(statuses.category, statuses.name);
+  }
+
+  async getStatus(id: string): Promise<Status | undefined> {
+    const [status] = await db.select().from(statuses).where(eq(statuses.id, id));
+    return status || undefined;
   }
 
   async createStatus(status: InsertStatus): Promise<Status> {

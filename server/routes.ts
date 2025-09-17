@@ -1218,6 +1218,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Master Data individual item routes (GET, PUT, DELETE by ID)
+  // Units of Measure individual routes
+  app.get("/api/masterdata/units-of-measure/:id", async (req, res) => {
+    try {
+      const unit = await storage.getUnitOfMeasure(req.params.id);
+      if (!unit) {
+        return res.status(404).json({ message: "Unit of measure not found" });
+      }
+      res.json(unit);
+    } catch (error) {
+      console.error("Error fetching unit of measure:", error);
+      res.status(500).json({ message: "Failed to fetch unit of measure" });
+    }
+  });
+
+  app.put("/api/masterdata/units-of-measure/:id", async (req, res) => {
+    try {
+      const unitData = insertUnitOfMeasureSchema.partial().parse(req.body);
+      const unit = await storage.updateUnitOfMeasure(req.params.id, unitData);
+      res.json(unit);
+    } catch (error) {
+      console.error("Error updating unit of measure:", error);
+      res.status(400).json({ message: "Failed to update unit of measure" });
+    }
+  });
+
+  app.delete("/api/masterdata/units-of-measure/:id", async (req, res) => {
+    try {
+      await storage.deleteUnitOfMeasure(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting unit of measure:", error);
+      res.status(500).json({ message: "Failed to delete unit of measure" });
+    }
+  });
+
+  // Payment Terms individual routes
+  app.get("/api/masterdata/payment-terms/:id", async (req, res) => {
+    try {
+      const term = await storage.getPaymentTerm(req.params.id);
+      if (!term) {
+        return res.status(404).json({ message: "Payment term not found" });
+      }
+      res.json(term);
+    } catch (error) {
+      console.error("Error fetching payment term:", error);
+      res.status(500).json({ message: "Failed to fetch payment term" });
+    }
+  });
+
+  app.put("/api/masterdata/payment-terms/:id", async (req, res) => {
+    try {
+      const termData = insertPaymentTermSchema.partial().parse(req.body);
+      const term = await storage.updatePaymentTerm(req.params.id, termData);
+      res.json(term);
+    } catch (error) {
+      console.error("Error updating payment term:", error);
+      res.status(400).json({ message: "Failed to update payment term" });
+    }
+  });
+
+  app.delete("/api/masterdata/payment-terms/:id", async (req, res) => {
+    try {
+      await storage.deletePaymentTerm(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting payment term:", error);
+      res.status(500).json({ message: "Failed to delete payment term" });
+    }
+  });
+
+  // Incoterms individual routes
+  app.get("/api/masterdata/incoterms/:id", async (req, res) => {
+    try {
+      const incoterm = await storage.getIncoterm(req.params.id);
+      if (!incoterm) {
+        return res.status(404).json({ message: "Incoterm not found" });
+      }
+      res.json(incoterm);
+    } catch (error) {
+      console.error("Error fetching incoterm:", error);
+      res.status(500).json({ message: "Failed to fetch incoterm" });
+    }
+  });
+
+  app.put("/api/masterdata/incoterms/:id", async (req, res) => {
+    try {
+      const incotermData = insertIncotermSchema.partial().parse(req.body);
+      const incoterm = await storage.updateIncoterm(req.params.id, incotermData);
+      res.json(incoterm);
+    } catch (error) {
+      console.error("Error updating incoterm:", error);
+      res.status(400).json({ message: "Failed to update incoterm" });
+    }
+  });
+
+  app.delete("/api/masterdata/incoterms/:id", async (req, res) => {
+    try {
+      await storage.deleteIncoterm(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting incoterm:", error);
+      res.status(500).json({ message: "Failed to delete incoterm" });
+    }
+  });
+
+  // VAT Rates individual routes
+  app.get("/api/masterdata/vat-rates/:id", async (req, res) => {
+    try {
+      const rate = await storage.getVatRate(req.params.id);
+      if (!rate) {
+        return res.status(404).json({ message: "VAT rate not found" });
+      }
+      res.json(rate);
+    } catch (error) {
+      console.error("Error fetching VAT rate:", error);
+      res.status(500).json({ message: "Failed to fetch VAT rate" });
+    }
+  });
+
+  app.put("/api/masterdata/vat-rates/:id", async (req, res) => {
+    try {
+      const rateData = insertVatRateSchema.partial().parse(req.body);
+      const rate = await storage.updateVatRate(req.params.id, rateData);
+      res.json(rate);
+    } catch (error) {
+      console.error("Error updating VAT rate:", error);
+      res.status(400).json({ message: "Failed to update VAT rate" });
+    }
+  });
+
+  app.delete("/api/masterdata/vat-rates/:id", async (req, res) => {
+    try {
+      await storage.deleteVatRate(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting VAT rate:", error);
+      res.status(500).json({ message: "Failed to delete VAT rate" });
+    }
+  });
+
+  // Cities individual routes
+  app.get("/api/masterdata/cities/:id", async (req, res) => {
+    try {
+      const city = await storage.getCity(req.params.id);
+      if (!city) {
+        return res.status(404).json({ message: "City not found" });
+      }
+      res.json(city);
+    } catch (error) {
+      console.error("Error fetching city:", error);
+      res.status(500).json({ message: "Failed to fetch city" });
+    }
+  });
+
+  app.put("/api/masterdata/cities/:id", async (req, res) => {
+    try {
+      const cityData = insertCitySchema.partial().parse(req.body);
+      const city = await storage.updateCity(req.params.id, cityData);
+      res.json(city);
+    } catch (error) {
+      console.error("Error updating city:", error);
+      res.status(400).json({ message: "Failed to update city" });
+    }
+  });
+
+  app.delete("/api/masterdata/cities/:id", async (req, res) => {
+    try {
+      await storage.deleteCity(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting city:", error);
+      res.status(500).json({ message: "Failed to delete city" });
+    }
+  });
+
+  // Statuses individual routes
+  app.get("/api/masterdata/statuses/:id", async (req, res) => {
+    try {
+      const status = await storage.getStatus(req.params.id);
+      if (!status) {
+        return res.status(404).json({ message: "Status not found" });
+      }
+      res.json(status);
+    } catch (error) {
+      console.error("Error fetching status:", error);
+      res.status(500).json({ message: "Failed to fetch status" });
+    }
+  });
+
+  app.put("/api/masterdata/statuses/:id", async (req, res) => {
+    try {
+      const statusData = insertStatusSchema.partial().parse(req.body);
+      const status = await storage.updateStatus(req.params.id, statusData);
+      res.json(status);
+    } catch (error) {
+      console.error("Error updating status:", error);
+      res.status(400).json({ message: "Failed to update status" });
+    }
+  });
+
+  app.delete("/api/masterdata/statuses/:id", async (req, res) => {
+    try {
+      await storage.deleteStatus(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting status:", error);
+      res.status(500).json({ message: "Failed to delete status" });
+    }
+  });
+
   // Text Snippets Management routes
   app.get("/api/text-snippets", async (req, res) => {
     try {
