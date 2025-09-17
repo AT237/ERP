@@ -156,7 +156,6 @@ function Router() {
           }}
         </Route>
         
-        {/* Work order form routes commented out - form file doesn't exist
         <Route path="/work-order-form" component={() => {
           const WorkOrderForm = React.lazy(() => import('./pages/work-order-form'));
           return (
@@ -175,7 +174,6 @@ function Router() {
             );
           }}
         </Route>
-        */}
         
         {/* Purchase order form route commented out - form file doesn't exist
         <Route path="/purchase-order-form" component={() => {

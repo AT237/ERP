@@ -842,7 +842,6 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      /* Commented out - work-order-form file doesn't exist
       if (activeTab.formType === 'work-order') {
         const WorkOrderForm = lazy(() => import('@/pages/work-order-form'));
         const workOrderId = activeTab.id.startsWith('edit-work-order-') 
@@ -865,7 +864,6 @@ export default function Layout({ children }: LayoutProps) {
           </Suspense>
         );
       }
-      */
       
       /* Commented out - purchase-order-form file doesn't exist
       if (activeTab.formType === 'purchase-order') {
