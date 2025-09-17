@@ -1,37 +1,16 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { insertTextSnippetSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, FileText, Copy, Search, Filter } from "lucide-react";
+import { Plus, Edit, Trash2, Copy, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { TextSnippet, InsertTextSnippet } from "@shared/schema";
-import { z } from "zod";
-import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
-import type { ActionButton } from '@/components/layouts/BaseFormLayout';
-
-// Form schema for text snippets
-const textSnippetFormSchema = insertTextSnippetSchema.extend({
-  // Add any additional validation rules if needed
-});
-
-type TextSnippetFormData = z.infer<typeof textSnippetFormSchema>;
+import type { TextSnippet } from "@shared/schema";
 
 // Available categories for text snippets
 const SNIPPET_CATEGORIES = [
@@ -56,10 +35,7 @@ const LOCALES = [
 ];
 
 export default function TextSnippets() {
-  const [showDialog, setShowDialog] = useState(false);
-  const [editingSnippet, setEditingSnippet] = useState<TextSnippet | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [activeSection, setActiveSection] = useState("basic");
   const { toast } = useToast();
 
   // Data fetching
@@ -160,66 +136,7 @@ export default function TextSnippets() {
     tableKey: 'text-snippets'
   });
 
-  // Form setup
-  const form = useForm<TextSnippetFormData>({
-    resolver: zodResolver(textSnippetFormSchema),
-    defaultValues: {
-      code: "",
-      title: "",
-      body: "",
-      category: "general",
-      locale: "nl",
-      version: 1,
-      isActive: true,
-    },
-  });
-
-  // Mutations
-  const createMutation = useMutation({
-    mutationFn: async (data: InsertTextSnippet) => {
-      await apiRequest("POST", "/api/text-snippets", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/text-snippets"] });
-      toast({
-        title: "Success",
-        description: "Text snippet created successfully",
-      });
-      setShowDialog(false);
-      form.reset();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create text snippet",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: { id: string; snippet: Partial<InsertTextSnippet> }) => {
-      await apiRequest("PUT", `/api/text-snippets/${data.id}`, data.snippet);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/text-snippets"] });
-      toast({
-        title: "Success",
-        description: "Text snippet updated successfully",
-      });
-      setShowDialog(false);
-      setEditingSnippet(null);
-      form.reset();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update text snippet",
-        variant: "destructive",
-      });
-    },
-  });
-
+  // Delete mutation for row actions
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/text-snippets/${id}`);
@@ -242,7 +159,7 @@ export default function TextSnippets() {
 
   const duplicateMutation = useMutation({
     mutationFn: async (snippet: TextSnippet) => {
-      const duplicateData: InsertTextSnippet = {
+      const duplicateData = {
         code: `${snippet.code}_copy`,
         title: `${snippet.title} (Copy)`,
         body: snippet.body,
@@ -271,31 +188,33 @@ export default function TextSnippets() {
 
   // Event handlers
   const handleNewSnippet = () => {
-    setEditingSnippet(null);
-    form.reset({
-      code: "",
-      title: "",
-      body: "",
-      category: "general",
-      locale: "nl",
-      version: 1,
-      isActive: true,
+    // Dispatch custom event to open text snippet form in new tab
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: 'new-text-snippet',
+        name: 'New Text Snippet',
+        formType: 'text-snippet'
+      }
     });
-    setShowDialog(true);
+    window.dispatchEvent(event);
   };
 
   const handleEdit = (snippet: TextSnippet) => {
-    setEditingSnippet(snippet);
-    form.reset({
-      code: snippet.code,
-      title: snippet.title,
-      body: snippet.body,
-      category: snippet.category || "general",
-      locale: snippet.locale || "nl",
-      version: snippet.version || 1,
-      isActive: snippet.isActive ?? true,
+    // Dispatch custom event to open text snippet edit form in new tab
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: `edit-text-snippet-${snippet.id}`,
+        name: `${snippet.code}`,
+        formType: 'text-snippet',
+        parentId: snippet.id
+      }
     });
-    setShowDialog(true);
+    window.dispatchEvent(event);
+  };
+
+  const handleRowDoubleClick = (snippet: TextSnippet) => {
+    // Same as edit for double-click
+    handleEdit(snippet);
   };
 
   const handleDelete = (id: string) => {
@@ -308,297 +227,9 @@ export default function TextSnippets() {
     duplicateMutation.mutate(snippet);
   };
 
-  const onSubmit = (data: TextSnippetFormData) => {
-    if (editingSnippet) {
-      updateMutation.mutate({
-        id: editingSnippet.id,
-        snippet: data,
-      });
-    } else {
-      createMutation.mutate(data);
-    }
-  };
 
-  const handleDialogClose = (open: boolean) => {
-    if (!open) {
-      setShowDialog(false);
-      setEditingSnippet(null);
-      form.reset();
-    }
-  };
 
-  // Custom components for FormField integration
-  const renderCategorySelect = (field: any) => (
-    <Select onValueChange={field.onChange} value={field.value || "general"}>
-      <SelectTrigger data-testid="select-category">
-        <SelectValue placeholder="Select category" />
-      </SelectTrigger>
-      <SelectContent>
-        {SNIPPET_CATEGORIES.map((category) => (
-          <SelectItem 
-            key={category.value} 
-            value={category.value}
-            data-testid={`option-category-${category.value}`}
-          >
-            {category.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
 
-  const renderLocaleSelect = (field: any) => (
-    <Select onValueChange={field.onChange} value={field.value || "nl"}>
-      <SelectTrigger data-testid="select-locale">
-        <SelectValue placeholder="Select language" />
-      </SelectTrigger>
-      <SelectContent>
-        {LOCALES.map((locale) => (
-          <SelectItem 
-            key={locale.value} 
-            value={locale.value}
-            data-testid={`option-locale-${locale.value}`}
-          >
-            {locale.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-
-  const renderActiveSwitch = (field: any) => (
-    <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-      <div className="space-y-0.5">
-        <Label>Active</Label>
-      </div>
-      <Switch
-        checked={field.value ?? true}
-        onCheckedChange={field.onChange}
-        data-testid="switch-active"
-      />
-    </div>
-  );
-
-  // Create form sections for LayoutForm2
-  const createFormSections = (): FormSection2<TextSnippetFormData>[] => [
-    {
-      id: "basic",
-      label: "Basic Information",
-      icon: <FileText className="h-4 w-4" />,
-      rows: [
-        createFieldsRow([
-          {
-            key: "code",
-            label: "Code",
-            type: "custom",
-            customComponent: (
-              <FormField
-                control={form.control}
-                name="code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input 
-                        placeholder="SNIPPET_CODE" 
-                        data-testid="input-code"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ),
-            validation: {
-              isRequired: true
-            },
-            testId: "input-code",
-            width: "50%"
-          } as FormField2<TextSnippetFormData>,
-          {
-            key: "category",
-            label: "Category",
-            type: "custom",
-            customComponent: (
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      {renderCategorySelect(field)}
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ),
-            testId: "select-category",
-            width: "50%"
-          } as FormField2<TextSnippetFormData>
-        ]),
-        createFieldRow({
-          key: "title",
-          label: "Title",
-          type: "custom",
-          customComponent: (
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input 
-                      placeholder="Enter snippet title" 
-                      data-testid="input-title"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ),
-          validation: {
-            isRequired: true
-          },
-          testId: "input-title"
-        } as FormField2<TextSnippetFormData>)
-      ]
-    },
-    {
-      id: "content",
-      label: "Content",
-      icon: <Edit className="h-4 w-4" />,
-      rows: [
-        createFieldRow({
-          key: "body",
-          label: "Content",
-          type: "custom",
-          customComponent: (
-            <FormField
-              control={form.control}
-              name="body"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Enter the text content for this snippet..." 
-                      className="min-h-[120px]"
-                      data-testid="textarea-body"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ),
-          validation: {
-            isRequired: true
-          },
-          testId: "textarea-body"
-        } as FormField2<TextSnippetFormData>)
-      ]
-    },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: <span className="text-xs font-bold">⚙</span>,
-      rows: [
-        {
-          type: "fields",
-          fields: [
-            {
-              key: "locale",
-              label: "Language",
-              type: "custom",
-              customComponent: (
-                <FormField
-                  control={form.control}
-                  name="locale"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        {renderLocaleSelect(field)}
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ),
-              testId: "select-locale",
-              width: "33%"
-            } as FormField2<TextSnippetFormData>,
-            {
-              key: "version",
-              label: "Version",
-              type: "custom",
-              customComponent: (
-                <FormField
-                  control={form.control}
-                  name="version"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="1"
-                          data-testid="input-version"
-                          {...field}
-                          value={field.value?.toString() || "1"}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ),
-              testId: "input-version",
-              width: "33%"
-            } as FormField2<TextSnippetFormData>,
-            {
-              key: "isActive",
-              label: "Active",
-              type: "custom",
-              customComponent: (
-                <FormField
-                  control={form.control}
-                  name="isActive"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        {renderActiveSwitch(field)}
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              ),
-              testId: "switch-active",
-              width: "33%"
-            } as FormField2<TextSnippetFormData>
-          ]
-        }
-      ]
-    }
-  ];
-
-  // Create action buttons
-  const createActionButtons = (): ActionButton[] => [
-    {
-      label: "Cancel",
-      variant: "outline",
-      onClick: () => handleDialogClose(false),
-      disabled: createMutation.isPending || updateMutation.isPending
-    },
-    {
-      label: `${editingSnippet ? 'Update' : 'Create'} Snippet`,
-      variant: "default",
-      onClick: () => form.handleSubmit(onSubmit)(),
-      disabled: createMutation.isPending || updateMutation.isPending
-    }
-  ];
 
   // Filter data by selected category
   const filteredData = React.useMemo(() => {
@@ -634,6 +265,7 @@ export default function TextSnippets() {
           const allIds = filteredData.map(s => s.id);
           tableState.toggleAllRows(allIds);
         }}
+        onRowDoubleClick={handleRowDoubleClick}
         getRowId={(row: TextSnippet) => row.id}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
@@ -668,34 +300,6 @@ export default function TextSnippets() {
           }
         ]}
       />
-
-      {/* Create/Edit Dialog */}
-      <Dialog open={showDialog} onOpenChange={handleDialogClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle data-testid="dialog-title">
-              {editingSnippet ? 'Edit Text Snippet' : 'Create New Text Snippet'}
-            </DialogTitle>
-            <DialogDescription>
-              {editingSnippet 
-                ? 'Update the text snippet details below.' 
-                : 'Create a new reusable text snippet for use in documents.'}
-            </DialogDescription>
-          </DialogHeader>
-
-          <Form {...form}>
-            <LayoutForm2
-              sections={createFormSections()}
-              activeSection={activeSection}
-              onSectionChange={setActiveSection}
-              form={form}
-              onSubmit={onSubmit}
-              actionButtons={createActionButtons()}
-              isLoading={createMutation.isPending || updateMutation.isPending}
-            />
-          </Form>
-        </DialogContent>
-      </Dialog>
 
       {/* Category Filter */}
       <div className="mt-4 flex items-center gap-2">

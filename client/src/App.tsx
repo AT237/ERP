@@ -194,6 +194,25 @@ function Router() {
           }}
         </Route>
         
+        <Route path="/text-snippet-form" component={() => {
+          const TextSnippetForm = React.lazy(() => import('./pages/text-snippet-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <TextSnippetForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/text-snippet-form/:id">
+          {(params) => {
+            const TextSnippetForm = React.lazy(() => import('./pages/text-snippet-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <TextSnippetForm onSave={() => window.history.back()} textSnippetId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        
         {/* Sales order form routes commented out - form files don't exist yet
         <Route path="/sales-order-form" component={() => {
           const SalesOrderForm = React.lazy(() => import('./pages/sales-order-form'));
