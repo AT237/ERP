@@ -865,6 +865,7 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
+      /* Commented out - purchase-order-form file doesn't exist
       if (activeTab.formType === 'purchase-order') {
         const PurchaseOrderForm = lazy(() => import('@/pages/purchase-order-form'));
         const purchaseOrderId = activeTab.id.startsWith('edit-purchase-order-') 
@@ -887,6 +888,7 @@ export default function Layout({ children }: LayoutProps) {
           </Suspense>
         );
       }
+      */
       
       if (activeTab.formType === 'sales-order') {
         const SalesOrderForm = lazy(() => import('@/pages/sales-order-form'));

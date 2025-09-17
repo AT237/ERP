@@ -1,35 +1,12 @@
-import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertInventoryItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Package, Edit, Trash2, Plus, Image } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { InventoryItem, InsertInventoryItem } from "@shared/schema";
-import { z } from "zod";
+import type { InventoryItem } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import imageCompression from 'browser-image-compression';
-import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
-import type { ActionButton } from '@/components/layouts/BaseFormLayout';
 
-const inventoryFormSchema = insertInventoryItemSchema.extend({
-  unitPrice: z.string().min(1, "Prijs is verplicht"),
-  costPrice: z.string().min(1, "Kostprijs is verplicht"),
-  margin: z.string().optional(),
-});
-
-type InventoryFormData = z.infer<typeof inventoryFormSchema>;
 
 const defaultColumns: ColumnConfig[] = [
   createIdColumn('sku', 'SKU'),
@@ -45,11 +22,6 @@ const defaultColumns: ColumnConfig[] = [
 ];
 
 export default function Inventory() {
-  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-  const [showDialog, setShowDialog] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string>("");
-  const [activeSection, setActiveSection] = useState("basic");
   const { toast } = useToast();
 
   // Data table state  
@@ -60,146 +32,6 @@ export default function Inventory() {
   // Data fetching
   const { data: items = [], isLoading } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory"],
-  });
-
-  // Form setup
-  const form = useForm<InventoryFormData>({
-    resolver: zodResolver(inventoryFormSchema),
-    defaultValues: {
-      name: "",
-      sku: "",
-      description: "",
-      category: "General",
-      unit: "pcs",
-      unitPrice: "0.00",
-      costPrice: "0.00",
-      margin: "0.00",
-      currentStock: 0,
-      minimumStock: 0,
-      status: "active",
-      image: "",
-      isComposite: false,
-    },
-  });
-
-  // Watch for price changes to auto-calculate margin
-  const watchedCostPrice = form.watch("costPrice");
-  const watchedUnitPrice = form.watch("unitPrice");
-
-  // Calculate margin
-  const calculateMargin = (costPrice: string, unitPrice: string) => {
-    const cost = parseFloat(costPrice) || 0;
-    const selling = parseFloat(unitPrice) || 0;
-    if (cost === 0) return "0.00";
-    const margin = ((selling - cost) / cost) * 100;
-    return margin.toFixed(2);
-  };
-
-  // Auto-calculate margin when prices change
-  useEffect(() => {
-    if (watchedCostPrice && watchedUnitPrice) {
-      const margin = calculateMargin(watchedCostPrice, watchedUnitPrice);
-      form.setValue("margin", margin);
-    }
-  }, [watchedCostPrice, watchedUnitPrice, form]);
-
-  // Image upload handler
-  const handleImageUpload = async (file: File) => {
-    try {
-      setUploadingImage(true);
-      
-      const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 800,
-        useWebWorker: true,
-      };
-      
-      const compressedFile = await imageCompression(file, options);
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64String = e.target?.result as string;
-        setPreviewImage(base64String);
-        form.setValue('image', base64String);
-      };
-      reader.readAsDataURL(compressedFile);
-      
-      toast({
-        title: "Succes",
-        description: `Afbeelding gecomprimeerd van ${(file.size / 1024 / 1024).toFixed(2)}MB naar ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
-      });
-    } catch (error) {
-      console.error('Error compressing image:', error);
-      toast({
-        title: "Fout",
-        description: "Kan afbeelding niet verwerken",
-        variant: "destructive",
-      });
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  // Mutations
-  const createMutation = useMutation({
-    mutationFn: async (data: InventoryFormData) => {
-      const response = await apiRequest("POST", "/api/inventory", {
-        ...data,
-        // Convert strings to numbers for decimal fields
-        unitPrice: parseFloat(data.unitPrice || '0').toString(),
-        costPrice: parseFloat(data.costPrice || '0').toString(),
-        margin: parseFloat(data.margin || '0').toString()
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      setShowDialog(false);
-      setPreviewImage("");
-      form.reset();
-      setEditingItem(null);
-      toast({
-        title: "Succes",
-        description: "Artikel toegevoegd",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Fout",
-        description: "Kan artikel niet toevoegen",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InventoryFormData> }) => {
-      const response = await apiRequest("PUT", `/api/inventory/${id}`, {
-        ...data,
-        unitPrice: parseFloat(data.unitPrice || '0').toString(),
-        costPrice: parseFloat(data.costPrice || '0').toString(),
-        margin: parseFloat(data.margin || '0').toString()
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      setShowDialog(false);
-      setPreviewImage("");
-      form.reset();
-      setEditingItem(null);
-      toast({
-        title: "Succes",
-        description: "Artikel bijgewerkt",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Fout",
-        description: "Kan artikel niet bijwerken",
-        variant: "destructive",
-      });
-    },
   });
 
   const deleteMutation = useMutation({
@@ -222,36 +54,30 @@ export default function Inventory() {
     },
   });
 
-  // Handlers
-  const onSubmit = (data: InventoryFormData) => {
-    if (editingItem) {
-      updateMutation.mutate({ id: editingItem.id, data });
-    } else {
-      createMutation.mutate(data);
-    }
+  const handleEdit = (item: InventoryItem) => {
+    // Dispatch custom event to open inventory edit form in new tab
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: `edit-inventory-${item.id}`,
+        name: `${item.name || item.sku}`,
+        formType: 'inventory',
+        parentId: item.id
+      }
+    });
+    window.dispatchEvent(event);
   };
 
-  const handleEdit = (item: InventoryItem) => {
-    setEditingItem(item);
-    form.reset({
-      name: item.name,
-      sku: item.sku,
-      description: item.description || "",
-      category: item.category || "General",
-      unit: item.unit || "pcs",
-      unitPrice: item.unitPrice || "0.00",
-      costPrice: item.costPrice || "0.00",
-      margin: item.margin || "0.00",
-      currentStock: item.currentStock || 0,
-      minimumStock: item.minimumStock || 0,
-      status: item.status || "active",
-      image: item.image || "",
-      isComposite: item.isComposite || false,
+  const handleRowDoubleClick = (item: InventoryItem) => {
+    // Dispatch custom event to open inventory edit form in new tab
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: `edit-inventory-${item.id}`,
+        name: `${item.name || item.sku}`,
+        formType: 'inventory',
+        parentId: item.id
+      }
     });
-    if (item.image) {
-      setPreviewImage(item.image);
-    }
-    setShowDialog(true);
+    window.dispatchEvent(event);
   };
 
   const handleDelete = (id: string) => {
@@ -261,13 +87,18 @@ export default function Inventory() {
   };
 
   const handleNewItem = () => {
-    setEditingItem(null);
-    setPreviewImage("");
-    form.reset();
-    setShowDialog(true);
+    // Dispatch custom event to open inventory form in new tab
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: 'new-inventory',
+        name: 'New Inventory Item',
+        formType: 'inventory'
+      }
+    });
+    window.dispatchEvent(event);
   };
 
-  // Keep raw data for sorting, formatting handled in display
+  // Render table data with proper formatting
   const renderTableData = (items: InventoryItem[]) => {
     return items.map((item) => ({
       ...item,
@@ -281,295 +112,6 @@ export default function Inventory() {
     }));
   };
 
-  // Image upload component
-  const renderImageUpload = () => (
-    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
-      {previewImage ? (
-        <div className="space-y-2">
-          <img 
-            src={previewImage} 
-            alt="Preview" 
-            className="mx-auto h-32 w-32 object-cover rounded-lg"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setPreviewImage("");
-              form.setValue("image", "");
-            }}
-          >
-            Verwijderen
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <div className="text-gray-500 dark:text-gray-400">
-            Sleep een afbeelding hierheen of klik om te selecteren
-          </div>
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleImageUpload(file);
-            }}
-            disabled={uploadingImage}
-            className="cursor-pointer"
-            data-testid="input-inventory-image"
-          />
-          {uploadingImage && <div className="text-sm text-orange-600">Comprimeren...</div>}
-        </div>
-      )}
-    </div>
-  );
-
-  // Composite info component
-  const renderCompositeInfo = () => (
-    form.watch("isComposite") ? (
-      <div className="p-4 bg-orange-50 dark:bg-orange-950 rounded-lg mt-2">
-        <p className="text-sm text-orange-700 dark:text-orange-300">
-          Componenten kunnen worden toegevoegd na het aanmaken van dit artikel.
-        </p>
-      </div>
-    ) : null
-  );
-
-  // Create form sections
-  const createFormSections = (): FormSection2<InventoryFormData>[] => [
-    {
-      id: "basic",
-      label: "Basisinformatie",
-      icon: <Package className="h-4 w-4" />,
-      rows: [
-        createFieldsRow([
-          {
-            key: "name",
-            label: "Naam",
-            type: "text",
-            placeholder: "Artikelnaam",
-            register: form.register("name"),
-            validation: {
-              error: form.formState.errors.name?.message,
-              isRequired: true
-            },
-            testId: "input-inventory-name",
-            width: "50%"
-          } as FormField2<InventoryFormData>,
-          {
-            key: "sku",
-            label: "SKU",
-            type: "text",
-            placeholder: "SKU/Artikelcode",
-            register: form.register("sku"),
-            validation: {
-              error: form.formState.errors.sku?.message,
-              isRequired: true
-            },
-            testId: "input-inventory-sku",
-            width: "50%"
-          } as FormField2<InventoryFormData>
-        ]),
-        createFieldRow({
-          key: "description",
-          label: "Beschrijving",
-          type: "textarea",
-          placeholder: "Beschrijving van het artikel",
-          register: form.register("description"),
-          testId: "input-inventory-description",
-          rows: 3
-        } as FormField2<InventoryFormData>),
-        createFieldsRow([
-          {
-            key: "category",
-            label: "Categorie",
-            type: "select",
-            options: [
-              { value: "General", label: "Algemeen" },
-              { value: "Electronics", label: "Elektronica" },
-              { value: "Hardware", label: "Hardware" },
-              { value: "Software", label: "Software" },
-              { value: "Services", label: "Diensten" }
-            ],
-            setValue: (value) => form.setValue("category", value),
-            watch: () => form.watch("category"),
-            testId: "select-inventory-category",
-            width: "50%"
-          } as FormField2<InventoryFormData>,
-          {
-            key: "unit",
-            label: "Eenheid",
-            type: "select",
-            options: [
-              { value: "pcs", label: "Stuks" },
-              { value: "kg", label: "Kilogram" },
-              { value: "m", label: "Meter" },
-              { value: "l", label: "Liter" },
-              { value: "box", label: "Doos" }
-            ],
-            setValue: (value) => form.setValue("unit", value),
-            watch: () => form.watch("unit"),
-            testId: "select-inventory-unit",
-            width: "50%"
-          } as FormField2<InventoryFormData>
-        ])
-      ]
-    },
-    {
-      id: "image",
-      label: "Afbeelding",
-      icon: <Image className="h-4 w-4" />,
-      rows: [
-        createFieldRow({
-          key: "image",
-          label: "Productafbeelding",
-          type: "custom",
-          customComponent: renderImageUpload(),
-          testId: "custom-inventory-image"
-        } as FormField2<InventoryFormData>)
-      ]
-    },
-    {
-      id: "pricing",
-      label: "Prijzen",
-      icon: <span className="text-xs font-bold">€</span>,
-      rows: [
-        createFieldsRow([
-          {
-            key: "costPrice",
-            label: "Kostprijs (€)",
-            type: "number",
-            placeholder: "0.00",
-            register: form.register("costPrice"),
-            validation: {
-              error: form.formState.errors.costPrice?.message,
-              isRequired: true
-            },
-            testId: "input-inventory-costPrice",
-            width: "33%"
-          } as FormField2<InventoryFormData>,
-          {
-            key: "unitPrice",
-            label: "Verkoopprijs (€)",
-            type: "number",
-            placeholder: "0.00",
-            register: form.register("unitPrice"),
-            validation: {
-              error: form.formState.errors.unitPrice?.message,
-              isRequired: true
-            },
-            testId: "input-inventory-unitPrice",
-            width: "33%"
-          } as FormField2<InventoryFormData>,
-          {
-            key: "margin",
-            label: "Marge (%)",
-            type: "text",
-            placeholder: "0.00",
-            register: form.register("margin"),
-            disabled: true,
-            className: "bg-gray-50 dark:bg-gray-800",
-            testId: "input-inventory-margin",
-            width: "33%"
-          } as FormField2<InventoryFormData>
-        ])
-      ]
-    },
-    {
-      id: "stock",
-      label: "Voorraad",
-      icon: <span className="text-xs font-bold">#</span>,
-      rows: [
-        createFieldsRow([
-          {
-            key: "currentStock",
-            label: "Huidige voorraad",
-            type: "number",
-            placeholder: "0",
-            register: form.register("currentStock", { valueAsNumber: true }),
-            testId: "input-inventory-currentStock",
-            width: "50%"
-          } as FormField2<InventoryFormData>,
-          {
-            key: "minimumStock",
-            label: "Minimum voorraad",
-            type: "number",
-            placeholder: "0",
-            register: form.register("minimumStock", { valueAsNumber: true }),
-            testId: "input-inventory-minimumStock",
-            width: "50%"
-          } as FormField2<InventoryFormData>
-        ])
-      ]
-    },
-    {
-      id: "composite",
-      label: "Samengesteld",
-      icon: <span className="text-xs font-bold">⚙</span>,
-      rows: [
-        {
-          type: "custom",
-          customContent: (
-            <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
-              <Label className="text-sm font-medium text-right pt-2">
-                Samengesteld artikel
-              </Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="isComposite"
-                    checked={form.watch("isComposite") || false}
-                    onCheckedChange={(checked) => form.setValue("isComposite", !!checked)}
-                    data-testid="checkbox-inventory-isComposite"
-                  />
-                  <Label htmlFor="isComposite" className="text-sm">
-                    Dit artikel bestaat uit andere artikelen
-                  </Label>
-                </div>
-                {renderCompositeInfo()}
-              </div>
-            </div>
-          )
-        }
-      ]
-    }
-  ];
-
-  // Create action buttons
-  const createActionButtons = (): ActionButton[] => [
-    {
-      label: "Annuleren",
-      variant: "outline",
-      onClick: () => {
-        setShowDialog(false);
-        setPreviewImage("");
-        form.reset();
-        setEditingItem(null);
-      },
-      disabled: createMutation.isPending || updateMutation.isPending
-    },
-    {
-      label: (createMutation.isPending || updateMutation.isPending) ? "Opslaan..." : "Opslaan",
-      variant: "default",
-      onClick: () => form.handleSubmit(onSubmit)(),
-      disabled: createMutation.isPending || updateMutation.isPending,
-      className: "bg-orange-600 hover:bg-orange-700"
-    }
-  ];
-
-  // Form content using LayoutForm2
-  const renderFormContent = () => (
-    <LayoutForm2
-      sections={createFormSections()}
-      activeSection={activeSection}
-      onSectionChange={setActiveSection}
-      form={form}
-      onSubmit={onSubmit}
-      actionButtons={createActionButtons()}
-      isLoading={createMutation.isPending || updateMutation.isPending}
-    />
-  );
 
   return (
     <div className="p-6">
@@ -596,7 +138,7 @@ export default function Inventory() {
         const allIds = items.map(item => item.id);
         tableState.toggleAllRows(allIds);
       }}
-      onRowDoubleClick={handleEdit}
+      onRowDoubleClick={handleRowDoubleClick}
       getRowId={(row: InventoryItem) => row.id}
       applyFiltersAndSearch={tableState.applyFiltersAndSearch}
       applySorting={tableState.applySorting}
@@ -614,23 +156,16 @@ export default function Inventory() {
           key: 'edit',
           label: 'Edit',
           icon: <Edit className="h-4 w-4" />,
-          onClick: () => handleEdit(row),
-          variant: 'outline' as const
+          onClick: () => handleEdit(row)
         },
         {
           key: 'delete',
           label: 'Delete',
           icon: <Trash2 className="h-4 w-4" />,
           onClick: () => handleDelete(row.id),
-          variant: 'destructive' as const
+          className: 'text-red-600 hover:text-red-700'
         }
       ]}
-      addEditDialog={{
-        isOpen: showDialog,
-        onOpenChange: setShowDialog,
-        title: editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item',
-        content: renderFormContent()
-      }}
     />
     </div>
   );
