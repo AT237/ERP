@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
@@ -12,17 +14,15 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger 
 } from "@/components/ui/dialog";
 import { SelectWithAdd } from "@/components/ui/select-with-add";
-import { SelectItem } from "@/components/ui/select";
 import { QuickAddProject } from "@/components/quick-add-forms";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertWorkOrderSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, ClipboardList, Search, Calendar, Clock, Save, ArrowLeft } from "lucide-react";
+import { Plus, Edit, Trash2, ClipboardList, Search, Calendar, Clock, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LayoutForm2, createFieldRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
 import type { WorkOrder, InsertWorkOrder, Project } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -38,7 +38,6 @@ export default function WorkOrders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingWorkOrder, setEditingWorkOrder] = useState<WorkOrder | null>(null);
-  const [activeSection, setActiveSection] = useState('general');
   const { toast } = useToast();
 
   const { data: workOrders, isLoading } = useQuery<WorkOrder[]>({
@@ -162,9 +161,9 @@ export default function WorkOrders() {
       assignedTo: workOrder.assignedTo || "",
       status: workOrder.status || "pending",
       priority: workOrder.priority || "medium",
-      startDate: workOrder.startDate ? format(new Date(workOrder.startDate), "yyyy-MM-dd") : undefined,
-      dueDate: workOrder.dueDate ? format(new Date(workOrder.dueDate), "yyyy-MM-dd") : undefined,
-      completedDate: workOrder.completedDate ? format(new Date(workOrder.completedDate), "yyyy-MM-dd") : undefined,
+      startDate: workOrder.startDate ? format(new Date(workOrder.startDate), "yyyy-MM-dd") : "",
+      dueDate: workOrder.dueDate ? format(new Date(workOrder.dueDate), "yyyy-MM-dd") : "",
+      completedDate: workOrder.completedDate ? format(new Date(workOrder.completedDate), "yyyy-MM-dd") : "",
       estimatedHours: workOrder.estimatedHours?.toString() || "",
       actualHours: workOrder.actualHours?.toString() || "",
     });
@@ -275,282 +274,49 @@ export default function WorkOrders() {
               </DialogDescription>
             </DialogHeader>
             
-            <LayoutForm2
-              sections={[
-                {
-                  id: 'general',
-                  label: 'Work Order Details',
-                  rows: [
-                    createSectionHeaderRow<FormData>('Basic Information'),
-                    createFieldRow<FormData>({
-                      key: 'orderNumber',
-                      label: 'Order Number',
-                      type: 'text',
-                      placeholder: 'WO-2024-0001',
-                      register: form.register('orderNumber'),
-                      validation: { 
-                        isRequired: true,
-                        error: form.formState.errors.orderNumber?.message 
-                      },
-                      testId: 'input-order-number'
-                    }),
-                    createFieldRow<FormData>({
-                      key: 'projectId',
-                      label: 'Project',
-                      type: 'custom',
-                      customComponent: (
-                        <SelectWithAdd
-                          value={form.watch("projectId")}
-                          onValueChange={(value) => form.setValue("projectId", value)}
-                          placeholder="Select project"
-                          addFormTitle="Add New Project"
-                          testId="select-project"
-                          addFormContent={
-                            <QuickAddProject 
-                              onSuccess={(projectId) => {
-                                form.setValue("projectId", projectId);
-                              }}
-                            />
-                          }
-                        >
-                          {projects?.map((project) => (
-                            <SelectItem key={project.id} value={project.id}>
-                              {project.name}
-                            </SelectItem>
-                          ))}
-                        </SelectWithAdd>
-                      )
-                    }),
-                    createFieldRow<FormData>({
-                      key: 'title',
-                      label: 'Title',
-                      type: 'text',
-                      placeholder: 'Work order title...',
-                      register: form.register('title'),
-                      validation: { 
-                        isRequired: true,
-                        error: form.formState.errors.title?.message 
-                      },
-                      testId: 'input-title'
-                    }),
-                    createFieldRow<FormData>({
-                      key: 'description',
-                      label: 'Description',
-                      type: 'textarea',
-                      placeholder: 'Work order description...',
-                      register: form.register('description'),
-                      testId: 'textarea-description'
-                    })
-                  ]
-                },
-                {
-                  id: 'details',
-                  label: 'Assignment & Status',
-                  rows: [
-                    createSectionHeaderRow<FormData>('Assignment'),
-                    createFieldRow<FormData>({
-                      key: 'assignedTo',
-                      label: 'Assigned To',
-                      type: 'text',
-                      placeholder: 'Employee name',
-                      register: form.register('assignedTo'),
-                      testId: 'input-assigned-to'
-                    }),
-                    createFieldRow<FormData>({
-                      key: 'status',
-                      label: 'Status',
-                      type: 'select',
-                      placeholder: 'Select status',
-                      options: [
-                        { value: 'pending', label: 'Pending' },
-                        { value: 'in-progress', label: 'In Progress' },
-                        { value: 'completed', label: 'Completed' },
-                        { value: 'cancelled', label: 'Cancelled' }
-                      ],
-                      watch: form.watch('status'),
-                      setValue: (value) => form.setValue('status', value),
-                      testId: 'select-status'
-                    }),
-                    createFieldRow<FormData>({
-                      key: 'priority',
-                      label: 'Priority',
-                      type: 'select',
-                      placeholder: 'Select priority',
-                      options: [
-                        { value: 'low', label: 'Low' },
-                        { value: 'medium', label: 'Medium' },
-                        { value: 'high', label: 'High' }
-                      ],
-                      watch: form.watch('priority'),
-                      setValue: (value) => form.setValue('priority', value),
-                      testId: 'select-priority'
-                    })
-                  ]
-                },
-                {
-                  id: 'schedule',
-                  label: 'Schedule & Hours',
-                  rows: [
-                    createSectionHeaderRow<FormData>('Timeline'),
-                    createFieldRow<FormData>({
-                      key: 'startDate',
-                      label: 'Start Date',
-                      type: 'date',
-                      register: form.register('startDate'),
-                      testId: 'input-start-date'
-                    }),
-                    createFieldRow<FormData>({
-                      key: 'dueDate',
-                      label: 'Due Date',
-                      type: 'date',
-                      register: form.register('dueDate'),
-                      testId: 'input-due-date'
-                    }),
-                    createFieldRow<FormData>({
-                      key: 'completedDate',
-                      label: 'Completed Date',
-                      type: 'date',
-                      register: form.register('completedDate'),
-                      testId: 'input-completed-date'
-                    }),
-                    createSectionHeaderRow<FormData>('Hours Tracking'),
-                    createFieldRow<FormData>({
-                      key: 'estimatedHours',
-                      label: 'Estimated Hours',
-                      type: 'text',
-                      placeholder: '0',
-                      register: form.register('estimatedHours'),
-                      testId: 'input-estimated-hours'
-                    }),
-                    createFieldRow<FormData>({
-                      key: 'actualHours',
-                      label: 'Actual Hours',
-                      type: 'text',
-                      placeholder: '0',
-                      register: form.register('actualHours'),
-                      testId: 'input-actual-hours'
-                    })
-                  ]
-                }
-              ]}
-              activeSection={activeSection}
-              onSectionChange={setActiveSection}
-              form={form}
-              onSubmit={onSubmit}
-              actionButtons={[
-                {
-                  key: 'cancel',
-                  label: 'Cancel',
-                  icon: <ArrowLeft size={14} />,
-                  onClick: () => setIsDialogOpen(false),
-                  variant: 'outline',
-                  testId: 'button-cancel'
-                },
-                {
-                  key: 'save',
-                  label: editingWorkOrder ? 'Update Work Order' : 'Create Work Order',
-                  icon: <Save size={14} />,
-                  onClick: form.handleSubmit(onSubmit),
-                  variant: 'default',
-                  testId: 'button-save'
-                }
-              ]}
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Work Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Order Number</TableHead>
-                    <TableHead>Project</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {workOrders?.map((workOrder) => (
-                    <TableRow key={workOrder.id}>
-                      <TableCell className="font-medium">
-                        {workOrder.orderNumber}
-                      </TableCell>
-                      <TableCell>
-                        {projects?.find(p => p.id === workOrder.projectId)?.name || 'Unknown'}
-                      </TableCell>
-                      <TableCell>{workOrder.title}</TableCell>
-                      <TableCell>{workOrder.status}</TableCell>
-                      <TableCell>{workOrder.priority}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(workOrder)}
-                            data-testid={`button-edit-${workOrder.id}`}
-                          >
-                            <Edit size={14} />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(workOrder.id)}
-                            data-testid={`button-delete-${workOrder.id}`}
-                          >
-                            <Trash2 size={14} />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
-                  icon: <Save size={14} />,
-                  onClick: form.handleSubmit(onSubmit),
-                  variant: 'default',
-                  testId: 'button-save'
-                }
-              ]}
-            />
-                  <SelectWithAdd
-                    value={form.watch("projectId")}
-                    onValueChange={(value) => form.setValue("projectId", value)}
-                    placeholder="Select project"
-                    addFormTitle="Add New Project"
-                    testId="select-project"
-                    addFormContent={
-                      <QuickAddProject 
-                        onSuccess={(projectId) => {
-                          form.setValue("projectId", projectId);
-                        }}
-                      />
-                    }
-                  >
-                    {projects?.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectWithAdd>
-                </div>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Order Number */}
+              <div>
+                <Label htmlFor="orderNumber">Order Number *</Label>
+                <Input
+                  id="orderNumber"
+                  {...form.register("orderNumber")}
+                  placeholder="WO-2024-0001"
+                  data-testid="input-order-number"
+                />
+                {form.formState.errors.orderNumber && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.orderNumber.message}
+                  </p>
+                )}
               </div>
-              
+
+              {/* Project Selection */}
+              <div>
+                <Label htmlFor="projectId">Project</Label>
+                <SelectWithAdd
+                  value={form.watch("projectId")}
+                  onValueChange={(value) => form.setValue("projectId", value || "")}
+                  placeholder="Select project"
+                  addFormTitle="Add New Project"
+                  testId="select-project"
+                  addFormContent={
+                    <QuickAddProject 
+                      onSuccess={(projectId) => {
+                        form.setValue("projectId", projectId);
+                      }}
+                    />
+                  }
+                >
+                  {projects?.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectWithAdd>
+              </div>
+
+              {/* Title */}
               <div>
                 <Label htmlFor="title">Title *</Label>
                 <Input
@@ -565,19 +331,21 @@ export default function WorkOrders() {
                   </p>
                 )}
               </div>
-              
+
+              {/* Description */}
               <div>
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
                   {...form.register("description")}
                   placeholder="Enter work order description..."
-                  rows={3}
+                  rows={4}
                   data-testid="textarea-description"
                 />
               </div>
-              
-              <div className="grid grid-cols-3 gap-4">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Assigned To */}
                 <div>
                   <Label htmlFor="assignedTo">Assigned To</Label>
                   <Input
@@ -587,15 +355,16 @@ export default function WorkOrders() {
                     data-testid="input-assigned-to"
                   />
                 </div>
-                
+
+                {/* Status */}
                 <div>
                   <Label htmlFor="status">Status</Label>
-                  <Select 
-                    value={form.watch("status")} 
-                    onValueChange={(value) => form.setValue("status", value)}
+                  <Select
+                    value={form.watch("status")}
+                    onValueChange={(value) => form.setValue("status", value || "pending")}
                   >
                     <SelectTrigger data-testid="select-status">
-                      <SelectValue />
+                      <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="pending">Pending</SelectItem>
@@ -605,15 +374,18 @@ export default function WorkOrders() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Priority */}
                 <div>
                   <Label htmlFor="priority">Priority</Label>
-                  <Select 
-                    value={form.watch("priority")} 
-                    onValueChange={(value) => form.setValue("priority", value)}
+                  <Select
+                    value={form.watch("priority")}
+                    onValueChange={(value) => form.setValue("priority", value || "medium")}
                   >
                     <SelectTrigger data-testid="select-priority">
-                      <SelectValue />
+                      <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="low">Low</SelectItem>
@@ -623,8 +395,9 @@ export default function WorkOrders() {
                   </Select>
                 </div>
               </div>
-              
-              <div className="grid grid-cols-3 gap-4">
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Dates */}
                 <div>
                   <Label htmlFor="startDate">Start Date</Label>
                   <Input
@@ -634,7 +407,6 @@ export default function WorkOrders() {
                     data-testid="input-start-date"
                   />
                 </div>
-                
                 <div>
                   <Label htmlFor="dueDate">Due Date</Label>
                   <Input
@@ -644,7 +416,6 @@ export default function WorkOrders() {
                     data-testid="input-due-date"
                   />
                 </div>
-                
                 <div>
                   <Label htmlFor="completedDate">Completed Date</Label>
                   <Input
@@ -655,46 +426,48 @@ export default function WorkOrders() {
                   />
                 </div>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Hours */}
                 <div>
                   <Label htmlFor="estimatedHours">Estimated Hours</Label>
                   <Input
                     id="estimatedHours"
+                    type="number"
                     {...form.register("estimatedHours")}
                     placeholder="0"
-                    type="number"
                     data-testid="input-estimated-hours"
                   />
                 </div>
-                
                 <div>
                   <Label htmlFor="actualHours">Actual Hours</Label>
                   <Input
                     id="actualHours"
+                    type="number"
                     {...form.register("actualHours")}
                     placeholder="0"
-                    type="number"
                     data-testid="input-actual-hours"
                   />
                 </div>
               </div>
-              
-              <div className="flex space-x-3">
-                <Button 
-                  type="submit" 
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  data-testid="button-save-work-order"
-                >
-                  {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : "Save Work Order"}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+
+              {/* Form Actions */}
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => setIsDialogOpen(false)}
                   data-testid="button-cancel"
                 >
                   Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  data-testid="button-save"
+                >
+                  <Save className="mr-2" size={16} />
+                  {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save'}
                 </Button>
               </div>
             </form>
@@ -711,53 +484,74 @@ export default function WorkOrders() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Order #</TableHead>
-                  <TableHead>Title</TableHead>
                   <TableHead>Project</TableHead>
+                  <TableHead>Title</TableHead>
                   <TableHead>Assigned To</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Priority</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Hours</TableHead>
+                  <TableHead className="w-20">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredWorkOrders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      No work orders found. Create your first work order to get started.
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                      No work orders found
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredWorkOrders.map((workOrder) => {
-                    const project = projects?.find(p => p.id === workOrder.projectId);
+                    const project = projects?.find((p) => p.id === workOrder.projectId);
                     return (
-                      <TableRow key={workOrder.id} data-testid={`row-work-order-${workOrder.id}`}>
-                        <TableCell className="font-medium">{workOrder.orderNumber}</TableCell>
-                        <TableCell>{workOrder.title}</TableCell>
-                        <TableCell>{project?.name || "—"}</TableCell>
-                        <TableCell>{workOrder.assignedTo || "—"}</TableCell>
+                      <TableRow key={workOrder.id}>
                         <TableCell>
-                          {workOrder.dueDate ? (
-                            <div className="flex items-center space-x-2">
-                              <Calendar size={14} />
-                              <span>{format(new Date(workOrder.dueDate), "MMM dd, yyyy")}</span>
-                            </div>
-                          ) : "—"}
+                          <span className="font-mono" data-testid={`text-order-number-${workOrder.id}`}>
+                            {workOrder.orderNumber}
+                          </span>
+                        </TableCell>
+                        <TableCell data-testid={`text-project-${workOrder.id}`}>
+                          {project?.name || "No Project"}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={getPriorityVariant(workOrder.priority || "medium")}>
-                            {workOrder.priority}
+                          <div data-testid={`text-title-${workOrder.id}`}>
+                            <div className="font-medium">{workOrder.title}</div>
+                            {workOrder.description && (
+                              <div className="text-sm text-muted-foreground truncate max-w-xs">
+                                {workOrder.description}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell data-testid={`text-assigned-to-${workOrder.id}`}>
+                          {workOrder.assignedTo || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusVariant(workOrder.status || "pending")} data-testid={`badge-status-${workOrder.id}`}>
+                            {workOrder.status || "pending"}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={getStatusVariant(workOrder.status || "pending")}>
-                            {workOrder.status}
+                          <Badge variant={getPriorityVariant(workOrder.priority || "medium")} data-testid={`badge-priority-${workOrder.id}`}>
+                            {workOrder.priority || "medium"}
                           </Badge>
+                        </TableCell>
+                        <TableCell data-testid={`text-due-date-${workOrder.id}`}>
+                          {workOrder.dueDate ? format(new Date(workOrder.dueDate), "MMM dd, yyyy") : "-"}
+                        </TableCell>
+                        <TableCell data-testid={`text-hours-${workOrder.id}`}>
+                          <div className="flex items-center space-x-1">
+                            <Clock size={14} className="text-muted-foreground" />
+                            <span className="text-sm">
+                              {workOrder.actualHours || 0}/{workOrder.estimatedHours || 0}
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">

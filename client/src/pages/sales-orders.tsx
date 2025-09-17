@@ -528,11 +528,11 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
               }
             ]}
           />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
                   control={form.control}
                   name="taxAmount"
                   render={({ field }) => (
@@ -551,8 +551,11 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
                     </FormItem>
                   )}
                 />
-                
-                <FormField
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
                   control={form.control}
                   name="totalAmount"
                   render={({ field }) => (
