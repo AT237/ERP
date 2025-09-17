@@ -773,6 +773,213 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
+      if (activeTab.formType === 'supplier') {
+        const SupplierForm = lazy(() => import('@/pages/supplier-form'));
+        const supplierId = activeTab.id.startsWith('edit-supplier-') 
+          ? activeTab.id.replace('edit-supplier-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <SupplierForm 
+              supplierId={supplierId}
+              parentId={activeTab.parentId}
+              onSave={() => {
+                const suppliersTab = tabs.find(tab => tab.id === 'suppliers');
+                if (suppliersTab) {
+                  setActiveTabId('suppliers');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
+      if (activeTab.formType === 'inventory' || activeTab.formType === 'inventory-item') {
+        const InventoryForm = lazy(() => import('@/pages/inventory-form'));
+        const inventoryId = activeTab.id.startsWith('edit-inventory-') 
+          ? activeTab.id.replace('edit-inventory-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <InventoryForm 
+              inventoryId={inventoryId}
+              parentId={activeTab.parentId}
+              onSave={() => {
+                const inventoryTab = tabs.find(tab => tab.id === 'inventory');
+                if (inventoryTab) {
+                  setActiveTabId('inventory');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
+      if (activeTab.formType === 'project') {
+        const ProjectForm = lazy(() => import('@/pages/project-form'));
+        const projectId = activeTab.id.startsWith('edit-project-') 
+          ? activeTab.id.replace('edit-project-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <ProjectForm 
+              projectId={projectId}
+              parentId={activeTab.parentId}
+              onSave={() => {
+                const projectsTab = tabs.find(tab => tab.id === 'projects');
+                if (projectsTab) {
+                  setActiveTabId('projects');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
+      if (activeTab.formType === 'work-order') {
+        const WorkOrderForm = lazy(() => import('@/pages/work-order-form'));
+        const workOrderId = activeTab.id.startsWith('edit-work-order-') 
+          ? activeTab.id.replace('edit-work-order-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <WorkOrderForm 
+              workOrderId={workOrderId}
+              parentId={activeTab.parentId}
+              onSave={() => {
+                const workOrdersTab = tabs.find(tab => tab.id === 'work-orders');
+                if (workOrdersTab) {
+                  setActiveTabId('work-orders');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
+      if (activeTab.formType === 'purchase-order') {
+        const PurchaseOrderForm = lazy(() => import('@/pages/purchase-order-form'));
+        const purchaseOrderId = activeTab.id.startsWith('edit-purchase-order-') 
+          ? activeTab.id.replace('edit-purchase-order-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <PurchaseOrderForm 
+              purchaseOrderId={purchaseOrderId}
+              parentId={activeTab.parentId}
+              onSave={() => {
+                const purchaseOrdersTab = tabs.find(tab => tab.id === 'purchase-orders');
+                if (purchaseOrdersTab) {
+                  setActiveTabId('purchase-orders');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
+      if (activeTab.formType === 'sales-order') {
+        const SalesOrderForm = lazy(() => import('@/pages/sales-order-form'));
+        const salesOrderId = activeTab.id.startsWith('edit-sales-order-') 
+          ? activeTab.id.replace('edit-sales-order-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <SalesOrderForm 
+              salesOrderId={salesOrderId}
+              parentId={activeTab.parentId}
+              onSave={() => {
+                const salesOrdersTab = tabs.find(tab => tab.id === 'sales-orders');
+                if (salesOrdersTab) {
+                  setActiveTabId('sales-orders');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
+      if (activeTab.formType === 'packing-list') {
+        const PackingListForm = lazy(() => import('@/pages/packing-list-form'));
+        const packingListId = activeTab.id.startsWith('edit-packing-list-') 
+          ? activeTab.id.replace('edit-packing-list-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <PackingListForm 
+              packingListId={packingListId}
+              parentId={activeTab.parentId}
+              onSave={() => {
+                const packingListsTab = tabs.find(tab => tab.id === 'packing-lists');
+                if (packingListsTab) {
+                  setActiveTabId('packing-lists');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
+      if (activeTab.formType === 'invoice') {
+        const InvoiceForm = lazy(() => import('@/pages/invoice-form'));
+        const invoiceId = activeTab.id.startsWith('edit-invoice-') 
+          ? activeTab.id.replace('edit-invoice-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <InvoiceForm 
+              invoiceId={invoiceId}
+              parentId={activeTab.parentId}
+              onSave={() => {
+                const invoicesTab = tabs.find(tab => tab.id === 'invoices');
+                if (invoicesTab) {
+                  setActiveTabId('invoices');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
+      if (activeTab.formType === 'text-snippet') {
+        const TextSnippetForm = lazy(() => import('@/pages/text-snippet-form'));
+        const textSnippetId = activeTab.id.startsWith('edit-text-snippet-') 
+          ? activeTab.id.replace('edit-text-snippet-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <TextSnippetForm 
+              textSnippetId={textSnippetId}
+              parentId={activeTab.parentId}
+              onSave={() => {
+                const textSnippetsTab = tabs.find(tab => tab.id === 'text-snippets');
+                if (textSnippetsTab) {
+                  setActiveTabId('text-snippets');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
       // Default form placeholder
       return (
         <div className="p-6">

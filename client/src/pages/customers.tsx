@@ -127,7 +127,6 @@ export default function Customers() {
   return (
     <div className="p-6">
       <DataTableLayout
-      title="Customer Management"
       entityName="Customer"
       entityNamePlural="Customers"
       data={renderTableData(customers)}

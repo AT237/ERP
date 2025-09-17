@@ -97,6 +97,185 @@ function Router() {
             );
           }}
         </Route>
+        
+        {/* Additional Form Routes for Tab System */}
+        <Route path="/supplier-form" component={() => {
+          const SupplierForm = React.lazy(() => import('./pages/supplier-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <SupplierForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/supplier-form/:id">
+          {(params) => {
+            const SupplierForm = React.lazy(() => import('./pages/supplier-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <SupplierForm onSave={() => window.history.back()} supplierId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        
+        <Route path="/inventory-form" component={() => {
+          const InventoryForm = React.lazy(() => import('./pages/inventory-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <InventoryForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/inventory-form/:id">
+          {(params) => {
+            const InventoryForm = React.lazy(() => import('./pages/inventory-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <InventoryForm onSave={() => window.history.back()} inventoryId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        
+        {/* Project form routes commented out - form file doesn't exist
+        <Route path="/project-form" component={() => {
+          const ProjectForm = React.lazy(() => import('./pages/project-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <ProjectForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/project-form/:id">
+          {(params) => {
+            const ProjectForm = React.lazy(() => import('./pages/project-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <ProjectForm onSave={() => window.history.back()} projectId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        */}
+        
+        {/* Work order form routes commented out - form file doesn't exist
+        <Route path="/work-order-form" component={() => {
+          const WorkOrderForm = React.lazy(() => import('./pages/work-order-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <WorkOrderForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/work-order-form/:id">
+          {(params) => {
+            const WorkOrderForm = React.lazy(() => import('./pages/work-order-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <WorkOrderForm onSave={() => window.history.back()} workOrderId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        */}
+        
+        {/* Purchase order form route commented out - form file doesn't exist
+        <Route path="/purchase-order-form" component={() => {
+          const PurchaseOrderForm = React.lazy(() => import('./pages/purchase-order-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <PurchaseOrderForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        */}
+        <Route path="/purchase-order-form/:id">
+          {(params) => {
+            const PurchaseOrderForm = React.lazy(() => import('./pages/purchase-order-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <PurchaseOrderForm onSave={() => window.history.back()} purchaseOrderId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        
+        <Route path="/sales-order-form" component={() => {
+          const SalesOrderForm = React.lazy(() => import('./pages/sales-order-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <SalesOrderForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/sales-order-form/:id">
+          {(params) => {
+            const SalesOrderForm = React.lazy(() => import('./pages/sales-order-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <SalesOrderForm onSave={() => window.history.back()} salesOrderId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        
+        <Route path="/packing-list-form" component={() => {
+          const PackingListForm = React.lazy(() => import('./pages/packing-list-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <PackingListForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/packing-list-form/:id">
+          {(params) => {
+            const PackingListForm = React.lazy(() => import('./pages/packing-list-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <PackingListForm onSave={() => window.history.back()} packingListId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        
+        <Route path="/invoice-form" component={() => {
+          const InvoiceForm = React.lazy(() => import('./pages/invoice-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <InvoiceForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/invoice-form/:id">
+          {(params) => {
+            const InvoiceForm = React.lazy(() => import('./pages/invoice-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <InvoiceForm onSave={() => window.history.back()} invoiceId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        
+        <Route path="/text-snippet-form" component={() => {
+          const TextSnippetForm = React.lazy(() => import('./pages/text-snippet-form'));
+          return (
+            <Suspense fallback={<div>Loading...</div>}>
+              <TextSnippetForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/text-snippet-form/:id">
+          {(params) => {
+            const TextSnippetForm = React.lazy(() => import('./pages/text-snippet-form'));
+            return (
+              <Suspense fallback={<div>Loading...</div>}>
+                <TextSnippetForm onSave={() => window.history.back()} textSnippetId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        
         <Route component={NotFound} />
       </Switch>
     </Layout>

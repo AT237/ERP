@@ -1,23 +1,12 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertSupplierSchema, type InsertSupplier, type Supplier } from "@shared/schema";
+import { type Supplier } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
-import { Plus } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 
 // Import our reusable layouts
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
-import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
 import { useDataTable } from '@/hooks/useDataTable';
-
-// Form schema
-const formSchema = insertSupplierSchema.extend({
-  paymentTerms: z.string().min(1, "Payment terms is required"),
-});
-
-type FormData = z.infer<typeof formSchema>;
 
 // Default column configuration for suppliers
 const defaultColumns: ColumnConfig[] = [
@@ -76,28 +65,49 @@ export default function SupplierTable() {
     tableKey: 'suppliers'
   });
   
-  // Dialog states
-  const [showAddSupplierDialog, setShowAddSupplierDialog] = useState(false);
+  // Dialog states (keeping some for non-form operations)
   const [showSupplierReport, setShowSupplierReport] = useState(false);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [selectedSupplierForReport, setSelectedSupplierForReport] = useState<Supplier | null>(null);
-  const [activeSection, setActiveSection] = useState("general");
 
-  // Form setup
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      contactPerson: "",
-      taxId: "",
-      paymentTerms: "30",
-      status: "active",
+  // Tab system handlers
+  const handleNewSupplier = () => {
+    // Dispatch custom event to open supplier form in new tab
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: 'new-supplier',
+        name: 'New Supplier',
+        formType: 'supplier'
+      }
+    });
+    window.dispatchEvent(event);
+  };
+
+  const handleEdit = (supplier: Supplier) => {
+    // Format supplier number for display
+    const formattedNumber = supplier.supplierNumber || `SUP-${supplier.id.slice(-4)}`;
+    // Dispatch custom event to open supplier edit form in new tab
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: `edit-supplier-${supplier.id}`,
+        name: `${formattedNumber}`,
+        formType: 'supplier',
+        parentId: supplier.id
+      }
+    });
+    window.dispatchEvent(event);
+  };
+
+  const handleRowDoubleClick = (supplier: Supplier) => {
+    // Same as edit for double-click
+    handleEdit(supplier);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this supplier?")) {
+      deleteSuppliersMutation.mutate([id]);
     }
-  });
+  };
 
   // Data fetching
   const { data: suppliers = [], isLoading } = useQuery<Supplier[]>({
@@ -105,82 +115,6 @@ export default function SupplierTable() {
   });
 
   // Mutations
-  const createSupplierMutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      const supplierData: InsertSupplier = {
-        name: data.name,
-        email: data.email || null,
-        phone: data.phone || null,
-        address: data.address || null,
-        contactPerson: data.contactPerson || null,
-        taxId: data.taxId || null,
-        paymentTerms: parseInt(data.paymentTerms),
-        status: data.status,
-      };
-      
-      const response = await fetch("/api/suppliers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(supplierData),
-      });
-      
-      if (!response.ok) throw new Error("Failed to create supplier");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
-      setShowAddSupplierDialog(false);
-      setEditingSupplier(null);
-      form.reset();
-      toast({
-        title: "Success",
-        description: "Supplier added successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add supplier. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const updateSupplierMutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      if (!editingSupplier) throw new Error("No supplier to update");
-      
-      const supplierData: Partial<InsertSupplier> = {
-        name: data.name,
-        email: data.email || null,
-        phone: data.phone || null,
-        address: data.address || null,
-        contactPerson: data.contactPerson || null,
-        taxId: data.taxId || null,
-        paymentTerms: parseInt(data.paymentTerms),
-        status: data.status,
-      };
-      
-      const response = await fetch(`/api/suppliers/${editingSupplier.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(supplierData),
-      });
-      
-      if (!response.ok) throw new Error("Failed to update supplier");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
-      setEditingSupplier(null);
-      setShowAddSupplierDialog(false);
-      form.reset();
-      toast({
-        title: "Success",
-        description: "Supplier updated successfully",
-      });
-    },
-  });
 
   const deleteSuppliersMutation = useMutation({
     mutationFn: async (supplierIds: string[]) => {
@@ -204,39 +138,9 @@ export default function SupplierTable() {
     },
   });
 
-  // Event handlers
-  const handleAddSupplier = () => {
-    setEditingSupplier(null);
-    form.reset();
-    setShowAddSupplierDialog(true);
-  };
-
-  const handleEditSupplier = (supplier: Supplier) => {
-    setEditingSupplier(supplier);
-    form.reset({
-      name: supplier.name || "",
-      email: supplier.email || "",
-      phone: supplier.phone || "",
-      address: supplier.address || "",
-      contactPerson: supplier.contactPerson || "",
-      taxId: supplier.taxId || "",
-      paymentTerms: supplier.paymentTerms?.toString() || "30",
-      status: supplier.status || "active",
-    });
-    setShowAddSupplierDialog(true);
-  };
-
   const handleSupplierDoubleClick = (supplier: Supplier) => {
     setSelectedSupplierForReport(supplier);
     setShowSupplierReport(true);
-  };
-
-  const onSubmit = (data: FormData) => {
-    if (editingSupplier) {
-      updateSupplierMutation.mutate(data);
-    } else {
-      createSupplierMutation.mutate(data);
-    }
   };
 
   const handleToggleAllRows = () => {
@@ -255,137 +159,26 @@ export default function SupplierTable() {
 
   // Duplicate functionality  
   const handleDuplicate = (supplier: Supplier) => {
-    // Pre-fill form with supplier data for duplication
-    form.reset({
-      name: `${supplier.name} (Copy)`,
-      email: supplier.email || "",
-      phone: supplier.phone || "",
-      address: supplier.address || "",
-      contactPerson: supplier.contactPerson || "",
-      taxId: "", // Clear tax ID for duplicate
-      paymentTerms: supplier.paymentTerms?.toString() || "30",
-      status: "active", // Reset to active
+    // Dispatch custom event to open supplier form in new tab with pre-filled data for duplication
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: `duplicate-supplier-${supplier.id}`,
+        name: `${supplier.name} (Copy)`,
+        formType: 'supplier',
+        duplicateData: {
+          name: `${supplier.name} (Copy)`,
+          email: supplier.email || "",
+          phone: supplier.phone || "",
+          address: supplier.address || "",
+          contactPerson: supplier.contactPerson || "",
+          taxId: "", // Clear tax ID for duplicate
+          paymentTerms: supplier.paymentTerms || 30,
+          status: "active" // Reset to active
+        }
+      }
     });
-    setEditingSupplier(null); // Make sure we're not editing
-    setShowAddSupplierDialog(true);
+    window.dispatchEvent(event);
   };
-
-  // Define form sections for the add/edit dialog
-  const formSections: FormSection2<FormData>[] = [
-    {
-      id: "general",
-      label: "Supplier Details",
-      rows: [
-        createSectionHeaderRow("Company Information"),
-        createFieldRow({
-          key: "name",
-          label: "Company Name",
-          type: "text",
-          placeholder: "Enter company name",
-          register: form.register("name"),
-          validation: {
-            isRequired: true,
-            error: form.formState.errors.name?.message
-          },
-          testId: "input-supplier-name"
-        }),
-        createFieldRow({
-          key: "taxId",
-          label: "Tax ID",
-          type: "text",
-          placeholder: "Tax identification number",
-          register: form.register("taxId"),
-          validation: {
-            error: form.formState.errors.taxId?.message
-          },
-          testId: "input-supplier-tax-id"
-        }),
-        createFieldRow({
-          key: "address",
-          label: "Address",
-          type: "text",
-          placeholder: "Company address",
-          register: form.register("address"),
-          validation: {
-            error: form.formState.errors.address?.message
-          },
-          testId: "input-supplier-address"
-        }),
-        
-        createSectionHeaderRow("Contact Information", "mt-6"),
-        createFieldRow({
-          key: "contactPerson",
-          label: "Contact Person",
-          type: "text",
-          placeholder: "Main contact person",
-          register: form.register("contactPerson"),
-          validation: {
-            error: form.formState.errors.contactPerson?.message
-          },
-          testId: "input-supplier-contact-person"
-        }),
-        createFieldRow({
-          key: "email",
-          label: "Email Address",
-          type: "email",
-          placeholder: "company@example.com",
-          register: form.register("email"),
-          validation: {
-            error: form.formState.errors.email?.message
-          },
-          testId: "input-supplier-email"
-        }),
-        createFieldRow({
-          key: "phone",
-          label: "Phone Number",
-          type: "tel",
-          placeholder: "+31 20 123 4567",
-          register: form.register("phone"),
-          validation: {
-            error: form.formState.errors.phone?.message
-          },
-          testId: "input-supplier-phone"
-        }),
-        
-        createSectionHeaderRow("Business Settings", "mt-6"),
-        createFieldRow({
-          key: "paymentTerms",
-          label: "Payment Terms",
-          type: "select",
-          options: [
-            { value: "0", label: "Immediate payment" },
-            { value: "14", label: "14 days" },
-            { value: "30", label: "30 days" },
-            { value: "60", label: "60 days" },
-            { value: "90", label: "90 days" }
-          ],
-          setValue: (value: string) => form.setValue("paymentTerms", value),
-          watch: () => form.watch("paymentTerms"),
-          validation: {
-            isRequired: true,
-            error: form.formState.errors.paymentTerms?.message
-          },
-          testId: "select-supplier-payment-terms"
-        }),
-        createFieldRow({
-          key: "status",
-          label: "Status",
-          type: "select",
-          options: [
-            { value: "active", label: "Active" },
-            { value: "inactive", label: "Inactive" },
-            { value: "prospect", label: "Prospect" }
-          ],
-          setValue: (value: string) => form.setValue("status", value),
-          watch: () => form.watch("status"),
-          validation: {
-            error: form.formState.errors.status?.message
-          },
-          testId: "select-supplier-status"
-        })
-      ]
-    }
-  ];
 
   return (
     <div className="p-6">
@@ -423,52 +216,27 @@ export default function SupplierTable() {
         {
           key: 'add-supplier',
           label: 'Add Supplier',
-          icon: <Plus size={16} />,
-          onClick: handleAddSupplier,
-          variant: 'default'
+          icon: <Plus className="h-4 w-4" />,
+          onClick: handleNewSupplier,
+          variant: 'default' as const
         }
       ]}
       
-      // Dialogs
-      addEditDialog={{
-        isOpen: showAddSupplierDialog,
-        onOpenChange: setShowAddSupplierDialog,
-        title: editingSupplier ? "Edit Supplier" : "Add New Supplier",
-        content: (
-          <div className="p-6">
-            <LayoutForm2
-              sections={formSections}
-              activeSection={activeSection}
-              onSectionChange={setActiveSection}
-              form={form}
-              onSubmit={onSubmit}
-              actionButtons={[
-                {
-                  key: 'cancel',
-                  label: 'Cancel',
-                  onClick: () => setShowAddSupplierDialog(false),
-                  variant: 'outline',
-                  testId: 'button-cancel-supplier'
-                },
-                {
-                  key: 'save',
-                  label: editingSupplier 
-                    ? (updateSupplierMutation.isPending ? "Updating..." : "Update Supplier")
-                    : (createSupplierMutation.isPending ? "Adding..." : "Add Supplier"),
-                  onClick: form.handleSubmit(onSubmit),
-                  variant: 'default',
-                  loading: createSupplierMutation.isPending || updateSupplierMutation.isPending,
-                  testId: 'button-save-supplier'
-                }
-              ]}
-              changeTracking={{
-                enabled: false // No change tracking for table forms
-              }}
-              isLoading={false}
-            />
-          </div>
-        )
-      }}
+      rowActions={(row: Supplier) => [
+        {
+          key: 'edit',
+          label: 'Edit',
+          icon: <Edit className="h-4 w-4" />,
+          onClick: () => handleEdit(row)
+        },
+        {
+          key: 'delete',
+          label: 'Delete', 
+          icon: <Trash2 className="h-4 w-4" />,
+          onClick: () => handleDelete(row.id),
+          className: 'text-red-600 hover:text-red-700'
+        }
+      ]}
       
       detailDialog={selectedSupplierForReport ? {
         isOpen: showSupplierReport,
@@ -575,7 +343,7 @@ export default function SupplierTable() {
       }}
       
       // Event handlers
-      onRowDoubleClick={handleSupplierDoubleClick}
+      onRowDoubleClick={handleRowDoubleClick}
       
       // Customization
       entityName="Supplier"
