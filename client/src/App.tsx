@@ -175,7 +175,6 @@ function Router() {
           }}
         </Route>
         
-        {/* Purchase order form route commented out - form file doesn't exist
         <Route path="/purchase-order-form" component={() => {
           const PurchaseOrderForm = React.lazy(() => import('./pages/purchase-order-form'));
           return (
@@ -184,8 +183,6 @@ function Router() {
             </Suspense>
           );
         }} />
-        */}
-        {/* Purchase order form route with ID commented out - form file doesn't exist
         <Route path="/purchase-order-form/:id">
           {(params) => {
             const PurchaseOrderForm = React.lazy(() => import('./pages/purchase-order-form'));
@@ -196,7 +193,6 @@ function Router() {
             );
           }}
         </Route>
-        */}
         
         {/* Sales order form routes commented out - form files don't exist yet
         <Route path="/sales-order-form" component={() => {
