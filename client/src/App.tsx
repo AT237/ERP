@@ -234,7 +234,6 @@ function Router() {
           }}
         </Route>
         
-        {/* Invoice form routes commented out - form file doesn't exist yet
         <Route path="/invoice-form" component={() => {
           const InvoiceForm = React.lazy(() => import('./pages/invoice-form'));
           return (
@@ -253,7 +252,6 @@ function Router() {
             );
           }}
         </Route>
-        */}
         
         {/* Text snippet form routes commented out - form file doesn't exist yet
         <Route path="/text-snippet-form" component={() => {
