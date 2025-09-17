@@ -215,7 +215,6 @@ function Router() {
         </Route>
         */}
         
-        {/* Packing list form routes commented out - form file doesn't exist yet
         <Route path="/packing-list-form" component={() => {
           const PackingListForm = React.lazy(() => import('./pages/packing-list-form'));
           return (
@@ -234,7 +233,6 @@ function Router() {
             );
           }}
         </Route>
-        */}
         
         {/* Invoice form routes commented out - form file doesn't exist yet
         <Route path="/invoice-form" component={() => {
