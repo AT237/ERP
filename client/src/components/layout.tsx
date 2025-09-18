@@ -26,6 +26,7 @@ const ContactPersonsTable = lazy(() => import('./contact-persons-table'));
 const ContactPersonsPage = lazy(() => import('../pages/contact-persons'));
 const QuotationsPage = lazy(() => import('../pages/quotations-simple'));
 const ContactPersonFormLayout = lazy(() => import('@/components/layouts/ContactPersonFormLayout'));
+const AddressFormLayout = lazy(() => import('@/components/layouts/AddressFormLayout'));
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -75,6 +76,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'packing-lists', name: 'Packing Lists' };
       case '/reports':
         return { id: 'reports', name: 'Reports' };
+      case '/addresses':
+        return { id: 'addresses', name: 'Addresses' };
       case '/welcome':
         return { id: 'welcome', name: 'Welcome' };
       default:
@@ -402,6 +405,8 @@ export default function Layout({ children }: LayoutProps) {
         return '/packing-lists';
       case 'reports':
         return '/reports';
+      case 'addresses':
+        return '/addresses';
       default:
         return '/dashboard';
     }
@@ -1003,6 +1008,25 @@ export default function Layout({ children }: LayoutProps) {
                   setActiveTabId('contacts');
                   closeTab(activeTab.id);
                 }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
+      if (activeTab.formType === 'address') {
+        const addressId = activeTab.id.startsWith('edit-address-') 
+          ? activeTab.id.replace('edit-address-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div></div>}>
+            <AddressFormLayout 
+              addressId={addressId}
+              onSave={() => {
+                // Navigate back to addresses page after saving
+                navigate('/addresses');
+                closeTab(activeTab.id);
               }} 
             />
           </Suspense>

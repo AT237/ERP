@@ -45,13 +45,14 @@ const defaultNavigation = [
     ]
   },
   {
-    id: "relaties",
-    name: "Relaties",
+    id: "relations",
+    name: "Relations",
     collapsible: true,
     items: [
       { id: "customers", name: "Customers", href: "/customers", icon: Users },
       { id: "suppliers", name: "Suppliers", href: "/suppliers", icon: Truck },
       { id: "contacts", name: "Contact Persons", href: "/contact-persons", icon: Contact },
+      { id: "addresses", name: "Addresses", href: "/addresses", icon: MapPin },
       { id: "prospects", name: "Prospects", href: "/prospects", icon: UserPlus }
     ]
   },
