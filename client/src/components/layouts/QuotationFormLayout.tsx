@@ -1270,7 +1270,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const headerFields: InfoField[] = [
     {
       label: 'Quotation Number',
-      value: quotationId ? existingQuotation?.quotationNumber || 'Loading...' : nextQuotationNumber
+      value: quotationId ? existingQuotation?.quotationNumber || '...' : nextQuotationNumber
     },
     {
       label: 'Customer',

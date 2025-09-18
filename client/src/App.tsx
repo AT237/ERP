@@ -44,7 +44,7 @@ function Router() {
         <Route path="/quotation-form" component={() => {
           const QuotationForm = React.lazy(() => import('./pages/quotation-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <QuotationForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -53,7 +53,7 @@ function Router() {
           {(params) => {
             const QuotationForm = React.lazy(() => import('./pages/quotation-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <QuotationForm onSave={() => window.history.back()} quotationId={params.id} />
               </Suspense>
             );
@@ -62,7 +62,7 @@ function Router() {
         <Route path="/customer-form" component={() => {
           const CustomerForm = React.lazy(() => import('./pages/customer-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <CustomerForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -71,7 +71,7 @@ function Router() {
           {(params) => {
             const CustomerForm = React.lazy(() => import('./pages/customer-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <CustomerForm onSave={() => window.history.back()} customerId={params.id} />
               </Suspense>
             );
@@ -81,7 +81,7 @@ function Router() {
           {(params) => {
             const LineItemForm = React.lazy(() => import('./pages/line-item-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <LineItemForm onSave={() => window.history.back()} quotationId={params.quotationId} />
               </Suspense>
             );
@@ -91,7 +91,7 @@ function Router() {
           {(params) => {
             const LineItemForm = React.lazy(() => import('./pages/line-item-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <LineItemForm onSave={() => window.history.back()} quotationId={params.quotationId} itemId={params.itemId} />
               </Suspense>
             );
@@ -102,7 +102,7 @@ function Router() {
         <Route path="/supplier-form" component={() => {
           const SupplierForm = React.lazy(() => import('./pages/supplier-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <SupplierForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -111,7 +111,7 @@ function Router() {
           {(params) => {
             const SupplierForm = React.lazy(() => import('./pages/supplier-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <SupplierForm onSave={() => window.history.back()} supplierId={params.id} />
               </Suspense>
             );
@@ -121,7 +121,7 @@ function Router() {
         <Route path="/inventory-form" component={() => {
           const InventoryForm = React.lazy(() => import('./pages/inventory-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <InventoryForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -130,7 +130,7 @@ function Router() {
           {(params) => {
             const InventoryForm = React.lazy(() => import('./pages/inventory-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <InventoryForm onSave={() => window.history.back()} inventoryId={params.id} />
               </Suspense>
             );
@@ -140,7 +140,7 @@ function Router() {
         <Route path="/project-form" component={() => {
           const ProjectForm = React.lazy(() => import('./pages/project-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <ProjectForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -149,7 +149,7 @@ function Router() {
           {(params) => {
             const ProjectForm = React.lazy(() => import('./pages/project-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <ProjectForm onSave={() => window.history.back()} projectId={params.id} />
               </Suspense>
             );
@@ -159,7 +159,7 @@ function Router() {
         <Route path="/work-order-form" component={() => {
           const WorkOrderForm = React.lazy(() => import('./pages/work-order-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <WorkOrderForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -168,7 +168,7 @@ function Router() {
           {(params) => {
             const WorkOrderForm = React.lazy(() => import('./pages/work-order-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <WorkOrderForm onSave={() => window.history.back()} workOrderId={params.id} />
               </Suspense>
             );
@@ -178,7 +178,7 @@ function Router() {
         <Route path="/purchase-order-form" component={() => {
           const PurchaseOrderForm = React.lazy(() => import('./pages/purchase-order-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <PurchaseOrderForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -187,7 +187,7 @@ function Router() {
           {(params) => {
             const PurchaseOrderForm = React.lazy(() => import('./pages/purchase-order-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <PurchaseOrderForm onSave={() => window.history.back()} purchaseOrderId={params.id} />
               </Suspense>
             );
@@ -197,7 +197,7 @@ function Router() {
         <Route path="/text-snippet-form" component={() => {
           const TextSnippetForm = React.lazy(() => import('./pages/text-snippet-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <TextSnippetForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -206,7 +206,7 @@ function Router() {
           {(params) => {
             const TextSnippetForm = React.lazy(() => import('./pages/text-snippet-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <TextSnippetForm onSave={() => window.history.back()} textSnippetId={params.id} />
               </Suspense>
             );
@@ -216,7 +216,7 @@ function Router() {
         <Route path="/sales-order-form" component={() => {
           const SalesOrderForm = React.lazy(() => import('./pages/sales-order-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <SalesOrderForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -225,7 +225,7 @@ function Router() {
           {(params) => {
             const SalesOrderForm = React.lazy(() => import('./pages/sales-order-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <SalesOrderForm onSave={() => window.history.back()} salesOrderId={params.id} />
               </Suspense>
             );
@@ -235,7 +235,7 @@ function Router() {
         <Route path="/packing-list-form" component={() => {
           const PackingListForm = React.lazy(() => import('./pages/packing-list-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <PackingListForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -244,7 +244,7 @@ function Router() {
           {(params) => {
             const PackingListForm = React.lazy(() => import('./pages/packing-list-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <PackingListForm onSave={() => window.history.back()} packingListId={params.id} />
               </Suspense>
             );
@@ -254,7 +254,7 @@ function Router() {
         <Route path="/invoice-form" component={() => {
           const InvoiceForm = React.lazy(() => import('./pages/invoice-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <InvoiceForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -263,7 +263,7 @@ function Router() {
           {(params) => {
             const InvoiceForm = React.lazy(() => import('./pages/invoice-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <InvoiceForm onSave={() => window.history.back()} invoiceId={params.id} />
               </Suspense>
             );
@@ -274,7 +274,7 @@ function Router() {
         <Route path="/text-snippet-form" component={() => {
           const TextSnippetForm = React.lazy(() => import('./pages/text-snippet-form'));
           return (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <TextSnippetForm onSave={() => window.history.back()} />
             </Suspense>
           );
@@ -283,7 +283,7 @@ function Router() {
           {(params) => {
             const TextSnippetForm = React.lazy(() => import('./pages/text-snippet-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <TextSnippetForm onSave={() => window.history.back()} textSnippetId={params.id} />
               </Suspense>
             );
@@ -296,7 +296,7 @@ function Router() {
           {(params) => {
             const MasterDataForm = React.lazy(() => import('./pages/masterdata-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <MasterDataForm 
                   type={params.type} 
                   onSave={() => window.history.back()} 
@@ -309,7 +309,7 @@ function Router() {
           {(params) => {
             const MasterDataForm = React.lazy(() => import('./pages/masterdata-form'));
             return (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <MasterDataForm 
                   type={params.type} 
                   id={params.id}

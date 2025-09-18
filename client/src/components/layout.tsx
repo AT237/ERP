@@ -574,7 +574,7 @@ export default function Layout({ children }: LayoutProps) {
         return (
           <CustomerProvider>
             <div className="p-6">
-              <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+              <Suspense fallback={<div></div>}>
                 <CustomerTable />
               </Suspense>
             </div>
@@ -585,7 +585,7 @@ export default function Layout({ children }: LayoutProps) {
       if (activeTab.id === 'suppliers') {
         return (
           <div className="p-6">
-            <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <SupplierTable />
             </Suspense>
           </div>
@@ -595,7 +595,7 @@ export default function Layout({ children }: LayoutProps) {
       if (activeTab.id === 'contacts') {
         return (
           <div className="p-6">
-            <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <ContactPersonsTable />
             </Suspense>
           </div>
@@ -606,7 +606,7 @@ export default function Layout({ children }: LayoutProps) {
         // Import and render Quotations component directly
         const QuotationsPage = lazy(() => import('../pages/quotations-simple'));
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <QuotationsPage onCreateNew={handleFormClick} />
           </Suspense>
         );
@@ -702,7 +702,7 @@ export default function Layout({ children }: LayoutProps) {
           : activeTab.parentId;
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <QuotationForm 
               quotationId={quotationId}
               onSave={() => {
@@ -726,7 +726,7 @@ export default function Layout({ children }: LayoutProps) {
           : undefined;
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <CustomerForm 
               customerId={customerId}
               parentId={activeTab.parentId}
@@ -753,7 +753,7 @@ export default function Layout({ children }: LayoutProps) {
         const quotationId = isEditing ? undefined : (activeTab.parentId || (activeTab as any).quotationId);
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <LineItemFormLayoutComponent 
               lineItemId={lineItemId}
               quotationId={quotationId}
@@ -780,7 +780,7 @@ export default function Layout({ children }: LayoutProps) {
           : undefined;
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <SupplierForm 
               supplierId={supplierId}
               parentId={activeTab.parentId}
@@ -803,7 +803,7 @@ export default function Layout({ children }: LayoutProps) {
           : undefined;
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <InventoryForm 
               inventoryId={inventoryId}
               parentId={activeTab.parentId}
@@ -826,7 +826,7 @@ export default function Layout({ children }: LayoutProps) {
           : undefined;
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <ProjectForm 
               projectId={projectId}
               parentId={activeTab.parentId}
@@ -849,7 +849,7 @@ export default function Layout({ children }: LayoutProps) {
           : undefined;
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <WorkOrderForm 
               workOrderId={workOrderId}
               parentId={activeTab.parentId}
@@ -872,7 +872,7 @@ export default function Layout({ children }: LayoutProps) {
           : undefined;
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <PurchaseOrderForm 
               purchaseOrderId={purchaseOrderId}
               parentId={activeTab.parentId}
@@ -896,7 +896,7 @@ export default function Layout({ children }: LayoutProps) {
           : undefined;
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <SalesOrderForm 
               salesOrderId={salesOrderId}
               parentId={activeTab.parentId}
@@ -921,7 +921,7 @@ export default function Layout({ children }: LayoutProps) {
           : undefined;
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <PackingListForm 
               packingListId={packingListId}
               parentId={activeTab.parentId}
@@ -946,7 +946,7 @@ export default function Layout({ children }: LayoutProps) {
           : undefined;
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <InvoiceForm 
               invoiceId={invoiceId}
               parentId={activeTab.parentId}
@@ -971,7 +971,7 @@ export default function Layout({ children }: LayoutProps) {
           : undefined;
         
         return (
-          <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+          <Suspense fallback={<div></div>}>
             <TextSnippetForm 
               textSnippetId={textSnippetId}
               parentId={activeTab.parentId}

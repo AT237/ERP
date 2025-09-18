@@ -64,8 +64,11 @@ export function BaseFormLayout({
                   <div className="bg-gray-100 dark:bg-gray-800 rounded-t-lg px-3 py-2 h-8 w-20 animate-pulse"></div>
                 </div>
               </div>
-              <div className="border-2 border-orange-500 bg-white p-6 h-[400px] flex items-center justify-center">
-                <div className="text-gray-400">Loading...</div>
+              <div className="bg-gray-50 dark:bg-gray-900 p-6 h-[400px] space-y-4">
+                <div className="bg-gray-200 dark:bg-gray-800 h-6 w-3/4 rounded animate-pulse"></div>
+                <div className="bg-gray-200 dark:bg-gray-800 h-4 w-1/2 rounded animate-pulse"></div>
+                <div className="bg-gray-200 dark:bg-gray-800 h-4 w-2/3 rounded animate-pulse"></div>
+                <div className="bg-gray-200 dark:bg-gray-800 h-4 w-1/3 rounded animate-pulse"></div>
               </div>
             </CardContent>
           </Card>
@@ -105,7 +108,7 @@ export function BaseFormLayout({
                 ) : (
                   button.icon && <span className="mr-1">{button.icon}</span>
                 )}
-                {button.loading ? 'Loading...' : button.label}
+                {button.label}
               </Button>
             ))}
           </div>

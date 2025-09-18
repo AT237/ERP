@@ -454,8 +454,11 @@ export function DataTableLayout<T = any>({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading {entityNamePlural.toLowerCase()}...</div>
+      <div className="h-64 space-y-3 p-4">
+        <div className="bg-gray-200 dark:bg-gray-800 h-8 w-3/4 rounded animate-pulse"></div>
+        <div className="bg-gray-200 dark:bg-gray-800 h-6 w-1/2 rounded animate-pulse"></div>
+        <div className="bg-gray-200 dark:bg-gray-800 h-6 w-2/3 rounded animate-pulse"></div>
+        <div className="bg-gray-200 dark:bg-gray-800 h-6 w-1/3 rounded animate-pulse"></div>
       </div>
     );
   }

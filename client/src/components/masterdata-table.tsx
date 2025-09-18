@@ -93,8 +93,10 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <div>Loading...</div>
+        <div className="h-64 space-y-3 p-4">
+          <div className="bg-gray-200 dark:bg-gray-800 h-8 w-3/4 rounded animate-pulse"></div>
+          <div className="bg-gray-200 dark:bg-gray-800 h-6 w-1/2 rounded animate-pulse"></div>
+          <div className="bg-gray-200 dark:bg-gray-800 h-6 w-2/3 rounded animate-pulse"></div>
         </div>
       ) : (
         <Card>
