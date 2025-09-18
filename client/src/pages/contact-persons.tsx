@@ -7,6 +7,11 @@ import type { CustomerContact, Customer } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 
+// Enhanced contact type that includes customer name
+type EnhancedCustomerContact = CustomerContact & {
+  customerName?: string;
+};
+
 const defaultColumns: ColumnConfig[] = [
   createIdColumn('id', 'Contact ID'),
   { 
@@ -159,9 +164,22 @@ export default function ContactPersons() {
     window.dispatchEvent(event);
   };
 
-  const handleRowDoubleClick = (contact: CustomerContact) => {
-    // Open edit form on double click
-    handleEdit(contact);
+  const handleRowDoubleClick = (contact: EnhancedCustomerContact) => {
+    // Open edit form on double click - extract base contact data
+    const baseContact: CustomerContact = {
+      id: contact.id,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      email: contact.email,
+      phone: contact.phone,
+      mobile: contact.mobile,
+      position: contact.position,
+      dateOfBirth: contact.dateOfBirth,
+      isPrimary: contact.isPrimary,
+      customerId: contact.customerId,
+      createdAt: contact.createdAt
+    };
+    handleEdit(baseContact);
   };
 
   const handleDelete = (id: string) => {
@@ -217,7 +235,7 @@ export default function ContactPersons() {
           tableState.toggleAllRows(allIds);
         }}
         onRowDoubleClick={handleRowDoubleClick}
-        getRowId={(row: CustomerContact) => row.id}
+        getRowId={(row: EnhancedCustomerContact) => row.id}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
         headerActions={[
@@ -229,12 +247,27 @@ export default function ContactPersons() {
             variant: 'default' as const
           }
         ]}
-        rowActions={(row: CustomerContact) => [
+        rowActions={(row: EnhancedCustomerContact) => [
           {
             key: 'edit',
             label: 'Edit',
             icon: <Edit className="h-4 w-4" />,
-            onClick: () => handleEdit(row)
+            onClick: () => {
+              const baseContact: CustomerContact = {
+                id: row.id,
+                firstName: row.firstName,
+                lastName: row.lastName,
+                email: row.email,
+                phone: row.phone,
+                mobile: row.mobile,
+                position: row.position,
+                dateOfBirth: row.dateOfBirth,
+                isPrimary: row.isPrimary,
+                customerId: row.customerId,
+                createdAt: row.createdAt
+              };
+              handleEdit(baseContact);
+            }
           },
           {
             key: 'delete',
