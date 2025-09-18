@@ -58,7 +58,7 @@ export default function Layout({ children }: LayoutProps) {
       case '/suppliers':
         return { id: 'suppliers', name: 'Suppliers' };
       case '/contact-persons':
-        return { id: 'contacts', name: 'Contact Persons' };
+        return { id: 'contact-persons', name: 'Contact Persons' };
       case '/quotations':
         return { id: 'quotations', name: 'Quotations' };
       case '/invoices':
@@ -386,7 +386,7 @@ export default function Layout({ children }: LayoutProps) {
         return '/inventory';
       case 'suppliers':
         return '/suppliers';
-      case 'contacts':
+      case 'contact-persons':
         return '/contact-persons';
       case 'quotations':
         return '/quotations';
@@ -599,7 +599,7 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
 
-      if (activeTab.id === 'contacts') {
+      if (activeTab.id === 'contact-persons') {
         return (
           <Suspense fallback={<div></div>}>
             <ContactPersonsPage />
@@ -1004,10 +1004,10 @@ export default function Layout({ children }: LayoutProps) {
             <ContactPersonForm 
               contactPersonId={contactPersonId}
               onSave={() => {
-                // Return to contacts tab after save
-                const contactsTab = tabs.find(tab => tab.id === 'contacts');
-                if (contactsTab) {
-                  setActiveTabId('contacts');
+                // Return to contact-persons tab after save
+                const contactPersonsTab = tabs.find(tab => tab.id === 'contact-persons');
+                if (contactPersonsTab) {
+                  setActiveTabId('contact-persons');
                   closeTab(activeTab.id);
                 }
               }} 
