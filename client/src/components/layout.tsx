@@ -23,6 +23,9 @@ import logoImage from "@assets/ATE solutions AFAS logo verticaal_1756322897372.j
 const CustomerTable = lazy(() => import('./customer-table'));
 const SupplierTable = lazy(() => import('./supplier-table'));
 const ContactPersonsTable = lazy(() => import('./contact-persons-table'));
+const ContactPersonsPage = lazy(() => import('../pages/contact-persons'));
+const QuotationsPage = lazy(() => import('../pages/quotations-simple'));
+const ContactPersonFormLayout = lazy(() => import('@/components/layouts/ContactPersonFormLayout'));
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -594,17 +597,14 @@ export default function Layout({ children }: LayoutProps) {
 
       if (activeTab.id === 'contacts') {
         return (
-          <div className="p-6">
-            <Suspense fallback={<div></div>}>
-              <ContactPersonsTable />
-            </Suspense>
-          </div>
+          <Suspense fallback={<div></div>}>
+            <ContactPersonsPage />
+          </Suspense>
         );
       }
 
       if (activeTab.id === 'quotations') {
         // Import and render Quotations component directly
-        const QuotationsPage = lazy(() => import('../pages/quotations-simple'));
         return (
           <Suspense fallback={<div></div>}>
             <QuotationsPage onCreateNew={handleFormClick} />
@@ -987,6 +987,27 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       */
+      
+      if (activeTab.formType === 'contact-person') {
+        const contactPersonId = activeTab.id.startsWith('edit-contact-person-') 
+          ? activeTab.id.replace('edit-contact-person-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div></div>}>
+            <ContactPersonFormLayout 
+              contactPersonId={contactPersonId}
+              onSave={() => {
+                const contactsTab = tabs.find(tab => tab.id === 'contacts');
+                if (contactsTab) {
+                  setActiveTabId('contacts');
+                  closeTab(activeTab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
       
       // Default form placeholder
       return (
