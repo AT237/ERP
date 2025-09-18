@@ -165,21 +165,16 @@ export default function ContactPersons() {
   };
 
   const handleRowDoubleClick = (contact: EnhancedCustomerContact) => {
-    // Open edit form on double click - extract base contact data
-    const baseContact: CustomerContact = {
-      id: contact.id,
-      firstName: contact.firstName,
-      lastName: contact.lastName,
-      email: contact.email,
-      phone: contact.phone,
-      mobile: contact.mobile,
-      position: contact.position,
-      dateOfBirth: contact.dateOfBirth,
-      isPrimary: contact.isPrimary,
-      customerId: contact.customerId,
-      createdAt: contact.createdAt
-    };
-    handleEdit(baseContact);
+    // Dispatch custom event to open contact person edit form in new tab (direct dispatch like customers)
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: `edit-contact-person-${contact.id}`,
+        name: `${contact.firstName} ${contact.lastName}`,
+        formType: 'contact-person',
+        parentId: contact.id
+      }
+    });
+    window.dispatchEvent(event);
   };
 
   const handleDelete = (id: string) => {
