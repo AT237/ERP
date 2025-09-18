@@ -25,7 +25,6 @@ const SupplierTable = lazy(() => import('./supplier-table'));
 const ContactPersonsTable = lazy(() => import('./contact-persons-table'));
 const ContactPersonsPage = lazy(() => import('../pages/contact-persons'));
 const QuotationsPage = lazy(() => import('../pages/quotations-simple'));
-const ContactPersonFormLayout = lazy(() => import('@/components/layouts/ContactPersonFormLayout'));
 const AddressFormLayout = lazy(() => import('@/components/layouts/AddressFormLayout'));
 
 interface LayoutProps {
@@ -994,15 +993,18 @@ export default function Layout({ children }: LayoutProps) {
       */
       
       if (activeTab.formType === 'contact-person') {
+        const ContactPersonForm = lazy(() => import('@/pages/contact-person-form'));
+        // Extract contactPersonId from tab.id if editing
         const contactPersonId = activeTab.id.startsWith('edit-contact-person-') 
           ? activeTab.id.replace('edit-contact-person-', '') 
           : undefined;
         
         return (
           <Suspense fallback={<div></div>}>
-            <ContactPersonFormLayout 
+            <ContactPersonForm 
               contactPersonId={contactPersonId}
               onSave={() => {
+                // Return to contacts tab after save
                 const contactsTab = tabs.find(tab => tab.id === 'contacts');
                 if (contactsTab) {
                   setActiveTabId('contacts');
