@@ -120,6 +120,25 @@ function Router() {
           }}
         </Route>
         
+        <Route path="/contact-person-form" component={() => {
+          const ContactPersonForm = React.lazy(() => import('./pages/contact-person-form'));
+          return (
+            <Suspense fallback={<div></div>}>
+              <ContactPersonForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/contact-person-form/:id">
+          {(params) => {
+            const ContactPersonForm = React.lazy(() => import('./pages/contact-person-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <ContactPersonForm onSave={() => window.history.back()} contactPersonId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        
         <Route path="/inventory-form" component={() => {
           const InventoryForm = React.lazy(() => import('./pages/inventory-form'));
           return (
