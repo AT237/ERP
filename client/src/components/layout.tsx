@@ -77,6 +77,20 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'reports', name: 'Reports' };
       case '/addresses':
         return { id: 'addresses', name: 'Addresses' };
+      case '/text-snippets':
+        return { id: 'text-snippets', name: 'Text Snippets' };
+      case '/master-data/uom':
+        return { id: 'uom', name: 'Units of Measure' };
+      case '/master-data/payment-terms':
+        return { id: 'payment-terms', name: 'Payment Terms' };
+      case '/master-data/incoterms':
+        return { id: 'incoterms', name: 'Incoterms' };
+      case '/master-data/vat':
+        return { id: 'vat', name: 'VAT Rates' };
+      case '/master-data/cities':
+        return { id: 'cities', name: 'Cities' };
+      case '/master-data/statuses':
+        return { id: 'statuses', name: 'Statuses' };
       case '/welcome':
         return { id: 'welcome', name: 'Welcome' };
       default:
@@ -301,26 +315,37 @@ export default function Layout({ children }: LayoutProps) {
     // Navigate to the route instead of creating a tab
     if (menuItem.route) {
       if (menuItem.route !== location) {
-        navigate(menuItem.route);
+        // Use setTimeout to avoid setState during render
+        setTimeout(() => {
+          navigate(menuItem.route!);
+        }, 0);
       } else {
         // If route already matches, ensure page tab exists by creating it if missing
         const pageInfo = getPageInfo(menuItem.route);
         const existingTab = tabs.find(tab => tab.id === pageInfo.id);
         
         if (!existingTab) {
-          // Create the page tab if it doesn't exist
-          const newTab: Tab = {
-            id: pageInfo.id,
-            name: pageInfo.name,
-            type: 'page',
-            menuRoute: menuItem.route,
-            content: children
-          };
-          setTabs(prevTabs => [...prevTabs, newTab]);
+          // Use setTimeout to avoid setState during render
+          setTimeout(() => {
+            // Create the page tab if it doesn't exist
+            const newTab: Tab = {
+              id: pageInfo.id,
+              name: pageInfo.name,
+              type: 'page',
+              menuRoute: menuItem.route,
+              content: children
+            };
+            setTabs(prevTabs => [...prevTabs, newTab]);
+            // Ensure the page tab is active
+            setActiveTabId(pageInfo.id);
+          }, 0);
+        } else {
+          // Use setTimeout to avoid setState during render
+          setTimeout(() => {
+            // Ensure the page tab is active
+            setActiveTabId(pageInfo.id);
+          }, 0);
         }
-        
-        // Ensure the page tab is active
-        setActiveTabId(pageInfo.id);
       }
     }
   };
@@ -406,6 +431,20 @@ export default function Layout({ children }: LayoutProps) {
         return '/reports';
       case 'addresses':
         return '/addresses';
+      case 'text-snippets':
+        return '/text-snippets';
+      case 'uom':
+        return '/master-data/uom';
+      case 'payment-terms':
+        return '/master-data/payment-terms';
+      case 'incoterms':
+        return '/master-data/incoterms';
+      case 'vat':
+        return '/master-data/vat';
+      case 'cities':
+        return '/master-data/cities';
+      case 'statuses':
+        return '/master-data/statuses';
       default:
         return '/dashboard';
     }

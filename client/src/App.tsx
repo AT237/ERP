@@ -43,6 +43,57 @@ function Router() {
         <Route path="/packing-lists" component={PackingLists} />
         <Route path="/reports" component={Reports} />
         <Route path="/text-snippets" component={TextSnippets} />
+        
+        {/* Master Data Routes */}
+        <Route path="/master-data/uom" component={() => (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <h2 className="text-xl font-semibold mb-4">Units of Measure</h2>
+              <p className="text-muted-foreground">Units of Measure management will be implemented here.</p>
+            </div>
+          </div>
+        )} />
+        <Route path="/master-data/payment-terms" component={() => (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <h2 className="text-xl font-semibold mb-4">Payment Terms</h2>
+              <p className="text-muted-foreground">Payment Terms management will be implemented here.</p>
+            </div>
+          </div>
+        )} />
+        <Route path="/master-data/incoterms" component={() => (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <h2 className="text-xl font-semibold mb-4">Incoterms</h2>
+              <p className="text-muted-foreground">Incoterms management will be implemented here.</p>
+            </div>
+          </div>
+        )} />
+        <Route path="/master-data/vat" component={() => (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <h2 className="text-xl font-semibold mb-4">VAT Rates</h2>
+              <p className="text-muted-foreground">VAT Rates management will be implemented here.</p>
+            </div>
+          </div>
+        )} />
+        <Route path="/master-data/cities" component={() => (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <h2 className="text-xl font-semibold mb-4">Cities</h2>
+              <p className="text-muted-foreground">Cities management will be implemented here.</p>
+            </div>
+          </div>
+        )} />
+        <Route path="/master-data/statuses" component={() => (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <h2 className="text-xl font-semibold mb-4">Statuses</h2>
+              <p className="text-muted-foreground">Statuses management will be implemented here.</p>
+            </div>
+          </div>
+        )} />
+        
         <Route path="/quotation-form" component={() => {
           const QuotationForm = React.lazy(() => import('./pages/quotation-form'));
           return (
