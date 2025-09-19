@@ -255,6 +255,7 @@ export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
   const [navigation, setNavigation] = useState(defaultNavigation);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [isEditMode, setIsEditMode] = useState(false);
+  
   const [originalNavigation, setOriginalNavigation] = useState(defaultNavigation);
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
