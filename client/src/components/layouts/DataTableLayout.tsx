@@ -449,8 +449,8 @@ export function DataTableLayout<T = any>({
   };
 
   // Apply filters and search
-  const filteredData = applyFiltersAndSearch(data);
-  const sortedData = applySorting(filteredData);
+  const filteredData = applyFiltersAndSearch(data, searchTerm, filters);
+  const sortedData = applySorting(filteredData, sortConfig);
 
   if (isLoading) {
     return (
