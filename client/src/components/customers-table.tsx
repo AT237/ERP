@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Customer } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useLocation } from 'wouter';
 
 const defaultColumns: ColumnConfig[] = [
   createIdColumn('id', 'Customer ID'),
@@ -82,6 +83,7 @@ const defaultColumns: ColumnConfig[] = [
 
 export default function CustomersTable() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   // Data table state  
   const tableState = useDataTable({ 
@@ -115,16 +117,8 @@ export default function CustomersTable() {
   });
 
   const handleEdit = (customer: Customer) => {
-    // Dispatch custom event to open customer edit form in new tab
-    const event = new CustomEvent('open-form-tab', {
-      detail: {
-        id: `edit-customer-${customer.id}`,
-        name: `${customer.name}`,
-        formType: 'customer',
-        parentId: customer.id
-      }
-    });
-    window.dispatchEvent(event);
+    // Navigate directly to customer edit form route (no popup)
+    setLocation(`/customer-form/${customer.id}`);
   };
 
   const handleRowDoubleClick = (customer: Customer) => {
@@ -139,15 +133,8 @@ export default function CustomersTable() {
   };
 
   const handleNewCustomer = () => {
-    // Dispatch custom event to open customer form in new tab
-    const event = new CustomEvent('open-form-tab', {
-      detail: {
-        id: 'new-customer',
-        name: 'New Customer',
-        formType: 'customer'
-      }
-    });
-    window.dispatchEvent(event);
+    // Navigate directly to customer form route (no popup)
+    setLocation('/customer-form');
   };
 
   // Render table data with proper formatting
