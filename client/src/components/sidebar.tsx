@@ -51,7 +51,7 @@ const defaultNavigation = [
     items: [
       { id: "customers", name: "Customers", href: "/customers", icon: Users },
       { id: "suppliers", name: "Suppliers", href: "/suppliers", icon: Truck },
-      { id: "contacts", name: "Contact Persons", href: "/contact-persons", icon: Contact },
+      { id: "contact-persons", name: "Contact Persons", href: "/contact-persons", icon: Contact },
       { id: "addresses", name: "Addresses", href: "/addresses", icon: MapPin },
       { id: "prospects", name: "Prospects", href: "/prospects", icon: UserPlus }
     ]
