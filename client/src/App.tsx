@@ -12,6 +12,7 @@ import Inventory from "@/pages/inventory";
 import Suppliers from "@/pages/suppliers";
 import ContactPersons from "@/pages/contact-persons";
 import Addresses from "@/pages/addresses";
+import Prospects from "@/pages/prospects";
 import Quotations from "@/pages/quotations";
 import Invoices from "@/pages/invoices";
 import Projects from "@/pages/projects";
@@ -34,6 +35,7 @@ function Router() {
         <Route path="/suppliers" component={Suppliers} />
         <Route path="/contact-persons" component={ContactPersons} />
         <Route path="/addresses" component={Addresses} />
+        <Route path="/prospects" component={Prospects} />
         <Route path="/quotations" component={() => <Quotations />} />
         <Route path="/invoices" component={Invoices} />
         <Route path="/projects" component={Projects} />
