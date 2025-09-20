@@ -501,18 +501,19 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 <Input
                   id="areaCode"
                   {...form.register("areaCode")}
-                  placeholder={currentCountryCode === 'ET' ? '+251' : '+31'}
+                  placeholder="Voer area code in"
                   data-testid="input-customer-areaCode"
                   className={currentCountryRequirements.requiresAreaCode ? "border-orange-300 focus:border-orange-500" : ""}
                 />
-                {currentCountryRequirements.requiresAreaCode && (
-                  <p className="text-sm text-orange-600 mt-1">
-                    Area code is verplicht voor {countryData?.name || 'dit land'}
-                  </p>
-                )}
-                {form.formState.errors.areaCode && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.areaCode.message}</p>
-                )}
+                <div className="h-5 mt-1">
+                  {form.formState.errors.areaCode ? (
+                    <p className="text-sm text-red-600">{form.formState.errors.areaCode.message}</p>
+                  ) : currentCountryRequirements.requiresAreaCode ? (
+                    <p className="text-sm text-orange-600">
+                      Area code is verplicht voor {countryData?.name || 'dit land'}
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </div>
 
