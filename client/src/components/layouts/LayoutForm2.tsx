@@ -7,7 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
-import type { InfoField } from './InfoHeaderLayout';
+// InfoField import removed per user request
 import type { FormTab } from './FormTabLayout';
 import { UseFormReturn, FieldValues, FieldPath } from 'react-hook-form';
 
@@ -142,8 +142,8 @@ export interface LayoutForm2Props<T extends FieldValues = FieldValues> {
   // Action buttons
   actionButtons: ActionButton[];
   
-  // Header fields (optional)
-  headerFields?: InfoField[];
+  // Header fields removed per user request
+  // headerFields?: InfoField[];
   
   // Change tracking (optional)
   changeTracking?: ChangeTrackingConfig;
@@ -308,7 +308,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   form,
   onSubmit,
   actionButtons,
-  headerFields = [],
+  // headerFields removed per user request
   changeTracking,
   originalValues,
   isLoading = false,
@@ -530,7 +530,6 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   return (
     <div className={`layout-form2 ${className}`}>
       <BaseFormLayout
-        headerFields={headerFields}
         actionButtons={actionButtons}
         tabs={tabs}
         activeTab={activeSection}

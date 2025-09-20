@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { InfoHeaderLayout, type InfoField } from './InfoHeaderLayout';
+// InfoHeaderLayout removed per user request
 import { FormTabLayout, type FormTab } from './FormTabLayout';
 
 export interface ActionButton {
@@ -17,8 +17,8 @@ export interface ActionButton {
 }
 
 export interface BaseFormLayoutProps {
-  // Header info fields (like quotation number, status, etc)
-  headerFields: InfoField[];
+  // Header info fields removed per user request
+  // headerFields: InfoField[];
   
   // Action buttons (Cancel, Save, etc)
   actionButtons: ActionButton[];
@@ -33,7 +33,6 @@ export interface BaseFormLayoutProps {
 }
 
 export function BaseFormLayout({
-  headerFields,
   actionButtons,
   tabs,
   activeTab,
@@ -47,11 +46,7 @@ export function BaseFormLayout({
         <div className="space-y-4">
           {/* Header Skeleton - maintains exact layout structure */}
           <div className="relative p-2 h-16">
-            {headerFields.length > 0 && (
-              <div className="absolute left-2 w-fit">
-                <div className="flex items-center gap-6 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 h-12 w-64 animate-pulse"></div>
-              </div>
-            )}
+            {/* Header skeleton removed per user request */}
             <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 h-10 w-80 animate-pulse"></div>
           </div>
 
@@ -82,12 +77,7 @@ export function BaseFormLayout({
       <div className="space-y-2">
         {/* Header with Info Fields and Action Buttons */}
         <div className="relative pt-2 pb-0 px-4">
-          {/* Info Header - only show if there are fields */}
-          {headerFields.length > 0 && (
-            <div className="absolute left-2 w-fit">
-              <InfoHeaderLayout fields={headerFields} />
-            </div>
-          )}
+          {/* Info Header removed per user request */}
           
           {/* Action Buttons */}
           <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
