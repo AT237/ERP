@@ -1,10 +1,5 @@
-import CustomerTable from "@/components/customer-table";
-import { CustomerProvider } from "@/contexts/CustomerContext";
+import CustomersTable from "@/components/customers-table";
 
 export default function Customers() {
-  return (
-    <CustomerProvider>
-      <CustomerTable />
-    </CustomerProvider>
-  );
+  return <CustomersTable />;
 }
