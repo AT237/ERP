@@ -47,6 +47,7 @@ export default function Layout({ children }: LayoutProps) {
   
   // Get page name from route
   const getPageInfo = (path: string) => {
+    console.log('🔍 getPageInfo called with path:', path);
     switch (path) {
       case '/':
       case '/dashboard':
@@ -58,6 +59,7 @@ export default function Layout({ children }: LayoutProps) {
       case '/suppliers':
         return { id: 'suppliers', name: 'Suppliers' };
       case '/contact-persons':
+        console.log('✅ Found /contact-persons route, returning Contact Persons');
         return { id: 'contact-persons', name: 'Contact Persons' };
       case '/quotations':
         return { id: 'quotations', name: 'Quotations' };
@@ -94,6 +96,7 @@ export default function Layout({ children }: LayoutProps) {
       case '/welcome':
         return { id: 'welcome', name: 'Welcome' };
       default:
+        console.log('❌ Default case triggered for path:', path);
         return { id: 'page', name: 'Page' };
     }
   };
