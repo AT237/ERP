@@ -249,8 +249,7 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
     }
   };
 
-  // Header fields
-  const headerFields: InfoField[] = [];
+  // Header fields removed per user request
 
   // Form sections
   const formSections: FormSection2<FormData>[] = [
@@ -446,7 +445,6 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
       form={form}
       onSubmit={onSubmit}
       actionButtons={actionButtons}
-      headerFields={headerFields}
       changeTracking={{
         enabled: true,
         onChangesDetected: (hasChanges) => setHasUnsavedChanges(hasChanges)

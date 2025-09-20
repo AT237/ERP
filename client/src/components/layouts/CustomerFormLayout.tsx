@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
+import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from './LayoutForm2';\nimport type { ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
 import type { FormTab } from './FormTabLayout';
 import { 
@@ -18,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Users } from "lucide-react";
+import { Save, ArrowLeft, Users, User, Building, CreditCard, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Customer, InsertCustomer, Country } from "@shared/schema";
 import { z } from "zod";
@@ -60,6 +60,9 @@ interface CustomerFormLayoutProps {
   parentId?: string; // ID of the parent tab that opened this form
 }
 
+// Form data type for LayoutForm2
+type CustomerFormData = z.infer<typeof baseCustomerFormSchema>;
+
 interface Memo {
   id: string;
   title: string;
@@ -68,7 +71,7 @@ interface Memo {
   createdAt: Date;
 }
 
-export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFormLayoutProps) {
+export default function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFormLayoutProps) {
   const [activeTab, setActiveTab] = useState("general");
   const [memos, setMemos] = useState<Memo[]>([]);
   const [newMemo, setNewMemo] = useState({ title: "", content: "", isInternal: false });
@@ -813,13 +816,276 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
     setTimeout(() => setSuppressTracking(false), 50);
   }, [formKey]);
 
+  // Form sections for LayoutForm2
+  const formSections: FormSection2<CustomerFormData>[] = [
+    {
+      id: "general",
+      label: "General", 
+      icon: <Building className="h-4 w-4" />,
+      rows: [
+        createSectionHeaderRow("Basic Information"),
+        createFieldsRow([
+          {
+            key: "name",
+            label: "Bedrijfsnaam",
+            type: "text",
+            register: form.register("name"),
+            validation: {
+              isRequired: true,
+              error: form.formState.errors.name?.message
+            },
+            testId: "input-customer-name",
+            width: "50%"
+          } as FormField2<CustomerFormData>,
+          {
+            key: "countryCode",
+            label: "Country",
+            type: "custom",
+            customComponent: (
+              <CountrySelectWithAdd
+                value={form.watch("countryCode") || ""}
+                onValueChange={(value) => form.setValue("countryCode", value)}
+                placeholder="Selecteer land..."
+                testId="select-customer-country"
+              />
+            ),
+            width: "50%"
+          } as FormField2<CustomerFormData>
+        ]),
+        createFieldsRow([
+          {
+            key: "kvkNummer",
+            label: "KVK-nummer",
+            type: "text",
+            register: form.register("kvkNummer"),
+            validation: {
+              error: form.formState.errors.kvkNummer?.message
+            },
+            testId: "input-customer-kvk-nummer",
+            width: "33%"
+          } as FormField2<CustomerFormData>,
+          {
+            key: "taxId",
+            label: `BTW-nummer${currentCountryRequirements.requiresBtw ? ' *' : ''}`,
+            type: "text",
+            register: form.register("taxId"),
+            validation: {
+              isRequired: currentCountryRequirements.requiresBtw,
+              error: form.formState.errors.taxId?.message
+            },
+            testId: "input-customer-taxId",
+            width: "33%"
+          } as FormField2<CustomerFormData>,
+          {
+            key: "areaCode",
+            label: `Area Code${currentCountryRequirements.requiresAreaCode ? ' *' : ''}`,
+            type: "text",
+            register: form.register("areaCode"),
+            validation: {
+              isRequired: currentCountryRequirements.requiresAreaCode,
+              error: form.formState.errors.areaCode?.message
+            },
+            testId: "input-customer-areaCode",
+            width: "33%"
+          } as FormField2<CustomerFormData>
+        ]),
+        createFieldsRow([
+          {
+            key: "language",
+            label: "Taal",
+            type: "select",
+            options: [
+              { value: "nl", label: "Nederlands" },
+              { value: "en", label: "English" },
+              { value: "de", label: "Deutsch" },
+              { value: "fr", label: "Français" }
+            ],
+            setValue: (value) => form.setValue("language", value),
+            watch: () => form.watch("language") || "nl",
+            testId: "select-customer-language",
+            width: "50%"
+          } as FormField2<CustomerFormData>,
+          {
+            key: "generalEmail",
+            label: "Algemene email",
+            type: "email",
+            register: form.register("generalEmail"),
+            validation: {
+              error: form.formState.errors.generalEmail?.message
+            },
+            testId: "input-customer-general-email",
+            width: "50%"
+          } as FormField2<CustomerFormData>
+        ]),
+        createFieldRow({
+          key: "addressId",
+          label: "Adres",
+          type: "custom",
+          customComponent: (
+            <AddressSelectWithAdd
+              value={form.watch("addressId") || ""}
+              onValueChange={(value) => form.setValue("addressId", value)}
+              placeholder="Selecteer adres..."
+              testId="select-customer-address"
+            />
+          ),
+          testId: "select-customer-address"
+        })
+      ]
+    },
+    {
+      id: "contact",
+      label: "Contact",
+      icon: <User className="h-4 w-4" />,
+      rows: [
+        createSectionHeaderRow("Contactinformatie"),
+        createFieldsRow([
+          {
+            key: "email",
+            label: "Email",
+            type: "email",
+            register: form.register("email"),
+            validation: {
+              error: form.formState.errors.email?.message
+            },
+            testId: "input-customer-email",
+            width: "50%"
+          } as FormField2<CustomerFormData>,
+          {
+            key: "phone",
+            label: "Telefoon",
+            type: "tel",
+            register: form.register("phone"),
+            validation: {
+              error: form.formState.errors.phone?.message
+            },
+            testId: "input-customer-phone",
+            width: "50%"
+          } as FormField2<CustomerFormData>
+        ]),
+        createFieldsRow([
+          {
+            key: "mobile",
+            label: "Mobiel",
+            type: "tel",
+            register: form.register("mobile"),
+            validation: {
+              error: form.formState.errors.mobile?.message
+            },
+            testId: "input-customer-mobile",
+            width: "50%"
+          } as FormField2<CustomerFormData>,
+          {
+            key: "contactPersonEmail",
+            label: "Contactpersoon",
+            type: "custom",
+            customComponent: (
+              <ContactPersonSelectWithAdd
+                value={form.watch("contactPersonEmail") || ""}
+                onValueChange={(value) => form.setValue("contactPersonEmail", value)}
+                placeholder="Selecteer contactpersoon..."
+                testId="select-customer-contact-person"
+              />
+            ),
+            width: "50%"
+          } as FormField2<CustomerFormData>
+        ])
+      ]
+    },
+    {
+      id: "financial",
+      label: "Financial",
+      icon: <CreditCard className="h-4 w-4" />,
+      rows: [
+        createSectionHeaderRow("Financial Information"),
+        createFieldsRow([
+          {
+            key: "bankAccount",
+            label: "Bankrekeningnummer",
+            type: "text",
+            register: form.register("bankAccount"),
+            validation: {
+              error: form.formState.errors.bankAccount?.message
+            },
+            testId: "input-customer-bank-account",
+            width: "50%"
+          } as FormField2<CustomerFormData>,
+          {
+            key: "paymentTerms",
+            label: "Betalingsvoorwaarden",
+            type: "select",
+            options: [
+              { value: "0", label: "Direct" },
+              { value: "7", label: "7 dagen" },
+              { value: "14", label: "14 dagen" },
+              { value: "30", label: "30 dagen" },
+              { value: "60", label: "60 dagen" },
+              { value: "90", label: "90 dagen" }
+            ],
+            setValue: (value) => form.setValue("paymentTerms", value),
+            watch: () => form.watch("paymentTerms") || "30",
+            validation: {
+              isRequired: true,
+              error: form.formState.errors.paymentTerms?.message
+            },
+            testId: "select-customer-payment-terms",
+            width: "50%"
+          } as FormField2<CustomerFormData>
+        ]),
+        createFieldsRow([
+          {
+            key: "invoiceEmail",
+            label: "Factuur email",
+            type: "email",
+            register: form.register("invoiceEmail"),
+            validation: {
+              error: form.formState.errors.invoiceEmail?.message
+            },
+            testId: "input-customer-invoice-email",
+            width: "50%"
+          } as FormField2<CustomerFormData>,
+          {
+            key: "status",
+            label: "Status",
+            type: "select",
+            options: [
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" },
+              { value: "prospect", label: "Prospect" }
+            ],
+            setValue: (value) => form.setValue("status", value),
+            watch: () => form.watch("status") || "active",
+            testId: "select-customer-status",
+            width: "50%"
+          } as FormField2<CustomerFormData>
+        ]),
+        createFieldRow({
+          key: "invoiceNotes",
+          label: "Factuur notities",
+          type: "textarea",
+          register: form.register("invoiceNotes"),
+          validation: {
+            error: form.formState.errors.invoiceNotes?.message
+          },
+          testId: "textarea-customer-invoice-notes"
+        })
+      ]
+    }
+  ];
+
   return (
     <div key={formKey}>
-      <BaseFormLayout
+      <LayoutForm2
+        sections={formSections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        form={form}
+        onSubmit={onSubmit}
         actionButtons={actionButtons}
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+        changeTracking={{
+          enabled: !suppressTracking,
+          onChangesDetected: (hasChanges) => setHasUnsavedChanges(hasChanges)
+        }}
         isLoading={isLoadingCustomer}
       />
     </div>
