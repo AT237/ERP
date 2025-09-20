@@ -784,8 +784,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   ];
 
 
-  // Create header fields for BaseFormLayout
-  const headerFields: InfoField[] = [];
+  // Header fields removed per user request
 
   // Create action buttons for BaseFormLayout
   const actionButtons: ActionButton[] = [
@@ -817,7 +816,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   return (
     <div key={formKey}>
       <BaseFormLayout
-        headerFields={headerFields}
         actionButtons={actionButtons}
         tabs={tabs}
         activeTab={activeTab}

@@ -1,39 +1,17 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, Search, MapPin, ExternalLink } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
 import { 
   Popover, PopoverContent, PopoverTrigger 
 } from "@/components/ui/popover";
 import { 
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList 
 } from "@/components/ui/command";
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle 
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertAddressSchema } from "@shared/schema";
 import { cn } from "@/lib/utils";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
 import type { Address } from "@shared/schema";
-import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
-import type { ActionButton } from '@/components/layouts/BaseFormLayout';
 
-const addressFormSchema = insertAddressSchema.extend({
-  street: z.string().min(1, "Street is required"),
-  houseNumber: z.string().min(1, "House number is required"),
-  postalCode: z.string().min(1, "Postal code is required"),
-  city: z.string().min(1, "City is required"),
-  country: z.string().min(1, "Country is required"),
-});
-
-type AddressFormData = z.infer<typeof addressFormSchema>;
+// Address form schema moved to tab-based system
 
 interface AddressSelectWithAddProps {
   value?: string;
@@ -51,10 +29,10 @@ export function AddressSelectWithAdd({
   className,
 }: AddressSelectWithAddProps) {
   const [open, setOpen] = useState(false);
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  // Dialog state removed - using tab system instead
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeSection, setActiveSection] = useState("address");
-  const { toast } = useToast();
+  // Active section state removed - using tab system instead
+  // Toast removed - not needed for tab-based system
 
   // Load addresses with search
   const { data: addresses = [] } = useQuery<Address[]>({
@@ -68,154 +46,17 @@ export function AddressSelectWithAdd({
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
-  // Address form
-  const addressForm = useForm<AddressFormData>({
-    resolver: zodResolver(addressFormSchema),
-    defaultValues: {
-      street: "",
-      houseNumber: "",
-      postalCode: "",
-      city: "",
-      country: "Nederland",
-    },
-  });
+  // Address form moved to tab-based system
 
-  // Create address mutation
-  const createAddressMutation = useMutation({
-    mutationFn: async (data: AddressFormData) => {
-      const response = await apiRequest("POST", "/api/addresses", data);
-      return response.json();
-    },
-    onSuccess: (newAddress) => {
-      toast({
-        title: "Success",
-        description: "Address created successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/addresses"] });
-      onValueChange?.(newAddress.id);
-      setShowAddDialog(false);
-      addressForm.reset();
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create address",
-        variant: "destructive",
-      });
-    },
-  });
+  // Address creation moved to tab-based system
 
-  const handleCreateAddress = (data: AddressFormData) => {
-    createAddressMutation.mutate(data);
-  };
+  // Address creation handler moved to tab-based system
 
-  // Create form sections for address
-  const createAddressFormSections = (): FormSection2<AddressFormData>[] => [
-    {
-      id: "address",
-      label: "Address Details",
-      icon: <MapPin className="h-4 w-4" />,
-      rows: [
-        createFieldsRow([
-          {
-            key: "street",
-            label: "Street",
-            type: "text",
-            register: addressForm.register("street"),
-            validation: {
-              error: addressForm.formState.errors.street?.message,
-              isRequired: true
-            },
-            testId: "input-address-street",
-            width: "67%"
-          } as FormField2<AddressFormData>,
-          {
-            key: "houseNumber",
-            label: "House No.",
-            type: "text",
-            register: addressForm.register("houseNumber"),
-            validation: {
-              error: addressForm.formState.errors.houseNumber?.message,
-              isRequired: true
-            },
-            testId: "input-address-house-number",
-            width: "33%"
-          } as FormField2<AddressFormData>
-        ]),
-        createFieldsRow([
-          {
-            key: "postalCode",
-            label: "Postal Code",
-            type: "text",
-            register: addressForm.register("postalCode"),
-            validation: {
-              error: addressForm.formState.errors.postalCode?.message,
-              isRequired: true
-            },
-            testId: "input-address-postal-code",
-            width: "33%"
-          } as FormField2<AddressFormData>,
-          {
-            key: "city",
-            label: "City",
-            type: "text",
-            register: addressForm.register("city"),
-            validation: {
-              error: addressForm.formState.errors.city?.message,
-              isRequired: true
-            },
-            testId: "input-address-city",
-            width: "33%"
-          } as FormField2<AddressFormData>,
-          {
-            key: "country",
-            label: "Country",
-            type: "text",
-            register: addressForm.register("country"),
-            validation: {
-              error: addressForm.formState.errors.country?.message,
-              isRequired: true
-            },
-            testId: "input-address-country",
-            width: "33%"
-          } as FormField2<AddressFormData>
-        ])
-      ]
-    }
-  ];
+  // Form sections moved to tab-based system
 
-  // Create action buttons
-  const createActionButtons = (): ActionButton[] => [
-    {
-      key: "cancel",
-      label: "Cancel",
-      variant: "outline",
-      onClick: () => setShowAddDialog(false),
-      disabled: createAddressMutation.isPending
-    },
-    {
-      key: "submit",
-      label: createAddressMutation.isPending ? "Creating..." : "Create Address",
-      variant: "default",
-      onClick: () => addressForm.handleSubmit(handleCreateAddress)(),
-      disabled: createAddressMutation.isPending
-    }
-  ];
+  // Action buttons moved to tab-based system
 
-  // Header fields with "Open full form" link
-  const createAddressHeaderFields = () => [
-    {
-      label: "Address Management",
-      value: (
-        <Link href="/masterdata-form/addresses" data-testid="link-open-address-management">
-          <Button variant="ghost" size="sm" className="h-auto p-0 text-orange-600 hover:text-orange-800">
-            <ExternalLink className="h-4 w-4 mr-1" />
-            Manage addresses
-          </Button>
-        </Link>
-      )
-    }
-  ];
+  // Header fields moved to tab-based system
 
   const formatAddress = (address: Address) => {
     return `${address.street} ${address.houseNumber}, ${address.postalCode} ${address.city}, ${address.country}`;
@@ -258,7 +99,16 @@ export function AddressSelectWithAdd({
                   variant="ghost" 
                   size="icon"
                   className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                  onClick={() => setShowAddDialog(true)}
+                  onClick={() => {
+                    setOpen(false);
+                    window.dispatchEvent(new CustomEvent('open-form-tab', { 
+                      detail: { 
+                        id: 'new-address', 
+                        name: 'New Address', 
+                        formType: 'address' 
+                      } 
+                    }));
+                  }}
                   data-testid={`${testId}-add-button`}
                 >
                   <Plus className="h-4 w-4" />
@@ -295,25 +145,7 @@ export function AddressSelectWithAdd({
         </PopoverContent>
       </Popover>
 
-      {/* Add Address Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add New Address</DialogTitle>
-          </DialogHeader>
-          
-          <LayoutForm2
-            sections={createAddressFormSections()}
-            activeSection={activeSection}
-            onSectionChange={setActiveSection}
-            form={addressForm}
-            onSubmit={handleCreateAddress}
-            actionButtons={createActionButtons()}
-            headerFields={createAddressHeaderFields()}
-            isLoading={createAddressMutation.isPending}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Address form now opens in tab instead of dialog */}
     </>
   );
 }
