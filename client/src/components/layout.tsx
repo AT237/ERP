@@ -312,26 +312,19 @@ export default function Layout({ children }: LayoutProps) {
   }, []); // Empty dependency array for stable listener
 
   const handleMenuClick = (menuItem: {id: string, name: string, route?: string}) => {
-    console.log('🔍 handleMenuClick called:', { menuItem, currentLocation: location, tabs: tabs.map(t => ({ id: t.id, name: t.name, type: t.type })) });
-    
     // Navigate to the route instead of creating a tab
     if (menuItem.route) {
       if (menuItem.route !== location) {
-        console.log('📍 Route different, navigating from', location, 'to', menuItem.route);
         // Use setTimeout to avoid setState during render
         setTimeout(() => {
           navigate(menuItem.route!);
         }, 0);
       } else {
-        console.log('📍 Route same, checking for existing tab');
         // If route already matches, ensure page tab exists by creating it if missing
         const pageInfo = getPageInfo(menuItem.route);
         const existingTab = tabs.find(tab => tab.id === pageInfo.id);
         
-        console.log('🔍 pageInfo:', pageInfo, 'existingTab:', existingTab);
-        
         if (!existingTab) {
-          console.log('➕ Creating new tab because no existing tab found');
           // Use setTimeout to avoid setState during render
           setTimeout(() => {
             // Create the page tab if it doesn't exist
@@ -347,7 +340,6 @@ export default function Layout({ children }: LayoutProps) {
             setActiveTabId(pageInfo.id);
           }, 0);
         } else {
-          console.log('✅ Switching to existing tab:', existingTab.id);
           // Use setTimeout to avoid setState during render
           setTimeout(() => {
             // Ensure the page tab is active
