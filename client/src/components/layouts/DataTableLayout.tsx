@@ -237,7 +237,7 @@ function DraggableColumnHeader({
     <TableHead
       ref={setNodeRef}
       style={dragStyle}
-      className={`${className} ${isDragging ? 'z-50' : ''} whitespace-nowrap relative border-r border-border`}
+      className={`${className} ${isDragging ? 'z-50' : ''} whitespace-nowrap relative border-r border-orange-200/50`}
       data-testid={`column-header-${column.key}`}
       onDoubleClick={(e) => onDoubleClick?.(e, column.key)}
       title="Double-click to auto-resize, drag to reorder"
@@ -245,11 +245,11 @@ function DraggableColumnHeader({
       <div className="flex items-center h-full">
         {/* Fixed position grip icon - always at left edge */}
         <div
-          className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted rounded w-6 flex items-center justify-center flex-shrink-0"
+          className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded w-6 flex items-center justify-center flex-shrink-0"
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="h-3 w-3 text-muted-foreground" />
+          <GripVertical className="h-3 w-3 text-orange-500" />
         </div>
         
         {/* Content area with consistent left margin */}
@@ -258,7 +258,7 @@ function DraggableColumnHeader({
         </div>
         
         {/* Visual separator line */}
-        <div className="absolute right-0 top-1 bottom-1 w-px bg-border"></div>
+        <div className="absolute right-0 top-1 bottom-1 w-px bg-orange-300/30"></div>
       </div>
     </TableHead>
   );
@@ -482,14 +482,14 @@ export function DataTableLayout<T = any>({
                 className="pl-8 h-8 text-sm w-64"
                 data-testid="input-search"
               />
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={14} />
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-orange-500" size={14} />
             </div>
             
             {/* Filter Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 text-xs w-20">
-                  <Filter size={14} className="mr-1 text-muted-foreground" />
+                  <Filter size={14} className="mr-1 text-orange-500" />
                   Filter{filters.length > 0 ? ` ${filters.length}` : ''}
                 </Button>
               </DropdownMenuTrigger>
@@ -510,7 +510,7 @@ export function DataTableLayout<T = any>({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 text-xs">
-                  <Settings size={14} className="mr-1 text-muted-foreground" />
+                  <Settings size={14} className="mr-1 text-orange-500" />
                   Columns
                 </Button>
               </DropdownMenuTrigger>
@@ -653,7 +653,7 @@ export function DataTableLayout<T = any>({
         </div>
 
         {/* Results count - Left aligned with title */}
-        <div className={`text-xs text-muted-foreground py-1 ${compact ? 'pl-0' : ''}`}>
+        <div className={`text-xs text-orange-500 py-1 ${compact ? 'pl-0' : ''}`}>
           {sortedData.length} of {data.length} {entityNamePlural.toLowerCase()}
           {selectedRows.length > 0 && ` • ${selectedRows.length} selected`}
         </div>
@@ -666,14 +666,14 @@ export function DataTableLayout<T = any>({
             onDragEnd={handleDragEnd}
           >
             <Table className="table-fixed w-full" style={{ tableLayout: 'fixed' }}>
-              <TableHeader className="bg-muted/50">
+              <TableHeader className="bg-orange-50 dark:bg-orange-900/20">
                 <TableRow>
-                  <TableHead className="w-12 p-2 border-r border-border" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
+                  <TableHead className="w-12 p-2 border-r border-orange-200/50" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
                     <div className="flex items-center justify-center h-4 w-4 mx-auto">
                       <Checkbox
                         checked={selectedRows.length === sortedData.length && sortedData.length > 0}
                         onCheckedChange={onToggleAllRows}
-                        className="h-4 w-4 border-2 border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
+                        className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
                         style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
                       />
                     </div>
@@ -691,20 +691,20 @@ export function DataTableLayout<T = any>({
                         <div className="flex items-center w-full">
                           {/* Label and sort area with consistent alignment */}
                           <div 
-                            className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-muted rounded px-1 py-1 min-w-0"
+                            className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded px-1 py-1 min-w-0"
                             onClick={() => column.sortable && onSort(column.key)}
                           >
-                            <span className="whitespace-nowrap uppercase font-bold text-xs text-foreground truncate">{column.label}</span>
+                            <span className="whitespace-nowrap uppercase font-bold text-xs text-orange-600 truncate">{column.label}</span>
                             {column.sortable && (
                               <div className="flex items-center flex-shrink-0">
                                 {sortConfig?.column === column.key ? (
                                   sortConfig.direction === 'asc' ? (
-                                    <ChevronUp size={12} className="text-muted-foreground" />
+                                    <ChevronUp size={12} className="text-orange-500" />
                                   ) : (
-                                    <ChevronDown size={12} className="text-muted-foreground" />
+                                    <ChevronDown size={12} className="text-orange-500" />
                                   )
                                 ) : (
-                                  <ChevronsUpDown size={12} className="opacity-30 text-muted-foreground" />
+                                  <ChevronsUpDown size={12} className="opacity-30 text-orange-500" />
                                 )}
                               </div>
                             )}
@@ -716,16 +716,16 @@ export function DataTableLayout<T = any>({
                               variant="ghost"
                               size="icon"
                               onClick={() => onAddFilter(column.key)}
-                              className="h-5 w-5 p-0.5 opacity-50 hover:opacity-100 flex-shrink-0 hover:bg-muted ml-1"
+                              className="h-5 w-5 p-0.5 opacity-50 hover:opacity-100 flex-shrink-0 hover:bg-orange-100 dark:hover:bg-orange-800/30 ml-1"
                             >
-                              <Filter size={10} className="text-muted-foreground" />
+                              <Filter size={10} className="text-orange-500" />
                             </Button>
                           )}
                         </div>
                         
                         {/* Enhanced Resize Handle - more visible */}
                         <div 
-                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-muted active:bg-accent transition-colors border-r-2 border-transparent hover:border-border"
+                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-orange-400/30 active:bg-orange-500/40 transition-colors border-r-2 border-transparent hover:border-orange-400"
                           onMouseDown={(e) => handleMouseDown(e, column.key)}
                           title="Drag to resize column"
                         />
@@ -737,7 +737,7 @@ export function DataTableLayout<T = any>({
               <TableBody>
                 {sortedData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={currentVisibleColumns.length + 1} className="text-center py-4 text-xs text-muted-foreground">
+                    <TableCell colSpan={currentVisibleColumns.length + 1} className="text-center py-4 text-xs text-orange-500">
                       No {entityNamePlural.toLowerCase()} found
                     </TableCell>
                   </TableRow>
@@ -750,9 +750,9 @@ export function DataTableLayout<T = any>({
                     return (
                       <TableRow 
                         key={rowId} 
-                        className={`hover:bg-muted/30 text-sm font-normal cursor-pointer ${
+                        className={`hover:bg-orange-100 dark:hover:bg-orange-800/30/30 text-sm font-normal cursor-pointer ${
                           isSelected 
-                            ? 'bg-muted/50' 
+                            ? 'bg-orange-50 dark:bg-orange-900/20' 
                             : isEven 
                               ? 'bg-white dark:bg-gray-950' 
                               : 'bg-white dark:bg-gray-900/50'
@@ -765,7 +765,7 @@ export function DataTableLayout<T = any>({
                             <Checkbox
                               checked={selectedRows.includes(rowId)}
                               onCheckedChange={() => onToggleRowSelection(rowId)}
-                              className="h-4 w-4 border-2 border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
+                              className="h-4 w-4 border-2 border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
                               style={{ minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
                             />
                           </div>
@@ -804,7 +804,7 @@ export function DataTableLayout<T = any>({
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader className="pb-4">
               <div className="flex justify-center">
-                <DialogTitle className="text-2xl font-bold text-foreground">
+                <DialogTitle className="text-2xl font-bold text-orange-600">
                   {addEditDialog.title}
                 </DialogTitle>
               </div>
@@ -824,7 +824,7 @@ export function DataTableLayout<T = any>({
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader className="pb-4">
               <div className="flex justify-center">
-                <DialogTitle className="text-2xl font-bold text-foreground">
+                <DialogTitle className="text-2xl font-bold text-orange-600">
                   {detailDialog.title}
                 </DialogTitle>
               </div>

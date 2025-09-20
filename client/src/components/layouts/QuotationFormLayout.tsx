@@ -629,11 +629,11 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     };
 
     return (
-      <Card className="border-l-4 border-l-border">
+      <Card className="border-l-4 border-l-orange-400">
         <CardContent className="pt-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-foreground">
+              <span className="font-medium text-orange-700 dark:text-orange-300">
                 Memo {index + 1}
               </span>
               <Button
@@ -1032,7 +1032,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           </Button>
           <Button
             type="submit"
-            className="bg-primary hover:bg-primary/90"
+            className="bg-orange-600 hover:bg-orange-700"
           >
             {editingItem ? 'Update Item' : 'ADD LINE'}
           </Button>
@@ -1191,7 +1191,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           createCustomRow(
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-foreground">Memo Management</h3>
+                <h3 className="text-lg font-semibold text-orange-600">Memo Management</h3>
                 <Button onClick={handleAddMemo} variant="outline" size="sm">
                   <Plus className="mr-2 h-4 w-4" />
                   New Memo
@@ -1254,8 +1254,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               label: "Total",
               type: "display",
               displayValue: (
-                <div className="bg-muted/20 p-4 rounded-lg border border-border">
-                  <p className="text-2xl font-bold text-foreground">€{quotationForm.watch("totalAmount") || "0.00"}</p>
+                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200">
+                  <p className="text-2xl font-bold text-orange-800 dark:text-orange-200">€{quotationForm.watch("totalAmount") || "0.00"}</p>
                 </div>
               ),
               testId: "text-total"

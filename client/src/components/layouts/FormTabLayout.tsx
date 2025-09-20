@@ -26,7 +26,7 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
               key={tab.id}
               className={`flex items-center gap-1 px-3 py-2 rounded-t-lg transition-colors cursor-pointer min-w-0 font-sans ${
                 activeTab === tab.id
-                  ? 'bg-primary text-primary-foreground relative z-10 border-2 border-primary border-b-primary'
+                  ? 'bg-orange-500 text-white relative z-10 border-2 border-orange-500 border-b-orange-500'
                   : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200 mb-[2px]'
               }`}
               onClick={() => onTabChange(tab.id)}
@@ -40,7 +40,7 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
       </div>
 
       {/* Tab Content - With orange border to connect with active tab */}
-      <div className="border border-border bg-white p-6 h-auto min-h-[200px] overflow-y-auto rounded-lg mx-4">
+      <div className="border border-orange-500 bg-white p-6 h-auto min-h-[200px] overflow-y-auto rounded-lg mx-4">
         {activeTabContent}
       </div>
     </div>
