@@ -262,8 +262,16 @@ export default function ContactPersonsTable() {
   }, [editingContact, form]);
 
   const handleEditContact = (contact: CustomerContact) => {
-    setEditingContact(contact);
-    setShowAddContactDialog(true);
+    // Dispatch custom event to open contact person edit form in new tab
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: `edit-contact-person-${contact.id}`,
+        name: `${contact.firstName} ${contact.lastName}`,
+        formType: 'contact-person',
+        parentId: contact.id
+      }
+    });
+    window.dispatchEvent(event);
   };
 
   const onSubmit = (data: FormData) => {
@@ -275,7 +283,16 @@ export default function ContactPersonsTable() {
   };
 
   const handleContactDoubleClick = (contact: CustomerContact) => {
-    handleEditContact(contact);
+    // Dispatch custom event to open contact person edit form in new tab
+    const event = new CustomEvent('open-form-tab', {
+      detail: {
+        id: `edit-contact-person-${contact.id}`,
+        name: `${contact.firstName} ${contact.lastName}`,
+        formType: 'contact-person',
+        parentId: contact.id
+      }
+    });
+    window.dispatchEvent(event);
   };
 
   const { data: contacts = [], isLoading } = useQuery<CustomerContact[]>({
@@ -371,7 +388,17 @@ export default function ContactPersonsTable() {
         <h1 className="text-2xl font-bold">Contact Persons</h1>
         <div className="flex items-center gap-2">
           <Button 
-            onClick={() => setShowAddContactDialog(true)}
+            onClick={() => {
+              // Dispatch custom event to open contact person form in new tab
+              const event = new CustomEvent('open-form-tab', {
+                detail: {
+                  id: 'new-contact-person',
+                  name: 'New Contact Person',
+                  formType: 'contact-person'
+                }
+              });
+              window.dispatchEvent(event);
+            }}
             data-testid="button-add-contact"
           >
             <Plus className="h-4 w-4 mr-2" />
