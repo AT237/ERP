@@ -175,7 +175,7 @@ function getFieldClassName(
   // Add modified field styling if change tracking is enabled
   if (changeTracking?.enabled && !changeTracking?.suppressTracking && field.isModified) {
     const modifiedClass = changeTracking.modifiedFieldClassName || 
-      'ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950';
+      'ring-2 ring-muted border-muted bg-muted/20';
     className = `${className} ${modifiedClass}`;
   }
   
@@ -282,7 +282,7 @@ function renderFieldValidation(field: FormField2): ReactNode {
   
   if (field.validation?.warning) {
     return (
-      <p className="text-sm text-orange-600 mt-1">
+      <p className="text-sm text-muted-foreground mt-1">
         {field.validation.warning}
       </p>
     );
@@ -385,7 +385,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       case 'section-header':
         return (
           <div key={`section-header-${rowIndex}`} className={row.className}>
-            <h3 className={`text-lg font-semibold text-orange-600 ${row.sectionTitleClassName || ''}`}>
+            <h3 className={`text-lg font-semibold text-foreground ${row.sectionTitleClassName || ''}`}>
               {row.sectionTitle}
             </h3>
           </div>
