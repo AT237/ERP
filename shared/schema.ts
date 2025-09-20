@@ -102,6 +102,33 @@ export const suppliers = pgTable("suppliers", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Prospects table for potential customers
+export const prospects = pgTable("prospects", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  prospectNumber: text("prospect_number").notNull().unique().default(sql`CONCAT('PROS-', LPAD(nextval('prospect_number_seq')::text, 4, '0'))`),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  companyName: text("company_name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  mobile: text("mobile"),
+  position: text("position"),
+  industry: text("industry"),
+  source: text("source"), // How we found them (referral, website, etc.)
+  status: text("status").default("new"), // new, contacted, qualified, proposal, negotiation, won, lost
+  priority: text("priority").default("medium"), // low, medium, high
+  estimatedValue: decimal("estimated_value", { precision: 10, scale: 2 }),
+  notes: text("notes"),
+  assignedTo: text("assigned_to"), // Sales person assigned
+  nextFollowUp: timestamp("next_follow_up"),
+  lastContactDate: timestamp("last_contact_date"),
+  conversionDate: timestamp("conversion_date"), // When they became a customer
+  customerId: varchar("customer_id").references(() => customers.id), // Reference if converted
+  addressId: varchar("address_id").references(() => addresses.id),
+  deletedAt: timestamp("deleted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Inventory items table
 export const inventoryItems = pgTable("inventory_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -637,6 +664,12 @@ export const insertCustomerContactSchema = createInsertSchema(customerContacts).
 });
 export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, customerNumber: true, createdAt: true, deletedAt: true });
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, supplierNumber: true, createdAt: true, deletedAt: true });
+export const insertProspectSchema = createInsertSchema(prospects).omit({ id: true, prospectNumber: true, createdAt: true, deletedAt: true }).extend({
+  nextFollowUp: z.string().optional(),
+  lastContactDate: z.string().optional(),
+  conversionDate: z.string().optional(),
+  estimatedValue: z.string().optional()
+});
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({ id: true, createdAt: true });
 export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, projectNumber: true, createdAt: true });
 export const insertQuotationSchema = createInsertSchema(quotations).omit({ id: true, createdAt: true }).extend({
@@ -691,6 +724,8 @@ export type Customer = typeof customers.$inferSelect;
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Supplier = typeof suppliers.$inferSelect;
 export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
+export type Prospect = typeof prospects.$inferSelect;
+export type InsertProspect = z.infer<typeof insertProspectSchema>;
 export type InventoryItem = typeof inventoryItems.$inferSelect;
 export type InsertInventoryItem = z.infer<typeof insertInventoryItemSchema>;
 export type Project = typeof projects.$inferSelect;

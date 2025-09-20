@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import {
-  insertCustomerSchema, insertSupplierSchema, insertInventoryItemSchema,
+  insertCustomerSchema, insertSupplierSchema, insertProspectSchema, insertInventoryItemSchema,
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
   insertInvoiceSchema, insertInvoiceItemSchema, insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema, insertSalesOrderSchema, insertSalesOrderItemSchema,
@@ -363,6 +363,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting supplier:", error);
       res.status(500).json({ message: "Failed to delete supplier" });
+    }
+  });
+
+  // Prospect routes
+  app.get("/api/prospects", async (req, res) => {
+    try {
+      const prospects = await storage.getProspects();
+      res.json(prospects);
+    } catch (error) {
+      console.error("Error fetching prospects:", error);
+      res.status(500).json({ message: "Failed to fetch prospects" });
+    }
+  });
+
+  app.get("/api/prospects/:id", async (req, res) => {
+    try {
+      const prospect = await storage.getProspect(req.params.id);
+      if (!prospect) {
+        return res.status(404).json({ message: "Prospect not found" });
+      }
+      res.json(prospect);
+    } catch (error) {
+      console.error("Error fetching prospect:", error);
+      res.status(500).json({ message: "Failed to fetch prospect" });
+    }
+  });
+
+  app.post("/api/prospects", async (req, res) => {
+    try {
+      const prospectData = insertProspectSchema.parse(req.body);
+      const prospect = await storage.createProspect(prospectData);
+      res.status(201).json(prospect);
+    } catch (error) {
+      console.error("Error creating prospect:", error);
+      res.status(400).json({ message: "Failed to create prospect" });
+    }
+  });
+
+  app.patch("/api/prospects/:id", async (req, res) => {
+    try {
+      const prospectData = insertProspectSchema.partial().parse(req.body);
+      const prospect = await storage.updateProspect(req.params.id, prospectData);
+      res.json(prospect);
+    } catch (error) {
+      console.error("Error updating prospect:", error);
+      res.status(400).json({ message: "Failed to update prospect" });
+    }
+  });
+
+  app.delete("/api/prospects/:id", async (req, res) => {
+    try {
+      await storage.deleteProspect(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting prospect:", error);
+      res.status(500).json({ message: "Failed to delete prospect" });
     }
   });
 
