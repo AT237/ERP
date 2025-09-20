@@ -20,7 +20,7 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
     <div className={`-space-y-px ${className}`}>
       {/* Tab Bar - With white background */}
       <div className="bg-white px-4 border-b-0 h-[62px] flex items-end">
-        <div className="flex items-end space-x-1 overflow-x-auto">
+        <div className="flex items-end space-x-1 overflow-x-auto ml-2">
           {tabs.map((tab) => (
             <div
               key={tab.id}
