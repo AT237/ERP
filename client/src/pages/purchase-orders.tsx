@@ -1,31 +1,142 @@
-import { useState } from "react";
+import React from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, ShoppingCart, Search, Calendar, DollarSign } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
+import { useDataTable } from '@/hooks/useDataTable';
 import type { PurchaseOrder, Supplier } from "@shared/schema";
 import { format } from "date-fns";
 
+// Default column configuration for purchase orders
+const defaultColumns: ColumnConfig[] = [
+  createIdColumn('orderNumber', 'Order #'),
+  { 
+    key: 'supplierName', 
+    label: 'Supplier', 
+    visible: true, 
+    width: 200, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: PurchaseOrder & { supplierName?: string }) => (
+      <span data-testid={`text-supplier-${row.id}`}>{value || "Unknown Supplier"}</span>
+    )
+  },
+  { 
+    key: 'orderDate', 
+    label: 'Order Date', 
+    visible: true, 
+    width: 140, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: PurchaseOrder) => (
+      <div className="flex items-center space-x-2" data-testid={`text-order-date-${row.id}`}>
+        <Calendar size={14} />
+        <span>{value ? format(new Date(value), "MMM dd, yyyy") : "-"}</span>
+      </div>
+    )
+  },
+  { 
+    key: 'expectedDate', 
+    label: 'Expected Date', 
+    visible: true, 
+    width: 140, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: PurchaseOrder) => (
+      <div className="flex items-center space-x-2" data-testid={`text-expected-date-${row.id}`}>
+        {value ? (
+          <>
+            <Calendar size={14} />
+            <span>{format(new Date(value), "MMM dd, yyyy")}</span>
+          </>
+        ) : (
+          <span>—</span>
+        )}
+      </div>
+    )
+  },
+  { 
+    key: 'totalAmount', 
+    label: 'Total Amount', 
+    visible: true, 
+    width: 120, 
+    filterable: false, 
+    sortable: true,
+    renderCell: (value: number, row: PurchaseOrder) => (
+      <div className="flex items-center space-x-2" data-testid={`text-total-${row.id}`}>
+        <DollarSign size={14} />
+        <span>${value}</span>
+      </div>
+    )
+  },
+  { 
+    key: 'status', 
+    label: 'Status', 
+    visible: true, 
+    width: 100, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: PurchaseOrder) => {
+      const getStatusVariant = (status: string) => {
+        switch (status) {
+          case "completed": return "default";
+          case "received": return "secondary";
+          case "pending": return "outline";
+          case "cancelled": return "destructive";
+          default: return "outline";
+        }
+      };
+      return (
+        <Badge variant={getStatusVariant(value || "")} data-testid={`badge-status-${row.id}`}>
+          {value}
+        </Badge>
+      );
+    }
+  },
+];
+
 export default function PurchaseOrders() {
-  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
-  const { data: purchaseOrders, isLoading } = useQuery<PurchaseOrder[]>({
-    queryKey: ["/api/purchase-orders"],
+  // Data table state  
+  const tableState = useDataTable({ 
+    defaultColumns,
+    defaultSort: { column: 'orderDate', direction: 'desc' },
+    tableKey: 'purchase-orders'
   });
 
-  const { data: suppliers } = useQuery<Supplier[]>({
-    queryKey: ["/api/suppliers"],
+  // Optimized data fetching with stable loading state
+  const { data: purchaseOrders = [], isLoading: ordersLoading } = useQuery<PurchaseOrder[]>({
+    queryKey: ["/api/purchase-orders"],
+    staleTime: 30000,
+    gcTime: 300000,
   });
+
+  const { data: suppliers = [], isLoading: suppliersLoading } = useQuery<Supplier[]>({
+    queryKey: ["/api/suppliers"],
+    staleTime: 60000,
+    gcTime: 600000,
+  });
+
+  // Combined loading state
+  const isLoading = ordersLoading || suppliersLoading;
+
+  // Supplier name lookup - memoized to prevent re-creation
+  const getSupplierName = React.useCallback((supplierId: string) => {
+    const supplier = suppliers?.find((s: Supplier) => s.id === supplierId);
+    return supplier?.name || 'Unknown Supplier';
+  }, [suppliers]);
+
+  // Enhanced data with supplier names - stabilized with useMemo
+  const enhancedPurchaseOrders = React.useMemo(() => {
+    return purchaseOrders.map(order => ({
+      ...order,
+      supplierName: getSupplierName(order.supplierId || '')
+    }));
+  }, [purchaseOrders, getSupplierName]);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -74,12 +185,6 @@ export default function PurchaseOrders() {
     window.dispatchEvent(event);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this purchase order?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
   const handleNewPurchaseOrder = () => {
     // Dispatch custom event to open purchase order form in new tab
     const event = new CustomEvent('open-form-tab', {
@@ -92,178 +197,92 @@ export default function PurchaseOrders() {
     window.dispatchEvent(event);
   };
 
-  const filteredPurchaseOrders = purchaseOrders?.filter(order =>
-    order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const handleToggleAllRows = () => {
+    const allRowIds = enhancedPurchaseOrders.map(order => order.id);
+    tableState.toggleAllRows(allRowIds);
+  };
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case "completed": return "default";
-      case "received": return "secondary";
-      case "pending": return "outline";
-      case "cancelled": return "destructive";
-      default: return "outline";
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this purchase order?")) {
+      deleteMutation.mutate(id);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const handleBulkDelete = (orderIds: string[]) => {
+    if (confirm(`Are you sure you want to delete ${orderIds.length} purchase orders?`)) {
+      orderIds.forEach(id => deleteMutation.mutate(id));
+      tableState.setSelectedRows([]);
+    }
+  };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header Image */}
-      <Card>
-        <CardContent className="p-0">
-          <img 
-            src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=300" 
-            alt="Large warehouse with organized inventory shelves" 
-            className="rounded-lg w-full h-48 object-cover" 
-          />
-        </CardContent>
-      </Card>
-
-      {/* Header with Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
-            <Input
-              placeholder="Search purchase orders..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-64"
-              data-testid="input-search-purchase-orders"
-            />
-          </div>
-        </div>
+    <div className="p-6">
+      <DataTableLayout
+        // Data
+        data={enhancedPurchaseOrders}
+        isLoading={isLoading}
+        getRowId={(order) => order.id}
         
-        <Button onClick={handleNewPurchaseOrder} data-testid="button-add-purchase-order">
-          <Plus className="mr-2" size={16} />
-          Add Purchase Order
-        </Button>
-      </div>
-
-      {/* Purchase Orders Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <ShoppingCart className="mr-2" size={20} />
-            Purchase Orders ({filteredPurchaseOrders.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order #</TableHead>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead>Order Date</TableHead>
-                  <TableHead>Expected Date</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPurchaseOrders.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No purchase orders found. Create your first purchase order to get started.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredPurchaseOrders.map((order) => {
-                    const supplier = suppliers?.find(s => s.id === order.supplierId);
-                    return (
-                      <TableRow 
-                        key={order.id} 
-                        data-testid={`row-purchase-order-${order.id}`}
-                        onDoubleClick={() => handleRowDoubleClick(order)}
-                        className="cursor-pointer hover:bg-muted/50"
-                      >
-                        <TableCell className="font-medium">{order.orderNumber}</TableCell>
-                        <TableCell>{supplier?.name || "—"}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Calendar size={14} />
-                            <span>{format(new Date(order.orderDate!), "MMM dd, yyyy")}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {order.expectedDate ? (
-                            <div className="flex items-center space-x-2">
-                              <Calendar size={14} />
-                              <span>{format(new Date(order.expectedDate), "MMM dd, yyyy")}</span>
-                            </div>
-                          ) : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <DollarSign size={14} />
-                            <span>${order.totalAmount}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusVariant(order.status || "pending")}>
-                            {order.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(order);
-                              }}
-                              data-testid={`button-edit-${order.id}`}
-                            >
-                              <Edit size={14} />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(order.id);
-                              }}
-                              data-testid={`button-delete-${order.id}`}
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+        // Table configuration
+        columns={tableState.columns}
+        setColumns={tableState.setColumns}
+        
+        // Search and filtering
+        searchTerm={tableState.searchTerm}
+        setSearchTerm={tableState.setSearchTerm}
+        filters={tableState.filters}
+        setFilters={tableState.setFilters}
+        onAddFilter={tableState.addFilter}
+        onUpdateFilter={tableState.updateFilter}
+        onRemoveFilter={tableState.removeFilter}
+        
+        // Sorting
+        sortConfig={tableState.sortConfig}
+        onSort={tableState.handleSort}
+        
+        // Row selection
+        selectedRows={tableState.selectedRows}
+        setSelectedRows={tableState.setSelectedRows}
+        onToggleRowSelection={tableState.toggleRowSelection}
+        onToggleAllRows={handleToggleAllRows}
+        
+        // Actions
+        headerActions={[
+          {
+            key: 'add-purchase-order',
+            label: 'Add Purchase Order',
+            icon: <Plus className="h-4 w-4" />,
+            onClick: handleNewPurchaseOrder,
+            variant: 'default' as const
+          }
+        ]}
+        
+        rowActions={(row: PurchaseOrder) => [
+          {
+            key: 'edit',
+            label: 'Edit',
+            icon: <Edit className="h-4 w-4" />,
+            onClick: () => handleEdit(row),
+            variant: 'outline' as const
+          },
+          {
+            key: 'delete',
+            label: 'Delete',
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: () => handleDelete(row.id),
+            variant: 'destructive' as const
+          }
+        ]}
+        
+        
+        // Events
+        onRowDoubleClick={handleRowDoubleClick}
+        
+        // Display options
+        entityName="Purchase Order"
+        entityNamePlural="Purchase Orders"
+        searchPlaceholder="Search purchase orders..."
+      />
     </div>
   );
 }
