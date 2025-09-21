@@ -443,7 +443,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
                 if (fieldIndex === 0) {
                   // First field (no label, already rendered above)
                   return (
-                    <div key={field.key as string} className={field.wrapperClassName}>
+                    <div key={field.key as string} className={`${field.wrapperClassName} ${field.width ? `w-[${field.width}]` : ''}`}>
                       {renderField(fieldWithModified, changeTracking)}
                       {renderFieldValidation(fieldWithModified)}
                     </div>

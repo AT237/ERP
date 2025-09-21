@@ -837,7 +837,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               error: form.formState.errors.name?.message
             },
             testId: "input-customer-name",
-            width: "50%"
+            width: "60%"
           } as FormField2<CustomerFormData>,
           {
             key: "countryCode",
