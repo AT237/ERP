@@ -9,7 +9,7 @@ import { useDataTable } from '@/hooks/useDataTable';
 import { useLocation } from 'wouter';
 
 const defaultColumns: ColumnConfig[] = [
-  createIdColumn('id', 'Customer ID'),
+  { key: 'customerNumber', label: 'Customer Number', visible: true, width: 120, filterable: true, sortable: true },
   { 
     key: 'name', 
     label: 'Company Name', 
@@ -192,19 +192,19 @@ export default function CustomersTable() {
             variant: 'default' as const
           }
         ]}
-        actionButtons={[
+        rowActions={(row: Customer) => [
           {
             key: 'edit',
             label: 'Edit',
             icon: <Edit className="h-4 w-4" />,
-            onClick: (row: Customer) => handleEdit(row),
+            onClick: () => handleEdit(row),
             variant: 'ghost' as const
           },
           {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: (row: Customer) => handleDelete(row.id),
+            onClick: () => handleDelete(row.id),
             variant: 'destructive' as const
           }
         ]}
