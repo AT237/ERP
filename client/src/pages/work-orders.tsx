@@ -1,23 +1,145 @@
-import { useState } from "react";
+import React from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, ClipboardList, Search, Calendar, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, ClipboardList, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableLayout, type ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
+import { useDataTable } from '@/hooks/useDataTable';
 import type { WorkOrder, Project } from "@shared/schema";
 import { format } from "date-fns";
 
+// Default column configuration for work orders
+const defaultColumns: ColumnConfig[] = [
+  createIdColumn('orderNumber', 'Order #'),
+  { 
+    key: 'projectName', 
+    label: 'Project', 
+    visible: true, 
+    width: 200, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: WorkOrder & { projectName?: string }) => (
+      <span data-testid={`text-project-${row.id}`}>{value || "No Project"}</span>
+    )
+  },
+  { 
+    key: 'title', 
+    label: 'Title', 
+    visible: true, 
+    width: 250, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: WorkOrder) => (
+      <div data-testid={`text-title-${row.id}`}>
+        <div className="font-medium">{value}</div>
+        {row.description && (
+          <div className="text-sm text-muted-foreground truncate max-w-xs">
+            {row.description}
+          </div>
+        )}
+      </div>
+    )
+  },
+  { 
+    key: 'assignedTo', 
+    label: 'Assigned To', 
+    visible: true, 
+    width: 150, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: WorkOrder) => (
+      <span data-testid={`text-assigned-to-${row.id}`}>{value || "-"}</span>
+    )
+  },
+  { 
+    key: 'status', 
+    label: 'Status', 
+    visible: true, 
+    width: 120, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: WorkOrder) => {
+      const getStatusVariant = (status: string) => {
+        switch (status) {
+          case "completed": return "default";
+          case "in-progress": return "secondary";
+          case "pending": return "outline";
+          case "cancelled": return "destructive";
+          default: return "outline";
+        }
+      };
+      return (
+        <Badge variant={getStatusVariant(value || "pending")} data-testid={`badge-status-${row.id}`}>
+          {value || "pending"}
+        </Badge>
+      );
+    }
+  },
+  { 
+    key: 'priority', 
+    label: 'Priority', 
+    visible: true, 
+    width: 100, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: WorkOrder) => {
+      const getPriorityVariant = (priority: string) => {
+        switch (priority) {
+          case "high": return "destructive";
+          case "medium": return "secondary";
+          case "low": return "outline";
+          default: return "secondary";
+        }
+      };
+      return (
+        <Badge variant={getPriorityVariant(value || "medium")} data-testid={`badge-priority-${row.id}`}>
+          {value || "medium"}
+        </Badge>
+      );
+    }
+  },
+  { 
+    key: 'dueDate', 
+    label: 'Due Date', 
+    visible: true, 
+    width: 140, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: WorkOrder) => (
+      <span data-testid={`text-due-date-${row.id}`}>
+        {value ? format(new Date(value), "MMM dd, yyyy") : "-"}
+      </span>
+    )
+  },
+  { 
+    key: 'hours', 
+    label: 'Hours', 
+    visible: true, 
+    width: 120, 
+    filterable: false, 
+    sortable: true,
+    renderCell: (value: any, row: WorkOrder) => (
+      <div className="flex items-center space-x-1" data-testid={`text-hours-${row.id}`}>
+        <Clock size={14} className="text-muted-foreground" />
+        <span className="text-sm">
+          {row.actualHours || 0}/{row.estimatedHours || 0}
+        </span>
+      </div>
+    )
+  },
+];
+
 export default function WorkOrders() {
-  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+
+  // Data table state  
+  const tableState = useDataTable({ 
+    defaultColumns,
+    defaultSort: { column: 'dueDate', direction: 'asc' },
+    tableKey: 'work-orders'
+  });
 
   const { data: workOrders, isLoading } = useQuery<WorkOrder[]>({
     queryKey: ["/api/work-orders"],
@@ -59,10 +181,16 @@ export default function WorkOrders() {
     }));
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this work order?")) {
-      deleteMutation.mutate(id);
-    }
+  const handleRowDoubleClick = (workOrder: WorkOrder) => {
+    // Dispatch event to open edit form tab on double click
+    window.dispatchEvent(new CustomEvent('open-form-tab', {
+      detail: {
+        id: `edit-work-order-${workOrder.id}`,
+        name: `${workOrder.orderNumber}`,
+        formType: 'work-order',
+        parentId: workOrder.id
+      }
+    }));
   };
 
   const handleNewWorkOrder = () => {
@@ -76,194 +204,91 @@ export default function WorkOrders() {
     }));
   };
 
-  const filteredWorkOrders = workOrders?.filter(workOrder =>
-    workOrder.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    workOrder.title.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const handleToggleAllRows = () => {
+    const allRowIds = enhancedWorkOrders.map(order => order.id);
+    tableState.toggleAllRows(allRowIds);
+  };
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case "completed": return "default";
-      case "in-progress": return "secondary";
-      case "pending": return "outline";
-      case "cancelled": return "destructive";
-      default: return "outline";
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this work order?")) {
+      deleteMutation.mutate(id);
     }
   };
 
-  const getPriorityVariant = (priority: string) => {
-    switch (priority) {
-      case "high": return "destructive";
-      case "medium": return "secondary";
-      case "low": return "outline";
-      default: return "secondary";
+  const handleBulkDelete = (orderIds: string[]) => {
+    if (confirm(`Are you sure you want to delete ${orderIds.length} work orders?`)) {
+      orderIds.forEach(id => deleteMutation.mutate(id));
+      tableState.setSelectedRows([]);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header Image */}
-      <Card>
-        <CardContent className="p-0">
-          <img 
-            src="https://images.unsplash.com/photo-1565793298595-6a879b1d9492?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=300" 
-            alt="Modern factory production line with workers" 
-            className="rounded-lg w-full h-48 object-cover" 
-          />
-        </CardContent>
-      </Card>
-
-      {/* Header with Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
-            <Input
-              placeholder="Search work orders..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-64"
-              data-testid="input-search-work-orders"
-            />
-          </div>
-        </div>
+    <div className="p-6">
+      <DataTableLayout
+        // Data
+        data={enhancedWorkOrders}
+        isLoading={isLoading}
+        getRowId={(order) => order.id}
         
-        <Button onClick={handleNewWorkOrder} data-testid="button-add-work-order">
-          <Plus className="mr-2" size={16} />
-          Add Work Order
-        </Button>
-      </div>
-
-      {/* Work Orders Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <ClipboardList className="mr-2" size={20} />
-            Work Orders ({filteredWorkOrders.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order #</TableHead>
-                  <TableHead>Project</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Hours</TableHead>
-                  <TableHead className="w-20">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredWorkOrders.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                      No work orders found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredWorkOrders.map((workOrder) => {
-                    const project = projects?.find((p) => p.id === workOrder.projectId);
-                    return (
-                      <TableRow key={workOrder.id}>
-                        <TableCell>
-                          <span className="font-mono" data-testid={`text-order-number-${workOrder.id}`}>
-                            {workOrder.orderNumber}
-                          </span>
-                        </TableCell>
-                        <TableCell data-testid={`text-project-${workOrder.id}`}>
-                          {project?.name || "No Project"}
-                        </TableCell>
-                        <TableCell>
-                          <div data-testid={`text-title-${workOrder.id}`}>
-                            <div className="font-medium">{workOrder.title}</div>
-                            {workOrder.description && (
-                              <div className="text-sm text-muted-foreground truncate max-w-xs">
-                                {workOrder.description}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell data-testid={`text-assigned-to-${workOrder.id}`}>
-                          {workOrder.assignedTo || "-"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusVariant(workOrder.status || "pending")} data-testid={`badge-status-${workOrder.id}`}>
-                            {workOrder.status || "pending"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getPriorityVariant(workOrder.priority || "medium")} data-testid={`badge-priority-${workOrder.id}`}>
-                            {workOrder.priority || "medium"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell data-testid={`text-due-date-${workOrder.id}`}>
-                          {workOrder.dueDate ? format(new Date(workOrder.dueDate), "MMM dd, yyyy") : "-"}
-                        </TableCell>
-                        <TableCell data-testid={`text-hours-${workOrder.id}`}>
-                          <div className="flex items-center space-x-1">
-                            <Clock size={14} className="text-muted-foreground" />
-                            <span className="text-sm">
-                              {workOrder.actualHours || 0}/{workOrder.estimatedHours || 0}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(workOrder)}
-                              data-testid={`button-edit-${workOrder.id}`}
-                            >
-                              <Edit size={14} />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDelete(workOrder.id)}
-                              data-testid={`button-delete-${workOrder.id}`}
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+        // Table configuration
+        columns={tableState.columns}
+        setColumns={tableState.setColumns}
+        
+        // Search and filtering
+        searchTerm={tableState.searchTerm}
+        setSearchTerm={tableState.setSearchTerm}
+        filters={tableState.filters}
+        setFilters={tableState.setFilters}
+        onAddFilter={tableState.addFilter}
+        onUpdateFilter={tableState.updateFilter}
+        onRemoveFilter={tableState.removeFilter}
+        
+        // Sorting
+        sortConfig={tableState.sortConfig}
+        onSort={tableState.handleSort}
+        
+        // Row selection
+        selectedRows={tableState.selectedRows}
+        setSelectedRows={tableState.setSelectedRows}
+        onToggleRowSelection={tableState.toggleRowSelection}
+        onToggleAllRows={handleToggleAllRows}
+        
+        // Actions
+        headerActions={[
+          {
+            key: 'add-work-order',
+            label: 'Add Work Order',
+            icon: <Plus className="h-4 w-4" />,
+            onClick: handleNewWorkOrder,
+            variant: 'default' as const
+          }
+        ]}
+        
+        rowActions={(row: WorkOrder) => [
+          {
+            key: 'edit',
+            label: 'Edit',
+            icon: <Edit className="h-4 w-4" />,
+            onClick: () => handleEdit(row),
+            variant: 'outline' as const
+          },
+          {
+            key: 'delete',
+            label: 'Delete',
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: () => handleDelete(row.id),
+            variant: 'destructive' as const
+          }
+        ]}
+        
+        // Events
+        onRowDoubleClick={handleRowDoubleClick}
+        
+        // Display options
+        entityName="Work Order"
+        entityNamePlural="Work Orders"
+        searchPlaceholder="Search work orders..."
+      />
     </div>
   );
 }
