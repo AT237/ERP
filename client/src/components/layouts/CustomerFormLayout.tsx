@@ -3,7 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from './LayoutForm2';\nimport type { ActionButton } from './BaseFormLayout';
+import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from './LayoutForm2';
+import type { ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
 import type { FormTab } from './FormTabLayout';
 import { 
