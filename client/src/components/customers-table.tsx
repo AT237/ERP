@@ -198,7 +198,7 @@ export default function CustomersTable() {
             label: 'Edit',
             icon: <Edit className="h-4 w-4" />,
             onClick: () => handleEdit(row),
-            variant: 'ghost' as const
+            variant: 'outline' as const
           },
           {
             key: 'delete',

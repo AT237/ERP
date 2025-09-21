@@ -203,7 +203,6 @@ export default function CustomerTable() {
     handleSort,
   } = customerContext;
   
-  const [resizing, setResizing] = useState<{ column: string; startX: number; startWidth: number } | null>(null);
   const [selectedCustomerForReport, setSelectedCustomerForReport] = useState<Customer | null>(null);
   const [showCustomerReport, setShowCustomerReport] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
@@ -590,42 +589,6 @@ export default function CustomerTable() {
   };
 
 
-  const handleMouseDown = (e: React.MouseEvent, columnKey: string) => {
-    e.preventDefault();
-    const column = columns.find(col => col.key === columnKey);
-    if (column) {
-      setResizing({
-        column: columnKey,
-        startX: e.clientX,
-        startWidth: column.width
-      });
-    }
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (resizing) {
-      const diff = e.clientX - resizing.startX;
-      const newWidth = Math.max(60, resizing.startWidth + diff);
-      setColumns(prev => prev.map((col: ColumnConfig) => 
-        col.key === resizing.column ? { ...col, width: newWidth } : col
-      ) as ColumnConfig[]);
-    }
-  };
-
-  const handleMouseUp = () => {
-    setResizing(null);
-  };
-
-  useEffect(() => {
-    if (resizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [resizing]);
 
   // Handle Email Excel functionality
   const handleEmailExcel = async (customer: Customer) => {
@@ -1005,11 +968,6 @@ export default function CustomerTable() {
                           </Button>
                         )}
                       </div>
-                      {/* Resize Handle */}
-                      <div 
-                        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/20 active:bg-primary/40"
-                        onMouseDown={(e) => handleMouseDown(e, column.key)}
-                      />
                     </DraggableColumnHeader>
                   ))}
                 </SortableContext>
