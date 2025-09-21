@@ -77,6 +77,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'reports', name: 'Reports' };
       case '/addresses':
         return { id: 'addresses', name: 'Addresses' };
+      case '/customer-form':
+        return { id: 'new-customer', name: 'New Customer' };
       case '/text-snippets':
         return { id: 'text-snippets', name: 'Text Snippets' };
       case '/master-data/uom':
