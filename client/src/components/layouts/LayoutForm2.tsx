@@ -432,8 +432,8 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
               {(row.fields[0].validation?.isRequired || row.fields[0].validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
             </Label>
             
-            {/* Multi-column field layout - consistent grid for all scenarios */}
-            <div className="grid grid-cols-2 gap-6 items-start">
+            {/* Multi-column field layout - consistent grid with proper spacing */}
+            <div className="grid grid-cols-2 gap-16 items-start">
               {row.fields.map((field, fieldIndex) => {
                 const fieldWithModified = {
                   ...field,
@@ -449,12 +449,12 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
                     </div>
                   );
                 } else {
-                  // All other fields with their own label
+                  // All other fields with label to the left (same as main layout)
                   return (
-                    <div key={field.key as string} className="space-y-1">
+                    <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-x-6">
                       <Label 
                         htmlFor={field.key as string} 
-                        className="text-sm font-medium"
+                        className="text-sm font-medium text-right pt-2"
                       >
                         {field.label}
                         {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
