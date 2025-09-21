@@ -659,13 +659,13 @@ export function DataTableLayout<T = any>({
         </div>
 
         {/* Table - Left aligned with title */}
-        <div className={`rounded-lg overflow-hidden border-0 ${compact ? 'ml-0' : ''}`}>
+        <div className={`rounded-lg overflow-x-auto border-0 ${compact ? 'ml-0' : ''}`}>
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <Table className="table-fixed w-full" style={{ tableLayout: 'fixed' }}>
+            <Table className="w-auto min-w-full" style={{ tableLayout: 'auto' }}>
               <TableHeader className="bg-orange-50 dark:bg-orange-900/20">
                 <TableRow>
                   <TableHead className="w-12 p-2 border-r border-orange-200/50" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
