@@ -20,7 +20,7 @@ import { CustomerProvider } from "@/contexts/CustomerContext";
 import logoImage from "@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg";
 
 // Lazy load components outside the render function to prevent re-importing
-const CustomerTable = lazy(() => import('./customer-table'));
+const CustomerTable = lazy(() => import('./customers-table'));
 const SupplierTable = lazy(() => import('./supplier-table'));
 const ContactPersonsTable = lazy(() => import('./contact-persons-table'));
 const ContactPersonsPage = lazy(() => import('../pages/contact-persons'));
