@@ -665,7 +665,13 @@ export function DataTableLayout<T = any>({
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <Table className="w-auto min-w-full" style={{ tableLayout: 'auto' }}>
+            <Table 
+              className="w-auto" 
+              style={{ 
+                tableLayout: 'fixed',
+                width: `${currentVisibleColumns.reduce((sum, col) => sum + col.width, 0) + 48}px` // +48 for checkbox column
+              }}
+            >
               <TableHeader className="bg-orange-50 dark:bg-orange-900/20">
                 <TableRow>
                   <TableHead className="w-12 p-2 border-r border-orange-200/50" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
