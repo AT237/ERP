@@ -432,83 +432,47 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
               {(row.fields[0].validation?.isRequired || row.fields[0].validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
             </Label>
             
-            {/* Multi-column field layout */}
-            {row.fields.length === 2 ? (
-              // Two-field layout: side by side
-              <div className="grid grid-cols-2 gap-4 items-center">
-                {row.fields.map((field, fieldIndex) => {
-                  const fieldWithModified = {
-                    ...field,
-                    isModified: modifiedFields.has(field.key as string)
-                  };
-                  
-                  if (fieldIndex === 0) {
-                    // First field (no label, already rendered above)
-                    return (
-                      <div key={field.key as string} className={field.wrapperClassName}>
-                        {renderField(fieldWithModified, changeTracking)}
-                        {renderFieldValidation(fieldWithModified)}
-                      </div>
-                    );
-                  } else if (fieldIndex === 1) {
-                    // Second field with inline label
-                    return (
-                      <div key={field.key as string} className="space-y-1">
-                        <Label 
-                          htmlFor={field.key as string} 
-                          className="text-sm font-medium"
-                        >
-                          {field.label}
-                          {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
-                        </Label>
-                        <div className={field.wrapperClassName}>
-                          {renderField(fieldWithModified, changeTracking)}
-                          {renderFieldValidation(fieldWithModified)}
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-            ) : (
-              // Three-field layout: [field][label][field] pattern
-              <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
-                {row.fields.slice(0, 3).map((field, fieldIndex) => {
-                  const fieldWithModified = {
-                    ...field,
-                    isModified: modifiedFields.has(field.key as string)
-                  };
-                  
-                  if (fieldIndex === 0) {
-                    // First field (no label, already rendered above)
-                    return (
-                      <div key={field.key as string} className={field.wrapperClassName}>
-                        {renderField(fieldWithModified, changeTracking)}
-                        {renderFieldValidation(fieldWithModified)}
-                      </div>
-                    );
-                  } else if (fieldIndex === 1) {
-                    // Second field label
-                    return (
-                      <div key={`label-${field.key as string}`} className="text-sm font-medium text-right pt-2">
+            {/* Multi-column field layout - consistent grid for all scenarios */}
+            <div className="grid grid-cols-2 gap-6 items-start">
+              {row.fields.map((field, fieldIndex) => {
+                const fieldWithModified = {
+                  ...field,
+                  isModified: modifiedFields.has(field.key as string)
+                };
+                
+                if (fieldIndex === 0) {
+                  // First field (no label, already rendered above)
+                  return (
+                    <div key={field.key as string} className={field.wrapperClassName}>
+                      {renderField(fieldWithModified, changeTracking)}
+                      {renderFieldValidation(fieldWithModified)}
+                    </div>
+                  );
+                } else {
+                  // All other fields with their own label
+                  return (
+                    <div key={field.key as string} className="space-y-1">
+                      <Label 
+                        htmlFor={field.key as string} 
+                        className="text-sm font-medium"
+                      >
                         {field.label}
                         {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
-                      </div>
-                    );
-                  } else if (fieldIndex === 2) {
-                    // Third field
-                    return (
-                      <div key={field.key as string} className={field.wrapperClassName}>
+                      </Label>
+                      <div className={field.wrapperClassName}>
                         {renderField(fieldWithModified, changeTracking)}
                         {renderFieldValidation(fieldWithModified)}
                       </div>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-            )}
+                    </div>
+                  );
+                }
+              })}
+              
+              {/* Fill empty cells if odd number of fields */}
+              {row.fields.length % 2 === 1 && row.fields.length > 1 && (
+                <div></div>
+              )}
+            </div>
             
             {/* Additional fields beyond the first 3 */}
             {row.fields.slice(3).map((field) => {
