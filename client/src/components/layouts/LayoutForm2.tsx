@@ -422,7 +422,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         
         // Handle multi-field layouts with precise percentage grid: 20% label | 37% field | 3% space | 10% label | 27% field | 3% space
         return (
-          <div key={`fields-${rowIndex}`} className={`grid grid-cols-[20%_37%_3%_10%_27%_3%] items-start gap-y-6 ${row.className || ''}`}>
+          <div key={`fields-${rowIndex}`} className={`grid grid-cols-[20%_minmax(0,_37%)_3%_10%_minmax(0,_27%)_3%] items-start gap-y-6 ${row.className || ''}`}>
             {/* First field label (20% column, right aligned) */}
             <Label 
               htmlFor={row.fields[0].key as string} 
@@ -432,8 +432,8 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
               {(row.fields[0].validation?.isRequired || row.fields[0].validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
             </Label>
             
-            {/* First field (37% column) */}
-            <div className={row.fields[0].wrapperClassName}>
+            {/* First field (37% column with min-width override) */}
+            <div className={`min-w-0 ${row.fields[0].wrapperClassName || ''}`}>
               {renderField({
                 ...row.fields[0],
                 isModified: modifiedFields.has(row.fields[0].key as string)
@@ -460,9 +460,9 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
               <div></div>
             )}
             
-            {/* Second field (27% column) */}
+            {/* Second field (27% column with min-width override) */}
             {row.fields.length > 1 ? (
-              <div className={row.fields[1].wrapperClassName}>
+              <div className={`min-w-0 ${row.fields[1].wrapperClassName || ''}`}>
                 {renderField({
                   ...row.fields[1],
                   isModified: modifiedFields.has(row.fields[1].key as string)
