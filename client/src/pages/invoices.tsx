@@ -1,35 +1,156 @@
-import { useState } from "react";
+import React from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, Receipt, Search, Calendar, DollarSign } from "lucide-react";
+import { Plus, Edit, Trash2, Receipt, Calendar, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableLayout, type ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
+import { useDataTable } from '@/hooks/useDataTable';
 import type { Invoice, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
+// Default column configuration for invoices
+const defaultColumns: ColumnConfig[] = [
+  createIdColumn('invoiceNumber', 'Invoice #'),
+  { 
+    key: 'customerName', 
+    label: 'Customer', 
+    visible: true, 
+    width: 200, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: Invoice & { customerName?: string }) => (
+      <span data-testid={`text-customer-${row.id}`}>{value || "Unknown Customer"}</span>
+    )
+  },
+  { 
+    key: 'createdAt', 
+    label: 'Date', 
+    visible: true, 
+    width: 140, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: Invoice) => (
+      <div className="flex items-center space-x-2" data-testid={`text-date-${row.id}`}>
+        <Calendar size={14} />
+        <span>{value ? format(new Date(value), "MMM dd, yyyy") : "-"}</span>
+      </div>
+    )
+  },
+  { 
+    key: 'dueDate', 
+    label: 'Due Date', 
+    visible: true, 
+    width: 140, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: Invoice) => (
+      <div className="flex items-center space-x-2" data-testid={`text-due-date-${row.id}`}>
+        {value ? (
+          <>
+            <Calendar size={14} />
+            <span>{format(new Date(value), "MMM dd, yyyy")}</span>
+          </>
+        ) : (
+          <span>—</span>
+        )}
+      </div>
+    )
+  },
+  { 
+    key: 'totalAmount', 
+    label: 'Total Amount', 
+    visible: true, 
+    width: 120, 
+    filterable: false, 
+    sortable: true,
+    renderCell: (value: string, row: Invoice) => (
+      <div className="flex items-center space-x-2" data-testid={`text-total-${row.id}`}>
+        <DollarSign size={14} />
+        <span>${value}</span>
+      </div>
+    )
+  },
+  { 
+    key: 'paidAmount', 
+    label: 'Paid Amount', 
+    visible: true, 
+    width: 120, 
+    filterable: false, 
+    sortable: true,
+    renderCell: (value: string, row: Invoice) => (
+      <div className="flex items-center space-x-2" data-testid={`text-paid-${row.id}`}>
+        <DollarSign size={14} />
+        <span>${value}</span>
+      </div>
+    )
+  },
+  { 
+    key: 'status', 
+    label: 'Status', 
+    visible: true, 
+    width: 100, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: Invoice) => {
+      const getStatusVariant = (status: string) => {
+        switch (status) {
+          case "paid": return "default";
+          case "pending": return "secondary";
+          case "overdue": return "destructive";
+          case "cancelled": return "outline";
+          default: return "secondary";
+        }
+      };
+      return (
+        <Badge variant={getStatusVariant(value || "pending")} data-testid={`badge-status-${row.id}`}>
+          {value}
+        </Badge>
+      );
+    }
+  },
+];
 
 export default function Invoices() {
-  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
-  const { data: invoices, isLoading } = useQuery<Invoice[]>({
+  // Data table state  
+  const tableState = useDataTable({ 
+    defaultColumns,
+    defaultSort: { column: 'createdAt', direction: 'desc' },
+    tableKey: 'invoices'
+  });
+
+  // Optimized data fetching with stable loading state
+  const { data: invoices = [], isLoading: invoicesLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
+    staleTime: 30000,
+    gcTime: 300000,
   });
 
-  const { data: customers } = useQuery<Customer[]>({
+  const { data: customers = [], isLoading: customersLoading } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
+    staleTime: 60000,
+    gcTime: 600000,
   });
 
+  // Combined loading state
+  const isLoading = invoicesLoading || customersLoading;
 
+  // Customer name lookup - memoized to prevent re-creation
+  const getCustomerName = React.useCallback((customerId: string) => {
+    const customer = customers?.find((c: Customer) => c.id === customerId);
+    return customer?.name || 'Unknown Customer';
+  }, [customers]);
 
+  // Enhanced data with customer names - stabilized with useMemo
+  const enhancedInvoices = React.useMemo(() => {
+    return invoices.map(invoice => ({
+      ...invoice,
+      customerName: getCustomerName(invoice.customerId || '')
+    }));
+  }, [invoices, getCustomerName]);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
