@@ -383,13 +383,8 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   const renderRow = useCallback((row: FormRow<T>, rowIndex: number): ReactNode => {
     switch (row.type) {
       case 'section-header':
-        return (
-          <div key={`section-header-${rowIndex}`} className={row.className}>
-            <h3 className={`text-lg font-semibold text-orange-600 ${row.sectionTitleClassName || ''}`}>
-              {row.sectionTitle}
-            </h3>
-          </div>
-        );
+        // Section headers removed - tab titles provide sufficient context
+        return null;
       
       case 'custom':
         return (
