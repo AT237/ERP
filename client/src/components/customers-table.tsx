@@ -18,10 +18,7 @@ const defaultColumns: ColumnConfig[] = [
     filterable: true, 
     sortable: true,
     renderCell: (value: string) => (
-      <div className="flex items-center space-x-2">
-        <Building size={14} className="text-blue-500" />
-        <span className="font-medium">{value}</span>
-      </div>
+      <span className="font-medium">{value}</span>
     )
   },
   { key: 'kvkNummer', label: 'KVK Number', visible: true, width: 120, filterable: true, sortable: true },
