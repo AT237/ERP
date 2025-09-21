@@ -72,8 +72,9 @@ interface Memo {
   createdAt: Date;
 }
 
-export default function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFormLayoutProps) {
+export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFormLayoutProps) {
   const [activeTab, setActiveTab] = useState("general");
+  const [activeSection, setActiveSection] = useState("general");
   const [memos, setMemos] = useState<Memo[]>([]);
   const [newMemo, setNewMemo] = useState({ title: "", content: "", isInternal: false });
   const [currentCountryRequirements, setCurrentCountryRequirements] = useState<{ requiresBtw?: boolean; requiresAreaCode?: boolean }>({});
