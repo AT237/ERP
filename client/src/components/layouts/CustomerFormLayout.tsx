@@ -414,8 +414,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       id: "general",
       label: "General",
       content: (
-        <div key={formKey} className="space-y-[6px]">
-          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6 gap-y-[6px]">
+        <div key={formKey} className="space-y-2">
+          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6 gap-y-2">
             <Label htmlFor="name" className="text-sm font-medium text-right">Bedrijfsnaam *</Label>
             <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
               <div>
@@ -551,8 +551,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       id: "financial",
       label: "Financial",
       content: (
-        <div key={formKey} className="space-y-[6px]">
-          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6 gap-y-[6px]">
+        <div key={formKey} className="space-y-2">
+          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6 gap-y-2">
             <Label htmlFor="bankAccount" className="text-sm font-medium text-right">Bankrekeningnummer</Label>
             <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
               <div>
@@ -650,12 +650,12 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       id: "contact",
       label: "Contact",
       content: (
-        <div key={formKey} className="space-y-[6px]">
-          <div className="space-y-[6px]">
+        <div key={formKey} className="space-y-2">
+          <div className="space-y-2">
             <h3 className="text-lg font-semibold text-orange-600">Contactinformatie</h3>
             
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-[6px]">
+              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -667,7 +667,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 />
               </div>
 
-              <div className="space-y-[6px]">
+              <div className="space-y-2">
                 <Label htmlFor="phone">Telefoon</Label>
                 <Input
                   id="phone"
@@ -680,7 +680,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-[6px]">
+              <div className="space-y-2">
                 <Label htmlFor="mobile">Mobiel</Label>
                 <Input
                   id="mobile"
@@ -694,7 +694,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
 
             {/* Contact Person Selection */}
             <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-[6px]">
+              <div className="space-y-2">
                 <Label htmlFor="contactPersonEmail">Contactpersoon</Label>
                 <ContactPersonSelectWithAdd
                   value={form.watch("contactPersonEmail") || ""}
@@ -713,13 +713,13 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       id: "memo",
       label: "Memo",
       content: (
-        <div key={formKey} className="space-y-[6px]">
-          <div className="space-y-[6px]">
+        <div key={formKey} className="space-y-2">
+          <div className="space-y-2">
             <h3 className="text-lg font-semibold text-orange-600">Notities</h3>
             
             {/* Add new memo */}
-            <div className="p-4 border rounded-lg space-y-[6px]">
-              <div className="space-y-[6px]">
+            <div className="p-4 border rounded-lg space-y-2">
+              <div className="space-y-2">
                 <Label htmlFor="memo-title">Titel</Label>
                 <Input
                   id="memo-title"
@@ -729,7 +729,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 />
               </div>
               
-              <div className="space-y-[6px]">
+              <div className="space-y-2">
                 <Label htmlFor="memo-content">Inhoud</Label>
                 <Textarea
                   id="memo-content"
@@ -756,7 +756,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             </div>
 
             {/* Display existing memos */}
-            <div className="space-y-[6px]">
+            <div className="space-y-2">
               {memos.map((memo) => (
                 <div key={memo.id} className="p-4 border rounded-lg">
                   <div className="flex justify-between items-start mb-2">
