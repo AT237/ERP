@@ -826,8 +826,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       icon: <Building className="h-4 w-4" />,
       rows: [
         createSectionHeaderRow("Basic Information"),
-        createFieldsRow([
-          {
+        createFieldRow({
             key: "name",
             label: "Bedrijfsnaam",
             type: "text",
@@ -836,10 +835,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               isRequired: true,
               error: form.formState.errors.name?.message
             },
-            testId: "input-customer-name",
-            width: "60%"
-          } as FormField2<CustomerFormData>,
-          {
+            testId: "input-customer-name"
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "countryCode",
             label: "Country",
             type: "custom",
@@ -850,12 +848,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 placeholder="Selecteer land..."
                 testId="select-customer-country"
               />
-            ),
-            width: "50%"
-          } as FormField2<CustomerFormData>
-        ]),
-        createFieldsRow([
-          {
+            )
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "kvkNummer",
             label: "KVK-nummer",
             type: "text",
@@ -863,10 +858,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             validation: {
               error: form.formState.errors.kvkNummer?.message
             },
-            testId: "input-customer-kvk-nummer",
-            width: "33%"
-          } as FormField2<CustomerFormData>,
-          {
+            testId: "input-customer-kvk-nummer"
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "taxId",
             label: `BTW-nummer${currentCountryRequirements.requiresBtw ? ' *' : ''}`,
             type: "text",
@@ -875,10 +869,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               isRequired: currentCountryRequirements.requiresBtw,
               error: form.formState.errors.taxId?.message
             },
-            testId: "input-customer-taxId",
-            width: "33%"
-          } as FormField2<CustomerFormData>,
-          {
+            testId: "input-customer-taxId"
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "areaCode",
             label: `Area Code${currentCountryRequirements.requiresAreaCode ? ' *' : ''}`,
             type: "text",
@@ -887,12 +880,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               isRequired: currentCountryRequirements.requiresAreaCode,
               error: form.formState.errors.areaCode?.message
             },
-            testId: "input-customer-areaCode",
-            width: "33%"
-          } as FormField2<CustomerFormData>
-        ]),
-        createFieldsRow([
-          {
+            testId: "input-customer-areaCode"
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "language",
             label: "Taal",
             type: "select",
@@ -904,10 +894,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             ],
             setValue: (value) => form.setValue("language", value),
             watch: () => form.watch("language") || "nl",
-            testId: "select-customer-language",
-            width: "50%"
-          } as FormField2<CustomerFormData>,
-          {
+            testId: "select-customer-language"
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "generalEmail",
             label: "Algemene email",
             type: "email",
@@ -915,10 +904,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             validation: {
               error: form.formState.errors.generalEmail?.message
             },
-            testId: "input-customer-general-email",
-            width: "50%"
-          } as FormField2<CustomerFormData>
-        ]),
+            testId: "input-customer-general-email"
+          } as FormField2<CustomerFormData>),
         createFieldRow({
           key: "addressId",
           label: "Adres",
@@ -941,8 +928,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       icon: <User className="h-4 w-4" />,
       rows: [
         createSectionHeaderRow("Contactinformatie"),
-        createFieldsRow([
-          {
+        createFieldRow({
             key: "email",
             label: "Email",
             type: "email",
@@ -950,10 +936,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             validation: {
               error: form.formState.errors.email?.message
             },
-            testId: "input-customer-email",
-            width: "50%"
-          } as FormField2<CustomerFormData>,
-          {
+            testId: "input-customer-email"
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "phone",
             label: "Telefoon",
             type: "tel",
@@ -961,12 +946,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             validation: {
               error: form.formState.errors.phone?.message
             },
-            testId: "input-customer-phone",
-            width: "50%"
-          } as FormField2<CustomerFormData>
-        ]),
-        createFieldsRow([
-          {
+            testId: "input-customer-phone"
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "mobile",
             label: "Mobiel",
             type: "tel",
@@ -974,10 +956,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             validation: {
               error: form.formState.errors.mobile?.message
             },
-            testId: "input-customer-mobile",
-            width: "50%"
-          } as FormField2<CustomerFormData>,
-          {
+            testId: "input-customer-mobile"
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "contactPersonEmail",
             label: "Contactpersoon",
             type: "custom",
@@ -988,10 +969,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 placeholder="Selecteer contactpersoon..."
                 testId="select-customer-contact-person"
               />
-            ),
-            width: "50%"
-          } as FormField2<CustomerFormData>
-        ])
+            )
+          } as FormField2<CustomerFormData>)
       ]
     },
     {
@@ -1000,8 +979,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       icon: <CreditCard className="h-4 w-4" />,
       rows: [
         createSectionHeaderRow("Financial Information"),
-        createFieldsRow([
-          {
+        createFieldRow({
             key: "bankAccount",
             label: "Bankrekeningnummer",
             type: "text",
@@ -1009,10 +987,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             validation: {
               error: form.formState.errors.bankAccount?.message
             },
-            testId: "input-customer-bank-account",
-            width: "50%"
-          } as FormField2<CustomerFormData>,
-          {
+            testId: "input-customer-bank-account"
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "paymentTerms",
             label: "Betalingsvoorwaarden",
             type: "select",
@@ -1030,12 +1007,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               isRequired: true,
               error: form.formState.errors.paymentTerms?.message
             },
-            testId: "select-customer-payment-terms",
-            width: "50%"
-          } as FormField2<CustomerFormData>
-        ]),
-        createFieldsRow([
-          {
+            testId: "select-customer-payment-terms"
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "invoiceEmail",
             label: "Factuur email",
             type: "email",
@@ -1043,10 +1017,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             validation: {
               error: form.formState.errors.invoiceEmail?.message
             },
-            testId: "input-customer-invoice-email",
-            width: "50%"
-          } as FormField2<CustomerFormData>,
-          {
+            testId: "input-customer-invoice-email"
+          } as FormField2<CustomerFormData>),
+        createFieldRow({
             key: "status",
             label: "Status",
             type: "select",
@@ -1057,10 +1030,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             ],
             setValue: (value) => form.setValue("status", value),
             watch: () => form.watch("status") || "active",
-            testId: "select-customer-status",
-            width: "50%"
-          } as FormField2<CustomerFormData>
-        ]),
+            testId: "select-customer-status"
+          } as FormField2<CustomerFormData>),
         createFieldRow({
           key: "invoiceNotes",
           label: "Factuur notities",
