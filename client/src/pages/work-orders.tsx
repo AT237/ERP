@@ -228,6 +228,7 @@ export default function WorkOrders() {
         // Data
         data={enhancedWorkOrders}
         isLoading={isLoading}
+        tableKey="work-orders"
         getRowId={(order) => order.id}
         
         // Table configuration

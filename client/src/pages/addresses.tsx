@@ -133,6 +133,7 @@ export default function Addresses() {
         data={renderTableData(addresses)}
         columns={tableState.columns}
         setColumns={tableState.setColumns}
+        tableKey="addresses"
         isLoading={isLoading}
         searchTerm={tableState.searchTerm}
         setSearchTerm={tableState.setSearchTerm}

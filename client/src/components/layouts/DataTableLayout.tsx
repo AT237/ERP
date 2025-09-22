@@ -127,6 +127,9 @@ export interface DataTableLayoutProps<T = any> {
   columns: ColumnConfig[];
   setColumns: (columns: ColumnConfig[] | ((prev: ColumnConfig[]) => ColumnConfig[])) => void;
   
+  // Column persistence
+  tableKey?: string; // Unique identifier for persisting column settings
+  
   // Search and filtering
   searchTerm: string;
   setSearchTerm: (term: string) => void;
@@ -269,6 +272,7 @@ export function DataTableLayout<T = any>({
   isLoading,
   columns,
   setColumns,
+  tableKey,
   searchTerm,
   setSearchTerm,
   filters,
@@ -297,6 +301,112 @@ export function DataTableLayout<T = any>({
   onExport,
   compact = false,
 }: DataTableLayoutProps<T>) {
+  
+  // Column persistence storage utilities
+  const saveColumnSettings = useCallback(async (columnSettings: ColumnConfig[]) => {
+    if (!tableKey) return;
+    
+    const settings = {
+      columns: columnSettings.map(col => ({
+        key: col.key,
+        width: col.width,
+        visible: col.visible,
+        order: columnSettings.indexOf(col)
+      }))
+    };
+    
+    try {
+      // First try user-preferences API for cross-device sync
+      await fetch('/api/user-preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: `ui:table:${tableKey}:columns`,
+          value: settings
+        })
+      });
+    } catch (error) {
+      // Fallback to localStorage
+      try {
+        localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(settings));
+      } catch (localError) {
+        console.warn('Failed to save column settings:', localError);
+      }
+    }
+  }, [tableKey]);
+  
+  const loadColumnSettings = useCallback(async (): Promise<ColumnConfig[] | null> => {
+    if (!tableKey) return null;
+    
+    try {
+      // First try user-preferences API
+      const response = await fetch(`/api/user-preferences/${encodeURIComponent(`ui:table:${tableKey}:columns`)}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.value?.columns || null;
+      }
+    } catch (error) {
+      // Fallback to localStorage
+      try {
+        const stored = localStorage.getItem(`table-columns-${tableKey}`);
+        if (stored) {
+          const data = JSON.parse(stored);
+          return data.columns || null;
+        }
+      } catch (localError) {
+        console.warn('Failed to load column settings:', localError);
+      }
+    }
+    
+    return null;
+  }, [tableKey]);
+  
+  // Load saved column settings on mount
+  const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
+  useEffect(() => {
+    if (!tableKey || hasLoadedSettings) return;
+    
+    const loadSettings = async () => {
+      const savedColumns = await loadColumnSettings();
+      if (savedColumns) {
+        // Merge saved settings with current columns
+        const mergedColumns = columns.map(column => {
+          const savedColumn = savedColumns.find(saved => saved.key === column.key);
+          return savedColumn ? {
+            ...column,
+            width: savedColumn.width,
+            visible: savedColumn.visible
+          } : column;
+        });
+        
+        // Reorder columns based on saved order
+        const orderedColumns = savedColumns
+          .map(saved => mergedColumns.find(col => col.key === saved.key))
+          .filter(Boolean) as ColumnConfig[];
+          
+        // Add any new columns not in saved state
+        const newColumns = mergedColumns.filter(col => 
+          !savedColumns.some(saved => saved.key === col.key)
+        );
+        
+        setColumns([...orderedColumns, ...newColumns]);
+      }
+      setHasLoadedSettings(true);
+    };
+    
+    loadSettings();
+  }, [tableKey, columns, loadColumnSettings, setColumns, hasLoadedSettings]);
+  
+  // Debounced save when columns change
+  useEffect(() => {
+    if (!hasLoadedSettings) return; // Don't save during initial load
+    
+    const timeoutId = setTimeout(() => {
+      saveColumnSettings(columns);
+    }, 500); // 500ms debounce
+    
+    return () => clearTimeout(timeoutId);
+  }, [columns, saveColumnSettings, hasLoadedSettings]);
   
   const [showColumnDialog, setShowColumnDialog] = useState(false);
   const [resizing, setResizing] = useState<{ 

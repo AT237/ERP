@@ -226,6 +226,7 @@ export default function PurchaseOrders() {
         // Table configuration
         columns={tableState.columns}
         setColumns={tableState.setColumns}
+        tableKey="purchase-orders"
         
         // Search and filtering
         searchTerm={tableState.searchTerm}

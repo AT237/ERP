@@ -159,6 +159,7 @@ export default function CustomersTable() {
         data={renderTableData(customers)}
         columns={tableState.columns}
         setColumns={tableState.setColumns}
+        tableKey="customers"
         isLoading={isLoading}
         searchTerm={tableState.searchTerm}
         setSearchTerm={tableState.setSearchTerm}

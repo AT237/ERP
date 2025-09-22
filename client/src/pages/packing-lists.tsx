@@ -199,6 +199,7 @@ export default function PackingLists() {
         // Data
         data={enhancedPackingLists}
         isLoading={isLoading}
+        tableKey="packing-lists"
         getRowId={(list) => list.id}
         
         // Table configuration

@@ -239,6 +239,7 @@ export default function Projects() {
         // Data
         data={enhancedProjects}
         isLoading={isLoading}
+        tableKey="projects"
         getRowId={(project) => project.id}
         
         // Table configuration
