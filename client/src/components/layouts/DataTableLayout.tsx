@@ -315,8 +315,6 @@ export function DataTableLayout<T = any>({
       }))
     };
     
-    console.log('💾 Saving column settings for', tableKey, ':', settings);
-    
     try {
       // First try user-preferences API for cross-device sync
       await fetch('/api/user-preferences', {
@@ -330,7 +328,6 @@ export function DataTableLayout<T = any>({
       
       // Always mirror to localStorage for reliable fallback
       localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(settings));
-      console.log('✅ Successfully saved column settings for', tableKey);
     } catch (error) {
       console.warn('API save failed, falling back to localStorage only:', error);
       // Fallback to localStorage only
@@ -345,21 +342,15 @@ export function DataTableLayout<T = any>({
   const loadColumnSettings = useCallback(async (): Promise<any[] | null> => {
     if (!tableKey) return null;
     
-    console.log('📥 Loading column settings for', tableKey);
-    
     try {
       // Force fresh request to avoid 304 cache issues
       const response = await fetch(`/api/user-preferences/${encodeURIComponent(`ui:table:${tableKey}:columns`)}`, {
         cache: 'no-store'
       });
       
-      console.log('🌐 API Response:', response.status, response.statusText);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('📊 API Data:', data);
         if (data.value?.columns) {
-          console.log('✅ Loaded from API:', data.value.columns);
           return data.value.columns;
         }
       } else if (response.status === 304) {
@@ -375,14 +366,11 @@ export function DataTableLayout<T = any>({
       const stored = localStorage.getItem(`table-columns-${tableKey}`);
       if (stored) {
         const data = JSON.parse(stored);
-        console.log('💾 Loaded from localStorage:', data.columns);
         return data.columns || null;
       }
     } catch (localError) {
       console.warn('Failed to load column settings from localStorage:', localError);
     }
-    
-    console.log('❌ No saved settings found for', tableKey);
     return null;
   }, [tableKey]);
   
@@ -400,9 +388,6 @@ export function DataTableLayout<T = any>({
     const loadSettings = async () => {
       const savedColumns = await loadColumnSettings();
       if (savedColumns && initialColumnsRef.current) {
-        console.log('🔄 Applying saved columns to table:', tableKey, savedColumns);
-        console.log('🔄 Initial columns:', initialColumnsRef.current);
-        
         // Merge saved settings with initial columns (not current columns to avoid race)
         const mergedColumns = initialColumnsRef.current.map(column => {
           const savedColumn = savedColumns.find(saved => saved.key === column.key);
@@ -412,8 +397,6 @@ export function DataTableLayout<T = any>({
             visible: savedColumn.visible
           } : column;
         });
-        
-        console.log('🔄 Merged columns:', mergedColumns);
         
         // Reorder columns based on saved order
         const orderedColumns = savedColumns
@@ -426,10 +409,7 @@ export function DataTableLayout<T = any>({
         );
         
         const finalColumns = [...orderedColumns, ...newColumns];
-        console.log('✅ Final columns to set:', finalColumns);
         setColumns(finalColumns);
-      } else {
-        console.log('❌ No saved columns found or no initial columns');
       }
       setHasLoadedSettings(true);
     };
