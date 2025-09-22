@@ -85,13 +85,17 @@ export interface FormField2<T extends FieldValues = FieldValues> {
  * A row can contain multiple fields for complex layouts
  */
 export interface FormRow<T extends FieldValues = FieldValues> {
-  type: 'field' | 'fields' | 'section-header' | 'custom';
+  type: 'field' | 'fields' | 'section-header' | 'custom' | 'two-column';
   
   // Single field
   field?: FormField2<T>;
   
   // Multiple fields in same row
   fields?: FormField2<T>[];
+  
+  // Two-column layout
+  leftColumn?: FormField2<T>[];
+  rightColumn?: FormField2<T>[];
   
   // Section header
   sectionTitle?: string;
@@ -500,6 +504,66 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
           </div>
         );
       
+      case 'two-column':
+        const leftFields = row.leftColumn || [];
+        const rightFields = row.rightColumn || [];
+        
+        return (
+          <div key={`two-column-${rowIndex}`} className={`flex gap-8 ${row.className || ''}`}>
+            {/* Left Column */}
+            <div className="space-y-1">
+              {leftFields.map((field) => {
+                const fieldWithModified = {
+                  ...field,
+                  isModified: modifiedFields.has(field.key as string)
+                };
+                
+                return (
+                  <div key={field.key as string} className="flex items-center gap-6 w-full max-w-[540px]">
+                    <Label 
+                      htmlFor={field.key as string} 
+                      className="text-sm font-medium text-right w-[130px] shrink-0"
+                    >
+                      {field.label}
+                      {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
+                    </Label>
+                    <div className={`w-[380px] ${field.wrapperClassName || ''}`}>
+                      {renderField(fieldWithModified, changeTracking)}
+                      {renderFieldValidation(fieldWithModified)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Right Column */}
+            <div className="space-y-1">
+              {rightFields.map((field) => {
+                const fieldWithModified = {
+                  ...field,
+                  isModified: modifiedFields.has(field.key as string)
+                };
+                
+                return (
+                  <div key={field.key as string} className="flex items-center gap-6 w-full max-w-[540px]">
+                    <Label 
+                      htmlFor={field.key as string} 
+                      className="text-sm font-medium text-right w-[130px] shrink-0"
+                    >
+                      {field.label}
+                      {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
+                    </Label>
+                    <div className={`w-[380px] ${field.wrapperClassName || ''}`}>
+                      {renderField(fieldWithModified, changeTracking)}
+                      {renderFieldValidation(fieldWithModified)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      
       default:
         return null;
     }
@@ -583,6 +647,22 @@ export function createSectionHeaderRow<T extends FieldValues>(
     sectionTitle: title,
     className,
     sectionTitleClassName: titleClassName
+  };
+}
+
+/**
+ * Helper function to create a two-column layout row
+ */
+export function createTwoColumnRow<T extends FieldValues>(
+  leftColumn: FormField2<T>[], 
+  rightColumn: FormField2<T>[],
+  className?: string
+): FormRow<T> {
+  return {
+    type: 'two-column',
+    leftColumn,
+    rightColumn,
+    className
   };
 }
 

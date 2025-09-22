@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from './LayoutForm2';
+import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow, createTwoColumnRow } from './LayoutForm2';
 import type { ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
 import type { FormTab } from './FormTabLayout';
@@ -826,76 +826,84 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       icon: <Building className="h-4 w-4" />,
       rows: [
         createSectionHeaderRow("Basic Information"),
-        createFieldRow({
-            key: "name",
-            label: "Bedrijfsnaam",
-            type: "text",
-            register: form.register("name"),
-            validation: {
-              isRequired: true,
-              error: form.formState.errors.name?.message
-            },
-            testId: "input-customer-name"
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
-            key: "countryCode",
-            label: "Country",
-            type: "custom",
-            customComponent: (
-              <CountrySelectWithAdd
-                value={form.watch("countryCode") || ""}
-                onValueChange={(value) => form.setValue("countryCode", value)}
-                placeholder="Selecteer land..."
-                testId="select-customer-country"
-              />
-            )
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
-            key: "kvkNummer",
-            label: "KVK-nummer",
-            type: "text",
-            register: form.register("kvkNummer"),
-            validation: {
-              error: form.formState.errors.kvkNummer?.message
-            },
-            testId: "input-customer-kvk-nummer"
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
-            key: "taxId",
-            label: `BTW-nummer${currentCountryRequirements.requiresBtw ? ' *' : ''}`,
-            type: "text",
-            register: form.register("taxId"),
-            validation: {
-              isRequired: currentCountryRequirements.requiresBtw,
-              error: form.formState.errors.taxId?.message
-            },
-            testId: "input-customer-taxId"
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
-            key: "areaCode",
-            label: `Area Code${currentCountryRequirements.requiresAreaCode ? ' *' : ''}`,
-            type: "text",
-            register: form.register("areaCode"),
-            validation: {
-              isRequired: currentCountryRequirements.requiresAreaCode,
-              error: form.formState.errors.areaCode?.message
-            },
-            testId: "input-customer-areaCode"
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
-            key: "language",
-            label: "Taal",
-            type: "select",
-            options: [
-              { value: "nl", label: "Nederlands" },
-              { value: "en", label: "English" },
-              { value: "de", label: "Deutsch" },
-              { value: "fr", label: "Français" }
-            ],
-            setValue: (value) => form.setValue("language", value),
-            watch: () => form.watch("language") || "nl",
-            testId: "select-customer-language"
-          } as FormField2<CustomerFormData>),
+        createTwoColumnRow(
+          // Left Column: Bedrijfsnaam, KVK-nummer, BTW-nummer
+          [
+            {
+              key: "name",
+              label: "Bedrijfsnaam",
+              type: "text",
+              register: form.register("name"),
+              validation: {
+                isRequired: true,
+                error: form.formState.errors.name?.message
+              },
+              testId: "input-customer-name"
+            } as FormField2<CustomerFormData>,
+            {
+              key: "kvkNummer",
+              label: "KVK-nummer",
+              type: "text",
+              register: form.register("kvkNummer"),
+              validation: {
+                error: form.formState.errors.kvkNummer?.message
+              },
+              testId: "input-customer-kvk-nummer"
+            } as FormField2<CustomerFormData>,
+            {
+              key: "taxId",
+              label: `BTW-nummer${currentCountryRequirements.requiresBtw ? ' *' : ''}`,
+              type: "text",
+              register: form.register("taxId"),
+              validation: {
+                isRequired: currentCountryRequirements.requiresBtw,
+                error: form.formState.errors.taxId?.message
+              },
+              testId: "input-customer-taxId"
+            } as FormField2<CustomerFormData>
+          ],
+          // Right Column: Taal, Country, Area Code
+          [
+            {
+              key: "language",
+              label: "Taal",
+              type: "select",
+              options: [
+                { value: "nl", label: "Nederlands" },
+                { value: "en", label: "English" },
+                { value: "de", label: "Deutsch" },
+                { value: "fr", label: "Français" }
+              ],
+              setValue: (value) => form.setValue("language", value),
+              watch: () => form.watch("language") || "nl",
+              testId: "select-customer-language"
+            } as FormField2<CustomerFormData>,
+            {
+              key: "countryCode",
+              label: "Country",
+              type: "custom",
+              customComponent: (
+                <CountrySelectWithAdd
+                  value={form.watch("countryCode") || ""}
+                  onValueChange={(value) => form.setValue("countryCode", value)}
+                  placeholder="Selecteer land..."
+                  testId="select-customer-country"
+                />
+              )
+            } as FormField2<CustomerFormData>,
+            {
+              key: "areaCode",
+              label: `Area Code${currentCountryRequirements.requiresAreaCode ? ' *' : ''}`,
+              type: "text",
+              register: form.register("areaCode"),
+              validation: {
+                isRequired: currentCountryRequirements.requiresAreaCode,
+                error: form.formState.errors.areaCode?.message
+              },
+              testId: "input-customer-areaCode"
+            } as FormField2<CustomerFormData>
+          ]
+        ),
         createFieldRow({
             key: "generalEmail",
             label: "Algemene email",
