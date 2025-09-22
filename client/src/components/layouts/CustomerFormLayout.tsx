@@ -460,46 +460,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 )}
               </div>
               <div className="text-sm font-medium text-right pt-2">
-                BTW-nummer{currentCountryRequirements.requiresBtw && <span className="text-red-600 ml-1">*</span>}
-              </div>
-              <div>
-                <Input
-                  id="taxId"
-                  {...form.register("taxId")}
-                  placeholder="NL123456789B01"
-                  data-testid="input-customer-taxId"
-                  className={getFieldClassName("taxId", currentCountryRequirements.requiresBtw ? "border-orange-300 focus:border-orange-500" : "")}
-                />
-                {currentCountryRequirements.requiresBtw && (
-                  <p className="text-sm text-orange-600 mt-1">
-                    BTW nummer is verplicht voor {countryData?.name || 'dit land'}
-                  </p>
-                )}
-                {form.formState.errors.taxId && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.taxId.message}</p>
-                )}
-              </div>
-            </div>
-
-            <Label htmlFor="language" className="text-sm font-medium text-right pt-2">Taal</Label>
-            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
-              <div>
-                <Select 
-                  onValueChange={(value) => form.setValue("language", value)}
-                  value={form.watch("language") || "nl"}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nl">Nederlands</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="de">Deutsch</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="text-sm font-medium text-right pt-2">
                 Area Code{currentCountryRequirements.requiresAreaCode && <span className="text-red-600 ml-1">*</span>}
               </div>
               <div>
@@ -523,15 +483,55 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             </div>
 
             <Label htmlFor="generalEmail" className="text-sm font-medium text-right pt-2">Algemene email</Label>
+            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
+              <div>
+                <Input
+                  id="generalEmail"
+                  type="email"
+                  {...form.register("generalEmail")}
+                  placeholder="algemeen@bedrijf.nl"
+                  data-testid="input-customer-general-email"
+                  className={getFieldClassName("generalEmail")}
+                />
+              </div>
+              <div className="text-sm font-medium text-right pt-2">
+                BTW-nummer{currentCountryRequirements.requiresBtw && <span className="text-red-600 ml-1">*</span>}
+              </div>
+              <div>
+                <Input
+                  id="taxId"
+                  {...form.register("taxId")}
+                  placeholder="NL123456789B01"
+                  data-testid="input-customer-taxId"
+                  className={getFieldClassName("taxId", currentCountryRequirements.requiresBtw ? "border-orange-300 focus:border-orange-500" : "")}
+                />
+                {currentCountryRequirements.requiresBtw && (
+                  <p className="text-sm text-orange-600 mt-1">
+                    BTW nummer is verplicht voor {countryData?.name || 'dit land'}
+                  </p>
+                )}
+                {form.formState.errors.taxId && (
+                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.taxId.message}</p>
+                )}
+              </div>
+            </div>
+
+            <Label htmlFor="language" className="text-sm font-medium text-right pt-2">Taal</Label>
             <div className="w-[30%]">
-              <Input
-                id="generalEmail"
-                type="email"
-                {...form.register("generalEmail")}
-                placeholder="algemeen@bedrijf.nl"
-                data-testid="input-customer-general-email"
-                className={getFieldClassName("generalEmail")}
-              />
+              <Select 
+                onValueChange={(value) => form.setValue("language", value)}
+                value={form.watch("language") || "nl"}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nl">Nederlands</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <Label htmlFor="addressId" className="text-sm font-medium text-right pt-2">Adres</Label>
