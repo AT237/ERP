@@ -420,10 +420,10 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       case 'fields':
         if (!row.fields || row.fields.length === 0) return null;
         
-        // Handle multi-field layouts with precise percentage grid: 20% label | 37% field | 3% space | 10% label | 27% field | 3% space
+        // Handle multi-field layouts (like the three-column layout in CustomerFormLayout)
         return (
-          <div key={`fields-${rowIndex}`} className={`grid grid-cols-[20%_minmax(0,_37%)_3%_10%_minmax(0,_27%)_3%] items-start gap-y-6 ${row.className || ''}`}>
-            {/* First field label (20% column, right aligned) */}
+          <div key={`fields-${rowIndex}`} className={`grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6 ${row.className || ''}`}>
+            {/* First field's label */}
             <Label 
               htmlFor={row.fields[0].key as string} 
               className="text-sm font-medium text-right pt-2"
@@ -432,52 +432,47 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
               {(row.fields[0].validation?.isRequired || row.fields[0].validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
             </Label>
             
-            {/* First field (37% column with min-width override) */}
-            <div className={`min-w-0 ${row.fields[0].wrapperClassName || ''}`}>
-              {renderField({
-                ...row.fields[0],
-                isModified: modifiedFields.has(row.fields[0].key as string)
-              }, changeTracking)}
-              {renderFieldValidation({
-                ...row.fields[0],
-                isModified: modifiedFields.has(row.fields[0].key as string)
+            {/* Multi-column field layout - consistent grid with proper spacing */}
+            <div className="grid grid-cols-2 gap-16 items-start">
+              {row.fields.map((field, fieldIndex) => {
+                const fieldWithModified = {
+                  ...field,
+                  isModified: modifiedFields.has(field.key as string)
+                };
+                
+                if (fieldIndex === 0) {
+                  // First field (no label, already rendered above)
+                  return (
+                    <div key={field.key as string} className={field.wrapperClassName}>
+                      {renderField(fieldWithModified, changeTracking)}
+                      {renderFieldValidation(fieldWithModified)}
+                    </div>
+                  );
+                } else {
+                  // All other fields with label to the left (same as main layout)
+                  return (
+                    <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-x-6">
+                      <Label 
+                        htmlFor={field.key as string} 
+                        className="text-sm font-medium text-right pt-2"
+                      >
+                        {field.label}
+                        {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
+                      </Label>
+                      <div className={field.wrapperClassName}>
+                        {renderField(fieldWithModified, changeTracking)}
+                        {renderFieldValidation(fieldWithModified)}
+                      </div>
+                    </div>
+                  );
+                }
               })}
+              
+              {/* Fill empty cells if odd number of fields */}
+              {row.fields.length % 2 === 1 && row.fields.length > 1 && (
+                <div></div>
+              )}
             </div>
-            
-            {/* 3% spacing */}
-            <div></div>
-            
-            {/* Second field label (10% column, right aligned) */}
-            {row.fields.length > 1 ? (
-              <Label 
-                htmlFor={row.fields[1].key as string} 
-                className="text-sm font-medium text-right pt-2"
-              >
-                {row.fields[1].label}
-                {(row.fields[1].validation?.isRequired || row.fields[1].validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
-              </Label>
-            ) : (
-              <div></div>
-            )}
-            
-            {/* Second field (27% column with min-width override) */}
-            {row.fields.length > 1 ? (
-              <div className={`min-w-0 ${row.fields[1].wrapperClassName || ''}`}>
-                {renderField({
-                  ...row.fields[1],
-                  isModified: modifiedFields.has(row.fields[1].key as string)
-                }, changeTracking)}
-                {renderFieldValidation({
-                  ...row.fields[1],
-                  isModified: modifiedFields.has(row.fields[1].key as string)
-                })}
-              </div>
-            ) : (
-              <div></div>
-            )}
-            
-            {/* Final 3% spacing */}
-            <div></div>
             
             {/* Additional fields beyond the first 3 */}
             {row.fields.slice(3).map((field) => {
