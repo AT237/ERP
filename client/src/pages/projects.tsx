@@ -11,6 +11,115 @@ import { queryClient } from "@/lib/queryClient";
 import type { Project, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
+// Default column configuration for projects
+const defaultColumns: ColumnConfig[] = [
+  createIdColumn('projectNumber', 'Project #'),
+  { 
+    key: 'name', 
+    label: 'Project Name', 
+    visible: true, 
+    width: 200, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: Project & { customerName?: string }) => (
+      <span data-testid={`text-project-name-${row.id}`}>{value}</span>
+    )
+  },
+  { 
+    key: 'customerName', 
+    label: 'Customer', 
+    visible: true, 
+    width: 180, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: Project & { customerName?: string }) => (
+      <span data-testid={`text-customer-${row.id}`}>{value || "Unknown Customer"}</span>
+    )
+  },
+  { 
+    key: 'status', 
+    label: 'Status', 
+    visible: true, 
+    width: 120, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: Project) => (
+      <Badge variant={value === 'Active' ? 'default' : value === 'Completed' ? 'secondary' : 'outline'} data-testid={`badge-status-${row.id}`}>
+        {value || 'Unknown'}
+      </Badge>
+    )
+  },
+  { 
+    key: 'progress', 
+    label: 'Progress', 
+    visible: true, 
+    width: 140, 
+    filterable: false, 
+    sortable: true,
+    renderCell: (value: number, row: Project) => (
+      <div className="space-y-1" data-testid={`progress-${row.id}`}>
+        <div className="flex justify-between text-sm">
+          <span>{value || 0}%</span>
+        </div>
+        <Progress value={value || 0} className="h-2" />
+      </div>
+    )
+  },
+  { 
+    key: 'startDate', 
+    label: 'Start Date', 
+    visible: true, 
+    width: 140, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: Project) => (
+      <div className="flex items-center space-x-2" data-testid={`text-start-date-${row.id}`}>
+        {value ? (
+          <>
+            <Calendar size={14} />
+            <span>{format(new Date(value), "MMM dd, yyyy")}</span>
+          </>
+        ) : (
+          <span>—</span>
+        )}
+      </div>
+    )
+  },
+  { 
+    key: 'endDate', 
+    label: 'End Date', 
+    visible: true, 
+    width: 140, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: Project) => (
+      <div className="flex items-center space-x-2" data-testid={`text-end-date-${row.id}`}>
+        {value ? (
+          <>
+            <Calendar size={14} />
+            <span>{format(new Date(value), "MMM dd, yyyy")}</span>
+          </>
+        ) : (
+          <span>—</span>
+        )}
+      </div>
+    )
+  },
+  { 
+    key: 'totalValue', 
+    label: 'Total Value', 
+    visible: true, 
+    width: 120, 
+    filterable: false, 
+    sortable: true,
+    renderCell: (value: string, row: Project) => (
+      <div className="flex items-center space-x-2" data-testid={`text-total-value-${row.id}`}>
+        <DollarSign size={14} />
+        <span>{value || "—"}</span>
+      </div>
+    )
+  },
+];
 
 export default function Projects() {
   const { toast } = useToast();
@@ -44,6 +153,13 @@ export default function Projects() {
       customerName: getCustomerName(project.customerId || '')
     }));
   }, [projects, getCustomerName]);
+
+  // Data table state  
+  const tableState = useDataTable({ 
+    defaultColumns,
+    defaultSort: { column: 'createdAt', direction: 'desc' },
+    tableKey: 'projects'
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {

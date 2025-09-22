@@ -8,6 +8,67 @@ import { useDataTable } from '@/hooks/useDataTable';
 import type { PackingList, Customer, Invoice, Project } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { format } from "date-fns";
+
+// Default column configuration for packing lists
+const defaultColumns: ColumnConfig[] = [
+  createIdColumn('packingNumber', 'Packing #'),
+  { 
+    key: 'customerName', 
+    label: 'Customer', 
+    visible: true, 
+    width: 180, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: PackingList & { customerName?: string }) => (
+      <span data-testid={`text-customer-${row.id}`}>{value || "Unknown Customer"}</span>
+    )
+  },
+  { 
+    key: 'invoiceNumber', 
+    label: 'Invoice #', 
+    visible: true, 
+    width: 140, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: PackingList & { invoiceNumber?: string }) => (
+      <span data-testid={`text-invoice-${row.id}`}>{value || "—"}</span>
+    )
+  },
+  { 
+    key: 'status', 
+    label: 'Status', 
+    visible: true, 
+    width: 120, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: PackingList) => (
+      <Badge variant={value === 'Shipped' ? 'default' : value === 'Packed' ? 'secondary' : 'outline'} data-testid={`badge-status-${row.id}`}>
+        {value || 'Unknown'}
+      </Badge>
+    )
+  },
+  { 
+    key: 'shippingDate', 
+    label: 'Shipping Date', 
+    visible: true, 
+    width: 140, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string, row: PackingList) => (
+      <div className="flex items-center space-x-2" data-testid={`text-shipping-date-${row.id}`}>
+        {value ? (
+          <>
+            <Truck size={14} />
+            <span>{format(new Date(value), "MMM dd, yyyy")}</span>
+          </>
+        ) : (
+          <span>—</span>
+        )}
+      </div>
+    )
+  },
+];
 
 export default function PackingLists() {
   const { toast } = useToast();
@@ -53,6 +114,13 @@ export default function PackingLists() {
       invoiceNumber: getInvoiceNumber(list.invoiceId || '')
     }));
   }, [packingLists, getCustomerName, getInvoiceNumber]);
+
+  // Data table state  
+  const tableState = useDataTable({ 
+    defaultColumns,
+    defaultSort: { column: 'createdAt', direction: 'desc' },
+    tableKey: 'packing-lists'
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {

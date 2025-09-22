@@ -47,7 +47,8 @@ export default function Addresses() {
 
   // Data table state  
   const tableState = useDataTable({ 
-    defaultColumns
+    defaultColumns,
+    tableKey: 'addresses'
   });
 
   // Data fetching
