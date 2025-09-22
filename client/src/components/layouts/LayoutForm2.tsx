@@ -402,15 +402,15 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         };
         
         return (
-          <div key={field.key as string} className={`grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-3 ${row.className || ''}`}>
+          <div key={field.key as string} className={`flex items-center gap-6 ${row.className || ''}`}>
             <Label 
               htmlFor={field.key as string} 
-              className="text-sm font-medium text-right pt-2"
+              className="text-sm font-medium text-right w-[130px] shrink-0"
             >
               {field.label}
               {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
             </Label>
-            <div className={field.wrapperClassName || (field.width ? `w-[${field.width}]` : "")}>
+            <div className={`flex-1 ${field.wrapperClassName || ''}`}>
               {renderField(field, changeTracking)}
               {renderFieldValidation(field)}
             </div>
@@ -422,18 +422,18 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         
         // Handle multi-field layouts (like the three-column layout in CustomerFormLayout)
         return (
-          <div key={`fields-${rowIndex}`} className={`grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-3 ${row.className || ''}`}>
+          <div key={`fields-${rowIndex}`} className={`flex items-center gap-6 ${row.className || ''}`}>
             {/* First field's label */}
             <Label 
               htmlFor={row.fields[0].key as string} 
-              className="text-sm font-medium text-right pt-2"
+              className="text-sm font-medium text-right w-[130px] shrink-0"
             >
               {row.fields[0].label}
               {(row.fields[0].validation?.isRequired || row.fields[0].validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
             </Label>
             
-            {/* Multi-column field layout - consistent grid with proper spacing */}
-            <div className="grid grid-cols-2 gap-16 items-start">
+            {/* Multi-column field layout with individual containers */}
+            <div className="flex-1 flex gap-16 items-center">
               {row.fields.map((field, fieldIndex) => {
                 const fieldWithModified = {
                   ...field,
@@ -443,23 +443,23 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
                 if (fieldIndex === 0) {
                   // First field (no label, already rendered above)
                   return (
-                    <div key={field.key as string} className={field.wrapperClassName}>
+                    <div key={field.key as string} className={`flex-1 ${field.wrapperClassName || ''}`}>
                       {renderField(fieldWithModified, changeTracking)}
                       {renderFieldValidation(fieldWithModified)}
                     </div>
                   );
                 } else {
-                  // All other fields with label to the left (same as main layout)
+                  // All other fields with label to the left
                   return (
-                    <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-x-6">
+                    <div key={field.key as string} className="flex items-center gap-6">
                       <Label 
                         htmlFor={field.key as string} 
-                        className="text-sm font-medium text-right pt-2"
+                        className="text-sm font-medium text-right w-[130px] shrink-0"
                       >
                         {field.label}
                         {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
                       </Label>
-                      <div className={field.wrapperClassName}>
+                      <div className={`flex-1 ${field.wrapperClassName || ''}`}>
                         {renderField(fieldWithModified, changeTracking)}
                         {renderFieldValidation(fieldWithModified)}
                       </div>
@@ -482,15 +482,15 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
               };
               
               return (
-                <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-3 mt-6">
+                <div key={field.key as string} className="flex items-center gap-6 mt-1">
                   <Label 
                     htmlFor={field.key as string} 
-                    className="text-sm font-medium text-right pt-2"
+                    className="text-sm font-medium text-right w-[130px] shrink-0"
                   >
                     {field.label}
                     {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
                   </Label>
-                  <div className={field.wrapperClassName || (field.width ? `w-[${field.width}]` : "")}>
+                  <div className={`flex-1 ${field.wrapperClassName || ''}`}>
                     {renderField(fieldWithModified, changeTracking)}
                     {renderFieldValidation(fieldWithModified)}
                   </div>
@@ -514,7 +514,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       id: section.id,
       label: section.label,
       content: (
-        <div className="space-y-6">
+        <div className="space-y-1">
           {section.rows.map((row, rowIndex) => renderRow(row, rowIndex))}
         </div>
       )
