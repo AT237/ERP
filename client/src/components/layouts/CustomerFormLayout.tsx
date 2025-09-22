@@ -444,7 +444,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               </div>
             </div>
 
-            <Label htmlFor="kvkNummer" className="text-sm font-medium text-right self-center -mt-4">KVK-nummer</Label>
+            <Label htmlFor="kvkNummer" className="text-sm font-medium text-right">KVK-nummer</Label>
             <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
               <div>
                 <Input
@@ -459,7 +459,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                   <p className="text-sm text-red-600 mt-1">{form.formState.errors.kvkNummer.message}</p>
                 )}
               </div>
-              <div className="text-sm font-medium text-right self-center">
+              <div className="text-sm font-medium text-right">
                 Area Code{currentCountryRequirements.requiresAreaCode && <span className="text-red-600 ml-1">*</span>}
               </div>
               <div>
