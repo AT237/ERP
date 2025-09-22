@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ReactNode, useMemo, useCallback } from "react";
+import React, { useState, useEffect, ReactNode, useMemo, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -307,11 +307,11 @@ export function DataTableLayout<T = any>({
     if (!tableKey) return;
     
     const settings = {
-      columns: columnSettings.map(col => ({
+      columns: columnSettings.map((col, index) => ({
         key: col.key,
         width: col.width,
         visible: col.visible,
-        order: columnSettings.indexOf(col)
+        order: index
       }))
     };
     
@@ -325,52 +325,70 @@ export function DataTableLayout<T = any>({
           value: settings
         })
       });
+      
+      // Always mirror to localStorage for reliable fallback
+      localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(settings));
     } catch (error) {
-      // Fallback to localStorage
+      console.warn('API save failed, falling back to localStorage only:', error);
+      // Fallback to localStorage only
       try {
         localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(settings));
       } catch (localError) {
-        console.warn('Failed to save column settings:', localError);
+        console.warn('Failed to save column settings to localStorage:', localError);
       }
     }
   }, [tableKey]);
   
-  const loadColumnSettings = useCallback(async (): Promise<ColumnConfig[] | null> => {
+  const loadColumnSettings = useCallback(async (): Promise<any[] | null> => {
     if (!tableKey) return null;
     
     try {
-      // First try user-preferences API
-      const response = await fetch(`/api/user-preferences/${encodeURIComponent(`ui:table:${tableKey}:columns`)}`);
+      // Force fresh request to avoid 304 cache issues
+      const response = await fetch(`/api/user-preferences/${encodeURIComponent(`ui:table:${tableKey}:columns`)}`, {
+        cache: 'no-store'
+      });
+      
       if (response.ok) {
         const data = await response.json();
         return data.value?.columns || null;
+      } else if (response.status === 304) {
+        // Handle 304 Not Modified - fall back to localStorage
+        console.log('Received 304, falling back to localStorage for table:', tableKey);
       }
     } catch (error) {
-      // Fallback to localStorage
-      try {
-        const stored = localStorage.getItem(`table-columns-${tableKey}`);
-        if (stored) {
-          const data = JSON.parse(stored);
-          return data.columns || null;
-        }
-      } catch (localError) {
-        console.warn('Failed to load column settings:', localError);
+      console.warn('API request failed, falling back to localStorage:', error);
+    }
+    
+    // Fallback to localStorage
+    try {
+      const stored = localStorage.getItem(`table-columns-${tableKey}`);
+      if (stored) {
+        const data = JSON.parse(stored);
+        return data.columns || null;
       }
+    } catch (localError) {
+      console.warn('Failed to load column settings from localStorage:', localError);
     }
     
     return null;
   }, [tableKey]);
   
+  // Capture initial columns to avoid race conditions
+  const initialColumnsRef = useRef<ColumnConfig[] | null>(null);
+  if (!initialColumnsRef.current) {
+    initialColumnsRef.current = columns;
+  }
+  
   // Load saved column settings on mount
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
   useEffect(() => {
-    if (!tableKey || hasLoadedSettings) return;
+    if (!tableKey || hasLoadedSettings || !initialColumnsRef.current) return;
     
     const loadSettings = async () => {
       const savedColumns = await loadColumnSettings();
-      if (savedColumns) {
-        // Merge saved settings with current columns
-        const mergedColumns = columns.map(column => {
+      if (savedColumns && initialColumnsRef.current) {
+        // Merge saved settings with initial columns (not current columns to avoid race)
+        const mergedColumns = initialColumnsRef.current.map(column => {
           const savedColumn = savedColumns.find(saved => saved.key === column.key);
           return savedColumn ? {
             ...column,
@@ -395,7 +413,7 @@ export function DataTableLayout<T = any>({
     };
     
     loadSettings();
-  }, [tableKey, columns, loadColumnSettings, setColumns, hasLoadedSettings]);
+  }, [tableKey, hasLoadedSettings, loadColumnSettings, setColumns]);
   
   // Debounced save when columns change
   useEffect(() => {
