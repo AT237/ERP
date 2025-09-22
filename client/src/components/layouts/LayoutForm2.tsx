@@ -402,7 +402,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         };
         
         return (
-          <div key={field.key as string} className={`flex items-center gap-6 w-full max-w-[600px] ${row.className || ''}`}>
+          <div key={field.key as string} className={`flex items-center gap-6 w-full max-w-[540px] ${row.className || ''}`}>
             <Label 
               htmlFor={field.key as string} 
               className="text-sm font-medium text-right w-[130px] shrink-0"
@@ -410,7 +410,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
               {field.label}
               {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
             </Label>
-            <div className={`w-[464px] ${field.wrapperClassName || ''}`}>
+            <div className={`w-[380px] ${field.wrapperClassName || ''}`}>
               {renderField(field, changeTracking)}
               {renderFieldValidation(field)}
             </div>
@@ -422,7 +422,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         
         // Handle multi-field layouts (like the three-column layout in CustomerFormLayout)
         return (
-          <div key={`fields-${rowIndex}`} className={`flex items-center gap-6 w-full max-w-[600px] ${row.className || ''}`}>
+          <div key={`fields-${rowIndex}`} className={`flex items-center gap-6 w-full max-w-[540px] ${row.className || ''}`}>
             {/* First field's label */}
             <Label 
               htmlFor={row.fields[0].key as string} 
@@ -433,7 +433,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
             </Label>
             
             {/* Multi-column field layout with individual containers */}
-            <div className="w-[464px] flex gap-16 items-center">
+            <div className="w-[380px] flex gap-16 items-center">
               {row.fields.map((field, fieldIndex) => {
                 const fieldWithModified = {
                   ...field,
@@ -482,7 +482,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
               };
               
               return (
-                <div key={field.key as string} className="flex items-center gap-6 w-full max-w-[600px] mt-1">
+                <div key={field.key as string} className="flex items-center gap-6 w-full max-w-[540px] mt-1">
                   <Label 
                     htmlFor={field.key as string} 
                     className="text-sm font-medium text-right w-[130px] shrink-0"
@@ -490,7 +490,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
                     {field.label}
                     {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
                   </Label>
-                  <div className={`w-[464px] ${field.wrapperClassName || ''}`}>
+                  <div className={`w-[380px] ${field.wrapperClassName || ''}`}>
                     {renderField(fieldWithModified, changeTracking)}
                     {renderFieldValidation(fieldWithModified)}
                   </div>
