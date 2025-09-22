@@ -402,7 +402,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         };
         
         return (
-          <div key={field.key as string} className={`grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6 ${row.className || ''}`}>
+          <div key={field.key as string} className={`grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-3 ${row.className || ''}`}>
             <Label 
               htmlFor={field.key as string} 
               className="text-sm font-medium text-right pt-2"
@@ -422,7 +422,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         
         // Handle multi-field layouts (like the three-column layout in CustomerFormLayout)
         return (
-          <div key={`fields-${rowIndex}`} className={`grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6 ${row.className || ''}`}>
+          <div key={`fields-${rowIndex}`} className={`grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-3 ${row.className || ''}`}>
             {/* First field's label */}
             <Label 
               htmlFor={row.fields[0].key as string} 
@@ -482,7 +482,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
               };
               
               return (
-                <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6 mt-6">
+                <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-3 mt-6">
                   <Label 
                     htmlFor={field.key as string} 
                     className="text-sm font-medium text-right pt-2"
