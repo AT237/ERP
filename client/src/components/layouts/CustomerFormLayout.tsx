@@ -415,7 +415,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       label: "General",
       content: (
         <div key={formKey} className="space-y-6">
-          <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-4">
+          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6 gap-y-2">
             <Label htmlFor="name" className="text-sm font-medium text-right">Bedrijfsnaam *</Label>
             <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
               <div>
@@ -552,7 +552,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       label: "Financial",
       content: (
         <div key={formKey} className="space-y-6">
-          <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-4">
+          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6 gap-y-2">
             <Label htmlFor="bankAccount" className="text-sm font-medium text-right">Bankrekeningnummer</Label>
             <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
               <div>
