@@ -825,7 +825,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       label: "General", 
       icon: <Building className="h-4 w-4" />,
       rows: [
-        createSectionHeaderRow("Basic Information"),
         createTwoColumnRow(
           // Left Column: Bedrijfsnaam, KVK-nummer, BTW-nummer
           [
