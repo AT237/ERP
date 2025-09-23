@@ -415,7 +415,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       label: "General",
       content: (
         <div key={formKey} className="space-y-4">
-          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6 gap-y-4">
+          {/* Bedrijfsnaam + Country */}
+          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6">
             <Label htmlFor="name" className="text-sm font-medium text-right">Bedrijfsnaam *</Label>
             <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
               <div>
@@ -443,7 +444,10 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 />
               </div>
             </div>
+          </div>
 
+          {/* KVK-nummer + Area Code */}
+          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6">
             <Label htmlFor="kvkNummer" className="text-sm font-medium text-right">KVK-nummer</Label>
             <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
               <div>
@@ -481,7 +485,10 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 </div>
               </div>
             </div>
+          </div>
 
+          {/* BTW-nummer */}
+          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6">
             <Label htmlFor="taxId" className="text-sm font-medium text-right">BTW-nummer{currentCountryRequirements.requiresBtw && <span className="text-red-600 ml-1">*</span>}</Label>
             <div className="w-[30%]">
               <Input
@@ -500,7 +507,10 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 <p className="text-sm text-red-600 mt-1">{form.formState.errors.taxId.message}</p>
               )}
             </div>
+          </div>
 
+          {/* Taal */}
+          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6">
             <Label htmlFor="language" className="text-sm font-medium text-right">Taal</Label>
             <div className="w-[30%]">
               <Select 
@@ -518,7 +528,10 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
+          {/* Adres */}
+          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6">
             <Label htmlFor="addressId" className="text-sm font-medium text-right">Adres</Label>
             <div className="w-[30%]">
               <AddressSelectWithAdd
