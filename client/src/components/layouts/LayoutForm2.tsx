@@ -508,59 +508,85 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         const leftFields = row.leftColumn || [];
         const rightFields = row.rightColumn || [];
         
+        // Calculate max fields to ensure grid alignment
+        const maxFields = Math.max(leftFields.length, rightFields.length);
+        
         return (
-          <div key={`two-column-${rowIndex}`} className={`flex gap-8 ${row.className || ''}`}>
-            {/* Left Column */}
-            <div className="flex flex-col space-y-4">
-              {leftFields.map((field) => {
-                const fieldWithModified = {
-                  ...field,
-                  isModified: modifiedFields.has(field.key as string)
-                };
-                
-                return (
-                  <div key={field.key as string} className="flex items-center gap-6 w-full max-w-[540px]">
+          <div key={`two-column-${rowIndex}`} className={`grid grid-cols-1 md:grid-cols-[130px_minmax(0,1fr)_130px_minmax(0,1fr)] gap-x-6 gap-y-4 ${row.className || ''}`}>
+            {Array.from({ length: maxFields }, (_, fieldIndex) => {
+              const leftField = leftFields[fieldIndex];
+              const rightField = rightFields[fieldIndex];
+              
+              return (
+                <div key={`grid-row-${fieldIndex}`} className="contents">
+                  {/* Left Label */}
+                  {leftField ? (
                     <Label 
-                      htmlFor={field.key as string} 
-                      className="text-sm font-medium text-right w-[130px] shrink-0"
+                      htmlFor={leftField.key as string} 
+                      className="text-sm font-medium text-right self-center md:col-start-1"
                     >
-                      {field.label}
-                      {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
+                      {leftField.label}
+                      {(leftField.validation?.isRequired || leftField.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
                     </Label>
-                    <div className={`w-[380px] ${field.wrapperClassName || ''}`}>
-                      {renderField(fieldWithModified, changeTracking)}
-                      {renderFieldValidation(fieldWithModified)}
+                  ) : (
+                    <div className="hidden md:block md:col-start-1"></div>
+                  )}
+                  
+                  {/* Left Field */}
+                  {leftField ? (
+                    <div className={`md:col-start-2 ${leftField.wrapperClassName || ''}`}>
+                      {(() => {
+                        const fieldWithModified = {
+                          ...leftField,
+                          isModified: modifiedFields.has(leftField.key as string)
+                        };
+                        return (
+                          <>
+                            {renderField(fieldWithModified, changeTracking)}
+                            {renderFieldValidation(fieldWithModified)}
+                          </>
+                        );
+                      })()}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            {/* Right Column */}
-            <div className="flex flex-col space-y-4">
-              {rightFields.map((field) => {
-                const fieldWithModified = {
-                  ...field,
-                  isModified: modifiedFields.has(field.key as string)
-                };
-                
-                return (
-                  <div key={field.key as string} className="flex items-center gap-6 w-full max-w-[540px]">
+                  ) : (
+                    <div className="hidden md:block md:col-start-2"></div>
+                  )}
+                  
+                  {/* Right Label */}
+                  {rightField ? (
                     <Label 
-                      htmlFor={field.key as string} 
-                      className="text-sm font-medium text-right w-[130px] shrink-0"
+                      htmlFor={rightField.key as string} 
+                      className="text-sm font-medium text-right self-center md:col-start-3"
                     >
-                      {field.label}
-                      {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
+                      {rightField.label}
+                      {(rightField.validation?.isRequired || rightField.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
                     </Label>
-                    <div className={`w-[380px] ${field.wrapperClassName || ''}`}>
-                      {renderField(fieldWithModified, changeTracking)}
-                      {renderFieldValidation(fieldWithModified)}
+                  ) : (
+                    <div className="hidden md:block md:col-start-3"></div>
+                  )}
+                  
+                  {/* Right Field */}
+                  {rightField ? (
+                    <div className={`md:col-start-4 ${rightField.wrapperClassName || ''}`}>
+                      {(() => {
+                        const fieldWithModified = {
+                          ...rightField,
+                          isModified: modifiedFields.has(rightField.key as string)
+                        };
+                        return (
+                          <>
+                            {renderField(fieldWithModified, changeTracking)}
+                            {renderFieldValidation(fieldWithModified)}
+                          </>
+                        );
+                      })()}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  ) : (
+                    <div className="hidden md:block md:col-start-4"></div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         );
       
