@@ -408,7 +408,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
     setMemos(memos.filter(memo => memo.id !== id));
   };
 
-  // Tab content
+  // Old manual HTML form code removed - using LayoutForm2 unified system
+  /*
   const tabs = [
     {
       id: "general",
@@ -785,7 +786,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       )
     }
   ];
-
+  */
 
   // Header fields removed per user request
 
