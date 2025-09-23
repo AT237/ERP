@@ -600,16 +600,121 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   // ========================================================================
   
   const tabs: FormTab[] = useMemo(() => {
-    return sections.map(section => ({
-      id: section.id,
-      label: section.label,
-      content: (
-        <div className="space-y-4">
-          {section.rows.map((row, rowIndex) => renderRow(row, rowIndex))}
-        </div>
-      )
-    }));
-  }, [sections, renderRow]);
+    return sections.map(section => {
+      // Check if section contains two-column rows
+      const hasTwoColumnRows = section.rows.some(row => row.type === 'two-column');
+      
+      if (hasTwoColumnRows) {
+        // Create unified grid for two-column sections
+        const allFields: JSX.Element[] = [];
+        
+        section.rows.forEach((row, rowIndex) => {
+          if (row.type === 'two-column') {
+            const leftFields = row.leftColumn || [];
+            const rightFields = row.rightColumn || [];
+            const maxFields = Math.max(leftFields.length, rightFields.length);
+            
+            for (let fieldIndex = 0; fieldIndex < maxFields; fieldIndex++) {
+              const leftField = leftFields[fieldIndex];
+              const rightField = rightFields[fieldIndex];
+              
+              // Left Label
+              if (leftField) {
+                allFields.push(
+                  <Label 
+                    key={`left-label-${rowIndex}-${fieldIndex}`}
+                    htmlFor={leftField.key as string} 
+                    className="text-sm font-medium text-right self-center"
+                  >
+                    {leftField.label}
+                    {(leftField.validation?.isRequired || leftField.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
+                  </Label>
+                );
+              } else {
+                allFields.push(<div key={`left-label-empty-${rowIndex}-${fieldIndex}`} />);
+              }
+              
+              // Left Field
+              if (leftField) {
+                const fieldWithModified = {
+                  ...leftField,
+                  isModified: modifiedFields.has(leftField.key as string)
+                };
+                allFields.push(
+                  <div key={`left-field-${rowIndex}-${fieldIndex}`} className={leftField.wrapperClassName || ''}>
+                    {renderField(fieldWithModified, changeTracking)}
+                    {renderFieldValidation(fieldWithModified)}
+                  </div>
+                );
+              } else {
+                allFields.push(<div key={`left-field-empty-${rowIndex}-${fieldIndex}`} />);
+              }
+              
+              // Right Label
+              if (rightField) {
+                allFields.push(
+                  <Label 
+                    key={`right-label-${rowIndex}-${fieldIndex}`}
+                    htmlFor={rightField.key as string} 
+                    className="text-sm font-medium text-right self-center"
+                  >
+                    {rightField.label}
+                    {(rightField.validation?.isRequired || rightField.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
+                  </Label>
+                );
+              } else {
+                allFields.push(<div key={`right-label-empty-${rowIndex}-${fieldIndex}`} />);
+              }
+              
+              // Right Field
+              if (rightField) {
+                const fieldWithModified = {
+                  ...rightField,
+                  isModified: modifiedFields.has(rightField.key as string)
+                };
+                allFields.push(
+                  <div key={`right-field-${rowIndex}-${fieldIndex}`} className={rightField.wrapperClassName || ''}>
+                    {renderField(fieldWithModified, changeTracking)}
+                    {renderFieldValidation(fieldWithModified)}
+                  </div>
+                );
+              } else {
+                allFields.push(<div key={`right-field-empty-${rowIndex}-${fieldIndex}`} />);
+              }
+            }
+          } else {
+            // Non two-column rows
+            allFields.push(
+              <div key={`other-row-${rowIndex}`} className="col-span-full">
+                {renderRow(row, rowIndex)}
+              </div>
+            );
+          }
+        });
+        
+        return {
+          id: section.id,
+          label: section.label,
+          content: (
+            <div className="grid grid-cols-1 md:grid-cols-[130px_minmax(0,1fr)_130px_minmax(0,1fr)] gap-x-6 gap-y-4">
+              {allFields}
+            </div>
+          )
+        };
+      } else {
+        // Regular sections without two-column rows
+        return {
+          id: section.id,
+          label: section.label,
+          content: (
+            <div className="space-y-4">
+              {section.rows.map((row, rowIndex) => renderRow(row, rowIndex))}
+            </div>
+          )
+        };
+      }
+    });
+  }, [sections, renderRow, modifiedFields, changeTracking, renderField, renderFieldValidation]);
 
   // ========================================================================
   // RENDER
