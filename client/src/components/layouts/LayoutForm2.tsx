@@ -378,6 +378,35 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   }, [form, checkForChanges, changeTracking]);
 
   // ========================================================================
+  // FIELD PAIR HELPER - UNIFIED GRID APPROACH  
+  // ========================================================================
+  
+  const renderFieldPair = (field: FormField2<T>, columnIndex: number) => {
+    const labelCol = columnIndex === 0 ? 'md:col-[1]' : 'md:col-[3]';
+    const fieldCol = columnIndex === 0 ? 'md:col-[2]' : 'md:col-[4]';
+    const fieldWithModified = {
+      ...field,
+      isModified: modifiedFields.has(field.key as string)
+    };
+
+    return (
+      <div key={field.key as string} className="contents">
+        <Label 
+          htmlFor={field.key as string} 
+          className={`text-sm font-medium text-left md:text-right self-center ${labelCol}`}
+        >
+          {field.label}
+          {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
+        </Label>
+        <div className={`${fieldCol} ${field.wrapperClassName || ''}`}>
+          {renderField(fieldWithModified, changeTracking)}
+          {renderFieldValidation(fieldWithModified)}
+        </div>
+      </div>
+    );
+  };
+
+  // ========================================================================
   // RENDER HELPERS
   // ========================================================================
   
@@ -399,191 +428,35 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       
       case 'field':
         if (!row.field) return null;
-        
-        const field = {
-          ...row.field,
-          isModified: modifiedFields.has(row.field.key as string)
-        };
-        
-        return (
-          <div key={field.key as string} className={`flex items-center gap-6 w-full max-w-[540px] ${row.className || ''}`}>
-            <Label 
-              htmlFor={field.key as string} 
-              className="text-sm font-medium text-right w-[130px] shrink-0"
-            >
-              {field.label}
-              {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
-            </Label>
-            <div className={`w-[380px] ${field.wrapperClassName || ''}`}>
-              {renderField(field, changeTracking)}
-              {renderFieldValidation(field)}
-            </div>
-          </div>
-        );
+        return renderFieldPair(row.field, 0); // Always use left column (index 0) for single field rows
       
       case 'fields':
         if (!row.fields || row.fields.length === 0) return null;
         
-        // Handle multi-field layouts (like the three-column layout in CustomerFormLayout)
+        // Render all fields as field pairs using the grid system
         return (
-          <div key={`fields-${rowIndex}`} className={`flex items-center gap-6 w-full max-w-[540px] ${row.className || ''}`}>
-            {/* First field's label */}
-            <Label 
-              htmlFor={row.fields[0].key as string} 
-              className="text-sm font-medium text-right w-[130px] shrink-0"
-            >
-              {row.fields[0].label}
-              {(row.fields[0].validation?.isRequired || row.fields[0].validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
-            </Label>
-            
-            {/* Multi-column field layout with individual containers */}
-            <div className="w-[380px] flex gap-16 items-center">
-              {row.fields.map((field, fieldIndex) => {
-                const fieldWithModified = {
-                  ...field,
-                  isModified: modifiedFields.has(field.key as string)
-                };
-                
-                if (fieldIndex === 0) {
-                  // First field (no label, already rendered above)
-                  return (
-                    <div key={field.key as string} className={`flex-1 ${field.wrapperClassName || ''}`}>
-                      {renderField(fieldWithModified, changeTracking)}
-                      {renderFieldValidation(fieldWithModified)}
-                    </div>
-                  );
-                } else {
-                  // All other fields with label to the left
-                  return (
-                    <div key={field.key as string} className="flex items-center gap-6">
-                      <Label 
-                        htmlFor={field.key as string} 
-                        className="text-sm font-medium text-right w-[130px] shrink-0"
-                      >
-                        {field.label}
-                        {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
-                      </Label>
-                      <div className={`flex-1 ${field.wrapperClassName || ''}`}>
-                        {renderField(fieldWithModified, changeTracking)}
-                        {renderFieldValidation(fieldWithModified)}
-                      </div>
-                    </div>
-                  );
-                }
-              })}
-              
-              {/* Fill empty cells if odd number of fields */}
-              {row.fields.length % 2 === 1 && row.fields.length > 1 && (
-                <div></div>
-              )}
-            </div>
-            
-            {/* Additional fields beyond the first 3 */}
-            {row.fields.slice(3).map((field) => {
-              const fieldWithModified = {
-                ...field,
-                isModified: modifiedFields.has(field.key as string)
-              };
-              
-              return (
-                <div key={field.key as string} className="flex items-center gap-6 w-full max-w-[540px] mt-1">
-                  <Label 
-                    htmlFor={field.key as string} 
-                    className="text-sm font-medium text-right w-[130px] shrink-0"
-                  >
-                    {field.label}
-                    {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
-                  </Label>
-                  <div className={`w-[380px] ${field.wrapperClassName || ''}`}>
-                    {renderField(fieldWithModified, changeTracking)}
-                    {renderFieldValidation(fieldWithModified)}
-                  </div>
-                </div>
-              );
-            })}
+          <div key={`fields-${rowIndex}`} className="contents">
+            {row.fields.map((field, fieldIndex) => 
+              renderFieldPair(field, fieldIndex % 2) // Alternate between left (0) and right (1) columns
+            )}
           </div>
         );
       
       case 'two-column':
         const leftFields = row.leftColumn || [];
         const rightFields = row.rightColumn || [];
-        
-        // Calculate max fields to ensure grid alignment
         const maxFields = Math.max(leftFields.length, rightFields.length);
         
         return (
-          <div key={`two-column-${rowIndex}`} className={`grid grid-cols-1 md:grid-cols-[130px_minmax(0,1fr)_130px_minmax(0,1fr)] gap-x-6 gap-y-4 ${row.className || ''}`}>
+          <div key={`two-column-${rowIndex}`} className="contents">
             {Array.from({ length: maxFields }, (_, fieldIndex) => {
               const leftField = leftFields[fieldIndex];
               const rightField = rightFields[fieldIndex];
               
               return (
-                <div key={`grid-row-${fieldIndex}`} className="contents">
-                  {/* Left Label */}
-                  {leftField ? (
-                    <Label 
-                      htmlFor={leftField.key as string} 
-                      className="text-sm font-medium text-right self-center md:col-start-1"
-                    >
-                      {leftField.label}
-                      {(leftField.validation?.isRequired || leftField.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
-                    </Label>
-                  ) : (
-                    <div className="hidden md:block md:col-start-1"></div>
-                  )}
-                  
-                  {/* Left Field */}
-                  {leftField ? (
-                    <div className={`md:col-start-2 ${leftField.wrapperClassName || ''}`}>
-                      {(() => {
-                        const fieldWithModified = {
-                          ...leftField,
-                          isModified: modifiedFields.has(leftField.key as string)
-                        };
-                        return (
-                          <>
-                            {renderField(fieldWithModified, changeTracking)}
-                            {renderFieldValidation(fieldWithModified)}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  ) : (
-                    <div className="hidden md:block md:col-start-2"></div>
-                  )}
-                  
-                  {/* Right Label */}
-                  {rightField ? (
-                    <Label 
-                      htmlFor={rightField.key as string} 
-                      className="text-sm font-medium text-right self-center md:col-start-3"
-                    >
-                      {rightField.label}
-                      {(rightField.validation?.isRequired || rightField.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
-                    </Label>
-                  ) : (
-                    <div className="hidden md:block md:col-start-3"></div>
-                  )}
-                  
-                  {/* Right Field */}
-                  {rightField ? (
-                    <div className={`md:col-start-4 ${rightField.wrapperClassName || ''}`}>
-                      {(() => {
-                        const fieldWithModified = {
-                          ...rightField,
-                          isModified: modifiedFields.has(rightField.key as string)
-                        };
-                        return (
-                          <>
-                            {renderField(fieldWithModified, changeTracking)}
-                            {renderFieldValidation(fieldWithModified)}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  ) : (
-                    <div className="hidden md:block md:col-start-4"></div>
-                  )}
+                <div key={`row-${fieldIndex}`} className="contents">
+                  {leftField && renderFieldPair(leftField, 0)}
+                  {rightField && renderFieldPair(rightField, 1)}
                 </div>
               );
             })}
@@ -600,121 +473,16 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   // ========================================================================
   
   const tabs: FormTab[] = useMemo(() => {
-    return sections.map(section => {
-      // Check if section contains two-column rows
-      const hasTwoColumnRows = section.rows.some(row => row.type === 'two-column');
-      
-      if (hasTwoColumnRows) {
-        // Create unified grid for two-column sections
-        const allFields: JSX.Element[] = [];
-        
-        section.rows.forEach((row, rowIndex) => {
-          if (row.type === 'two-column') {
-            const leftFields = row.leftColumn || [];
-            const rightFields = row.rightColumn || [];
-            const maxFields = Math.max(leftFields.length, rightFields.length);
-            
-            for (let fieldIndex = 0; fieldIndex < maxFields; fieldIndex++) {
-              const leftField = leftFields[fieldIndex];
-              const rightField = rightFields[fieldIndex];
-              
-              // Left Label
-              if (leftField) {
-                allFields.push(
-                  <Label 
-                    key={`left-label-${rowIndex}-${fieldIndex}`}
-                    htmlFor={leftField.key as string} 
-                    className="text-sm font-medium text-right self-center"
-                  >
-                    {leftField.label}
-                    {(leftField.validation?.isRequired || leftField.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
-                  </Label>
-                );
-              } else {
-                allFields.push(<div key={`left-label-empty-${rowIndex}-${fieldIndex}`} />);
-              }
-              
-              // Left Field
-              if (leftField) {
-                const fieldWithModified = {
-                  ...leftField,
-                  isModified: modifiedFields.has(leftField.key as string)
-                };
-                allFields.push(
-                  <div key={`left-field-${rowIndex}-${fieldIndex}`} className={leftField.wrapperClassName || ''}>
-                    {renderField(fieldWithModified, changeTracking)}
-                    {renderFieldValidation(fieldWithModified)}
-                  </div>
-                );
-              } else {
-                allFields.push(<div key={`left-field-empty-${rowIndex}-${fieldIndex}`} />);
-              }
-              
-              // Right Label
-              if (rightField) {
-                allFields.push(
-                  <Label 
-                    key={`right-label-${rowIndex}-${fieldIndex}`}
-                    htmlFor={rightField.key as string} 
-                    className="text-sm font-medium text-right self-center"
-                  >
-                    {rightField.label}
-                    {(rightField.validation?.isRequired || rightField.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
-                  </Label>
-                );
-              } else {
-                allFields.push(<div key={`right-label-empty-${rowIndex}-${fieldIndex}`} />);
-              }
-              
-              // Right Field
-              if (rightField) {
-                const fieldWithModified = {
-                  ...rightField,
-                  isModified: modifiedFields.has(rightField.key as string)
-                };
-                allFields.push(
-                  <div key={`right-field-${rowIndex}-${fieldIndex}`} className={rightField.wrapperClassName || ''}>
-                    {renderField(fieldWithModified, changeTracking)}
-                    {renderFieldValidation(fieldWithModified)}
-                  </div>
-                );
-              } else {
-                allFields.push(<div key={`right-field-empty-${rowIndex}-${fieldIndex}`} />);
-              }
-            }
-          } else {
-            // Non two-column rows
-            allFields.push(
-              <div key={`other-row-${rowIndex}`} className="col-span-full">
-                {renderRow(row, rowIndex)}
-              </div>
-            );
-          }
-        });
-        
-        return {
-          id: section.id,
-          label: section.label,
-          content: (
-            <div className="grid grid-cols-1 md:grid-cols-[130px_minmax(0,1fr)_130px_minmax(0,1fr)] gap-x-6 gap-y-4">
-              {allFields}
-            </div>
-          )
-        };
-      } else {
-        // Regular sections without two-column rows
-        return {
-          id: section.id,
-          label: section.label,
-          content: (
-            <div className="space-y-4">
-              {section.rows.map((row, rowIndex) => renderRow(row, rowIndex))}
-            </div>
-          )
-        };
-      }
-    });
-  }, [sections, renderRow, modifiedFields, changeTracking, renderField, renderFieldValidation]);
+    return sections.map(section => ({
+      id: section.id,
+      label: section.label,
+      content: (
+        <div className="grid grid-cols-1 md:grid-cols-[130px_minmax(0,1fr)_130px_minmax(0,1fr)] gap-x-6 gap-y-4">
+          {section.rows.map((row, rowIndex) => renderRow(row, rowIndex))}
+        </div>
+      )
+    }));
+  }, [sections, renderRow]);
 
   // ========================================================================
   // RENDER
