@@ -398,9 +398,11 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
           {field.label}
           {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
         </Label>
-        <div className={`${fieldCol} ${field.wrapperClassName || ''}`}>
+        <div className={`${fieldCol} ${field.wrapperClassName || ''} space-y-1`}>
           {renderField(fieldWithModified, changeTracking)}
-          {renderFieldValidation(fieldWithModified)}
+          <div className="min-h-[1.25rem]">
+            {renderFieldValidation(fieldWithModified)}
+          </div>
         </div>
       </div>
     );
