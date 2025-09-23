@@ -203,7 +203,7 @@ function renderField<T extends FieldValues>(
   field: FormField2<T>, 
   changeTracking?: ChangeTrackingConfig
 ): ReactNode {
-  const className = getFieldClassName(field as FormField2<FieldValues>, changeTracking);
+  const className = getFieldClassName(field as FormField2<FieldValues>, changeTracking, "w-full");
   
   const baseProps = {
     id: field.key as string,
