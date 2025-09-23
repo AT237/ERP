@@ -511,7 +511,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         return (
           <div key={`two-column-${rowIndex}`} className={`flex gap-8 ${row.className || ''}`}>
             {/* Left Column */}
-            <div className="flex flex-col">
+            <div className="flex flex-col space-y-4">
               {leftFields.map((field) => {
                 const fieldWithModified = {
                   ...field,
@@ -537,7 +537,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
             </div>
             
             {/* Right Column */}
-            <div className="flex flex-col">
+            <div className="flex flex-col space-y-4">
               {rightFields.map((field) => {
                 const fieldWithModified = {
                   ...field,
