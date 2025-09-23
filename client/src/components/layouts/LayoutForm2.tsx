@@ -393,7 +393,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       <div key={field.key as string} className="contents">
         <Label 
           htmlFor={field.key as string} 
-          className={`text-sm font-medium text-left md:text-right self-center ${labelCol}`}
+          className={`text-sm font-medium text-left md:text-right self-start pt-2 ${labelCol}`}
         >
           {field.label}
           {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
