@@ -488,20 +488,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             watch: () => form.watch("language") || "nl",
             testId: "select-customer-language"
           } as FormField2<CustomerFormData>,
-          // Positie 4: Contact person
-          {
-            key: "contactPersonEmail",
-            label: "Contact Person",
-            type: "custom",
-            customComponent: (
-              <ContactPersonSelectWithAdd
-                value={form.watch("contactPersonEmail") || ""}
-                onValueChange={(value) => form.setValue("contactPersonEmail", value)}
-                placeholder="Selecteer contactpersoon..."
-                testId="select-customer-contact-person"
-              />
-            )
-          } as FormField2<CustomerFormData>,
           // Positie 5: KVK-nummer
           {
             key: "kvkNummer",
@@ -603,28 +589,30 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       label: "Financial",
       icon: <CreditCard className="h-4 w-4" />,
       rows: [
-        createSectionHeaderRow("Financial Information"),
-        createFieldRow({
+        createFieldsRow([
+          // Positie 1: Bank Account
+          {
             key: "bankAccount",
-            label: "Bankrekeningnummer",
+            label: "Bank Account",
             type: "text",
             register: form.register("bankAccount"),
             validation: {
               error: form.formState.errors.bankAccount?.message
             },
             testId: "input-customer-bank-account"
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
+          } as FormField2<CustomerFormData>,
+          // Positie 2: Payment Terms
+          {
             key: "paymentTerms",
-            label: "Betalingsvoorwaarden",
+            label: "Payment Terms",
             type: "select",
             options: [
               { value: "0", label: "Direct" },
-              { value: "7", label: "7 dagen" },
-              { value: "14", label: "14 dagen" },
-              { value: "30", label: "30 dagen" },
-              { value: "60", label: "60 dagen" },
-              { value: "90", label: "90 dagen" }
+              { value: "7", label: "7 days" },
+              { value: "14", label: "14 days" },
+              { value: "30", label: "30 days" },
+              { value: "60", label: "60 days" },
+              { value: "90", label: "90 days" }
             ],
             setValue: (value) => form.setValue("paymentTerms", value),
             watch: () => form.watch("paymentTerms") || "30",
@@ -633,18 +621,20 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               error: form.formState.errors.paymentTerms?.message
             },
             testId: "select-customer-payment-terms"
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
+          } as FormField2<CustomerFormData>,
+          // Positie 3: Invoice Email
+          {
             key: "invoiceEmail",
-            label: "Factuur email",
+            label: "Invoice Email",
             type: "email",
             register: form.register("invoiceEmail"),
             validation: {
               error: form.formState.errors.invoiceEmail?.message
             },
             testId: "input-customer-invoice-email"
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
+          } as FormField2<CustomerFormData>,
+          // Positie 4: Status
+          {
             key: "status",
             label: "Status",
             type: "select",
@@ -656,17 +646,20 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             setValue: (value) => form.setValue("status", value),
             watch: () => form.watch("status") || "active",
             testId: "select-customer-status"
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
-          key: "invoiceNotes",
-          label: "Factuur notities",
-          type: "textarea",
-          register: form.register("invoiceNotes"),
-          validation: {
-            error: form.formState.errors.invoiceNotes?.message
-          },
-          testId: "textarea-customer-invoice-notes"
-        })
+          } as FormField2<CustomerFormData>,
+          // Positie 5: Invoice Notes
+          {
+            key: "invoiceNotes",
+            label: "Invoice Notes",
+            type: "textarea",
+            register: form.register("invoiceNotes"),
+            validation: {
+              error: form.formState.errors.invoiceNotes?.message
+            },
+            testId: "textarea-customer-invoice-notes"
+          } as FormField2<CustomerFormData>
+          // Positie 6-12: automatisch leeg
+        ])
       ]
     }
   ];
