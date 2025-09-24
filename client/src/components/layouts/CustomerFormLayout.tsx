@@ -565,52 +565,42 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       icon: <User className="h-4 w-4" />,
       rows: [
         createSectionHeaderRow("Contact Information"),
-        createTwoColumnRow(
-          [
-            {
-              key: "email",
-              label: "Email",
-              type: "email",
-              register: form.register("email"),
-              validation: {
-                error: form.formState.errors.email?.message
-              },
-              testId: "input-customer-email"
-            } as FormField2<CustomerFormData>,
-            {
-              key: "phone",
-              label: "Telefoon",
-              type: "text",
-              register: form.register("phone"),
-              validation: {
-                error: form.formState.errors.phone?.message
-              },
-              testId: "input-customer-phone"
-            } as FormField2<CustomerFormData>
-          ],
-          [
-            {
-              key: "generalEmail",
-              label: "Algemene Email",
-              type: "email",
-              register: form.register("generalEmail"),
-              validation: {
-                error: form.formState.errors.generalEmail?.message
-              },
-              testId: "input-customer-general-email"
-            } as FormField2<CustomerFormData>,
-            {
-              key: "mobile",
-              label: "Mobiel",
-              type: "text",
-              register: form.register("mobile"),
-              validation: {
-                error: form.formState.errors.mobile?.message
-              },
-              testId: "input-customer-mobile"
-            } as FormField2<CustomerFormData>
-          ]
-        )
+        createFieldsRow([
+          // Positie 1: General Email
+          {
+            key: "generalEmail",
+            label: "General Email",
+            type: "email",
+            register: form.register("generalEmail"),
+            validation: {
+              error: form.formState.errors.generalEmail?.message
+            },
+            testId: "input-customer-general-email"
+          } as FormField2<CustomerFormData>,
+          // Positie 2: Phone
+          {
+            key: "phone",
+            label: "Phone",
+            type: "text",
+            register: form.register("phone"),
+            validation: {
+              error: form.formState.errors.phone?.message
+            },
+            testId: "input-customer-phone"
+          } as FormField2<CustomerFormData>,
+          // Positie 3: Mobile
+          {
+            key: "mobile",
+            label: "Mobile",
+            type: "text",
+            register: form.register("mobile"),
+            validation: {
+              error: form.formState.errors.mobile?.message
+            },
+            testId: "input-customer-mobile"
+          } as FormField2<CustomerFormData>
+          // Positie 4-12: automatisch leeg
+        ])
       ]
     },
     {
