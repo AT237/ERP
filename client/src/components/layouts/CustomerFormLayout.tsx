@@ -488,7 +488,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               key: "countryCode",
               label: "Country",
               type: "custom",
-              render: () => (
+              customComponent: (
                 <CountrySelectWithAdd
                   value={form.watch("countryCode") || ""}
                   onValueChange={(value) => form.setValue("countryCode", value)}
@@ -526,7 +526,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               key: "addressId",
               label: "Adres",
               type: "custom",
-              render: () => (
+              customComponent: (
                 <AddressSelectWithAdd
                   value={form.watch("addressId") || ""}
                   onValueChange={(value) => form.setValue("addressId", value)}
@@ -595,7 +595,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             key: "contactPersonEmail",
             label: "Contactpersoon",
             type: "custom",
-            render: () => (
+            customComponent: (
               <ContactPersonSelectWithAdd
                 value={form.watch("contactPersonEmail") || ""}
                 onValueChange={(value) => form.setValue("contactPersonEmail", value)}
