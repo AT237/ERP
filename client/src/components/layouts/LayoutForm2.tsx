@@ -493,7 +493,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         id: section.id,
         label: section.label,
         content: (
-          <div className="grid grid-rows-6 gap-[10px] min-h-[360px] pt-[10px]">
+          <div className="grid grid-rows-6 gap-[10px] min-h-[280px] pt-[10px]">
             {/* Rij 1 */}
             <div className="grid grid-cols-2 gap-8">
               {allFields[0] && renderSimpleField(allFields[0])}
