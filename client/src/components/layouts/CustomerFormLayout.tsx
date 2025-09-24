@@ -502,7 +502,18 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               />
             )
           } as FormField2<CustomerFormData>,
-          // Positie 5 & 6: leeg (worden automatisch opgevuld met undefined)
+          // Positie 5: KVK-nummer
+          {
+            key: "kvkNummer",
+            label: "KVK-nummer",
+            type: "text",
+            register: form.register("kvkNummer"),
+            validation: {
+              error: form.formState.errors.kvkNummer?.message
+            },
+            testId: "input-customer-kvk-nummer"
+          } as FormField2<CustomerFormData>,
+          // Positie 6: leeg (wordt automatisch opgevuld met undefined)
           
           // Positie 7: Country
           {
