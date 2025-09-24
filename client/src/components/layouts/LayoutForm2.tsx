@@ -473,15 +473,13 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       id: section.id,
       label: section.label,
       content: (
-        <div className="border-2 border-orange-400 rounded-lg p-6 bg-white dark:bg-gray-900">
-          <div className="min-h-[600px] flex flex-col">
-            <div className="grid grid-rows-6 gap-4 flex-1">
-              {section.rows.map((row, rowIndex) => (
-                <div key={`row-${rowIndex}`} className="border border-gray-200 dark:border-gray-700 rounded p-4">
-                  {renderRow(row, rowIndex)}
-                </div>
-              ))}
-            </div>
+        <div className="min-h-[600px] flex flex-col">
+          <div className="grid grid-rows-6 gap-4 flex-1">
+            {section.rows.map((row, rowIndex) => (
+              <div key={`row-${rowIndex}`} className="border border-gray-200 dark:border-gray-700 rounded p-4">
+                {renderRow(row, rowIndex)}
+              </div>
+            ))}
           </div>
         </div>
       )
