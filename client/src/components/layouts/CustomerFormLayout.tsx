@@ -488,6 +488,20 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             watch: () => form.watch("language") || "nl",
             testId: "select-customer-language"
           } as FormField2<CustomerFormData>,
+          // Positie 4: Contact Person
+          {
+            key: "contactPersonEmail",
+            label: "Contact Person",
+            type: "custom",
+            customComponent: (
+              <ContactPersonSelectWithAdd
+                value={form.watch("contactPersonEmail") || ""}
+                onValueChange={(value) => form.setValue("contactPersonEmail", value)}
+                placeholder="Select contact person..."
+                testId="select-customer-contact-person"
+              />
+            )
+          } as FormField2<CustomerFormData>,
           // Positie 5: KVK-nummer
           {
             key: "kvkNummer",
