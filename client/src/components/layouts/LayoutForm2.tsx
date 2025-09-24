@@ -398,9 +398,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         </Label>
         <div className={field.wrapperClassName || ''}>
           {renderField(fieldWithModified, changeTracking)}
-          <div className="min-h-[1.25rem]">
-            {renderFieldValidation(fieldWithModified)}
-          </div>
+          {renderFieldValidation(fieldWithModified)}
         </div>
       </div>
     );
