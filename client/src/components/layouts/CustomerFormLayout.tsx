@@ -532,11 +532,10 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           // Positie 8: BTW-nummer
           {
             key: "taxId",
-            label: `BTW-nummer${currentCountryRequirements.requiresBtw ? ' *' : ''}`,
+            label: "BTW-nummer",
             type: "text",
             register: form.register("taxId"),
             validation: {
-              isRequired: currentCountryRequirements.requiresBtw,
               error: form.formState.errors.taxId?.message
             },
             testId: "input-customer-tax-id"
