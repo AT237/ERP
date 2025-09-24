@@ -32,6 +32,7 @@ const baseCustomerFormSchema = insertCustomerSchema.extend({
   }),
   countryCode: z.string().optional(),
   areaCode: z.string().optional(),
+  memo: z.string().optional(),
 });
 
 // Create dynamic schema based on country requirements
@@ -115,6 +116,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       bankAccount: "",
       invoiceEmail: "",
       invoiceNotes: "",
+      memo: "",
       language: "nl",
       paymentTerms: "30",
       status: "active",
@@ -228,6 +230,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         bankAccount: customer.bankAccount || "",
         invoiceEmail: customer.invoiceEmail || "",
         invoiceNotes: customer.invoiceNotes || "",
+        memo: customer.memo || "",
         language: customer.language || "nl",
         paymentTerms: customer.paymentTerms?.toString() || "30",
         status: customer.status || "active",
@@ -539,8 +542,20 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               error: form.formState.errors.taxId?.message
             },
             testId: "input-customer-tax-id"
+          } as FormField2<CustomerFormData>,
+          // Positie 9: Memo (zal over meerdere posities lopen door colspan styling)
+          {
+            key: "memo",
+            label: "Memo",
+            type: "textarea",
+            register: form.register("memo"),
+            validation: {
+              error: form.formState.errors.memo?.message
+            },
+            wrapperClassName: "col-span-2", // Neemt beide kolommen in (spanning over positie 9-10)
+            testId: "textarea-customer-memo"
           } as FormField2<CustomerFormData>
-          // Positie 9-12: automatisch leeg
+          // Positie 10-12: automatisch leeg
         ])
       ]
     },

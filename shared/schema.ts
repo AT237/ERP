@@ -79,6 +79,7 @@ export const customers = pgTable("customers", {
   bankAccount: text("bank_account"),
   invoiceEmail: text("invoice_email"), // Email for invoices
   invoiceNotes: text("invoice_notes"), // Notes for invoice handling
+  memo: text("memo"), // General notes and memo
   language: text("language").default("nl"),
   paymentTerms: integer("payment_terms").default(30),
   status: text("status").default("active"),
