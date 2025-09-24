@@ -382,21 +382,23 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   // ========================================================================
   
   const renderFieldPair = (field: FormField2<T>, columnIndex: number) => {
+    const labelCol = columnIndex === 0 ? 'md:col-[1]' : 'md:col-[3]';
+    const fieldCol = columnIndex === 0 ? 'md:col-[2]' : 'md:col-[4]';
     const fieldWithModified = {
       ...field,
       isModified: modifiedFields.has(field.key as string)
     };
 
     return (
-      <div key={field.key as string} className="border-2 border-orange-400 rounded-lg p-4 bg-white dark:bg-gray-900">
+      <div key={field.key as string} className="contents">
         <Label 
           htmlFor={field.key as string} 
-          className="text-sm font-medium text-left block mb-2"
+          className={`text-sm font-medium text-left md:text-right self-start pt-2 ${labelCol}`}
         >
           {field.label}
           {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
         </Label>
-        <div className={`${field.wrapperClassName || ''} space-y-1`}>
+        <div className={`${fieldCol} ${field.wrapperClassName || ''} space-y-1`}>
           {renderField(fieldWithModified, changeTracking)}
           <div className="min-h-[1.25rem]">
             {renderFieldValidation(fieldWithModified)}
@@ -428,20 +430,16 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       
       case 'field':
         if (!row.field) return null;
-        return (
-          <div key={`field-${rowIndex}`} className="grid grid-cols-1 gap-4 mb-4">
-            {renderFieldPair(row.field, 0)}
-          </div>
-        );
+        return renderFieldPair(row.field, 0); // Always use left column (index 0) for single field rows
       
       case 'fields':
         if (!row.fields || row.fields.length === 0) return null;
         
-        // Render all fields in a responsive grid
+        // Render all fields as field pairs using the grid system
         return (
-          <div key={`fields-${rowIndex}`} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div key={`fields-${rowIndex}`} className="contents">
             {row.fields.map((field, fieldIndex) => 
-              renderFieldPair(field, fieldIndex)
+              renderFieldPair(field, fieldIndex % 2) // Alternate between left (0) and right (1) columns
             )}
           </div>
         );
@@ -449,13 +447,21 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       case 'two-column':
         const leftFields = row.leftColumn || [];
         const rightFields = row.rightColumn || [];
-        const allFields = [...leftFields, ...rightFields];
+        const maxFields = Math.max(leftFields.length, rightFields.length);
         
         return (
-          <div key={`two-column-${rowIndex}`} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            {allFields.map((field, fieldIndex) => 
-              renderFieldPair(field, fieldIndex)
-            )}
+          <div key={`two-column-${rowIndex}`} className="contents">
+            {Array.from({ length: maxFields }, (_, fieldIndex) => {
+              const leftField = leftFields[fieldIndex];
+              const rightField = rightFields[fieldIndex];
+              
+              return (
+                <div key={`row-${fieldIndex}`} className="contents">
+                  {leftField && renderFieldPair(leftField, 0)}
+                  {rightField && renderFieldPair(rightField, 1)}
+                </div>
+              );
+            })}
           </div>
         );
       
@@ -473,7 +479,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       id: section.id,
       label: section.label,
       content: (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-[130px_minmax(0,1fr)_130px_minmax(0,1fr)] gap-x-6 gap-y-4">
           {section.rows.map((row, rowIndex) => renderRow(row, rowIndex))}
         </div>
       )
