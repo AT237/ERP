@@ -409,6 +409,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   };
 
   // Old manual HTML form code removed - using LayoutForm2 unified system
+  // The following code is commented out as it's replaced by LayoutForm2
   /*
   const tabs = [
     {
