@@ -409,385 +409,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   };
 
   // Old manual HTML form code removed - using LayoutForm2 unified system
-  // The following code is commented out as it's replaced by LayoutForm2
-  /*
-  const tabs = [
-    {
-      id: "general",
-      label: "General",
-      content: (
-        <div key={formKey} className="space-y-4">
-          {/* Bedrijfsnaam + Country */}
-          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6">
-            <Label htmlFor="name" className="text-sm font-medium text-right">Bedrijfsnaam *</Label>
-            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
-              <div>
-                <Input
-                  id="name"
-                  {...form.register("name")}
-                  placeholder="Bedrijfsnaam"
-                  autoComplete="off"
-                  data-testid="input-customer-name"
-                  className={getFieldClassName("name")}
-                />
-                {form.formState.errors.name && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.name.message}</p>
-                )}
-              </div>
-              <div className="text-sm font-medium text-right">
-                Country
-              </div>
-              <div>
-                <CountrySelectWithAdd
-                  value={form.watch("countryCode") || ""}
-                  onValueChange={(value) => form.setValue("countryCode", value)}
-                  placeholder="Selecteer land..."
-                  testId="select-customer-country"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* KVK-nummer + Area Code */}
-          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6">
-            <Label htmlFor="kvkNummer" className="text-sm font-medium text-right">KVK-nummer</Label>
-            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
-              <div>
-                <Input
-                  id="kvkNummer"
-                  {...form.register("kvkNummer")}
-                  placeholder="12345678"
-                  maxLength={8}
-                  data-testid="input-customer-kvk-nummer"
-                  className={getFieldClassName("kvkNummer")}
-                />
-                {form.formState.errors.kvkNummer && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.kvkNummer.message}</p>
-                )}
-              </div>
-              <div className="text-sm font-medium text-right">
-                Area Code{currentCountryRequirements.requiresAreaCode && <span className="text-red-600 ml-1">*</span>}
-              </div>
-              <div>
-                <Input
-                  id="areaCode"
-                  {...form.register("areaCode")}
-                  placeholder="Voer area code in"
-                  data-testid="input-customer-areaCode"
-                  className={currentCountryRequirements.requiresAreaCode ? "border-orange-300 focus:border-orange-500" : ""}
-                />
-                <div className="h-5 mt-1">
-                  {form.formState.errors.areaCode ? (
-                    <p className="text-sm text-red-600">{form.formState.errors.areaCode.message}</p>
-                  ) : currentCountryRequirements.requiresAreaCode ? (
-                    <p className="text-sm text-orange-600">
-                      Area code is verplicht voor {countryData?.name || 'dit land'}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* BTW-nummer */}
-          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6">
-            <Label htmlFor="taxId" className="text-sm font-medium text-right">BTW-nummer{currentCountryRequirements.requiresBtw && <span className="text-red-600 ml-1">*</span>}</Label>
-            <div className="w-[30%]">
-              <Input
-                id="taxId"
-                {...form.register("taxId")}
-                placeholder="NL123456789B01"
-                data-testid="input-customer-taxId"
-                className={getFieldClassName("taxId", currentCountryRequirements.requiresBtw ? "border-orange-300 focus:border-orange-500" : "")}
-              />
-              {currentCountryRequirements.requiresBtw && (
-                <p className="text-sm text-orange-600 mt-1">
-                  BTW nummer is verplicht voor {countryData?.name || 'dit land'}
-                </p>
-              )}
-              {form.formState.errors.taxId && (
-                <p className="text-sm text-red-600 mt-1">{form.formState.errors.taxId.message}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Taal */}
-          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6">
-            <Label htmlFor="language" className="text-sm font-medium text-right">Taal</Label>
-            <div className="w-[30%]">
-              <Select 
-                onValueChange={(value) => form.setValue("language", value)}
-                value={form.watch("language") || "nl"}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="nl">Nederlands</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="de">Deutsch</SelectItem>
-                  <SelectItem value="fr">Français</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Adres */}
-          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6">
-            <Label htmlFor="addressId" className="text-sm font-medium text-right">Adres</Label>
-            <div className="w-[30%]">
-              <AddressSelectWithAdd
-                value={form.watch("addressId") || ""}
-                onValueChange={(value) => form.setValue("addressId", value)}
-                placeholder="Selecteer adres..."
-                testId="select-customer-address"
-              />
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: "financial",
-      label: "Financial",
-      content: (
-        <div key={formKey} className="space-y-4">
-          <div className="grid grid-cols-[130px_1fr] items-center gap-x-6 gap-y-4">
-            <Label htmlFor="bankAccount" className="text-sm font-medium text-right">Bankrekeningnummer</Label>
-            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
-              <div>
-                <Input
-                  id="bankAccount"
-                  {...form.register("bankAccount")}
-                  placeholder="NL91ABNA0417164300"
-                  data-testid="input-customer-bankAccount"
-                  className={getFieldClassName("bankAccount")}
-                />
-              </div>
-              <div className="text-sm font-medium text-right">
-                Email voor facturen
-              </div>
-              <div>
-                <Input
-                  id="invoiceEmail"
-                  type="email"
-                  {...form.register("invoiceEmail")}
-                  placeholder="facturen@bedrijf.nl"
-                  data-testid="input-customer-invoice-email"
-                  className={getFieldClassName("invoiceEmail")}
-                />
-              </div>
-            </div>
-
-            <Label htmlFor="paymentTerms" className="text-sm font-medium text-right">Betalingsvoorwaarden *</Label>
-            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
-              <div>
-                <Select 
-                  onValueChange={(value) => form.setValue("paymentTerms", value)}
-                  value={form.watch("paymentTerms") || "30"}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="7">7 dagen</SelectItem>
-                    <SelectItem value="14">14 dagen</SelectItem>
-                    <SelectItem value="30">30 dagen</SelectItem>
-                    <SelectItem value="45">45 dagen</SelectItem>
-                    <SelectItem value="60">60 dagen</SelectItem>
-                  </SelectContent>
-                </Select>
-                {form.formState.errors.paymentTerms && (
-                  <p className="text-sm text-red-600">{form.formState.errors.paymentTerms.message}</p>
-                )}
-              </div>
-              <div className="text-sm font-medium text-right">
-                Status
-              </div>
-              <div>
-                <Select 
-                  onValueChange={(value) => form.setValue("status", value)}
-                  value={form.watch("status") || "active"}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Actief</SelectItem>
-                    <SelectItem value="inactive">Inactief</SelectItem>
-                    <SelectItem value="prospect">Prospect</SelectItem>
-                    <SelectItem value="archived">Gearchiveerd</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Label htmlFor="invoiceNotes" className="text-sm font-medium text-right">Notities voor facturatie</Label>
-            <div>
-              <Textarea
-                id="invoiceNotes"
-                {...form.register("invoiceNotes")}
-                placeholder="Opmerkingen en notities voor factuurbehandeling..."
-                rows={3}
-                data-testid="textarea-customer-invoice-notes"
-                className={getFieldClassName("invoiceNotes")}
-              />
-            </div>
-
-            <Label htmlFor="openstaandePosten" className="text-sm font-medium text-right">Openstaande posten</Label>
-            <div>
-              <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
-                <p className="text-sm text-gray-600 dark:text-gray-400" data-testid="text-openstaande-posten">
-                  {isEditing ? "€ 0,00 (wordt geladen uit externe tabel)" : "€ 0,00 (geen openstaande posten voor nieuwe klant)"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: "contact",
-      label: "Contact",
-      content: (
-        <div key={formKey} className="space-y-4">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-orange-600">Contactinformatie</h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...form.register("email")}
-                  placeholder="info@bedrijf.nl"
-                  data-testid="input-customer-email"
-                  className={getFieldClassName("email")}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <Label htmlFor="phone">Telefoon</Label>
-                <Input
-                  id="phone"
-                  {...form.register("phone")}
-                  placeholder="+31 20 123 4567"
-                  data-testid="input-customer-phone"
-                  className={getFieldClassName("phone")}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <Label htmlFor="mobile">Mobiel</Label>
-                <Input
-                  id="mobile"
-                  {...form.register("mobile")}
-                  placeholder="+31 6 12345678"
-                  data-testid="input-customer-mobile"
-                  className={getFieldClassName("mobile")}
-                />
-              </div>
-            </div>
-
-            {/* Contact Person Selection */}
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-4">
-                <Label htmlFor="contactPersonEmail">Contactpersoon</Label>
-                <ContactPersonSelectWithAdd
-                  value={form.watch("contactPersonEmail") || ""}
-                  onValueChange={(value) => form.setValue("contactPersonEmail", value)}
-                  customerId={customerId}
-                  placeholder="Selecteer contactpersoon..."
-                  testId="select-customer-contact-person"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: "memo",
-      label: "Memo",
-      content: (
-        <div key={formKey} className="space-y-4">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-orange-600">Notities</h3>
-            
-            {/* Add new memo */}
-            <div className="p-4 border rounded-lg space-y-4">
-              <div className="space-y-4">
-                <Label htmlFor="memo-title">Titel</Label>
-                <Input
-                  id="memo-title"
-                  value={newMemo.title}
-                  onChange={(e) => setNewMemo({ ...newMemo, title: e.target.value })}
-                  placeholder="Notitie titel"
-                />
-              </div>
-              
-              <div className="space-y-4">
-                <Label htmlFor="memo-content">Inhoud</Label>
-                <Textarea
-                  id="memo-content"
-                  value={newMemo.content}
-                  onChange={(e) => setNewMemo({ ...newMemo, content: e.target.value })}
-                  placeholder="Notitie inhoud..."
-                  rows={3}
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="memo-internal"
-                  checked={newMemo.isInternal}
-                  onChange={(e) => setNewMemo({ ...newMemo, isInternal: e.target.checked })}
-                />
-                <Label htmlFor="memo-internal">Interne notitie</Label>
-              </div>
-              
-              <Button onClick={handleAddMemo} className="bg-orange-600 hover:bg-orange-700">
-                Notitie toevoegen
-              </Button>
-            </div>
-
-            {/* Display existing memos */}
-            <div className="space-y-4">
-              {memos.map((memo) => (
-                <div key={memo.id} className="p-4 border rounded-lg">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium">{memo.title}</h4>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteMemo(memo.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      Verwijderen
-                    </Button>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">{memo.content}</p>
-                  <div className="flex justify-between items-center text-xs text-gray-500">
-                    <span>{memo.isInternal ? 'Interne notitie' : 'Externe notitie'}</span>
-                    <span>{memo.createdAt.toLocaleDateString()}</span>
-                  </div>
-                </div>
-              ))}
-              
-              {memos.length === 0 && (
-                <p className="text-gray-500 text-center py-4">Geen notities toegevoegd</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )
-    }
-  ];
-  */
 
   // Header fields removed per user request
 
@@ -858,30 +479,16 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 isRequired: currentCountryRequirements.requiresBtw,
                 error: form.formState.errors.taxId?.message
               },
-              testId: "input-customer-taxId"
+              testId: "input-customer-tax-id"
             } as FormField2<CustomerFormData>
           ],
-          // Right Column: Taal, Country, Area Code
+          // Right Column: Country, Area Code, Language, Address
           [
-            {
-              key: "language",
-              label: "Taal",
-              type: "select",
-              options: [
-                { value: "nl", label: "Nederlands" },
-                { value: "en", label: "English" },
-                { value: "de", label: "Deutsch" },
-                { value: "fr", label: "Français" }
-              ],
-              setValue: (value) => form.setValue("language", value),
-              watch: () => form.watch("language") || "nl",
-              testId: "select-customer-language"
-            } as FormField2<CustomerFormData>,
             {
               key: "countryCode",
               label: "Country",
               type: "custom",
-              customComponent: (
+              render: () => (
                 <CountrySelectWithAdd
                   value={form.watch("countryCode") || ""}
                   onValueChange={(value) => form.setValue("countryCode", value)}
@@ -899,34 +506,37 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 isRequired: currentCountryRequirements.requiresAreaCode,
                 error: form.formState.errors.areaCode?.message
               },
-              testId: "input-customer-areaCode"
+              testId: "input-customer-area-code"
+            } as FormField2<CustomerFormData>,
+            {
+              key: "language",
+              label: "Taal",
+              type: "select",
+              options: [
+                { value: "nl", label: "Nederlands" },
+                { value: "en", label: "English" },
+                { value: "de", label: "Deutsch" },
+                { value: "fr", label: "Français" }
+              ],
+              setValue: (value) => form.setValue("language", value),
+              watch: () => form.watch("language") || "nl",
+              testId: "select-customer-language"
+            } as FormField2<CustomerFormData>,
+            {
+              key: "addressId",
+              label: "Adres",
+              type: "custom",
+              render: () => (
+                <AddressSelectWithAdd
+                  value={form.watch("addressId") || ""}
+                  onValueChange={(value) => form.setValue("addressId", value)}
+                  placeholder="Selecteer adres..."
+                  testId="select-customer-address"
+                />
+              )
             } as FormField2<CustomerFormData>
           ]
-        ),
-        createFieldRow({
-            key: "generalEmail",
-            label: "Algemene email",
-            type: "email",
-            register: form.register("generalEmail"),
-            validation: {
-              error: form.formState.errors.generalEmail?.message
-            },
-            testId: "input-customer-general-email"
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
-          key: "addressId",
-          label: "Adres",
-          type: "custom",
-          customComponent: (
-            <AddressSelectWithAdd
-              value={form.watch("addressId") || ""}
-              onValueChange={(value) => form.setValue("addressId", value)}
-              placeholder="Selecteer adres..."
-              testId="select-customer-address"
-            />
-          ),
-          testId: "select-customer-address"
-        })
+        )
       ]
     },
     {
@@ -934,42 +544,58 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       label: "Contact",
       icon: <User className="h-4 w-4" />,
       rows: [
-        createSectionHeaderRow("Contactinformatie"),
-        createFieldRow({
-            key: "email",
-            label: "Email",
-            type: "email",
-            register: form.register("email"),
-            validation: {
-              error: form.formState.errors.email?.message
-            },
-            testId: "input-customer-email"
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
-            key: "phone",
-            label: "Telefoon",
-            type: "tel",
-            register: form.register("phone"),
-            validation: {
-              error: form.formState.errors.phone?.message
-            },
-            testId: "input-customer-phone"
-          } as FormField2<CustomerFormData>),
-        createFieldRow({
-            key: "mobile",
-            label: "Mobiel",
-            type: "tel",
-            register: form.register("mobile"),
-            validation: {
-              error: form.formState.errors.mobile?.message
-            },
-            testId: "input-customer-mobile"
-          } as FormField2<CustomerFormData>),
+        createSectionHeaderRow("Contact Information"),
+        createTwoColumnRow(
+          [
+            {
+              key: "email",
+              label: "Email",
+              type: "email",
+              register: form.register("email"),
+              validation: {
+                error: form.formState.errors.email?.message
+              },
+              testId: "input-customer-email"
+            } as FormField2<CustomerFormData>,
+            {
+              key: "phone",
+              label: "Telefoon",
+              type: "text",
+              register: form.register("phone"),
+              validation: {
+                error: form.formState.errors.phone?.message
+              },
+              testId: "input-customer-phone"
+            } as FormField2<CustomerFormData>
+          ],
+          [
+            {
+              key: "generalEmail",
+              label: "Algemene Email",
+              type: "email",
+              register: form.register("generalEmail"),
+              validation: {
+                error: form.formState.errors.generalEmail?.message
+              },
+              testId: "input-customer-general-email"
+            } as FormField2<CustomerFormData>,
+            {
+              key: "mobile",
+              label: "Mobiel",
+              type: "text",
+              register: form.register("mobile"),
+              validation: {
+                error: form.formState.errors.mobile?.message
+              },
+              testId: "input-customer-mobile"
+            } as FormField2<CustomerFormData>
+          ]
+        ),
         createFieldRow({
             key: "contactPersonEmail",
             label: "Contactpersoon",
             type: "custom",
-            customComponent: (
+            render: () => (
               <ContactPersonSelectWithAdd
                 value={form.watch("contactPersonEmail") || ""}
                 onValueChange={(value) => form.setValue("contactPersonEmail", value)}
