@@ -450,7 +450,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           // Positie 1: Bedrijfsnaam
           {
             key: "name",
-            label: "Bedrijfsnaam",
+            label: "Company Name",
             type: "text",
             register: form.register("name"),
             validation: {
@@ -462,7 +462,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           // Positie 2: Adres
           {
             key: "addressId",
-            label: "Adres",
+            label: "Address",
             type: "custom",
             customComponent: (
               <AddressSelectWithAdd
@@ -476,7 +476,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           // Positie 3: Taal
           {
             key: "language",
-            label: "Taal",
+            label: "Language",
             type: "select",
             options: [
               { value: "nl", label: "Nederlands" },
@@ -491,7 +491,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           // Positie 4: Contact person
           {
             key: "contactPersonEmail",
-            label: "Contactpersoon",
+            label: "Contact Person",
             type: "custom",
             customComponent: (
               <ContactPersonSelectWithAdd
@@ -505,7 +505,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           // Positie 5: KVK-nummer
           {
             key: "kvkNummer",
-            label: "KVK-nummer",
+            label: "KVK Number",
             type: "text",
             register: form.register("kvkNummer"),
             validation: {
@@ -532,7 +532,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           // Positie 8: BTW-nummer
           {
             key: "taxId",
-            label: "BTW-nummer",
+            label: "VAT Number",
             type: "text",
             register: form.register("taxId"),
             validation: {
