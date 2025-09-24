@@ -388,10 +388,10 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
     };
 
     return (
-      <div key={field.key as string} className="flex flex-col">
+      <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-3">
         <Label 
           htmlFor={field.key as string} 
-          className="text-sm font-medium mb-1"
+          className="text-sm font-medium text-right pt-2"
         >
           {field.label}
           {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
@@ -493,12 +493,38 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         id: section.id,
         label: section.label,
         content: (
-          <div className="grid grid-cols-2 gap-8 pt-[10px]">
-            <div className="space-y-[10px]">
-              {leftFields.map(field => renderSimpleField(field))}
-            </div>
-            <div className="space-y-[10px]">
-              {rightFields.map(field => renderSimpleField(field))}
+          <div className="bg-orange-50 border border-orange-200 rounded-md p-4">
+            <div className="grid grid-rows-6 gap-[10px] min-h-[360px]">
+              {/* Rij 1 */}
+              <div className="grid grid-cols-2 gap-8">
+                {allFields[0] && renderSimpleField(allFields[0])}
+                {allFields[1] && renderSimpleField(allFields[1])}
+              </div>
+              {/* Rij 2 */}
+              <div className="grid grid-cols-2 gap-8">
+                {allFields[2] && renderSimpleField(allFields[2])}
+                {allFields[3] && renderSimpleField(allFields[3])}
+              </div>
+              {/* Rij 3 */}
+              <div className="grid grid-cols-2 gap-8">
+                {allFields[4] && renderSimpleField(allFields[4])}
+                {allFields[5] && renderSimpleField(allFields[5])}
+              </div>
+              {/* Rij 4 */}
+              <div className="grid grid-cols-2 gap-8">
+                {allFields[6] && renderSimpleField(allFields[6])}
+                {allFields[7] && renderSimpleField(allFields[7])}
+              </div>
+              {/* Rij 5 */}
+              <div className="grid grid-cols-2 gap-8">
+                {allFields[8] && renderSimpleField(allFields[8])}
+                {allFields[9] && renderSimpleField(allFields[9])}
+              </div>
+              {/* Rij 6 */}
+              <div className="grid grid-cols-2 gap-8">
+                {allFields[10] && renderSimpleField(allFields[10])}
+                {allFields[11] && renderSimpleField(allFields[11])}
+              </div>
             </div>
           </div>
         )
