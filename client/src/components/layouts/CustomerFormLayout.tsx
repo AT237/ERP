@@ -446,97 +446,92 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       label: "General", 
       icon: <Building className="h-4 w-4" />,
       rows: [
-        createTwoColumnRow(
-          // Left Column: Bedrijfsnaam, KVK-nummer, BTW-nummer
-          [
-            {
-              key: "name",
-              label: "Bedrijfsnaam",
-              type: "text",
-              register: form.register("name"),
-              validation: {
-                isRequired: true,
-                error: form.formState.errors.name?.message
-              },
-              testId: "input-customer-name"
-            } as FormField2<CustomerFormData>,
-            {
-              key: "kvkNummer",
-              label: "KVK-nummer",
-              type: "text",
-              register: form.register("kvkNummer"),
-              validation: {
-                error: form.formState.errors.kvkNummer?.message
-              },
-              testId: "input-customer-kvk-nummer"
-            } as FormField2<CustomerFormData>,
-            {
-              key: "taxId",
-              label: `BTW-nummer${currentCountryRequirements.requiresBtw ? ' *' : ''}`,
-              type: "text",
-              register: form.register("taxId"),
-              validation: {
-                isRequired: currentCountryRequirements.requiresBtw,
-                error: form.formState.errors.taxId?.message
-              },
-              testId: "input-customer-tax-id"
-            } as FormField2<CustomerFormData>
-          ],
-          // Right Column: Country, Area Code, Language, Address
-          [
-            {
-              key: "countryCode",
-              label: "Country",
-              type: "custom",
-              customComponent: (
-                <CountrySelectWithAdd
-                  value={form.watch("countryCode") || ""}
-                  onValueChange={(value) => form.setValue("countryCode", value)}
-                  placeholder="Selecteer land..."
-                  testId="select-customer-country"
-                />
-              )
-            } as FormField2<CustomerFormData>,
-            {
-              key: "areaCode",
-              label: `Area Code${currentCountryRequirements.requiresAreaCode ? ' *' : ''}`,
-              type: "text",
-              register: form.register("areaCode"),
-              validation: {
-                isRequired: currentCountryRequirements.requiresAreaCode,
-                error: form.formState.errors.areaCode?.message
-              },
-              testId: "input-customer-area-code"
-            } as FormField2<CustomerFormData>,
-            {
-              key: "language",
-              label: "Taal",
-              type: "select",
-              options: [
-                { value: "nl", label: "Nederlands" },
-                { value: "en", label: "English" },
-                { value: "de", label: "Deutsch" },
-                { value: "fr", label: "Français" }
-              ],
-              setValue: (value) => form.setValue("language", value),
-              watch: () => form.watch("language") || "nl",
-              testId: "select-customer-language"
-            } as FormField2<CustomerFormData>,
-            {
-              key: "addressId",
-              label: "Adres",
-              type: "custom",
-              customComponent: (
-                <AddressSelectWithAdd
-                  value={form.watch("addressId") || ""}
-                  onValueChange={(value) => form.setValue("addressId", value)}
-                  placeholder="Selecteer adres..."
-                  testId="select-customer-address"
-                />
-              )
-            } as FormField2<CustomerFormData>
-          ]
-        )
+        createFieldsRow([
+          // Positie 1: Bedrijfsnaam
+          {
+            key: "name",
+            label: "Bedrijfsnaam",
+            type: "text",
+            register: form.register("name"),
+            validation: {
+              isRequired: true,
+              error: form.formState.errors.name?.message
+            },
+            testId: "input-customer-name"
+          } as FormField2<CustomerFormData>,
+          // Positie 2: Adres
+          {
+            key: "addressId",
+            label: "Adres",
+            type: "custom",
+            customComponent: (
+              <AddressSelectWithAdd
+                value={form.watch("addressId") || ""}
+                onValueChange={(value) => form.setValue("addressId", value)}
+                placeholder="Selecteer adres..."
+                testId="select-customer-address"
+              />
+            )
+          } as FormField2<CustomerFormData>,
+          // Positie 3: Taal
+          {
+            key: "language",
+            label: "Taal",
+            type: "select",
+            options: [
+              { value: "nl", label: "Nederlands" },
+              { value: "en", label: "English" },
+              { value: "de", label: "Deutsch" },
+              { value: "fr", label: "Français" }
+            ],
+            setValue: (value) => form.setValue("language", value),
+            watch: () => form.watch("language") || "nl",
+            testId: "select-customer-language"
+          } as FormField2<CustomerFormData>,
+          // Positie 4: Contact person
+          {
+            key: "contactPersonEmail",
+            label: "Contactpersoon",
+            type: "custom",
+            customComponent: (
+              <ContactPersonSelectWithAdd
+                value={form.watch("contactPersonEmail") || ""}
+                onValueChange={(value) => form.setValue("contactPersonEmail", value)}
+                placeholder="Selecteer contactpersoon..."
+                testId="select-customer-contact-person"
+              />
+            )
+          } as FormField2<CustomerFormData>,
+          // Positie 5 & 6: leeg (worden automatisch opgevuld met undefined)
+          
+          // Positie 7: Country
+          {
+            key: "countryCode",
+            label: "Country",
+            type: "custom",
+            customComponent: (
+              <CountrySelectWithAdd
+                value={form.watch("countryCode") || ""}
+                onValueChange={(value) => form.setValue("countryCode", value)}
+                placeholder="Selecteer land..."
+                testId="select-customer-country"
+              />
+            )
+          } as FormField2<CustomerFormData>,
+          // Positie 8: BTW-nummer
+          {
+            key: "taxId",
+            label: `BTW-nummer${currentCountryRequirements.requiresBtw ? ' *' : ''}`,
+            type: "text",
+            register: form.register("taxId"),
+            validation: {
+              isRequired: currentCountryRequirements.requiresBtw,
+              error: form.formState.errors.taxId?.message
+            },
+            testId: "input-customer-tax-id"
+          } as FormField2<CustomerFormData>
+          // Positie 9-12: automatisch leeg
+        ])
       ]
     },
     {
@@ -590,20 +585,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               testId: "input-customer-mobile"
             } as FormField2<CustomerFormData>
           ]
-        ),
-        createFieldRow({
-            key: "contactPersonEmail",
-            label: "Contactpersoon",
-            type: "custom",
-            customComponent: (
-              <ContactPersonSelectWithAdd
-                value={form.watch("contactPersonEmail") || ""}
-                onValueChange={(value) => form.setValue("contactPersonEmail", value)}
-                placeholder="Selecteer contactpersoon..."
-                testId="select-customer-contact-person"
-              />
-            )
-          } as FormField2<CustomerFormData>)
+        )
       ]
     },
     {
