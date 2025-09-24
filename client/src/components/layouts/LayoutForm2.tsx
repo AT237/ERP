@@ -381,22 +381,22 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   // FIELD PAIR HELPER - UNIFIED GRID APPROACH  
   // ========================================================================
   
-  const renderFieldPair = (field: FormField2<T>) => {
+  const renderSimpleField = (field: FormField2<T>) => {
     const fieldWithModified = {
       ...field,
       isModified: modifiedFields.has(field.key as string)
     };
 
     return (
-      <div key={field.key as string} className="flex gap-4 items-start">
+      <div key={field.key as string} className="flex flex-col">
         <Label 
           htmlFor={field.key as string} 
-          className="text-sm font-medium text-right w-32 pt-2 flex-shrink-0"
+          className="text-sm font-medium mb-1"
         >
           {field.label}
           {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
         </Label>
-        <div className={`flex-1 ${field.wrapperClassName || ''} space-y-1`}>
+        <div className={field.wrapperClassName || ''}>
           {renderField(fieldWithModified, changeTracking)}
           <div className="min-h-[1.25rem]">
             {renderFieldValidation(fieldWithModified)}
@@ -430,7 +430,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         if (!row.field) return null;
         return (
           <div key={`field-${rowIndex}`} className="grid grid-cols-2 gap-8">
-            {renderFieldPair(row.field)}
+            {renderSimpleField(row.field)}
           </div>
         );
       
@@ -439,7 +439,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         
         return (
           <div key={`fields-${rowIndex}`} className="grid grid-cols-2 gap-8">
-            {row.fields.map((field) => renderFieldPair(field))}
+            {row.fields.map((field) => renderSimpleField(field))}
           </div>
         );
       
@@ -451,10 +451,10 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         return (
           <div key={`two-column-${rowIndex}`} className="grid grid-cols-2 gap-8">
             <div className="space-y-4">
-              {leftFields.map((field) => renderFieldPair(field))}
+              {leftFields.map((field) => renderSimpleField(field))}
             </div>
             <div className="space-y-4">
-              {rightFields.map((field) => renderFieldPair(field))}
+              {rightFields.map((field) => renderSimpleField(field))}
             </div>
           </div>
         );
@@ -469,22 +469,42 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   // ========================================================================
   
   const tabs: FormTab[] = useMemo(() => {
-    return sections.map(section => ({
-      id: section.id,
-      label: section.label,
-      content: (
-        <div className="min-h-[600px] flex flex-col">
-          <div className="grid grid-rows-6 gap-4 flex-1">
-            {section.rows.map((row, rowIndex) => (
-              <div key={`row-${rowIndex}`} className="border border-gray-200 dark:border-gray-700 rounded p-4">
-                {renderRow(row, rowIndex)}
-              </div>
-            ))}
+    return sections.map(section => {
+      // Verzamel alle velden uit alle rijen van deze sectie
+      const allFields: FormField2<T>[] = [];
+      
+      section.rows.forEach(row => {
+        if (row.type === 'field' && row.field) {
+          allFields.push(row.field);
+        } else if (row.type === 'fields' && row.fields) {
+          allFields.push(...row.fields);
+        } else if (row.type === 'two-column') {
+          if (row.leftColumn) allFields.push(...row.leftColumn);
+          if (row.rightColumn) allFields.push(...row.rightColumn);
+        }
+      });
+      
+      // Verdeel velden over twee kolommen
+      const midpoint = Math.ceil(allFields.length / 2);
+      const leftFields = allFields.slice(0, midpoint);
+      const rightFields = allFields.slice(midpoint);
+      
+      return {
+        id: section.id,
+        label: section.label,
+        content: (
+          <div className="grid grid-cols-2 gap-8 pt-[10px]">
+            <div className="space-y-[10px]">
+              {leftFields.map(field => renderSimpleField(field))}
+            </div>
+            <div className="space-y-[10px]">
+              {rightFields.map(field => renderSimpleField(field))}
+            </div>
           </div>
-        </div>
-      )
-    }));
-  }, [sections, renderRow]);
+        )
+      };
+    });
+  }, [sections]);
 
   // ========================================================================
   // RENDER
