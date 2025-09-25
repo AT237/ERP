@@ -35,6 +35,14 @@ export const countries = pgTable("countries", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Languages table for language management
+export const languages = pgTable("languages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(), // ISO language code (nl, en, de, etc.)
+  name: text("name").notNull(), // Language name (Dutch, English, German, etc.)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Addresses table for reusable addresses
 export const addresses = pgTable("addresses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -80,7 +88,7 @@ export const customers = pgTable("customers", {
   invoiceEmail: text("invoice_email"), // Email for invoices
   invoiceNotes: text("invoice_notes"), // Notes for invoice handling
   memo: text("memo"), // General notes and memo
-  language: text("language").default("nl"),
+  languageCode: text("language_code").references(() => languages.code).default("nl"),
   paymentTerms: integer("payment_terms").default(30),
   status: text("status").default("active"),
   deletedAt: timestamp("deleted_at"),
@@ -655,6 +663,7 @@ export const packingListItemsRelations = relations(packingListItems, ({ one }) =
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCountrySchema = createInsertSchema(countries).omit({ id: true, createdAt: true });
+export const insertLanguageSchema = createInsertSchema(languages).omit({ id: true, createdAt: true });
 export const insertAddressSchema = createInsertSchema(addresses).omit({ id: true, createdAt: true });
 export const insertCustomerContactSchema = createInsertSchema(customerContacts).omit({ id: true, createdAt: true }).extend({
   mobile: z.array(
@@ -717,6 +726,8 @@ export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
 export type Country = typeof countries.$inferSelect;
 export type InsertCountry = z.infer<typeof insertCountrySchema>;
+export type Language = typeof languages.$inferSelect;
+export type InsertLanguage = z.infer<typeof insertLanguageSchema>;
 export type Address = typeof addresses.$inferSelect;
 export type InsertAddress = z.infer<typeof insertAddressSchema>;
 export type CustomerContact = typeof customerContacts.$inferSelect;
