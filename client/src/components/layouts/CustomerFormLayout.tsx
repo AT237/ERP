@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AddressSelectWithAdd } from "@/components/ui/address-select-with-add";
 import { ContactPersonSelectWithAdd } from "@/components/ui/contact-person-select-with-add";
 import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
+import { LanguageSelectWithAdd } from "@/components/ui/language-select-with-add";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
@@ -33,6 +34,7 @@ const baseCustomerFormSchema = insertCustomerSchema.extend({
   countryCode: z.string().optional(),
   areaCode: z.string().optional(),
   memo: z.string().optional(),
+  languageCode: z.string().optional(),
 });
 
 // Create dynamic schema based on country requirements
@@ -117,7 +119,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       invoiceEmail: "",
       invoiceNotes: "",
       memo: "",
-      language: "nl",
+      languageCode: "nl",
       paymentTerms: "30",
       status: "active",
     },
@@ -231,7 +233,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         invoiceEmail: customer.invoiceEmail || "",
         invoiceNotes: customer.invoiceNotes || "",
         memo: customer.memo || "",
-        language: customer.language || "nl",
+        languageCode: customer.languageCode || "nl",
         paymentTerms: customer.paymentTerms?.toString() || "30",
         status: customer.status || "active",
       };
@@ -290,7 +292,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   const nameValue = form.watch("name");
   const kvkNummerValue = form.watch("kvkNummer");
   const taxIdValue = form.watch("taxId");
-  const languageValue = form.watch("language");
+  const languageValue = form.watch("languageCode");
   const areaCodeValue = form.watch("areaCode");
   const addressIdValue = form.watch("addressId");
   const bankAccountValue = form.watch("bankAccount");
@@ -476,20 +478,20 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               />
             )
           } as FormField2<CustomerFormData>,
-          // Positie 3: Taal
+          // Positie 3: Language
           {
-            key: "language",
+            key: "languageCode",
             label: "Language",
-            type: "select",
-            options: [
-              { value: "nl", label: "Nederlands" },
-              { value: "en", label: "English" },
-              { value: "de", label: "Deutsch" },
-              { value: "fr", label: "Français" }
-            ],
-            setValue: (value) => form.setValue("language", value),
-            watch: () => form.watch("language") || "nl",
-            testId: "select-customer-language"
+            type: "custom",
+            customComponent: (
+              <LanguageSelectWithAdd
+                value={form.watch("languageCode") || ""}
+                onValueChange={(value) => form.setValue("languageCode", value)}
+                placeholder="Select language..."
+                testId="select-customer-language"
+                className={getFieldClassName("languageCode")}
+              />
+            )
           } as FormField2<CustomerFormData>,
           // Positie 4: Contact Person
           {
