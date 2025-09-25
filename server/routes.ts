@@ -8,7 +8,7 @@ import {
   insertPurchaseOrderItemSchema, insertSalesOrderSchema, insertSalesOrderItemSchema,
   insertWorkOrderSchema, insertPackingListSchema,
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
-  insertAddressSchema, insertCountrySchema, insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
+  insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
   insertVatRateSchema, insertCitySchema, insertStatusSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
@@ -307,6 +307,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting country:", error);
       res.status(500).json({ message: "Failed to delete country" });
+    }
+  });
+
+  // Language routes
+  app.get("/api/languages", async (req, res) => {
+    try {
+      const { q } = req.query;
+      let languages;
+      if (q && typeof q === 'string') {
+        languages = await storage.searchLanguages(q);
+      } else {
+        languages = await storage.getLanguages();
+      }
+      res.json(languages);
+    } catch (error) {
+      console.error("Error fetching languages:", error);
+      res.status(500).json({ message: "Failed to fetch languages" });
+    }
+  });
+
+  app.get("/api/languages/:id", async (req, res) => {
+    try {
+      const language = await storage.getLanguage(req.params.id);
+      if (!language) {
+        return res.status(404).json({ message: "Language not found" });
+      }
+      res.json(language);
+    } catch (error) {
+      console.error("Error fetching language:", error);
+      res.status(500).json({ message: "Failed to fetch language" });
+    }
+  });
+
+  app.get("/api/languages/by-code/:code", async (req, res) => {
+    try {
+      const language = await storage.getLanguageByCode(req.params.code);
+      if (!language) {
+        return res.status(404).json({ message: "Language not found" });
+      }
+      res.json(language);
+    } catch (error) {
+      console.error("Error fetching language:", error);
+      res.status(500).json({ message: "Failed to fetch language" });
+    }
+  });
+
+  app.post("/api/languages", async (req, res) => {
+    try {
+      const languageData = insertLanguageSchema.parse(req.body);
+      const language = await storage.createLanguage(languageData);
+      res.status(201).json(language);
+    } catch (error) {
+      console.error("Error creating language:", error);
+      res.status(400).json({ message: "Failed to create language" });
+    }
+  });
+
+  app.patch("/api/languages/:id", async (req, res) => {
+    try {
+      const languageData = insertLanguageSchema.partial().parse(req.body);
+      const language = await storage.updateLanguage(req.params.id, languageData);
+      res.json(language);
+    } catch (error) {
+      console.error("Error updating language:", error);
+      res.status(400).json({ message: "Failed to update language" });
+    }
+  });
+
+  app.delete("/api/languages/:id", async (req, res) => {
+    try {
+      await storage.deleteLanguage(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting language:", error);
+      res.status(500).json({ message: "Failed to delete language" });
     }
   });
 

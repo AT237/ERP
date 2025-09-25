@@ -1,7 +1,7 @@
 import {
   users, customers, suppliers, prospects, inventoryItems, projects, quotations, quotationItems,
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
-  packingLists, packingListItems, userPreferences, customerContacts, addresses, countries,
+  packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
   unitsOfMeasure, paymentTerms, incoterms, vatRates, cities, statuses, textSnippets, textSnippetUsages,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type Prospect, type InsertProspect, type InventoryItem, type InsertInventoryItem,
@@ -12,7 +12,7 @@ import {
   type SalesOrderItem, type InsertSalesOrderItem, type WorkOrder, type InsertWorkOrder,
   type PackingList, type InsertPackingList, type PackingListItem, type InsertPackingListItem,
   type UserPreferences, type InsertUserPreferences, type CustomerContact, type InsertCustomerContact,
-  type Address, type InsertAddress, type Country, type InsertCountry, type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentTerm, type InsertPaymentTerm,
+  type Address, type InsertAddress, type Country, type InsertCountry, type Language, type InsertLanguage, type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentTerm, type InsertPaymentTerm,
   type Incoterm, type InsertIncoterm, type VatRate, type InsertVatRate,
   type City, type InsertCity, type Status, type InsertStatus,
   type TextSnippet, type InsertTextSnippet, type TextSnippetUsage, type InsertTextSnippetUsage
@@ -38,6 +38,15 @@ export interface IStorage {
   createCountry(country: InsertCountry): Promise<Country>;
   updateCountry(id: string, country: Partial<InsertCountry>): Promise<Country>;
   deleteCountry(id: string): Promise<void>;
+
+  // Language methods
+  getLanguages(): Promise<Language[]>;
+  getLanguage(id: string): Promise<Language | undefined>;
+  getLanguageByCode(code: string): Promise<Language | undefined>;
+  searchLanguages(query: string): Promise<Language[]>;
+  createLanguage(language: InsertLanguage): Promise<Language>;
+  updateLanguage(id: string, language: Partial<InsertLanguage>): Promise<Language>;
+  deleteLanguage(id: string): Promise<void>;
 
   // Customer methods
   getCustomers(): Promise<Customer[]>;
@@ -297,6 +306,44 @@ export class DatabaseStorage implements IStorage {
         ilike(countries.code, `%${query}%`)
       ))
       .orderBy(countries.name);
+  }
+
+  // Language methods
+  async getLanguages(): Promise<Language[]> {
+    return await db.select().from(languages).orderBy(languages.name);
+  }
+
+  async getLanguage(id: string): Promise<Language | undefined> {
+    const [language] = await db.select().from(languages).where(eq(languages.id, id));
+    return language || undefined;
+  }
+
+  async getLanguageByCode(code: string): Promise<Language | undefined> {
+    const [language] = await db.select().from(languages).where(eq(languages.code, code));
+    return language || undefined;
+  }
+
+  async createLanguage(language: InsertLanguage): Promise<Language> {
+    const [newLanguage] = await db.insert(languages).values(language).returning();
+    return newLanguage;
+  }
+
+  async updateLanguage(id: string, language: Partial<InsertLanguage>): Promise<Language> {
+    const [updatedLanguage] = await db.update(languages).set(language).where(eq(languages.id, id)).returning();
+    return updatedLanguage;
+  }
+
+  async deleteLanguage(id: string): Promise<void> {
+    await db.delete(languages).where(eq(languages.id, id));
+  }
+
+  async searchLanguages(query: string): Promise<Language[]> {
+    return await db.select().from(languages)
+      .where(or(
+        ilike(languages.name, `%${query}%`),
+        ilike(languages.code, `%${query}%`)
+      ))
+      .orderBy(languages.name);
   }
 
   // Customer methods
