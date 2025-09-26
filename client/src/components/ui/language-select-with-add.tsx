@@ -107,18 +107,18 @@ export function LanguageSelectWithAdd({
 
   const actionButtons: ActionButton[] = [
     {
-      type: "button",
+      key: "cancel",
+      label: "Cancel",
       variant: "outline", 
       onClick: () => setShowAddDialog(false),
-      children: "Cancel",
       testId: "button-cancel-language"
     },
     {
-      type: "submit",
+      key: "submit",
+      label: createLanguageMutation.isPending ? "Creating..." : "Create Language",
       variant: "default",
       onClick: handleSubmit,
       disabled: createLanguageMutation.isPending,
-      children: createLanguageMutation.isPending ? "Creating..." : "Create Language",
       testId: "button-create-language"
     }
   ];
@@ -258,13 +258,13 @@ export function LanguageSelectWithAdd({
           </DialogHeader>
           
           <div className="flex-1 overflow-hidden">
-            <LayoutForm2<LanguageFormData>
-              form={languageForm}
-              sections={sections}
+            <LayoutForm2
+              form={languageForm as any}
+              sections={sections as any}
               actionButtons={actionButtons}
               activeSection={activeSection}
               onSectionChange={setActiveSection}
-              showTabs={false}
+              onSubmit={handleSubmit}
               showActionButtons={true}
               className="h-full"
             />
