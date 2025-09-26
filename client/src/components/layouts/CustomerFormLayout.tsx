@@ -545,20 +545,36 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             },
             testId: "input-customer-tax-id"
           } as FormField2<CustomerFormData>,
-          // Positie 9: Memo (zal over meerdere posities lopen door colspan styling)
-          {
-            key: "memo",
-            label: "Memo",
-            type: "textarea",
-            register: form.register("memo"),
-            validation: {
-              error: form.formState.errors.memo?.message
-            },
-            wrapperClassName: "col-span-2", // Neemt beide kolommen in (spanning over positie 9-10)
-            testId: "textarea-customer-memo"
-          } as FormField2<CustomerFormData>
-          // Positie 10-12: automatisch leeg
-        ])
+          // Positie 9-12: reserveren voor memo veld (wordt apart geïmplementeerd)
+        ]),
+        // Speciale rij voor memo veld dat over de gehele breedte loopt
+        {
+          type: 'custom',
+          customContent: (
+            <div className="grid grid-cols-[130px_1fr] items-start gap-3 mt-4">
+              <Label 
+                htmlFor="memo" 
+                className="text-sm font-medium text-right pt-2"
+              >
+                Memo
+              </Label>
+              <div>
+                <Textarea
+                  id="memo"
+                  {...form.register("memo")}
+                  placeholder="Notities en memo's..."
+                  className={`min-h-[80px] ${getFieldClassName("memo")}`}
+                  data-testid="textarea-customer-memo"
+                />
+                {form.formState.errors.memo && (
+                  <span className="text-sm text-red-600 mt-1 block">
+                    {form.formState.errors.memo.message}
+                  </span>
+                )}
+              </div>
+            </div>
+          )
+        }
       ]
     },
     {
