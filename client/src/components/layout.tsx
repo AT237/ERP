@@ -51,7 +51,7 @@ export default function Layout({ children }: LayoutProps) {
     const customerFormMatch = path.match(/^\/customer-form\/(.+)$/);
     if (customerFormMatch) {
       const customerId = customerFormMatch[1];
-      return { id: `customer-${customerId}`, name: customerId };
+      return { id: `customer-${customerId}`, name: 'Loading...' };
     }
     
     switch (path) {
