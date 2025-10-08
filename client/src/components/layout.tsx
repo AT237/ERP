@@ -320,6 +320,22 @@ export default function Layout({ children }: LayoutProps) {
     return () => window.removeEventListener('open-form-tab', handleOpenFormTab as EventListener);
   }, []); // Empty dependency array for stable listener
 
+  // Listen for tab name updates (e.g., when customer number is loaded)
+  useEffect(() => {
+    const handleUpdateTabName = (e: CustomEvent) => {
+      const { tabId, name } = e.detail;
+      
+      setTabs(prevTabs => 
+        prevTabs.map(tab => 
+          tab.id === tabId ? { ...tab, name } : tab
+        )
+      );
+    };
+    
+    window.addEventListener('update-tab-name', handleUpdateTabName as EventListener);
+    return () => window.removeEventListener('update-tab-name', handleUpdateTabName as EventListener);
+  }, []);
+
   const handleMenuClick = (menuItem: {id: string, name: string, route?: string}) => {
     // Navigate to the route instead of creating a tab
     if (menuItem.route) {

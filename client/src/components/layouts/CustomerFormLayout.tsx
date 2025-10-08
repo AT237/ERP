@@ -171,6 +171,18 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
     enabled: !!customerId,
   });
 
+  // Update tab name with customer number when data is loaded
+  useEffect(() => {
+    if (customer && customerId) {
+      window.dispatchEvent(new CustomEvent('update-tab-name', {
+        detail: {
+          tabId: `customer-${customerId}`,
+          name: customer.customerNumber
+        }
+      }));
+    }
+  }, [customer, customerId]);
+
   // Fetch country data when countryCode changes - use specific field watch
   const currentCountryCode = form.watch("countryCode");
   const { data: countryData, isLoading: isLoadingCountry } = useQuery({
