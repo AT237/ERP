@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, User, Phone, Star } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, User, Phone, Star, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Popover, PopoverContent, PopoverTrigger 
@@ -303,20 +303,43 @@ export function ContactPersonSelectWithAdd({
                       onValueChange?.(contact.id);
                       setOpen(false);
                     }}
-                    className="flex items-center"
+                    className="flex items-center justify-between group"
                   >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === contact.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div>
-                      <div className="font-medium">{formatContact(contact)}</div>
-                      {contact.isPrimary && (
-                        <div className="text-xs text-orange-600">Primary Contact</div>
-                      )}
+                    <div className="flex items-center flex-1">
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4 shrink-0",
+                          value === contact.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium">{formatContact(contact)}</div>
+                        {contact.isPrimary && (
+                          <div className="text-xs text-orange-600">Primary Contact</div>
+                        )}
+                      </div>
                     </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-orange-600 hover:bg-orange-50 shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpen(false);
+                        window.dispatchEvent(new CustomEvent('open-form-tab', { 
+                          detail: { 
+                            id: `contact-${contact.id}`, 
+                            name: `${contact.firstName} ${contact.lastName}`, 
+                            formType: 'contact-person',
+                            recordId: contact.id
+                          } 
+                        }));
+                      }}
+                      data-testid={`${testId}-view-${contact.id}`}
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                    </Button>
                   </CommandItem>
                 ))}
               </CommandGroup>

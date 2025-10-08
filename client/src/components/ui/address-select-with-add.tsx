@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Popover, PopoverContent, PopoverTrigger 
@@ -126,17 +126,40 @@ export function AddressSelectWithAdd({
                       onValueChange?.(address.id);
                       setOpen(false);
                     }}
-                    className="flex items-center"
+                    className="flex items-center justify-between group"
                   >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === address.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div>
-                      <div className="font-medium">{formatAddress(address)}</div>
+                    <div className="flex items-center flex-1">
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4 shrink-0",
+                          value === address.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium">{formatAddress(address)}</div>
+                      </div>
                     </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-orange-600 hover:bg-orange-50 shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpen(false);
+                        window.dispatchEvent(new CustomEvent('open-form-tab', { 
+                          detail: { 
+                            id: `address-${address.id}`, 
+                            name: `Edit Address`, 
+                            formType: 'address',
+                            recordId: address.id
+                          } 
+                        }));
+                      }}
+                      data-testid={`${testId}-view-${address.id}`}
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                    </Button>
                   </CommandItem>
                 ))}
               </CommandGroup>
