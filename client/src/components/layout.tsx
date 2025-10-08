@@ -47,6 +47,13 @@ export default function Layout({ children }: LayoutProps) {
   
   // Get page name from route
   const getPageInfo = (path: string) => {
+    // Check for customer-form with ID pattern
+    const customerFormMatch = path.match(/^\/customer-form\/(.+)$/);
+    if (customerFormMatch) {
+      const customerId = customerFormMatch[1];
+      return { id: `customer-${customerId}`, name: customerId };
+    }
+    
     switch (path) {
       case '/':
       case '/dashboard':
