@@ -670,8 +670,10 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               error: form.formState.errors.paymentTerms?.message
             },
             testId: "select-customer-payment-terms"
-          } as FormField2<CustomerFormData>,
-          // Positie 3: Invoice Email
+          } as FormField2<CustomerFormData>
+        ]),
+        createFieldsRow([
+          // Positie 1: Invoice Email
           {
             key: "invoiceEmail",
             label: "Invoice Email",
@@ -682,7 +684,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             },
             testId: "input-customer-invoice-email"
           } as FormField2<CustomerFormData>,
-          // Positie 4: Status
+          // Positie 2: Status
           {
             key: "status",
             label: "Status",
@@ -695,8 +697,10 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             setValue: (value) => form.setValue("status", value),
             watch: () => form.watch("status") || "active",
             testId: "select-customer-status"
-          } as FormField2<CustomerFormData>,
-          // Positie 5: Invoice Notes
+          } as FormField2<CustomerFormData>
+        ]),
+        createFieldsRow([
+          // Positie 1-2: Invoice Notes (full width)
           {
             key: "invoiceNotes",
             label: "Invoice Notes",
@@ -707,7 +711,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             },
             testId: "textarea-customer-invoice-notes"
           } as FormField2<CustomerFormData>
-          // Positie 6-12: automatisch leeg
         ])
       ]
     }
