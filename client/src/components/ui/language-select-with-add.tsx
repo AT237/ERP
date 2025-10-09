@@ -1,36 +1,15 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, Globe, Settings, ExternalLink, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
 import { 
   Popover, PopoverContent, PopoverTrigger 
 } from "@/components/ui/popover";
 import { 
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList 
 } from "@/components/ui/command";
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle 
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertLanguageSchema } from "@shared/schema";
 import { cn } from "@/lib/utils";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
 import type { Language } from "@shared/schema";
-import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
-import type { ActionButton } from '@/components/layouts/BaseFormLayout';
-
-const languageFormSchema = insertLanguageSchema.extend({
-  code: z.string().min(1, "Language code is required").max(10, "Language code too long"),
-  name: z.string().min(1, "Language name is required"),
-});
-
-type LanguageFormData = z.infer<typeof languageFormSchema>;
 
 interface LanguageSelectWithAddProps {
   value?: string;
@@ -48,10 +27,7 @@ export function LanguageSelectWithAdd({
   className,
 }: LanguageSelectWithAddProps) {
   const [open, setOpen] = useState(false);
-  const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeSection, setActiveSection] = useState("language");
-  const { toast } = useToast();
 
   // Load languages with search
   const { data: languages = [] } = useQuery<Language[]>({
@@ -65,101 +41,7 @@ export function LanguageSelectWithAdd({
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
-  // Language form
-  const languageForm = useForm<LanguageFormData>({
-    resolver: zodResolver(languageFormSchema),
-    defaultValues: {
-      code: "",
-      name: "",
-    },
-  });
-
-  // Create language mutation
-  const createLanguageMutation = useMutation({
-    mutationFn: async (data: LanguageFormData) => {
-      const response = await apiRequest("POST", "/api/languages", data);
-      return response.json();
-    },
-    onSuccess: (newLanguage) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/languages"] });
-      setShowAddDialog(false);
-      languageForm.reset();
-      onValueChange?.(newLanguage.code);
-      toast({
-        title: "Success",
-        description: "Language created successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create language",
-        variant: "destructive",
-      });
-    },
-  });
-
   const selectedLanguage = languages.find(lang => lang.code === value);
-
-  const handleSubmit = languageForm.handleSubmit((data) => {
-    createLanguageMutation.mutate(data);
-  });
-
-  const actionButtons: ActionButton[] = [
-    {
-      key: "cancel",
-      label: "Cancel",
-      variant: "outline", 
-      onClick: () => setShowAddDialog(false),
-      testId: "button-cancel-language"
-    },
-    {
-      key: "submit",
-      label: createLanguageMutation.isPending ? "Creating..." : "Create Language",
-      variant: "default",
-      onClick: handleSubmit,
-      disabled: createLanguageMutation.isPending,
-      testId: "button-create-language"
-    }
-  ];
-
-  const sections: FormSection2<LanguageFormData>[] = [
-    {
-      id: "language",
-      label: "Language",
-      icon: <Globe className="h-4 w-4" />,
-      rows: [
-        createSectionHeaderRow("Language Information"),
-        createFieldsRow([
-          // Position 1: Language Code
-          {
-            key: "code",
-            label: "Language Code",
-            type: "text",
-            register: languageForm.register("code"),
-            validation: {
-              error: languageForm.formState.errors.code?.message
-            },
-            placeholder: "e.g., en, nl, de",
-            testId: "input-language-code"
-          } as FormField2<LanguageFormData>,
-          // Position 2: Language Name
-          {
-            key: "name", 
-            label: "Language Name",
-            type: "text",
-            register: languageForm.register("name"),
-            validation: {
-              error: languageForm.formState.errors.name?.message
-            },
-            placeholder: "e.g., English, Dutch, German",
-            testId: "input-language-name"
-          } as FormField2<LanguageFormData>
-          // Position 3-12: automatically empty
-        ])
-      ]
-    }
-  ];
 
   return (
     <>
@@ -176,32 +58,44 @@ export function LanguageSelectWithAdd({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
+        <PopoverContent 
+          className="p-0 max-h-[300px]" 
+          align="start" 
+          sideOffset={4}
+          style={{ width: 'var(--radix-popover-trigger-width)' }}
+        >
           <Command>
-            <CommandInput 
-              placeholder="Search languages..." 
-              value={searchQuery}
-              onValueChange={setSearchQuery}
-            />
+            <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+              <CommandInput 
+                placeholder="Search languages..." 
+                className="flex-1 border-0 bg-transparent outline-none focus:ring-0 pr-2"
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+              />
+              <div className="flex-shrink-0 ml-auto">
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  size="icon"
+                  className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                  onClick={() => {
+                    setOpen(false);
+                    window.dispatchEvent(new CustomEvent('open-form-tab', { 
+                      detail: { 
+                        id: 'new-language', 
+                        name: 'New Language', 
+                        formType: 'language'
+                      } 
+                    }));
+                  }}
+                  data-testid={`${testId}-add-button`}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             <CommandList>
-              <CommandEmpty>
-                <div className="text-center py-2">
-                  <p className="text-sm text-muted-foreground mb-2">No languages found.</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setShowAddDialog(true);
-                      setOpen(false);
-                    }}
-                    className="text-xs"
-                    data-testid="button-add-new-language"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add Language
-                  </Button>
-                </div>
-              </CommandEmpty>
+              <CommandEmpty>No language found.</CommandEmpty>
               <CommandGroup>
                 {languages.map((language) => (
                   <CommandItem
@@ -250,51 +144,12 @@ export function LanguageSelectWithAdd({
                   </CommandItem>
                 ))}
               </CommandGroup>
-              {languages.length > 0 && (
-                <div className="border-t p-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setShowAddDialog(true);
-                      setOpen(false);
-                    }}
-                    className="w-full text-xs"
-                    data-testid="button-add-language-from-list"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add New Language
-                  </Button>
-                </div>
-              )}
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
 
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-4xl h-[600px] p-0">
-          <DialogHeader className="px-6 py-4 border-b">
-            <DialogTitle className="text-xl font-semibold text-orange-600 flex items-center gap-2">
-              <Globe className="h-5 w-5" />
-              Add New Language
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-hidden">
-            <LayoutForm2
-              form={languageForm as any}
-              sections={sections as any}
-              actionButtons={actionButtons}
-              activeSection={activeSection}
-              onSectionChange={setActiveSection}
-              onSubmit={handleSubmit}
-              showActionButtons={true}
-              className="h-full"
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Language form now opens in tab instead of dialog */}
     </>
   );
 }
