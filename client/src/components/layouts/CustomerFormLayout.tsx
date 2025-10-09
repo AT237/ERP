@@ -695,21 +695,37 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             setValue: (value) => form.setValue("status", value),
             watch: () => form.watch("status") || "active",
             testId: "select-customer-status"
-          } as FormField2<CustomerFormData>,
-          // Positie 5-6: Invoice Notes (full width via layout single)
-          {
-            key: "invoiceNotes",
-            label: "Invoice Notes",
-            type: "textarea",
-            register: form.register("invoiceNotes"),
-            validation: {
-              error: form.formState.errors.invoiceNotes?.message
-            },
-            layout: "single",
-            testId: "textarea-customer-invoice-notes"
           } as FormField2<CustomerFormData>
-          // Positie 7-12: automatisch leeg
-        ])
+          // Positie 5-12: automatisch leeg
+        ]),
+        // Speciale rij voor Invoice Notes veld dat over de gehele breedte loopt
+        {
+          type: 'custom',
+          customContent: (
+            <div className="grid grid-cols-[130px_1fr] items-start gap-3 mt-4">
+              <Label 
+                htmlFor="invoiceNotes" 
+                className="text-sm font-medium text-right pt-2"
+              >
+                Invoice Notes
+              </Label>
+              <div>
+                <Textarea
+                  id="invoiceNotes"
+                  {...form.register("invoiceNotes")}
+                  placeholder="Invoice notes..."
+                  className={`min-h-[80px] ${getFieldClassName("invoiceNotes")}`}
+                  data-testid="textarea-customer-invoice-notes"
+                />
+                {form.formState.errors.invoiceNotes && (
+                  <span className="text-sm text-red-600 mt-1 block">
+                    {form.formState.errors.invoiceNotes.message}
+                  </span>
+                )}
+              </div>
+            </div>
+          )
+        }
       ]
     }
   ];
