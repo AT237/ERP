@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, Globe, Settings, ExternalLink } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Globe, Settings, ExternalLink, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
@@ -211,18 +211,42 @@ export function LanguageSelectWithAdd({
                       onValueChange?.(currentValue === value ? "" : currentValue);
                       setOpen(false);
                     }}
+                    className="flex items-center justify-between group"
                     data-testid={`option-language-${language.code}`}
                   >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === language.code ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div className="flex flex-col flex-1">
-                      <span className="font-medium">{language.name}</span>
-                      <span className="text-xs text-muted-foreground">{language.code}</span>
+                    <div className="flex items-center flex-1">
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4 shrink-0",
+                          value === language.code ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex flex-col flex-1">
+                        <span className="font-medium">{language.name}</span>
+                        <span className="text-xs text-muted-foreground">{language.code}</span>
+                      </div>
                     </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-orange-600 hover:bg-orange-50 shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpen(false);
+                        window.dispatchEvent(new CustomEvent('open-form-tab', { 
+                          detail: { 
+                            id: `language-${language.id}`, 
+                            name: language.name, 
+                            formType: 'language',
+                            recordId: language.id
+                          } 
+                        }));
+                      }}
+                      data-testid={`${testId}-view-${language.code}`}
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                    </Button>
                   </CommandItem>
                 ))}
               </CommandGroup>
