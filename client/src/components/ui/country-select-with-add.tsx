@@ -1,37 +1,15 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, Globe, Settings, ExternalLink } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
 import { 
   Popover, PopoverContent, PopoverTrigger 
 } from "@/components/ui/popover";
 import { 
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList 
 } from "@/components/ui/command";
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle 
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertCountrySchema } from "@shared/schema";
 import { cn } from "@/lib/utils";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
 import type { Country } from "@shared/schema";
-import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from '@/components/layouts/LayoutForm2';
-import type { ActionButton } from '@/components/layouts/BaseFormLayout';
-
-const countryFormSchema = insertCountrySchema.extend({
-  code: z.string().min(1, "Country code is required").max(10, "Country code too long"),
-  name: z.string().min(1, "Country name is required"),
-});
-
-type CountryFormData = z.infer<typeof countryFormSchema>;
 
 interface CountrySelectWithAddProps {
   value?: string;
@@ -49,10 +27,7 @@ export function CountrySelectWithAdd({
   className,
 }: CountrySelectWithAddProps) {
   const [open, setOpen] = useState(false);
-  const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeSection, setActiveSection] = useState("country");
-  const { toast } = useToast();
 
   // Load countries with search
   const { data: countries = [] } = useQuery<Country[]>({
@@ -65,178 +40,6 @@ export function CountrySelectWithAdd({
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
-
-  // Country form
-  const countryForm = useForm<CountryFormData>({
-    resolver: zodResolver(countryFormSchema),
-    defaultValues: {
-      code: "",
-      name: "",
-      requiresBtw: false,
-      requiresAreaCode: false,
-    },
-  });
-
-  // Create country mutation
-  const createCountryMutation = useMutation({
-    mutationFn: async (data: CountryFormData) => {
-      const response = await apiRequest("POST", "/api/countries", data);
-      return response.json();
-    },
-    onSuccess: (newCountry) => {
-      toast({
-        title: "Success",
-        description: "Country created successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/countries"] });
-      onValueChange?.(newCountry.code);
-      setShowAddDialog(false);
-      countryForm.reset();
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create country",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleCreateCountry = (data: CountryFormData) => {
-    createCountryMutation.mutate(data);
-  };
-
-  // Custom checkbox components
-  const renderBtwCheckbox = () => (
-    <div className="flex items-center space-x-2">
-      <Checkbox 
-        id="requiresBtw"
-        checked={countryForm.watch("requiresBtw") || false}
-        onCheckedChange={(checked) => 
-          countryForm.setValue("requiresBtw", !!checked)
-        }
-        data-testid="checkbox-requires-btw"
-      />
-      <Label 
-        htmlFor="requiresBtw" 
-        className="text-sm font-normal cursor-pointer"
-      >
-        Requires BTW/VAT Number
-      </Label>
-    </div>
-  );
-
-  const renderAreaCodeCheckbox = () => (
-    <div className="flex items-center space-x-2">
-      <Checkbox 
-        id="requiresAreaCode"
-        checked={countryForm.watch("requiresAreaCode") || false}
-        onCheckedChange={(checked) => 
-          countryForm.setValue("requiresAreaCode", !!checked)
-        }
-        data-testid="checkbox-requires-area-code"
-      />
-      <Label 
-        htmlFor="requiresAreaCode" 
-        className="text-sm font-normal cursor-pointer"
-      >
-        Requires Area Code
-      </Label>
-    </div>
-  );
-
-  // Create form sections for country
-  const createCountryFormSections = (): FormSection2<CountryFormData>[] => [
-    {
-      id: "country",
-      label: "Country Info",
-      icon: <Globe className="h-4 w-4" />,
-      rows: [
-        createFieldsRow([
-          {
-            key: "code",
-            label: "Code",
-            type: "text",
-            placeholder: "NL",
-            register: countryForm.register("code"),
-            validation: {
-              error: countryForm.formState.errors.code?.message,
-              isRequired: true
-            },
-            testId: "input-country-code",
-            width: "25%"
-          } as FormField2<CountryFormData>,
-          {
-            key: "name",
-            label: "Country Name",
-            type: "text",
-            placeholder: "Netherlands",
-            register: countryForm.register("name"),
-            validation: {
-              error: countryForm.formState.errors.name?.message,
-              isRequired: true
-            },
-            testId: "input-country-name",
-            width: "75%"
-          } as FormField2<CountryFormData>
-        ])
-      ]
-    },
-    {
-      id: "validation",
-      label: "Validation Rules",
-      icon: <Settings className="h-4 w-4" />,
-      rows: [
-        createFieldRow({
-          key: "requiresBtw",
-          label: "BTW Requirements",
-          type: "custom",
-          customComponent: renderBtwCheckbox(),
-          testId: "checkbox-requires-btw"
-        } as FormField2<CountryFormData>),
-        createFieldRow({
-          key: "requiresAreaCode",
-          label: "Area Code Requirements",
-          type: "custom",
-          customComponent: renderAreaCodeCheckbox(),
-          testId: "checkbox-requires-area-code"
-        } as FormField2<CountryFormData>)
-      ]
-    }
-  ];
-
-  // Create action buttons
-  const createActionButtons = (): ActionButton[] => [
-    {
-      key: "cancel",
-      label: "Cancel",
-      variant: "outline",
-      onClick: () => setShowAddDialog(false),
-      disabled: createCountryMutation.isPending
-    },
-    {
-      key: "submit",
-      label: createCountryMutation.isPending ? "Creating..." : "Create Country",
-      variant: "default",
-      onClick: () => countryForm.handleSubmit(handleCreateCountry)(),
-      disabled: createCountryMutation.isPending
-    }
-  ];
-
-  // Header fields with "Open full form" link
-  const createCountryHeaderFields = () => [
-    {
-      label: "Country Management",
-      value: (
-        <Link href="/masterdata-form/countries" data-testid="link-open-countries-management">
-          <Button variant="ghost" size="sm" className="h-auto p-0 text-orange-600 hover:text-orange-800">
-            <ExternalLink className="h-4 w-4 mr-1" />
-            Manage countries
-          </Button>
-        </Link>
-      )
-    }
-  ];
 
   const formatCountry = (country: Country) => {
     return `${country.name} (${country.code})`;
@@ -279,7 +82,16 @@ export function CountrySelectWithAdd({
                   variant="ghost" 
                   size="icon"
                   className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                  onClick={() => setShowAddDialog(true)}
+                  onClick={() => {
+                    setOpen(false);
+                    window.dispatchEvent(new CustomEvent('open-form-tab', { 
+                      detail: { 
+                        id: 'new-country', 
+                        name: 'New Country', 
+                        formType: 'country'
+                      } 
+                    }));
+                  }}
                   data-testid={`${testId}-add-button`}
                 >
                   <Plus className="h-4 w-4" />
@@ -298,17 +110,40 @@ export function CountrySelectWithAdd({
                       onValueChange?.(country.code);
                       setOpen(false);
                     }}
-                    className="flex items-center"
+                    className="flex items-center justify-between group"
                   >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === country.code ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div>
-                      <div className="font-medium">{formatCountry(country)}</div>
+                    <div className="flex items-center flex-1">
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4 shrink-0",
+                          value === country.code ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium">{formatCountry(country)}</div>
+                      </div>
                     </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-orange-600 hover:bg-orange-50 shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpen(false);
+                        window.dispatchEvent(new CustomEvent('open-form-tab', { 
+                          detail: { 
+                            id: `country-${country.id}`, 
+                            name: country.name, 
+                            formType: 'country',
+                            recordId: country.id
+                          } 
+                        }));
+                      }}
+                      data-testid={`${testId}-view-${country.code}`}
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                    </Button>
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -317,25 +152,7 @@ export function CountrySelectWithAdd({
         </PopoverContent>
       </Popover>
 
-      {/* Add Country Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add New Country</DialogTitle>
-          </DialogHeader>
-          
-          <LayoutForm2
-            sections={createCountryFormSections()}
-            activeSection={activeSection}
-            onSectionChange={setActiveSection}
-            form={countryForm}
-            onSubmit={handleCreateCountry}
-            actionButtons={createActionButtons()}
-            headerFields={createCountryHeaderFields()}
-            isLoading={createCountryMutation.isPending}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Country form now opens in tab instead of dialog */}
     </>
   );
 }
