@@ -27,7 +27,9 @@ import { z } from "zod";
 
 // Base form schema for customer data - include all fields from insertCustomerSchema
 const baseCustomerFormSchema = insertCustomerSchema.extend({
-  paymentTerms: z.string().min(1, "Betalingsvoorwaarden zijn verplicht").transform(val => parseInt(val, 10)),
+  paymentTerms: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined), // Keep for backward compatibility
+  paymentDaysId: z.string().optional(),
+  paymentScheduleId: z.string().optional(),
   kvkNummer: z.string().optional().refine((val) => !val || /^\d{8}$/.test(val), {
     message: "KVK nummer moet 8 cijfers bevatten"
   }),
@@ -120,7 +122,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       invoiceNotes: "",
       memo: "",
       languageCode: "nl",
-      paymentTerms: "30",
+      paymentTerms: "30", // Keep for backward compatibility
+      paymentDaysId: "",
+      paymentScheduleId: "",
       status: "active",
     },
   });
@@ -169,6 +173,16 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer>({
     queryKey: ["/api/customers", customerId],
     enabled: !!customerId,
+  });
+
+  // Fetch Payment Days data
+  const { data: paymentDaysData } = useQuery<any[]>({
+    queryKey: ["/api/masterdata/payment-days"],
+  });
+
+  // Fetch Payment Schedules data
+  const { data: paymentSchedulesData } = useQuery<any[]>({
+    queryKey: ["/api/masterdata/payment-schedules"],
   });
 
   // Update tab name with customer number when data is loaded
@@ -247,6 +261,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         memo: customer.memo || "",
         languageCode: customer.languageCode || "nl",
         paymentTerms: customer.paymentTerms?.toString() || "30",
+        paymentDaysId: customer.paymentDaysId || "",
+        paymentScheduleId: customer.paymentScheduleId || "",
         status: customer.status || "active",
       };
       
@@ -650,28 +666,33 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             },
             testId: "input-customer-bank-account"
           } as FormField2<CustomerFormData>,
-          // Positie 2: Payment Terms
+          // Positie 2: Payment Days
           {
-            key: "paymentTerms",
-            label: "Payment Terms",
+            key: "paymentDaysId",
+            label: "Payment Days",
             type: "select",
-            options: [
-              { value: "0", label: "Direct" },
-              { value: "7", label: "7 days" },
-              { value: "14", label: "14 days" },
-              { value: "30", label: "30 days" },
-              { value: "60", label: "60 days" },
-              { value: "90", label: "90 days" }
-            ],
-            setValue: (value) => form.setValue("paymentTerms", value),
-            watch: () => form.watch("paymentTerms") || "30",
-            validation: {
-              isRequired: true,
-              error: form.formState.errors.paymentTerms?.message
-            },
-            testId: "select-customer-payment-terms"
+            options: paymentDaysData?.map(pd => ({
+              value: pd.id,
+              label: form.watch("languageCode") === "en" ? pd.name_en : pd.name_nl
+            })) || [],
+            setValue: (value) => form.setValue("paymentDaysId", value),
+            watch: () => form.watch("paymentDaysId") || "",
+            testId: "select-customer-payment-days"
           } as FormField2<CustomerFormData>,
-          // Positie 3: Invoice Email
+          // Positie 3: Payment Schedule
+          {
+            key: "paymentScheduleId",
+            label: "Payment Schedule",
+            type: "select",
+            options: paymentSchedulesData?.map(ps => ({
+              value: ps.id,
+              label: form.watch("languageCode") === "en" ? ps.name_en : ps.name_nl
+            })) || [],
+            setValue: (value) => form.setValue("paymentScheduleId", value),
+            watch: () => form.watch("paymentScheduleId") || "",
+            testId: "select-customer-payment-schedule"
+          } as FormField2<CustomerFormData>,
+          // Positie 4: Invoice Email
           {
             key: "invoiceEmail",
             label: "Invoice Email",
@@ -682,7 +703,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             },
             testId: "input-customer-invoice-email"
           } as FormField2<CustomerFormData>,
-          // Positie 4: Status
+          // Positie 5: Status
           {
             key: "status",
             label: "Status",
@@ -696,7 +717,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             watch: () => form.watch("status") || "active",
             testId: "select-customer-status"
           } as FormField2<CustomerFormData>
-          // Positie 5-12: automatisch leeg
+          // Positie 6-12: automatisch leeg
         ]),
         // Speciale rij voor Invoice Notes veld dat over de gehele breedte loopt
         {

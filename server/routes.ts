@@ -8,7 +8,8 @@ import {
   insertPurchaseOrderItemSchema, insertSalesOrderSchema, insertSalesOrderItemSchema,
   insertWorkOrderSchema, insertPackingListSchema,
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
-  insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, insertPaymentTermSchema, insertIncotermSchema,
+  insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, 
+  insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertIncotermSchema,
   insertVatRateSchema, insertCitySchema, insertStatusSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
@@ -1236,6 +1237,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating unit of measure:", error);
       res.status(400).json({ message: "Failed to create unit of measure" });
+    }
+  });
+
+  // Master Data routes - Payment Days
+  app.get("/api/masterdata/payment-days", async (req, res) => {
+    try {
+      const paymentDays = await storage.getPaymentDays();
+      res.json(paymentDays);
+    } catch (error) {
+      console.error("Error fetching payment days:", error);
+      res.status(500).json({ message: "Failed to fetch payment days" });
+    }
+  });
+
+  app.post("/api/masterdata/payment-days", async (req, res) => {
+    try {
+      const paymentDayData = insertPaymentDaySchema.parse(req.body);
+      const paymentDay = await storage.createPaymentDay(paymentDayData);
+      res.json(paymentDay);
+    } catch (error) {
+      console.error("Error creating payment day:", error);
+      res.status(400).json({ message: "Failed to create payment day" });
+    }
+  });
+
+  app.get("/api/masterdata/payment-days/:id", async (req, res) => {
+    try {
+      const paymentDay = await storage.getPaymentDay(req.params.id);
+      if (!paymentDay) {
+        return res.status(404).json({ message: "Payment day not found" });
+      }
+      res.json(paymentDay);
+    } catch (error) {
+      console.error("Error fetching payment day:", error);
+      res.status(500).json({ message: "Failed to fetch payment day" });
+    }
+  });
+
+  app.put("/api/masterdata/payment-days/:id", async (req, res) => {
+    try {
+      const paymentDayData = insertPaymentDaySchema.partial().parse(req.body);
+      const paymentDay = await storage.updatePaymentDay(req.params.id, paymentDayData);
+      res.json(paymentDay);
+    } catch (error) {
+      console.error("Error updating payment day:", error);
+      res.status(400).json({ message: "Failed to update payment day" });
+    }
+  });
+
+  app.delete("/api/masterdata/payment-days/:id", async (req, res) => {
+    try {
+      await storage.deletePaymentDay(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting payment day:", error);
+      res.status(500).json({ message: "Failed to delete payment day" });
+    }
+  });
+
+  // Master Data routes - Payment Schedules
+  app.get("/api/masterdata/payment-schedules", async (req, res) => {
+    try {
+      const schedules = await storage.getPaymentSchedules();
+      res.json(schedules);
+    } catch (error) {
+      console.error("Error fetching payment schedules:", error);
+      res.status(500).json({ message: "Failed to fetch payment schedules" });
+    }
+  });
+
+  app.post("/api/masterdata/payment-schedules", async (req, res) => {
+    try {
+      const scheduleData = insertPaymentScheduleSchema.parse(req.body);
+      const schedule = await storage.createPaymentSchedule(scheduleData);
+      res.json(schedule);
+    } catch (error) {
+      console.error("Error creating payment schedule:", error);
+      res.status(400).json({ message: "Failed to create payment schedule" });
+    }
+  });
+
+  app.get("/api/masterdata/payment-schedules/:id", async (req, res) => {
+    try {
+      const schedule = await storage.getPaymentSchedule(req.params.id);
+      if (!schedule) {
+        return res.status(404).json({ message: "Payment schedule not found" });
+      }
+      res.json(schedule);
+    } catch (error) {
+      console.error("Error fetching payment schedule:", error);
+      res.status(500).json({ message: "Failed to fetch payment schedule" });
+    }
+  });
+
+  app.put("/api/masterdata/payment-schedules/:id", async (req, res) => {
+    try {
+      const scheduleData = insertPaymentScheduleSchema.partial().parse(req.body);
+      const schedule = await storage.updatePaymentSchedule(req.params.id, scheduleData);
+      res.json(schedule);
+    } catch (error) {
+      console.error("Error updating payment schedule:", error);
+      res.status(400).json({ message: "Failed to update payment schedule" });
+    }
+  });
+
+  app.delete("/api/masterdata/payment-schedules/:id", async (req, res) => {
+    try {
+      await storage.deletePaymentSchedule(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting payment schedule:", error);
+      res.status(500).json({ message: "Failed to delete payment schedule" });
     }
   });
 

@@ -2,7 +2,7 @@ import {
   users, customers, suppliers, prospects, inventoryItems, projects, quotations, quotationItems,
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
-  unitsOfMeasure, paymentTerms, incoterms, vatRates, cities, statuses, textSnippets, textSnippetUsages,
+  unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, incoterms, vatRates, cities, statuses, textSnippets, textSnippetUsages,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type Prospect, type InsertProspect, type InventoryItem, type InsertInventoryItem,
   type Project, type InsertProject, type Quotation, type InsertQuotation,
@@ -12,7 +12,9 @@ import {
   type SalesOrderItem, type InsertSalesOrderItem, type WorkOrder, type InsertWorkOrder,
   type PackingList, type InsertPackingList, type PackingListItem, type InsertPackingListItem,
   type UserPreferences, type InsertUserPreferences, type CustomerContact, type InsertCustomerContact,
-  type Address, type InsertAddress, type Country, type InsertCountry, type Language, type InsertLanguage, type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentTerm, type InsertPaymentTerm,
+  type Address, type InsertAddress, type Country, type InsertCountry, type Language, type InsertLanguage, 
+  type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentDay, type InsertPaymentDay,
+  type PaymentSchedule, type InsertPaymentSchedule, type PaymentTerm, type InsertPaymentTerm,
   type Incoterm, type InsertIncoterm, type VatRate, type InsertVatRate,
   type City, type InsertCity, type Status, type InsertStatus,
   type TextSnippet, type InsertTextSnippet, type TextSnippetUsage, type InsertTextSnippetUsage
@@ -179,6 +181,18 @@ export interface IStorage {
   createUnitOfMeasure(uom: InsertUnitOfMeasure): Promise<UnitOfMeasure>;
   updateUnitOfMeasure(id: string, uom: Partial<InsertUnitOfMeasure>): Promise<UnitOfMeasure>;
   deleteUnitOfMeasure(id: string): Promise<void>;
+
+  getPaymentDays(): Promise<PaymentDay[]>;
+  getPaymentDay(id: string): Promise<PaymentDay | undefined>;
+  createPaymentDay(paymentDay: InsertPaymentDay): Promise<PaymentDay>;
+  updatePaymentDay(id: string, paymentDay: Partial<InsertPaymentDay>): Promise<PaymentDay>;
+  deletePaymentDay(id: string): Promise<void>;
+
+  getPaymentSchedules(): Promise<PaymentSchedule[]>;
+  getPaymentSchedule(id: string): Promise<PaymentSchedule | undefined>;
+  createPaymentSchedule(schedule: InsertPaymentSchedule): Promise<PaymentSchedule>;
+  updatePaymentSchedule(id: string, schedule: Partial<InsertPaymentSchedule>): Promise<PaymentSchedule>;
+  deletePaymentSchedule(id: string): Promise<void>;
 
   getPaymentTerms(): Promise<PaymentTerm[]>;
   getPaymentTerm(id: string): Promise<PaymentTerm | undefined>;
@@ -1008,6 +1022,52 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUnitOfMeasure(id: string): Promise<void> {
     await db.update(unitsOfMeasure).set({ isActive: false }).where(eq(unitsOfMeasure.id, id));
+  }
+
+  async getPaymentDays(): Promise<PaymentDay[]> {
+    return await db.select().from(paymentDays).where(eq(paymentDays.isActive, true)).orderBy(paymentDays.sortOrder);
+  }
+
+  async getPaymentDay(id: string): Promise<PaymentDay | undefined> {
+    const [paymentDay] = await db.select().from(paymentDays).where(eq(paymentDays.id, id));
+    return paymentDay || undefined;
+  }
+
+  async createPaymentDay(paymentDay: InsertPaymentDay): Promise<PaymentDay> {
+    const [newPaymentDay] = await db.insert(paymentDays).values(paymentDay).returning();
+    return newPaymentDay;
+  }
+
+  async updatePaymentDay(id: string, paymentDay: Partial<InsertPaymentDay>): Promise<PaymentDay> {
+    const [updatedPaymentDay] = await db.update(paymentDays).set(paymentDay).where(eq(paymentDays.id, id)).returning();
+    return updatedPaymentDay;
+  }
+
+  async deletePaymentDay(id: string): Promise<void> {
+    await db.update(paymentDays).set({ isActive: false }).where(eq(paymentDays.id, id));
+  }
+
+  async getPaymentSchedules(): Promise<PaymentSchedule[]> {
+    return await db.select().from(paymentSchedules).where(eq(paymentSchedules.isActive, true)).orderBy(paymentSchedules.sortOrder);
+  }
+
+  async getPaymentSchedule(id: string): Promise<PaymentSchedule | undefined> {
+    const [schedule] = await db.select().from(paymentSchedules).where(eq(paymentSchedules.id, id));
+    return schedule || undefined;
+  }
+
+  async createPaymentSchedule(schedule: InsertPaymentSchedule): Promise<PaymentSchedule> {
+    const [newSchedule] = await db.insert(paymentSchedules).values(schedule).returning();
+    return newSchedule;
+  }
+
+  async updatePaymentSchedule(id: string, schedule: Partial<InsertPaymentSchedule>): Promise<PaymentSchedule> {
+    const [updatedSchedule] = await db.update(paymentSchedules).set(schedule).where(eq(paymentSchedules.id, id)).returning();
+    return updatedSchedule;
+  }
+
+  async deletePaymentSchedule(id: string): Promise<void> {
+    await db.update(paymentSchedules).set({ isActive: false }).where(eq(paymentSchedules.id, id));
   }
 
   async getPaymentTerms(): Promise<PaymentTerm[]> {

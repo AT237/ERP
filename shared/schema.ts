@@ -89,7 +89,9 @@ export const customers = pgTable("customers", {
   invoiceNotes: text("invoice_notes"), // Notes for invoice handling
   memo: text("memo"), // General notes and memo
   languageCode: text("language_code").references(() => languages.code).default("nl"),
-  paymentTerms: integer("payment_terms").default(30),
+  paymentTerms: integer("payment_terms").default(30), // DEPRECATED: use paymentDaysId and paymentScheduleId instead
+  paymentDaysId: varchar("payment_days_id").references(() => paymentDays.id),
+  paymentScheduleId: varchar("payment_schedule_id").references(() => paymentSchedules.id),
   status: text("status").default("active"),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -396,6 +398,32 @@ export const unitsOfMeasure = pgTable("units_of_measure", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Payment Days - number of days for payment (0, 7, 30, 60, 90, etc.)
+export const paymentDays = pgTable("payment_days", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  days: integer("days").notNull().unique(), // 0, 7, 30, 60, 90
+  name_nl: text("name_nl").notNull(), // "Direct", "7 dagen", "30 dagen"
+  name_en: text("name_en").notNull(), // "Direct", "7 days", "30 days"
+  description_nl: text("description_nl"), // "Betaling direct", "Betaling binnen 30 dagen"
+  description_en: text("description_en"), // "Payment direct", "Payment within 30 days"
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Payment Schedules - percentage breakdown of payments (100%, 50-30-10-10, etc.)
+export const paymentSchedules = pgTable("payment_schedules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(), // "100", "50_30_10_10"
+  name_nl: text("name_nl").notNull(), // "100%", "50-30-10-10"
+  name_en: text("name_en").notNull(), // "100%", "50-30-10-10"
+  scheduleItems: jsonb("schedule_items").notNull(), // [{"percentage": 50, "moment_nl": "bij order", "moment_en": "by order"}, ...]
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Keep old paymentTerms for backward compatibility (can be removed later)
 export const paymentTerms = pgTable("payment_terms", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   code: text("code").notNull().unique(),
@@ -709,6 +737,8 @@ export const insertPackingListItemSchema = createInsertSchema(packingListItems).
 
 // Master Data insert schemas
 export const insertUnitOfMeasureSchema = createInsertSchema(unitsOfMeasure).omit({ id: true, createdAt: true });
+export const insertPaymentDaySchema = createInsertSchema(paymentDays).omit({ id: true, createdAt: true });
+export const insertPaymentScheduleSchema = createInsertSchema(paymentSchedules).omit({ id: true, createdAt: true });
 export const insertPaymentTermSchema = createInsertSchema(paymentTerms).omit({ id: true, createdAt: true });
 export const insertIncotermSchema = createInsertSchema(incoterms).omit({ id: true, createdAt: true });
 export const insertVatRateSchema = createInsertSchema(vatRates).omit({ id: true, createdAt: true });
@@ -772,6 +802,10 @@ export type InsertPackingListItem = z.infer<typeof insertPackingListItemSchema>;
 // Master Data types
 export type UnitOfMeasure = typeof unitsOfMeasure.$inferSelect;
 export type InsertUnitOfMeasure = z.infer<typeof insertUnitOfMeasureSchema>;
+export type PaymentDay = typeof paymentDays.$inferSelect;
+export type InsertPaymentDay = z.infer<typeof insertPaymentDaySchema>;
+export type PaymentSchedule = typeof paymentSchedules.$inferSelect;
+export type InsertPaymentSchedule = z.infer<typeof insertPaymentScheduleSchema>;
 export type PaymentTerm = typeof paymentTerms.$inferSelect;
 export type InsertPaymentTerm = z.infer<typeof insertPaymentTermSchema>;
 export type Incoterm = typeof incoterms.$inferSelect;
