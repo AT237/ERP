@@ -1229,7 +1229,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               label: "Budget Quotation",
               type: "custom",
               customComponent: (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 mt-2">
                   <Checkbox
                     id="isBudgetQuotation"
                     checked={quotationForm.watch("isBudgetQuotation") || false}
