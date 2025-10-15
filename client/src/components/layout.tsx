@@ -27,6 +27,21 @@ const ContactPersonsPage = lazy(() => import('../pages/contact-persons'));
 const QuotationsPage = lazy(() => import('../pages/quotations-simple'));
 const AddressFormLayout = lazy(() => import('@/components/layouts/AddressFormLayout'));
 
+// Lazy load form components
+const QuotationForm = lazy(() => import('@/pages/quotation-form'));
+const CustomerForm = lazy(() => import('@/pages/customer-form'));
+const LineItemFormLayoutComponent = lazy(() => import('@/components/layouts/LineItemFormLayout').then(module => ({ default: module.LineItemFormLayout })));
+const SupplierForm = lazy(() => import('@/pages/supplier-form'));
+const InventoryForm = lazy(() => import('@/pages/inventory-form'));
+const ProjectForm = lazy(() => import('@/pages/project-form'));
+const WorkOrderForm = lazy(() => import('@/pages/work-order-form'));
+const PurchaseOrderForm = lazy(() => import('@/pages/purchase-order-form'));
+const SalesOrderForm = lazy(() => import('@/pages/sales-order-form'));
+const PackingListForm = lazy(() => import('@/pages/packing-list-form'));
+const InvoiceForm = lazy(() => import('@/pages/invoice-form'));
+const TextSnippetForm = lazy(() => import('@/pages/text-snippet-form'));
+const ContactPersonForm = lazy(() => import('@/pages/contact-person-form'));
+
 interface LayoutProps {
   children: React.ReactNode;
 }
@@ -763,7 +778,6 @@ export default function Layout({ children }: LayoutProps) {
     if (activeTab.type === 'form') {
       // Handle form tabs
       if (activeTab.formType === 'quotation') {
-        const QuotationForm = lazy(() => import('@/pages/quotation-form'));
         // Extract quotationId from tab.id if editing OR from parentId
         const quotationId = activeTab.id.startsWith('edit-quotation-') 
           ? activeTab.id.replace('edit-quotation-', '') 
@@ -787,7 +801,6 @@ export default function Layout({ children }: LayoutProps) {
       }
       
       if (activeTab.formType === 'customer') {
-        const CustomerForm = lazy(() => import('@/pages/customer-form'));
         // Extract customerId from tab.id if editing
         const customerId = activeTab.id.startsWith('edit-customer-') 
           ? activeTab.id.replace('edit-customer-', '') 
@@ -812,7 +825,6 @@ export default function Layout({ children }: LayoutProps) {
       }
       
       if (activeTab.formType === 'line-item' || activeTab.formType === 'quotation-item') {
-        const LineItemFormLayoutComponent = lazy(() => import('@/components/layouts/LineItemFormLayout').then(module => ({ default: module.LineItemFormLayout })));
         // Extract lineItemId and quotationId from tab.id
         // Format: 'edit-line-item-{lineItemId}' or 'quotation-item-{lineType}-{timestamp}'
         const isEditing = activeTab.id.startsWith('edit-line-item-');
@@ -842,7 +854,6 @@ export default function Layout({ children }: LayoutProps) {
       }
       
       if (activeTab.formType === 'supplier') {
-        const SupplierForm = lazy(() => import('@/pages/supplier-form'));
         const supplierId = activeTab.id.startsWith('edit-supplier-') 
           ? activeTab.id.replace('edit-supplier-', '') 
           : undefined;
@@ -865,7 +876,6 @@ export default function Layout({ children }: LayoutProps) {
       }
       
       if (activeTab.formType === 'inventory' || activeTab.formType === 'inventory-item') {
-        const InventoryForm = lazy(() => import('@/pages/inventory-form'));
         const inventoryId = activeTab.id.startsWith('edit-inventory-') 
           ? activeTab.id.replace('edit-inventory-', '') 
           : undefined;
@@ -888,7 +898,6 @@ export default function Layout({ children }: LayoutProps) {
       }
       
       if (activeTab.formType === 'project') {
-        const ProjectForm = lazy(() => import('@/pages/project-form'));
         const projectId = activeTab.id.startsWith('edit-project-') 
           ? activeTab.id.replace('edit-project-', '') 
           : undefined;
@@ -911,7 +920,6 @@ export default function Layout({ children }: LayoutProps) {
       }
       
       if (activeTab.formType === 'work-order') {
-        const WorkOrderForm = lazy(() => import('@/pages/work-order-form'));
         const workOrderId = activeTab.id.startsWith('edit-work-order-') 
           ? activeTab.id.replace('edit-work-order-', '') 
           : undefined;
@@ -934,7 +942,6 @@ export default function Layout({ children }: LayoutProps) {
       }
       
       if (activeTab.formType === 'purchase-order') {
-        const PurchaseOrderForm = lazy(() => import('@/pages/purchase-order-form'));
         const purchaseOrderId = activeTab.id.startsWith('edit-purchase-order-') 
           ? activeTab.id.replace('edit-purchase-order-', '') 
           : undefined;
@@ -1057,7 +1064,6 @@ export default function Layout({ children }: LayoutProps) {
       */
       
       if (activeTab.formType === 'contact-person') {
-        const ContactPersonForm = lazy(() => import('@/pages/contact-person-form'));
         // Extract contactPersonId from tab.id if editing
         const contactPersonId = activeTab.id.startsWith('edit-contact-person-') 
           ? activeTab.id.replace('edit-contact-person-', '') 
