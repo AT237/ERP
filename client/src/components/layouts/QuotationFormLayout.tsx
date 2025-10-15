@@ -246,14 +246,22 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   React.useEffect(() => {
     if (watchedQuotationDate && watchedValidityDays) {
       const quotationDate = new Date(watchedQuotationDate);
-      const validUntilDate = new Date(quotationDate);
-      validUntilDate.setDate(quotationDate.getDate() + watchedValidityDays);
-      const validUntilString = validUntilDate.toISOString().split('T')[0];
       
-      // Only update if the calculated date is different from current value
-      const currentValidUntil = quotationForm.getValues("validUntil");
-      if (currentValidUntil !== validUntilString) {
-        quotationForm.setValue("validUntil", validUntilString, { shouldTouch: false, shouldDirty: false });
+      // Check if the date is valid before processing
+      if (!isNaN(quotationDate.getTime())) {
+        const validUntilDate = new Date(quotationDate);
+        validUntilDate.setDate(quotationDate.getDate() + watchedValidityDays);
+        
+        // Only proceed if the calculated date is also valid
+        if (!isNaN(validUntilDate.getTime())) {
+          const validUntilString = validUntilDate.toISOString().split('T')[0];
+          
+          // Only update if the calculated date is different from current value
+          const currentValidUntil = quotationForm.getValues("validUntil");
+          if (currentValidUntil !== validUntilString) {
+            quotationForm.setValue("validUntil", validUntilString, { shouldTouch: false, shouldDirty: false });
+          }
+        }
       }
     }
   }, [watchedQuotationDate, watchedValidityDays]);
