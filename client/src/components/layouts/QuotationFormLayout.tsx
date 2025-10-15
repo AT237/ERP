@@ -1048,35 +1048,36 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         id: "general",
         label: "General",
         rows: [
-          createSectionHeaderRow("Basic Information", "mb-6"),
-          createFieldRow({
-            key: "customerId",
-            label: "Customer",
-            type: "custom",
-            customComponent: (
-              <CustomerSelect
-                value={quotationForm.watch("customerId")}
-                onValueChange={(value) => quotationForm.setValue("customerId", value)}
-                placeholder="Select customer..."
-                testId="select-customer"
-                onOpen={() => setShouldLoadCustomers(true)}
-                customers={customers.map(c => ({ 
-                  id: c.id, 
-                  customerNumber: c.customerNumber || '', 
-                  name: c.name, 
-                  email: c.generalEmail || undefined, 
-                  phone: c.phone || undefined 
-                }))}
-              />
-            ),
-            validation: {
-              error: quotationForm.formState.errors.customerId?.message,
-              isRequired: true
-            },
-            testId: "field-customer",
-            wrapperClassName: "w-[30%]"
-          }),
           createFieldsRow([
+            // Positie 1-2: Customer (full width)
+            {
+              key: "customerId",
+              label: "Customer",
+              type: "custom",
+              layout: "single",
+              customComponent: (
+                <CustomerSelect
+                  value={quotationForm.watch("customerId")}
+                  onValueChange={(value) => quotationForm.setValue("customerId", value)}
+                  placeholder="Select customer..."
+                  testId="select-customer"
+                  onOpen={() => setShouldLoadCustomers(true)}
+                  customers={customers.map(c => ({ 
+                    id: c.id, 
+                    customerNumber: c.customerNumber || '', 
+                    name: c.name, 
+                    email: c.generalEmail || undefined, 
+                    phone: c.phone || undefined 
+                  }))}
+                />
+              ),
+              validation: {
+                error: quotationForm.formState.errors.customerId?.message,
+                isRequired: true
+              },
+              testId: "field-customer"
+            },
+            // Positie 3: Quotation Date
             {
               key: "quotationDate",
               label: "Quotation Date",
@@ -1089,6 +1090,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               },
               testId: "input-quotation-date"
             },
+            // Positie 4: Status
             {
               key: "status",
               label: "Status",
@@ -1106,82 +1108,88 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 error: quotationForm.formState.errors.status?.message
               },
               testId: "select-status"
+            },
+            // Positie 5: Validity Days
+            {
+              key: "validityDays",
+              label: "Validity (days)",
+              type: "text",
+              register: quotationForm.register("validityDays", { valueAsNumber: true }),
+              validation: {
+                error: quotationForm.formState.errors.validityDays?.message,
+                isRequired: true
+              },
+              testId: "input-validity-days"
+            },
+            // Positie 6: Valid Until
+            {
+              key: "validUntil",
+              label: "Valid Until",
+              type: "text",
+              register: quotationForm.register("validUntil"),
+              validation: {
+                error: quotationForm.formState.errors.validUntil?.message
+              },
+              testId: "input-valid-until"
+            },
+            // Positie 7: Budget Quotation
+            {
+              key: "isBudgetQuotation",
+              label: "Budget Quotation",
+              type: "custom",
+              customComponent: (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isBudgetQuotation"
+                    checked={quotationForm.watch("isBudgetQuotation") || false}
+                    onCheckedChange={(checked) => {
+                      quotationForm.setValue("isBudgetQuotation", checked === true);
+                    }}
+                    data-testid="checkbox-budget-quotation"
+                  />
+                  <Label 
+                    htmlFor="isBudgetQuotation" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Mark as budget quotation
+                  </Label>
+                </div>
+              ),
+              validation: {
+                error: quotationForm.formState.errors.isBudgetQuotation?.message
+              },
+              testId: "field-budget-quotation"
             }
+            // Positie 8-12: automatisch leeg
           ]),
-          createFieldRow({
-            key: "validityDays",
-            label: "Validity (days)",
-            type: "custom",
-            customComponent: (
-              <div className="flex gap-4 items-center">
-                <div className="w-32">
-                  <Input
-                    id="validityDays"
-                    type="number"
-                    min="1"
-                    defaultValue="30"
-                    {...quotationForm.register("validityDays", { valueAsNumber: true })}
-                    data-testid="input-validity-days"
-                  />
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span>Valid Until:</span>
-                  <Input
-                    id="validUntil"
-                    type="text"
-                    {...quotationForm.register("validUntil")}
-                    className="bg-gray-50 dark:bg-gray-800 w-40"
-                    readOnly
-                    data-testid="input-valid-until"
-                  />
-                </div>
-              </div>
-            ),
-            validation: {
-              error: quotationForm.formState.errors.validityDays?.message,
-              isRequired: true
-            },
-            testId: "field-validity"
-          }),
-          createFieldRow({
-            key: "description",
-            label: "Quotation description",
-            type: "textarea",
-            rows: 3,
-            register: quotationForm.register("description"),
-            validation: {
-              error: quotationForm.formState.errors.description?.message
-            },
-            testId: "input-description",
-            wrapperClassName: "w-[60%]"
-          }),
-          createFieldRow({
-            key: "isBudgetQuotation",
-            label: "Budget quotation",
-            type: "custom",
-            customComponent: (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isBudgetQuotation"
-                  checked={quotationForm.watch("isBudgetQuotation") || false}
-                  onCheckedChange={(checked) => {
-                    quotationForm.setValue("isBudgetQuotation", checked === true);
-                  }}
-                  data-testid="checkbox-budget-quotation"
-                />
+          // Custom row voor Description veld dat over de gehele breedte loopt
+          {
+            type: 'custom',
+            customContent: (
+              <div className="grid grid-cols-[130px_1fr] items-start gap-3 mt-4">
                 <Label 
-                  htmlFor="isBudgetQuotation" 
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  htmlFor="description" 
+                  className="text-sm font-medium text-right pt-2"
                 >
-                  Budget quotation
+                  Description
                 </Label>
+                <div>
+                  <Textarea
+                    id="description"
+                    {...quotationForm.register("description")}
+                    placeholder="Quotation description..."
+                    className="min-h-[80px]"
+                    data-testid="textarea-quotation-description"
+                  />
+                  {quotationForm.formState.errors.description && (
+                    <span className="text-sm text-red-600 mt-1 block">
+                      {quotationForm.formState.errors.description.message}
+                    </span>
+                  )}
+                </div>
               </div>
-            ),
-            validation: {
-              error: quotationForm.formState.errors.isBudgetQuotation?.message
-            },
-            testId: "field-budget-quotation"
-          })
+            )
+          }
         ]
       },
       {
