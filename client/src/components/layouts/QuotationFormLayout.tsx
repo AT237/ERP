@@ -822,143 +822,237 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     });
   };
 
-  // PDF generation function with proper logo loading
+  // Helper function to convert number to words (for amount in words)
+  const numberToWords = (amount: number): string => {
+    // Simple implementation for Euro amounts
+    const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+    const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+    const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+    
+    if (amount === 0) return 'zero euro';
+    
+    const euros = Math.floor(amount);
+    const cents = Math.round((amount - euros) * 100);
+    
+    let result = '';
+    
+    if (euros >= 1000000) {
+      const millions = Math.floor(euros / 1000000);
+      result += numberToWords(millions).replace(' euro', '') + ' million ';
+      const remainder = euros % 1000000;
+      if (remainder > 0) result += numberToWords(remainder).replace(' euro', '') + ' ';
+    } else if (euros >= 1000) {
+      const thousands = Math.floor(euros / 1000);
+      result += numberToWords(thousands).replace(' euro', '') + ' thousand ';
+      const remainder = euros % 1000;
+      if (remainder > 0) result += numberToWords(remainder).replace(' euro', '') + ' ';
+    } else if (euros >= 100) {
+      const hundreds = Math.floor(euros / 100);
+      result += ones[hundreds] + ' hundred ';
+      const remainder = euros % 100;
+      if (remainder > 0) result += numberToWords(remainder).replace(' euro', '') + ' ';
+    } else if (euros >= 20) {
+      result += tens[Math.floor(euros / 10)] + ' ';
+      if (euros % 10 > 0) result += ones[euros % 10] + ' ';
+    } else if (euros >= 10) {
+      result += teens[euros - 10] + ' ';
+    } else if (euros > 0) {
+      result += ones[euros] + ' ';
+    }
+    
+    result += 'euro';
+    
+    if (cents > 0) {
+      result += ' and ' + numberToWords(cents).replace(' euro', '') + ' cent';
+    }
+    
+    return result.charAt(0).toUpperCase() + result.slice(1);
+  };
+
+  // PDF generation function matching the professional layout
   const generateProfessionalPDF = async (): Promise<jsPDF> => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
-    let yPos = 20;
+    const margin = 15;
+    let yPos = 15;
     
-    // Add company logo with proper conversion
-    try {
-      const logoDataUrl = await imageUrlToDataUrl(companyLogo);
-      doc.addImage(logoDataUrl, 'JPEG', 20, yPos, 40, 30);
-    } catch (error) {
-      console.warn('Could not add logo to PDF:', error);
-      // Continue without logo
-    }
-    
-    // Company info (right side)
-    doc.setFontSize(10);
+    // Page number (top right)
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text('ATE Solutions', pageWidth - 60, yPos + 10);
-    doc.text('Your Address Line 1', pageWidth - 60, yPos + 16);
-    doc.text('Your Address Line 2', pageWidth - 60, yPos + 22);
-    doc.text('Phone: +31 123 456 789', pageWidth - 60, yPos + 28);
-    doc.text('Email: info@atesolutions.nl', pageWidth - 60, yPos + 34);
+    doc.text('1 of 1', pageWidth - margin - 15, yPos);
     
-    yPos += 60;
+    yPos += 15;
     
-    // Quotation header
-    doc.setFontSize(18);
+    // Date (top right)
+    const quotationDate = quotationForm.watch("quotationDate") || format(new Date(), 'dd-MM-yyyy');
+    doc.text(`Date: ${quotationDate}`, pageWidth - margin - 35, yPos);
+    
+    yPos += 10;
+    
+    // Quotation title (centered)
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     const quotationNumber = quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber");
-    doc.text(`QUOTATION ${quotationNumber}`, 20, yPos);
+    const titleWidth = doc.getTextWidth(`QUOTATION ${quotationNumber}`);
+    doc.text(`QUOTATION ${quotationNumber}`, (pageWidth - titleWidth) / 2, yPos);
     
-    yPos += 20;
+    yPos += 10;
     
-    // Quotation details (left column)
-    doc.setFontSize(10);
+    // Supplier and Customer info (two columns)
+    const leftCol = margin;
+    const rightCol = pageWidth / 2 + 10;
+    
+    // Supplier info (left)
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Supplier: ATE Solutions B.V.', leftCol, yPos);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Date: ${format(new Date(), 'dd-MM-yyyy')}`, 20, yPos);
-    doc.text(`Valid until: ${quotationForm.watch("validUntil") || 'N/A'}`, 20, yPos + 8);
-    doc.text(`Validity: ${quotationForm.watch("validityDays") || 30} days`, 20, yPos + 16);
+    doc.text('Oude Telgterweg 255', leftCol + 15, yPos + 5);
+    doc.text('3853PG, ERMELO', leftCol + 15, yPos + 10);
+    doc.text('0031 682332087', leftCol + 15, yPos + 15);
+    doc.text('info@atesolutions.nl', leftCol + 15, yPos + 20);
+    doc.text('VAT no. NL 8656 38792 B01', leftCol + 15, yPos + 25);
+    doc.text('C.o.c. no. 91385415', leftCol + 15, yPos + 30);
+    doc.text('IBAN: NL28INGB 0102962979', leftCol + 15, yPos + 35);
+    doc.text('The Netherlands', leftCol + 15, yPos + 40);
     
-    // Customer details (right column) - use quotationCustomer if available, fallback to customers array
+    // Customer info (right)
     const customer = quotationCustomer || customers.find(c => c.id === quotationForm.watch("customerId"));
     if (customer) {
       doc.setFont('helvetica', 'bold');
-      doc.text('Bill to:', pageWidth - 80, yPos);
+      doc.text(`Customer: ${customer.name}`, rightCol, yPos);
       doc.setFont('helvetica', 'normal');
-      doc.text(customer.name, pageWidth - 80, yPos + 8);
+      
       // Handle different customer object structures
-      const customerNumber = 'customerNumber' in customer ? customer.customerNumber : '';
-      const phone = customer.phone || '';
-      const email = 'generalEmail' in customer ? customer.generalEmail : customer.email;
-      doc.text(customerNumber || '', pageWidth - 80, yPos + 16);
-      doc.text(phone || '', pageWidth - 80, yPos + 24);
-      doc.text(email || '', pageWidth - 80, yPos + 32);
+      const address = ('address' in customer ? customer.address : '') || '';
+      const city = ('city' in customer ? customer.city : '') || '';
+      const postalCode = ('postalCode' in customer ? customer.postalCode : '') || '';
+      const country = ('country' in customer ? customer.country : '') || '';
+      
+      let customerYPos = yPos + 5;
+      if (address) {
+        doc.text(String(address), rightCol + 15, customerYPos);
+        customerYPos += 5;
+      }
+      if (city || postalCode) {
+        doc.text(`${postalCode}${postalCode && city ? ', ' : ''}${city}`, rightCol + 15, customerYPos);
+        customerYPos += 5;
+      }
+      if (country) {
+        doc.text(String(country), rightCol + 15, customerYPos);
+      }
     }
     
-    yPos += 50;
+    yPos += 55;
     
-    // Description
+    // Quotation description
     const description = quotationForm.watch("description");
     if (description) {
-      doc.setFont('helvetica', 'bold');
-      doc.text('Description:', 20, yPos);
       doc.setFont('helvetica', 'normal');
-      doc.text(description, 20, yPos + 8);
-      yPos += 20;
+      doc.text(`Quotation description: ${description}`, margin, yPos);
+      yPos += 10;
     }
     
-    // Items table
     yPos += 10;
     
-    // Table header
-    doc.setFillColor(240, 240, 240);
-    doc.rect(20, yPos - 5, pageWidth - 40, 12, 'F');
-    doc.setFont('helvetica', 'bold');
+    // Items table header
     doc.setFontSize(9);
-    doc.text('Description', 25, yPos + 2);
-    doc.text('Qty', 130, yPos + 2);
-    doc.text('Unit Price', 150, yPos + 2);
-    doc.text('Line Total', 180, yPos + 2);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Position', margin, yPos);
+    doc.text('Description', margin + 20, yPos);
+    doc.text('Quantity', 130, yPos);
+    doc.text('Unit Price:', 155, yPos);
+    doc.text('Total Price:', 180, yPos);
     
-    // Table lines
-    doc.line(20, yPos + 5, pageWidth - 20, yPos + 5);
-    yPos += 15;
+    yPos += 5;
     
     // Items
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
     quotationItems.forEach((item, index) => {
-      if (yPos > pageHeight - 50) {
+      if (yPos > pageHeight - 80) {
         doc.addPage();
         yPos = 30;
       }
       
-      // Alternate row background
-      if (index % 2 === 1) {
-        doc.setFillColor(250, 250, 250);
-        doc.rect(20, yPos - 5, pageWidth - 40, 12, 'F');
-      }
+      const position = String((index + 1) * 10).padStart(3, '0');
+      doc.setFont('helvetica', 'bold');
+      doc.text(position, margin, yPos);
       
-      doc.text(item.description || '', 25, yPos + 2);
-      doc.text((item.quantity || 0).toString(), 130, yPos + 2);
-      doc.text(`€${parseFloat(item.unitPrice || '0').toFixed(2)}`, 150, yPos + 2);
-      doc.text(`€${parseFloat(item.lineTotal || '0').toFixed(2)}`, 180, yPos + 2);
-      yPos += 12;
+      doc.setFont('helvetica', 'normal');
+      // Handle multi-line descriptions
+      const descLines = doc.splitTextToSize(item.description || '', 105);
+      descLines.forEach((line: string, idx: number) => {
+        doc.text(line, margin + 20, yPos + (idx * 5));
+      });
+      
+      doc.text(`${item.quantity || 0} Pcs.`, 130, yPos);
+      doc.text(`€ ${parseFloat(item.unitPrice || '0').toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, 155, yPos);
+      doc.text(`€ ${parseFloat(item.lineTotal || '0').toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, 180, yPos);
+      
+      yPos += Math.max(descLines.length * 5, 5) + 10;
     });
     
-    // Table footer line
-    doc.line(20, yPos, pageWidth - 20, yPos);
-    yPos += 20;
+    yPos += 5;
     
-    // Totals section
-    const subtotal = parseFloat(quotationForm.watch("subtotal") || '0');
-    const taxAmount = parseFloat(quotationForm.watch("taxAmount") || '0');
+    // Total
     const totalAmount = parseFloat(quotationForm.watch("totalAmount") || '0');
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text('Subtotal:', 140, yPos);
-    doc.text(`€${subtotal.toFixed(2)}`, 180, yPos);
-    yPos += 8;
-    
-    doc.text('Tax (21%):', 140, yPos);
-    doc.text(`€${taxAmount.toFixed(2)}`, 180, yPos);
-    yPos += 8;
-    
     doc.setFont('helvetica', 'bold');
-    doc.text('Total:', 140, yPos);
-    doc.text(`€${totalAmount.toFixed(2)}`, 180, yPos);
+    doc.text('Total:', 155, yPos);
+    doc.text(`€ ${totalAmount.toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, 180, yPos);
+    
+    yPos += 10;
+    
+    // Amount in words
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text(`Amount in words: ${numberToWords(totalAmount)}`, margin + 80, yPos);
+    
+    yPos += 10;
+    
+    // Notes
+    const notes = quotationForm.watch("notes");
+    if (notes) {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Notes:', margin, yPos);
+      doc.setFont('helvetica', 'normal');
+      yPos += 5;
+      const noteLines = doc.splitTextToSize(notes, pageWidth - 2 * margin);
+      noteLines.forEach((line: string) => {
+        doc.text(line, margin, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+    }
+    
+    yPos += 10;
+    
+    // Payment conditions and delivery info
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    const paymentConditions = quotationForm.watch("paymentConditions") || 'Payment within 30 days';
+    const incoTerms = quotationForm.watch("incoTerms") || 'Ex Works';
+    const validityDays = quotationForm.watch("validityDays") || 30;
+    
+    doc.text(`Payment conditions: ${paymentConditions}`, margin + 20, yPos);
+    yPos += 5;
+    doc.text(`Delivery: ${incoTerms}`, margin + 40, yPos);
+    yPos += 5;
+    doc.text(`Delivery time: To be discussed`, margin + 30, yPos);
+    yPos += 5;
+    doc.text(`Validity: ${validityDays} Days`, margin + 40, yPos);
+    
+    yPos += 15;
+    
+    // Signature
+    doc.setFont('helvetica', 'normal');
+    doc.text('Kind regards, A. Tomassen', margin + 30, yPos);
     
     // Footer
-    yPos = pageHeight - 30;
+    yPos = pageHeight - 20;
     doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Thank you for your business!', 20, yPos);
-    doc.text('Payment terms: 30 days net', 20, yPos + 6);
+    doc.text('Our general terms and conditions apply to all our deliveries.', margin, yPos);
     
     return doc;
   };
