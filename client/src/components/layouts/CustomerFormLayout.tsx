@@ -15,6 +15,8 @@ import { AddressSelectWithAdd } from "@/components/ui/address-select-with-add";
 import { ContactPersonSelectWithAdd } from "@/components/ui/contact-person-select-with-add";
 import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
 import { LanguageSelectWithAdd } from "@/components/ui/language-select-with-add";
+import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
+import { PaymentScheduleSelectWithAdd } from "@/components/ui/payment-schedule-select-with-add";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
@@ -173,16 +175,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer>({
     queryKey: ["/api/customers", customerId],
     enabled: !!customerId,
-  });
-
-  // Fetch Payment Days data
-  const { data: paymentDaysData } = useQuery<any[]>({
-    queryKey: ["/api/masterdata/payment-days"],
-  });
-
-  // Fetch Payment Schedules data
-  const { data: paymentSchedulesData } = useQuery<any[]>({
-    queryKey: ["/api/masterdata/payment-schedules"],
   });
 
   // Update tab name with customer number when data is loaded
@@ -670,27 +662,31 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           {
             key: "paymentDaysId",
             label: "Payment Days",
-            type: "select",
-            options: paymentDaysData?.map(pd => ({
-              value: pd.id,
-              label: form.watch("languageCode") === "en" ? pd.name_en : pd.name_nl
-            })) || [],
-            setValue: (value) => form.setValue("paymentDaysId", value),
-            watch: () => form.watch("paymentDaysId") || "",
-            testId: "select-customer-payment-days"
+            type: "custom",
+            customComponent: (
+              <PaymentDaySelectWithAdd
+                value={form.watch("paymentDaysId") || ""}
+                onValueChange={(value) => form.setValue("paymentDaysId", value)}
+                language={form.watch("languageCode") || "nl"}
+                placeholder="Select payment days..."
+                testId="select-customer-payment-days"
+              />
+            )
           } as FormField2<CustomerFormData>,
           // Positie 3: Payment Schedule
           {
             key: "paymentScheduleId",
             label: "Payment Schedule",
-            type: "select",
-            options: paymentSchedulesData?.map(ps => ({
-              value: ps.id,
-              label: form.watch("languageCode") === "en" ? ps.name_en : ps.name_nl
-            })) || [],
-            setValue: (value) => form.setValue("paymentScheduleId", value),
-            watch: () => form.watch("paymentScheduleId") || "",
-            testId: "select-customer-payment-schedule"
+            type: "custom",
+            customComponent: (
+              <PaymentScheduleSelectWithAdd
+                value={form.watch("paymentScheduleId") || ""}
+                onValueChange={(value) => form.setValue("paymentScheduleId", value)}
+                language={form.watch("languageCode") || "nl"}
+                placeholder="Select payment schedule..."
+                testId="select-customer-payment-schedule"
+              />
+            )
           } as FormField2<CustomerFormData>,
           // Positie 4: Invoice Email
           {
