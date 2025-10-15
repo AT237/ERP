@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
 // InfoField import removed per user request
 import type { FormTab } from './FormTabLayout';
@@ -41,7 +42,7 @@ export interface FormField2<T extends FieldValues = FieldValues> {
   // Basic field properties
   key: FieldPath<T>;
   label: string;
-  type: 'text' | 'email' | 'tel' | 'number' | 'select' | 'textarea' | 'custom' | 'display';
+  type: 'text' | 'email' | 'tel' | 'number' | 'date' | 'select' | 'textarea' | 'custom' | 'display';
   
   // Layout and positioning
   layout?: FieldLayout;
@@ -224,6 +225,18 @@ function renderField<T extends FieldValues>(
           {...baseProps}
           type={field.type}
           {...(field.register || {})}
+        />
+      );
+    
+    case 'date':
+      return (
+        <DatePicker
+          value={field.watch?.() || ""}
+          onChange={(value) => field.setValue?.(value)}
+          placeholder={field.placeholder || "dd-mm-yyyy"}
+          disabled={field.disabled}
+          className={className}
+          testId={field.testId || `date-${field.key}`}
         />
       );
     
