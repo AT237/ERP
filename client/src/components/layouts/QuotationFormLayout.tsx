@@ -177,6 +177,26 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     enabled: !quotationId, // Only fetch when creating new quotation
   });
 
+  // Helper function to convert yyyy-MM-dd to dd-mm-yyyy
+  const formatDateForDisplay = (dateString: string): string => {
+    if (!dateString) return "";
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`; // dd-mm-yyyy
+    }
+    return dateString;
+  };
+
+  // Helper function to convert dd-mm-yyyy to yyyy-MM-dd
+  const formatDateForStorage = (dateString: string): string => {
+    if (!dateString) return "";
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`; // yyyy-MM-dd
+    }
+    return dateString;
+  };
+
   // Forms
   const quotationForm = useForm<QuotationFormData>({
     resolver: zodResolver(quotationFormSchema),
@@ -186,8 +206,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       description: "",
       revisionNumber: "V1.0",
       status: "draft",
-      quotationDate: format(new Date(), 'yyyy-MM-dd'),
-      validUntil: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), // 30 days from now
+      quotationDate: format(new Date(), 'dd-MM-yyyy'),
+      validUntil: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'dd-MM-yyyy'), // 30 days from now
       validityDays: 30,
       isBudgetQuotation: false,
       subtotal: "0.00",
@@ -245,21 +265,29 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
   React.useEffect(() => {
     if (watchedQuotationDate && watchedValidityDays) {
-      const quotationDate = new Date(watchedQuotationDate);
-      
-      // Check if the date is valid before processing
-      if (!isNaN(quotationDate.getTime())) {
-        const validUntilDate = new Date(quotationDate);
-        validUntilDate.setDate(quotationDate.getDate() + watchedValidityDays);
+      // Parse dd-mm-yyyy format
+      const parts = watchedQuotationDate.split('-');
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+        const year = parseInt(parts[2], 10);
+        const quotationDate = new Date(year, month, day);
         
-        // Only proceed if the calculated date is also valid
-        if (!isNaN(validUntilDate.getTime())) {
-          const validUntilString = validUntilDate.toISOString().split('T')[0];
+        // Check if the date is valid before processing
+        if (!isNaN(quotationDate.getTime())) {
+          const validUntilDate = new Date(quotationDate);
+          validUntilDate.setDate(quotationDate.getDate() + watchedValidityDays);
           
-          // Only update if the calculated date is different from current value
-          const currentValidUntil = quotationForm.getValues("validUntil");
-          if (currentValidUntil !== validUntilString) {
-            quotationForm.setValue("validUntil", validUntilString, { shouldTouch: false, shouldDirty: false });
+          // Only proceed if the calculated date is also valid
+          if (!isNaN(validUntilDate.getTime())) {
+            // Format as dd-mm-yyyy
+            const validUntilString = format(validUntilDate, 'dd-MM-yyyy');
+            
+            // Only update if the calculated date is different from current value
+            const currentValidUntil = quotationForm.getValues("validUntil");
+            if (currentValidUntil !== validUntilString) {
+              quotationForm.setValue("validUntil", validUntilString, { shouldTouch: false, shouldDirty: false });
+            }
           }
         }
       }
@@ -321,8 +349,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         description: existingQuotation.description || "",
         revisionNumber: existingQuotation.revisionNumber || "V1.0",
         status: existingQuotation.status || "draft",
-        quotationDate: existingQuotation.quotationDate ? format(new Date(existingQuotation.quotationDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
-        validUntil: existingQuotation.validUntil ? format(new Date(existingQuotation.validUntil), 'yyyy-MM-dd') : "",
+        quotationDate: existingQuotation.quotationDate ? format(new Date(existingQuotation.quotationDate), 'dd-MM-yyyy') : format(new Date(), 'dd-MM-yyyy'),
+        validUntil: existingQuotation.validUntil ? format(new Date(existingQuotation.validUntil), 'dd-MM-yyyy') : "",
         validityDays: existingQuotation.validityDays || 30,
         isBudgetQuotation: existingQuotation.isBudgetQuotation || false,
         subtotal: existingQuotation.subtotal?.toString() || "0.00",
@@ -524,10 +552,17 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   });
 
   const handleSaveQuotation = (data: QuotationFormData) => {
+    // Convert dates from dd-mm-yyyy to yyyy-MM-dd for storage
+    const dataWithConvertedDates = {
+      ...data,
+      quotationDate: formatDateForStorage(data.quotationDate || ""),
+      validUntil: formatDateForStorage(data.validUntil || ""),
+    };
+    
     if (quotationId) {
-      updateQuotationMutation.mutate(data);
+      updateQuotationMutation.mutate(dataWithConvertedDates);
     } else {
-      createQuotationMutation.mutate(data);
+      createQuotationMutation.mutate(dataWithConvertedDates);
     }
   };
 
@@ -1089,9 +1124,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             {
               key: "quotationDate",
               label: "Quotation Date",
-              type: "text",
-              placeholder: "YYYY-MM-DD",
-              register: quotationForm.register("quotationDate"),
+              type: "date",
+              placeholder: "dd-mm-yyyy",
+              setValue: (value) => quotationForm.setValue("quotationDate", value),
+              watch: () => quotationForm.watch("quotationDate"),
               validation: {
                 error: quotationForm.formState.errors.quotationDate?.message,
                 isRequired: true
@@ -1133,8 +1169,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             {
               key: "validUntil",
               label: "Valid Until",
-              type: "text",
-              register: quotationForm.register("validUntil"),
+              type: "date",
+              placeholder: "dd-mm-yyyy",
+              setValue: (value) => quotationForm.setValue("validUntil", value),
+              watch: () => quotationForm.watch("validUntil"),
               validation: {
                 error: quotationForm.formState.errors.validUntil?.message
               },
