@@ -1067,16 +1067,16 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       const pdf = await generateProfessionalPDF();
       setCurrentPDF(pdf);
       
-      // Create data URL for preview (better compatibility than blob URL)
-      const pdfDataUri = pdf.output('datauristring');
+      // Open PDF in new window for better compatibility
+      const pdfBlob = pdf.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
       
-      // Show in modal
-      setPdfBlobUrl(pdfDataUri);
-      setShowPDFPreview(true);
+      // Open in new tab/window
+      window.open(pdfUrl, '_blank');
       
       toast({
         title: "Success", 
-        description: "PDF preview geopend",
+        description: "PDF preview geopend in nieuw tabblad",
       });
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -1590,11 +1590,20 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           </DialogHeader>
           {pdfBlobUrl && (
             <div className="w-full h-[70vh] mb-4">
-              <iframe 
-                src={pdfBlobUrl} 
+              <object 
+                data={pdfBlobUrl} 
+                type="application/pdf"
                 className="w-full h-full border rounded-md"
                 title="PDF Preview"
-              />
+              >
+                <div className="flex flex-col items-center justify-center h-full">
+                  <p className="text-gray-500 mb-4">PDF preview not supported in this browser</p>
+                  <Button onClick={handleSavePDF}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download PDF
+                  </Button>
+                </div>
+              </object>
             </div>
           )}
           <div className="flex justify-between gap-2">
