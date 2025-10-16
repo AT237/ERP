@@ -1067,17 +1067,16 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       const pdf = await generateProfessionalPDF();
       setCurrentPDF(pdf);
       
-      // Create blob and URL for preview
-      const pdfBlob = pdf.output('blob');
-      const pdfUrl = URL.createObjectURL(pdfBlob);
+      // Create data URL for preview (better compatibility than blob URL)
+      const pdfDataUri = pdf.output('datauristring');
       
       // Show in modal
-      setPdfBlobUrl(pdfUrl);
+      setPdfBlobUrl(pdfDataUri);
       setShowPDFPreview(true);
       
       toast({
         title: "Success", 
-        description: "PDF preview opened",
+        description: "PDF preview geopend",
       });
     } catch (error) {
       console.error("Error generating PDF:", error);
