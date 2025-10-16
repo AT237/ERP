@@ -22,6 +22,7 @@ import SalesOrders from "@/pages/sales-orders";
 import PackingLists from "@/pages/packing-lists";
 import Reports from "@/pages/reports";
 import TextSnippets from "@/pages/text-snippets";
+import LayoutDesigner from "@/pages/layout-designer";
 import Layout from "@/components/layout";
 
 function Router() {
@@ -45,6 +46,7 @@ function Router() {
         <Route path="/packing-lists" component={PackingLists} />
         <Route path="/reports" component={Reports} />
         <Route path="/text-snippets" component={TextSnippets} />
+        <Route path="/layout-designer" component={LayoutDesigner} />
         
         {/* Master Data Routes */}
         <Route path="/master-data/uom" component={() => (

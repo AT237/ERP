@@ -103,6 +103,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'new-customer', name: 'New Customer' };
       case '/text-snippets':
         return { id: 'text-snippets', name: 'Text Snippets' };
+      case '/layout-designer':
+        return { id: 'layout-designer', name: 'Layout Designer' };
       case '/master-data/uom':
         return { id: 'uom', name: 'Units of Measure' };
       case '/master-data/payment-terms':
@@ -473,6 +475,8 @@ export default function Layout({ children }: LayoutProps) {
         return '/addresses';
       case 'text-snippets':
         return '/text-snippets';
+      case 'layout-designer':
+        return '/layout-designer';
       case 'uom':
         return '/master-data/uom';
       case 'payment-terms':

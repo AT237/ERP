@@ -23,7 +23,7 @@ import {
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact,
   ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search, ChevronsDown, ChevronsUp,
-  Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen
+  Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen, Layout
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -109,6 +109,14 @@ const defaultNavigation = [
     collapsible: true,
     items: [
       { id: "analytics", name: "Analytics", href: "/reports", icon: BarChart3 }
+    ]
+  },
+  {
+    id: "tools",
+    name: "Tools",
+    collapsible: true,
+    items: [
+      { id: "layout-designer", name: "Layout Designer", href: "/layout-designer", icon: Layout }
     ]
   }
 ];
