@@ -3,6 +3,7 @@ import {
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
   unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, incoterms, vatRates, cities, statuses, textSnippets, textSnippetUsages,
+  documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type Prospect, type InsertProspect, type InventoryItem, type InsertInventoryItem,
   type Project, type InsertProject, type Quotation, type InsertQuotation,
@@ -17,7 +18,10 @@ import {
   type PaymentSchedule, type InsertPaymentSchedule, type PaymentTerm, type InsertPaymentTerm,
   type Incoterm, type InsertIncoterm, type VatRate, type InsertVatRate,
   type City, type InsertCity, type Status, type InsertStatus,
-  type TextSnippet, type InsertTextSnippet, type TextSnippetUsage, type InsertTextSnippetUsage
+  type TextSnippet, type InsertTextSnippet, type TextSnippetUsage, type InsertTextSnippetUsage,
+  type DocumentLayout, type InsertDocumentLayout, type LayoutBlock, type InsertLayoutBlock,
+  type LayoutSection, type InsertLayoutSection, type LayoutElement, type InsertLayoutElement,
+  type DocumentLayoutField, type InsertDocumentLayoutField
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, or, ilike } from "drizzle-orm";
@@ -235,6 +239,43 @@ export interface IStorage {
   deleteTextSnippet(id: string): Promise<void>;
   recordSnippetUsage(usage: InsertTextSnippetUsage): Promise<TextSnippetUsage>;
   getSnippetUsages(snippetId: string): Promise<TextSnippetUsage[]>;
+
+  // Layout Management methods
+  // Document Layouts
+  getDocumentLayouts(documentType?: string): Promise<DocumentLayout[]>;
+  getDocumentLayout(id: string): Promise<DocumentLayout | undefined>;
+  getDefaultLayout(documentType: string): Promise<DocumentLayout | undefined>;
+  createDocumentLayout(layout: InsertDocumentLayout): Promise<DocumentLayout>;
+  updateDocumentLayout(id: string, layout: Partial<InsertDocumentLayout>): Promise<DocumentLayout>;
+  deleteDocumentLayout(id: string): Promise<void>;
+  
+  // Layout Blocks
+  getLayoutBlocks(documentType?: string): Promise<LayoutBlock[]>;
+  getLayoutBlock(id: string): Promise<LayoutBlock | undefined>;
+  createLayoutBlock(block: InsertLayoutBlock): Promise<LayoutBlock>;
+  updateLayoutBlock(id: string, block: Partial<InsertLayoutBlock>): Promise<LayoutBlock>;
+  deleteLayoutBlock(id: string): Promise<void>;
+  
+  // Layout Sections
+  getLayoutSections(layoutId: string): Promise<LayoutSection[]>;
+  getLayoutSection(id: string): Promise<LayoutSection | undefined>;
+  createLayoutSection(section: InsertLayoutSection): Promise<LayoutSection>;
+  updateLayoutSection(id: string, section: Partial<InsertLayoutSection>): Promise<LayoutSection>;
+  deleteLayoutSection(id: string): Promise<void>;
+  
+  // Layout Elements
+  getLayoutElements(sectionId: string): Promise<LayoutElement[]>;
+  getLayoutElement(id: string): Promise<LayoutElement | undefined>;
+  createLayoutElement(element: InsertLayoutElement): Promise<LayoutElement>;
+  updateLayoutElement(id: string, element: Partial<InsertLayoutElement>): Promise<LayoutElement>;
+  deleteLayoutElement(id: string): Promise<void>;
+  
+  // Document Layout Fields
+  getDocumentLayoutFields(documentType: string): Promise<DocumentLayoutField[]>;
+  getDocumentLayoutField(id: string): Promise<DocumentLayoutField | undefined>;
+  createDocumentLayoutField(field: InsertDocumentLayoutField): Promise<DocumentLayoutField>;
+  updateDocumentLayoutField(id: string, field: Partial<InsertDocumentLayoutField>): Promise<DocumentLayoutField>;
+  deleteDocumentLayoutField(id: string): Promise<void>;
 
   // Conversion methods
   convertQuotationToSalesOrder(quotationId: string): Promise<SalesOrder>;
@@ -1340,6 +1381,170 @@ export class DatabaseStorage implements IStorage {
     }
 
     return invoice;
+  }
+
+  // ===================================
+  // LAYOUT MANAGEMENT IMPLEMENTATIONS
+  // ===================================
+
+  // Document Layouts
+  async getDocumentLayouts(documentType?: string): Promise<DocumentLayout[]> {
+    if (documentType) {
+      return await db.select().from(documentLayouts)
+        .where(eq(documentLayouts.documentType, documentType))
+        .orderBy(documentLayouts.name);
+    }
+    return await db.select().from(documentLayouts).orderBy(documentLayouts.documentType, documentLayouts.name);
+  }
+
+  async getDocumentLayout(id: string): Promise<DocumentLayout | undefined> {
+    const [layout] = await db.select().from(documentLayouts).where(eq(documentLayouts.id, id));
+    return layout || undefined;
+  }
+
+  async getDefaultLayout(documentType: string): Promise<DocumentLayout | undefined> {
+    const [layout] = await db.select().from(documentLayouts)
+      .where(and(
+        eq(documentLayouts.documentType, documentType),
+        eq(documentLayouts.isDefault, true)
+      ));
+    return layout || undefined;
+  }
+
+  async createDocumentLayout(layout: InsertDocumentLayout): Promise<DocumentLayout> {
+    const [newLayout] = await db.insert(documentLayouts).values(layout).returning();
+    return newLayout;
+  }
+
+  async updateDocumentLayout(id: string, layout: Partial<InsertDocumentLayout>): Promise<DocumentLayout> {
+    const [updatedLayout] = await db.update(documentLayouts)
+      .set({ ...layout, updatedAt: new Date() })
+      .where(eq(documentLayouts.id, id))
+      .returning();
+    return updatedLayout;
+  }
+
+  async deleteDocumentLayout(id: string): Promise<void> {
+    await db.delete(documentLayouts).where(eq(documentLayouts.id, id));
+  }
+
+  // Layout Blocks
+  async getLayoutBlocks(documentType?: string): Promise<LayoutBlock[]> {
+    if (documentType) {
+      return await db.select().from(layoutBlocks)
+        .where(sql`${layoutBlocks.compatibleDocumentTypes} @> ${JSON.stringify([documentType])}`)
+        .orderBy(layoutBlocks.label);
+    }
+    return await db.select().from(layoutBlocks).orderBy(layoutBlocks.label);
+  }
+
+  async getLayoutBlock(id: string): Promise<LayoutBlock | undefined> {
+    const [block] = await db.select().from(layoutBlocks).where(eq(layoutBlocks.id, id));
+    return block || undefined;
+  }
+
+  async createLayoutBlock(block: InsertLayoutBlock): Promise<LayoutBlock> {
+    const [newBlock] = await db.insert(layoutBlocks).values(block as any).returning();
+    return newBlock;
+  }
+
+  async updateLayoutBlock(id: string, block: Partial<InsertLayoutBlock>): Promise<LayoutBlock> {
+    const [updatedBlock] = await db.update(layoutBlocks)
+      .set(block as any)
+      .where(eq(layoutBlocks.id, id))
+      .returning();
+    return updatedBlock;
+  }
+
+  async deleteLayoutBlock(id: string): Promise<void> {
+    await db.delete(layoutBlocks).where(eq(layoutBlocks.id, id));
+  }
+
+  // Layout Sections
+  async getLayoutSections(layoutId: string): Promise<LayoutSection[]> {
+    return await db.select().from(layoutSections)
+      .where(eq(layoutSections.layoutId, layoutId))
+      .orderBy(layoutSections.position);
+  }
+
+  async getLayoutSection(id: string): Promise<LayoutSection | undefined> {
+    const [section] = await db.select().from(layoutSections).where(eq(layoutSections.id, id));
+    return section || undefined;
+  }
+
+  async createLayoutSection(section: InsertLayoutSection): Promise<LayoutSection> {
+    const [newSection] = await db.insert(layoutSections).values(section).returning();
+    return newSection;
+  }
+
+  async updateLayoutSection(id: string, section: Partial<InsertLayoutSection>): Promise<LayoutSection> {
+    const [updatedSection] = await db.update(layoutSections)
+      .set(section)
+      .where(eq(layoutSections.id, id))
+      .returning();
+    return updatedSection;
+  }
+
+  async deleteLayoutSection(id: string): Promise<void> {
+    await db.delete(layoutSections).where(eq(layoutSections.id, id));
+  }
+
+  // Layout Elements
+  async getLayoutElements(sectionId: string): Promise<LayoutElement[]> {
+    return await db.select().from(layoutElements)
+      .where(eq(layoutElements.sectionId, sectionId))
+      .orderBy(layoutElements.yPosition, layoutElements.xPosition);
+  }
+
+  async getLayoutElement(id: string): Promise<LayoutElement | undefined> {
+    const [element] = await db.select().from(layoutElements).where(eq(layoutElements.id, id));
+    return element || undefined;
+  }
+
+  async createLayoutElement(element: InsertLayoutElement): Promise<LayoutElement> {
+    const [newElement] = await db.insert(layoutElements).values(element).returning();
+    return newElement;
+  }
+
+  async updateLayoutElement(id: string, element: Partial<InsertLayoutElement>): Promise<LayoutElement> {
+    const [updatedElement] = await db.update(layoutElements)
+      .set(element)
+      .where(eq(layoutElements.id, id))
+      .returning();
+    return updatedElement;
+  }
+
+  async deleteLayoutElement(id: string): Promise<void> {
+    await db.delete(layoutElements).where(eq(layoutElements.id, id));
+  }
+
+  // Document Layout Fields
+  async getDocumentLayoutFields(documentType: string): Promise<DocumentLayoutField[]> {
+    return await db.select().from(documentLayoutFields)
+      .where(eq(documentLayoutFields.documentType, documentType))
+      .orderBy(documentLayoutFields.category, documentLayoutFields.label);
+  }
+
+  async getDocumentLayoutField(id: string): Promise<DocumentLayoutField | undefined> {
+    const [field] = await db.select().from(documentLayoutFields).where(eq(documentLayoutFields.id, id));
+    return field || undefined;
+  }
+
+  async createDocumentLayoutField(field: InsertDocumentLayoutField): Promise<DocumentLayoutField> {
+    const [newField] = await db.insert(documentLayoutFields).values(field).returning();
+    return newField;
+  }
+
+  async updateDocumentLayoutField(id: string, field: Partial<InsertDocumentLayoutField>): Promise<DocumentLayoutField> {
+    const [updatedField] = await db.update(documentLayoutFields)
+      .set(field)
+      .where(eq(documentLayoutFields.id, id))
+      .returning();
+    return updatedField;
+  }
+
+  async deleteDocumentLayoutField(id: string): Promise<void> {
+    await db.delete(documentLayoutFields).where(eq(documentLayoutFields.id, id));
   }
 
   // Initialize basic country data

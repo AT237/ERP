@@ -822,3 +822,106 @@ export type TextSnippet = typeof textSnippets.$inferSelect;
 export type InsertTextSnippet = z.infer<typeof insertTextSnippetSchema>;
 export type TextSnippetUsage = typeof textSnippetUsages.$inferSelect;
 export type InsertTextSnippetUsage = z.infer<typeof insertTextSnippetUsageSchema>;
+
+// ===================================
+// LAYOUT MANAGEMENT SYSTEM
+// ===================================
+
+// Document Layouts - Main layout configuration per document type
+export const documentLayouts = pgTable("document_layouts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  documentType: text("document_type").notNull(), // 'quotation', 'invoice', 'packing_list', 'work_order', etc.
+  name: text("name").notNull(), // e.g., "Standard Quotation Layout", "Invoice - Landscape"
+  pageFormat: text("page_format").notNull().default("A4"), // 'A4', 'Letter', etc.
+  orientation: text("orientation").notNull().default("portrait"), // 'portrait' or 'landscape'
+  isDefault: boolean("is_default").default(false), // Default layout for this document type
+  metadata: jsonb("metadata").$type<Record<string, any>>().default(sql`'{}'::jsonb`), // Additional configuration
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Layout Blocks - Reusable block library (header, footer, totals, etc.)
+export const layoutBlocks = pgTable("layout_blocks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  blockType: text("block_type").notNull(), // 'company_header', 'page_footer', 'line_items_table', 'totals_summary', etc.
+  label: text("label").notNull(), // Display name for the block
+  defaultConfig: jsonb("default_config").$type<Record<string, any>>().default(sql`'{}'::jsonb`), // Default configuration
+  compatibleDocumentTypes: jsonb("compatible_document_types").$type<string[]>().default(sql`'[]'::jsonb`), // Which document types can use this block
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Layout Sections - Sections within a layout (header, body, footer, tables)
+export const layoutSections = pgTable("layout_sections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  layoutId: varchar("layout_id").references(() => documentLayouts.id, { onDelete: "cascade" }).notNull(),
+  sectionType: text("section_type").notNull(), // 'header', 'footer', 'body', 'table'
+  position: integer("position").notNull(), // Vertical position/order in layout
+  allowMultiple: boolean("allow_multiple").default(false), // Can this section appear multiple times
+  config: jsonb("config").$type<Record<string, any>>().default(sql`'{}'::jsonb`), // Section-specific configuration
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Layout Elements - Individual elements within sections (fields, blocks, etc.)
+export const layoutElements = pgTable("layout_elements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sectionId: varchar("section_id").references(() => layoutSections.id, { onDelete: "cascade" }).notNull(),
+  elementType: text("element_type").notNull(), // 'field', 'block', 'table'
+  fieldKey: text("field_key"), // For element_type='field': which data field to display
+  blockId: varchar("block_id").references(() => layoutBlocks.id), // For element_type='block': which block to use
+  xPosition: decimal("x_position", { precision: 10, scale: 2 }).notNull(), // X coordinate (mm)
+  yPosition: decimal("y_position", { precision: 10, scale: 2 }).notNull(), // Y coordinate (mm)
+  width: decimal("width", { precision: 10, scale: 2 }), // Width (mm)
+  height: decimal("height", { precision: 10, scale: 2 }), // Height (mm)
+  style: jsonb("style").$type<Record<string, any>>().default(sql`'{}'::jsonb`), // Font, color, alignment, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Document Layout Fields - Available fields per document type
+export const documentLayoutFields = pgTable("document_layout_fields", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  documentType: text("document_type").notNull(), // 'quotation', 'invoice', etc.
+  fieldKey: text("field_key").notNull(), // e.g., 'quotationNumber', 'customerName', 'totalAmount'
+  label: text("label").notNull(), // Display label
+  dataType: text("data_type").notNull(), // 'text', 'number', 'date', 'currency'
+  category: text("category"), // Group fields: 'header', 'customer', 'items', 'totals', etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Insert schemas and types for Layout Management
+export const insertDocumentLayoutSchema = createInsertSchema(documentLayouts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLayoutBlockSchema = createInsertSchema(layoutBlocks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertLayoutSectionSchema = createInsertSchema(layoutSections).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertLayoutElementSchema = createInsertSchema(layoutElements).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDocumentLayoutFieldSchema = createInsertSchema(documentLayoutFields).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types for Layout Management
+export type DocumentLayout = typeof documentLayouts.$inferSelect;
+export type InsertDocumentLayout = z.infer<typeof insertDocumentLayoutSchema>;
+export type LayoutBlock = typeof layoutBlocks.$inferSelect;
+export type InsertLayoutBlock = z.infer<typeof insertLayoutBlockSchema>;
+export type LayoutSection = typeof layoutSections.$inferSelect;
+export type InsertLayoutSection = z.infer<typeof insertLayoutSectionSchema>;
+export type LayoutElement = typeof layoutElements.$inferSelect;
+export type InsertLayoutElement = z.infer<typeof insertLayoutElementSchema>;
+export type DocumentLayoutField = typeof documentLayoutFields.$inferSelect;
+export type InsertDocumentLayoutField = z.infer<typeof insertDocumentLayoutFieldSchema>;

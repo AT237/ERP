@@ -10,7 +10,9 @@ import {
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, 
   insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertIncotermSchema,
-  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema
+  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
+  insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
+  insertLayoutElementSchema, insertDocumentLayoutFieldSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { db, checkDatabaseStatus } from './db';
@@ -1792,6 +1794,313 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ connected: status });
     } catch (error) {
       res.status(500).json({ connected: false, error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  // =============================================================================
+  // LAYOUT MANAGEMENT ROUTES
+  // =============================================================================
+
+  // Document Layouts
+  app.get("/api/layouts", async (req, res) => {
+    try {
+      const documentType = req.query.documentType as string | undefined;
+      const layouts = await storage.getDocumentLayouts(documentType);
+      res.json(layouts);
+    } catch (error) {
+      console.error("Error fetching layouts:", error);
+      res.status(500).json({ message: "Failed to fetch layouts" });
+    }
+  });
+
+  app.get("/api/layouts/:id", async (req, res) => {
+    try {
+      const layout = await storage.getDocumentLayout(req.params.id);
+      if (!layout) {
+        return res.status(404).json({ message: "Layout not found" });
+      }
+      res.json(layout);
+    } catch (error) {
+      console.error("Error fetching layout:", error);
+      res.status(500).json({ message: "Failed to fetch layout" });
+    }
+  });
+
+  app.get("/api/layouts/default/:documentType", async (req, res) => {
+    try {
+      const layout = await storage.getDefaultLayout(req.params.documentType);
+      if (!layout) {
+        return res.status(404).json({ message: "Default layout not found" });
+      }
+      res.json(layout);
+    } catch (error) {
+      console.error("Error fetching default layout:", error);
+      res.status(500).json({ message: "Failed to fetch default layout" });
+    }
+  });
+
+  app.post("/api/layouts", async (req, res) => {
+    try {
+      const layoutData = insertDocumentLayoutSchema.parse(req.body);
+      const layout = await storage.createDocumentLayout(layoutData);
+      res.status(201).json(layout);
+    } catch (error) {
+      console.error("Error creating layout:", error);
+      res.status(400).json({ message: "Failed to create layout" });
+    }
+  });
+
+  app.put("/api/layouts/:id", async (req, res) => {
+    try {
+      const layoutData = insertDocumentLayoutSchema.partial().parse(req.body);
+      const layout = await storage.updateDocumentLayout(req.params.id, layoutData);
+      res.json(layout);
+    } catch (error) {
+      console.error("Error updating layout:", error);
+      res.status(400).json({ message: "Failed to update layout" });
+    }
+  });
+
+  app.delete("/api/layouts/:id", async (req, res) => {
+    try {
+      await storage.deleteDocumentLayout(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting layout:", error);
+      res.status(500).json({ message: "Failed to delete layout" });
+    }
+  });
+
+  // Layout Blocks
+  app.get("/api/layout-blocks", async (req, res) => {
+    try {
+      const documentType = req.query.documentType as string | undefined;
+      const blocks = await storage.getLayoutBlocks(documentType);
+      res.json(blocks);
+    } catch (error) {
+      console.error("Error fetching layout blocks:", error);
+      res.status(500).json({ message: "Failed to fetch layout blocks" });
+    }
+  });
+
+  app.get("/api/layout-blocks/:id", async (req, res) => {
+    try {
+      const block = await storage.getLayoutBlock(req.params.id);
+      if (!block) {
+        return res.status(404).json({ message: "Layout block not found" });
+      }
+      res.json(block);
+    } catch (error) {
+      console.error("Error fetching layout block:", error);
+      res.status(500).json({ message: "Failed to fetch layout block" });
+    }
+  });
+
+  app.post("/api/layout-blocks", async (req, res) => {
+    try {
+      const blockData = insertLayoutBlockSchema.parse(req.body);
+      const block = await storage.createLayoutBlock(blockData);
+      res.status(201).json(block);
+    } catch (error) {
+      console.error("Error creating layout block:", error);
+      res.status(400).json({ message: "Failed to create layout block" });
+    }
+  });
+
+  app.put("/api/layout-blocks/:id", async (req, res) => {
+    try {
+      const blockData = insertLayoutBlockSchema.partial().parse(req.body);
+      const block = await storage.updateLayoutBlock(req.params.id, blockData);
+      res.json(block);
+    } catch (error) {
+      console.error("Error updating layout block:", error);
+      res.status(400).json({ message: "Failed to update layout block" });
+    }
+  });
+
+  app.delete("/api/layout-blocks/:id", async (req, res) => {
+    try {
+      await storage.deleteLayoutBlock(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting layout block:", error);
+      res.status(500).json({ message: "Failed to delete layout block" });
+    }
+  });
+
+  // Layout Sections
+  app.get("/api/layout-sections", async (req, res) => {
+    try {
+      const layoutId = req.query.layoutId as string;
+      if (!layoutId) {
+        return res.status(400).json({ message: "layoutId is required" });
+      }
+      const sections = await storage.getLayoutSections(layoutId);
+      res.json(sections);
+    } catch (error) {
+      console.error("Error fetching layout sections:", error);
+      res.status(500).json({ message: "Failed to fetch layout sections" });
+    }
+  });
+
+  app.get("/api/layout-sections/:id", async (req, res) => {
+    try {
+      const section = await storage.getLayoutSection(req.params.id);
+      if (!section) {
+        return res.status(404).json({ message: "Layout section not found" });
+      }
+      res.json(section);
+    } catch (error) {
+      console.error("Error fetching layout section:", error);
+      res.status(500).json({ message: "Failed to fetch layout section" });
+    }
+  });
+
+  app.post("/api/layout-sections", async (req, res) => {
+    try {
+      const sectionData = insertLayoutSectionSchema.parse(req.body);
+      const section = await storage.createLayoutSection(sectionData);
+      res.status(201).json(section);
+    } catch (error) {
+      console.error("Error creating layout section:", error);
+      res.status(400).json({ message: "Failed to create layout section" });
+    }
+  });
+
+  app.put("/api/layout-sections/:id", async (req, res) => {
+    try {
+      const sectionData = insertLayoutSectionSchema.partial().parse(req.body);
+      const section = await storage.updateLayoutSection(req.params.id, sectionData);
+      res.json(section);
+    } catch (error) {
+      console.error("Error updating layout section:", error);
+      res.status(400).json({ message: "Failed to update layout section" });
+    }
+  });
+
+  app.delete("/api/layout-sections/:id", async (req, res) => {
+    try {
+      await storage.deleteLayoutSection(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting layout section:", error);
+      res.status(500).json({ message: "Failed to delete layout section" });
+    }
+  });
+
+  // Layout Elements
+  app.get("/api/layout-elements", async (req, res) => {
+    try {
+      const sectionId = req.query.sectionId as string;
+      if (!sectionId) {
+        return res.status(400).json({ message: "sectionId is required" });
+      }
+      const elements = await storage.getLayoutElements(sectionId);
+      res.json(elements);
+    } catch (error) {
+      console.error("Error fetching layout elements:", error);
+      res.status(500).json({ message: "Failed to fetch layout elements" });
+    }
+  });
+
+  app.get("/api/layout-elements/:id", async (req, res) => {
+    try {
+      const element = await storage.getLayoutElement(req.params.id);
+      if (!element) {
+        return res.status(404).json({ message: "Layout element not found" });
+      }
+      res.json(element);
+    } catch (error) {
+      console.error("Error fetching layout element:", error);
+      res.status(500).json({ message: "Failed to fetch layout element" });
+    }
+  });
+
+  app.post("/api/layout-elements", async (req, res) => {
+    try {
+      const elementData = insertLayoutElementSchema.parse(req.body);
+      const element = await storage.createLayoutElement(elementData);
+      res.status(201).json(element);
+    } catch (error) {
+      console.error("Error creating layout element:", error);
+      res.status(400).json({ message: "Failed to create layout element" });
+    }
+  });
+
+  app.put("/api/layout-elements/:id", async (req, res) => {
+    try {
+      const elementData = insertLayoutElementSchema.partial().parse(req.body);
+      const element = await storage.updateLayoutElement(req.params.id, elementData);
+      res.json(element);
+    } catch (error) {
+      console.error("Error updating layout element:", error);
+      res.status(400).json({ message: "Failed to update layout element" });
+    }
+  });
+
+  app.delete("/api/layout-elements/:id", async (req, res) => {
+    try {
+      await storage.deleteLayoutElement(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting layout element:", error);
+      res.status(500).json({ message: "Failed to delete layout element" });
+    }
+  });
+
+  // Document Layout Fields
+  app.get("/api/document-fields/:documentType", async (req, res) => {
+    try {
+      const fields = await storage.getDocumentLayoutFields(req.params.documentType);
+      res.json(fields);
+    } catch (error) {
+      console.error("Error fetching document fields:", error);
+      res.status(500).json({ message: "Failed to fetch document fields" });
+    }
+  });
+
+  app.get("/api/document-fields/field/:id", async (req, res) => {
+    try {
+      const field = await storage.getDocumentLayoutField(req.params.id);
+      if (!field) {
+        return res.status(404).json({ message: "Document field not found" });
+      }
+      res.json(field);
+    } catch (error) {
+      console.error("Error fetching document field:", error);
+      res.status(500).json({ message: "Failed to fetch document field" });
+    }
+  });
+
+  app.post("/api/document-fields", async (req, res) => {
+    try {
+      const fieldData = insertDocumentLayoutFieldSchema.parse(req.body);
+      const field = await storage.createDocumentLayoutField(fieldData);
+      res.status(201).json(field);
+    } catch (error) {
+      console.error("Error creating document field:", error);
+      res.status(400).json({ message: "Failed to create document field" });
+    }
+  });
+
+  app.put("/api/document-fields/:id", async (req, res) => {
+    try {
+      const fieldData = insertDocumentLayoutFieldSchema.partial().parse(req.body);
+      const field = await storage.updateDocumentLayoutField(req.params.id, fieldData);
+      res.json(field);
+    } catch (error) {
+      console.error("Error updating document field:", error);
+      res.status(400).json({ message: "Failed to update document field" });
+    }
+  });
+
+  app.delete("/api/document-fields/:id", async (req, res) => {
+    try {
+      await storage.deleteDocumentLayoutField(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting document field:", error);
+      res.status(500).json({ message: "Failed to delete document field" });
     }
   });
 
