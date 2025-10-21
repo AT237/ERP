@@ -462,20 +462,58 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
       {/* Canvas - A4 Preview */}
       <Card className="flex items-center justify-center bg-gray-50 relative">
-        {/* Canvas Area */}
+        {/* Canvas Area with Rulers */}
         <div className="flex-1 flex items-center justify-center overflow-auto p-4">
-          <div 
-            className="bg-white shadow-lg relative" 
-            style={{ 
-              width: '210mm', 
-              height: '297mm', 
-              transform: `scale(${zoom})`, 
-              transformOrigin: 'center',
-              transition: 'transform 0.2s ease'
-            }}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-          >
+          <div className="relative" style={{ transform: `scale(${zoom})`, transformOrigin: 'center', transition: 'transform 0.2s ease' }}>
+            {/* Horizontal Ruler */}
+            <div className="absolute top-0 left-[30px] right-0 h-[30px] bg-gray-100 border-b border-gray-300 flex">
+              {Array.from({ length: Math.ceil(794 / 50) + 1 }).map((_, i) => {
+                const px = i * 50;
+                return (
+                  <div key={`h-${i}`} className="relative" style={{ width: '50px' }}>
+                    <div className="absolute bottom-0 left-0 w-px h-3 bg-gray-400"></div>
+                    <span className="absolute bottom-0 left-1 text-[8px] text-gray-600">{px}</span>
+                    {/* Minor ticks every 10px */}
+                    {[10, 20, 30, 40].map(offset => (
+                      <div key={`h-${i}-${offset}`} className="absolute bottom-0 w-px h-1.5 bg-gray-300" style={{ left: `${offset}px` }}></div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Vertical Ruler */}
+            <div className="absolute top-[30px] left-0 bottom-0 w-[30px] bg-gray-100 border-r border-gray-300 flex flex-col">
+              {Array.from({ length: Math.ceil(1123 / 50) + 1 }).map((_, i) => {
+                const px = i * 50;
+                return (
+                  <div key={`v-${i}`} className="relative" style={{ height: '50px' }}>
+                    <div className="absolute right-0 top-0 h-px w-3 bg-gray-400"></div>
+                    <span className="absolute right-0.5 top-1 text-[8px] text-gray-600 transform -rotate-90 origin-top-right whitespace-nowrap">{px}</span>
+                    {/* Minor ticks every 10px */}
+                    {[10, 20, 30, 40].map(offset => (
+                      <div key={`v-${i}-${offset}`} className="absolute right-0 h-px w-1.5 bg-gray-300" style={{ top: `${offset}px` }}></div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Corner square */}
+            <div className="absolute top-0 left-0 w-[30px] h-[30px] bg-gray-200 border-r border-b border-gray-300"></div>
+
+            {/* Canvas with offset for rulers */}
+            <div 
+              className="bg-white shadow-lg relative" 
+              style={{ 
+                width: '210mm', 
+                height: '297mm',
+                marginLeft: '30px',
+                marginTop: '30px'
+              }}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
             <div className="border-2 border-dashed border-gray-300 h-full p-8">
               {canvasBlocks.length === 0 ? (
                 <div className="h-full flex items-center justify-center">
@@ -501,6 +539,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   ))}
                 </div>
               )}
+            </div>
             </div>
           </div>
         </div>
