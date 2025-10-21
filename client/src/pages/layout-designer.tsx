@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Plus, Download, Eye, Save, FileText, Receipt, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,15 +12,74 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LayoutDesigner() {
   const [selectedLayoutId, setSelectedLayoutId] = useState<number | null>(null);
   const [documentType, setDocumentType] = useState<'quotation' | 'invoice' | 'packing_list'>('quotation');
+  const [showNewLayoutDialog, setShowNewLayoutDialog] = useState(false);
+  const [newLayoutName, setNewLayoutName] = useState('');
+  const [newLayoutOrientation, setNewLayoutOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const { toast } = useToast();
   
   // Load existing layouts
   const { data: layouts = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/document-layouts'],
   });
+
+  // Create new layout mutation
+  const createLayoutMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest('POST', '/api/document-layouts', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/document-layouts'] });
+      setShowNewLayoutDialog(false);
+      setNewLayoutName('');
+      toast({
+        title: 'Success',
+        description: 'Layout created successfully',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create layout',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleCreateLayout = () => {
+    if (!newLayoutName.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a layout name',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    createLayoutMutation.mutate({
+      name: newLayoutName,
+      documentType,
+      pageFormat: 'a4',
+      orientation: newLayoutOrientation,
+      isDefault: false,
+      isActive: true,
+    });
+  };
 
   // Filter layouts by document type
   const filteredLayouts = (layouts as any[]).filter((layout: any) => 
@@ -54,7 +113,12 @@ export default function LayoutDesigner() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" data-testid="button-new-layout">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowNewLayoutDialog(true)}
+                data-testid="button-new-layout"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 New Layout
               </Button>
@@ -127,6 +191,74 @@ export default function LayoutDesigner() {
           </div>
         </Tabs>
       </div>
+
+      {/* New Layout Dialog */}
+      <Dialog open={showNewLayoutDialog} onOpenChange={setShowNewLayoutDialog}>
+        <DialogContent data-testid="dialog-new-layout">
+          <DialogHeader>
+            <DialogTitle>Create New Layout</DialogTitle>
+            <DialogDescription>
+              Create a new document layout for {documentTypeLabels[documentType]}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="layout-name">Layout Name</Label>
+              <Input
+                id="layout-name"
+                placeholder="e.g., Standard Quotation Layout"
+                value={newLayoutName}
+                onChange={(e) => setNewLayoutName(e.target.value)}
+                data-testid="input-layout-name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="orientation">Orientation</Label>
+              <Select value={newLayoutOrientation} onValueChange={(value: any) => setNewLayoutOrientation(value)}>
+                <SelectTrigger id="orientation" data-testid="select-orientation">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="portrait">Portrait</SelectItem>
+                  <SelectItem value="landscape">Landscape</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="rounded-lg border border-border p-3 bg-muted/50">
+              <div className="text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Document Type:</span>
+                  <span className="font-medium">{documentTypeLabels[documentType]}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Page Format:</span>
+                  <span className="font-medium">A4</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowNewLayoutDialog(false)}
+              data-testid="button-cancel"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateLayout}
+              disabled={createLayoutMutation.isPending}
+              data-testid="button-create"
+            >
+              {createLayoutMutation.isPending ? 'Creating...' : 'Create Layout'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
