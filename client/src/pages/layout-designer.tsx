@@ -461,55 +461,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
       </Card>
 
       {/* Canvas - A4 Preview */}
-      <Card className="flex flex-col bg-gray-50">
-        {/* Zoom Controls */}
-        <div className="p-3 border-b border-border bg-white flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}
-              disabled={zoom <= 0.1}
-              className="h-8 w-8 p-0"
-              data-testid="button-zoom-out"
-            >
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            <div className="flex items-center gap-2 min-w-[200px]">
-              <input
-                type="range"
-                min="0.1"
-                max="1.5"
-                step="0.1"
-                value={zoom}
-                onChange={(e) => setZoom(parseFloat(e.target.value))}
-                className="flex-1"
-                data-testid="slider-zoom"
-              />
-              <span className="text-xs font-medium w-12 text-right">{Math.round(zoom * 100)}%</span>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setZoom(Math.min(1.5, zoom + 0.1))}
-              disabled={zoom >= 1.5}
-              className="h-8 w-8 p-0"
-              data-testid="button-zoom-in"
-            >
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setZoom(0.5)}
-            className="h-8 text-xs"
-            data-testid="button-zoom-reset"
-          >
-            Reset
-          </Button>
-        </div>
-
+      <Card className="flex items-center justify-center bg-gray-50 relative">
         {/* Canvas Area */}
         <div className="flex-1 flex items-center justify-center overflow-auto p-4">
           <div 
@@ -551,6 +503,52 @@ function VisualDesignerView({ layout }: { layout: any }) {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Floating Zoom Controls - Bottom Right */}
+        <div className="absolute bottom-4 right-4 bg-white border border-border rounded-lg shadow-lg p-3 flex flex-col gap-2 min-w-[180px]">
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}
+              disabled={zoom <= 0.1}
+              className="h-8 w-8 p-0"
+              data-testid="button-zoom-out"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <span className="text-xs font-bold text-orange-600 min-w-[40px] text-center">{Math.round(zoom * 100)}%</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setZoom(Math.min(1.5, zoom + 0.1))}
+              disabled={zoom >= 1.5}
+              className="h-8 w-8 p-0"
+              data-testid="button-zoom-in"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </div>
+          <input
+            type="range"
+            min="0.1"
+            max="1.5"
+            step="0.1"
+            value={zoom}
+            onChange={(e) => setZoom(parseFloat(e.target.value))}
+            className="w-full"
+            data-testid="slider-zoom"
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setZoom(0.5)}
+            className="h-8 text-xs w-full"
+            data-testid="button-zoom-reset"
+          >
+            Reset (50%)
+          </Button>
         </div>
       </Card>
 
