@@ -178,6 +178,7 @@ export default function LayoutDesigner() {
                 isLoading={isLoading}
                 onSelectLayout={setSelectedLayoutId}
                 selectedLayoutId={selectedLayoutId}
+                onCreateNew={() => setShowNewLayoutDialog(true)}
               />
             </TabsContent>
 
@@ -270,12 +271,14 @@ function LayoutManagerView({
   isLoading,
   onSelectLayout,
   selectedLayoutId,
+  onCreateNew,
 }: {
   layouts: any[];
   documentType: string;
   isLoading: boolean;
   onSelectLayout: (id: number) => void;
   selectedLayoutId: number | null;
+  onCreateNew: () => void;
 }) {
   if (isLoading) {
     return (
@@ -295,7 +298,7 @@ function LayoutManagerView({
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center pb-6">
-          <Button data-testid="button-create-first-layout">
+          <Button onClick={onCreateNew} data-testid="button-create-first-layout">
             <Plus className="h-4 w-4 mr-2" />
             Create First Layout
           </Button>
