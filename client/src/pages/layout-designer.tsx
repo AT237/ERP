@@ -596,7 +596,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
             {/* Canvas with offset for rulers */}
             <div 
-              className="bg-white shadow-lg relative" 
+              className="bg-white shadow-lg relative border-2 border-dashed border-gray-300" 
               style={{ 
                 width: '210mm', 
                 height: '297mm',
@@ -606,9 +606,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
-            <div className="border-2 border-dashed border-gray-300 h-full p-8">
               {canvasBlocks.length === 0 ? (
-                <div className="h-full flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center text-muted-foreground">
                     <div className="text-4xl mb-4">📋</div>
                     <div className="text-lg font-medium">Canvas Area</div>
@@ -618,20 +617,17 @@ function VisualDesignerView({ layout }: { layout: any }) {
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div className="relative h-full">
-                  {canvasBlocks.map((block) => (
-                    <CanvasBlock
-                      key={block.id}
-                      block={block}
-                      isSelected={selectedBlock?.id === block.id}
-                      onClick={() => setSelectedBlock(block)}
-                      onRemove={() => handleRemoveBlock(block.id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+              ) : null}
+              
+              {canvasBlocks.map((block) => (
+                <CanvasBlock
+                  key={block.id}
+                  block={block}
+                  isSelected={selectedBlock?.id === block.id}
+                  onClick={() => setSelectedBlock(block)}
+                  onRemove={() => handleRemoveBlock(block.id)}
+                />
+              ))}
             </div>
           </div>
         </div>
