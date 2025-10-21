@@ -365,6 +365,10 @@ function LayoutManagerView({
 
 // Visual Designer Component
 function VisualDesignerView({ layout }: { layout: any }) {
+  const [canvasBlocks, setCanvasBlocks] = useState<any[]>([]);
+  const [selectedBlock, setSelectedBlock] = useState<any>(null);
+  const [draggedBlockType, setDraggedBlockType] = useState<string | null>(null);
+
   if (!layout) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -372,6 +376,37 @@ function VisualDesignerView({ layout }: { layout: any }) {
       </div>
     );
   }
+
+  const handleDragStart = (blockType: string) => {
+    setDraggedBlockType(blockType);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggedBlockType) return;
+
+    const newBlock = {
+      id: `block-${Date.now()}`,
+      type: draggedBlockType,
+      position: { x: 20, y: 20 + (canvasBlocks.length * 50) },
+      config: getDefaultConfig(draggedBlockType),
+    };
+
+    setCanvasBlocks([...canvasBlocks, newBlock]);
+    setSelectedBlock(newBlock);
+    setDraggedBlockType(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleRemoveBlock = (blockId: string) => {
+    setCanvasBlocks(canvasBlocks.filter(b => b.id !== blockId));
+    if (selectedBlock?.id === blockId) {
+      setSelectedBlock(null);
+    }
+  };
 
   return (
     <div className="grid grid-cols-[250px_1fr_300px] gap-4 h-full">
@@ -382,29 +417,50 @@ function VisualDesignerView({ layout }: { layout: any }) {
           <CardDescription>Drag blocks onto canvas</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          <BlockLibraryItem name="Company Header" icon="🏢" />
-          <BlockLibraryItem name="Date Block" icon="📅" />
-          <BlockLibraryItem name="Line Items Table" icon="📊" />
-          <BlockLibraryItem name="Totals Summary" icon="💰" />
-          <BlockLibraryItem name="Footer Block" icon="📄" />
-          <BlockLibraryItem name="Text Block" icon="📝" />
-          <BlockLibraryItem name="Page Number" icon="🔢" />
-          <BlockLibraryItem name="Document Title" icon="📌" />
+          <BlockLibraryItem name="Company Header" icon="🏢" onDragStart={handleDragStart} />
+          <BlockLibraryItem name="Date Block" icon="📅" onDragStart={handleDragStart} />
+          <BlockLibraryItem name="Line Items Table" icon="📊" onDragStart={handleDragStart} />
+          <BlockLibraryItem name="Totals Summary" icon="💰" onDragStart={handleDragStart} />
+          <BlockLibraryItem name="Footer Block" icon="📄" onDragStart={handleDragStart} />
+          <BlockLibraryItem name="Text Block" icon="📝" onDragStart={handleDragStart} />
+          <BlockLibraryItem name="Page Number" icon="🔢" onDragStart={handleDragStart} />
+          <BlockLibraryItem name="Document Title" icon="📌" onDragStart={handleDragStart} />
         </CardContent>
       </Card>
 
       {/* Canvas - A4 Preview */}
       <Card className="flex items-center justify-center bg-gray-50">
-        <div className="bg-white shadow-lg" style={{ width: '210mm', height: '297mm', transform: 'scale(0.5)', transformOrigin: 'center' }}>
-          <div className="border-2 border-dashed border-gray-300 h-full p-8 flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <div className="text-4xl mb-4">📋</div>
-              <div className="text-lg font-medium">Canvas Area</div>
-              <div className="text-sm mt-2">Drag & drop blocks here</div>
-              <div className="text-xs mt-4 text-orange-600">
-                A4 {layout.orientation} · {layout.pageFormat}
+        <div 
+          className="bg-white shadow-lg relative" 
+          style={{ width: '210mm', height: '297mm', transform: 'scale(0.5)', transformOrigin: 'center' }}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+        >
+          <div className="border-2 border-dashed border-gray-300 h-full p-8">
+            {canvasBlocks.length === 0 ? (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-4xl mb-4">📋</div>
+                  <div className="text-lg font-medium">Canvas Area</div>
+                  <div className="text-sm mt-2">Drag & drop blocks here</div>
+                  <div className="text-xs mt-4 text-orange-600">
+                    A4 {layout.orientation} · {layout.pageFormat}
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="relative h-full">
+                {canvasBlocks.map((block) => (
+                  <CanvasBlock
+                    key={block.id}
+                    block={block}
+                    isSelected={selectedBlock?.id === block.id}
+                    onClick={() => setSelectedBlock(block)}
+                    onRemove={() => handleRemoveBlock(block.id)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -416,13 +472,63 @@ function VisualDesignerView({ layout }: { layout: any }) {
           <CardDescription>Configure selected block</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-sm text-muted-foreground text-center py-8">
-            No block selected
-          </div>
+          {selectedBlock ? (
+            <BlockProperties block={selectedBlock} />
+          ) : (
+            <div className="text-sm text-muted-foreground text-center py-8">
+              No block selected
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
   );
+}
+
+// Helper function to get default config for each block type
+function getDefaultConfig(blockType: string) {
+  const companyData = {
+    name: "Your Company Name B.V.",
+    address: "Business Street 123",
+    postalCode: "1234 AB",
+    city: "Amsterdam",
+    phone: "+31 20 123 4567",
+    email: "info@yourcompany.nl",
+    vatNumber: "NL123456789B01",
+    cocNumber: "12345678",
+    iban: "NL12 ABCD 0123 4567 89",
+    country: "Netherlands"
+  };
+
+  switch (blockType) {
+    case "Company Header":
+      return {
+        company: companyData,
+        showLabel: true,
+        labelText: "Supplier:",
+      };
+    case "Date Block":
+      return {
+        label: "Date:",
+        date: new Date().toLocaleDateString('nl-NL'),
+      };
+    case "Document Title":
+      return {
+        text: "QUOTATION",
+      };
+    case "Text Block":
+      return {
+        text: "Enter your text here...",
+      };
+    case "Page Number":
+      return {
+        format: "of_total",
+        currentPage: 1,
+        totalPages: 1,
+      };
+    default:
+      return {};
+  }
 }
 
 // Preview Component
@@ -466,15 +572,171 @@ function PreviewView({ layout }: { layout: any }) {
 }
 
 // Block Library Item Component
-function BlockLibraryItem({ name, icon }: { name: string; icon: string }) {
+function BlockLibraryItem({ name, icon, onDragStart }: { name: string; icon: string; onDragStart: (name: string) => void }) {
   return (
     <div
       className="flex items-center gap-2 p-2 border border-border rounded cursor-move hover:bg-accent hover:border-orange-500 transition-all"
       draggable
+      onDragStart={() => onDragStart(name)}
       data-testid={`block-${name.toLowerCase().replace(/\s+/g, '-')}`}
     >
       <span className="text-xl">{icon}</span>
       <span className="text-sm font-medium">{name}</span>
+    </div>
+  );
+}
+
+// Canvas Block Component
+function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
+  const getBlockIcon = (type: string) => {
+    const icons: { [key: string]: string } = {
+      "Company Header": "🏢",
+      "Date Block": "📅",
+      "Line Items Table": "📊",
+      "Totals Summary": "💰",
+      "Footer Block": "📄",
+      "Text Block": "📝",
+      "Page Number": "🔢",
+      "Document Title": "📌",
+    };
+    return icons[type] || "📦";
+  };
+
+  return (
+    <div
+      className={`absolute border-2 rounded p-3 bg-white shadow-sm cursor-pointer transition-all ${
+        isSelected ? 'border-orange-500 shadow-md' : 'border-gray-300 hover:border-orange-300'
+      }`}
+      style={{ 
+        left: `${block.position.x}px`, 
+        top: `${block.position.y}px`,
+        minWidth: '200px',
+      }}
+      onClick={onClick}
+      data-testid={`canvas-${block.type.toLowerCase().replace(/\s+/g, '-')}`}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{getBlockIcon(block.type)}</span>
+          <span className="text-sm font-medium">{block.type}</span>
+        </div>
+        <Button 
+          size="sm" 
+          variant="ghost" 
+          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+        >
+          ×
+        </Button>
+      </div>
+      <div className="text-xs text-muted-foreground">
+        {block.type === "Company Header" && (
+          <div>{block.config.company?.name || 'Company Name'}</div>
+        )}
+        {block.type === "Document Title" && (
+          <div className="font-bold">{block.config.text}</div>
+        )}
+        {block.type === "Date Block" && (
+          <div>{block.config.date}</div>
+        )}
+        {block.type === "Text Block" && (
+          <div className="truncate">{block.config.text}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Block Properties Component
+function BlockProperties({ block }: { block: any }) {
+  if (block.type === "Company Header") {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-sm font-medium mb-2">Company Information</h4>
+          <div className="space-y-2 text-xs">
+            <div>
+              <span className="text-muted-foreground">Name:</span>
+              <div className="font-medium">{block.config.company.name}</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Address:</span>
+              <div className="font-medium">{block.config.company.address}</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">City:</span>
+              <div className="font-medium">{block.config.company.postalCode} {block.config.company.city}</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Phone:</span>
+              <div className="font-medium">{block.config.company.phone}</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Email:</span>
+              <div className="font-medium">{block.config.company.email}</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">VAT:</span>
+              <div className="font-medium">{block.config.company.vatNumber}</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">CoC:</span>
+              <div className="font-medium">{block.config.company.cocNumber}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (block.type === "Document Title") {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-sm font-medium mb-2">Title Text</h4>
+          <div className="text-xs font-medium">{block.config.text}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (block.type === "Date Block") {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-sm font-medium mb-2">Date</h4>
+          <div className="text-xs">
+            <div><span className="text-muted-foreground">Label:</span> {block.config.label}</div>
+            <div><span className="text-muted-foreground">Date:</span> {block.config.date}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (block.type === "Text Block") {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-sm font-medium mb-2">Text Content</h4>
+          <div className="text-xs">{block.config.text}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h4 className="text-sm font-medium mb-2">Block Type</h4>
+        <div className="text-xs text-muted-foreground">{block.type}</div>
+      </div>
+      <div className="text-xs text-muted-foreground">
+        Configuration options coming soon...
+      </div>
     </div>
   );
 }
