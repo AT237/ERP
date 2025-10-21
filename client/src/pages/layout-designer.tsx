@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -368,6 +368,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [canvasBlocks, setCanvasBlocks] = useState<any[]>([]);
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
   const [draggedBlockType, setDraggedBlockType] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(0.5);
 
   if (!layout) {
     return (
@@ -460,38 +461,95 @@ function VisualDesignerView({ layout }: { layout: any }) {
       </Card>
 
       {/* Canvas - A4 Preview */}
-      <Card className="flex items-center justify-center bg-gray-50">
-        <div 
-          className="bg-white shadow-lg relative" 
-          style={{ width: '210mm', height: '297mm', transform: 'scale(0.5)', transformOrigin: 'center' }}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-        >
-          <div className="border-2 border-dashed border-gray-300 h-full p-8">
-            {canvasBlocks.length === 0 ? (
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <div className="text-4xl mb-4">📋</div>
-                  <div className="text-lg font-medium">Canvas Area</div>
-                  <div className="text-sm mt-2">Drag & drop blocks here</div>
-                  <div className="text-xs mt-4 text-orange-600">
-                    A4 {layout.orientation} · {layout.pageFormat}
+      <Card className="flex flex-col bg-gray-50">
+        {/* Zoom Controls */}
+        <div className="p-3 border-b border-border bg-white flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}
+              disabled={zoom <= 0.1}
+              className="h-8 w-8 p-0"
+              data-testid="button-zoom-out"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-2 min-w-[200px]">
+              <input
+                type="range"
+                min="0.1"
+                max="1.5"
+                step="0.1"
+                value={zoom}
+                onChange={(e) => setZoom(parseFloat(e.target.value))}
+                className="flex-1"
+                data-testid="slider-zoom"
+              />
+              <span className="text-xs font-medium w-12 text-right">{Math.round(zoom * 100)}%</span>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setZoom(Math.min(1.5, zoom + 0.1))}
+              disabled={zoom >= 1.5}
+              className="h-8 w-8 p-0"
+              data-testid="button-zoom-in"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setZoom(0.5)}
+            className="h-8 text-xs"
+            data-testid="button-zoom-reset"
+          >
+            Reset
+          </Button>
+        </div>
+
+        {/* Canvas Area */}
+        <div className="flex-1 flex items-center justify-center overflow-auto p-4">
+          <div 
+            className="bg-white shadow-lg relative" 
+            style={{ 
+              width: '210mm', 
+              height: '297mm', 
+              transform: `scale(${zoom})`, 
+              transformOrigin: 'center',
+              transition: 'transform 0.2s ease'
+            }}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+          >
+            <div className="border-2 border-dashed border-gray-300 h-full p-8">
+              {canvasBlocks.length === 0 ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center text-muted-foreground">
+                    <div className="text-4xl mb-4">📋</div>
+                    <div className="text-lg font-medium">Canvas Area</div>
+                    <div className="text-sm mt-2">Drag & drop blocks here</div>
+                    <div className="text-xs mt-4 text-orange-600">
+                      A4 {layout.orientation} · {layout.pageFormat}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="relative h-full">
-                {canvasBlocks.map((block) => (
-                  <CanvasBlock
-                    key={block.id}
-                    block={block}
-                    isSelected={selectedBlock?.id === block.id}
-                    onClick={() => setSelectedBlock(block)}
-                    onRemove={() => handleRemoveBlock(block.id)}
-                  />
-                ))}
-              </div>
-            )}
+              ) : (
+                <div className="relative h-full">
+                  {canvasBlocks.map((block) => (
+                    <CanvasBlock
+                      key={block.id}
+                      block={block}
+                      isSelected={selectedBlock?.id === block.id}
+                      onClick={() => setSelectedBlock(block)}
+                      onRemove={() => handleRemoveBlock(block.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </Card>
