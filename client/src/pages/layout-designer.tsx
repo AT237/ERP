@@ -35,16 +35,16 @@ export default function LayoutDesigner() {
   
   // Load existing layouts
   const { data: layouts = [], isLoading } = useQuery<any[]>({
-    queryKey: ['/api/document-layouts'],
+    queryKey: ['/api/layouts'],
   });
 
   // Create new layout mutation
   const createLayoutMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest('POST', '/api/document-layouts', data);
+      return await apiRequest('POST', '/api/layouts', data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/document-layouts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/layouts'] });
       setShowNewLayoutDialog(false);
       setNewLayoutName('');
       toast({
