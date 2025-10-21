@@ -389,6 +389,13 @@ function VisualDesignerView({ layout }: { layout: any }) {
       id: `block-${Date.now()}`,
       type: draggedBlockType,
       position: { x: 20, y: 20 + (canvasBlocks.length * 50) },
+      size: { width: 200, height: 100 },
+      style: {
+        fontSize: 9,
+        fontFamily: 'helvetica',
+        fontStyle: 'normal',
+      },
+      zIndex: canvasBlocks.length,
       config: getDefaultConfig(draggedBlockType),
     };
 
@@ -406,6 +413,30 @@ function VisualDesignerView({ layout }: { layout: any }) {
     if (selectedBlock?.id === blockId) {
       setSelectedBlock(null);
     }
+  };
+
+  const updateBlockProperty = (blockId: string, property: string, value: any) => {
+    setCanvasBlocks(blocks => 
+      blocks.map(block => 
+        block.id === blockId 
+          ? { ...block, [property]: value }
+          : block
+      )
+    );
+    
+    if (selectedBlock?.id === blockId) {
+      setSelectedBlock({ ...selectedBlock, [property]: value });
+    }
+  };
+
+  const bringToFront = (blockId: string) => {
+    const maxZ = Math.max(...canvasBlocks.map(b => b.zIndex || 0));
+    updateBlockProperty(blockId, 'zIndex', maxZ + 1);
+  };
+
+  const sendToBack = (blockId: string) => {
+    const minZ = Math.min(...canvasBlocks.map(b => b.zIndex || 0));
+    updateBlockProperty(blockId, 'zIndex', minZ - 1);
   };
 
   return (
@@ -473,7 +504,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
         </CardHeader>
         <CardContent>
           {selectedBlock ? (
-            <BlockProperties block={selectedBlock} />
+            <BlockProperties 
+              block={selectedBlock} 
+              onUpdateProperty={updateBlockProperty}
+              onBringToFront={() => bringToFront(selectedBlock.id)}
+              onSendToBack={() => sendToBack(selectedBlock.id)}
+            />
           ) : (
             <div className="text-sm text-muted-foreground text-center py-8">
               No block selected
@@ -610,7 +646,11 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
       style={{ 
         left: `${block.position.x}px`, 
         top: `${block.position.y}px`,
-        minWidth: '200px',
+        width: `${block.size?.width || 200}px`,
+        minHeight: `${block.size?.height || 100}px`,
+        zIndex: block.zIndex || 0,
+        fontSize: `${block.style?.fontSize || 9}px`,
+        fontFamily: block.style?.fontFamily || 'helvetica',
       }}
       onClick={onClick}
       data-testid={`canvas-${block.type.toLowerCase().replace(/\s+/g, '-')}`}
@@ -651,91 +691,192 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
 }
 
 // Block Properties Component
-function BlockProperties({ block }: { block: any }) {
-  if (block.type === "Company Header") {
-    return (
-      <div className="space-y-4">
-        <div>
-          <h4 className="text-sm font-medium mb-2">Company Information</h4>
-          <div className="space-y-2 text-xs">
-            <div>
-              <span className="text-muted-foreground">Name:</span>
-              <div className="font-medium">{block.config.company.name}</div>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Address:</span>
-              <div className="font-medium">{block.config.company.address}</div>
-            </div>
-            <div>
-              <span className="text-muted-foreground">City:</span>
-              <div className="font-medium">{block.config.company.postalCode} {block.config.company.city}</div>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Phone:</span>
-              <div className="font-medium">{block.config.company.phone}</div>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Email:</span>
-              <div className="font-medium">{block.config.company.email}</div>
-            </div>
-            <div>
-              <span className="text-muted-foreground">VAT:</span>
-              <div className="font-medium">{block.config.company.vatNumber}</div>
-            </div>
-            <div>
-              <span className="text-muted-foreground">CoC:</span>
-              <div className="font-medium">{block.config.company.cocNumber}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+function BlockProperties({ 
+  block, 
+  onUpdateProperty, 
+  onBringToFront, 
+  onSendToBack 
+}: { 
+  block: any; 
+  onUpdateProperty: (id: string, property: string, value: any) => void;
+  onBringToFront: () => void;
+  onSendToBack: () => void;
+}) {
+  const updatePosition = (axis: 'x' | 'y', value: number) => {
+    onUpdateProperty(block.id, 'position', { ...block.position, [axis]: value });
+  };
 
-  if (block.type === "Document Title") {
-    return (
-      <div className="space-y-4">
-        <div>
-          <h4 className="text-sm font-medium mb-2">Title Text</h4>
-          <div className="text-xs font-medium">{block.config.text}</div>
-        </div>
-      </div>
-    );
-  }
+  const updateSize = (dimension: 'width' | 'height', value: number) => {
+    onUpdateProperty(block.id, 'size', { ...block.size, [dimension]: value });
+  };
 
-  if (block.type === "Date Block") {
-    return (
-      <div className="space-y-4">
-        <div>
-          <h4 className="text-sm font-medium mb-2">Date</h4>
-          <div className="text-xs">
-            <div><span className="text-muted-foreground">Label:</span> {block.config.label}</div>
-            <div><span className="text-muted-foreground">Date:</span> {block.config.date}</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (block.type === "Text Block") {
-    return (
-      <div className="space-y-4">
-        <div>
-          <h4 className="text-sm font-medium mb-2">Text Content</h4>
-          <div className="text-xs">{block.config.text}</div>
-        </div>
-      </div>
-    );
-  }
+  const updateStyle = (property: string, value: any) => {
+    onUpdateProperty(block.id, 'style', { ...block.style, [property]: value });
+  };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Position Controls */}
       <div>
-        <h4 className="text-sm font-medium mb-2">Block Type</h4>
-        <div className="text-xs text-muted-foreground">{block.type}</div>
+        <h4 className="text-sm font-semibold mb-3 text-orange-600">Positie</h4>
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label htmlFor="pos-x" className="text-xs">X</Label>
+              <Input
+                id="pos-x"
+                type="number"
+                value={block.position?.x || 0}
+                onChange={(e) => updatePosition('x', parseInt(e.target.value) || 0)}
+                className="h-8 text-xs"
+                data-testid="input-position-x"
+              />
+            </div>
+            <div>
+              <Label htmlFor="pos-y" className="text-xs">Y</Label>
+              <Input
+                id="pos-y"
+                type="number"
+                value={block.position?.y || 0}
+                onChange={(e) => updatePosition('y', parseInt(e.target.value) || 0)}
+                className="h-8 text-xs"
+                data-testid="input-position-y"
+              />
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="text-xs text-muted-foreground">
-        Configuration options coming soon...
+
+      {/* Size Controls */}
+      <div>
+        <h4 className="text-sm font-semibold mb-3 text-orange-600">Grootte</h4>
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label htmlFor="size-width" className="text-xs">Breedte</Label>
+              <Input
+                id="size-width"
+                type="number"
+                value={block.size?.width || 200}
+                onChange={(e) => updateSize('width', parseInt(e.target.value) || 200)}
+                className="h-8 text-xs"
+                data-testid="input-size-width"
+              />
+            </div>
+            <div>
+              <Label htmlFor="size-height" className="text-xs">Hoogte</Label>
+              <Input
+                id="size-height"
+                type="number"
+                value={block.size?.height || 100}
+                onChange={(e) => updateSize('height', parseInt(e.target.value) || 100)}
+                className="h-8 text-xs"
+                data-testid="input-size-height"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Font Controls */}
+      <div>
+        <h4 className="text-sm font-semibold mb-3 text-orange-600">Lettertype</h4>
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="font-family" className="text-xs">Font</Label>
+            <Select 
+              value={block.style?.fontFamily || 'helvetica'}
+              onValueChange={(value) => updateStyle('fontFamily', value)}
+            >
+              <SelectTrigger id="font-family" className="h-8 text-xs" data-testid="select-font-family">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="helvetica">Helvetica</SelectItem>
+                <SelectItem value="times">Times</SelectItem>
+                <SelectItem value="courier">Courier</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="font-size" className="text-xs">Grootte</Label>
+            <Input
+              id="font-size"
+              type="number"
+              value={block.style?.fontSize || 9}
+              onChange={(e) => updateStyle('fontSize', parseInt(e.target.value) || 9)}
+              className="h-8 text-xs"
+              data-testid="input-font-size"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="font-style" className="text-xs">Stijl</Label>
+            <Select 
+              value={block.style?.fontStyle || 'normal'}
+              onValueChange={(value) => updateStyle('fontStyle', value)}
+            >
+              <SelectTrigger id="font-style" className="h-8 text-xs" data-testid="select-font-style">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="normal">Normaal</SelectItem>
+                <SelectItem value="bold">Vet</SelectItem>
+                <SelectItem value="italic">Cursief</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Z-Index Controls */}
+      <div>
+        <h4 className="text-sm font-semibold mb-3 text-orange-600">Laag</h4>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onBringToFront}
+            className="flex-1 h-8 text-xs"
+            data-testid="button-bring-to-front"
+          >
+            Naar voren
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onSendToBack}
+            className="flex-1 h-8 text-xs"
+            data-testid="button-send-to-back"
+          >
+            Naar achteren
+          </Button>
+        </div>
+        <div className="mt-2 text-xs text-muted-foreground text-center">
+          Z-index: {block.zIndex || 0}
+        </div>
+      </div>
+
+      {/* Block-specific content (read-only preview) */}
+      <div className="pt-4 border-t">
+        <h4 className="text-sm font-semibold mb-3 text-orange-600">Inhoud</h4>
+        {block.type === "Company Header" && (
+          <div className="space-y-1 text-xs">
+            <div className="font-medium">{block.config.company?.name}</div>
+            <div className="text-muted-foreground">{block.config.company?.address}</div>
+            <div className="text-muted-foreground">{block.config.company?.postalCode} {block.config.company?.city}</div>
+          </div>
+        )}
+        {block.type === "Document Title" && (
+          <div className="text-xs font-bold">{block.config.text}</div>
+        )}
+        {block.type === "Date Block" && (
+          <div className="text-xs text-muted-foreground">{block.config.date}</div>
+        )}
+        {block.type === "Text Block" && (
+          <div className="text-xs text-muted-foreground">{block.config.text}</div>
+        )}
       </div>
     </div>
   );
