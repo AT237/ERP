@@ -600,8 +600,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
             <div 
               className="bg-white shadow-lg relative border-2 border-dashed border-gray-300" 
               style={{ 
-                width: '210mm', 
-                height: '297mm',
+                width: '794px', // A4 width: 210mm = 794px @ 96 DPI
+                height: '1123px', // A4 height: 297mm = 1123px @ 96 DPI
                 marginLeft: '30px',
                 marginTop: '30px',
                 transform: `scale(${zoom})`,
