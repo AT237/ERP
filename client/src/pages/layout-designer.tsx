@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -369,6 +369,29 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
   const [draggedBlockType, setDraggedBlockType] = useState<string | null>(null);
   const [zoom, setZoom] = useState(0.5);
+  const { toast } = useToast();
+
+  // Load existing sections for this layout
+  const { data: existingSections } = useQuery<any[]>({
+    queryKey: ['/api/layout-sections', { layoutId: layout?.id }],
+    enabled: !!layout?.id,
+  });
+
+  // Load sections into canvas when they're fetched
+  useEffect(() => {
+    if (existingSections && existingSections.length > 0 && canvasBlocks.length === 0) {
+      const blocks = existingSections.map((section: any, index: number) => ({
+        id: section.id || `block-${index}`,
+        type: section.name,
+        position: section.config?.position || { x: 20, y: 20 + (index * 50) },
+        size: section.config?.size || { width: 200, height: 100 },
+        style: section.config?.style || { fontSize: 9, fontFamily: 'helvetica', fontStyle: 'normal' },
+        zIndex: section.config?.zIndex || index,
+        config: section.config || {},
+      }));
+      setCanvasBlocks(blocks);
+    }
+  }, [existingSections]);
 
   if (!layout) {
     return (
@@ -377,6 +400,46 @@ function VisualDesignerView({ layout }: { layout: any }) {
       </div>
     );
   }
+
+  // Save layout mutation
+  const saveLayoutMutation = useMutation({
+    mutationFn: async () => {
+      // Save each block as a layout section
+      const sections = canvasBlocks.map((block, index) => ({
+        layoutId: layout.id,
+        name: block.type,
+        sectionType: block.type.toLowerCase().replace(/\s+/g, '_'),
+        position: index,
+        config: {
+          ...block.config,
+          position: block.position,
+          size: block.size,
+          style: block.style,
+          zIndex: block.zIndex,
+        }
+      }));
+
+      // Save all sections
+      for (const section of sections) {
+        await apiRequest('POST', '/api/layout-sections', section);
+      }
+
+      return sections;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Opgeslagen!',
+        description: `Layout "${layout.name}" is succesvol opgeslagen`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Fout bij opslaan',
+        description: error.message || 'Kon layout niet opslaan',
+        variant: 'destructive',
+      });
+    },
+  });
 
   const handleDragStart = (blockType: string) => {
     setDraggedBlockType(blockType);
@@ -461,9 +524,38 @@ function VisualDesignerView({ layout }: { layout: any }) {
       </Card>
 
       {/* Canvas - A4 Preview */}
-      <Card className="flex items-center justify-center bg-gray-50 relative">
+      <Card className="flex flex-col bg-gray-50 relative">
+        {/* Toolbar */}
+        <div className="p-3 border-b border-border bg-white flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              {canvasBlocks.length} {canvasBlocks.length === 1 ? 'blok' : 'blokken'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setCanvasBlocks([])}
+              disabled={canvasBlocks.length === 0}
+              data-testid="button-clear-canvas"
+            >
+              Wis alles
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => saveLayoutMutation.mutate()}
+              disabled={saveLayoutMutation.isPending || canvasBlocks.length === 0}
+              data-testid="button-save-layout"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saveLayoutMutation.isPending ? 'Opslaan...' : 'Opslaan'}
+            </Button>
+          </div>
+        </div>
+
         {/* Canvas Area with Rulers */}
-        <div className="flex-1 flex items-center justify-center overflow-auto p-4">
+        <div className="flex-1 flex items-center justify-center overflow-auto p-4" style={{ minHeight: '600px' }}>
           <div className="relative" style={{ transform: `scale(${zoom})`, transformOrigin: 'center', transition: 'transform 0.2s ease' }}>
             {/* Horizontal Ruler */}
             <div className="absolute top-0 left-[30px] right-0 h-[30px] bg-gray-100 border-b border-gray-300 flex">
