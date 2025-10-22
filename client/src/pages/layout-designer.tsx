@@ -848,6 +848,9 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
     display: block.config?.visible === false ? 'none' : undefined,
   };
 
+  // Fallback for missing block type
+  const blockType = block.type || block.name || block.sectionType || 'block';
+
   return (
     <div
       className={`absolute border-2 rounded shadow-sm cursor-pointer transition-all ${
@@ -855,12 +858,12 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
       }`}
       style={blockStyle}
       onClick={onClick}
-      data-testid={`canvas-${block.type.toLowerCase().replace(/\s+/g, '-')}`}
+      data-testid={`canvas-${blockType.toLowerCase().replace(/\s+/g, '-')}`}
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-lg">{getBlockIcon(block.type)}</span>
-          <span className="text-sm font-medium">{block.type}</span>
+          <span className="text-lg">{getBlockIcon(blockType)}</span>
+          <span className="text-sm font-medium">{blockType}</span>
         </div>
         <Button 
           size="sm" 

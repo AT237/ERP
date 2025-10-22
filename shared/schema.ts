@@ -854,6 +854,7 @@ export const layoutBlocks = pgTable("layout_blocks", {
 export const layoutSections = pgTable("layout_sections", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   layoutId: varchar("layout_id").references(() => documentLayouts.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(), // Display name for the section
   sectionType: text("section_type").notNull(), // 'header', 'footer', 'body', 'table'
   position: integer("position").notNull(), // Vertical position/order in layout
   allowMultiple: boolean("allow_multiple").default(false), // Can this section appear multiple times
