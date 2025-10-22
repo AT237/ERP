@@ -373,7 +373,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
   // Load existing sections for this layout
   const { data: existingSections } = useQuery<any[]>({
-    queryKey: ['/api/layout-sections', { layoutId: layout?.id }],
+    queryKey: [`/api/layout-sections?layoutId=${layout?.id}`],
     enabled: !!layout?.id,
   });
 
