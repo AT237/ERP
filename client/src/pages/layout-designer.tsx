@@ -449,10 +449,20 @@ function VisualDesignerView({ layout }: { layout: any }) {
     e.preventDefault();
     if (!draggedBlockType) return;
 
+    // Get drop position relative to canvas
+    const canvas = e.currentTarget as HTMLElement;
+    const rect = canvas.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    // Apply snap to grid if enabled
+    x = snapToGrid(x);
+    y = snapToGrid(y);
+
     const newBlock = {
       id: `block-${Date.now()}`,
       type: draggedBlockType,
-      position: { x: 20, y: 20 + (canvasBlocks.length * 50) },
+      position: { x, y },
       size: { width: 200, height: 100 },
       style: {
         fontSize: 9,
@@ -632,6 +642,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
     blocks.forEach(block => {
       updateBlockProperty(block.id, 'size', { width: targetWidth, height: targetHeight });
     });
+  };
+
+  // Snap to grid helper
+  const snapToGrid = (value: number) => {
+    if (!showGrid) return value;
+    return Math.round(value / gridSize) * gridSize;
   };
 
   return (
