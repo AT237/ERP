@@ -487,6 +487,25 @@ function VisualDesignerView({ layout }: { layout: any }) {
     if (selectedBlock?.id === blockId) {
       setSelectedBlock(null);
     }
+    setSelectedBlocks(selectedBlocks.filter(id => id !== blockId));
+  };
+
+  const handleBlockClick = (block: any, e?: React.MouseEvent) => {
+    if (e?.ctrlKey || e?.metaKey) {
+      // Ctrl+Click: toggle block in selection
+      if (selectedBlocks.includes(block.id)) {
+        const newSelection = selectedBlocks.filter(id => id !== block.id);
+        setSelectedBlocks(newSelection);
+        setSelectedBlock(newSelection.length > 0 ? canvasBlocks.find(b => b.id === newSelection[0]) || null : null);
+      } else {
+        setSelectedBlocks([...selectedBlocks, block.id]);
+        setSelectedBlock(block);
+      }
+    } else {
+      // Normal click: select only this block
+      setSelectedBlock(block);
+      setSelectedBlocks([block.id]);
+    }
   };
 
   const updateBlockProperty = (blockId: string, property: string, value: any) => {
@@ -744,9 +763,15 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
           {/* Info */}
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              {selectedBlocks.length > 0 ? `${selectedBlocks.length} geselecteerd` : `${canvasBlocks.length} ${canvasBlocks.length === 1 ? 'blok' : 'blokken'}`}
-            </span>
+            {selectedBlocks.length > 0 ? (
+              <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium">
+                {selectedBlocks.length} geselecteerd
+              </span>
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                {canvasBlocks.length} {canvasBlocks.length === 1 ? 'blok' : 'blokken'}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -848,8 +873,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 <CanvasBlock
                   key={block.id}
                   block={block}
-                  isSelected={selectedBlock?.id === block.id}
-                  onClick={() => setSelectedBlock(block)}
+                  isSelected={selectedBlocks.includes(block.id)}
+                  onClick={(e: React.MouseEvent) => handleBlockClick(block, e)}
                   onRemove={() => handleRemoveBlock(block.id)}
                 />
               ))}
@@ -1083,7 +1108,7 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
         isSelected ? 'border-orange-500 shadow-md' : 'border-gray-300 hover:border-orange-300'
       }`}
       style={blockStyle}
-      onClick={onClick}
+      onClick={(e) => onClick(e)}
       data-testid={`canvas-${blockType.toLowerCase().replace(/\s+/g, '-')}`}
     >
       <div className="flex items-center justify-between mb-2">
