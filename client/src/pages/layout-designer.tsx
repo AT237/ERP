@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3 } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -568,6 +568,72 @@ function VisualDesignerView({ layout }: { layout: any }) {
     });
   };
 
+  // Distribute functions
+  const distributeHorizontally = () => {
+    if (selectedBlocks.length < 3) return;
+    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id)).sort((a, b) => a.position.x - b.position.x);
+    const leftMost = blocks[0].position.x;
+    const rightMost = blocks[blocks.length - 1].position.x + (blocks[blocks.length - 1].size?.width || 0);
+    const totalWidth = rightMost - leftMost;
+    const totalBlockWidth = blocks.reduce((sum, b) => sum + (b.size?.width || 0), 0);
+    const gap = (totalWidth - totalBlockWidth) / (blocks.length - 1);
+    
+    let currentX = leftMost;
+    blocks.forEach((block, index) => {
+      if (index > 0) {
+        updateBlockProperty(block.id, 'position', { ...block.position, x: currentX });
+      }
+      currentX += (block.size?.width || 0) + gap;
+    });
+  };
+
+  const distributeVertically = () => {
+    if (selectedBlocks.length < 3) return;
+    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id)).sort((a, b) => a.position.y - b.position.y);
+    const topMost = blocks[0].position.y;
+    const bottomMost = blocks[blocks.length - 1].position.y + (blocks[blocks.length - 1].size?.height || 0);
+    const totalHeight = bottomMost - topMost;
+    const totalBlockHeight = blocks.reduce((sum, b) => sum + (b.size?.height || 0), 0);
+    const gap = (totalHeight - totalBlockHeight) / (blocks.length - 1);
+    
+    let currentY = topMost;
+    blocks.forEach((block, index) => {
+      if (index > 0) {
+        updateBlockProperty(block.id, 'position', { ...block.position, y: currentY });
+      }
+      currentY += (block.size?.height || 0) + gap;
+    });
+  };
+
+  // Sizing functions
+  const sameWidth = () => {
+    if (selectedBlocks.length < 2) return;
+    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
+    const targetWidth = blocks[0].size?.width || 200;
+    blocks.forEach(block => {
+      updateBlockProperty(block.id, 'size', { ...block.size, width: targetWidth });
+    });
+  };
+
+  const sameHeight = () => {
+    if (selectedBlocks.length < 2) return;
+    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
+    const targetHeight = blocks[0].size?.height || 100;
+    blocks.forEach(block => {
+      updateBlockProperty(block.id, 'size', { ...block.size, height: targetHeight });
+    });
+  };
+
+  const sameSize = () => {
+    if (selectedBlocks.length < 2) return;
+    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
+    const targetWidth = blocks[0].size?.width || 200;
+    const targetHeight = blocks[0].size?.height || 100;
+    blocks.forEach(block => {
+      updateBlockProperty(block.id, 'size', { width: targetWidth, height: targetHeight });
+    });
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Professional Toolbar - BoldReports Style */}
@@ -610,6 +676,29 @@ function VisualDesignerView({ layout }: { layout: any }) {
             </Button>
             <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignBottom} disabled={selectedBlocks.length < 2} title="Align Bottom">
               <AlignVerticalJustifyEnd className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Distribute Tools */}
+          <div className="flex items-center gap-1 px-2 border-r border-border">
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={distributeHorizontally} disabled={selectedBlocks.length < 3} title="Distribute Horizontally">
+              <AlignHorizontalDistributeCenter className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={distributeVertically} disabled={selectedBlocks.length < 3} title="Distribute Vertically">
+              <AlignVerticalDistributeCenter className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Sizing Tools */}
+          <div className="flex items-center gap-1 px-2 border-r border-border">
+            <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={sameWidth} disabled={selectedBlocks.length < 2} title="Same Width">
+              W
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={sameHeight} disabled={selectedBlocks.length < 2} title="Same Height">
+              H
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={sameSize} disabled={selectedBlocks.length < 2} title="Same Size">
+              <Maximize2 className="h-4 w-4" />
             </Button>
           </div>
 
