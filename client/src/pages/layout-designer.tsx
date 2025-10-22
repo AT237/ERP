@@ -821,20 +821,39 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
     return icons[type] || "📦";
   };
 
+  // Build style object with all properties
+  const blockStyle: React.CSSProperties = {
+    left: `${block.position.x}px`, 
+    top: `${block.position.y}px`,
+    width: `${block.size?.width || 200}px`,
+    minHeight: `${block.size?.height || 100}px`,
+    zIndex: block.zIndex || 0,
+    fontSize: `${block.style?.fontSize || 9}px`,
+    fontFamily: block.style?.fontFamily || 'helvetica',
+    fontWeight: block.style?.fontStyle === 'bold' ? 'bold' : 'normal',
+    fontStyle: block.style?.fontStyle === 'italic' ? 'italic' : 'normal',
+    textAlign: (block.style?.textAlign || 'left') as any,
+    color: block.style?.color || '#000000',
+    backgroundColor: block.style?.backgroundColor || '#ffffff',
+    opacity: block.style?.opacity !== undefined ? block.style.opacity : 1,
+    borderColor: block.style?.borderColor || undefined,
+    borderWidth: block.style?.borderWidth ? `${block.style.borderWidth}px` : undefined,
+    borderStyle: block.style?.borderStyle || undefined,
+    borderRadius: block.style?.borderRadius ? `${block.style.borderRadius}px` : undefined,
+    lineHeight: block.style?.lineHeight || undefined,
+    letterSpacing: block.style?.letterSpacing ? `${block.style.letterSpacing}px` : undefined,
+    textDecoration: block.style?.textDecoration || undefined,
+    padding: `${block.style?.paddingTop || 0}px ${block.style?.paddingRight || 0}px ${block.style?.paddingBottom || 0}px ${block.style?.paddingLeft || 0}px`,
+    transform: block.style?.rotation ? `rotate(${block.style.rotation}deg)` : undefined,
+    display: block.config?.visible === false ? 'none' : undefined,
+  };
+
   return (
     <div
-      className={`absolute border-2 rounded p-3 bg-white shadow-sm cursor-pointer transition-all ${
+      className={`absolute border-2 rounded shadow-sm cursor-pointer transition-all ${
         isSelected ? 'border-orange-500 shadow-md' : 'border-gray-300 hover:border-orange-300'
       }`}
-      style={{ 
-        left: `${block.position.x}px`, 
-        top: `${block.position.y}px`,
-        width: `${block.size?.width || 200}px`,
-        minHeight: `${block.size?.height || 100}px`,
-        zIndex: block.zIndex || 0,
-        fontSize: `${block.style?.fontSize || 9}px`,
-        fontFamily: block.style?.fontFamily || 'helvetica',
-      }}
+      style={blockStyle}
       onClick={onClick}
       data-testid={`canvas-${block.type.toLowerCase().replace(/\s+/g, '-')}`}
     >
@@ -897,8 +916,19 @@ function BlockProperties({
     onUpdateProperty(block.id, 'style', { ...block.style, [property]: value });
   };
 
+  const updateConfig = (property: string, value: any) => {
+    onUpdateProperty(block.id, 'config', { ...block.config, [property]: value });
+  };
+
   return (
-    <div className="space-y-6">
+    <Tabs defaultValue="position" className="w-full">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="position" className="text-xs">Positie</TabsTrigger>
+        <TabsTrigger value="style" className="text-xs">Stijl</TabsTrigger>
+        <TabsTrigger value="advanced" className="text-xs">Geavanceerd</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="position" className="space-y-4 mt-4">
       {/* Position Controls */}
       <div>
         <h4 className="text-sm font-semibold mb-3 text-orange-600">Positie</h4>
@@ -1013,54 +1043,341 @@ function BlockProperties({
         </div>
       </div>
 
-      {/* Z-Index Controls */}
-      <div>
-        <h4 className="text-sm font-semibold mb-3 text-orange-600">Laag</h4>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onBringToFront}
-            className="flex-1 h-8 text-xs"
-            data-testid="button-bring-to-front"
-          >
-            Naar voren
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onSendToBack}
-            className="flex-1 h-8 text-xs"
-            data-testid="button-send-to-back"
-          >
-            Naar achteren
-          </Button>
+        {/* Rotation */}
+        <div>
+          <Label htmlFor="rotation" className="text-xs">Rotatie (graden)</Label>
+          <Input
+            id="rotation"
+            type="number"
+            value={block.style?.rotation || 0}
+            onChange={(e) => updateStyle('rotation', parseInt(e.target.value) || 0)}
+            className="h-8 text-xs"
+            min="0"
+            max="360"
+            data-testid="input-rotation"
+          />
         </div>
-        <div className="mt-2 text-xs text-muted-foreground text-center">
-          Z-index: {block.zIndex || 0}
-        </div>
-      </div>
 
-      {/* Block-specific content (read-only preview) */}
-      <div className="pt-4 border-t">
-        <h4 className="text-sm font-semibold mb-3 text-orange-600">Inhoud</h4>
-        {block.type === "Company Header" && (
-          <div className="space-y-1 text-xs">
-            <div className="font-medium">{block.config.company?.name}</div>
-            <div className="text-muted-foreground">{block.config.company?.address}</div>
-            <div className="text-muted-foreground">{block.config.company?.postalCode} {block.config.company?.city}</div>
+        {/* Z-Index Controls */}
+        <div>
+          <h4 className="text-sm font-semibold mb-3 text-orange-600">Laag</h4>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onBringToFront}
+              className="flex-1 h-8 text-xs"
+              data-testid="button-bring-to-front"
+            >
+              Naar voren
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onSendToBack}
+              className="flex-1 h-8 text-xs"
+              data-testid="button-send-to-back"
+            >
+              Naar achteren
+            </Button>
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground text-center">
+            Z-index: {block.zIndex || 0}
+          </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="style" className="space-y-4 mt-4">
+        {/* Text Alignment */}
+        <div>
+          <Label className="text-xs">Tekstuitlijning</Label>
+          <Select 
+            value={block.style?.textAlign || 'left'}
+            onValueChange={(value) => updateStyle('textAlign', value)}
+          >
+            <SelectTrigger className="h-8 text-xs" data-testid="select-text-align">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="left">Links</SelectItem>
+              <SelectItem value="center">Midden</SelectItem>
+              <SelectItem value="right">Rechts</SelectItem>
+              <SelectItem value="justify">Uitgevuld</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Text Color */}
+        <div>
+          <Label htmlFor="text-color" className="text-xs">Tekstkleur</Label>
+          <Input
+            id="text-color"
+            type="color"
+            value={block.style?.color || '#000000'}
+            onChange={(e) => updateStyle('color', e.target.value)}
+            className="h-8"
+            data-testid="input-text-color"
+          />
+        </div>
+
+        {/* Background Color */}
+        <div>
+          <Label htmlFor="bg-color" className="text-xs">Achtergrondkleur</Label>
+          <Input
+            id="bg-color"
+            type="color"
+            value={block.style?.backgroundColor || '#ffffff'}
+            onChange={(e) => updateStyle('backgroundColor', e.target.value)}
+            className="h-8"
+            data-testid="input-bg-color"
+          />
+        </div>
+
+        {/* Background Opacity */}
+        <div>
+          <Label htmlFor="opacity" className="text-xs">Transparantie (%)</Label>
+          <Input
+            id="opacity"
+            type="number"
+            value={block.style?.opacity !== undefined ? block.style.opacity * 100 : 100}
+            onChange={(e) => updateStyle('opacity', (parseInt(e.target.value) || 100) / 100)}
+            className="h-8 text-xs"
+            min="0"
+            max="100"
+            data-testid="input-opacity"
+          />
+        </div>
+
+        {/* Border Color */}
+        <div>
+          <Label htmlFor="border-color" className="text-xs">Randkleur</Label>
+          <Input
+            id="border-color"
+            type="color"
+            value={block.style?.borderColor || '#000000'}
+            onChange={(e) => updateStyle('borderColor', e.target.value)}
+            className="h-8"
+            data-testid="input-border-color"
+          />
+        </div>
+
+        {/* Border Width */}
+        <div>
+          <Label htmlFor="border-width" className="text-xs">Randbreedte (px)</Label>
+          <Input
+            id="border-width"
+            type="number"
+            value={block.style?.borderWidth || 0}
+            onChange={(e) => updateStyle('borderWidth', parseInt(e.target.value) || 0)}
+            className="h-8 text-xs"
+            min="0"
+            data-testid="input-border-width"
+          />
+        </div>
+
+        {/* Border Style */}
+        <div>
+          <Label className="text-xs">Randstijl</Label>
+          <Select 
+            value={block.style?.borderStyle || 'solid'}
+            onValueChange={(value) => updateStyle('borderStyle', value)}
+          >
+            <SelectTrigger className="h-8 text-xs" data-testid="select-border-style">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="solid">Solid</SelectItem>
+              <SelectItem value="dashed">Dashed</SelectItem>
+              <SelectItem value="dotted">Dotted</SelectItem>
+              <SelectItem value="none">None</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Border Radius */}
+        <div>
+          <Label htmlFor="border-radius" className="text-xs">Border Radius (px)</Label>
+          <Input
+            id="border-radius"
+            type="number"
+            value={block.style?.borderRadius || 0}
+            onChange={(e) => updateStyle('borderRadius', parseInt(e.target.value) || 0)}
+            className="h-8 text-xs"
+            min="0"
+            data-testid="input-border-radius"
+          />
+        </div>
+
+        {/* Line Height */}
+        <div>
+          <Label htmlFor="line-height" className="text-xs">Regelafstand</Label>
+          <Input
+            id="line-height"
+            type="number"
+            step="0.1"
+            value={block.style?.lineHeight || 1.2}
+            onChange={(e) => updateStyle('lineHeight', parseFloat(e.target.value) || 1.2)}
+            className="h-8 text-xs"
+            data-testid="input-line-height"
+          />
+        </div>
+
+        {/* Letter Spacing */}
+        <div>
+          <Label htmlFor="letter-spacing" className="text-xs">Letter Spacing (px)</Label>
+          <Input
+            id="letter-spacing"
+            type="number"
+            step="0.1"
+            value={block.style?.letterSpacing || 0}
+            onChange={(e) => updateStyle('letterSpacing', parseFloat(e.target.value) || 0)}
+            className="h-8 text-xs"
+            data-testid="input-letter-spacing"
+          />
+        </div>
+
+        {/* Text Decoration */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <input
+              id="underline"
+              type="checkbox"
+              checked={block.style?.textDecoration?.includes('underline') || false}
+              onChange={(e) => updateStyle('textDecoration', e.target.checked ? 'underline' : 'none')}
+              className="h-4 w-4"
+              data-testid="checkbox-underline"
+            />
+            <Label htmlFor="underline" className="text-xs">Onderstrepen</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              id="line-through"
+              type="checkbox"
+              checked={block.style?.textDecoration?.includes('line-through') || false}
+              onChange={(e) => updateStyle('textDecoration', e.target.checked ? 'line-through' : 'none')}
+              className="h-4 w-4"
+              data-testid="checkbox-strikethrough"
+            />
+            <Label htmlFor="line-through" className="text-xs">Doorstrepen</Label>
+          </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="advanced" className="space-y-4 mt-4">
+        {/* Padding */}
+        <div>
+          <Label className="text-xs mb-2 block">Padding (px)</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              type="number"
+              placeholder="Top"
+              value={block.style?.paddingTop || 0}
+              onChange={(e) => updateStyle('paddingTop', parseInt(e.target.value) || 0)}
+              className="h-8 text-xs"
+              data-testid="input-padding-top"
+            />
+            <Input
+              type="number"
+              placeholder="Right"
+              value={block.style?.paddingRight || 0}
+              onChange={(e) => updateStyle('paddingRight', parseInt(e.target.value) || 0)}
+              className="h-8 text-xs"
+              data-testid="input-padding-right"
+            />
+            <Input
+              type="number"
+              placeholder="Bottom"
+              value={block.style?.paddingBottom || 0}
+              onChange={(e) => updateStyle('paddingBottom', parseInt(e.target.value) || 0)}
+              className="h-8 text-xs"
+              data-testid="input-padding-bottom"
+            />
+            <Input
+              type="number"
+              placeholder="Left"
+              value={block.style?.paddingLeft || 0}
+              onChange={(e) => updateStyle('paddingLeft', parseInt(e.target.value) || 0)}
+              className="h-8 text-xs"
+              data-testid="input-padding-left"
+            />
+          </div>
+        </div>
+
+        {/* Visibility */}
+        <div className="flex items-center gap-2">
+          <input
+            id="visible"
+            type="checkbox"
+            checked={block.config?.visible !== false}
+            onChange={(e) => updateConfig('visible', e.target.checked)}
+            className="h-4 w-4"
+            data-testid="checkbox-visible"
+          />
+          <Label htmlFor="visible" className="text-xs">Zichtbaar</Label>
+        </div>
+
+        {/* Lock Position */}
+        <div className="flex items-center gap-2">
+          <input
+            id="locked"
+            type="checkbox"
+            checked={block.config?.locked || false}
+            onChange={(e) => updateConfig('locked', e.target.checked)}
+            className="h-4 w-4"
+            data-testid="checkbox-locked"
+          />
+          <Label htmlFor="locked" className="text-xs">Positie vergrendelen</Label>
+        </div>
+
+        {/* Snap to Grid */}
+        <div className="flex items-center gap-2">
+          <input
+            id="snap-to-grid"
+            type="checkbox"
+            checked={block.config?.snapToGrid || false}
+            onChange={(e) => updateConfig('snapToGrid', e.target.checked)}
+            className="h-4 w-4"
+            data-testid="checkbox-snap-to-grid"
+          />
+          <Label htmlFor="snap-to-grid" className="text-xs">Snap to grid</Label>
+        </div>
+
+        {/* Grid Size */}
+        {block.config?.snapToGrid && (
+          <div>
+            <Label htmlFor="grid-size" className="text-xs">Grid grootte (px)</Label>
+            <Input
+              id="grid-size"
+              type="number"
+              value={block.config?.gridSize || 10}
+              onChange={(e) => updateConfig('gridSize', parseInt(e.target.value) || 10)}
+              className="h-8 text-xs"
+              data-testid="input-grid-size"
+            />
           </div>
         )}
-        {block.type === "Document Title" && (
-          <div className="text-xs font-bold">{block.config.text}</div>
-        )}
-        {block.type === "Date Block" && (
-          <div className="text-xs text-muted-foreground">{block.config.date}</div>
-        )}
-        {block.type === "Text Block" && (
-          <div className="text-xs text-muted-foreground">{block.config.text}</div>
-        )}
-      </div>
-    </div>
+
+        {/* Block-specific content */}
+        <div className="pt-4 border-t">
+          <h4 className="text-sm font-semibold mb-3 text-orange-600">Inhoud</h4>
+          {block.type === "Company Header" && (
+            <div className="space-y-1 text-xs">
+              <div className="font-medium">{block.config.company?.name}</div>
+              <div className="text-muted-foreground">{block.config.company?.address}</div>
+              <div className="text-muted-foreground">{block.config.company?.postalCode} {block.config.company?.city}</div>
+            </div>
+          )}
+          {block.type === "Document Title" && (
+            <div className="text-xs font-bold">{block.config.text}</div>
+          )}
+          {block.type === "Date Block" && (
+            <div className="text-xs text-muted-foreground">{block.config.date}</div>
+          )}
+          {block.type === "Text Block" && (
+            <div className="text-xs text-muted-foreground">{block.config.text}</div>
+          )}
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 }
