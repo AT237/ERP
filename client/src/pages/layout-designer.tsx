@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -503,56 +503,171 @@ function VisualDesignerView({ layout }: { layout: any }) {
     updateBlockProperty(blockId, 'zIndex', minZ - 1);
   };
 
-  return (
-    <div className="grid grid-cols-[250px_1fr_300px] gap-4 h-full">
-      {/* Left Sidebar - Block Library */}
-      <Card className="overflow-auto">
-        <CardHeader>
-          <CardTitle className="text-base">Block Library</CardTitle>
-          <CardDescription>Drag blocks onto canvas</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <BlockLibraryItem name="Company Header" icon="🏢" onDragStart={handleDragStart} />
-          <BlockLibraryItem name="Date Block" icon="📅" onDragStart={handleDragStart} />
-          <BlockLibraryItem name="Line Items Table" icon="📊" onDragStart={handleDragStart} />
-          <BlockLibraryItem name="Totals Summary" icon="💰" onDragStart={handleDragStart} />
-          <BlockLibraryItem name="Footer Block" icon="📄" onDragStart={handleDragStart} />
-          <BlockLibraryItem name="Text Block" icon="📝" onDragStart={handleDragStart} />
-          <BlockLibraryItem name="Page Number" icon="🔢" onDragStart={handleDragStart} />
-          <BlockLibraryItem name="Document Title" icon="📌" onDragStart={handleDragStart} />
-        </CardContent>
-      </Card>
+  const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]);
+  const [showGrid, setShowGrid] = useState(true);
+  const [gridSize, setGridSize] = useState(10);
 
-      {/* Canvas - A4 Preview */}
-      <Card className="flex flex-col bg-gray-50 relative">
-        {/* Toolbar */}
-        <div className="p-3 border-b border-border bg-white flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              {canvasBlocks.length} {canvasBlocks.length === 1 ? 'blok' : 'blokken'}
+  // Alignment functions
+  const alignLeft = () => {
+    if (selectedBlocks.length < 2) return;
+    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
+    const leftMost = Math.min(...blocks.map(b => b.position.x));
+    blocks.forEach(block => {
+      updateBlockProperty(block.id, 'position', { ...block.position, x: leftMost });
+    });
+  };
+
+  const alignRight = () => {
+    if (selectedBlocks.length < 2) return;
+    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
+    const rightMost = Math.max(...blocks.map(b => b.position.x + (b.size?.width || 0)));
+    blocks.forEach(block => {
+      const width = block.size?.width || 0;
+      updateBlockProperty(block.id, 'position', { ...block.position, x: rightMost - width });
+    });
+  };
+
+  const alignCenter = () => {
+    if (selectedBlocks.length < 2) return;
+    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
+    const positions = blocks.map(b => ({ left: b.position.x, right: b.position.x + (b.size?.width || 0) }));
+    const center = (Math.min(...positions.map(p => p.left)) + Math.max(...positions.map(p => p.right))) / 2;
+    blocks.forEach(block => {
+      const width = block.size?.width || 0;
+      updateBlockProperty(block.id, 'position', { ...block.position, x: center - width / 2 });
+    });
+  };
+
+  const alignTop = () => {
+    if (selectedBlocks.length < 2) return;
+    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
+    const topMost = Math.min(...blocks.map(b => b.position.y));
+    blocks.forEach(block => {
+      updateBlockProperty(block.id, 'position', { ...block.position, y: topMost });
+    });
+  };
+
+  const alignBottom = () => {
+    if (selectedBlocks.length < 2) return;
+    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
+    const bottomMost = Math.max(...blocks.map(b => b.position.y + (b.size?.height || 0)));
+    blocks.forEach(block => {
+      const height = block.size?.height || 0;
+      updateBlockProperty(block.id, 'position', { ...block.position, y: bottomMost - height });
+    });
+  };
+
+  const alignMiddle = () => {
+    if (selectedBlocks.length < 2) return;
+    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
+    const positions = blocks.map(b => ({ top: b.position.y, bottom: b.position.y + (b.size?.height || 0) }));
+    const middle = (Math.min(...positions.map(p => p.top)) + Math.max(...positions.map(p => p.bottom))) / 2;
+    blocks.forEach(block => {
+      const height = block.size?.height || 0;
+      updateBlockProperty(block.id, 'position', { ...block.position, y: middle - height / 2 });
+    });
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Professional Toolbar - BoldReports Style */}
+      <div className="border-b border-border bg-white px-4 py-2">
+        <div className="flex items-center gap-1 flex-wrap">
+          {/* File Operations */}
+          <div className="flex items-center gap-1 pr-2 border-r border-border">
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="Save">
+              <Save className="h-4 w-4" onClick={() => saveLayoutMutation.mutate()} />
+            </Button>
+          </div>
+
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-1 px-2 border-r border-border">
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setZoom(Math.max(0.1, zoom - 0.1))} title="Zoom Out">
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <span className="text-xs font-medium min-w-[45px] text-center">{Math.round(zoom * 100)}%</span>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setZoom(Math.min(2, zoom + 0.1))} title="Zoom In">
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Alignment Tools */}
+          <div className="flex items-center gap-1 px-2 border-r border-border">
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignLeft} disabled={selectedBlocks.length < 2} title="Align Left">
+              <AlignLeft className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignCenter} disabled={selectedBlocks.length < 2} title="Align Center">
+              <AlignCenter className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignRight} disabled={selectedBlocks.length < 2} title="Align Right">
+              <AlignRight className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignTop} disabled={selectedBlocks.length < 2} title="Align Top">
+              <AlignVerticalJustifyStart className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignMiddle} disabled={selectedBlocks.length < 2} title="Align Middle">
+              <AlignVerticalJustifyCenter className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignBottom} disabled={selectedBlocks.length < 2} title="Align Bottom">
+              <AlignVerticalJustifyEnd className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Layer Controls */}
+          <div className="flex items-center gap-1 px-2 border-r border-border">
+            <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => selectedBlock && bringToFront(selectedBlock.id)} disabled={!selectedBlock} title="Bring to Front">
+              Naar voren
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => selectedBlock && sendToBack(selectedBlock.id)} disabled={!selectedBlock} title="Send to Back">
+              Naar achteren
+            </Button>
+          </div>
+
+          {/* View Controls */}
+          <div className="flex items-center gap-1 px-2">
+            <Button 
+              size="sm" 
+              variant={showGrid ? "default" : "ghost"} 
+              className="h-8 px-2 text-xs" 
+              onClick={() => setShowGrid(!showGrid)}
+              title="Toggle Grid"
+            >
+              <Grid3x3 className="h-4 w-4 mr-1" />
+              Grid
+            </Button>
+          </div>
+
+          {/* Info */}
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {selectedBlocks.length > 0 ? `${selectedBlocks.length} geselecteerd` : `${canvasBlocks.length} ${canvasBlocks.length === 1 ? 'blok' : 'blokken'}`}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setCanvasBlocks([])}
-              disabled={canvasBlocks.length === 0}
-              data-testid="button-clear-canvas"
-            >
-              Wis alles
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => saveLayoutMutation.mutate()}
-              disabled={saveLayoutMutation.isPending || canvasBlocks.length === 0}
-              data-testid="button-save-layout"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {saveLayoutMutation.isPending ? 'Opslaan...' : 'Opslaan'}
-            </Button>
-          </div>
         </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="grid grid-cols-[250px_1fr_300px] gap-4 h-full p-4">
+        {/* Left Sidebar - Block Library */}
+        <Card className="overflow-auto">
+          <CardHeader>
+            <CardTitle className="text-base">Block Library</CardTitle>
+            <CardDescription>Drag blocks onto canvas</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <BlockLibraryItem name="Company Header" icon="🏢" onDragStart={handleDragStart} />
+            <BlockLibraryItem name="Date Block" icon="📅" onDragStart={handleDragStart} />
+            <BlockLibraryItem name="Line Items Table" icon="📊" onDragStart={handleDragStart} />
+            <BlockLibraryItem name="Totals Summary" icon="💰" onDragStart={handleDragStart} />
+            <BlockLibraryItem name="Footer Block" icon="📄" onDragStart={handleDragStart} />
+            <BlockLibraryItem name="Text Block" icon="📝" onDragStart={handleDragStart} />
+            <BlockLibraryItem name="Page Number" icon="🔢" onDragStart={handleDragStart} />
+            <BlockLibraryItem name="Document Title" icon="📌" onDragStart={handleDragStart} />
+          </CardContent>
+        </Card>
+
+        {/* Canvas - A4 Preview */}
+        <Card className="flex flex-col bg-gray-50 relative">
 
         {/* Canvas Area with Rulers */}
         <div className="flex-1 flex items-center justify-center overflow-auto p-4" style={{ minHeight: '600px' }}>
@@ -601,7 +716,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 width: '794px', // A4 width: 210mm = 794px @ 96 DPI
                 height: '1123px', // A4 height: 297mm = 1123px @ 96 DPI
                 marginLeft: '30px',
-                marginTop: '30px'
+                marginTop: '30px',
+                backgroundImage: showGrid ? `
+                  linear-gradient(to right, #e5e5e5 1px, transparent 1px),
+                  linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)
+                ` : 'none',
+                backgroundSize: showGrid ? `${gridSize}px ${gridSize}px` : 'auto',
               }}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
@@ -679,27 +799,28 @@ function VisualDesignerView({ layout }: { layout: any }) {
         </div>
       </Card>
 
-      {/* Right Sidebar - Properties */}
-      <Card className="overflow-auto">
-        <CardHeader>
-          <CardTitle className="text-base">Properties</CardTitle>
-          <CardDescription>Configure selected block</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {selectedBlock ? (
-            <BlockProperties 
-              block={selectedBlock} 
-              onUpdateProperty={updateBlockProperty}
-              onBringToFront={() => bringToFront(selectedBlock.id)}
-              onSendToBack={() => sendToBack(selectedBlock.id)}
-            />
-          ) : (
-            <div className="text-sm text-muted-foreground text-center py-8">
-              No block selected
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {/* Right Sidebar - Properties */}
+        <Card className="overflow-auto">
+          <CardHeader>
+            <CardTitle className="text-base">Properties</CardTitle>
+            <CardDescription>Configure selected block</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {selectedBlock ? (
+              <BlockProperties 
+                block={selectedBlock} 
+                onUpdateProperty={updateBlockProperty}
+                onBringToFront={() => bringToFront(selectedBlock.id)}
+                onSendToBack={() => sendToBack(selectedBlock.id)}
+              />
+            ) : (
+              <div className="text-sm text-muted-foreground text-center py-8">
+                No block selected
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
