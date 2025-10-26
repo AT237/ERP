@@ -850,15 +850,53 @@ export const layoutBlocks = pgTable("layout_blocks", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Type definitions for Section Configuration
+export type SectionPrintRules = {
+  firstPage?: boolean; // Print only on first page
+  lastPage?: boolean; // Print only on last page
+  oddPages?: boolean; // Print only on odd pages
+  evenPages?: boolean; // Print only on even pages
+  pageRange?: { from: number; to: number }; // Print on specific page range
+  everyPage?: boolean; // Print on every page (default)
+};
+
+export type SectionDimensions = {
+  height: number; // Height in pixels
+  minHeight?: number; // Minimum height
+  maxHeight?: number; // Maximum height
+  unit?: 'px' | 'mm' | '%'; // Unit of measurement
+};
+
+export type SectionStyle = {
+  backgroundColor?: string; // Background color
+  borderColor?: string; // Border color
+  borderWidth?: number; // Border width in pixels
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'none'; // Border style
+  padding?: { top: number; right: number; bottom: number; left: number }; // Padding
+  margin?: { top: number; right: number; bottom: number; left: number }; // Margin
+};
+
+export type SectionConfig = {
+  printRules?: SectionPrintRules;
+  dimensions?: SectionDimensions;
+  style?: SectionStyle;
+  blocks?: any[]; // Blocks within this section
+  metadata?: {
+    savedAsTemplate?: boolean; // Is this section saved as a reusable template
+    templateId?: string; // Reference to layout_blocks if saved as template
+    createdFromBlockId?: string; // If created from a template
+  };
+};
+
 // Layout Sections - Sections within a layout (header, body, footer, tables)
 export const layoutSections = pgTable("layout_sections", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   layoutId: varchar("layout_id").references(() => documentLayouts.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(), // Display name for the section
-  sectionType: text("section_type").notNull(), // 'header', 'footer', 'body', 'table'
+  sectionType: text("section_type").notNull(), // 'header', 'footer', 'body', 'table', 'custom'
   position: integer("position").notNull(), // Vertical position/order in layout
   allowMultiple: boolean("allow_multiple").default(false), // Can this section appear multiple times
-  config: jsonb("config").$type<Record<string, any>>().default(sql`'{}'::jsonb`), // Section-specific configuration
+  config: jsonb("config").$type<SectionConfig>().default(sql`'{}'::jsonb`), // Section-specific configuration
   createdAt: timestamp("created_at").defaultNow(),
 });
 
