@@ -365,10 +365,16 @@ function LayoutManagerView({
 
 // Visual Designer Component
 function VisualDesignerView({ layout }: { layout: any }) {
-  const [canvasBlocks, setCanvasBlocks] = useState<any[]>([]);
+  // Section-based state
+  const [sections, setSections] = useState<any[]>([]);
+  const [selectedSection, setSelectedSection] = useState<any>(null);
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
   const [draggedBlockType, setDraggedBlockType] = useState<string | null>(null);
   const [zoom, setZoom] = useState(0.5);
+  const [leftPanelTab, setLeftPanelTab] = useState<'sections' | 'blocks'>('sections');
+  const [showNewSectionDialog, setShowNewSectionDialog] = useState(false);
+  const [newSectionName, setNewSectionName] = useState('');
+  const [newSectionType, setNewSectionType] = useState('custom');
   const { toast } = useToast();
 
   // Load existing sections for this layout
@@ -377,19 +383,23 @@ function VisualDesignerView({ layout }: { layout: any }) {
     enabled: !!layout?.id,
   });
 
-  // Load sections into canvas when they're fetched
+  // Load sections into state when they're fetched
   useEffect(() => {
-    if (existingSections && existingSections.length > 0 && canvasBlocks.length === 0) {
-      const blocks = existingSections.map((section: any, index: number) => ({
-        id: section.id || `block-${index}`,
-        type: section.name,
-        position: section.config?.position || { x: 20, y: 20 + (index * 50) },
-        size: section.config?.size || { width: 200, height: 100 },
-        style: section.config?.style || { fontSize: 9, fontFamily: 'helvetica', fontStyle: 'normal' },
-        zIndex: section.config?.zIndex || index,
-        config: section.config || {},
+    if (existingSections && existingSections.length > 0 && sections.length === 0) {
+      const loadedSections = existingSections.map((section: any) => ({
+        id: section.id,
+        name: section.name,
+        sectionType: section.sectionType,
+        position: section.position,
+        config: {
+          printRules: section.config?.printRules || { everyPage: true },
+          dimensions: section.config?.dimensions || { height: 200, unit: 'px' },
+          style: section.config?.style || {},
+          blocks: section.config?.blocks || [],
+          metadata: section.config?.metadata || {},
+        },
       }));
-      setCanvasBlocks(blocks);
+      setSections(loadedSections.sort((a, b) => a.position - b.position));
     }
   }, [existingSections]);
 
@@ -401,27 +411,57 @@ function VisualDesignerView({ layout }: { layout: any }) {
     );
   }
 
+  // Create new section
+  const handleCreateSection = () => {
+    if (!newSectionName.trim()) {
+      toast({
+        title: 'Naam vereist',
+        description: 'Geef de sectie een naam',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newSection = {
+      id: `section-${Date.now()}`,
+      name: newSectionName,
+      sectionType: newSectionType,
+      position: sections.length,
+      config: {
+        printRules: { everyPage: true },
+        dimensions: { height: 200, unit: 'px' as const },
+        style: { backgroundColor: '#ffffff' },
+        blocks: [],
+        metadata: {},
+      },
+    };
+
+    setSections([...sections, newSection]);
+    setSelectedSection(newSection);
+    setShowNewSectionDialog(false);
+    setNewSectionName('');
+    setNewSectionType('custom');
+  };
+
   // Save layout mutation
   const saveLayoutMutation = useMutation({
     mutationFn: async () => {
-      // Save each block as a layout section
-      const sections = canvasBlocks.map((block, index) => ({
-        layoutId: layout.id,
-        name: block.type,
-        sectionType: block.type.toLowerCase().replace(/\s+/g, '_'),
-        position: index,
-        config: {
-          ...block.config,
-          position: block.position,
-          size: block.size,
-          style: block.style,
-          zIndex: block.zIndex,
+      // Delete existing sections first
+      if (existingSections && existingSections.length > 0) {
+        for (const section of existingSections) {
+          await apiRequest('DELETE', `/api/layout-sections/${section.id}`);
         }
-      }));
+      }
 
-      // Save all sections
+      // Save all sections with their blocks
       for (const section of sections) {
-        await apiRequest('POST', '/api/layout-sections', section);
+        await apiRequest('POST', '/api/layout-sections', {
+          layoutId: layout.id,
+          name: section.name,
+          sectionType: section.sectionType,
+          position: section.position,
+          config: section.config,
+        });
       }
 
       return sections;
@@ -445,19 +485,19 @@ function VisualDesignerView({ layout }: { layout: any }) {
     setDraggedBlockType(blockType);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDropOnSection = (e: React.DragEvent, sectionId: string) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!draggedBlockType) return;
 
-    // Get drop position relative to canvas
-    const canvas = e.currentTarget as HTMLElement;
-    const rect = canvas.getBoundingClientRect();
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top;
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
 
-    // Apply snap to grid if enabled
-    x = snapToGrid(x);
-    y = snapToGrid(y);
+    // Get drop position relative to section
+    const sectionElement = e.currentTarget as HTMLElement;
+    const rect = sectionElement.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
     const newBlock = {
       id: `block-${Date.now()}`,
@@ -469,11 +509,18 @@ function VisualDesignerView({ layout }: { layout: any }) {
         fontFamily: 'helvetica',
         fontStyle: 'normal',
       },
-      zIndex: canvasBlocks.length,
+      zIndex: (section.config.blocks?.length || 0),
       config: getDefaultConfig(draggedBlockType),
     };
 
-    setCanvasBlocks([...canvasBlocks, newBlock]);
+    // Add block to section
+    const updatedSections = sections.map(s => 
+      s.id === sectionId 
+        ? { ...s, config: { ...s.config, blocks: [...(s.config.blocks || []), newBlock] } }
+        : s
+    );
+
+    setSections(updatedSections);
     setSelectedBlock(newBlock);
     setDraggedBlockType(null);
   };
@@ -482,29 +529,76 @@ function VisualDesignerView({ layout }: { layout: any }) {
     e.preventDefault();
   };
 
-  const handleRemoveBlock = (blockId: string) => {
-    setCanvasBlocks(canvasBlocks.filter(b => b.id !== blockId));
+  const handleRemoveBlock = (sectionId: string, blockId: string) => {
+    const updatedSections = sections.map(s => 
+      s.id === sectionId 
+        ? { ...s, config: { ...s.config, blocks: (s.config.blocks || []).filter((b: any) => b.id !== blockId) } }
+        : s
+    );
+    setSections(updatedSections);
+    
     if (selectedBlock?.id === blockId) {
       setSelectedBlock(null);
     }
-    setSelectedBlocks(selectedBlocks.filter(id => id !== blockId));
   };
 
-  const handleBlockClick = (block: any, e?: React.MouseEvent) => {
-    if (e?.ctrlKey || e?.metaKey) {
-      // Ctrl+Click: toggle block in selection
-      if (selectedBlocks.includes(block.id)) {
-        const newSelection = selectedBlocks.filter(id => id !== block.id);
-        setSelectedBlocks(newSelection);
-        setSelectedBlock(newSelection.length > 0 ? canvasBlocks.find(b => b.id === newSelection[0]) || null : null);
-      } else {
-        setSelectedBlocks([...selectedBlocks, block.id]);
-        setSelectedBlock(block);
+  const handleBlockClick = (block: any) => {
+    setSelectedBlock(block);
+    setSelectedSection(null); // Deselect section when block is selected
+  };
+
+  const handleSectionClick = (section: any) => {
+    setSelectedSection(section);
+    setSelectedBlock(null); // Deselect block when section is selected
+  };
+
+  const updateSectionProperty = (sectionId: string, path: string, value: any) => {
+    const updatedSections = sections.map(s => {
+      if (s.id !== sectionId) return s;
+      
+      const pathParts = path.split('.');
+      const updated = { ...s };
+      let current: any = updated;
+      
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        current[pathParts[i]] = { ...current[pathParts[i]] };
+        current = current[pathParts[i]];
       }
-    } else {
-      // Normal click: select only this block
-      setSelectedBlock(block);
-      setSelectedBlocks([block.id]);
+      
+      current[pathParts[pathParts.length - 1]] = value;
+      return updated;
+    });
+    
+    setSections(updatedSections);
+    
+    if (selectedSection?.id === sectionId) {
+      const updated = updatedSections.find(s => s.id === sectionId);
+      if (updated) setSelectedSection(updated);
+    }
+  };
+
+  const updateBlockProperty = (sectionId: string, blockId: string, property: string, value: any) => {
+    const updatedSections = sections.map(s => {
+      if (s.id !== sectionId) return s;
+      
+      return {
+        ...s,
+        config: {
+          ...s.config,
+          blocks: (s.config.blocks || []).map((b: any) => 
+            b.id === blockId ? { ...b, [property]: value } : b
+          ),
+        },
+      };
+    });
+    
+    setSections(updatedSections);
+  };
+
+  const handleRemoveSection = (sectionId: string) => {
+    setSections(sections.filter(s => s.id !== sectionId));
+    if (selectedSection?.id === sectionId) {
+      setSelectedSection(null);
     }
   };
 
