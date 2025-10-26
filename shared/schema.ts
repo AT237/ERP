@@ -835,6 +835,7 @@ export const documentLayouts = pgTable("document_layouts", {
   pageFormat: text("page_format").notNull().default("A4"), // 'A4', 'Letter', etc.
   orientation: text("orientation").notNull().default("portrait"), // 'portrait' or 'landscape'
   isDefault: boolean("is_default").default(false), // Default layout for this document type
+  allowedTables: jsonb("allowed_tables").$type<string[]>().default(sql`'[]'::jsonb`), // Tables/databases accessible for data fields (e.g., ['quotations', 'customers', 'projects'])
   metadata: jsonb("metadata").$type<Record<string, any>>().default(sql`'{}'::jsonb`), // Additional configuration
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

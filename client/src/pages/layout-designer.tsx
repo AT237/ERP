@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2 } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -375,7 +375,22 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [showNewSectionDialog, setShowNewSectionDialog] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
   const [newSectionType, setNewSectionType] = useState('custom');
+  const [showTableSelectorDialog, setShowTableSelectorDialog] = useState(false);
+  const [allowedTables, setAllowedTables] = useState<string[]>(layout?.allowedTables || []);
   const { toast } = useToast();
+  
+  // Available database tables for selection
+  const availableTables = [
+    { name: 'quotations', label: 'Offertes', fields: ['quotationNumber', 'customerId', 'projectId', 'totalAmount', 'validUntil', 'status'] },
+    { name: 'customers', label: 'Klanten', fields: ['customerNumber', 'name', 'email', 'phone', 'address', 'city'] },
+    { name: 'projects', label: 'Projecten', fields: ['projectNumber', 'name', 'customerId', 'status', 'startDate', 'endDate'] },
+    { name: 'invoices', label: 'Facturen', fields: ['invoiceNumber', 'customerId', 'totalAmount', 'dueDate', 'status'] },
+    { name: 'purchase_orders', label: 'Inkooporders', fields: ['poNumber', 'supplierId', 'totalAmount', 'status'] },
+    { name: 'work_orders', label: 'Werkorders', fields: ['woNumber', 'projectId', 'description', 'status'] },
+    { name: 'packing_lists', label: 'Paklijsten', fields: ['plNumber', 'customerId', 'projectId', 'shipDate'] },
+    { name: 'suppliers', label: 'Leveranciers', fields: ['supplierNumber', 'name', 'email', 'phone', 'address'] },
+    { name: 'inventory', label: 'Voorraad', fields: ['itemCode', 'name', 'quantity', 'unitPrice', 'supplier'] },
+  ];
 
   // Load existing sections for this layout
   const { data: existingSections } = useQuery<any[]>({
@@ -641,6 +656,18 @@ function VisualDesignerView({ layout }: { layout: any }) {
             Grid
           </Button>
 
+          <div className="h-6 w-px bg-border" />
+
+          {/* Table Selection */}
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => setShowTableSelectorDialog(true)}
+          >
+            <Database className="h-4 w-4 mr-2" />
+            Databron ({allowedTables.length})
+          </Button>
+
           {/* Info */}
           <div className="ml-auto flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
@@ -694,6 +721,65 @@ function VisualDesignerView({ layout }: { layout: any }) {
             </Button>
             <Button onClick={handleCreateSection}>
               Maken
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Table Selector Dialog */}
+      <Dialog open={showTableSelectorDialog} onOpenChange={setShowTableSelectorDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Databronnen Selecteren</DialogTitle>
+            <DialogDescription>
+              Selecteer welke tabellen beschikbaar zijn voor Data Fields in dit rapport
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="grid grid-cols-2 gap-3">
+              {availableTables.map((table) => (
+                <div
+                  key={table.name}
+                  className={`p-3 border rounded cursor-pointer transition-all ${
+                    allowedTables.includes(table.name)
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-border hover:bg-accent'
+                  }`}
+                  onClick={() => {
+                    if (allowedTables.includes(table.name)) {
+                      setAllowedTables(allowedTables.filter(t => t !== table.name));
+                    } else {
+                      setAllowedTables([...allowedTables, table.name]);
+                    }
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-sm">{table.label}</span>
+                    {allowedTables.includes(table.name) && (
+                      <Badge variant="secondary" className="text-xs">✓</Badge>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {table.fields.length} velden beschikbaar
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTableSelectorDialog(false)}>
+              Sluiten
+            </Button>
+            <Button onClick={() => {
+              setShowTableSelectorDialog(false);
+              toast({
+                title: 'Databronnen bijgewerkt',
+                description: `${allowedTables.length} ${allowedTables.length === 1 ? 'tabel' : 'tabellen'} geselecteerd`,
+              });
+            }}>
+              Opslaan
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -754,14 +840,28 @@ function VisualDesignerView({ layout }: { layout: any }) {
               <div className="text-xs text-muted-foreground mb-2">
                 Sleep blokken naar een sectie
               </div>
-              <BlockLibraryItem name="Company Header" icon="🏢" onDragStart={handleDragStart} />
-              <BlockLibraryItem name="Date Block" icon="📅" onDragStart={handleDragStart} />
-              <BlockLibraryItem name="Line Items Table" icon="📊" onDragStart={handleDragStart} />
-              <BlockLibraryItem name="Totals Summary" icon="💰" onDragStart={handleDragStart} />
-              <BlockLibraryItem name="Footer Block" icon="📄" onDragStart={handleDragStart} />
-              <BlockLibraryItem name="Text Block" icon="📝" onDragStart={handleDragStart} />
-              <BlockLibraryItem name="Page Number" icon="🔢" onDragStart={handleDragStart} />
-              <BlockLibraryItem name="Document Title" icon="📌" onDragStart={handleDragStart} />
+              
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-orange-600 mb-1">Basis Elementen</div>
+                <BlockLibraryItem name="Text" icon="📝" onDragStart={handleDragStart} />
+                <BlockLibraryItem name="Image" icon="🖼️" onDragStart={handleDragStart} />
+                <BlockLibraryItem name="Data Field" icon="🔢" onDragStart={handleDragStart} />
+              </div>
+              
+              <div className="space-y-1 mt-3">
+                <div className="text-xs font-semibold text-orange-600 mb-1">Document Blokken</div>
+                <BlockLibraryItem name="Company Header" icon="🏢" onDragStart={handleDragStart} />
+                <BlockLibraryItem name="Date Block" icon="📅" onDragStart={handleDragStart} />
+                <BlockLibraryItem name="Document Title" icon="📌" onDragStart={handleDragStart} />
+                <BlockLibraryItem name="Page Number" icon="🔢" onDragStart={handleDragStart} />
+              </div>
+              
+              <div className="space-y-1 mt-3">
+                <div className="text-xs font-semibold text-orange-600 mb-1">Gestructureerd</div>
+                <BlockLibraryItem name="Line Items Table" icon="📊" onDragStart={handleDragStart} />
+                <BlockLibraryItem name="Totals Summary" icon="💰" onDragStart={handleDragStart} />
+                <BlockLibraryItem name="Footer Block" icon="📄" onDragStart={handleDragStart} />
+              </div>
             </TabsContent>
           </Tabs>
         </Card>
@@ -871,9 +971,13 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 onUpdateProperty={updateSectionProperty}
               />
             ) : selectedBlock ? (
-              <div className="text-sm text-muted-foreground text-center py-8">
-                Blok eigenschappen - Work in progress
-              </div>
+              <BlockProperties 
+                block={selectedBlock}
+                sectionId={sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id}
+                allowedTables={allowedTables}
+                availableTables={availableTables}
+                onUpdateProperty={updateBlockProperty}
+              />
             ) : (
               <div className="text-sm text-muted-foreground text-center py-8">
                 Selecteer een sectie of blok
@@ -902,6 +1006,26 @@ function getDefaultConfig(blockType: string) {
   };
 
   switch (blockType) {
+    case "Text":
+      return {
+        text: "Voer tekst in...",
+        editable: true,
+      };
+    case "Image":
+      return {
+        src: null,
+        alt: "Image",
+        width: 100,
+        height: 100,
+        fit: "contain", // 'contain', 'cover', 'fill'
+      };
+    case "Data Field":
+      return {
+        tableName: null, // Selected from allowedTables
+        fieldName: null, // Selected from table fields
+        label: "Veld Label:",
+        format: "text", // 'text', 'number', 'currency', 'date'
+      };
     case "Company Header":
       return {
         company: companyData,
@@ -991,6 +1115,9 @@ function BlockLibraryItem({ name, icon, onDragStart }: { name: string; icon: str
 function SectionBlock({ block, sectionId, isSelected, onClick, onRemove }: any) {
   const getBlockIcon = (type: string) => {
     const icons: { [key: string]: string } = {
+      "Text": "📝",
+      "Image": "🖼️",
+      "Data Field": "🔢",
       "Company Header": "🏢",
       "Date Block": "📅",
       "Line Items Table": "📊",
@@ -1040,10 +1167,221 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove }: any) 
         </Button>
       </div>
       <div className="text-xs text-muted-foreground">
+        {block.type === "Text" && <div className="truncate">{block.config?.text || 'Tekst...'}</div>}
+        {block.type === "Image" && <div>{block.config?.src ? '🖼️ Afbeelding' : '🖼️ Geen afbeelding'}</div>}
+        {block.type === "Data Field" && (
+          <div>
+            {block.config?.tableName && block.config?.fieldName 
+              ? `${block.config.tableName}.${block.config.fieldName}` 
+              : 'Selecteer veld...'}
+          </div>
+        )}
         {block.type === "Company Header" && <div>{block.config?.company?.name || 'Company Name'}</div>}
         {block.type === "Document Title" && <div className="font-bold">{block.config?.text}</div>}
         {block.type === "Date Block" && <div>{block.config?.date}</div>}
         {block.type === "Text Block" && <div className="truncate">{block.config?.text}</div>}
+      </div>
+    </div>
+  );
+}
+
+// Block Properties Component
+function BlockProperties({ 
+  block, 
+  sectionId,
+  allowedTables,
+  availableTables,
+  onUpdateProperty 
+}: { 
+  block: any; 
+  sectionId: string;
+  allowedTables: string[];
+  availableTables: any[];
+  onUpdateProperty: (sectionId: string, blockId: string, property: string, value: any) => void;
+}) {
+  const updateConfig = (property: string, value: any) => {
+    onUpdateProperty(sectionId, block.id, 'config', { ...block.config, [property]: value });
+  };
+
+  const selectedTable = availableTables.find(t => t.name === block.config?.tableName);
+
+  return (
+    <div className="space-y-4">
+      <div className="text-sm font-semibold text-orange-600">
+        {block.type}
+      </div>
+
+      {/* Text Block Properties */}
+      {block.type === "Text" && (
+        <div>
+          <Label htmlFor="text-content" className="text-xs">Tekst</Label>
+          <textarea
+            id="text-content"
+            value={block.config?.text || ''}
+            onChange={(e) => updateConfig('text', e.target.value)}
+            className="w-full min-h-[100px] p-2 text-xs border rounded"
+            placeholder="Voer tekst in..."
+          />
+        </div>
+      )}
+
+      {/* Image Block Properties */}
+      {block.type === "Image" && (
+        <div className="space-y-2">
+          <div>
+            <Label htmlFor="image-src" className="text-xs">Afbeelding URL</Label>
+            <Input
+              id="image-src"
+              value={block.config?.src || ''}
+              onChange={(e) => updateConfig('src', e.target.value)}
+              className="h-8 text-xs"
+              placeholder="https://..."
+            />
+          </div>
+          <div>
+            <Label htmlFor="image-alt" className="text-xs">Alt tekst</Label>
+            <Input
+              id="image-alt"
+              value={block.config?.alt || ''}
+              onChange={(e) => updateConfig('alt', e.target.value)}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label htmlFor="image-width" className="text-xs">Breedte (px)</Label>
+              <Input
+                id="image-width"
+                type="number"
+                value={block.config?.width || 100}
+                onChange={(e) => updateConfig('width', parseInt(e.target.value) || 100)}
+                className="h-8 text-xs"
+              />
+            </div>
+            <div>
+              <Label htmlFor="image-height" className="text-xs">Hoogte (px)</Label>
+              <Input
+                id="image-height"
+                type="number"
+                value={block.config?.height || 100}
+                onChange={(e) => updateConfig('height', parseInt(e.target.value) || 100)}
+                className="h-8 text-xs"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Data Field Block Properties */}
+      {block.type === "Data Field" && (
+        <div className="space-y-3">
+          {allowedTables.length === 0 ? (
+            <div className="p-3 border border-orange-200 bg-orange-50 rounded text-xs text-orange-700">
+              ⚠️ Geen databronnen geselecteerd. Klik op "Databron" in de toolbar om tabellen te selecteren.
+            </div>
+          ) : (
+            <>
+              <div>
+                <Label htmlFor="data-table" className="text-xs">Tabel</Label>
+                <Select 
+                  value={block.config?.tableName || ''}
+                  onValueChange={(value) => updateConfig('tableName', value)}
+                >
+                  <SelectTrigger id="data-table" className="h-8 text-xs">
+                    <SelectValue placeholder="Selecteer tabel..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allowedTables.map(tableName => {
+                      const table = availableTables.find(t => t.name === tableName);
+                      return table ? (
+                        <SelectItem key={table.name} value={table.name}>
+                          {table.label}
+                        </SelectItem>
+                      ) : null;
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedTable && (
+                <div>
+                  <Label htmlFor="data-field" className="text-xs">Veld</Label>
+                  <Select 
+                    value={block.config?.fieldName || ''}
+                    onValueChange={(value) => updateConfig('fieldName', value)}
+                  >
+                    <SelectTrigger id="data-field" className="h-8 text-xs">
+                      <SelectValue placeholder="Selecteer veld..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedTable.fields.map((field: string) => (
+                        <SelectItem key={field} value={field}>
+                          {field}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="data-label" className="text-xs">Label</Label>
+                <Input
+                  id="data-label"
+                  value={block.config?.label || ''}
+                  onChange={(e) => updateConfig('label', e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="Veld Label:"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="data-format" className="text-xs">Formaat</Label>
+                <Select 
+                  value={block.config?.format || 'text'}
+                  onValueChange={(value) => updateConfig('format', value)}
+                >
+                  <SelectTrigger id="data-format" className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text">Tekst</SelectItem>
+                    <SelectItem value="number">Nummer</SelectItem>
+                    <SelectItem value="currency">Valuta</SelectItem>
+                    <SelectItem value="date">Datum</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Common properties for all blocks */}
+      <div className="pt-3 border-t">
+        <div className="text-xs font-semibold text-orange-600 mb-2">Positie & Grootte</div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <Label htmlFor="block-x" className="text-xs">X</Label>
+            <Input
+              id="block-x"
+              type="number"
+              value={block.position?.x || 0}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: parseInt(e.target.value) || 0 })}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div>
+            <Label htmlFor="block-y" className="text-xs">Y</Label>
+            <Input
+              id="block-y"
+              type="number"
+              value={block.position?.y || 0}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: parseInt(e.target.value) || 0 })}
+              className="h-8 text-xs"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1238,492 +1576,3 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
   );
 }
 
-// Block Properties Component
-function BlockProperties({ 
-  block, 
-  onUpdateProperty, 
-  onBringToFront, 
-  onSendToBack 
-}: { 
-  block: any; 
-  onUpdateProperty: (id: string, property: string, value: any) => void;
-  onBringToFront: () => void;
-  onSendToBack: () => void;
-}) {
-  const updatePosition = (axis: 'x' | 'y', value: number) => {
-    onUpdateProperty(block.id, 'position', { ...block.position, [axis]: value });
-  };
-
-  const updateSize = (dimension: 'width' | 'height', value: number) => {
-    onUpdateProperty(block.id, 'size', { ...block.size, [dimension]: value });
-  };
-
-  const updateStyle = (property: string, value: any) => {
-    onUpdateProperty(block.id, 'style', { ...block.style, [property]: value });
-  };
-
-  const updateConfig = (property: string, value: any) => {
-    onUpdateProperty(block.id, 'config', { ...block.config, [property]: value });
-  };
-
-  return (
-    <Tabs defaultValue="position" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="position" className="text-xs">Positie</TabsTrigger>
-        <TabsTrigger value="style" className="text-xs">Stijl</TabsTrigger>
-        <TabsTrigger value="advanced" className="text-xs">Geavanceerd</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="position" className="space-y-4 mt-4">
-      {/* Position Controls */}
-      <div>
-        <h4 className="text-sm font-semibold mb-3 text-orange-600">Positie</h4>
-        <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label htmlFor="pos-x" className="text-xs">X</Label>
-              <Input
-                id="pos-x"
-                type="number"
-                value={block.position?.x || 0}
-                onChange={(e) => updatePosition('x', parseInt(e.target.value) || 0)}
-                className="h-8 text-xs"
-                data-testid="input-position-x"
-              />
-            </div>
-            <div>
-              <Label htmlFor="pos-y" className="text-xs">Y</Label>
-              <Input
-                id="pos-y"
-                type="number"
-                value={block.position?.y || 0}
-                onChange={(e) => updatePosition('y', parseInt(e.target.value) || 0)}
-                className="h-8 text-xs"
-                data-testid="input-position-y"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Size Controls */}
-      <div>
-        <h4 className="text-sm font-semibold mb-3 text-orange-600">Grootte</h4>
-        <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label htmlFor="size-width" className="text-xs">Breedte</Label>
-              <Input
-                id="size-width"
-                type="number"
-                value={block.size?.width || 200}
-                onChange={(e) => updateSize('width', parseInt(e.target.value) || 200)}
-                className="h-8 text-xs"
-                data-testid="input-size-width"
-              />
-            </div>
-            <div>
-              <Label htmlFor="size-height" className="text-xs">Hoogte</Label>
-              <Input
-                id="size-height"
-                type="number"
-                value={block.size?.height || 100}
-                onChange={(e) => updateSize('height', parseInt(e.target.value) || 100)}
-                className="h-8 text-xs"
-                data-testid="input-size-height"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Font Controls */}
-      <div>
-        <h4 className="text-sm font-semibold mb-3 text-orange-600">Lettertype</h4>
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="font-family" className="text-xs">Font</Label>
-            <Select 
-              value={block.style?.fontFamily || 'helvetica'}
-              onValueChange={(value) => updateStyle('fontFamily', value)}
-            >
-              <SelectTrigger id="font-family" className="h-8 text-xs" data-testid="select-font-family">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="helvetica">Helvetica</SelectItem>
-                <SelectItem value="times">Times</SelectItem>
-                <SelectItem value="courier">Courier</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="font-size" className="text-xs">Grootte</Label>
-            <Input
-              id="font-size"
-              type="number"
-              value={block.style?.fontSize || 9}
-              onChange={(e) => updateStyle('fontSize', parseInt(e.target.value) || 9)}
-              className="h-8 text-xs"
-              data-testid="input-font-size"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="font-style" className="text-xs">Stijl</Label>
-            <Select 
-              value={block.style?.fontStyle || 'normal'}
-              onValueChange={(value) => updateStyle('fontStyle', value)}
-            >
-              <SelectTrigger id="font-style" className="h-8 text-xs" data-testid="select-font-style">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="normal">Normaal</SelectItem>
-                <SelectItem value="bold">Vet</SelectItem>
-                <SelectItem value="italic">Cursief</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-        {/* Rotation */}
-        <div>
-          <Label htmlFor="rotation" className="text-xs">Rotatie (graden)</Label>
-          <Input
-            id="rotation"
-            type="number"
-            value={block.style?.rotation || 0}
-            onChange={(e) => updateStyle('rotation', parseInt(e.target.value) || 0)}
-            className="h-8 text-xs"
-            min="0"
-            max="360"
-            data-testid="input-rotation"
-          />
-        </div>
-
-        {/* Z-Index Controls */}
-        <div>
-          <h4 className="text-sm font-semibold mb-3 text-orange-600">Laag</h4>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onBringToFront}
-              className="flex-1 h-8 text-xs"
-              data-testid="button-bring-to-front"
-            >
-              Naar voren
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onSendToBack}
-              className="flex-1 h-8 text-xs"
-              data-testid="button-send-to-back"
-            >
-              Naar achteren
-            </Button>
-          </div>
-          <div className="mt-2 text-xs text-muted-foreground text-center">
-            Z-index: {block.zIndex || 0}
-          </div>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="style" className="space-y-4 mt-4">
-        {/* Text Alignment */}
-        <div>
-          <Label className="text-xs">Tekstuitlijning</Label>
-          <Select 
-            value={block.style?.textAlign || 'left'}
-            onValueChange={(value) => updateStyle('textAlign', value)}
-          >
-            <SelectTrigger className="h-8 text-xs" data-testid="select-text-align">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="left">Links</SelectItem>
-              <SelectItem value="center">Midden</SelectItem>
-              <SelectItem value="right">Rechts</SelectItem>
-              <SelectItem value="justify">Uitgevuld</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Text Color */}
-        <div>
-          <Label htmlFor="text-color" className="text-xs">Tekstkleur</Label>
-          <Input
-            id="text-color"
-            type="color"
-            value={block.style?.color || '#000000'}
-            onChange={(e) => updateStyle('color', e.target.value)}
-            className="h-8"
-            data-testid="input-text-color"
-          />
-        </div>
-
-        {/* Background Color */}
-        <div>
-          <Label htmlFor="bg-color" className="text-xs">Achtergrondkleur</Label>
-          <Input
-            id="bg-color"
-            type="color"
-            value={block.style?.backgroundColor || '#ffffff'}
-            onChange={(e) => updateStyle('backgroundColor', e.target.value)}
-            className="h-8"
-            data-testid="input-bg-color"
-          />
-        </div>
-
-        {/* Background Opacity */}
-        <div>
-          <Label htmlFor="opacity" className="text-xs">Transparantie (%)</Label>
-          <Input
-            id="opacity"
-            type="number"
-            value={block.style?.opacity !== undefined ? block.style.opacity * 100 : 100}
-            onChange={(e) => updateStyle('opacity', (parseInt(e.target.value) || 100) / 100)}
-            className="h-8 text-xs"
-            min="0"
-            max="100"
-            data-testid="input-opacity"
-          />
-        </div>
-
-        {/* Border Color */}
-        <div>
-          <Label htmlFor="border-color" className="text-xs">Randkleur</Label>
-          <Input
-            id="border-color"
-            type="color"
-            value={block.style?.borderColor || '#000000'}
-            onChange={(e) => updateStyle('borderColor', e.target.value)}
-            className="h-8"
-            data-testid="input-border-color"
-          />
-        </div>
-
-        {/* Border Width */}
-        <div>
-          <Label htmlFor="border-width" className="text-xs">Randbreedte (px)</Label>
-          <Input
-            id="border-width"
-            type="number"
-            value={block.style?.borderWidth || 0}
-            onChange={(e) => updateStyle('borderWidth', parseInt(e.target.value) || 0)}
-            className="h-8 text-xs"
-            min="0"
-            data-testid="input-border-width"
-          />
-        </div>
-
-        {/* Border Style */}
-        <div>
-          <Label className="text-xs">Randstijl</Label>
-          <Select 
-            value={block.style?.borderStyle || 'solid'}
-            onValueChange={(value) => updateStyle('borderStyle', value)}
-          >
-            <SelectTrigger className="h-8 text-xs" data-testid="select-border-style">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="solid">Solid</SelectItem>
-              <SelectItem value="dashed">Dashed</SelectItem>
-              <SelectItem value="dotted">Dotted</SelectItem>
-              <SelectItem value="none">None</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Border Radius */}
-        <div>
-          <Label htmlFor="border-radius" className="text-xs">Border Radius (px)</Label>
-          <Input
-            id="border-radius"
-            type="number"
-            value={block.style?.borderRadius || 0}
-            onChange={(e) => updateStyle('borderRadius', parseInt(e.target.value) || 0)}
-            className="h-8 text-xs"
-            min="0"
-            data-testid="input-border-radius"
-          />
-        </div>
-
-        {/* Line Height */}
-        <div>
-          <Label htmlFor="line-height" className="text-xs">Regelafstand</Label>
-          <Input
-            id="line-height"
-            type="number"
-            step="0.1"
-            value={block.style?.lineHeight || 1.2}
-            onChange={(e) => updateStyle('lineHeight', parseFloat(e.target.value) || 1.2)}
-            className="h-8 text-xs"
-            data-testid="input-line-height"
-          />
-        </div>
-
-        {/* Letter Spacing */}
-        <div>
-          <Label htmlFor="letter-spacing" className="text-xs">Letter Spacing (px)</Label>
-          <Input
-            id="letter-spacing"
-            type="number"
-            step="0.1"
-            value={block.style?.letterSpacing || 0}
-            onChange={(e) => updateStyle('letterSpacing', parseFloat(e.target.value) || 0)}
-            className="h-8 text-xs"
-            data-testid="input-letter-spacing"
-          />
-        </div>
-
-        {/* Text Decoration */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <input
-              id="underline"
-              type="checkbox"
-              checked={block.style?.textDecoration?.includes('underline') || false}
-              onChange={(e) => updateStyle('textDecoration', e.target.checked ? 'underline' : 'none')}
-              className="h-4 w-4"
-              data-testid="checkbox-underline"
-            />
-            <Label htmlFor="underline" className="text-xs">Onderstrepen</Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              id="line-through"
-              type="checkbox"
-              checked={block.style?.textDecoration?.includes('line-through') || false}
-              onChange={(e) => updateStyle('textDecoration', e.target.checked ? 'line-through' : 'none')}
-              className="h-4 w-4"
-              data-testid="checkbox-strikethrough"
-            />
-            <Label htmlFor="line-through" className="text-xs">Doorstrepen</Label>
-          </div>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="advanced" className="space-y-4 mt-4">
-        {/* Padding */}
-        <div>
-          <Label className="text-xs mb-2 block">Padding (px)</Label>
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              type="number"
-              placeholder="Top"
-              value={block.style?.paddingTop || 0}
-              onChange={(e) => updateStyle('paddingTop', parseInt(e.target.value) || 0)}
-              className="h-8 text-xs"
-              data-testid="input-padding-top"
-            />
-            <Input
-              type="number"
-              placeholder="Right"
-              value={block.style?.paddingRight || 0}
-              onChange={(e) => updateStyle('paddingRight', parseInt(e.target.value) || 0)}
-              className="h-8 text-xs"
-              data-testid="input-padding-right"
-            />
-            <Input
-              type="number"
-              placeholder="Bottom"
-              value={block.style?.paddingBottom || 0}
-              onChange={(e) => updateStyle('paddingBottom', parseInt(e.target.value) || 0)}
-              className="h-8 text-xs"
-              data-testid="input-padding-bottom"
-            />
-            <Input
-              type="number"
-              placeholder="Left"
-              value={block.style?.paddingLeft || 0}
-              onChange={(e) => updateStyle('paddingLeft', parseInt(e.target.value) || 0)}
-              className="h-8 text-xs"
-              data-testid="input-padding-left"
-            />
-          </div>
-        </div>
-
-        {/* Visibility */}
-        <div className="flex items-center gap-2">
-          <input
-            id="visible"
-            type="checkbox"
-            checked={block.config?.visible !== false}
-            onChange={(e) => updateConfig('visible', e.target.checked)}
-            className="h-4 w-4"
-            data-testid="checkbox-visible"
-          />
-          <Label htmlFor="visible" className="text-xs">Zichtbaar</Label>
-        </div>
-
-        {/* Lock Position */}
-        <div className="flex items-center gap-2">
-          <input
-            id="locked"
-            type="checkbox"
-            checked={block.config?.locked || false}
-            onChange={(e) => updateConfig('locked', e.target.checked)}
-            className="h-4 w-4"
-            data-testid="checkbox-locked"
-          />
-          <Label htmlFor="locked" className="text-xs">Positie vergrendelen</Label>
-        </div>
-
-        {/* Snap to Grid */}
-        <div className="flex items-center gap-2">
-          <input
-            id="snap-to-grid"
-            type="checkbox"
-            checked={block.config?.snapToGrid || false}
-            onChange={(e) => updateConfig('snapToGrid', e.target.checked)}
-            className="h-4 w-4"
-            data-testid="checkbox-snap-to-grid"
-          />
-          <Label htmlFor="snap-to-grid" className="text-xs">Snap to grid</Label>
-        </div>
-
-        {/* Grid Size */}
-        {block.config?.snapToGrid && (
-          <div>
-            <Label htmlFor="grid-size" className="text-xs">Grid grootte (px)</Label>
-            <Input
-              id="grid-size"
-              type="number"
-              value={block.config?.gridSize || 10}
-              onChange={(e) => updateConfig('gridSize', parseInt(e.target.value) || 10)}
-              className="h-8 text-xs"
-              data-testid="input-grid-size"
-            />
-          </div>
-        )}
-
-        {/* Block-specific content */}
-        <div className="pt-4 border-t">
-          <h4 className="text-sm font-semibold mb-3 text-orange-600">Inhoud</h4>
-          {block.type === "Company Header" && (
-            <div className="space-y-1 text-xs">
-              <div className="font-medium">{block.config.company?.name}</div>
-              <div className="text-muted-foreground">{block.config.company?.address}</div>
-              <div className="text-muted-foreground">{block.config.company?.postalCode} {block.config.company?.city}</div>
-            </div>
-          )}
-          {block.type === "Document Title" && (
-            <div className="text-xs font-bold">{block.config.text}</div>
-          )}
-          {block.type === "Date Block" && (
-            <div className="text-xs text-muted-foreground">{block.config.date}</div>
-          )}
-          {block.type === "Text Block" && (
-            <div className="text-xs text-muted-foreground">{block.config.text}</div>
-          )}
-        </div>
-      </TabsContent>
-    </Tabs>
-  );
-}
