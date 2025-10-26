@@ -602,444 +602,281 @@ function VisualDesignerView({ layout }: { layout: any }) {
     }
   };
 
-  const updateBlockProperty = (blockId: string, property: string, value: any) => {
-    setCanvasBlocks(blocks => 
-      blocks.map(block => 
-        block.id === blockId 
-          ? { ...block, [property]: value }
-          : block
-      )
-    );
-    
-    if (selectedBlock?.id === blockId) {
-      setSelectedBlock({ ...selectedBlock, [property]: value });
-    }
-  };
-
-  const bringToFront = (blockId: string) => {
-    const maxZ = Math.max(...canvasBlocks.map(b => b.zIndex || 0));
-    updateBlockProperty(blockId, 'zIndex', maxZ + 1);
-  };
-
-  const sendToBack = (blockId: string) => {
-    const minZ = Math.min(...canvasBlocks.map(b => b.zIndex || 0));
-    updateBlockProperty(blockId, 'zIndex', minZ - 1);
-  };
-
-  const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]);
   const [showGrid, setShowGrid] = useState(true);
   const [gridSize, setGridSize] = useState(10);
 
-  // Alignment functions
-  const alignLeft = () => {
-    if (selectedBlocks.length < 2) return;
-    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
-    const leftMost = Math.min(...blocks.map(b => b.position.x));
-    blocks.forEach(block => {
-      updateBlockProperty(block.id, 'position', { ...block.position, x: leftMost });
-    });
-  };
-
-  const alignRight = () => {
-    if (selectedBlocks.length < 2) return;
-    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
-    const rightMost = Math.max(...blocks.map(b => b.position.x + (b.size?.width || 0)));
-    blocks.forEach(block => {
-      const width = block.size?.width || 0;
-      updateBlockProperty(block.id, 'position', { ...block.position, x: rightMost - width });
-    });
-  };
-
-  const alignCenter = () => {
-    if (selectedBlocks.length < 2) return;
-    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
-    const positions = blocks.map(b => ({ left: b.position.x, right: b.position.x + (b.size?.width || 0) }));
-    const center = (Math.min(...positions.map(p => p.left)) + Math.max(...positions.map(p => p.right))) / 2;
-    blocks.forEach(block => {
-      const width = block.size?.width || 0;
-      updateBlockProperty(block.id, 'position', { ...block.position, x: center - width / 2 });
-    });
-  };
-
-  const alignTop = () => {
-    if (selectedBlocks.length < 2) return;
-    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
-    const topMost = Math.min(...blocks.map(b => b.position.y));
-    blocks.forEach(block => {
-      updateBlockProperty(block.id, 'position', { ...block.position, y: topMost });
-    });
-  };
-
-  const alignBottom = () => {
-    if (selectedBlocks.length < 2) return;
-    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
-    const bottomMost = Math.max(...blocks.map(b => b.position.y + (b.size?.height || 0)));
-    blocks.forEach(block => {
-      const height = block.size?.height || 0;
-      updateBlockProperty(block.id, 'position', { ...block.position, y: bottomMost - height });
-    });
-  };
-
-  const alignMiddle = () => {
-    if (selectedBlocks.length < 2) return;
-    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
-    const positions = blocks.map(b => ({ top: b.position.y, bottom: b.position.y + (b.size?.height || 0) }));
-    const middle = (Math.min(...positions.map(p => p.top)) + Math.max(...positions.map(p => p.bottom))) / 2;
-    blocks.forEach(block => {
-      const height = block.size?.height || 0;
-      updateBlockProperty(block.id, 'position', { ...block.position, y: middle - height / 2 });
-    });
-  };
-
-  // Distribute functions
-  const distributeHorizontally = () => {
-    if (selectedBlocks.length < 3) return;
-    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id)).sort((a, b) => a.position.x - b.position.x);
-    const leftMost = blocks[0].position.x;
-    const rightMost = blocks[blocks.length - 1].position.x + (blocks[blocks.length - 1].size?.width || 0);
-    const totalWidth = rightMost - leftMost;
-    const totalBlockWidth = blocks.reduce((sum, b) => sum + (b.size?.width || 0), 0);
-    const gap = (totalWidth - totalBlockWidth) / (blocks.length - 1);
-    
-    let currentX = leftMost;
-    blocks.forEach((block, index) => {
-      if (index > 0) {
-        updateBlockProperty(block.id, 'position', { ...block.position, x: currentX });
-      }
-      currentX += (block.size?.width || 0) + gap;
-    });
-  };
-
-  const distributeVertically = () => {
-    if (selectedBlocks.length < 3) return;
-    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id)).sort((a, b) => a.position.y - b.position.y);
-    const topMost = blocks[0].position.y;
-    const bottomMost = blocks[blocks.length - 1].position.y + (blocks[blocks.length - 1].size?.height || 0);
-    const totalHeight = bottomMost - topMost;
-    const totalBlockHeight = blocks.reduce((sum, b) => sum + (b.size?.height || 0), 0);
-    const gap = (totalHeight - totalBlockHeight) / (blocks.length - 1);
-    
-    let currentY = topMost;
-    blocks.forEach((block, index) => {
-      if (index > 0) {
-        updateBlockProperty(block.id, 'position', { ...block.position, y: currentY });
-      }
-      currentY += (block.size?.height || 0) + gap;
-    });
-  };
-
-  // Sizing functions
-  const sameWidth = () => {
-    if (selectedBlocks.length < 2) return;
-    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
-    const targetWidth = blocks[0].size?.width || 200;
-    blocks.forEach(block => {
-      updateBlockProperty(block.id, 'size', { ...block.size, width: targetWidth });
-    });
-  };
-
-  const sameHeight = () => {
-    if (selectedBlocks.length < 2) return;
-    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
-    const targetHeight = blocks[0].size?.height || 100;
-    blocks.forEach(block => {
-      updateBlockProperty(block.id, 'size', { ...block.size, height: targetHeight });
-    });
-  };
-
-  const sameSize = () => {
-    if (selectedBlocks.length < 2) return;
-    const blocks = canvasBlocks.filter(b => selectedBlocks.includes(b.id));
-    const targetWidth = blocks[0].size?.width || 200;
-    const targetHeight = blocks[0].size?.height || 100;
-    blocks.forEach(block => {
-      updateBlockProperty(block.id, 'size', { width: targetWidth, height: targetHeight });
-    });
-  };
-
-  // Snap to grid helper
-  const snapToGrid = (value: number) => {
-    if (!showGrid) return value;
-    return Math.round(value / gridSize) * gridSize;
-  };
-
   return (
     <div className="flex flex-col h-full">
-      {/* Professional Toolbar - BoldReports Style */}
+      {/* Toolbar */}
       <div className="border-b border-border bg-white px-4 py-2">
-        <div className="flex items-center gap-1 flex-wrap">
-          {/* File Operations */}
-          <div className="flex items-center gap-1 pr-2 border-r border-border">
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="Save">
-              <Save className="h-4 w-4" onClick={() => saveLayoutMutation.mutate()} />
-            </Button>
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Save */}
+          <Button size="sm" variant="ghost" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
+            <Save className="h-4 w-4 mr-2" />
+            {saveLayoutMutation.isPending ? 'Opslaan...' : 'Opslaan'}
+          </Button>
 
-          {/* Zoom Controls */}
-          <div className="flex items-center gap-1 px-2 border-r border-border">
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setZoom(Math.max(0.1, zoom - 0.1))} title="Zoom Out">
+          <div className="h-6 w-px bg-border" />
+
+          {/* Zoom */}
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}>
               <ZoomOut className="h-4 w-4" />
             </Button>
             <span className="text-xs font-medium min-w-[45px] text-center">{Math.round(zoom * 100)}%</span>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setZoom(Math.min(2, zoom + 0.1))} title="Zoom In">
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setZoom(Math.min(2, zoom + 0.1))}>
               <ZoomIn className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* Alignment Tools */}
-          <div className="flex items-center gap-1 px-2 border-r border-border">
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignLeft} disabled={selectedBlocks.length < 2} title="Align Left">
-              <AlignLeft className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignCenter} disabled={selectedBlocks.length < 2} title="Align Center">
-              <AlignCenter className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignRight} disabled={selectedBlocks.length < 2} title="Align Right">
-              <AlignRight className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignTop} disabled={selectedBlocks.length < 2} title="Align Top">
-              <AlignVerticalJustifyStart className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignMiddle} disabled={selectedBlocks.length < 2} title="Align Middle">
-              <AlignVerticalJustifyCenter className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={alignBottom} disabled={selectedBlocks.length < 2} title="Align Bottom">
-              <AlignVerticalJustifyEnd className="h-4 w-4" />
-            </Button>
-          </div>
+          <div className="h-6 w-px bg-border" />
 
-          {/* Distribute Tools */}
-          <div className="flex items-center gap-1 px-2 border-r border-border">
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={distributeHorizontally} disabled={selectedBlocks.length < 3} title="Distribute Horizontally">
-              <AlignHorizontalDistributeCenter className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={distributeVertically} disabled={selectedBlocks.length < 3} title="Distribute Vertically">
-              <AlignVerticalDistributeCenter className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Sizing Tools */}
-          <div className="flex items-center gap-1 px-2 border-r border-border">
-            <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={sameWidth} disabled={selectedBlocks.length < 2} title="Same Width">
-              W
-            </Button>
-            <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={sameHeight} disabled={selectedBlocks.length < 2} title="Same Height">
-              H
-            </Button>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={sameSize} disabled={selectedBlocks.length < 2} title="Same Size">
-              <Maximize2 className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Layer Controls */}
-          <div className="flex items-center gap-1 px-2 border-r border-border">
-            <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => selectedBlock && bringToFront(selectedBlock.id)} disabled={!selectedBlock} title="Bring to Front">
-              Naar voren
-            </Button>
-            <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => selectedBlock && sendToBack(selectedBlock.id)} disabled={!selectedBlock} title="Send to Back">
-              Naar achteren
-            </Button>
-          </div>
-
-          {/* View Controls */}
-          <div className="flex items-center gap-1 px-2">
-            <Button 
-              size="sm" 
-              variant={showGrid ? "default" : "ghost"} 
-              className="h-8 px-2 text-xs" 
-              onClick={() => setShowGrid(!showGrid)}
-              title="Toggle Grid"
-            >
-              <Grid3x3 className="h-4 w-4 mr-1" />
-              Grid
-            </Button>
-          </div>
+          {/* Grid Toggle */}
+          <Button 
+            size="sm" 
+            variant={showGrid ? "default" : "ghost"} 
+            onClick={() => setShowGrid(!showGrid)}
+          >
+            <Grid3x3 className="h-4 w-4 mr-2" />
+            Grid
+          </Button>
 
           {/* Info */}
           <div className="ml-auto flex items-center gap-2">
-            {selectedBlocks.length > 0 ? (
-              <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium">
-                {selectedBlocks.length} geselecteerd
-              </span>
-            ) : (
-              <span className="text-xs text-muted-foreground">
-                {canvasBlocks.length} {canvasBlocks.length === 1 ? 'blok' : 'blokken'}
-              </span>
-            )}
+            <span className="text-xs text-muted-foreground">
+              {sections.length} {sections.length === 1 ? 'sectie' : 'secties'}
+            </span>
           </div>
         </div>
       </div>
 
+      {/* New Section Dialog */}
+      <Dialog open={showNewSectionDialog} onOpenChange={setShowNewSectionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nieuwe Sectie Maken</DialogTitle>
+            <DialogDescription>
+              Maak een nieuwe pagina-sectie voor deze layout
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="section-name">Naam</Label>
+              <Input
+                id="section-name"
+                placeholder="bijv. Header, Footer, Body"
+                value={newSectionName}
+                onChange={(e) => setNewSectionName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="section-type">Type</Label>
+              <Select value={newSectionType} onValueChange={setNewSectionType}>
+                <SelectTrigger id="section-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="header">Header</SelectItem>
+                  <SelectItem value="footer">Footer</SelectItem>
+                  <SelectItem value="body">Body</SelectItem>
+                  <SelectItem value="table">Tabel</SelectItem>
+                  <SelectItem value="custom">Aangepast</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewSectionDialog(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleCreateSection}>
+              Maken
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Main Content Area */}
       <div className="grid grid-cols-[250px_1fr_300px] gap-4 h-full p-4">
-        {/* Left Sidebar - Block Library */}
+        {/* Left Sidebar - Sections & Blocks */}
         <Card className="overflow-auto">
-          <CardHeader>
-            <CardTitle className="text-base">Block Library</CardTitle>
-            <CardDescription>Drag blocks onto canvas</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <BlockLibraryItem name="Company Header" icon="🏢" onDragStart={handleDragStart} />
-            <BlockLibraryItem name="Date Block" icon="📅" onDragStart={handleDragStart} />
-            <BlockLibraryItem name="Line Items Table" icon="📊" onDragStart={handleDragStart} />
-            <BlockLibraryItem name="Totals Summary" icon="💰" onDragStart={handleDragStart} />
-            <BlockLibraryItem name="Footer Block" icon="📄" onDragStart={handleDragStart} />
-            <BlockLibraryItem name="Text Block" icon="📝" onDragStart={handleDragStart} />
-            <BlockLibraryItem name="Page Number" icon="🔢" onDragStart={handleDragStart} />
-            <BlockLibraryItem name="Document Title" icon="📌" onDragStart={handleDragStart} />
-          </CardContent>
-        </Card>
-
-        {/* Canvas - A4 Preview */}
-        <Card className="flex flex-col bg-gray-50 relative">
-
-        {/* Canvas Area with Rulers */}
-        <div className="flex-1 flex items-center justify-center overflow-auto p-4" style={{ minHeight: '600px' }}>
-          <div className="relative" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
-            {/* Horizontal Ruler - Shows actual pixel coordinates */}
-            <div className="absolute top-0 left-[30px] h-[30px] bg-gray-100 border-b border-gray-300 flex" style={{ width: '794px' }}>
-              {Array.from({ length: Math.ceil(794 / 50) + 1 }).map((_, i) => {
-                const px = i * 50;
-                return (
-                  <div key={`h-${i}`} className="relative" style={{ width: '50px' }}>
-                    <div className="absolute bottom-0 left-0 w-px h-3 bg-gray-400"></div>
-                    <span className="absolute bottom-0 left-1 text-[8px] text-gray-600">{px}</span>
-                    {/* Minor ticks every 10px */}
-                    {[10, 20, 30, 40].map(offset => (
-                      <div key={`h-${i}-${offset}`} className="absolute bottom-0 w-px h-1.5 bg-gray-300" style={{ left: `${offset}px` }}></div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Vertical Ruler - Shows actual pixel coordinates */}
-            <div className="absolute top-[30px] left-0 w-[30px] bg-gray-100 border-r border-gray-300 flex flex-col" style={{ height: '1123px' }}>
-              {Array.from({ length: Math.ceil(1123 / 50) + 1 }).map((_, i) => {
-                const px = i * 50;
-                return (
-                  <div key={`v-${i}`} className="relative" style={{ height: '50px' }}>
-                    <div className="absolute right-0 top-0 h-px w-3 bg-gray-400"></div>
-                    <span className="absolute right-0.5 top-1 text-[8px] text-gray-600 transform -rotate-90 origin-top-right whitespace-nowrap">{px}</span>
-                    {/* Minor ticks every 10px */}
-                    {[10, 20, 30, 40].map(offset => (
-                      <div key={`v-${i}-${offset}`} className="absolute right-0 h-px w-1.5 bg-gray-300" style={{ top: `${offset}px` }}></div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Corner square */}
-            <div className="absolute top-0 left-0 w-[30px] h-[30px] bg-gray-200 border-r border-b border-gray-300"></div>
-
-            {/* Canvas with offset for rulers */}
-            <div 
-              className="bg-white shadow-lg relative border-2 border-dashed border-gray-300" 
-              style={{ 
-                width: '794px', // A4 width: 210mm = 794px @ 96 DPI
-                height: '1123px', // A4 height: 297mm = 1123px @ 96 DPI
-                marginLeft: '30px',
-                marginTop: '30px',
-                backgroundImage: showGrid ? `
-                  linear-gradient(to right, #e5e5e5 1px, transparent 1px),
-                  linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)
-                ` : 'none',
-                backgroundSize: showGrid ? `${gridSize}px ${gridSize}px` : 'auto',
-              }}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-            >
-              {canvasBlocks.length === 0 ? (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center text-muted-foreground">
-                    <div className="text-4xl mb-4">📋</div>
-                    <div className="text-lg font-medium">Canvas Area</div>
-                    <div className="text-sm mt-2">Drag & drop blocks here</div>
-                    <div className="text-xs mt-4 text-orange-600">
-                      A4 {layout.orientation} · {layout.pageFormat}
+          <Tabs value={leftPanelTab} onValueChange={(v: any) => setLeftPanelTab(v)}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="sections">Secties</TabsTrigger>
+              <TabsTrigger value="blocks">Blokken</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="sections" className="mt-4 space-y-2 px-4">
+              <Button 
+                className="w-full" 
+                size="sm" 
+                onClick={() => setShowNewSectionDialog(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nieuwe Sectie
+              </Button>
+              
+              <div className="space-y-2 mt-4">
+                {sections.map((section) => (
+                  <div
+                    key={section.id}
+                    className={`p-3 border rounded cursor-pointer transition-all ${
+                      selectedSection?.id === section.id 
+                        ? 'border-orange-500 bg-orange-50' 
+                        : 'border-border hover:bg-accent'
+                    }`}
+                    onClick={() => handleSectionClick(section)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-sm">{section.name}</div>
+                        <div className="text-xs text-muted-foreground capitalize">{section.sectionType}</div>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {section.config.blocks?.length || 0}
+                      </Badge>
                     </div>
                   </div>
-                </div>
-              ) : null}
-              
-              {canvasBlocks.map((block) => (
-                <CanvasBlock
-                  key={block.id}
-                  block={block}
-                  isSelected={selectedBlocks.includes(block.id)}
-                  onClick={(e: React.MouseEvent) => handleBlockClick(block, e)}
-                  onRemove={() => handleRemoveBlock(block.id)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+                ))}
+                
+                {sections.length === 0 && (
+                  <div className="text-center py-8 text-sm text-muted-foreground">
+                    Geen secties. Maak er een aan!
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="blocks" className="mt-4 space-y-2 px-4">
+              <div className="text-xs text-muted-foreground mb-2">
+                Sleep blokken naar een sectie
+              </div>
+              <BlockLibraryItem name="Company Header" icon="🏢" onDragStart={handleDragStart} />
+              <BlockLibraryItem name="Date Block" icon="📅" onDragStart={handleDragStart} />
+              <BlockLibraryItem name="Line Items Table" icon="📊" onDragStart={handleDragStart} />
+              <BlockLibraryItem name="Totals Summary" icon="💰" onDragStart={handleDragStart} />
+              <BlockLibraryItem name="Footer Block" icon="📄" onDragStart={handleDragStart} />
+              <BlockLibraryItem name="Text Block" icon="📝" onDragStart={handleDragStart} />
+              <BlockLibraryItem name="Page Number" icon="🔢" onDragStart={handleDragStart} />
+              <BlockLibraryItem name="Document Title" icon="📌" onDragStart={handleDragStart} />
+            </TabsContent>
+          </Tabs>
+        </Card>
 
-        {/* Floating Zoom Controls - Bottom Right */}
-        <div className="absolute bottom-4 right-4 bg-white border border-border rounded-lg shadow-lg p-3 flex flex-col gap-2 min-w-[180px]">
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}
-              disabled={zoom <= 0.1}
-              className="h-8 w-8 p-0"
-              data-testid="button-zoom-out"
-            >
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            <span className="text-xs font-bold text-orange-600 min-w-[40px] text-center">{Math.round(zoom * 100)}%</span>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setZoom(Math.min(1.5, zoom + 0.1))}
-              disabled={zoom >= 1.5}
-              className="h-8 w-8 p-0"
-              data-testid="button-zoom-in"
-            >
-              <ZoomIn className="h-4 w-4" />
-            </Button>
+        {/* Canvas - Section-Based Layout */}
+        <Card className="flex flex-col bg-gray-50 overflow-auto p-4">
+          <div className="space-y-4" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
+            {sections.length === 0 ? (
+              <div className="flex items-center justify-center h-96">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-4xl mb-4">📄</div>
+                  <div className="text-lg font-medium">Geen Secties</div>
+                  <div className="text-sm mt-2">Maak een nieuwe sectie om te beginnen</div>
+                </div>
+              </div>
+            ) : (
+              sections.map((section) => (
+                <div
+                  key={section.id}
+                  className={`border-2 rounded-lg transition-all ${
+                    selectedSection?.id === section.id 
+                      ? 'border-orange-500 shadow-lg' 
+                      : 'border-border'
+                  }`}
+                  style={{
+                    backgroundColor: section.config.style?.backgroundColor || '#ffffff',
+                    minHeight: `${section.config.dimensions?.height || 200}px`,
+                  }}
+                  onClick={() => handleSectionClick(section)}
+                >
+                  {/* Section Header */}
+                  <div className="bg-gray-100 px-3 py-2 flex items-center justify-between border-b">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">{section.name}</span>
+                      <Badge variant="outline" className="text-xs">{section.sectionType}</Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {section.config.blocks?.length || 0} blokken
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-red-500"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveSection(section.id);
+                        }}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Section Content - Drop Zone for Blocks */}
+                  <div
+                    className="relative p-4"
+                    style={{
+                      minHeight: `${section.config.dimensions?.height || 200}px`,
+                      backgroundImage: showGrid ? `
+                        linear-gradient(to right, #e5e5e5 1px, transparent 1px),
+                        linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)
+                      ` : 'none',
+                      backgroundSize: showGrid ? `${gridSize}px ${gridSize}px` : 'auto',
+                    }}
+                    onDrop={(e) => handleDropOnSection(e, section.id)}
+                    onDragOver={handleDragOver}
+                  >
+                    {(!section.config.blocks || section.config.blocks.length === 0) ? (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="text-center text-muted-foreground">
+                          <div className="text-2xl mb-2">📦</div>
+                          <div className="text-sm">Sleep blokken hierheen</div>
+                        </div>
+                      </div>
+                    ) : (
+                      section.config.blocks.map((block: any) => (
+                        <SectionBlock
+                          key={block.id}
+                          block={block}
+                          sectionId={section.id}
+                          isSelected={selectedBlock?.id === block.id}
+                          onClick={() => handleBlockClick(block)}
+                          onRemove={() => handleRemoveBlock(section.id, block.id)}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
-          <input
-            type="range"
-            min="0.1"
-            max="1.5"
-            step="0.1"
-            value={zoom}
-            onChange={(e) => setZoom(parseFloat(e.target.value))}
-            className="w-full"
-            data-testid="slider-zoom"
-          />
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setZoom(0.5)}
-            className="h-8 text-xs w-full"
-            data-testid="button-zoom-reset"
-          >
-            Reset (50%)
-          </Button>
-        </div>
-      </Card>
+        </Card>
 
         {/* Right Sidebar - Properties */}
         <Card className="overflow-auto">
           <CardHeader>
             <CardTitle className="text-base">Properties</CardTitle>
-            <CardDescription>Configure selected block</CardDescription>
+            <CardDescription>
+              {selectedSection ? 'Sectie instellingen' : selectedBlock ? 'Blok instellingen' : 'Niets geselecteerd'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {selectedBlock ? (
-              <BlockProperties 
-                block={selectedBlock} 
-                onUpdateProperty={updateBlockProperty}
-                onBringToFront={() => bringToFront(selectedBlock.id)}
-                onSendToBack={() => sendToBack(selectedBlock.id)}
+            {selectedSection ? (
+              <SectionProperties 
+                section={selectedSection}
+                onUpdateProperty={updateSectionProperty}
               />
+            ) : selectedBlock ? (
+              <div className="text-sm text-muted-foreground text-center py-8">
+                Blok eigenschappen - Work in progress
+              </div>
             ) : (
               <div className="text-sm text-muted-foreground text-center py-8">
-                No block selected
+                Selecteer een sectie of blok
               </div>
             )}
           </CardContent>
@@ -1146,6 +983,167 @@ function BlockLibraryItem({ name, icon, onDragStart }: { name: string; icon: str
     >
       <span className="text-xl">{icon}</span>
       <span className="text-sm font-medium">{name}</span>
+    </div>
+  );
+}
+
+// Section Block Component (blocks within sections)
+function SectionBlock({ block, sectionId, isSelected, onClick, onRemove }: any) {
+  const getBlockIcon = (type: string) => {
+    const icons: { [key: string]: string } = {
+      "Company Header": "🏢",
+      "Date Block": "📅",
+      "Line Items Table": "📊",
+      "Totals Summary": "💰",
+      "Footer Block": "📄",
+      "Text Block": "📝",
+      "Page Number": "🔢",
+      "Document Title": "📌",
+    };
+    return icons[type] || "📦";
+  };
+
+  const blockStyle: React.CSSProperties = {
+    left: `${block.position.x}px`, 
+    top: `${block.position.y}px`,
+    width: `${block.size?.width || 200}px`,
+    minHeight: `${block.size?.height || 100}px`,
+    zIndex: block.zIndex || 0,
+  };
+
+  return (
+    <div
+      className={`absolute border-2 rounded shadow-sm cursor-pointer transition-all p-2 bg-white ${
+        isSelected ? 'border-orange-500 shadow-md' : 'border-gray-300 hover:border-orange-300'
+      }`}
+      style={blockStyle}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{getBlockIcon(block.type)}</span>
+          <span className="text-sm font-medium">{block.type}</span>
+        </div>
+        <Button 
+          size="sm" 
+          variant="ghost" 
+          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+        >
+          ×
+        </Button>
+      </div>
+      <div className="text-xs text-muted-foreground">
+        {block.type === "Company Header" && <div>{block.config?.company?.name || 'Company Name'}</div>}
+        {block.type === "Document Title" && <div className="font-bold">{block.config?.text}</div>}
+        {block.type === "Date Block" && <div>{block.config?.date}</div>}
+        {block.type === "Text Block" && <div className="truncate">{block.config?.text}</div>}
+      </div>
+    </div>
+  );
+}
+
+// Section Properties Component
+function SectionProperties({ section, onUpdateProperty }: { section: any; onUpdateProperty: (id: string, path: string, value: any) => void }) {
+  return (
+    <div className="space-y-4">
+      {/* Name */}
+      <div>
+        <Label htmlFor="section-name" className="text-xs">Naam</Label>
+        <Input
+          id="section-name"
+          value={section.name}
+          onChange={(e) => onUpdateProperty(section.id, 'name', e.target.value)}
+          className="h-8 text-xs"
+        />
+      </div>
+
+      {/* Height */}
+      <div>
+        <Label htmlFor="section-height" className="text-xs">Hoogte (px)</Label>
+        <Input
+          id="section-height"
+          type="number"
+          value={section.config.dimensions?.height || 200}
+          onChange={(e) => onUpdateProperty(section.id, 'config.dimensions.height', parseInt(e.target.value) || 200)}
+          className="h-8 text-xs"
+        />
+      </div>
+
+      {/* Background Color */}
+      <div>
+        <Label htmlFor="section-bg" className="text-xs">Achtergrondkleur</Label>
+        <Input
+          id="section-bg"
+          type="color"
+          value={section.config.style?.backgroundColor || '#ffffff'}
+          onChange={(e) => onUpdateProperty(section.id, 'config.style.backgroundColor', e.target.value)}
+          className="h-8"
+        />
+      </div>
+
+      {/* Print Rules */}
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold">Print Regels</Label>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="print-every"
+              checked={section.config.printRules?.everyPage || false}
+              onChange={(e) => onUpdateProperty(section.id, 'config.printRules.everyPage', e.target.checked)}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="print-every" className="text-xs font-normal">Elke pagina</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="print-first"
+              checked={section.config.printRules?.firstPage || false}
+              onChange={(e) => onUpdateProperty(section.id, 'config.printRules.firstPage', e.target.checked)}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="print-first" className="text-xs font-normal">Alleen eerste pagina</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="print-last"
+              checked={section.config.printRules?.lastPage || false}
+              onChange={(e) => onUpdateProperty(section.id, 'config.printRules.lastPage', e.target.checked)}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="print-last" className="text-xs font-normal">Alleen laatste pagina</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="print-odd"
+              checked={section.config.printRules?.oddPages || false}
+              onChange={(e) => onUpdateProperty(section.id, 'config.printRules.oddPages', e.target.checked)}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="print-odd" className="text-xs font-normal">Alleen oneven pagina's</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="print-even"
+              checked={section.config.printRules?.evenPages || false}
+              onChange={(e) => onUpdateProperty(section.id, 'config.printRules.evenPages', e.target.checked)}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="print-even" className="text-xs font-normal">Alleen even pagina's</Label>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
