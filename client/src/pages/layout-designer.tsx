@@ -787,29 +787,34 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
       {/* Main Content Area */}
       <div className="grid grid-cols-[250px_1fr_300px] gap-4 h-full p-4">
-        {/* Left Sidebar - Sections & Blocks */}
+        {/* Left Sidebar - Platte Lijst */}
         <Card className="overflow-auto">
-          <Tabs value={leftPanelTab} onValueChange={(v: any) => setLeftPanelTab(v)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="sections">Secties</TabsTrigger>
-              <TabsTrigger value="blocks">Blokken</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="sections" className="mt-4 space-y-2 px-4">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Elementen</CardTitle>
+            <CardDescription className="text-xs">Sleep naar een sectie</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {/* Secties Beheer */}
+            <div className="mb-4">
               <Button 
-                className="w-full" 
+                className="w-full justify-start" 
                 size="sm" 
+                variant="outline"
                 onClick={() => setShowNewSectionDialog(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Nieuwe Sectie
               </Button>
-              
-              <div className="space-y-2 mt-4">
+            </div>
+
+            {/* Secties Lijst */}
+            {sections.length > 0 && (
+              <div className="mb-4 space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground px-2 mb-2">SECTIES ({sections.length})</div>
                 {sections.map((section) => (
                   <div
                     key={section.id}
-                    className={`p-3 border rounded cursor-pointer transition-all ${
+                    className={`p-2 border rounded cursor-pointer transition-all text-sm ${
                       selectedSection?.id === section.id 
                         ? 'border-orange-500 bg-orange-50' 
                         : 'border-border hover:bg-accent'
@@ -817,9 +822,9 @@ function VisualDesignerView({ layout }: { layout: any }) {
                     onClick={() => handleSectionClick(section)}
                   >
                     <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-sm">{section.name}</div>
-                        <div className="text-xs text-muted-foreground capitalize">{section.sectionType}</div>
+                      <div className="flex items-center gap-2">
+                        <span>📄</span>
+                        <span className="font-medium">{section.name}</span>
                       </div>
                       <Badge variant="outline" className="text-xs">
                         {section.config.blocks?.length || 0}
@@ -827,43 +832,24 @@ function VisualDesignerView({ layout }: { layout: any }) {
                     </div>
                   </div>
                 ))}
-                
-                {sections.length === 0 && (
-                  <div className="text-center py-8 text-sm text-muted-foreground">
-                    Geen secties. Maak er een aan!
-                  </div>
-                )}
               </div>
-            </TabsContent>
+            )}
+
+            <div className="border-t pt-3 mb-2"></div>
+
+            {/* Blokken Lijst */}
+            <div className="text-xs font-semibold text-muted-foreground px-2 mb-2">BLOKKEN</div>
+            <BlockLibraryItem name="Text" icon="📝" onDragStart={handleDragStart} description="Vrije tekst met opmaak" />
+            <BlockLibraryItem name="Image" icon="🖼️" onDragStart={handleDragStart} description="Upload/link afbeelding" />
+            <BlockLibraryItem name="Data Field" icon="🔢" onDragStart={handleDragStart} description="Database veld" />
+            <BlockLibraryItem name="Company Header" icon="🏢" onDragStart={handleDragStart} description="Bedrijfsgegevens blok" />
             
-            <TabsContent value="blocks" className="mt-4 space-y-2 px-4">
-              <div className="text-xs text-muted-foreground mb-2">
-                Sleep blokken naar een sectie
-              </div>
-              
-              <div className="space-y-1">
-                <div className="text-xs font-semibold text-orange-600 mb-1">Basis Elementen</div>
-                <BlockLibraryItem name="Text" icon="📝" onDragStart={handleDragStart} />
-                <BlockLibraryItem name="Image" icon="🖼️" onDragStart={handleDragStart} />
-                <BlockLibraryItem name="Data Field" icon="🔢" onDragStart={handleDragStart} />
-              </div>
-              
-              <div className="space-y-1 mt-3">
-                <div className="text-xs font-semibold text-orange-600 mb-1">Document Blokken</div>
-                <BlockLibraryItem name="Company Header" icon="🏢" onDragStart={handleDragStart} />
-                <BlockLibraryItem name="Date Block" icon="📅" onDragStart={handleDragStart} />
-                <BlockLibraryItem name="Document Title" icon="📌" onDragStart={handleDragStart} />
-                <BlockLibraryItem name="Page Number" icon="🔢" onDragStart={handleDragStart} />
-              </div>
-              
-              <div className="space-y-1 mt-3">
-                <div className="text-xs font-semibold text-orange-600 mb-1">Gestructureerd</div>
-                <BlockLibraryItem name="Line Items Table" icon="📊" onDragStart={handleDragStart} />
-                <BlockLibraryItem name="Totals Summary" icon="💰" onDragStart={handleDragStart} />
-                <BlockLibraryItem name="Footer Block" icon="📄" onDragStart={handleDragStart} />
-              </div>
-            </TabsContent>
-          </Tabs>
+            <div className="border-t pt-3 mt-3 mb-2"></div>
+            <div className="text-xs font-semibold text-muted-foreground px-2 mb-2">OPGESLAGEN</div>
+            <div className="p-3 border border-dashed rounded text-center text-xs text-muted-foreground">
+              Nog geen opgeslagen blokken
+            </div>
+          </CardContent>
         </Card>
 
         {/* Canvas - Section-Based Layout */}
@@ -1097,16 +1083,21 @@ function PreviewView({ layout }: { layout: any }) {
 }
 
 // Block Library Item Component
-function BlockLibraryItem({ name, icon, onDragStart }: { name: string; icon: string; onDragStart: (name: string) => void }) {
+function BlockLibraryItem({ name, icon, description, onDragStart }: { name: string; icon: string; description?: string; onDragStart: (name: string) => void }) {
   return (
     <div
-      className="flex items-center gap-2 p-2 border border-border rounded cursor-move hover:bg-accent hover:border-orange-500 transition-all"
+      className="flex items-start gap-2 p-2 border border-border rounded cursor-move hover:bg-accent hover:border-orange-500 transition-all"
       draggable
       onDragStart={() => onDragStart(name)}
       data-testid={`block-${name.toLowerCase().replace(/\s+/g, '-')}`}
     >
-      <span className="text-xl">{icon}</span>
-      <span className="text-sm font-medium">{name}</span>
+      <span className="text-lg mt-0.5">{icon}</span>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium">{name}</div>
+        {description && (
+          <div className="text-xs text-muted-foreground truncate">{description}</div>
+        )}
+      </div>
     </div>
   );
 }
