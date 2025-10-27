@@ -43,6 +43,22 @@ The backend uses **Node.js with Express.js** in a RESTful API pattern, implement
 - **Usage Tracking**: A `text_snippet_usages` table tracks snippet applications.
 - **Integration**: Document item tables support various `lineType` values (`standard`, `unique`, `text`, `charges`) and track `sourceSnippetId` and `sourceSnippetVersion`.
 
+## Layout Designer System
+A comprehensive document layout management system for creating customizable templates (quotations, invoices, packing lists) with a section-first workflow and visual designer interface.
+
+### Key Features
+- **Section-Based Workflow**: Create named sections with print rules (first page, odd pages, even pages), dimensions, and styling before adding blocks
+- **Block Types**: 
+  - Basic Elements: Text, Image, Data Field (database-driven)
+  - Document Blocks: Company Header, Date Block, Document Title, Page Number
+  - Structured: Line Items Table, Totals Summary, Footer Block
+- **Data Field Integration**: Select allowed database tables per layout; Data Field blocks can reference specific fields from quotations, customers, projects, etc.
+- **Visual Designer**: Drag & drop interface with section stacking, grid alignment, and real-time preview
+- **Database Architecture**: 5-table system (`document_layouts`, `layout_sections`, `layout_blocks`, `layout_elements`, `document_layout_fields`)
+
+### Design References
+- **BoldReports-inspired interface**: See `attached_assets/image_1761509060465.png` for professional report designer reference showing component library, properties panel, table configuration, formula editor, and design analyzer
+
 # External Dependencies
 
 ## Database & Infrastructure
