@@ -12,10 +12,12 @@ import {
   type FormSection2, 
   createFieldRow, 
   createFieldsRow,
-  createSectionHeaderRow 
+  createSectionHeaderRow,
+  type FormField2
 } from './LayoutForm2';
 import type { InfoField } from './InfoHeaderLayout';
 import { Input } from "@/components/ui/input";
+import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
 
 // Form schema with enhanced validation
 const formSchema = insertAddressSchema.extend({
@@ -233,16 +235,20 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
           {
             key: "country",
             label: "Country",
-            type: "text",
-            placeholder: "Netherlands",
-            register: form.register("country"),
+            type: "custom",
+            customComponent: (
+              <CountrySelectWithAdd
+                value={form.watch("country") || ""}
+                onValueChange={(value) => form.setValue("country", value)}
+                placeholder="Selecteer land..."
+                testId="select-address-country"
+              />
+            ),
             validation: {
               error: form.formState.errors.country?.message,
               isRequired: true
-            },
-            testId: "input-country",
-            className: form.formState.errors.country ? "border-red-500" : ""
-          }
+            }
+          } as FormField2<FormData>
         ])
       ]
     }
@@ -265,7 +271,7 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
           loading: createMutation.isPending || updateMutation.isPending
         }
       ]}
-      headerFields={infoFields}
+      infoFields={infoFields}
       isLoading={isLoadingAddress}
     />
   );
