@@ -11,6 +11,7 @@ import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
 // InfoField import removed per user request
 import type { FormTab } from './FormTabLayout';
 import { UseFormReturn, FieldValues, FieldPath } from 'react-hook-form';
+import { useFormPersistence } from "@/hooks/use-form-persistence";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -150,11 +151,18 @@ export interface LayoutForm2Props<T extends FieldValues = FieldValues> {
   // Header fields removed per user request
   // headerFields?: InfoField[];
   
+  // Info fields for header
+  infoFields?: Array<{ label: string; value: string | ReactNode }>;
+  
   // Change tracking (optional)
   changeTracking?: ChangeTrackingConfig;
   
   // Original form values for change tracking
   originalValues?: Partial<T>;
+  
+  // Form persistence (auto-save to localStorage)
+  formPersistenceKey?: string; // If provided, form data will be auto-saved to localStorage
+  onFormPersistenceClear?: () => void; // Callback when persistence data is cleared
   
   // Loading state
   isLoading?: boolean;
@@ -326,11 +334,38 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   onSubmit,
   actionButtons,
   // headerFields removed per user request
+  infoFields,
   changeTracking,
   originalValues,
+  formPersistenceKey,
+  onFormPersistenceClear,
   isLoading = false,
   className = ""
 }: LayoutForm2Props<T>) {
+
+  // ========================================================================
+  // FORM PERSISTENCE - AUTO-SAVE TO LOCALSTORAGE
+  // ========================================================================
+  
+  // Auto-save form data to localStorage while typing (only if persistence key is provided)
+  // Use a dummy key if not provided to avoid conditional hook calls
+  const persistenceOptions = {
+    storageKey: formPersistenceKey || '__no_persistence__'
+  };
+  
+  const { clearSavedData } = useFormPersistence(form, persistenceOptions);
+  
+  // Expose clearSavedData to parent via callback when they need to clear after successful save
+  useEffect(() => {
+    if (onFormPersistenceClear && formPersistenceKey) {
+      // Pass the clear function to the parent
+      // Parent can call this when form is successfully submitted
+      window.addEventListener(`clear-form-data-${formPersistenceKey}`, clearSavedData);
+      return () => {
+        window.removeEventListener(`clear-form-data-${formPersistenceKey}`, clearSavedData);
+      };
+    }
+  }, [formPersistenceKey, clearSavedData, onFormPersistenceClear]);
 
   // ========================================================================
   // CHANGE TRACKING LOGIC

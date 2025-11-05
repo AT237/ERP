@@ -41,6 +41,9 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const isEditing = !!addressId;
+  
+  // Generate persistence key for this form
+  const formPersistenceKey = addressId ? `address-form-edit-${addressId}` : 'address-form-new';
 
   // Fetch address data if editing
   const { data: address, isLoading: isLoadingAddress } = useQuery<Address>({
@@ -110,6 +113,8 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
         description: "Address created successfully",
       });
       setHasUnsavedChanges(false);
+      // Clear persisted form data after successful save
+      window.dispatchEvent(new Event(`clear-form-data-${formPersistenceKey}`));
       onSave();
     },
     onError: () => {
@@ -135,6 +140,8 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
         description: "Address updated successfully",
       });
       setHasUnsavedChanges(false);
+      // Clear persisted form data after successful save
+      window.dispatchEvent(new Event(`clear-form-data-${formPersistenceKey}`));
       onSave();
     },
     onError: () => {
@@ -272,6 +279,7 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
         }
       ]}
       infoFields={infoFields}
+      formPersistenceKey={formPersistenceKey}
       isLoading={isLoadingAddress}
     />
   );
