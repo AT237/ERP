@@ -13,10 +13,13 @@ export function useFormPersistence<T extends Record<string, any>>(
 ) {
   const { storageKey, excludeFields = [], onRestore } = options;
   const isRestoredRef = useRef(false);
+  
+  // Skip persistence if storage key is empty or a placeholder
+  const shouldPersist = storageKey && storageKey !== '__no_persistence__';
 
   // Restore form data from localStorage on mount
   useEffect(() => {
-    if (isRestoredRef.current) return;
+    if (!shouldPersist || isRestoredRef.current) return;
     
     try {
       const savedData = localStorage.getItem(storageKey);
@@ -42,10 +45,12 @@ export function useFormPersistence<T extends Record<string, any>>(
     } catch (error) {
       console.error('Failed to restore form data:', error);
     }
-  }, [storageKey, form, excludeFields, onRestore]);
+  }, [storageKey, form, excludeFields, onRestore, shouldPersist]);
 
   // Save form data to localStorage on every change
   useEffect(() => {
+    if (!shouldPersist) return;
+    
     const subscription = form.watch((formData) => {
       try {
         // Filter out excluded fields before saving
@@ -63,7 +68,7 @@ export function useFormPersistence<T extends Record<string, any>>(
     });
 
     return () => subscription.unsubscribe();
-  }, [form, storageKey, excludeFields]);
+  }, [form, storageKey, excludeFields, shouldPersist]);
 
   // Clear saved data
   const clearSavedData = () => {

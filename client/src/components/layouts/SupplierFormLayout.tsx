@@ -387,9 +387,10 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
       form={form}
       onSubmit={onSubmit}
       actionButtons={actionButtons}
-      headerFields={headerFields}
+      infoFields={headerFields}
       changeTracking={changeTrackingConfig}
       originalValues={originalValues}
+      formPersistenceKey={supplierId ? `supplier-form-edit-${supplierId}` : 'supplier-form-new'}
       isLoading={isLoadingSupplier}
     />
   );

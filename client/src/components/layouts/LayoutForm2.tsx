@@ -347,13 +347,11 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   // FORM PERSISTENCE - AUTO-SAVE TO LOCALSTORAGE
   // ========================================================================
   
-  // Auto-save form data to localStorage while typing (only if persistence key is provided)
-  // Use a dummy key if not provided to avoid conditional hook calls
-  const persistenceOptions = {
+  // Always call the hook to comply with React's rules of hooks
+  // The hook itself will skip persistence logic if no valid key is provided
+  const { clearSavedData } = useFormPersistence(form, {
     storageKey: formPersistenceKey || '__no_persistence__'
-  };
-  
-  const { clearSavedData } = useFormPersistence(form, persistenceOptions);
+  });
   
   // Expose clearSavedData to parent via callback when they need to clear after successful save
   useEffect(() => {

@@ -760,6 +760,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           enabled: !suppressTracking,
           onChangesDetected: (hasChanges) => setHasUnsavedChanges(hasChanges)
         }}
+        formPersistenceKey={customerId ? `customer-form-edit-${customerId}` : 'customer-form-new'}
         isLoading={isLoadingCustomer}
       />
     </div>
