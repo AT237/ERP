@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { loadQuotationPrintData } from "./utils/field-resolver";
 import {
   insertCustomerSchema, insertSupplierSchema, insertProspectSchema, insertInventoryItemSchema,
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
@@ -667,6 +668,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching quotation items:", error);
       res.status(500).json({ message: "Failed to fetch quotation items" });
+    }
+  });
+
+  // Get quotation print data with all related entities for PDF generation
+  app.get("/api/quotations/:id/print-data", async (req, res) => {
+    try {
+      const printData = await loadQuotationPrintData(req.params.id);
+      if (!printData) {
+        return res.status(404).json({ message: "Quotation not found" });
+      }
+      res.json(printData);
+    } catch (error) {
+      console.error("Error fetching quotation print data:", error);
+      res.status(500).json({ message: "Failed to fetch quotation print data" });
     }
   });
 
