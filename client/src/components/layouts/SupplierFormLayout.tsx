@@ -390,7 +390,10 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
       infoFields={headerFields}
       changeTracking={changeTrackingConfig}
       originalValues={originalValues}
-      formPersistenceKey={supplierId ? `supplier-form-edit-${supplierId}` : 'supplier-form-new'}
+      persistence={{
+        formType: 'supplier',
+        entityId: supplierId
+      }}
       isLoading={isLoadingSupplier}
     />
   );

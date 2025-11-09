@@ -131,6 +131,16 @@ export interface ChangeTrackingConfig {
 }
 
 /**
+ * Form persistence configuration
+ */
+export interface FormPersistenceConfig {
+  formType: string;        // e.g., 'customer', 'supplier', 'quotation'
+  entityId?: string;       // Optional ID when editing an existing entity
+  scope?: string;          // Optional scope for nested/modal forms
+  disabled?: boolean;      // Disable persistence for this form
+}
+
+/**
  * Main props for LayoutForm2 component
  */
 export interface LayoutForm2Props<T extends FieldValues = FieldValues> {
@@ -161,8 +171,10 @@ export interface LayoutForm2Props<T extends FieldValues = FieldValues> {
   originalValues?: Partial<T>;
   
   // Form persistence (auto-save to localStorage)
-  formPersistenceKey?: string; // If provided, form data will be auto-saved to localStorage
-  onFormPersistenceClear?: () => void; // Callback when persistence data is cleared
+  // Either provide persistence config (recommended) or a manual key (deprecated)
+  persistence?: FormPersistenceConfig;
+  formPersistenceKey?: string; // Deprecated: use persistence instead
+  onFormPersistenceClear?: () => void; // Deprecated: clearing is now automatic
   
   // Loading state
   isLoading?: boolean;
@@ -174,6 +186,22 @@ export interface LayoutForm2Props<T extends FieldValues = FieldValues> {
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+/**
+ * Build a standardized form persistence key
+ */
+export function buildFormPersistenceKey(config: FormPersistenceConfig): string {
+  const { formType, entityId, scope } = config;
+  const parts = ['erp-form', formType];
+  
+  if (scope) {
+    parts.push(scope);
+  }
+  
+  parts.push(entityId || 'new');
+  
+  return parts.join('-');
+}
 
 /**
  * Get CSS class for field based on its validation and modification status
@@ -337,8 +365,9 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   infoFields,
   changeTracking,
   originalValues,
-  formPersistenceKey,
-  onFormPersistenceClear,
+  persistence,
+  formPersistenceKey, // Deprecated
+  onFormPersistenceClear, // Deprecated
   isLoading = false,
   className = ""
 }: LayoutForm2Props<T>) {
@@ -347,17 +376,26 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   // FORM PERSISTENCE - AUTO-SAVE TO LOCALSTORAGE
   // ========================================================================
   
+  // Generate persistence key automatically from config or use manual key (deprecated)
+  const generatedKey = persistence && !persistence.disabled 
+    ? buildFormPersistenceKey(persistence)
+    : formPersistenceKey; // Fallback to deprecated manual key
+  
   // Always call the hook to comply with React's rules of hooks
   // The hook itself will skip persistence logic if no valid key is provided
   const { clearSavedData } = useFormPersistence(form, {
-    storageKey: formPersistenceKey || '__no_persistence__'
+    storageKey: generatedKey || '__no_persistence__'
   });
   
-  // Expose clearSavedData to parent via callback when they need to clear after successful save
+  // Store the clear function ref so we can call it after successful submit
+  const clearSavedDataRef = useRef(clearSavedData);
+  useEffect(() => {
+    clearSavedDataRef.current = clearSavedData;
+  }, [clearSavedData]);
+  
+  // Expose clearSavedData to parent via callback (deprecated - now automatic)
   useEffect(() => {
     if (onFormPersistenceClear && formPersistenceKey) {
-      // Pass the clear function to the parent
-      // Parent can call this when form is successfully submitted
       window.addEventListener(`clear-form-data-${formPersistenceKey}`, clearSavedData);
       return () => {
         window.removeEventListener(`clear-form-data-${formPersistenceKey}`, clearSavedData);
