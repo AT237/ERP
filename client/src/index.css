@@ -89,6 +89,20 @@
     @apply font-sans antialiased bg-background text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
   }
+  
+  /* Mobile zoom - scale to 50% for maximum overview on small screens */
+  @media (max-width: 767px) {
+    html {
+      zoom: 0.5;
+    }
+  }
+  
+  /* Desktop zoom - scale to 90% for more overview on large screens */
+  @media (min-width: 768px) {
+    html {
+      zoom: 0.9;
+    }
+  }
 }
 
 /* Anti-flicker CSS - prevents screen flashing during renders */
