@@ -10,7 +10,7 @@ import {
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, 
   insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertIncotermSchema,
-  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
+  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema
 } from "@shared/schema";
@@ -1672,6 +1672,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting status:", error);
       res.status(500).json({ message: "Failed to delete status" });
+    }
+  });
+
+  // Company Profiles routes
+  app.get("/api/masterdata/company-profiles", async (req, res) => {
+    try {
+      const profiles = await storage.getCompanyProfiles();
+      res.json(profiles);
+    } catch (error) {
+      console.error("Error fetching company profiles:", error);
+      res.status(500).json({ message: "Failed to fetch company profiles" });
+    }
+  });
+
+  app.get("/api/masterdata/company-profiles/active", async (req, res) => {
+    try {
+      const profile = await storage.getActiveCompanyProfile();
+      if (!profile) {
+        return res.status(404).json({ message: "No active company profile found" });
+      }
+      res.json(profile);
+    } catch (error) {
+      console.error("Error fetching active company profile:", error);
+      res.status(500).json({ message: "Failed to fetch active company profile" });
+    }
+  });
+
+  app.post("/api/masterdata/company-profiles", async (req, res) => {
+    try {
+      const profileData = insertCompanyProfileSchema.parse(req.body);
+      const profile = await storage.createCompanyProfile(profileData);
+      res.status(201).json(profile);
+    } catch (error) {
+      console.error("Error creating company profile:", error);
+      res.status(400).json({ message: "Failed to create company profile" });
+    }
+  });
+
+  app.get("/api/masterdata/company-profiles/:id", async (req, res) => {
+    try {
+      const profile = await storage.getCompanyProfile(req.params.id);
+      if (!profile) {
+        return res.status(404).json({ message: "Company profile not found" });
+      }
+      res.json(profile);
+    } catch (error) {
+      console.error("Error fetching company profile:", error);
+      res.status(500).json({ message: "Failed to fetch company profile" });
+    }
+  });
+
+  app.put("/api/masterdata/company-profiles/:id", async (req, res) => {
+    try {
+      const profileData = insertCompanyProfileSchema.partial().parse(req.body);
+      const profile = await storage.updateCompanyProfile(req.params.id, profileData);
+      res.json(profile);
+    } catch (error) {
+      console.error("Error updating company profile:", error);
+      res.status(400).json({ message: "Failed to update company profile" });
+    }
+  });
+
+  app.delete("/api/masterdata/company-profiles/:id", async (req, res) => {
+    try {
+      await storage.deleteCompanyProfile(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting company profile:", error);
+      res.status(500).json({ message: "Failed to delete company profile" });
     }
   });
 

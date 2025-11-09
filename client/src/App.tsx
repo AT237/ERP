@@ -97,6 +97,14 @@ function Router() {
             </div>
           </div>
         )} />
+        <Route path="/master-data/company-details" component={() => {
+          const CompanyDetailsPage = React.lazy(() => import('./pages/company-details.tsx'));
+          return (
+            <Suspense fallback={<div></div>}>
+              <CompanyDetailsPage />
+            </Suspense>
+          );
+        }} />
         
         <Route path="/quotation-form" component={() => {
           const QuotationForm = React.lazy(() => import('./pages/quotation-form'));

@@ -70,6 +70,7 @@ const defaultNavigation = [
     name: "Master Data",
     collapsible: true,
     items: [
+      { id: "company-details", name: "Our Company Details", href: "/master-data/company-details", icon: Building },
       { id: "text-snippets", name: "Text Snippets", href: "/text-snippets", icon: BookOpen },
       { id: "uom", name: "Units of Measure", href: "/master-data/uom", icon: Ruler },
       { id: "payment-terms", name: "Payment Terms", href: "/master-data/payment-terms", icon: Calendar },
