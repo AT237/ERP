@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -60,12 +61,25 @@ interface QuotationPrintData {
 
 interface QuotationPrintPreviewProps {
   quotationId: string;
+  onLoadingChange?: (isLoading: boolean) => void;
 }
 
-export function QuotationPrintPreview({ quotationId }: QuotationPrintPreviewProps) {
+export function QuotationPrintPreview({ quotationId, onLoadingChange }: QuotationPrintPreviewProps) {
   const { data: printData, isLoading } = useQuery<QuotationPrintData>({
     queryKey: ["/api/quotations", quotationId, "print-data"],
+    queryFn: async () => {
+      const response = await fetch(`/api/quotations/${quotationId}/print-data`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch quotation print data');
+      }
+      return response.json();
+    },
   });
+
+  // Notify parent of loading state changes
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
 
   if (isLoading) {
     return (

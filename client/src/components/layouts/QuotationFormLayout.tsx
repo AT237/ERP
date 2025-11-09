@@ -23,6 +23,7 @@ import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, P
 import { CustomerSelect } from "@/components/ui/customer-select";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn } from '@/components/layouts/DataTableLayout';
+import { QuotationPrintDialog } from "@/components/print/QuotationPrintDialog";
 import { useDataTable } from '@/hooks/useDataTable';
 import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem } from "@shared/schema";
 import { insertInventoryItemSchema } from "@shared/schema";
@@ -1498,8 +1499,23 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   ];
 
+  // Additional action: Print button (only for existing quotations)
+  const additionalHeaderActions = quotationId && existingQuotation ? (
+    <QuotationPrintDialog
+      quotationId={quotationId}
+      quotationNumber={existingQuotation.quotationNumber}
+    />
+  ) : null;
+
   return (
     <div className="h-full">
+      {/* Additional header actions */}
+      {additionalHeaderActions && (
+        <div className="px-6 py-3 bg-white border-b flex justify-end">
+          {additionalHeaderActions}
+        </div>
+      )}
+      
       <LayoutForm2
         sections={createQuotationFormSections()}
         activeSection={activeTab}

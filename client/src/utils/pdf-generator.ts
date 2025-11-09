@@ -52,24 +52,49 @@ export async function generatePdfFromElement(
       format: "a4",
     });
 
-    // If content is taller than one page, we need multiple pages
-    let heightLeft = imgHeight;
-    let position = 0;
-    const pageHeight = pdfHeight;
-
     // Convert canvas to image
     const imgData = canvas.toDataURL("image/jpeg", quality);
 
-    // Add first page
-    pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+    // Calculate how many pages we need
+    const pageHeight = pdfHeight;
+    const totalPages = Math.ceil(imgHeight / pageHeight);
 
-    // Add additional pages if needed
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    // Add pages by slicing the image
+    for (let page = 0; page < totalPages; page++) {
+      if (page > 0) {
+        pdf.addPage();
+      }
+
+      // Calculate source rectangle for this page
+      const sourceY = page * pageHeight;
+      const sourceHeight = Math.min(pageHeight, imgHeight - sourceY);
+
+      // For html2canvas output, we need to crop the canvas
+      // Create a temporary canvas to hold the page slice
+      const pageCanvas = document.createElement('canvas');
+      const pageCtx = pageCanvas.getContext('2d');
+      if (!pageCtx) continue;
+
+      // Calculate pixel dimensions (scale from mm to pixels)
+      const pixelsPerMm = canvas.width / imgWidth;
+      const sourceYPx = sourceY * pixelsPerMm;
+      const sourceHeightPx = sourceHeight * pixelsPerMm;
+
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sourceHeightPx;
+
+      // Draw the slice from the original canvas
+      pageCtx.drawImage(
+        canvas,
+        0, sourceYPx,           // source x, y
+        canvas.width, sourceHeightPx, // source width, height
+        0, 0,                   // dest x, y
+        canvas.width, sourceHeightPx  // dest width, height
+      );
+
+      // Convert page canvas to image and add to PDF
+      const pageImgData = pageCanvas.toDataURL("image/jpeg", quality);
+      pdf.addImage(pageImgData, "JPEG", 0, 0, imgWidth, sourceHeight);
     }
 
     // Download PDF
@@ -130,19 +155,44 @@ export async function previewPdfInNewTab(
       format: "a4",
     });
 
-    let heightLeft = imgHeight;
-    let position = 0;
-    const pageHeight = pdfHeight;
+    // Convert canvas to image
     const imgData = canvas.toDataURL("image/jpeg", quality);
 
-    pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+    // Calculate pages
+    const pageHeight = pdfHeight;
+    const totalPages = Math.ceil(imgHeight / pageHeight);
 
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    // Add pages by slicing the image
+    for (let page = 0; page < totalPages; page++) {
+      if (page > 0) {
+        pdf.addPage();
+      }
+
+      const sourceY = page * pageHeight;
+      const sourceHeight = Math.min(pageHeight, imgHeight - sourceY);
+
+      // Create page slice
+      const pageCanvas = document.createElement('canvas');
+      const pageCtx = pageCanvas.getContext('2d');
+      if (!pageCtx) continue;
+
+      const pixelsPerMm = canvas.width / imgWidth;
+      const sourceYPx = sourceY * pixelsPerMm;
+      const sourceHeightPx = sourceHeight * pixelsPerMm;
+
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sourceHeightPx;
+
+      pageCtx.drawImage(
+        canvas,
+        0, sourceYPx,
+        canvas.width, sourceHeightPx,
+        0, 0,
+        canvas.width, sourceHeightPx
+      );
+
+      const pageImgData = pageCanvas.toDataURL("image/jpeg", quality);
+      pdf.addImage(pageImgData, "JPEG", 0, 0, imgWidth, sourceHeight);
     }
 
     // Open in new tab
