@@ -2,7 +2,7 @@ import {
   users, customers, suppliers, prospects, inventoryItems, projects, quotations, quotationItems,
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
-  unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, incoterms, vatRates, cities, statuses, textSnippets, textSnippetUsages,
+  unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, incoterms, vatRates, cities, statuses, companyProfiles, textSnippets, textSnippetUsages,
   documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type Prospect, type InsertProspect, type InventoryItem, type InsertInventoryItem,
@@ -17,7 +17,7 @@ import {
   type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentDay, type InsertPaymentDay,
   type PaymentSchedule, type InsertPaymentSchedule, type PaymentTerm, type InsertPaymentTerm,
   type Incoterm, type InsertIncoterm, type VatRate, type InsertVatRate,
-  type City, type InsertCity, type Status, type InsertStatus,
+  type City, type InsertCity, type Status, type InsertStatus, type CompanyProfile, type InsertCompanyProfile,
   type TextSnippet, type InsertTextSnippet, type TextSnippetUsage, type InsertTextSnippetUsage,
   type DocumentLayout, type InsertDocumentLayout, type LayoutBlock, type InsertLayoutBlock,
   type LayoutSection, type InsertLayoutSection, type LayoutElement, type InsertLayoutElement,
@@ -227,6 +227,14 @@ export interface IStorage {
   createStatus(status: InsertStatus): Promise<Status>;
   updateStatus(id: string, status: Partial<InsertStatus>): Promise<Status>;
   deleteStatus(id: string): Promise<void>;
+
+  // Company Profile methods
+  getCompanyProfiles(): Promise<CompanyProfile[]>;
+  getCompanyProfile(id: string): Promise<CompanyProfile | undefined>;
+  getActiveCompanyProfile(): Promise<CompanyProfile | undefined>;
+  createCompanyProfile(profile: InsertCompanyProfile): Promise<CompanyProfile>;
+  updateCompanyProfile(id: string, profile: Partial<InsertCompanyProfile>): Promise<CompanyProfile>;
+  deleteCompanyProfile(id: string): Promise<void>;
 
   // Text Snippet methods
   getTextSnippets(): Promise<TextSnippet[]>;
@@ -1226,6 +1234,64 @@ export class DatabaseStorage implements IStorage {
     await db.update(statuses).set({ isActive: false }).where(eq(statuses.id, id));
   }
 
+  // Company Profile methods
+  async getCompanyProfiles(): Promise<CompanyProfile[]> {
+    return await db.select().from(companyProfiles).orderBy(desc(companyProfiles.isActive), companyProfiles.name);
+  }
+
+  async getCompanyProfile(id: string): Promise<CompanyProfile | undefined> {
+    const [profile] = await db.select().from(companyProfiles).where(eq(companyProfiles.id, id));
+    return profile || undefined;
+  }
+
+  async getActiveCompanyProfile(): Promise<CompanyProfile | undefined> {
+    const [profile] = await db.select().from(companyProfiles)
+      .where(eq(companyProfiles.isActive, true))
+      .limit(1);
+    return profile || undefined;
+  }
+
+  async createCompanyProfile(profile: InsertCompanyProfile): Promise<CompanyProfile> {
+    // Treat undefined isActive as true (database default) and deactivate all others
+    const isActivating = profile.isActive !== false; // undefined or true = activate
+    
+    if (isActivating) {
+      // Deactivate all existing profiles in a transaction-safe manner
+      await db.update(companyProfiles).set({ isActive: false });
+    }
+    
+    const [newProfile] = await db.insert(companyProfiles)
+      .values({ ...profile, isActive: isActivating })
+      .returning();
+    return newProfile;
+  }
+
+  async updateCompanyProfile(id: string, profile: Partial<InsertCompanyProfile>): Promise<CompanyProfile> {
+    // If isActive is being set or is undefined (implying activation), deactivate all others
+    const isActivating = profile.isActive !== false;
+    
+    if (isActivating) {
+      // Deactivate all other profiles
+      await db.update(companyProfiles)
+        .set({ isActive: false })
+        .where(sql`${companyProfiles.id} != ${id}`);
+    }
+    
+    const [updatedProfile] = await db.update(companyProfiles)
+      .set({ 
+        ...profile, 
+        isActive: isActivating,
+        updatedAt: sql`NOW()`
+      })
+      .where(eq(companyProfiles.id, id))
+      .returning();
+    return updatedProfile;
+  }
+
+  async deleteCompanyProfile(id: string): Promise<void> {
+    await db.update(companyProfiles).set({ isActive: false }).where(eq(companyProfiles.id, id));
+  }
+
   // Text Snippet methods
   async getTextSnippets(): Promise<TextSnippet[]> {
     return await db.select().from(textSnippets)
@@ -1412,13 +1478,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDocumentLayout(layout: InsertDocumentLayout): Promise<DocumentLayout> {
-    const [newLayout] = await db.insert(documentLayouts).values(layout).returning();
+    // Normalize allowedTables to mutable string[] if provided
+    const normalizedLayout = {
+      ...layout,
+      allowedTables: layout.allowedTables ? [...layout.allowedTables] : undefined
+    };
+    const [newLayout] = await db.insert(documentLayouts).values(normalizedLayout as any).returning();
     return newLayout;
   }
 
   async updateDocumentLayout(id: string, layout: Partial<InsertDocumentLayout>): Promise<DocumentLayout> {
+    // Normalize allowedTables to mutable string[] if provided
+    const normalizedLayout = {
+      ...layout,
+      allowedTables: layout.allowedTables ? [...layout.allowedTables] : undefined,
+      updatedAt: new Date()
+    };
     const [updatedLayout] = await db.update(documentLayouts)
-      .set({ ...layout, updatedAt: new Date() })
+      .set(normalizedLayout as any)
       .where(eq(documentLayouts.id, id))
       .returning();
     return updatedLayout;
@@ -1473,13 +1550,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createLayoutSection(section: InsertLayoutSection): Promise<LayoutSection> {
-    const [newSection] = await db.insert(layoutSections).values(section).returning();
+    // Normalize config to serializable JSON if provided
+    const normalizedSection = {
+      ...section,
+      config: section.config ? JSON.parse(JSON.stringify(section.config)) : undefined
+    };
+    const [newSection] = await db.insert(layoutSections).values(normalizedSection as any).returning();
     return newSection;
   }
 
   async updateLayoutSection(id: string, section: Partial<InsertLayoutSection>): Promise<LayoutSection> {
+    // Normalize config to serializable JSON if provided  
+    const normalizedSection = {
+      ...section,
+      config: section.config ? JSON.parse(JSON.stringify(section.config)) : undefined
+    };
     const [updatedSection] = await db.update(layoutSections)
-      .set(section)
+      .set(normalizedSection as any)
       .where(eq(layoutSections.id, id))
       .returning();
     return updatedSection;

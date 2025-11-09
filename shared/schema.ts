@@ -501,6 +501,28 @@ export const statuses = pgTable("statuses", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Company profiles table for our company details (used in print layouts)
+export const companyProfiles = pgTable("company_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(), // Company name
+  logoUrl: text("logo_url"), // Path to company logo
+  street: text("street"), // Street address
+  houseNumber: text("house_number"), // House number
+  postalCode: text("postal_code"), // Postal code
+  city: text("city"), // City
+  country: text("country").default("Netherlands"), // Country
+  phone: text("phone"), // Phone number
+  email: text("email"), // General email
+  website: text("website"), // Website URL
+  kvkNummer: text("kvk_nummer"), // Dutch Chamber of Commerce number
+  btwNummer: text("btw_nummer"), // VAT number
+  bankAccount: text("bank_account"), // Bank account (IBAN)
+  bankName: text("bank_name"), // Bank name
+  isActive: boolean("is_active").default(true), // Only one should be active at a time
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Define relations
 export const addressesRelations = relations(addresses, ({ many }) => ({
   customers: many(customers),
@@ -744,6 +766,7 @@ export const insertIncotermSchema = createInsertSchema(incoterms).omit({ id: tru
 export const insertVatRateSchema = createInsertSchema(vatRates).omit({ id: true, createdAt: true });
 export const insertCitySchema = createInsertSchema(cities).omit({ id: true, createdAt: true });
 export const insertStatusSchema = createInsertSchema(statuses).omit({ id: true, createdAt: true });
+export const insertCompanyProfileSchema = createInsertSchema(companyProfiles).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Text Snippets insert schemas
 export const insertTextSnippetSchema = createInsertSchema(textSnippets).omit({ id: true, createdAt: true, updatedAt: true });
@@ -816,6 +839,8 @@ export type City = typeof cities.$inferSelect;
 export type InsertCity = z.infer<typeof insertCitySchema>;
 export type Status = typeof statuses.$inferSelect;
 export type InsertStatus = z.infer<typeof insertStatusSchema>;
+export type CompanyProfile = typeof companyProfiles.$inferSelect;
+export type InsertCompanyProfile = z.infer<typeof insertCompanyProfileSchema>;
 
 // Text Snippets types
 export type TextSnippet = typeof textSnippets.$inferSelect;
