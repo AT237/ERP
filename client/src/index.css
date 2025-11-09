@@ -97,10 +97,10 @@
     }
   }
   
-  /* Desktop zoom - scale to 90% for more overview on large screens */
+  /* Desktop zoom - scale to 80% for more overview on large screens */
   @media (min-width: 768px) {
     html {
-      zoom: 0.9;
+      zoom: 0.8;
     }
   }
 }
