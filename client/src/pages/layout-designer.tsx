@@ -876,7 +876,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                     sections.map((section) => (
                       <div
                         key={`label-${section.id}`}
-                        className="bg-orange-50 px-3 py-2 flex items-center justify-center"
+                        className="bg-orange-50 border border-orange-200 px-3 py-2 flex items-center justify-center"
                         style={{
                           minHeight: `${section.config.dimensions?.height || 200}px`,
                         }}
@@ -992,7 +992,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   {sections.length > 0 && sections.map((section) => (
                     <div
                       key={`controls-${section.id}`}
-                      className="bg-orange-50 px-2 py-2 flex items-start justify-center"
+                      className="bg-orange-50 border border-orange-200 px-2 py-2 flex items-start justify-center"
                       style={{
                         minHeight: `${section.config.dimensions?.height || 200}px`,
                       }}
