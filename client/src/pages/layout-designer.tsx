@@ -896,47 +896,61 @@ function VisualDesignerView({ layout }: { layout: any }) {
                       60 // minimum width
                     );
 
-                    return sections.map((section) => {
-                      const sectionHeight = section.config.dimensions?.height || 200;
-                      return (
-                        <div key={section.id} className="flex gap-0">
-                          {/* Left Side Panel - Section Label */}
-                          <div className="flex-shrink-0" style={{ width: `${maxLabelWidth}px` }}>
-                            <div 
-                              className="bg-orange-50 border border-orange-200 px-3 py-2" 
-                              style={{ 
-                                height: `${sectionHeight}px`, 
-                                boxSizing: 'border-box',
-                                writingMode: 'vertical-rl',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                overflow: 'hidden',
-                                width: '100%'
-                              }}
-                            >
-                              <span className="font-medium text-sm text-gray-700" style={{ transform: 'rotate(180deg)' }}>
-                                {section.name}
-                              </span>
-                            </div>
-                          </div>
+                    return (
+                      <div className="flex gap-0">
+                        {/* Left Side Panel - All Section Labels */}
+                        <div className="flex-shrink-0 flex flex-col" style={{ width: `${maxLabelWidth}px` }}>
+                          {sections.map((section) => {
+                            const sectionHeight = section.config.dimensions?.height || 200;
+                            return (
+                              <div 
+                                key={`label-${section.id}`}
+                                className="bg-orange-50 border border-orange-200 px-3 py-2" 
+                                style={{ 
+                                  height: `${sectionHeight}px`, 
+                                  boxSizing: 'border-box',
+                                  writingMode: 'vertical-rl',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  overflow: 'hidden',
+                                  width: '100%'
+                                }}
+                              >
+                                <span className="font-medium text-sm text-gray-700" style={{ transform: 'rotate(180deg)' }}>
+                                  {section.name}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
 
-                          {/* Center: A4 Section Content */}
-                          <div 
-                            className={`border-2 transition-all bg-white shadow-lg ${
-                              selectedSection?.id === section.id 
-                                ? 'border-orange-500' 
-                                : 'border-gray-600'
-                            }`}
-                            style={{
-                              backgroundColor: section.config.style?.backgroundColor || '#ffffff',
-                              height: `${sectionHeight}px`,
-                              minHeight: `${sectionHeight}px`,
-                              boxSizing: 'border-box',
-                              width: '794px',
-                            }}
-                            onClick={() => handleSectionClick(section)}
-                          >
+                        {/* Center: A4 Document - Single container with all sections */}
+                        <div 
+                          className="bg-white shadow-2xl border-4 border-gray-700"
+                          style={{
+                            width: '794px',
+                            boxSizing: 'border-box',
+                          }}
+                        >
+                          {sections.map((section, index) => {
+                            const sectionHeight = section.config.dimensions?.height || 200;
+                            return (
+                              <div 
+                                key={section.id}
+                                className={`transition-all ${
+                                  selectedSection?.id === section.id 
+                                    ? 'ring-4 ring-orange-500 ring-inset' 
+                                    : ''
+                                } ${index > 0 ? 'border-t-2 border-dashed border-gray-300' : ''}`}
+                                style={{
+                                  backgroundColor: section.config.style?.backgroundColor || '#ffffff',
+                                  height: `${sectionHeight}px`,
+                                  minHeight: `${sectionHeight}px`,
+                                  boxSizing: 'border-box',
+                                }}
+                                onClick={() => handleSectionClick(section)}
+                              >
                             <div
                               className="relative p-4 h-full"
                               style={{
@@ -996,35 +1010,43 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                 />
                               ))
                             )}
-                          </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
 
-                        {/* Right Side Panel - Section Controls */}
-                        <div className="flex-shrink-0">
-                          <div 
-                            className="bg-orange-50 border border-orange-200 px-2 py-2 flex items-start justify-center" 
-                            style={{ 
-                              height: `${sectionHeight}px`, 
-                              boxSizing: 'border-box' 
-                            }}
-                          >
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-red-500 hover:bg-red-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveSection(section.id);
-                              }}
-                              title="Sectie verwijderen"
-                            >
-                              ×
-                            </Button>
-                          </div>
+                        {/* Right Side Panel - All Section Controls */}
+                        <div className="flex-shrink-0 flex flex-col">
+                          {sections.map((section) => {
+                            const sectionHeight = section.config.dimensions?.height || 200;
+                            return (
+                              <div 
+                                key={`control-${section.id}`}
+                                className="bg-orange-50 border border-orange-200 px-2 py-2 flex items-start justify-center" 
+                                style={{ 
+                                  height: `${sectionHeight}px`, 
+                                  boxSizing: 'border-box' 
+                                }}
+                              >
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0 text-red-500 hover:bg-red-100"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveSection(section.id);
+                                  }}
+                                  title="Sectie verwijderen"
+                                >
+                                  ×
+                                </Button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                      );
-                    });
+                    );
                   })()
                 )}
               </div>
