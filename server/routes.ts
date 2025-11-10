@@ -11,7 +11,7 @@ import {
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, 
   insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertIncotermSchema,
-  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
+  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema
 } from "@shared/schema";
@@ -1476,6 +1476,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating status:", error);
       res.status(400).json({ message: "Failed to create status" });
+    }
+  });
+
+  // Master Data routes - Images
+  app.get("/api/masterdata/images", async (req, res) => {
+    try {
+      const { images } = await import("@shared/schema");
+      const imageList = await db.select().from(images).where(db.sql`is_active = true`);
+      res.json(imageList);
+    } catch (error) {
+      console.error("Error fetching images:", error);
+      res.status(500).json({ message: "Failed to fetch images" });
+    }
+  });
+
+  app.post("/api/masterdata/images", async (req, res) => {
+    try {
+      const imageData = insertImageSchema.parse(req.body);
+      const { images } = await import("@shared/schema");
+      const [image] = await db.insert(images).values(imageData).returning();
+      res.json(image);
+    } catch (error) {
+      console.error("Error creating image:", error);
+      res.status(400).json({ message: "Failed to create image" });
     }
   });
 

@@ -501,6 +501,19 @@ export const statuses = pgTable("statuses", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Images master data table for reusable images in layouts
+export const images = pgTable("images", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").default("general"), // "logo", "product", "signature", etc.
+  imageData: text("image_data").notNull(), // Base64 data URI
+  width: integer("width"), // Original width in pixels
+  height: integer("height"), // Original height in pixels
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Company profiles table for our company details (used in print layouts)
 export const companyProfiles = pgTable("company_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -766,6 +779,7 @@ export const insertIncotermSchema = createInsertSchema(incoterms).omit({ id: tru
 export const insertVatRateSchema = createInsertSchema(vatRates).omit({ id: true, createdAt: true });
 export const insertCitySchema = createInsertSchema(cities).omit({ id: true, createdAt: true });
 export const insertStatusSchema = createInsertSchema(statuses).omit({ id: true, createdAt: true });
+export const insertImageSchema = createInsertSchema(images).omit({ id: true, createdAt: true });
 export const insertCompanyProfileSchema = createInsertSchema(companyProfiles).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Text Snippets insert schemas
@@ -839,6 +853,8 @@ export type City = typeof cities.$inferSelect;
 export type InsertCity = z.infer<typeof insertCitySchema>;
 export type Status = typeof statuses.$inferSelect;
 export type InsertStatus = z.infer<typeof insertStatusSchema>;
+export type Image = typeof images.$inferSelect;
+export type InsertImage = z.infer<typeof insertImageSchema>;
 export type CompanyProfile = typeof companyProfiles.$inferSelect;
 export type InsertCompanyProfile = z.infer<typeof insertCompanyProfileSchema>;
 

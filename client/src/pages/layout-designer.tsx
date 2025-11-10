@@ -1524,44 +1524,18 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveU
           <span className="text-lg">{getBlockIcon(block.type)}</span>
           <span className="text-sm font-medium">{block.type}</span>
         </div>
-        <div className="flex flex-col gap-0.5">
-          <Button 
-            size="sm" 
-            variant="ghost" 
-            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-            title="Verwijder"
-          >
-            ×
-          </Button>
-          <Button 
-            size="sm" 
-            variant="ghost" 
-            className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              onMoveUp();
-            }}
-            title="Verplaats omhoog"
-          >
-            <ArrowUp className="h-3 w-3" />
-          </Button>
-          <Button 
-            size="sm" 
-            variant="ghost" 
-            className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              onMoveDown();
-            }}
-            title="Verplaats omlaag"
-          >
-            <ArrowDown className="h-3 w-3" />
-          </Button>
-        </div>
+        <Button 
+          size="sm" 
+          variant="ghost" 
+          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          title="Verwijder"
+        >
+          ×
+        </Button>
       </div>
       <div className="text-xs text-muted-foreground">
         {block.type === "Text" && <div className="truncate">{block.config?.text || 'Tekst...'}</div>}
