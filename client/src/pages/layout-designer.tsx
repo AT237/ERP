@@ -551,6 +551,10 @@ function VisualDesignerView({ layout }: { layout: any }) {
   };
 
   const handleRemoveBlock = (sectionId: string, blockId: string) => {
+    if (!window.confirm('Do you want to delete this block?')) {
+      return;
+    }
+    
     const updatedSections = sections.map(s => 
       s.id === sectionId 
         ? { ...s, config: { ...s.config, blocks: (s.config.blocks || []).filter((b: any) => b.id !== blockId) } }
