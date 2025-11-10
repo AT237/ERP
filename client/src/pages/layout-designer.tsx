@@ -840,48 +840,6 @@ function VisualDesignerView({ layout }: { layout: any }) {
             <CardDescription className="text-xs">Sleep naar een sectie</CardDescription>
           </CardHeader>
           <CardContent className="space-y-1">
-            {/* Secties Beheer */}
-            <div className="mb-4">
-              <Button 
-                className="w-full justify-start" 
-                size="sm" 
-                variant="outline"
-                onClick={() => setShowNewSectionDialog(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Nieuwe Sectie
-              </Button>
-            </div>
-
-            {/* Secties Lijst */}
-            {sections.length > 0 && (
-              <div className="mb-4 space-y-1">
-                {sections.map((section) => (
-                  <div
-                    key={section.id}
-                    className={`p-2 border rounded cursor-pointer transition-all text-sm ${
-                      selectedSection?.id === section.id 
-                        ? 'border-orange-500 bg-orange-50' 
-                        : 'border-border hover:bg-accent'
-                    }`}
-                    onClick={() => handleSectionClick(section)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span>📄</span>
-                        <span className="font-medium">{section.name}</span>
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {section.config.blocks?.length || 0}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="border-t pt-3 mb-2"></div>
-
             {/* Blokken Lijst */}
             <div className="text-xs font-semibold text-muted-foreground px-2 mb-2">BLOKKEN</div>
             <BlockLibraryItem name="Text" icon="📝" onDragStart={handleDragStart} description="Vrije tekst met opmaak" />
