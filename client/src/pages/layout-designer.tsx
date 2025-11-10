@@ -875,14 +875,13 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   ) : (
                     sections.map((section) => {
                       const sectionHeight = section.config.dimensions?.height || 200;
-                      // Add 32px for p-4 padding (16px top + 16px bottom) + 4px for border-2 (2px top + 2px bottom)
-                      const totalHeight = sectionHeight + 36;
                       return (
                         <div
                           key={`label-${section.id}`}
                           className="bg-orange-50 border border-orange-200 px-3 py-2 flex items-center justify-center"
                           style={{
-                            height: `${totalHeight}px`,
+                            height: `${sectionHeight}px`,
+                            boxSizing: 'border-box',
                           }}
                         >
                           <span className="font-medium text-sm text-gray-700 writing-mode-vertical transform -rotate-180" style={{ writingMode: 'vertical-rl' }}>
@@ -922,14 +921,15 @@ function VisualDesignerView({ layout }: { layout: any }) {
                           }`}
                           style={{
                             backgroundColor: section.config.style?.backgroundColor || '#ffffff',
-                            minHeight: `${section.config.dimensions?.height || 200}px`,
+                            height: `${section.config.dimensions?.height || 200}px`,
+                            boxSizing: 'border-box',
                           }}
                           onClick={() => handleSectionClick(section)}
                         >
                           <div
-                            className="relative p-4"
+                            className="relative p-4 h-full"
                             style={{
-                              minHeight: `${section.config.dimensions?.height || 200}px`,
+                              boxSizing: 'border-box',
                               backgroundImage: showGrid ? `
                                 linear-gradient(to right, #e5e5e5 1px, transparent 1px),
                                 linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)
@@ -996,14 +996,13 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 <div className="w-12 flex-shrink-0">
                   {sections.length > 0 && sections.map((section) => {
                     const sectionHeight = section.config.dimensions?.height || 200;
-                    // Add 32px for p-4 padding (16px top + 16px bottom) + 4px for border-2 (2px top + 2px bottom)
-                    const totalHeight = sectionHeight + 36;
                     return (
                       <div
                         key={`controls-${section.id}`}
                         className="bg-orange-50 border border-orange-200 px-2 py-2 flex items-start justify-center"
                         style={{
-                          height: `${totalHeight}px`,
+                          height: `${sectionHeight}px`,
+                          boxSizing: 'border-box',
                         }}
                       >
                         <Button
