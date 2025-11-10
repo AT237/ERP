@@ -854,93 +854,118 @@ function VisualDesignerView({ layout }: { layout: any }) {
           </CardContent>
         </Card>
 
-        {/* Canvas - Section-Based Layout */}
-        <Card className="flex flex-col bg-gray-50 overflow-auto p-4">
-          <div className="space-y-4" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
-            {sections.length === 0 ? (
-              <div className="flex items-center justify-center h-96">
-                <div className="text-center text-muted-foreground">
-                  <div className="text-4xl mb-4">📄</div>
-                  <div className="text-lg font-medium">Geen Secties</div>
-                  <div className="text-sm mt-2">Maak een nieuwe sectie om te beginnen</div>
-                </div>
-              </div>
-            ) : (
-              sections.map((section) => (
-                <div
-                  key={section.id}
-                  className={`border-2 rounded-lg transition-all ${
-                    selectedSection?.id === section.id 
-                      ? 'border-orange-500 shadow-lg' 
-                      : 'border-border'
-                  }`}
-                  style={{
-                    backgroundColor: section.config.style?.backgroundColor || '#ffffff',
-                    minHeight: `${section.config.dimensions?.height || 200}px`,
-                  }}
-                  onClick={() => handleSectionClick(section)}
-                >
-                  {/* Section Header */}
-                  <div className="bg-gray-100 px-3 py-2 flex items-center justify-between border-b">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{section.name}</span>
-                      <Badge variant="outline" className="text-xs">{section.sectionType}</Badge>
+        {/* Canvas - A4 Page Layout */}
+        <Card className="flex flex-col bg-gray-50 overflow-auto">
+          <div className="flex-1 p-8 flex items-start justify-center">
+            <div 
+              style={{ 
+                transform: `scale(${zoom})`, 
+                transformOrigin: 'top center',
+                width: '794px', // A4 width @ 96 DPI
+              }}
+            >
+              {/* A4 Page Container */}
+              <div 
+                className="bg-white shadow-2xl"
+                style={{
+                  width: '794px',
+                  minHeight: '1123px', // A4 height @ 96 DPI
+                }}
+              >
+                {/* Page Content */}
+                <div className="space-y-0">
+                  {sections.length === 0 ? (
+                    <div className="flex items-center justify-center" style={{ minHeight: '1123px' }}>
+                      <div className="text-center text-muted-foreground">
+                        <div className="text-4xl mb-4">📄</div>
+                        <div className="text-lg font-medium">Geen Secties</div>
+                        <div className="text-sm mt-2">Maak een nieuwe sectie om te beginnen</div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {section.config.blocks?.length || 0} blokken
-                      </Badge>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-0 text-red-500"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveSection(section.id);
+                  ) : (
+                    sections.map((section) => (
+                      <div
+                        key={section.id}
+                        className={`border-2 transition-all ${
+                          selectedSection?.id === section.id 
+                            ? 'border-orange-500 shadow-lg' 
+                            : 'border-gray-300 border-dashed'
+                        }`}
+                        style={{
+                          backgroundColor: section.config.style?.backgroundColor || '#ffffff',
+                          minHeight: `${section.config.dimensions?.height || 200}px`,
                         }}
+                        onClick={() => handleSectionClick(section)}
                       >
-                        ×
-                      </Button>
-                    </div>
-                  </div>
+                        {/* Section Header */}
+                        <div className="bg-gray-100 px-3 py-2 flex items-center justify-between border-b">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">{section.name}</span>
+                            <Badge variant="outline" className="text-xs">{section.sectionType}</Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {section.config.blocks?.length || 0} blokken
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-red-500"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSection(section.id);
+                              }}
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        </div>
 
-                  {/* Section Content - Drop Zone for Blocks */}
-                  <div
-                    className="relative p-4"
-                    style={{
-                      minHeight: `${section.config.dimensions?.height || 200}px`,
-                      backgroundImage: showGrid ? `
-                        linear-gradient(to right, #e5e5e5 1px, transparent 1px),
-                        linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)
-                      ` : 'none',
-                      backgroundSize: showGrid ? `${gridSize}px ${gridSize}px` : 'auto',
-                    }}
-                    onDrop={(e) => handleDropOnSection(e, section.id)}
-                    onDragOver={handleDragOver}
-                  >
-                    {(!section.config.blocks || section.config.blocks.length === 0) ? (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="text-center text-muted-foreground">
-                          <div className="text-2xl mb-2">📦</div>
-                          <div className="text-sm">Sleep blokken hierheen</div>
+                        {/* Section Content - Drop Zone for Blocks */}
+                        <div
+                          className="relative p-4"
+                          style={{
+                            minHeight: `${section.config.dimensions?.height || 200}px`,
+                            backgroundImage: showGrid ? `
+                              linear-gradient(to right, #e5e5e5 1px, transparent 1px),
+                              linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)
+                            ` : 'none',
+                            backgroundSize: showGrid ? `${gridSize}px ${gridSize}px` : 'auto',
+                          }}
+                          onDrop={(e) => handleDropOnSection(e, section.id)}
+                          onDragOver={handleDragOver}
+                        >
+                          {(!section.config.blocks || section.config.blocks.length === 0) ? (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <div className="text-center text-muted-foreground">
+                                <div className="text-2xl mb-2">📦</div>
+                                <div className="text-sm">Sleep blokken hierheen</div>
+                              </div>
+                            </div>
+                          ) : (
+                            section.config.blocks.map((block: any) => (
+                              <SectionBlock
+                                key={block.id}
+                                block={block}
+                                sectionId={section.id}
+                                isSelected={selectedBlock?.id === block.id}
+                                onClick={() => handleBlockClick(block)}
+                                onRemove={() => handleRemoveBlock(section.id, block.id)}
+                              />
+                            ))
+                          )}
                         </div>
                       </div>
-                    ) : (
-                      section.config.blocks.map((block: any) => (
-                        <SectionBlock
-                          key={block.id}
-                          block={block}
-                          sectionId={section.id}
-                          isSelected={selectedBlock?.id === block.id}
-                          onClick={() => handleBlockClick(block)}
-                          onRemove={() => handleRemoveBlock(section.id, block.id)}
-                        />
-                      ))
-                    )}
-                  </div>
+                    ))
+                  )}
                 </div>
-              ))
-            )}
+              </div>
+              
+              {/* Page Info */}
+              <div className="text-center mt-4 text-xs text-gray-500">
+                A4 Formaat: 210 × 297 mm (794 × 1123 px @ 96 DPI)
+              </div>
+            </div>
           </div>
         </Card>
 
