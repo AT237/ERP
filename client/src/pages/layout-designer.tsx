@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database } from 'lucide-react';
+import { BlockRenderers, UnknownBlockRenderer } from '@/components/print/BlockRenderers';
+import type { PrintData } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -1044,6 +1046,36 @@ function getDefaultConfig(blockType: string) {
 
 // Preview Component
 function PreviewView({ layout }: { layout: any }) {
+  const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
+  const [showQuotationDialog, setShowQuotationDialog] = useState(false);
+  const { toast } = useToast();
+
+  // Fetch all quotations
+  const { data: quotations = [] } = useQuery<any[]>({
+    queryKey: ['/api/quotations'],
+  });
+
+  // Fetch selected quotation print data
+  const { data: printData, isLoading: isPrintDataLoading } = useQuery({
+    queryKey: ['/api/quotations', selectedQuotationId, 'print-data'],
+    queryFn: async () => {
+      if (!selectedQuotationId) return null;
+      const response = await fetch(`/api/quotations/${selectedQuotationId}/print-data`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch quotation print data');
+      }
+      return response.json();
+    },
+    enabled: !!selectedQuotationId,
+  });
+
+  // Fetch layout sections
+  const { data: sections = [] } = useQuery({
+    queryKey: ['/api/layout-sections'],
+    select: (data: any[]) => data.filter((s: any) => s.layoutId === layout?.id).sort((a: any, b: any) => a.position - b.position),
+    enabled: !!layout,
+  });
+
   if (!layout) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -1052,32 +1084,202 @@ function PreviewView({ layout }: { layout: any }) {
     );
   }
 
+  const handleSelectQuotation = () => {
+    if (quotations.length === 0) {
+      toast({
+        title: 'No quotations found',
+        description: 'Create a quotation first to preview the layout',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setShowQuotationDialog(true);
+  };
+
+  const selectedQuotation = quotations.find((q: any) => q.id === selectedQuotationId);
+
   return (
     <div className="flex flex-col items-center">
       <div className="mb-4 flex gap-2">
-        <Button size="sm" variant="outline" data-testid="button-download-pdf">
-          <Download className="h-4 w-4 mr-2" />
-          Download PDF
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={handleSelectQuotation}
+          data-testid="button-select-quotation"
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          {selectedQuotation ? `Offerte: ${selectedQuotation.quotationNumber}` : 'Selecteer Offerte'}
         </Button>
-        <Button size="sm" variant="outline" data-testid="button-generate-sample">
-          <Eye className="h-4 w-4 mr-2" />
-          Generate Sample
-        </Button>
+        {selectedQuotationId && (
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => setSelectedQuotationId(null)}
+            data-testid="button-clear-selection"
+          >
+            Wis Selectie
+          </Button>
+        )}
       </div>
-      
-      <Card className="w-full max-w-4xl">
-        <CardContent className="p-8">
-          <div className="bg-white shadow-xl mx-auto" style={{ width: '210mm', aspectRatio: '1/1.414' }}>
-            <div className="border border-gray-200 h-full p-8 flex items-center justify-center">
-              <div className="text-center text-muted-foreground">
-                <div className="text-4xl mb-4">👁️</div>
-                <div className="text-lg font-medium">PDF Preview</div>
-                <div className="text-sm mt-2">Generated document will appear here</div>
+
+      {!selectedQuotationId ? (
+        <Card className="w-full max-w-4xl">
+          <CardContent className="p-8">
+            <div className="bg-white shadow-xl mx-auto" style={{ width: '210mm', aspectRatio: '1/1.414' }}>
+              <div className="border border-gray-200 h-full p-8 flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-4xl mb-4">📄</div>
+                  <div className="text-lg font-medium">Selecteer een offerte</div>
+                  <div className="text-sm mt-2">Klik op "Selecteer Offerte" om een preview te zien</div>
+                </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      ) : isPrintDataLoading ? (
+        <Card className="w-full max-w-4xl">
+          <CardContent className="p-8">
+            <div className="bg-white shadow-xl mx-auto" style={{ width: '210mm', aspectRatio: '1/1.414' }}>
+              <div className="border border-gray-200 h-full p-8 flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-4xl mb-4">⏳</div>
+                  <div className="text-lg font-medium">Laden...</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="w-full max-w-4xl">
+          <CardContent className="p-8">
+            <div className="bg-white shadow-xl mx-auto" style={{ width: '210mm', minHeight: '297mm' }}>
+              <LayoutPreview 
+                layout={layout}
+                sections={sections}
+                printData={printData}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quotation Selection Dialog */}
+      <Dialog open={showQuotationDialog} onOpenChange={setShowQuotationDialog}>
+        <DialogContent data-testid="dialog-select-quotation">
+          <DialogHeader>
+            <DialogTitle>Selecteer Offerte voor Preview</DialogTitle>
+            <DialogDescription>
+              Kies een offerte om te zien hoe deze eruit ziet in de geselecteerde layout
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="max-h-96 overflow-y-auto space-y-2">
+              {quotations.map((quotation: any) => (
+                <div
+                  key={quotation.id}
+                  className={`p-3 border rounded cursor-pointer transition-colors ${
+                    selectedQuotationId === quotation.id
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-border hover:border-orange-300 hover:bg-orange-50/50'
+                  }`}
+                  onClick={() => {
+                    setSelectedQuotationId(quotation.id);
+                    setShowQuotationDialog(false);
+                  }}
+                  data-testid={`quotation-item-${quotation.id}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{quotation.quotationNumber}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {quotation.customerName || 'Geen klant'}
+                      </div>
+                    </div>
+                    <Badge variant={quotation.status === 'sent' ? 'default' : 'secondary'}>
+                      {quotation.status || 'draft'}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Layout Preview Renderer Component
+function LayoutPreview({ layout, sections, printData }: { layout: any; sections: any[]; printData: any }) {
+  if (!printData) {
+    return (
+      <div className="border border-gray-200 h-full p-8 flex items-center justify-center">
+        <div className="text-center text-muted-foreground">
+          <div className="text-4xl mb-4">⚠️</div>
+          <div className="text-lg font-medium">Geen data beschikbaar</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Convert printData to PrintData type
+  const typedPrintData: PrintData = {
+    quotation: printData.quotation || {},
+    customer: printData.customer || null,
+    project: printData.project || null,
+    company: printData.company || null,
+  };
+
+  return (
+    <div className="p-8 font-['Arial',sans-serif]">
+      {sections.map((section: any) => (
+        <div
+          key={section.id}
+          className="mb-6"
+          style={{
+            backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
+            padding: `${section.config?.style?.padding?.top || 0}px ${section.config?.style?.padding?.right || 0}px ${section.config?.style?.padding?.bottom || 0}px ${section.config?.style?.padding?.left || 0}px`,
+            minHeight: section.config?.dimensions?.height ? `${section.config.dimensions.height}px` : 'auto',
+            borderColor: section.config?.style?.borderColor || 'transparent',
+            borderStyle: section.config?.style?.borderStyle || 'none',
+            borderWidth: section.config?.style?.borderWidth || 0,
+          }}
+        >
+          {/* Render blocks within section */}
+          {section.config?.blocks?.length > 0 ? (
+            <div className="space-y-3">
+              {section.config.blocks.map((block: any, index: number) => {
+                const BlockRenderer = BlockRenderers[block.type];
+                
+                if (BlockRenderer) {
+                  return (
+                    <div key={block.id || index}>
+                      <BlockRenderer block={block} printData={typedPrintData} />
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={block.id || index}>
+                      <UnknownBlockRenderer block={block} printData={typedPrintData} />
+                    </div>
+                  );
+                }
+              })}
+            </div>
+          ) : (
+            <div className="text-sm text-gray-400 italic text-center py-8">
+              Geen blokken in deze sectie - sleep blokken hierheen in de Designer tab
+            </div>
+          )}
+        </div>
+      ))}
+      
+      {sections.length === 0 && (
+        <div className="text-center text-gray-400 italic py-8">
+          Geen secties geconfigureerd - maak secties aan in de Designer tab
+        </div>
+      )}
     </div>
   );
 }
