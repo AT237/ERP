@@ -1032,12 +1032,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
                         {/* Right Side Panel - All Section Controls */}
                         <div className="flex-shrink-0 flex flex-col">
-                          {sections.map((section) => {
+                          {sections.map((section, index) => {
                             const sectionHeight = section.config.dimensions?.height || 200;
                             return (
                               <div 
                                 key={`control-${section.id}`}
-                                className="bg-orange-50 border border-orange-200 px-2 py-2 flex items-start justify-center" 
+                                className="bg-orange-50 border border-orange-200 px-2 py-2 flex flex-col items-center justify-start gap-1" 
                                 style={{ 
                                   height: `${sectionHeight}px`, 
                                   boxSizing: 'border-box' 
@@ -1054,6 +1054,40 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                   title="Sectie verwijderen"
                                 >
                                   ×
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-100"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (index > 0) {
+                                      const newSections = [...sections];
+                                      [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
+                                      setSections(newSections);
+                                    }
+                                  }}
+                                  disabled={index === 0}
+                                  title="Sectie naar boven"
+                                >
+                                  <ArrowUp className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-100"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (index < sections.length - 1) {
+                                      const newSections = [...sections];
+                                      [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+                                      setSections(newSections);
+                                    }
+                                  }}
+                                  disabled={index === sections.length - 1}
+                                  title="Sectie naar beneden"
+                                >
+                                  <ArrowDown className="h-3 w-3" />
                                 </Button>
                               </div>
                             );
