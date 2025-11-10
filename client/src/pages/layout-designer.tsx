@@ -912,10 +912,10 @@ function VisualDesignerView({ layout }: { layout: any }) {
                     const maxLabelWidth = Math.max(
                       ...sections.map(s => {
                         const textLength = s.name.length;
-                        const estimatedWidth = Math.min(Math.ceil(textLength * 0.6) * 16 + 24, 150);
+                        const estimatedWidth = Math.min(Math.ceil(textLength * 0.4) * 16 + 16, 100);
                         return estimatedWidth;
                       }),
-                      60 // minimum width
+                      40 // minimum width
                     );
 
                     return (
@@ -927,7 +927,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                             return (
                               <div 
                                 key={`label-${section.id}`}
-                                className="bg-orange-50 border border-orange-200 px-3 py-2" 
+                                className="bg-orange-50 border border-orange-200 px-1 py-2" 
                                 style={{ 
                                   height: `${sectionHeight}px`, 
                                   boxSizing: 'border-box',
