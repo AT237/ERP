@@ -907,6 +907,11 @@ export type SectionConfig = {
   dimensions?: SectionDimensions;
   style?: SectionStyle;
   blocks?: any[]; // Blocks within this section
+  layoutGrid?: {
+    rows: number; // Number of horizontal divisions
+    gutter: number; // Space between rows in pixels
+    snap: boolean; // Whether to snap blocks to grid
+  };
   metadata?: {
     savedAsTemplate?: boolean; // Is this section saved as a reusable template
     templateId?: string; // Reference to layout_blocks if saved as template

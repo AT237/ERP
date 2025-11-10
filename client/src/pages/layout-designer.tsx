@@ -413,6 +413,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
           dimensions: section.config?.dimensions || { height: 200, unit: 'px' },
           style: section.config?.style || {},
           blocks: section.config?.blocks || [],
+          layoutGrid: section.config?.layoutGrid, // Preserve layout grid settings
           metadata: section.config?.metadata || {},
         },
       }));
@@ -935,6 +936,33 @@ function VisualDesignerView({ layout }: { layout: any }) {
                           onDrop={(e) => handleDropOnSection(e, section.id)}
                           onDragOver={handleDragOver}
                         >
+                          {/* Height Grid Overlay */}
+                          {section.config.layoutGrid && (() => {
+                            const sectionHeight = section.config.dimensions?.height || 200;
+                            const { rows, gutter } = section.config.layoutGrid;
+                            const totalGutterSpace = (rows - 1) * gutter;
+                            const availableHeight = sectionHeight - totalGutterSpace - 32; // -32 for padding (p-4 = 16px * 2)
+                            const rowHeight = availableHeight / rows;
+                            
+                            return Array.from({ length: rows - 1 }).map((_, index) => {
+                              const yPosition = (index + 1) * rowHeight + (index + 1) * gutter;
+                              return (
+                                <div
+                                  key={`grid-line-${index}`}
+                                  className="absolute left-0 right-0 border-t-2 border-orange-400 border-dashed pointer-events-none"
+                                  style={{
+                                    top: `${yPosition}px`,
+                                    opacity: 0.5,
+                                  }}
+                                >
+                                  <div className="absolute -top-3 right-2 text-xs text-orange-600 bg-white px-1 rounded">
+                                    Rij {index + 2}
+                                  </div>
+                                </div>
+                              );
+                            });
+                          })()}
+
                           {(!section.config.blocks || section.config.blocks.length === 0) ? (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                               <div className="text-center text-muted-foreground">
@@ -1698,6 +1726,72 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
             />
             <Label htmlFor="print-even" className="text-xs font-normal">Alleen even pagina's</Label>
           </div>
+        </div>
+      </div>
+
+      {/* Layout Grid */}
+      <div className="space-y-2 border-t pt-4">
+        <Label className="text-xs font-semibold">Hoogte Verdeling</Label>
+        <div className="space-y-3">
+          {/* Enable Grid Toggle */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="grid-enabled"
+              checked={!!section.config.layoutGrid}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  onUpdateProperty(section.id, 'config.layoutGrid', { rows: 3, gutter: 10, snap: true });
+                } else {
+                  onUpdateProperty(section.id, 'config.layoutGrid', undefined);
+                }
+              }}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="grid-enabled" className="text-xs font-normal">Grid inschakelen</Label>
+          </div>
+
+          {/* Grid Settings (only show when enabled) */}
+          {section.config.layoutGrid && (
+            <>
+              <div>
+                <Label htmlFor="grid-rows" className="text-xs">Aantal rijen</Label>
+                <Input
+                  id="grid-rows"
+                  type="number"
+                  min="2"
+                  max="20"
+                  value={section.config.layoutGrid.rows || 3}
+                  onChange={(e) => onUpdateProperty(section.id, 'config.layoutGrid.rows', parseInt(e.target.value) || 3)}
+                  className="h-8 text-xs"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="grid-gutter" className="text-xs">Tussenruimte (px)</Label>
+                <Input
+                  id="grid-gutter"
+                  type="number"
+                  min="0"
+                  max="50"
+                  value={section.config.layoutGrid.gutter || 10}
+                  onChange={(e) => onUpdateProperty(section.id, 'config.layoutGrid.gutter', parseInt(e.target.value) || 10)}
+                  className="h-8 text-xs"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="grid-snap"
+                  checked={section.config.layoutGrid.snap || false}
+                  onChange={(e) => onUpdateProperty(section.id, 'config.layoutGrid.snap', e.target.checked)}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="grid-snap" className="text-xs font-normal">Snap-to-grid</Label>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
