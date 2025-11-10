@@ -1483,7 +1483,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/masterdata/images", async (req, res) => {
     try {
       const { images } = await import("@shared/schema");
-      const imageList = await db.select().from(images).where(db.sql`is_active = true`);
+      const { eq } = await import("drizzle-orm");
+      const imageList = await db.select().from(images).where(eq(images.isActive, true));
       res.json(imageList);
     } catch (error) {
       console.error("Error fetching images:", error);

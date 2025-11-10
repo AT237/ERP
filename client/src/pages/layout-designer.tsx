@@ -1139,6 +1139,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
               <BlockProperties 
                 block={selectedBlock}
                 sectionId={sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id}
+                sections={sections}
                 allowedTables={allowedTables}
                 availableTables={availableTables}
                 onUpdateProperty={updateBlockProperty}
@@ -1560,12 +1561,14 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveU
 function BlockProperties({ 
   block, 
   sectionId,
+  sections,
   allowedTables,
   availableTables,
   onUpdateProperty 
 }: { 
   block: any; 
   sectionId: string;
+  sections: any[];
   allowedTables: string[];
   availableTables: any[];
   onUpdateProperty: (sectionId: string, blockId: string, property: string, value: any) => void;
@@ -1575,9 +1578,21 @@ function BlockProperties({
   };
 
   const selectedTable = availableTables.find(t => t.name === block.config?.tableName);
+  const currentSection = sections.find(s => s.id === sectionId);
+  
+  // Fetch images from master data
+  const { data: images } = useQuery<any[]>({
+    queryKey: ['/api/masterdata/images'],
+  });
 
   return (
     <div className="space-y-4">
+      {/* Section Name */}
+      <div className="pb-2 border-b">
+        <div className="text-xs text-muted-foreground">Sectie</div>
+        <div className="text-sm font-medium">{currentSection?.name || 'Onbekend'}</div>
+      </div>
+      
       <div className="text-sm font-semibold text-orange-600">
         {block.type}
       </div>
@@ -1600,42 +1615,48 @@ function BlockProperties({
       {block.type === "Image" && (
         <div className="space-y-2">
           <div>
-            <Label htmlFor="image-src" className="text-xs">Afbeelding URL</Label>
-            <Input
-              id="image-src"
-              value={block.config?.src || ''}
-              onChange={(e) => updateConfig('src', e.target.value)}
-              className="h-8 text-xs"
-              placeholder="https://..."
-            />
-          </div>
-          <div>
-            <Label htmlFor="image-alt" className="text-xs">Alt tekst</Label>
-            <Input
-              id="image-alt"
-              value={block.config?.alt || ''}
-              onChange={(e) => updateConfig('alt', e.target.value)}
-              className="h-8 text-xs"
-            />
+            <Label htmlFor="image-select" className="text-xs">Afbeelding</Label>
+            <Select 
+              value={block.config?.imageId || ''}
+              onValueChange={(value) => {
+                const selectedImage = images?.find(img => img.id === value);
+                updateConfig('imageId', value);
+                if (selectedImage) {
+                  updateConfig('src', selectedImage.imageData);
+                  updateConfig('alt', selectedImage.name);
+                }
+              }}
+            >
+              <SelectTrigger id="image-select" className="h-8 text-xs">
+                <SelectValue placeholder="Selecteer afbeelding..." />
+              </SelectTrigger>
+              <SelectContent>
+                {images?.map((img: any) => (
+                  <SelectItem key={img.id} value={img.id}>
+                    {img.name} {img.category && `(${img.category})`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label htmlFor="image-width" className="text-xs">Breedte (px)</Label>
+              <Label htmlFor="block-width" className="text-xs">Breedte (px)</Label>
               <Input
-                id="image-width"
+                id="block-width"
                 type="number"
-                value={block.config?.width || 100}
-                onChange={(e) => updateConfig('width', parseInt(e.target.value) || 100)}
+                value={block.size?.width || 200}
+                onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, width: parseInt(e.target.value) || 200 })}
                 className="h-8 text-xs"
               />
             </div>
             <div>
-              <Label htmlFor="image-height" className="text-xs">Hoogte (px)</Label>
+              <Label htmlFor="block-height" className="text-xs">Hoogte (px)</Label>
               <Input
-                id="image-height"
+                id="block-height"
                 type="number"
-                value={block.config?.height || 100}
-                onChange={(e) => updateConfig('height', parseInt(e.target.value) || 100)}
+                value={block.size?.height || 100}
+                onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, height: parseInt(e.target.value) || 100 })}
                 className="h-8 text-xs"
               />
             </div>
