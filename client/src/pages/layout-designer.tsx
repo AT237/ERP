@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer } from '@/components/print/BlockRenderers';
 import type { PrintData } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
@@ -563,6 +563,42 @@ function VisualDesignerView({ layout }: { layout: any }) {
     }
   };
 
+  const handleMoveBlockUp = (sectionId: string, blockId: string) => {
+    const updatedSections = sections.map(s => {
+      if (s.id !== sectionId) return s;
+      
+      const blocks = [...(s.config.blocks || [])];
+      const index = blocks.findIndex((b: any) => b.id === blockId);
+      
+      if (index > 0) {
+        // Swap with previous block
+        [blocks[index - 1], blocks[index]] = [blocks[index], blocks[index - 1]];
+      }
+      
+      return { ...s, config: { ...s.config, blocks } };
+    });
+    
+    setSections(updatedSections);
+  };
+
+  const handleMoveBlockDown = (sectionId: string, blockId: string) => {
+    const updatedSections = sections.map(s => {
+      if (s.id !== sectionId) return s;
+      
+      const blocks = [...(s.config.blocks || [])];
+      const index = blocks.findIndex((b: any) => b.id === blockId);
+      
+      if (index >= 0 && index < blocks.length - 1) {
+        // Swap with next block
+        [blocks[index], blocks[index + 1]] = [blocks[index + 1], blocks[index]];
+      }
+      
+      return { ...s, config: { ...s.config, blocks } };
+    });
+    
+    setSections(updatedSections);
+  };
+
   const handleBlockClick = (block: any) => {
     setSelectedBlock(block);
     setSelectedSection(null); // Deselect section when block is selected
@@ -816,7 +852,6 @@ function VisualDesignerView({ layout }: { layout: any }) {
             {/* Secties Lijst */}
             {sections.length > 0 && (
               <div className="mb-4 space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground px-2 mb-2">SECTIES ({sections.length})</div>
                 {sections.map((section) => (
                   <div
                     key={section.id}
@@ -1013,6 +1048,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                   isSelected={selectedBlock?.id === block.id}
                                   onClick={() => handleBlockClick(block)}
                                   onRemove={() => handleRemoveBlock(section.id, block.id)}
+                                  onMoveUp={() => handleMoveBlockUp(section.id, block.id)}
+                                  onMoveDown={() => handleMoveBlockDown(section.id, block.id)}
                                 />
                               ))
                             )}
@@ -1427,7 +1464,7 @@ function BlockLibraryItem({ name, icon, description, onDragStart }: { name: stri
 }
 
 // Section Block Component (blocks within sections)
-function SectionBlock({ block, sectionId, isSelected, onClick, onRemove }: any) {
+function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveUp, onMoveDown }: any) {
   const getBlockIcon = (type: string) => {
     const icons: { [key: string]: string } = {
       "Text": "📝",
@@ -1469,17 +1506,44 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove }: any) 
           <span className="text-lg">{getBlockIcon(block.type)}</span>
           <span className="text-sm font-medium">{block.type}</span>
         </div>
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-        >
-          ×
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMoveUp();
+            }}
+            title="Verplaats omhoog"
+          >
+            <ArrowUp className="h-3 w-3" />
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMoveDown();
+            }}
+            title="Verplaats omlaag"
+          >
+            <ArrowDown className="h-3 w-3" />
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+            title="Verwijder"
+          >
+            ×
+          </Button>
+        </div>
       </div>
       <div className="text-xs text-muted-foreground">
         {block.type === "Text" && <div className="truncate">{block.config?.text || 'Tekst...'}</div>}
