@@ -22,6 +22,7 @@ import SalesOrders from "@/pages/sales-orders";
 import PackingLists from "@/pages/packing-lists";
 import Reports from "@/pages/reports";
 import TextSnippets from "@/pages/text-snippets";
+import Images from "@/pages/images";
 import LayoutDesigner from "@/pages/layout-designer";
 import Layout from "@/components/layout";
 
@@ -49,14 +50,7 @@ function Router() {
         <Route path="/layout-designer" component={LayoutDesigner} />
         
         {/* Master Data Routes */}
-        <Route path="/master-data/images" component={() => (
-          <div className="p-6">
-            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
-              <h2 className="text-xl font-semibold mb-4">Images</h2>
-              <p className="text-muted-foreground">Images management will be implemented here.</p>
-            </div>
-          </div>
-        )} />
+        <Route path="/master-data/images" component={Images} />
         <Route path="/master-data/uom" component={() => (
           <div className="p-6">
             <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
