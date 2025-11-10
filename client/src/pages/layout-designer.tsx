@@ -927,11 +927,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
                         {/* Center: A4 Document - Single container with all sections */}
                         <div 
-                          className="bg-white border-4 border-black"
+                          className="bg-white shadow-lg"
                           style={{
                             width: '794px',
+                            minHeight: '1123px',
                             boxSizing: 'border-box',
-                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                            border: '1px solid #e5e7eb',
                           }}
                         >
                           {sections.map((section, index) => {
