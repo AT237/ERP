@@ -41,6 +41,7 @@ const PackingListForm = lazy(() => import('@/pages/packing-list-form'));
 const InvoiceForm = lazy(() => import('@/pages/invoice-form'));
 const TextSnippetForm = lazy(() => import('@/pages/text-snippet-form'));
 const ContactPersonForm = lazy(() => import('@/pages/contact-person-form'));
+const ImageForm = lazy(() => import('@/pages/image-form'));
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -1102,6 +1103,25 @@ export default function Layout({ children }: LayoutProps) {
               onSave={() => {
                 // Navigate back to addresses page after saving
                 navigate('/addresses');
+                closeTab(activeTab.id);
+              }} 
+            />
+          </Suspense>
+        );
+      }
+      
+      if (activeTab.formType === 'image') {
+        const imageId = activeTab.id.startsWith('edit-image-') 
+          ? activeTab.id.replace('edit-image-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div></div>}>
+            <ImageForm 
+              imageId={imageId}
+              onSave={() => {
+                // Navigate back to images page after saving
+                navigate('/master-data/images');
                 closeTab(activeTab.id);
               }} 
             />
