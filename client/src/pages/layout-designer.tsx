@@ -885,103 +885,111 @@ function VisualDesignerView({ layout }: { layout: any }) {
                     </div>
                   ) : (
                     sections.map((section) => (
-                      <div
-                        key={section.id}
-                        className={`border-2 transition-all ${
-                          selectedSection?.id === section.id 
-                            ? 'border-orange-500 shadow-lg' 
-                            : 'border-gray-300 border-dashed'
-                        }`}
-                        style={{
-                          backgroundColor: section.config.style?.backgroundColor || '#ffffff',
-                          minHeight: `${section.config.dimensions?.height || 200}px`,
-                        }}
-                        onClick={() => handleSectionClick(section)}
-                      >
-                        {/* Section Header */}
-                        <div className="bg-gray-100 px-3 py-2 flex items-center justify-between border-b">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm">{section.name}</span>
-                            <Badge variant="outline" className="text-xs">{section.sectionType}</Badge>
+                      <div key={section.id} className="mb-6">
+                        {/* Section with Controls Outside A4 */}
+                        <div className="grid grid-cols-[150px_1fr_150px] gap-4 items-start">
+                          {/* Left: Section Name */}
+                          <div className="pt-2">
+                            <div className="flex flex-col gap-1">
+                              <span className="font-medium text-sm text-gray-700">{section.name}</span>
+                              <Badge variant="outline" className="text-xs w-fit">{section.sectionType}</Badge>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-xs">
+
+                          {/* Center: A4 Section Content */}
+                          <div
+                            className={`border-2 transition-all ${
+                              selectedSection?.id === section.id 
+                                ? 'border-orange-500 shadow-lg' 
+                                : 'border-gray-300 border-dashed'
+                            }`}
+                            style={{
+                              backgroundColor: section.config.style?.backgroundColor || '#ffffff',
+                              minHeight: `${section.config.dimensions?.height || 200}px`,
+                            }}
+                            onClick={() => handleSectionClick(section)}
+                          >
+                            {/* Section Content - Drop Zone for Blocks */}
+                            <div
+                              className="relative p-4"
+                              style={{
+                                minHeight: `${section.config.dimensions?.height || 200}px`,
+                                backgroundImage: showGrid ? `
+                                  linear-gradient(to right, #e5e5e5 1px, transparent 1px),
+                                  linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)
+                                ` : 'none',
+                                backgroundSize: showGrid ? `${gridSize}px ${gridSize}px` : 'auto',
+                              }}
+                              onDrop={(e) => handleDropOnSection(e, section.id)}
+                              onDragOver={handleDragOver}
+                            >
+                              {/* Height Grid Overlay */}
+                              {section.config.layoutGrid && (() => {
+                                const sectionHeight = section.config.dimensions?.height || 200;
+                                const { rows, gutter } = section.config.layoutGrid;
+                                const totalGutterSpace = (rows - 1) * gutter;
+                                const availableHeight = sectionHeight - totalGutterSpace - 32;
+                                const rowHeight = availableHeight / rows;
+                                
+                                return Array.from({ length: rows - 1 }).map((_, index) => {
+                                  const yPosition = (index + 1) * rowHeight + (index + 1) * gutter;
+                                  return (
+                                    <div
+                                      key={`grid-line-${index}`}
+                                      className="absolute left-0 right-0 border-t-2 border-orange-400 border-dashed pointer-events-none"
+                                      style={{
+                                        top: `${yPosition}px`,
+                                        opacity: 0.5,
+                                      }}
+                                    >
+                                      <div className="absolute -top-3 right-2 text-xs text-orange-600 bg-white px-1 rounded">
+                                        Rij {index + 2}
+                                      </div>
+                                    </div>
+                                  );
+                                });
+                              })()}
+
+                              {(!section.config.blocks || section.config.blocks.length === 0) ? (
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                  <div className="text-center text-muted-foreground">
+                                    <div className="text-2xl mb-2">📦</div>
+                                    <div className="text-sm">Sleep blokken hierheen</div>
+                                  </div>
+                                </div>
+                              ) : (
+                                section.config.blocks.map((block: any) => (
+                                  <SectionBlock
+                                    key={block.id}
+                                    block={block}
+                                    sectionId={section.id}
+                                    isSelected={selectedBlock?.id === block.id}
+                                    onClick={() => handleBlockClick(block)}
+                                    onRemove={() => handleRemoveBlock(section.id, block.id)}
+                                  />
+                                ))
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right: Section Controls */}
+                          <div className="pt-2 flex flex-col gap-2">
+                            <Badge variant="secondary" className="text-xs w-fit">
                               {section.config.blocks?.length || 0} blokken
                             </Badge>
                             <Button
                               size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-red-500"
+                              variant="outline"
+                              className="h-8 w-8 p-0 text-red-500 hover:bg-red-50"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleRemoveSection(section.id);
                               }}
+                              title="Sectie verwijderen"
                             >
                               ×
                             </Button>
                           </div>
-                        </div>
-
-                        {/* Section Content - Drop Zone for Blocks */}
-                        <div
-                          className="relative p-4"
-                          style={{
-                            minHeight: `${section.config.dimensions?.height || 200}px`,
-                            backgroundImage: showGrid ? `
-                              linear-gradient(to right, #e5e5e5 1px, transparent 1px),
-                              linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)
-                            ` : 'none',
-                            backgroundSize: showGrid ? `${gridSize}px ${gridSize}px` : 'auto',
-                          }}
-                          onDrop={(e) => handleDropOnSection(e, section.id)}
-                          onDragOver={handleDragOver}
-                        >
-                          {/* Height Grid Overlay */}
-                          {section.config.layoutGrid && (() => {
-                            const sectionHeight = section.config.dimensions?.height || 200;
-                            const { rows, gutter } = section.config.layoutGrid;
-                            const totalGutterSpace = (rows - 1) * gutter;
-                            const availableHeight = sectionHeight - totalGutterSpace - 32; // -32 for padding (p-4 = 16px * 2)
-                            const rowHeight = availableHeight / rows;
-                            
-                            return Array.from({ length: rows - 1 }).map((_, index) => {
-                              const yPosition = (index + 1) * rowHeight + (index + 1) * gutter;
-                              return (
-                                <div
-                                  key={`grid-line-${index}`}
-                                  className="absolute left-0 right-0 border-t-2 border-orange-400 border-dashed pointer-events-none"
-                                  style={{
-                                    top: `${yPosition}px`,
-                                    opacity: 0.5,
-                                  }}
-                                >
-                                  <div className="absolute -top-3 right-2 text-xs text-orange-600 bg-white px-1 rounded">
-                                    Rij {index + 2}
-                                  </div>
-                                </div>
-                              );
-                            });
-                          })()}
-
-                          {(!section.config.blocks || section.config.blocks.length === 0) ? (
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <div className="text-center text-muted-foreground">
-                                <div className="text-2xl mb-2">📦</div>
-                                <div className="text-sm">Sleep blokken hierheen</div>
-                              </div>
-                            </div>
-                          ) : (
-                            section.config.blocks.map((block: any) => (
-                              <SectionBlock
-                                key={block.id}
-                                block={block}
-                                sectionId={section.id}
-                                isSelected={selectedBlock?.id === block.id}
-                                onClick={() => handleBlockClick(block)}
-                                onRemove={() => handleRemoveBlock(section.id, block.id)}
-                              />
-                            ))
-                          )}
                         </div>
                       </div>
                     ))
