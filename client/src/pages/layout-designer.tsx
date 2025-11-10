@@ -865,64 +865,51 @@ function VisualDesignerView({ layout }: { layout: any }) {
               }}
             >
               {/* Layout Container with Side Labels */}
-              <div className="flex gap-0">
-                {/* Left Side Panel - Section Labels */}
-                <div className="w-32 flex-shrink-0">
-                  {sections.length === 0 ? (
-                    <div className="text-xs text-gray-400 text-center pt-20">
-                      Geen secties
-                    </div>
-                  ) : (
-                    sections.map((section) => {
-                      const sectionHeight = section.config.dimensions?.height || 200;
-                      return (
-                        <div
-                          key={`label-${section.id}`}
-                          className="bg-orange-50 border border-orange-200 px-3 py-2 flex items-center justify-center"
-                          style={{
-                            height: `${sectionHeight}px`,
-                            boxSizing: 'border-box',
-                          }}
-                        >
-                          <span className="font-medium text-sm text-gray-700 writing-mode-vertical transform -rotate-180" style={{ writingMode: 'vertical-rl' }}>
-                            {section.name}
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-
-                {/* A4 Page Container */}
-                <div 
-                  className="bg-white shadow-2xl"
-                  style={{
-                    width: '794px',
-                    minHeight: '1123px',
-                  }}
-                >
-                  {sections.length === 0 ? (
-                    <div className="flex items-center justify-center" style={{ minHeight: '1123px' }}>
-                      <div className="text-center text-muted-foreground">
-                        <div className="text-4xl mb-4">📄</div>
-                        <div className="text-lg font-medium">Geen Secties</div>
-                        <div className="text-sm mt-2">Maak een nieuwe sectie om te beginnen</div>
+              <div className="flex gap-0 flex-col">
+                {sections.length === 0 ? (
+                  <div className="flex gap-0">
+                    <div className="w-32 flex-shrink-0">
+                      <div className="text-xs text-gray-400 text-center pt-20">
+                        Geen secties
                       </div>
                     </div>
-                  ) : (
-                    <div className="space-y-0">
-                      {sections.map((section) => (
-                        <div
-                          key={section.id}
-                          className={`border-2 transition-all ${
+                    <div className="bg-white shadow-2xl" style={{ width: '794px', minHeight: '1123px' }}>
+                      <div className="flex items-center justify-center" style={{ minHeight: '1123px' }}>
+                        <div className="text-center text-muted-foreground">
+                          <div className="text-4xl mb-4">📄</div>
+                          <div className="text-lg font-medium">Geen Secties</div>
+                          <div className="text-sm mt-2">Maak een nieuwe sectie om te beginnen</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="w-12 flex-shrink-0"></div>
+                  </div>
+                ) : (
+                  sections.map((section) => {
+                    const sectionHeight = section.config.dimensions?.height || 200;
+                    return (
+                      <div key={section.id} className="flex gap-0 items-stretch">
+                        {/* Left Side Panel - Section Label */}
+                        <div className="w-32 flex-shrink-0 flex">
+                          <div className="bg-orange-50 border border-orange-200 px-3 py-2 flex items-center justify-center flex-1" style={{ minHeight: `${sectionHeight}px`, boxSizing: 'border-box' }}>
+                            <span className="font-medium text-sm text-gray-700 writing-mode-vertical transform -rotate-180" style={{ writingMode: 'vertical-rl' }}>
+                              {section.name}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Center: A4 Section Content */}
+                        <div 
+                          className={`border-2 transition-all flex-1 ${
                             selectedSection?.id === section.id 
                               ? 'border-orange-500 shadow-lg' 
                               : 'border-gray-300 border-dashed'
                           }`}
                           style={{
                             backgroundColor: section.config.style?.backgroundColor || '#ffffff',
-                            height: `${section.config.dimensions?.height || 200}px`,
+                            minHeight: `${sectionHeight}px`,
                             boxSizing: 'border-box',
+                            width: '794px',
                           }}
                           onClick={() => handleSectionClick(section)}
                         >
@@ -941,10 +928,10 @@ function VisualDesignerView({ layout }: { layout: any }) {
                           >
                             {/* Height Grid Overlay */}
                             {section.config.layoutGrid && (() => {
-                              const sectionHeight = section.config.dimensions?.height || 200;
+                              const gridSectionHeight = section.config.dimensions?.height || 200;
                               const { rows, gutter } = section.config.layoutGrid;
                               const totalGutterSpace = (rows - 1) * gutter;
-                              const availableHeight = sectionHeight - totalGutterSpace - 32;
+                              const availableHeight = gridSectionHeight - totalGutterSpace - 32;
                               const rowHeight = availableHeight / rows;
                               
                               return Array.from({ length: rows - 1 }).map((_, index) => {
@@ -987,40 +974,28 @@ function VisualDesignerView({ layout }: { layout: any }) {
                             )}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
 
-                {/* Right Side Panel - Section Controls */}
-                <div className="w-12 flex-shrink-0">
-                  {sections.length > 0 && sections.map((section) => {
-                    const sectionHeight = section.config.dimensions?.height || 200;
-                    return (
-                      <div
-                        key={`controls-${section.id}`}
-                        className="bg-orange-50 border border-orange-200 px-2 py-2 flex items-start justify-center"
-                        style={{
-                          height: `${sectionHeight}px`,
-                          boxSizing: 'border-box',
-                        }}
-                      >
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0 text-red-500 hover:bg-red-100"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveSection(section.id);
-                          }}
-                          title="Sectie verwijderen"
-                        >
-                          ×
-                        </Button>
+                        {/* Right Side Panel - Section Controls */}
+                        <div className="w-12 flex-shrink-0 flex">
+                          <div className="bg-orange-50 border border-orange-200 px-2 py-2 flex items-start justify-center flex-1" style={{ minHeight: `${sectionHeight}px`, boxSizing: 'border-box' }}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-red-500 hover:bg-red-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSection(section.id);
+                              }}
+                              title="Sectie verwijderen"
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     );
-                  })}
-                </div>
+                  })
+                )}
               </div>
               
               {/* Page Info */}
