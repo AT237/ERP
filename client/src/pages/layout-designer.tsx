@@ -1476,7 +1476,19 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveU
           <span className="text-lg">{getBlockIcon(block.type)}</span>
           <span className="text-sm font-medium">{block.type}</span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-col gap-0.5">
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+            title="Verwijder"
+          >
+            ×
+          </Button>
           <Button 
             size="sm" 
             variant="ghost" 
@@ -1500,18 +1512,6 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveU
             title="Verplaats omlaag"
           >
             <ArrowDown className="h-3 w-3" />
-          </Button>
-          <Button 
-            size="sm" 
-            variant="ghost" 
-            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-            title="Verwijder"
-          >
-            ×
           </Button>
         </div>
       </div>
