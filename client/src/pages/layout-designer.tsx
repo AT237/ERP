@@ -375,7 +375,10 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [selectedSection, setSelectedSection] = useState<any>(null);
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
   const [draggedBlockType, setDraggedBlockType] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(0.5);
+  const [zoom, setZoom] = useState(() => {
+    const saved = localStorage.getItem('layout-designer-zoom');
+    return saved ? parseFloat(saved) : 0.5;
+  });
   const [leftPanelTab, setLeftPanelTab] = useState<'sections' | 'blocks'>('sections');
   const [showNewSectionDialog, setShowNewSectionDialog] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
@@ -423,6 +426,11 @@ function VisualDesignerView({ layout }: { layout: any }) {
       setSections(loadedSections.sort((a, b) => a.position - b.position));
     }
   }, [existingSections]);
+
+  // Save zoom setting to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('layout-designer-zoom', zoom.toString());
+  }, [zoom]);
 
   if (!layout) {
     return (
