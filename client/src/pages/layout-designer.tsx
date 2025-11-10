@@ -868,7 +868,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
               <div className="flex gap-0 flex-col">
                 {sections.length === 0 ? (
                   <div className="flex gap-0">
-                    <div className="w-32 flex-shrink-0">
+                    <div className="flex-shrink-0">
                       <div className="text-xs text-gray-400 text-center pt-20">
                         Geen secties
                       </div>
@@ -882,7 +882,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                         </div>
                       </div>
                     </div>
-                    <div className="w-12 flex-shrink-0"></div>
+                    <div className="flex-shrink-0"></div>
                   </div>
                 ) : (
                   sections.map((section) => {
@@ -890,9 +890,9 @@ function VisualDesignerView({ layout }: { layout: any }) {
                     return (
                       <div key={section.id} className="flex gap-0 items-stretch">
                         {/* Left Side Panel - Section Label */}
-                        <div className="w-32 flex-shrink-0 flex">
+                        <div className="flex-shrink-0 flex">
                           <div className="bg-orange-50 border border-orange-200 px-3 py-2 flex items-center justify-center flex-1" style={{ minHeight: `${sectionHeight}px`, boxSizing: 'border-box' }}>
-                            <span className="font-medium text-sm text-gray-700 writing-mode-vertical transform -rotate-180" style={{ writingMode: 'vertical-rl' }}>
+                            <span className="font-medium text-sm text-gray-700" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
                               {section.name}
                             </span>
                           </div>
@@ -976,7 +976,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                         </div>
 
                         {/* Right Side Panel - Section Controls */}
-                        <div className="w-12 flex-shrink-0 flex">
+                        <div className="flex-shrink-0 flex">
                           <div className="bg-orange-50 border border-orange-200 px-2 py-2 flex items-start justify-center flex-1" style={{ minHeight: `${sectionHeight}px`, boxSizing: 'border-box' }}>
                             <Button
                               size="sm"
