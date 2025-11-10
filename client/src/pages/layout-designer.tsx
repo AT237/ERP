@@ -885,46 +885,56 @@ function VisualDesignerView({ layout }: { layout: any }) {
                     <div className="flex-shrink-0"></div>
                   </div>
                 ) : (
-                  sections.map((section) => {
-                    const sectionHeight = section.config.dimensions?.height || 200;
-                    return (
-                      <div key={section.id} className="flex gap-0">
-                        {/* Left Side Panel - Section Label */}
-                        <div className="flex-shrink-0">
-                          <div 
-                            className="bg-orange-50 border border-orange-200 px-3 py-2" 
-                            style={{ 
-                              height: `${sectionHeight}px`, 
-                              boxSizing: 'border-box',
-                              writingMode: 'vertical-rl',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              maxWidth: '150px',
-                              overflow: 'hidden'
-                            }}
-                          >
-                            <span className="font-medium text-sm text-gray-700" style={{ transform: 'rotate(180deg)' }}>
-                              {section.name}
-                            </span>
-                          </div>
-                        </div>
+                  (() => {
+                    // Calculate max label width needed
+                    const maxLabelWidth = Math.max(
+                      ...sections.map(s => {
+                        const textLength = s.name.length;
+                        const estimatedWidth = Math.min(Math.ceil(textLength * 0.6) * 16 + 24, 150);
+                        return estimatedWidth;
+                      }),
+                      60 // minimum width
+                    );
 
-                        {/* Center: A4 Section Content */}
-                        <div 
-                          className={`border-2 transition-all flex-1 ${
-                            selectedSection?.id === section.id 
-                              ? 'border-orange-500 shadow-lg' 
-                              : 'border-gray-300 border-dashed'
-                          }`}
-                          style={{
-                            backgroundColor: section.config.style?.backgroundColor || '#ffffff',
-                            minHeight: `${sectionHeight}px`,
-                            boxSizing: 'border-box',
-                            width: '794px',
-                          }}
-                          onClick={() => handleSectionClick(section)}
-                        >
+                    return sections.map((section) => {
+                      const sectionHeight = section.config.dimensions?.height || 200;
+                      return (
+                        <div key={section.id} className="flex gap-0">
+                          {/* Left Side Panel - Section Label */}
+                          <div className="flex-shrink-0" style={{ width: `${maxLabelWidth}px` }}>
+                            <div 
+                              className="bg-orange-50 border border-orange-200 px-3 py-2" 
+                              style={{ 
+                                height: `${sectionHeight}px`, 
+                                boxSizing: 'border-box',
+                                writingMode: 'vertical-rl',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                overflow: 'hidden',
+                                width: '100%'
+                              }}
+                            >
+                              <span className="font-medium text-sm text-gray-700" style={{ transform: 'rotate(180deg)' }}>
+                                {section.name}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Center: A4 Section Content */}
+                          <div 
+                            className={`border-2 transition-all flex-1 ${
+                              selectedSection?.id === section.id 
+                                ? 'border-orange-500 shadow-lg' 
+                                : 'border-gray-300 border-dashed'
+                            }`}
+                            style={{
+                              backgroundColor: section.config.style?.backgroundColor || '#ffffff',
+                              minHeight: `${sectionHeight}px`,
+                              boxSizing: 'border-box',
+                            }}
+                            onClick={() => handleSectionClick(section)}
+                          >
                           <div
                             className="relative p-4 h-full"
                             style={{
@@ -1012,8 +1022,9 @@ function VisualDesignerView({ layout }: { layout: any }) {
                         </div>
                       </div>
                     );
-                  })
-                )}
+                  });
+                })()
+              )}
               </div>
               
               {/* Page Info */}
