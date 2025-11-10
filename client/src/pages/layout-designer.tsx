@@ -848,6 +848,20 @@ function VisualDesignerView({ layout }: { layout: any }) {
             <CardDescription className="text-xs">Sleep naar een sectie</CardDescription>
           </CardHeader>
           <CardContent className="space-y-1">
+            {/* Add Section Button */}
+            <Button 
+              className="w-full justify-start mb-3" 
+              size="sm" 
+              variant="outline"
+              onClick={() => setShowNewSectionDialog(true)}
+              data-testid="button-add-section"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Section
+            </Button>
+
+            <div className="border-t mb-3"></div>
+
             {/* Blokken Lijst */}
             <div className="text-xs font-semibold text-muted-foreground px-2 mb-2">BLOKKEN</div>
             <BlockLibraryItem name="Text" icon="📝" onDragStart={handleDragStart} description="Vrije tekst met opmaak" />
