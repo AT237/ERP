@@ -888,16 +888,20 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   sections.map((section) => {
                     const sectionHeight = section.config.dimensions?.height || 200;
                     return (
-                      <div key={section.id} className="flex gap-0 items-stretch">
+                      <div key={section.id} className="flex gap-0">
                         {/* Left Side Panel - Section Label */}
-                        <div className="flex-shrink-0 flex">
+                        <div className="flex-shrink-0">
                           <div 
-                            className="bg-orange-50 border border-orange-200 px-3 py-2 flex items-center justify-center flex-1" 
+                            className="bg-orange-50 border border-orange-200 px-3 py-2" 
                             style={{ 
-                              minHeight: `${sectionHeight}px`, 
+                              height: `${sectionHeight}px`, 
                               boxSizing: 'border-box',
                               writingMode: 'vertical-rl',
-                              maxWidth: '150px'
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              maxWidth: '150px',
+                              overflow: 'hidden'
                             }}
                           >
                             <span className="font-medium text-sm text-gray-700" style={{ transform: 'rotate(180deg)' }}>
@@ -984,8 +988,14 @@ function VisualDesignerView({ layout }: { layout: any }) {
                         </div>
 
                         {/* Right Side Panel - Section Controls */}
-                        <div className="flex-shrink-0 flex">
-                          <div className="bg-orange-50 border border-orange-200 px-2 py-2 flex items-start justify-center flex-1" style={{ minHeight: `${sectionHeight}px`, boxSizing: 'border-box' }}>
+                        <div className="flex-shrink-0">
+                          <div 
+                            className="bg-orange-50 border border-orange-200 px-2 py-2 flex items-start justify-center" 
+                            style={{ 
+                              height: `${sectionHeight}px`, 
+                              boxSizing: 'border-box' 
+                            }}
+                          >
                             <Button
                               size="sm"
                               variant="ghost"
