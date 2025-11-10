@@ -865,7 +865,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
               }}
             >
               {/* Layout Container with Side Labels */}
-              <div className="flex gap-4">
+              <div className="flex gap-0">
                 {/* Left Side Panel - Section Labels */}
                 <div className="w-32 flex-shrink-0">
                   {sections.length === 0 ? (
@@ -876,15 +876,14 @@ function VisualDesignerView({ layout }: { layout: any }) {
                     sections.map((section) => (
                       <div
                         key={`label-${section.id}`}
-                        className="mb-6 flex flex-col gap-1"
+                        className="bg-orange-50 px-3 py-2 flex items-center justify-center"
                         style={{
                           minHeight: `${section.config.dimensions?.height || 200}px`,
-                          justifyContent: 'flex-start',
-                          paddingTop: '8px',
                         }}
                       >
-                        <span className="font-medium text-sm text-gray-700">{section.name}</span>
-                        <Badge variant="outline" className="text-xs w-fit">{section.sectionType}</Badge>
+                        <span className="font-medium text-sm text-gray-700 writing-mode-vertical transform -rotate-180" style={{ writingMode: 'vertical-rl' }}>
+                          {section.name}
+                        </span>
                       </div>
                     ))
                   )}
@@ -989,23 +988,19 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 </div>
 
                 {/* Right Side Panel - Section Controls */}
-                <div className="w-24 flex-shrink-0">
+                <div className="w-12 flex-shrink-0">
                   {sections.length > 0 && sections.map((section) => (
                     <div
                       key={`controls-${section.id}`}
-                      className="mb-6 flex flex-col gap-2"
+                      className="bg-orange-50 px-2 py-2 flex items-start justify-center"
                       style={{
                         minHeight: `${section.config.dimensions?.height || 200}px`,
-                        paddingTop: '8px',
                       }}
                     >
-                      <Badge variant="secondary" className="text-xs w-fit">
-                        {section.config.blocks?.length || 0} blokken
-                      </Badge>
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="h-8 w-8 p-0 text-red-500 hover:bg-red-50"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-red-500 hover:bg-red-100"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRemoveSection(section.id);
