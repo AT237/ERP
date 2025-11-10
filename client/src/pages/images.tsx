@@ -7,15 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 
-// Image categories
-const IMAGE_CATEGORIES = [
-  { value: "logo", label: "Logo" },
-  { value: "header", label: "Header" },
-  { value: "footer", label: "Footer" },
-  { value: "product", label: "Product" },
-  { value: "general", label: "General" },
-];
-
 export default function Images() {
   const { toast } = useToast();
 
@@ -53,19 +44,6 @@ export default function Images() {
       width: 200,
       filterable: true,
       sortable: true,
-    },
-    {
-      key: 'category',
-      label: 'Category',
-      visible: true,
-      width: 130,
-      filterable: true,
-      sortable: true,
-      renderCell: (value: string | null) => (
-        <Badge variant="outline">
-          {IMAGE_CATEGORIES.find(cat => cat.value === value)?.label || value || 'General'}
-        </Badge>
-      )
     },
     {
       key: 'description',
@@ -127,7 +105,7 @@ export default function Images() {
     const event = new CustomEvent('open-form-tab', {
       detail: {
         id: 'new-image',
-        name: 'New Image',
+        name: 'Image',
         formType: 'image'
       }
     });
@@ -145,7 +123,7 @@ export default function Images() {
     const event = new CustomEvent('open-form-tab', {
       detail: {
         id: `edit-image-${image.id}`,
-        name: `${image.name}`,
+        name: 'Image',
         formType: 'image',
         parentId: image.id
       }

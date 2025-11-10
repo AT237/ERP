@@ -7,23 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-// Image categories
-const IMAGE_CATEGORIES = [
-  { value: "logo", label: "Logo" },
-  { value: "header", label: "Header" },
-  { value: "footer", label: "Footer" },
-  { value: "product", label: "Product" },
-  { value: "general", label: "General" },
-];
 
 interface ImageFormProps {
   imageId?: string;
@@ -35,7 +19,6 @@ export default function ImageForm({ imageId, onSave }: ImageFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    category: "general",
     imageData: "",
   });
 
@@ -55,7 +38,6 @@ export default function ImageForm({ imageId, onSave }: ImageFormProps) {
       setFormData({
         name: existingImage.name || "",
         description: existingImage.description || "",
-        category: existingImage.category || "general",
         imageData: existingImage.imageData || "",
       });
     }
@@ -123,25 +105,6 @@ export default function ImageForm({ imageId, onSave }: ImageFormProps) {
                   required
                   data-testid="input-image-name"
                 />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="category">Category</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
-                >
-                  <SelectTrigger id="category" data-testid="select-image-category">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {IMAGE_CATEGORIES.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="grid gap-2">
