@@ -49,6 +49,14 @@ function Router() {
         <Route path="/layout-designer" component={LayoutDesigner} />
         
         {/* Master Data Routes */}
+        <Route path="/master-data/images" component={() => (
+          <div className="p-6">
+            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
+              <h2 className="text-xl font-semibold mb-4">Images</h2>
+              <p className="text-muted-foreground">Images management will be implemented here.</p>
+            </div>
+          </div>
+        )} />
         <Route path="/master-data/uom" component={() => (
           <div className="p-6">
             <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">

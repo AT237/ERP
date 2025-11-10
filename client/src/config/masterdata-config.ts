@@ -5,7 +5,8 @@ import {
   insertIncotermSchema,
   insertVatRateSchema,
   insertCitySchema,
-  insertStatusSchema
+  insertStatusSchema,
+  insertImageSchema
 } from "@shared/schema";
 
 export interface MasterDataField {
@@ -213,6 +214,34 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
       { key: "name", label: "Name" },
       { key: "category", label: "Category" },
       { key: "color", label: "Color" }
+    ]
+  },
+
+  'images': {
+    title: "Images",
+    singularTitle: "Image",
+    endpoint: "images",
+    schema: insertImageSchema,
+    fields: [
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "description", label: "Description", type: "textarea" },
+      { 
+        name: "category", 
+        label: "Category", 
+        type: "select",
+        options: [
+          { value: "logo", label: "Logo" },
+          { value: "header", label: "Header" },
+          { value: "footer", label: "Footer" },
+          { value: "product", label: "Product" },
+          { value: "general", label: "General" }
+        ]
+      }
+    ],
+    columns: [
+      { key: "name", label: "Name" },
+      { key: "category", label: "Category" },
+      { key: "description", label: "Description" }
     ]
   }
 };
