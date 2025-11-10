@@ -875,8 +875,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   ) : (
                     sections.map((section) => {
                       const sectionHeight = section.config.dimensions?.height || 200;
-                      // Add 4px for border-2 (2px top + 2px bottom)
-                      const totalHeight = sectionHeight + 4;
+                      // Add 32px for p-4 padding (16px top + 16px bottom) + 4px for border-2 (2px top + 2px bottom)
+                      const totalHeight = sectionHeight + 36;
                       return (
                         <div
                           key={`label-${section.id}`}
@@ -996,8 +996,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 <div className="w-12 flex-shrink-0">
                   {sections.length > 0 && sections.map((section) => {
                     const sectionHeight = section.config.dimensions?.height || 200;
-                    // Add 4px for border-2 (2px top + 2px bottom)
-                    const totalHeight = sectionHeight + 4;
+                    // Add 32px for p-4 padding (16px top + 16px bottom) + 4px for border-2 (2px top + 2px bottom)
+                    const totalHeight = sectionHeight + 36;
                     return (
                       <div
                         key={`controls-${section.id}`}
