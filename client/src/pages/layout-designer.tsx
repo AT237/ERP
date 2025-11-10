@@ -926,10 +926,11 @@ function VisualDesignerView({ layout }: { layout: any }) {
                             className={`border-2 transition-all bg-white shadow-lg ${
                               selectedSection?.id === section.id 
                                 ? 'border-orange-500' 
-                                : 'border-gray-400'
+                                : 'border-gray-600'
                             }`}
                             style={{
                               backgroundColor: section.config.style?.backgroundColor || '#ffffff',
+                              height: `${sectionHeight}px`,
                               minHeight: `${sectionHeight}px`,
                               boxSizing: 'border-box',
                               width: '794px',
