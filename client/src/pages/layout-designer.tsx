@@ -33,6 +33,7 @@ export default function LayoutDesigner() {
   const [showNewLayoutDialog, setShowNewLayoutDialog] = useState(false);
   const [newLayoutName, setNewLayoutName] = useState('');
   const [newLayoutOrientation, setNewLayoutOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const [activeTab, setActiveTab] = useState('layouts');
   const { toast } = useToast();
   
   // Load existing layouts
@@ -104,60 +105,62 @@ export default function LayoutDesigner() {
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="border-b border-border bg-white">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-orange-600">Layout Designer</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Create and customize document templates for quotations, invoices, and packing lists
-              </p>
+      {/* Header - only show on Layout Manager tab */}
+      {activeTab !== 'designer' && (
+        <div className="border-b border-border bg-white">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-2xl font-bold text-orange-600">Layout Designer</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Create and customize document templates for quotations, invoices, and packing lists
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowNewLayoutDialog(true)}
+                  data-testid="button-new-layout"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Layout
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setShowNewLayoutDialog(true)}
-                data-testid="button-new-layout"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                New Layout
-              </Button>
-            </div>
-          </div>
 
-          {/* Document Type Selector */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-foreground">Document Type:</label>
-            <Select value={documentType} onValueChange={(value: any) => setDocumentType(value)}>
-              <SelectTrigger className="w-[200px]" data-testid="select-document-type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(documentTypeLabels).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center gap-2">
-                      {(() => {
-                        const Icon = documentTypeIcons[key as keyof typeof documentTypeIcons];
-                        return <Icon className="h-4 w-4" />;
-                      })()}
-                      {label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Badge variant="outline" className="ml-2">
-              {filteredLayouts.length} {filteredLayouts.length === 1 ? 'layout' : 'layouts'}
-            </Badge>
+            {/* Document Type Selector */}
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-foreground">Document Type:</label>
+              <Select value={documentType} onValueChange={(value: any) => setDocumentType(value)}>
+                <SelectTrigger className="w-[200px]" data-testid="select-document-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(documentTypeLabels).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const Icon = documentTypeIcons[key as keyof typeof documentTypeIcons];
+                          return <Icon className="h-4 w-4" />;
+                        })()}
+                        {label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Badge variant="outline" className="ml-2">
+                {filteredLayouts.length} {filteredLayouts.length === 1 ? 'layout' : 'layouts'}
+              </Badge>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
-        <Tabs defaultValue="layouts" className="h-full flex flex-col">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <div className="border-b border-border px-6 bg-white">
             <TabsList className="bg-transparent h-12">
               <TabsTrigger value="layouts" className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600">
@@ -172,7 +175,7 @@ export default function LayoutDesigner() {
             </TabsList>
           </div>
 
-          <div className="flex-1 overflow-auto p-6">
+          <div className={`flex-1 overflow-auto ${activeTab === 'designer' ? 'p-2' : 'p-6'}`}>
             <TabsContent value="layouts" className="h-full m-0">
               <LayoutManagerView
                 layouts={filteredLayouts}
