@@ -891,8 +891,16 @@ function VisualDesignerView({ layout }: { layout: any }) {
                       <div key={section.id} className="flex gap-0 items-stretch">
                         {/* Left Side Panel - Section Label */}
                         <div className="flex-shrink-0 flex">
-                          <div className="bg-orange-50 border border-orange-200 px-3 py-2 flex items-center justify-center flex-1" style={{ minHeight: `${sectionHeight}px`, boxSizing: 'border-box' }}>
-                            <span className="font-medium text-sm text-gray-700" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          <div 
+                            className="bg-orange-50 border border-orange-200 px-3 py-2 flex items-center justify-center flex-1" 
+                            style={{ 
+                              minHeight: `${sectionHeight}px`, 
+                              boxSizing: 'border-box',
+                              writingMode: 'vertical-rl',
+                              maxWidth: '150px'
+                            }}
+                          >
+                            <span className="font-medium text-sm text-gray-700" style={{ transform: 'rotate(180deg)' }}>
                               {section.name}
                             </span>
                           </div>
