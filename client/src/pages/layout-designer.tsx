@@ -930,14 +930,15 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
                         {/* Center: A4 Document - Single container with all sections */}
                         <div 
-                          className="bg-white shadow-lg"
+                          className="shadow-lg"
                           style={{
                             width: '794px',
-                            minHeight: '1123px',
-                            boxSizing: 'border-box',
-                            border: '1px solid #e5e7eb',
+                            height: '1123px',
+                            border: '2px solid #666',
+                            overflow: 'hidden',
                           }}
                         >
+                          <div className="bg-white h-full overflow-y-auto" style={{ boxSizing: 'border-box' }}>
                           {sections.map((section, index) => {
                             const sectionHeight = section.config.dimensions?.height || 200;
                             return (
@@ -1019,6 +1020,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                               </div>
                             );
                           })}
+                          </div>
                         </div>
 
                         {/* Right Side Panel - All Section Controls */}
