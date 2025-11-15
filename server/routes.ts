@@ -1505,6 +1505,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Master Data individual item routes (GET, PUT, DELETE by ID)
+  // Images individual routes
+  app.get("/api/masterdata/images/:id", async (req, res) => {
+    try {
+      const { images } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const [image] = await db.select().from(images).where(eq(images.id, req.params.id));
+      if (!image) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      res.json(image);
+    } catch (error) {
+      console.error("Error fetching image:", error);
+      res.status(500).json({ message: "Failed to fetch image" });
+    }
+  });
+
+  app.put("/api/masterdata/images/:id", async (req, res) => {
+    try {
+      const imageData = insertImageSchema.partial().parse(req.body);
+      const { images } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const [image] = await db.update(images)
+        .set(imageData)
+        .where(eq(images.id, req.params.id))
+        .returning();
+      if (!image) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      res.json(image);
+    } catch (error) {
+      console.error("Error updating image:", error);
+      res.status(400).json({ message: "Failed to update image" });
+    }
+  });
+
+  app.patch("/api/masterdata/images/:id", async (req, res) => {
+    try {
+      const imageData = insertImageSchema.partial().parse(req.body);
+      const { images } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const [image] = await db.update(images)
+        .set(imageData)
+        .where(eq(images.id, req.params.id))
+        .returning();
+      if (!image) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      res.json(image);
+    } catch (error) {
+      console.error("Error updating image:", error);
+      res.status(400).json({ message: "Failed to update image" });
+    }
+  });
+
+  app.delete("/api/masterdata/images/:id", async (req, res) => {
+    try {
+      const { images } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      await db.update(images)
+        .set({ isActive: false })
+        .where(eq(images.id, req.params.id));
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      res.status(500).json({ message: "Failed to delete image" });
+    }
+  });
+
   // Units of Measure individual routes
   app.get("/api/masterdata/units-of-measure/:id", async (req, res) => {
     try {
