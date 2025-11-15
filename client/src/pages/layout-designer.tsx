@@ -1633,7 +1633,7 @@ function BlockProperties({
               <SelectContent>
                 {images?.map((img: any) => (
                   <SelectItem key={img.id} value={img.id}>
-                    {img.name} {img.category && `(${img.category})`}
+                    {img.name}
                   </SelectItem>
                 ))}
               </SelectContent>
