@@ -662,6 +662,15 @@ function VisualDesignerView({ layout }: { layout: any }) {
     });
     
     setSections(updatedSections);
+    
+    // Update selectedBlock if it's the one being modified
+    if (selectedBlock?.id === blockId) {
+      const updatedSection = updatedSections.find(s => s.id === sectionId);
+      const updatedBlock = updatedSection?.config.blocks?.find((b: any) => b.id === blockId);
+      if (updatedBlock) {
+        setSelectedBlock(updatedBlock);
+      }
+    }
   };
 
   const handleRemoveSection = (sectionId: string) => {
