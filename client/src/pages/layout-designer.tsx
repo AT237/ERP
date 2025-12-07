@@ -1138,7 +1138,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
               
               {/* Page Info */}
               <div className="text-center mt-4 text-xs text-gray-500">
-                A4 Formaat: 210 × 297 mm (794 × 1123 px @ 96 DPI)
+                A4 Format: 210 × 297 mm
               </div>
             </div>
           </div>
@@ -1810,12 +1810,13 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
 
       {/* Height */}
       <div>
-        <Label htmlFor="section-height" className="text-xs">Height (px)</Label>
+        <Label htmlFor="section-height" className="text-xs">Height (mm)</Label>
         <Input
           id="section-height"
           type="number"
-          value={section.config.dimensions?.height || 200}
-          onChange={(e) => onUpdateProperty(section.id, 'config.dimensions.height', parseInt(e.target.value) || 200)}
+          step="0.5"
+          value={pxToMm(section.config.dimensions?.height || 200)}
+          onChange={(e) => onUpdateProperty(section.id, 'config.dimensions.height', mmToPx(parseFloat(e.target.value) || 53))}
           className="h-8 text-xs"
         />
       </div>
@@ -1955,14 +1956,15 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               </div>
 
               <div>
-                <Label htmlFor="grid-gutter" className="text-xs">Gutter (px)</Label>
+                <Label htmlFor="grid-gutter" className="text-xs">Gutter (mm)</Label>
                 <Input
                   id="grid-gutter"
                   type="number"
+                  step="0.5"
                   min="0"
-                  max="50"
-                  value={section.config.layoutGrid.gutter || 10}
-                  onChange={(e) => onUpdateProperty(section.id, 'config.layoutGrid.gutter', parseInt(e.target.value) || 10)}
+                  max="15"
+                  value={pxToMm(section.config.layoutGrid.gutter || 10)}
+                  onChange={(e) => onUpdateProperty(section.id, 'config.layoutGrid.gutter', mmToPx(parseFloat(e.target.value) || 2.5))}
                   className="h-8 text-xs"
                 />
               </div>
