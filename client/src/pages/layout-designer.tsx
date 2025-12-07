@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Building2 } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2 } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer } from '@/components/print/BlockRenderers';
 import type { PrintData } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
@@ -704,10 +704,19 @@ function VisualDesignerView({ layout }: { layout: any }) {
       <div className="border-b border-border bg-white px-4 py-2">
         <div className="flex items-center gap-2 flex-wrap">
           {/* Save */}
-          <Button size="sm" variant="ghost" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
-            <Save className="h-4 w-4 mr-2" />
-            {saveLayoutMutation.isPending ? 'Saving...' : 'Save'}
-          </Button>
+          <TooltipProvider delayDuration={2000}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
+                  <Save className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Save</p>
+                <p className="text-xs text-muted-foreground">Save layout changes</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <div className="h-6 w-px bg-border" />
 
@@ -762,21 +771,6 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 </TooltipContent>
               </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div
-                    draggable
-                    onDragStart={() => handleDragStart("Company Header")}
-                    className="h-8 w-8 flex items-center justify-center rounded cursor-grab hover:bg-muted transition-colors"
-                  >
-                    <Building2 className="h-4 w-4" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="font-medium">Company Header</p>
-                  <p className="text-xs text-muted-foreground">Company information block</p>
-                </TooltipContent>
-              </Tooltip>
             </div>
           </TooltipProvider>
 
