@@ -1567,8 +1567,8 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveU
         <div className="flex items-center gap-2">
           <span className="text-lg">{getBlockIcon(block.type)}</span>
           <span className="text-sm font-medium truncate">
-            {block.type === "Image" && block.config?.imageDescription 
-              ? block.config.imageDescription 
+            {block.type === "Image" 
+              ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
               : block.type === "Text" 
                 ? (block.config?.text || 'Tekst...') 
                 : block.type === "Data Field" && block.config?.tableName && block.config?.fieldName
