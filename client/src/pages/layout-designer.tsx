@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Building2 } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer } from '@/components/print/BlockRenderers';
 import type { PrintData } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -705,8 +706,79 @@ function VisualDesignerView({ layout }: { layout: any }) {
           {/* Save */}
           <Button size="sm" variant="ghost" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
             <Save className="h-4 w-4 mr-2" />
-            {saveLayoutMutation.isPending ? 'Opslaan...' : 'Opslaan'}
+            {saveLayoutMutation.isPending ? 'Saving...' : 'Save'}
           </Button>
+
+          <div className="h-6 w-px bg-border" />
+
+          {/* Draggable Block Icons */}
+          <TooltipProvider delayDuration={2000}>
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    draggable
+                    onDragStart={() => handleDragStart("Text")}
+                    className="h-8 w-8 flex items-center justify-center rounded cursor-grab hover:bg-muted transition-colors"
+                  >
+                    <Type className="h-4 w-4" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">Text</p>
+                  <p className="text-xs text-muted-foreground">Free text with formatting</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    draggable
+                    onDragStart={() => handleDragStart("Image")}
+                    className="h-8 w-8 flex items-center justify-center rounded cursor-grab hover:bg-muted transition-colors"
+                  >
+                    <Image className="h-4 w-4" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">Image</p>
+                  <p className="text-xs text-muted-foreground">Upload or link an image</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    draggable
+                    onDragStart={() => handleDragStart("Data Field")}
+                    className="h-8 w-8 flex items-center justify-center rounded cursor-grab hover:bg-muted transition-colors"
+                  >
+                    <Table2 className="h-4 w-4" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">Data Field</p>
+                  <p className="text-xs text-muted-foreground">Database field value</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    draggable
+                    onDragStart={() => handleDragStart("Company Header")}
+                    className="h-8 w-8 flex items-center justify-center rounded cursor-grab hover:bg-muted transition-colors"
+                  >
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">Company Header</p>
+                  <p className="text-xs text-muted-foreground">Company information block</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
 
           <div className="h-6 w-px bg-border" />
 
