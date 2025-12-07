@@ -922,6 +922,8 @@ export type SectionConfig = {
   printRules?: SectionPrintRules;
   dimensions?: SectionDimensions;
   style?: SectionStyle;
+  canGrow?: boolean; // Section height can increase when content grows
+  canShrink?: boolean; // Section height can decrease when there's whitespace
   blocks?: any[]; // Blocks within this section
   layoutGrid?: {
     rows: number; // Number of horizontal divisions

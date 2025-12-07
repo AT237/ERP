@@ -1817,6 +1817,33 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
         />
       </div>
 
+      {/* Can Grow / Can Shrink */}
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold">Hoogte Gedrag</Label>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="can-grow"
+              checked={section.config.canGrow || false}
+              onChange={(e) => onUpdateProperty(section.id, 'config.canGrow', e.target.checked)}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="can-grow" className="text-xs font-normal">Can grow (hoogte neemt toe bij meer data)</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="can-shrink"
+              checked={section.config.canShrink || false}
+              onChange={(e) => onUpdateProperty(section.id, 'config.canShrink', e.target.checked)}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="can-shrink" className="text-xs font-normal">Can shrink (hoogte neemt af bij witte ruimte)</Label>
+          </div>
+        </div>
+      </div>
+
       {/* Background Color */}
       <div>
         <Label htmlFor="section-bg" className="text-xs">Achtergrondkleur</Label>
