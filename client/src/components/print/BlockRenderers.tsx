@@ -132,7 +132,11 @@ export function PageNumberRenderer({ block }: BlockRendererProps) {
 
 // Image Block - logo or other images
 export function ImageBlockRenderer({ block, printData }: BlockRendererProps) {
-  const { src, alt = 'Image', width, height, fit = 'contain' } = block.config || {};
+  const { src, alt = 'Image', fit = 'contain' } = block.config || {};
+  
+  // Get dimensions from block.size (preferred) or block.config
+  const width = block.size?.width || block.config?.width;
+  const height = block.size?.height || block.config?.height;
   
   // Special handling for company logo
   const imageSrc = src === 'company.logo' && printData.company?.logoUrl

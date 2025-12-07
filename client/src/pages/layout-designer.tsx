@@ -1309,44 +1309,38 @@ function PreviewView({ layout }: { layout: any }) {
       </div>
 
       {!selectedQuotationId ? (
-        <Card className="w-full max-w-4xl">
-          <CardContent className="p-8">
-            <div className="bg-white shadow-xl mx-auto" style={{ width: '210mm', aspectRatio: '1/1.414' }}>
-              <div className="border border-gray-200 h-full p-8 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <div className="text-4xl mb-4">📄</div>
-                  <div className="text-lg font-medium">Selecteer een offerte</div>
-                  <div className="text-sm mt-2">Klik op "Selecteer Offerte" om een preview te zien</div>
-                </div>
+        <div className="w-full flex justify-center">
+          <div className="bg-white mx-auto" style={{ width: '794px', height: '1123px' }}>
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <div className="text-4xl mb-4">📄</div>
+                <div className="text-lg font-medium">Selecteer een offerte</div>
+                <div className="text-sm mt-2">Klik op "Selecteer Offerte" om een preview te zien</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ) : isPrintDataLoading ? (
-        <Card className="w-full max-w-4xl">
-          <CardContent className="p-8">
-            <div className="bg-white shadow-xl mx-auto" style={{ width: '210mm', aspectRatio: '1/1.414' }}>
-              <div className="border border-gray-200 h-full p-8 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <div className="text-4xl mb-4">⏳</div>
-                  <div className="text-lg font-medium">Laden...</div>
-                </div>
+        <div className="w-full flex justify-center">
+          <div className="bg-white mx-auto" style={{ width: '794px', height: '1123px' }}>
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <div className="text-4xl mb-4">⏳</div>
+                <div className="text-lg font-medium">Laden...</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ) : (
-        <Card className="w-full max-w-4xl">
-          <CardContent className="p-8">
-            <div className="bg-white shadow-xl mx-auto" style={{ width: '210mm', minHeight: '297mm' }}>
-              <LayoutPreview 
-                layout={layout}
-                sections={sections}
-                printData={printData}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="w-full flex justify-center">
+          <div className="bg-white mx-auto" style={{ width: '794px', minHeight: '1123px' }}>
+            <LayoutPreview 
+              layout={layout}
+              sections={sections}
+              printData={printData}
+            />
+          </div>
+        </div>
       )}
 
       {/* Quotation Selection Dialog */}
