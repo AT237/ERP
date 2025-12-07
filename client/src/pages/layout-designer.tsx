@@ -720,9 +720,28 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
           <div className="h-6 w-px bg-border" />
 
-          {/* Draggable Block Icons */}
+          {/* Add Section & Draggable Block Icons */}
           <TooltipProvider delayDuration={2000}>
             <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    onClick={() => setShowNewSectionDialog(true)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">Add Section</p>
+                  <p className="text-xs text-muted-foreground">Create a new page section</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <div className="h-6 w-px bg-border mx-1" />
+
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
@@ -929,43 +948,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
       </Dialog>
 
       {/* Main Content Area */}
-      <div className="grid grid-cols-[250px_1fr_300px] gap-4 h-full p-4">
-        {/* Left Sidebar - Platte Lijst */}
-        <Card className="overflow-auto">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Elementen</CardTitle>
-            <CardDescription className="text-xs">Sleep naar een sectie</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {/* Add Section Button */}
-            <Button 
-              className="w-full justify-start mb-3" 
-              size="sm" 
-              variant="outline"
-              onClick={() => setShowNewSectionDialog(true)}
-              data-testid="button-add-section"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Section
-            </Button>
-
-            <div className="border-t mb-3"></div>
-
-            {/* Blokken Lijst */}
-            <div className="text-xs font-semibold text-muted-foreground px-2 mb-2">BLOKKEN</div>
-            <BlockLibraryItem name="Text" icon="📝" onDragStart={handleDragStart} description="Vrije tekst met opmaak" />
-            <BlockLibraryItem name="Image" icon="🖼️" onDragStart={handleDragStart} description="Upload/link afbeelding" />
-            <BlockLibraryItem name="Data Field" icon="🔢" onDragStart={handleDragStart} description="Database veld" />
-            <BlockLibraryItem name="Company Header" icon="🏢" onDragStart={handleDragStart} description="Bedrijfsgegevens blok" />
-            
-            <div className="border-t pt-3 mt-3 mb-2"></div>
-            <div className="text-xs font-semibold text-muted-foreground px-2 mb-2">OPGESLAGEN</div>
-            <div className="p-3 border border-dashed rounded text-center text-xs text-muted-foreground">
-              Nog geen opgeslagen blokken
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-[1fr_300px] gap-4 h-full p-4">
         {/* Canvas - A4 Page Layout */}
         <Card className="flex flex-col bg-gray-50 overflow-auto">
           <div className="flex-1 p-8">
@@ -1537,26 +1520,6 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
           Geen secties geconfigureerd - maak secties aan in de Designer tab
         </div>
       )}
-    </div>
-  );
-}
-
-// Block Library Item Component
-function BlockLibraryItem({ name, icon, description, onDragStart }: { name: string; icon: string; description?: string; onDragStart: (name: string) => void }) {
-  return (
-    <div
-      className="flex items-start gap-2 p-2 border border-border rounded cursor-move hover:bg-accent hover:border-orange-500 transition-all"
-      draggable
-      onDragStart={() => onDragStart(name)}
-      data-testid={`block-${name.toLowerCase().replace(/\s+/g, '-')}`}
-    >
-      <span className="text-lg mt-0.5">{icon}</span>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium">{name}</div>
-        {description && (
-          <div className="text-xs text-muted-foreground truncate">{description}</div>
-        )}
-      </div>
     </div>
   );
 }
