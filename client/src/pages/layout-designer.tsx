@@ -1257,10 +1257,9 @@ function PreviewView({ layout }: { layout: any }) {
   });
 
   // Fetch layout sections
-  const { data: sections = [] } = useQuery({
-    queryKey: ['/api/layout-sections'],
-    select: (data: any[]) => data.filter((s: any) => s.layoutId === layout?.id).sort((a: any, b: any) => a.position - b.position),
-    enabled: !!layout,
+  const { data: sections = [] } = useQuery<any[]>({
+    queryKey: [`/api/layout-sections?layoutId=${layout?.id}`],
+    enabled: !!layout?.id,
   });
 
   if (!layout) {
