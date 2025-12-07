@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2 } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer } from '@/components/print/BlockRenderers';
 import type { PrintData } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
@@ -697,6 +697,11 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
   const [showGrid, setShowGrid] = useState(true);
   const [gridSize, setGridSize] = useState(10);
+  
+  // Print margins state (in mm)
+  const [printMargins, setPrintMargins] = useState({ top: 10, right: 10, bottom: 10, left: 10 });
+  const [showPrintMarginsDialog, setShowPrintMarginsDialog] = useState(false);
+  const [showPrintMargins, setShowPrintMargins] = useState(true);
 
   return (
     <div className="flex flex-col h-full">
@@ -817,6 +822,26 @@ function VisualDesignerView({ layout }: { layout: any }) {
             <Grid3x3 className="h-4 w-4 mr-2" />
             Grid
           </Button>
+
+          {/* Print Margins */}
+          <TooltipProvider delayDuration={2000}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant={showPrintMargins ? "default" : "ghost"} 
+                  onClick={() => setShowPrintMarginsDialog(true)}
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Marges
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Print Margins</p>
+                <p className="text-xs text-muted-foreground">Set print margin areas</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <div className="h-6 w-px bg-border" />
 
@@ -947,6 +972,97 @@ function VisualDesignerView({ layout }: { layout: any }) {
         </DialogContent>
       </Dialog>
 
+      {/* Print Margins Dialog */}
+      <Dialog open={showPrintMarginsDialog} onOpenChange={setShowPrintMarginsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Print Marges</DialogTitle>
+            <DialogDescription>
+              Stel de printmarges in (in millimeters). Deze worden als grijs gebied weergegeven.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="margin-top">Boven (mm)</Label>
+                <Input
+                  id="margin-top"
+                  type="number"
+                  min="0"
+                  max="50"
+                  value={printMargins.top}
+                  onChange={(e) => setPrintMargins({ ...printMargins, top: parseFloat(e.target.value) || 0 })}
+                  onFocus={(e) => e.target.select()}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="margin-bottom">Onder (mm)</Label>
+                <Input
+                  id="margin-bottom"
+                  type="number"
+                  min="0"
+                  max="50"
+                  value={printMargins.bottom}
+                  onChange={(e) => setPrintMargins({ ...printMargins, bottom: parseFloat(e.target.value) || 0 })}
+                  onFocus={(e) => e.target.select()}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="margin-left">Links (mm)</Label>
+                <Input
+                  id="margin-left"
+                  type="number"
+                  min="0"
+                  max="50"
+                  value={printMargins.left}
+                  onChange={(e) => setPrintMargins({ ...printMargins, left: parseFloat(e.target.value) || 0 })}
+                  onFocus={(e) => e.target.select()}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="margin-right">Rechts (mm)</Label>
+                <Input
+                  id="margin-right"
+                  type="number"
+                  min="0"
+                  max="50"
+                  value={printMargins.right}
+                  onChange={(e) => setPrintMargins({ ...printMargins, right: parseFloat(e.target.value) || 0 })}
+                  onFocus={(e) => e.target.select()}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 pt-2">
+              <input
+                type="checkbox"
+                id="show-margins"
+                checked={showPrintMargins}
+                onChange={(e) => setShowPrintMargins(e.target.checked)}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="show-margins" className="text-sm font-normal">Toon marges in ontwerp</Label>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPrintMarginsDialog(false)}>
+              Sluiten
+            </Button>
+            <Button onClick={() => {
+              setShowPrintMarginsDialog(false);
+              toast({
+                title: 'Marges bijgewerkt',
+                description: `Marges: ${printMargins.top}mm (boven), ${printMargins.bottom}mm (onder), ${printMargins.left}mm (links), ${printMargins.right}mm (rechts)`,
+              });
+            }}>
+              Toepassen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Main Content Area */}
       <div className="grid grid-cols-[1fr_300px] gap-4 h-full p-4">
         {/* Canvas - A4 Page Layout */}
@@ -1004,7 +1120,44 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   {sections.length === 0 ? (
                     <>
                       <div className="flex-shrink-0" style={{ width: '40px' }}></div>
-                      <div className="bg-white shadow-2xl" style={{ width: '794px', minHeight: '1123px' }}>
+                      <div className="bg-white shadow-2xl relative" style={{ width: '794px', minHeight: '1123px' }}>
+                        {/* Print Margin Overlays for empty state */}
+                        {showPrintMargins && (
+                          <>
+                            <div 
+                              className="absolute top-0 left-0 right-0 bg-gray-200 opacity-50 pointer-events-none z-20 flex items-center justify-center"
+                              style={{ height: `${mmToPx(printMargins.top)}px` }}
+                            >
+                              <span className="text-xs text-gray-600 font-medium">{printMargins.top}mm</span>
+                            </div>
+                            <div 
+                              className="absolute bottom-0 left-0 right-0 bg-gray-200 opacity-50 pointer-events-none z-20 flex items-center justify-center"
+                              style={{ height: `${mmToPx(printMargins.bottom)}px` }}
+                            >
+                              <span className="text-xs text-gray-600 font-medium">{printMargins.bottom}mm</span>
+                            </div>
+                            <div 
+                              className="absolute left-0 bg-gray-200 opacity-50 pointer-events-none z-20 flex items-center justify-center"
+                              style={{ 
+                                width: `${mmToPx(printMargins.left)}px`,
+                                top: `${mmToPx(printMargins.top)}px`,
+                                bottom: `${mmToPx(printMargins.bottom)}px`,
+                              }}
+                            >
+                              <span className="text-xs text-gray-600 font-medium" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{printMargins.left}mm</span>
+                            </div>
+                            <div 
+                              className="absolute right-0 bg-gray-200 opacity-50 pointer-events-none z-20 flex items-center justify-center"
+                              style={{ 
+                                width: `${mmToPx(printMargins.right)}px`,
+                                top: `${mmToPx(printMargins.top)}px`,
+                                bottom: `${mmToPx(printMargins.bottom)}px`,
+                              }}
+                            >
+                              <span className="text-xs text-gray-600 font-medium" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{printMargins.right}mm</span>
+                            </div>
+                          </>
+                        )}
                         <div className="flex items-center justify-center" style={{ minHeight: '1123px' }}>
                           <div className="text-center text-muted-foreground">
                             <div className="text-4xl mb-4">📄</div>
@@ -1045,7 +1198,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
                       {/* Center: A4 Document - Single container with all sections */}
                       <div 
-                        className="shadow-lg"
+                        className="shadow-lg relative"
                         style={{
                           width: '794px',
                           height: '1123px',
@@ -1053,6 +1206,47 @@ function VisualDesignerView({ layout }: { layout: any }) {
                           overflow: 'hidden',
                         }}
                       >
+                          {/* Print Margin Overlays */}
+                          {showPrintMargins && (
+                            <>
+                              {/* Top margin */}
+                              <div 
+                                className="absolute top-0 left-0 right-0 bg-gray-200 opacity-50 pointer-events-none z-20 flex items-center justify-center"
+                                style={{ height: `${mmToPx(printMargins.top)}px` }}
+                              >
+                                <span className="text-xs text-gray-600 font-medium">{printMargins.top}mm</span>
+                              </div>
+                              {/* Bottom margin */}
+                              <div 
+                                className="absolute bottom-0 left-0 right-0 bg-gray-200 opacity-50 pointer-events-none z-20 flex items-center justify-center"
+                                style={{ height: `${mmToPx(printMargins.bottom)}px` }}
+                              >
+                                <span className="text-xs text-gray-600 font-medium">{printMargins.bottom}mm</span>
+                              </div>
+                              {/* Left margin */}
+                              <div 
+                                className="absolute top-0 bottom-0 left-0 bg-gray-200 opacity-50 pointer-events-none z-20 flex items-center justify-center"
+                                style={{ 
+                                  width: `${mmToPx(printMargins.left)}px`,
+                                  top: `${mmToPx(printMargins.top)}px`,
+                                  bottom: `${mmToPx(printMargins.bottom)}px`,
+                                }}
+                              >
+                                <span className="text-xs text-gray-600 font-medium" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{printMargins.left}mm</span>
+                              </div>
+                              {/* Right margin */}
+                              <div 
+                                className="absolute top-0 bottom-0 right-0 bg-gray-200 opacity-50 pointer-events-none z-20 flex items-center justify-center"
+                                style={{ 
+                                  width: `${mmToPx(printMargins.right)}px`,
+                                  top: `${mmToPx(printMargins.top)}px`,
+                                  bottom: `${mmToPx(printMargins.bottom)}px`,
+                                }}
+                              >
+                                <span className="text-xs text-gray-600 font-medium" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{printMargins.right}mm</span>
+                              </div>
+                            </>
+                          )}
                           <div className="bg-white h-full overflow-y-auto" style={{ boxSizing: 'border-box' }}>
                           {sections.map((section, index) => {
                             const sectionHeight = section.config.dimensions?.height || 200;
