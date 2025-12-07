@@ -475,58 +475,36 @@ function VisualDesignerView({ layout }: { layout: any }) {
   // Save layout mutation
   const saveLayoutMutation = useMutation({
     mutationFn: async () => {
-      // Get current sections from database to delete
-      const currentDbSections = existingSections || [];
-      
       // Delete existing sections first
-      for (const section of currentDbSections) {
-        try {
+      if (existingSections && existingSections.length > 0) {
+        for (const section of existingSections) {
           await apiRequest('DELETE', `/api/layout-sections/${section.id}`);
-        } catch (e) {
-          // Ignore errors for sections that may not exist
         }
       }
 
-      // Save all current sections with their blocks
-      const savedSections = [];
+      // Save all sections with their blocks
       for (const section of sections) {
-        const result = await apiRequest('POST', '/api/layout-sections', {
+        await apiRequest('POST', '/api/layout-sections', {
           layoutId: layout.id,
           name: section.name,
           sectionType: section.sectionType,
           position: section.position,
           config: section.config,
         });
-        savedSections.push(result);
       }
 
-      return savedSections;
+      return sections;
     },
-    onSuccess: (savedSections) => {
-      // Invalidate and refetch sections to sync cache with database
-      queryClient.invalidateQueries({ queryKey: [`/api/layout-sections?layoutId=${layout.id}`] });
-      
-      // Update local state with the saved sections (with new database IDs)
-      if (savedSections && savedSections.length > 0) {
-        const updatedSections = savedSections.map((section: any, index: number) => ({
-          id: section.id,
-          name: section.name,
-          sectionType: section.sectionType,
-          position: section.position,
-          config: sections[index]?.config || section.config,
-        }));
-        setSections(updatedSections);
-      }
-      
+    onSuccess: () => {
       toast({
-        title: 'Saved!',
-        description: `Layout "${layout.name}" has been saved successfully`,
+        title: 'Opgeslagen!',
+        description: `Layout "${layout.name}" is succesvol opgeslagen`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Save error',
-        description: error.message || 'Could not save layout',
+        title: 'Fout bij opslaan',
+        description: error.message || 'Kon layout niet opslaan',
         variant: 'destructive',
       });
     },
