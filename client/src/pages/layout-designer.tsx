@@ -1629,11 +1629,13 @@ function BlockProperties({
               value={block.config?.imageId || ''}
               onValueChange={(value) => {
                 const selectedImage = images?.find(img => img.id === value);
-                updateConfig('imageId', value);
-                if (selectedImage) {
-                  updateConfig('src', selectedImage.imageData);
-                  updateConfig('alt', selectedImage.name);
-                }
+                // Update all config properties at once to prevent race condition
+                onUpdateProperty(sectionId, block.id, 'config', { 
+                  ...block.config, 
+                  imageId: value,
+                  src: selectedImage?.imageData || '',
+                  alt: selectedImage?.name || ''
+                });
               }}
             >
               <SelectTrigger id="image-select" className="h-8 text-xs">
