@@ -1556,15 +1556,31 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveU
         onClick();
       }}
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-lg">{getBlockIcon(block.type)}</span>
-          <span className="text-sm font-medium">{block.type}</span>
+          <span className="text-sm font-medium truncate">
+            {block.type === "Image" && block.config?.imageDescription 
+              ? block.config.imageDescription 
+              : block.type === "Text" 
+                ? (block.config?.text || 'Tekst...') 
+                : block.type === "Data Field" && block.config?.tableName && block.config?.fieldName
+                  ? `${block.config.tableName}.${block.config.fieldName}`
+                  : block.type === "Company Header"
+                    ? (block.config?.company?.name || 'Company Name')
+                    : block.type === "Document Title"
+                      ? (block.config?.text || 'Document Title')
+                      : block.type === "Date Block"
+                        ? (block.config?.date || 'Date')
+                        : block.type === "Text Block"
+                          ? (block.config?.text || 'Text Block')
+                          : block.type}
+          </span>
         </div>
         <Button 
           size="sm" 
           variant="ghost" 
-          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100"
+          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100 flex-shrink-0"
           onClick={(e) => {
             e.stopPropagation();
             onRemove();
@@ -1573,21 +1589,6 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveU
         >
           ×
         </Button>
-      </div>
-      <div className="text-xs text-muted-foreground">
-        {block.type === "Text" && <div className="truncate">{block.config?.text || 'Tekst...'}</div>}
-        {block.type === "Image" && <div>{block.config?.src ? '🖼️ Afbeelding' : '🖼️ Geen afbeelding'}</div>}
-        {block.type === "Data Field" && (
-          <div>
-            {block.config?.tableName && block.config?.fieldName 
-              ? `${block.config.tableName}.${block.config.fieldName}` 
-              : 'Selecteer veld...'}
-          </div>
-        )}
-        {block.type === "Company Header" && <div>{block.config?.company?.name || 'Company Name'}</div>}
-        {block.type === "Document Title" && <div className="font-bold">{block.config?.text}</div>}
-        {block.type === "Date Block" && <div>{block.config?.date}</div>}
-        {block.type === "Text Block" && <div className="truncate">{block.config?.text}</div>}
       </div>
     </div>
   );
@@ -1728,12 +1729,12 @@ function BlockProperties({
             value={block.config?.imageId || ''}
             onValueChange={(value) => {
               const selectedImage = images?.find(img => img.id === value);
-              // Update all config properties at once to prevent race condition
               onUpdateProperty(sectionId, block.id, 'config', { 
                 ...block.config, 
                 imageId: value,
                 src: selectedImage?.imageData || '',
-                alt: selectedImage?.name || ''
+                alt: selectedImage?.name || '',
+                imageDescription: selectedImage?.name || 'Image'
               });
             }}
           >
