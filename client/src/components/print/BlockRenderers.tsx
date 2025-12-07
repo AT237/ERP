@@ -185,13 +185,18 @@ export function ImageBlockRenderer({ block, printData }: BlockRendererProps) {
   const alignmentStyles = getAlignmentStyles(alignH, alignV);
 
   return (
-    <div style={{ ...alignmentStyles, ...(block.style || {}) }}>
+    <div style={{ 
+      ...alignmentStyles, 
+      ...(block.style || {}),
+      width: '100%',
+      height: '100%',
+    }}>
       <img
         src={imageSrc}
         alt={alt}
         style={{
-          maxWidth: '100%',
-          maxHeight: '100%',
+          width: '100%',
+          height: '100%',
           objectFit: fit as any,
         }}
       />

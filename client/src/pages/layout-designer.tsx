@@ -1684,7 +1684,7 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
                   left: `${mmToPx(block.position?.x || 0)}px`,
                   top: `${mmToPx(block.position?.y || 0)}px`,
                   width: `${mmToPx(block.size?.width || 50)}px`,
-                  minHeight: `${mmToPx(block.size?.height || 25)}px`,
+                  height: `${mmToPx(block.size?.height || 25)}px`,
                 };
                 
                 if (BlockRenderer) {
@@ -1742,7 +1742,7 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveU
     left: `${mmToPx(block.position.x || 0)}px`, 
     top: `${mmToPx(block.position.y || 0)}px`,
     width: `${mmToPx(block.size?.width || 50)}px`,
-    minHeight: `${mmToPx(block.size?.height || 25)}px`,
+    height: `${mmToPx(block.size?.height || 25)}px`,
     zIndex: block.zIndex || 10,
   };
 
