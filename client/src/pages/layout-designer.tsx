@@ -1599,6 +1599,57 @@ function BlockProperties({
         {block.type}
       </div>
 
+      {/* Position & Size - Always first for all blocks */}
+      <div className="space-y-3">
+        <div className="text-xs font-semibold text-orange-600">Positie</div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <Label htmlFor="block-x" className="text-xs">X (px)</Label>
+            <Input
+              id="block-x"
+              type="number"
+              value={block.position?.x || 0}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: parseInt(e.target.value) || 0 })}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div>
+            <Label htmlFor="block-y" className="text-xs">Y (px)</Label>
+            <Input
+              id="block-y"
+              type="number"
+              value={block.position?.y || 0}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: parseInt(e.target.value) || 0 })}
+              className="h-8 text-xs"
+            />
+          </div>
+        </div>
+        
+        <div className="text-xs font-semibold text-orange-600">Grootte</div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <Label htmlFor="block-width" className="text-xs">Breedte (px)</Label>
+            <Input
+              id="block-width"
+              type="number"
+              value={block.size?.width || 200}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, width: parseInt(e.target.value) || 200 })}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div>
+            <Label htmlFor="block-height" className="text-xs">Hoogte (px)</Label>
+            <Input
+              id="block-height"
+              type="number"
+              value={block.size?.height || 100}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, height: parseInt(e.target.value) || 100 })}
+              className="h-8 text-xs"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Text Block Properties */}
       {block.type === "Text" && (
         <div>
@@ -1642,28 +1693,6 @@ function BlockProperties({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label htmlFor="block-width" className="text-xs">Breedte (px)</Label>
-              <Input
-                id="block-width"
-                type="number"
-                value={block.size?.width || 200}
-                onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, width: parseInt(e.target.value) || 200 })}
-                className="h-8 text-xs"
-              />
-            </div>
-            <div>
-              <Label htmlFor="block-height" className="text-xs">Hoogte (px)</Label>
-              <Input
-                id="block-height"
-                type="number"
-                value={block.size?.height || 100}
-                onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, height: parseInt(e.target.value) || 100 })}
-                className="h-8 text-xs"
-              />
-            </div>
           </div>
         </div>
       )}
@@ -1753,32 +1782,6 @@ function BlockProperties({
         </div>
       )}
 
-      {/* Common properties for all blocks */}
-      <div className="pt-3 border-t">
-        <div className="text-xs font-semibold text-orange-600 mb-2">Positie & Grootte</div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <Label htmlFor="block-x" className="text-xs">X</Label>
-            <Input
-              id="block-x"
-              type="number"
-              value={block.position?.x || 0}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: parseInt(e.target.value) || 0 })}
-              className="h-8 text-xs"
-            />
-          </div>
-          <div>
-            <Label htmlFor="block-y" className="text-xs">Y</Label>
-            <Input
-              id="block-y"
-              type="number"
-              value={block.position?.y || 0}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: parseInt(e.target.value) || 0 })}
-              className="h-8 text-xs"
-            />
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
