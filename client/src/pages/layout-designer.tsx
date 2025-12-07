@@ -368,6 +368,14 @@ function LayoutManagerView({
   );
 }
 
+// Conversion constants: 1mm = 3.78px at 96 DPI
+const MM_TO_PX = 3.78;
+const PX_TO_MM = 1 / MM_TO_PX;
+
+// Helper functions for mm/px conversion
+const pxToMm = (px: number): number => Math.round(px * PX_TO_MM * 10) / 10;
+const mmToPx = (mm: number): number => Math.round(mm * MM_TO_PX);
+
 // Visual Designer Component
 function VisualDesignerView({ layout }: { layout: any }) {
   // Section-based state
