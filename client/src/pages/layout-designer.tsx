@@ -385,6 +385,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [newSectionType, setNewSectionType] = useState('custom');
   const [showTableSelectorDialog, setShowTableSelectorDialog] = useState(false);
   const [allowedTables, setAllowedTables] = useState<string[]>(layout?.allowedTables || []);
+  const [hasLoadedInitially, setHasLoadedInitially] = useState(false);
   const { toast } = useToast();
   
   // Available database tables for selection
@@ -406,9 +407,9 @@ function VisualDesignerView({ layout }: { layout: any }) {
     enabled: !!layout?.id,
   });
 
-  // Load sections into state when they're fetched
+  // Load sections into state when they're fetched (only on initial load)
   useEffect(() => {
-    if (existingSections && existingSections.length > 0 && sections.length === 0) {
+    if (existingSections && existingSections.length > 0 && !hasLoadedInitially) {
       const loadedSections = existingSections.map((section: any) => ({
         id: section.id,
         name: section.name,
@@ -424,8 +425,9 @@ function VisualDesignerView({ layout }: { layout: any }) {
         },
       }));
       setSections(loadedSections.sort((a, b) => a.position - b.position));
+      setHasLoadedInitially(true);
     }
-  }, [existingSections]);
+  }, [existingSections, hasLoadedInitially]);
 
   // Save zoom setting to localStorage whenever it changes
   useEffect(() => {
@@ -503,10 +505,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
       return savedSections;
     },
     onSuccess: (savedSections) => {
-      // Invalidate and refetch sections to sync cache with database
-      queryClient.invalidateQueries({ queryKey: [`/api/layout-sections?layoutId=${layout.id}`] });
-      
       // Update local state with the saved sections (with new database IDs)
+      // Keep the current config from local state as it has the latest changes
       if (savedSections && savedSections.length > 0) {
         const updatedSections = savedSections.map((section: any, index: number) => ({
           id: section.id,
@@ -517,6 +517,9 @@ function VisualDesignerView({ layout }: { layout: any }) {
         }));
         setSections(updatedSections);
       }
+      
+      // Invalidate cache after updating local state
+      queryClient.invalidateQueries({ queryKey: [`/api/layout-sections?layoutId=${layout.id}`] });
       
       toast({
         title: 'Saved!',
