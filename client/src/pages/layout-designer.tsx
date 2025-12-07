@@ -1687,6 +1687,87 @@ function BlockProperties({
           </div>
         </div>
         
+        {/* Alignment */}
+        <div className="text-xs font-bold pt-2">Alignment</div>
+        <div className="space-y-2">
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => updateConfig('alignH', 'left')}
+              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignH === 'left' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+              title="Left"
+            >
+              <div className="flex flex-col gap-0.5">
+                <div className="w-4 h-0.5 bg-current"></div>
+                <div className="w-3 h-0.5 bg-current"></div>
+                <div className="w-4 h-0.5 bg-current"></div>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => updateConfig('alignH', 'center')}
+              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignH === 'center' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+              title="Center"
+            >
+              <div className="flex flex-col gap-0.5 items-center">
+                <div className="w-4 h-0.5 bg-current"></div>
+                <div className="w-3 h-0.5 bg-current"></div>
+                <div className="w-4 h-0.5 bg-current"></div>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => updateConfig('alignH', 'right')}
+              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignH === 'right' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+              title="Right"
+            >
+              <div className="flex flex-col gap-0.5 items-end">
+                <div className="w-4 h-0.5 bg-current"></div>
+                <div className="w-3 h-0.5 bg-current"></div>
+                <div className="w-4 h-0.5 bg-current"></div>
+              </div>
+            </button>
+          </div>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => updateConfig('alignV', 'top')}
+              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignV === 'top' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+              title="Top"
+            >
+              <div className="flex gap-0.5 items-start h-4">
+                <div className="w-0.5 h-4 bg-current"></div>
+                <div className="w-0.5 h-3 bg-current"></div>
+                <div className="w-0.5 h-4 bg-current"></div>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => updateConfig('alignV', 'middle')}
+              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignV === 'middle' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+              title="Middle"
+            >
+              <div className="flex gap-0.5 items-center h-4">
+                <div className="w-0.5 h-4 bg-current"></div>
+                <div className="w-0.5 h-3 bg-current"></div>
+                <div className="w-0.5 h-4 bg-current"></div>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => updateConfig('alignV', 'bottom')}
+              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignV === 'bottom' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+              title="Bottom"
+            >
+              <div className="flex gap-0.5 items-end h-4">
+                <div className="w-0.5 h-4 bg-current"></div>
+                <div className="w-0.5 h-3 bg-current"></div>
+                <div className="w-0.5 h-4 bg-current"></div>
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* Can Grow / Can Shrink for blocks */}
         <div className="space-y-2 pt-2">
           <div className="flex items-center space-x-2">
