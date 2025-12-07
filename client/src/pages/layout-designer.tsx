@@ -1730,6 +1730,30 @@ function BlockProperties({
             />
           </div>
         </div>
+        
+        {/* Can Grow / Can Shrink for blocks */}
+        <div className="space-y-2 pt-2">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="block-can-grow"
+              checked={block.config?.canGrow || false}
+              onChange={(e) => updateConfig('canGrow', e.target.checked)}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="block-can-grow" className="text-xs font-normal">Can grow</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="block-can-shrink"
+              checked={block.config?.canShrink || false}
+              onChange={(e) => updateConfig('canShrink', e.target.checked)}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="block-can-shrink" className="text-xs font-normal">Can shrink</Label>
+          </div>
+        </div>
       </div>
 
       {/* Text Block Properties */}
