@@ -1466,15 +1466,15 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
   };
 
   return (
-    <div className="p-8 font-['Arial',sans-serif]">
+    <div className="font-['Arial',sans-serif]">
       {sections.map((section: any) => (
         <div
           key={section.id}
-          className="mb-6"
+          className="relative"
           style={{
             backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
-            padding: `${section.config?.style?.padding?.top || 0}px ${section.config?.style?.padding?.right || 0}px ${section.config?.style?.padding?.bottom || 0}px ${section.config?.style?.padding?.left || 0}px`,
-            minHeight: section.config?.dimensions?.height ? `${section.config.dimensions.height}px` : 'auto',
+            height: section.config?.dimensions?.height ? `${section.config.dimensions.height}px` : 'auto',
+            minHeight: section.config?.dimensions?.height ? `${section.config.dimensions.height}px` : '100px',
             borderColor: section.config?.style?.borderColor || 'transparent',
             borderStyle: section.config?.style?.borderStyle || 'none',
             borderWidth: section.config?.style?.borderWidth || 0,
@@ -1482,25 +1482,32 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
         >
           {/* Render blocks within section */}
           {section.config?.blocks?.length > 0 ? (
-            <div className="space-y-3">
+            <>
               {section.config.blocks.map((block: any, index: number) => {
                 const BlockRenderer = BlockRenderers[block.type];
+                const blockStyle: React.CSSProperties = {
+                  position: 'absolute',
+                  left: `${mmToPx(block.position?.x || 0)}px`,
+                  top: `${mmToPx(block.position?.y || 0)}px`,
+                  width: `${mmToPx(block.size?.width || 50)}px`,
+                  minHeight: `${mmToPx(block.size?.height || 25)}px`,
+                };
                 
                 if (BlockRenderer) {
                   return (
-                    <div key={block.id || index}>
+                    <div key={block.id || index} style={blockStyle}>
                       <BlockRenderer block={block} printData={typedPrintData} />
                     </div>
                   );
                 } else {
                   return (
-                    <div key={block.id || index}>
+                    <div key={block.id || index} style={blockStyle}>
                       <UnknownBlockRenderer block={block} printData={typedPrintData} />
                     </div>
                   );
                 }
               })}
-            </div>
+            </>
           ) : (
             <div className="text-sm text-gray-400 italic text-center py-8">
               Geen blokken in deze sectie - sleep blokken hierheen in de Designer tab
