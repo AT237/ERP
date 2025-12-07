@@ -1542,7 +1542,7 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveU
     top: `${block.position.y}px`,
     width: `${block.size?.width || 200}px`,
     minHeight: `${block.size?.height || 100}px`,
-    zIndex: block.zIndex || 0,
+    zIndex: block.zIndex || 10,
   };
 
   return (
