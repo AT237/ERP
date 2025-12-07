@@ -500,6 +500,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
         title: 'Opgeslagen!',
         description: `Layout "${layout.name}" is succesvol opgeslagen`,
       });
+      // Invalidate the query to refetch from database
+      queryClient.invalidateQueries({ queryKey: [`/api/layout-sections?layoutId=${layout.id}`] });
+      // Reset sections state so useEffect reloads from database
+      setSections([]);
+      setSelectedSection(null);
+      setSelectedBlock(null);
     },
     onError: (error: any) => {
       toast({
