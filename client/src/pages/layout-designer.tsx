@@ -958,77 +958,101 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 transformOrigin: 'top left',
               }}
             >
-              {/* Layout Container with Side Labels */}
-              <div className="flex gap-0 flex-col">
-                {sections.length === 0 ? (
-                  <div className="flex gap-0">
-                    <div className="flex-shrink-0">
-                      <div className="text-xs text-gray-400 text-center pt-20">
-                        Geen secties
-                      </div>
-                    </div>
-                    <div className="bg-white shadow-2xl" style={{ width: '794px', minHeight: '1123px' }}>
-                      <div className="flex items-center justify-center" style={{ minHeight: '1123px' }}>
-                        <div className="text-center text-muted-foreground">
-                          <div className="text-4xl mb-4">📄</div>
-                          <div className="text-lg font-medium">Geen Secties</div>
-                          <div className="text-sm mt-2">Maak een nieuwe sectie om te beginnen</div>
+              {/* Layout Container with Rulers */}
+              <div className="flex flex-col">
+                {/* Top Ruler - Horizontal (210mm) */}
+                <div className="flex">
+                  <div style={{ width: sections.length > 0 ? '40px' : '0px' }}></div>
+                  <div 
+                    className="bg-gray-100 border-b border-gray-300 relative"
+                    style={{ width: '794px', height: '20px' }}
+                  >
+                    {Array.from({ length: 211 }).map((_, i) => {
+                      const xPos = i * MM_TO_PX;
+                      const isMajor = i % 10 === 0;
+                      const isMid = i % 5 === 0 && !isMajor;
+                      return (
+                        <div key={`h-tick-${i}`} className="absolute bottom-0" style={{ left: `${xPos}px` }}>
+                          <div 
+                            className="bg-gray-500"
+                            style={{ 
+                              width: '1px', 
+                              height: isMajor ? '10px' : isMid ? '6px' : '3px' 
+                            }}
+                          />
+                          {isMajor && i > 0 && (
+                            <span 
+                              className="absolute text-gray-600"
+                              style={{ 
+                                fontSize: '8px', 
+                                left: '-6px', 
+                                top: '-10px' 
+                              }}
+                            >
+                              {i}
+                            </span>
+                          )}
                         </div>
-                      </div>
-                    </div>
-                    <div className="flex-shrink-0"></div>
+                      );
+                    })}
                   </div>
-                ) : (
-                  (() => {
-                    // Calculate max label width needed
-                    const maxLabelWidth = Math.max(
-                      ...sections.map(s => {
-                        const textLength = s.name.length;
-                        const estimatedWidth = Math.min(Math.ceil(textLength * 0.4) * 16 + 16, 100);
-                        return estimatedWidth;
-                      }),
-                      40 // minimum width
-                    );
+                  <div style={{ width: '20px' }}></div>
+                </div>
 
-                    return (
-                      <div className="flex gap-0">
-                        {/* Left Side Panel - All Section Labels */}
-                        <div className="flex-shrink-0 flex flex-col" style={{ width: `${maxLabelWidth}px` }}>
-                          {sections.map((section) => {
-                            const sectionHeight = section.config.dimensions?.height || 200;
-                            return (
-                              <div 
-                                key={`label-${section.id}`}
-                                className="bg-orange-50 border border-orange-200 px-1 py-2" 
-                                style={{ 
-                                  height: `${sectionHeight}px`, 
-                                  boxSizing: 'border-box',
-                                  writingMode: 'vertical-rl',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  overflow: 'hidden',
-                                  width: '100%'
-                                }}
-                              >
-                                <span className="font-medium text-sm text-gray-700" style={{ transform: 'rotate(180deg)' }}>
-                                  {section.name}
-                                </span>
-                              </div>
-                            );
-                          })}
+                {/* Main Content Row */}
+                <div className="flex gap-0">
+                  {sections.length === 0 ? (
+                    <>
+                      <div className="flex-shrink-0" style={{ width: '40px' }}></div>
+                      <div className="bg-white shadow-2xl" style={{ width: '794px', minHeight: '1123px' }}>
+                        <div className="flex items-center justify-center" style={{ minHeight: '1123px' }}>
+                          <div className="text-center text-muted-foreground">
+                            <div className="text-4xl mb-4">📄</div>
+                            <div className="text-lg font-medium">No Sections</div>
+                            <div className="text-sm mt-2">Create a new section to start</div>
+                          </div>
                         </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Left Side Panel - All Section Labels */}
+                      <div className="flex-shrink-0 flex flex-col" style={{ width: '40px' }}>
+                        {sections.map((section) => {
+                          const sectionHeight = section.config.dimensions?.height || 200;
+                          return (
+                            <div 
+                              key={`label-${section.id}`}
+                              className="bg-orange-50 border border-orange-200 px-1 py-2" 
+                              style={{ 
+                                height: `${sectionHeight}px`, 
+                                boxSizing: 'border-box',
+                                writingMode: 'vertical-rl',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                overflow: 'hidden',
+                                width: '100%'
+                              }}
+                            >
+                              <span className="font-medium text-sm text-gray-700" style={{ transform: 'rotate(180deg)' }}>
+                                {section.name}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
 
-                        {/* Center: A4 Document - Single container with all sections */}
-                        <div 
-                          className="shadow-lg"
-                          style={{
-                            width: '794px',
-                            height: '1123px',
-                            border: '2px solid #666',
-                            overflow: 'hidden',
-                          }}
-                        >
+                      {/* Center: A4 Document - Single container with all sections */}
+                      <div 
+                        className="shadow-lg"
+                        style={{
+                          width: '794px',
+                          height: '1123px',
+                          border: '2px solid #666',
+                          overflow: 'hidden',
+                        }}
+                      >
                           <div className="bg-white h-full overflow-y-auto" style={{ boxSizing: 'border-box' }}>
                           {sections.map((section, index) => {
                             const sectionHeight = section.config.dimensions?.height || 200;
@@ -1109,81 +1133,51 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                 />
                               ))
                             )}
-                                </div>
-                              </div>
-                            );
-                          })}
                           </div>
                         </div>
+                      );
+                    })}
+                    </div>
+                  </div>
 
-                        {/* Right Side Panel - All Section Controls */}
-                        <div className="flex-shrink-0 flex flex-col">
-                          {sections.map((section, index) => {
-                            const sectionHeight = section.config.dimensions?.height || 200;
-                            return (
-                              <div 
-                                key={`control-${section.id}`}
-                                className="bg-orange-50 border border-orange-200 px-2 py-2 flex flex-col items-center justify-start gap-1" 
-                                style={{ 
-                                  height: `${sectionHeight}px`, 
-                                  boxSizing: 'border-box' 
-                                }}
-                              >
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 w-6 p-0 text-red-500 hover:bg-red-100"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveSection(section.id);
-                                  }}
-                                  title="Sectie verwijderen"
-                                >
-                                  ×
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-100"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (index > 0) {
-                                      const newSections = [...sections];
-                                      [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
-                                      setSections(newSections);
-                                    }
-                                  }}
-                                  disabled={index === 0}
-                                  title="Sectie naar boven"
-                                >
-                                  <ArrowUp className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-100"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (index < sections.length - 1) {
-                                      const newSections = [...sections];
-                                      [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
-                                      setSections(newSections);
-                                    }
-                                  }}
-                                  disabled={index === sections.length - 1}
-                                  title="Sectie naar beneden"
-                                >
-                                  <ArrowDown className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            );
-                          })}
+                  {/* Right Ruler - Vertical (297mm) */}
+                  <div 
+                    className="bg-gray-100 border-l border-gray-300 relative flex-shrink-0"
+                    style={{ width: '20px', height: '1123px' }}
+                  >
+                    {Array.from({ length: 298 }).map((_, i) => {
+                      const yPos = i * MM_TO_PX;
+                      const isMajor = i % 10 === 0;
+                      const isMid = i % 5 === 0 && !isMajor;
+                      return (
+                        <div key={`v-tick-${i}`} className="absolute left-0" style={{ top: `${yPos}px` }}>
+                          <div 
+                            className="bg-gray-500"
+                            style={{ 
+                              height: '1px', 
+                              width: isMajor ? '10px' : isMid ? '6px' : '3px' 
+                            }}
+                          />
+                          {isMajor && i > 0 && (
+                            <span 
+                              className="absolute text-gray-600"
+                              style={{ 
+                                fontSize: '8px', 
+                                left: '12px', 
+                                top: '-4px' 
+                              }}
+                            >
+                              {i}
+                            </span>
+                          )}
                         </div>
-                      </div>
-                    );
-                  })()
-                )}
-              </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
               
               {/* Page Info */}
               <div className="text-center mt-4 text-xs text-gray-500">
