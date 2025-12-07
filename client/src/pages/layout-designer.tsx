@@ -824,21 +824,21 @@ function VisualDesignerView({ layout }: { layout: any }) {
           </Button>
 
           {/* Print Margins */}
-          <TooltipProvider delayDuration={2000}>
+          <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
                   size="sm" 
                   variant={showPrintMargins ? "default" : "ghost"} 
                   onClick={() => setShowPrintMarginsDialog(true)}
+                  className="px-2"
                 >
-                  <Printer className="h-4 w-4 mr-2" />
-                  Marges
+                  <Printer className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="font-medium">Print Margins</p>
-                <p className="text-xs text-muted-foreground">Set print margin areas</p>
+                <p className="font-medium">Print Marges</p>
+                <p className="text-xs text-muted-foreground">Stel printmarges in</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
