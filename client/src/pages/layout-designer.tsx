@@ -1133,10 +1133,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
         {/* Right Sidebar - Properties */}
         <Card className="overflow-auto">
           <CardHeader>
-            <CardTitle className="text-base">Properties</CardTitle>
-            <CardDescription>
-              {selectedSection ? 'Section Settings' : selectedBlock ? 'Properties' : 'Nothing selected'}
-            </CardDescription>
+            <CardTitle className="text-base text-orange-600">Properties</CardTitle>
           </CardHeader>
           <CardContent>
             {selectedSection ? (
@@ -1591,12 +1588,12 @@ function BlockProperties({
     <div className="space-y-4">
       {/* Section: Name on one line */}
       <div className="pb-2 border-b">
-        <div className="text-sm font-medium text-orange-600">Section: {currentSection?.name || 'Unknown'}</div>
+        <div className="text-sm font-bold">Section: {currentSection?.name || 'Unknown'}</div>
       </div>
 
       {/* Position - Always first for all blocks */}
       <div className="space-y-3">
-        <div className="text-xs font-semibold text-orange-600">Position</div>
+        <div className="text-xs font-bold">Position</div>
         <div className="grid grid-cols-2 gap-2">
           <div>
             <Label htmlFor="block-x" className="text-xs">X (px)</Label>
@@ -1620,7 +1617,7 @@ function BlockProperties({
           </div>
         </div>
         
-        <div className="text-xs font-semibold text-orange-600">Size</div>
+        <div className="text-xs font-bold">Size</div>
         <div className="grid grid-cols-2 gap-2">
           <div>
             <Label htmlFor="block-width" className="text-xs">Width (px)</Label>
