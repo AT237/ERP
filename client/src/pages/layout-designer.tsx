@@ -1610,22 +1610,24 @@ function BlockProperties({
         <div className="text-xs font-bold">Position</div>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <Label htmlFor="block-x" className="text-xs">X (px)</Label>
+            <Label htmlFor="block-x" className="text-xs">X (mm)</Label>
             <Input
               id="block-x"
               type="number"
-              value={block.position?.x || 0}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: parseInt(e.target.value) || 0 })}
+              step="0.5"
+              value={pxToMm(block.position?.x || 0)}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: mmToPx(parseFloat(e.target.value) || 0) })}
               className="h-8 text-xs"
             />
           </div>
           <div>
-            <Label htmlFor="block-y" className="text-xs">Y (px)</Label>
+            <Label htmlFor="block-y" className="text-xs">Y (mm)</Label>
             <Input
               id="block-y"
               type="number"
-              value={block.position?.y || 0}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: parseInt(e.target.value) || 0 })}
+              step="0.5"
+              value={pxToMm(block.position?.y || 0)}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: mmToPx(parseFloat(e.target.value) || 0) })}
               className="h-8 text-xs"
             />
           </div>
@@ -1634,22 +1636,24 @@ function BlockProperties({
         <div className="text-xs font-bold">Size</div>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <Label htmlFor="block-width" className="text-xs">Width (px)</Label>
+            <Label htmlFor="block-width" className="text-xs">Width (mm)</Label>
             <Input
               id="block-width"
               type="number"
-              value={block.size?.width || 200}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, width: parseInt(e.target.value) || 200 })}
+              step="0.5"
+              value={pxToMm(block.size?.width || 200)}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, width: mmToPx(parseFloat(e.target.value) || 53) })}
               className="h-8 text-xs"
             />
           </div>
           <div>
-            <Label htmlFor="block-height" className="text-xs">Height (px)</Label>
+            <Label htmlFor="block-height" className="text-xs">Height (mm)</Label>
             <Input
               id="block-height"
               type="number"
-              value={block.size?.height || 100}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, height: parseInt(e.target.value) || 100 })}
+              step="0.5"
+              value={pxToMm(block.size?.height || 100)}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, height: mmToPx(parseFloat(e.target.value) || 26) })}
               className="h-8 text-xs"
             />
           </div>
