@@ -1869,7 +1869,15 @@ function BlockProperties({
               type="number"
               step="1"
               value={block.size?.width ?? 50}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, width: parseFloat(e.target.value) || 50 })}
+              onChange={(e) => {
+                const newWidth = parseFloat(e.target.value) || 50;
+                if (block.type === "Image" && block.config?.lockAspectRatio && block.config?.aspectRatio) {
+                  const newHeight = Math.round(newWidth / block.config.aspectRatio * 10) / 10;
+                  onUpdateProperty(sectionId, block.id, 'size', { width: newWidth, height: newHeight });
+                } else {
+                  onUpdateProperty(sectionId, block.id, 'size', { ...block.size, width: newWidth });
+                }
+              }}
               onFocus={(e) => e.target.select()}
               className="h-8 text-xs"
             />
@@ -1881,7 +1889,15 @@ function BlockProperties({
               type="number"
               step="1"
               value={block.size?.height ?? 25}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, height: parseFloat(e.target.value) || 25 })}
+              onChange={(e) => {
+                const newHeight = parseFloat(e.target.value) || 25;
+                if (block.type === "Image" && block.config?.lockAspectRatio && block.config?.aspectRatio) {
+                  const newWidth = Math.round(newHeight * block.config.aspectRatio * 10) / 10;
+                  onUpdateProperty(sectionId, block.id, 'size', { width: newWidth, height: newHeight });
+                } else {
+                  onUpdateProperty(sectionId, block.id, 'size', { ...block.size, height: newHeight });
+                }
+              }}
               onFocus={(e) => e.target.select()}
               className="h-8 text-xs"
             />
@@ -2035,6 +2051,25 @@ function BlockProperties({
               ))}
             </SelectContent>
           </Select>
+          
+          <div className="flex items-center space-x-2 pt-2">
+            <input
+              type="checkbox"
+              id="lock-aspect-ratio"
+              checked={block.config?.lockAspectRatio || false}
+              onChange={(e) => {
+                const currentWidth = block.size?.width ?? 50;
+                const currentHeight = block.size?.height ?? 25;
+                const aspectRatio = currentWidth / currentHeight;
+                updateConfig('lockAspectRatio', e.target.checked);
+                if (e.target.checked) {
+                  updateConfig('aspectRatio', aspectRatio);
+                }
+              }}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="lock-aspect-ratio" className="text-xs font-normal">Vergrendel verhouding</Label>
+          </div>
         </div>
       )}
 
