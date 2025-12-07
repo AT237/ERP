@@ -130,13 +130,48 @@ export function PageNumberRenderer({ block }: BlockRendererProps) {
   );
 }
 
+// Helper function to get alignment styles
+function getAlignmentStyles(alignH?: string, alignV?: string): React.CSSProperties {
+  const styles: React.CSSProperties = {
+    display: 'flex',
+    width: '100%',
+    height: '100%',
+  };
+  
+  switch (alignH) {
+    case 'left':
+      styles.justifyContent = 'flex-start';
+      break;
+    case 'center':
+      styles.justifyContent = 'center';
+      break;
+    case 'right':
+      styles.justifyContent = 'flex-end';
+      break;
+    default:
+      styles.justifyContent = 'flex-start';
+  }
+  
+  switch (alignV) {
+    case 'top':
+      styles.alignItems = 'flex-start';
+      break;
+    case 'middle':
+      styles.alignItems = 'center';
+      break;
+    case 'bottom':
+      styles.alignItems = 'flex-end';
+      break;
+    default:
+      styles.alignItems = 'flex-start';
+  }
+  
+  return styles;
+}
+
 // Image Block - logo or other images
 export function ImageBlockRenderer({ block, printData }: BlockRendererProps) {
-  const { src, alt = 'Image', fit = 'contain' } = block.config || {};
-  
-  // Get dimensions from block.size (preferred) or block.config
-  const width = block.size?.width || block.config?.width;
-  const height = block.size?.height || block.config?.height;
+  const { src, alt = 'Image', fit = 'contain', alignH, alignV } = block.config || {};
   
   // Special handling for company logo
   const imageSrc = src === 'company.logo' && printData.company?.logoUrl
@@ -147,14 +182,16 @@ export function ImageBlockRenderer({ block, printData }: BlockRendererProps) {
     return <div className="text-xs text-gray-400 italic">Geen afbeelding</div>;
   }
 
+  const alignmentStyles = getAlignmentStyles(alignH, alignV);
+
   return (
-    <div style={block.style || {}}>
+    <div style={{ ...alignmentStyles, ...(block.style || {}) }}>
       <img
         src={imageSrc}
         alt={alt}
         style={{
-          width: width ? `${width}px` : 'auto',
-          height: height ? `${height}px` : 'auto',
+          maxWidth: '100%',
+          maxHeight: '100%',
           objectFit: fit as any,
         }}
       />
