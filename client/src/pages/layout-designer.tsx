@@ -546,8 +546,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
     const newBlock = {
       id: `block-${Date.now()}`,
       type: draggedBlockType,
-      position: { x, y },
-      size: { width: 200, height: 100 },
+      position: { x: pxToMm(x), y: pxToMm(y) },
+      size: { width: 50, height: 25 },
       style: {
         fontSize: 9,
         fontFamily: 'helvetica',
@@ -1538,10 +1538,10 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveU
   };
 
   const blockStyle: React.CSSProperties = {
-    left: `${block.position.x}px`, 
-    top: `${block.position.y}px`,
-    width: `${block.size?.width || 200}px`,
-    minHeight: `${block.size?.height || 100}px`,
+    left: `${mmToPx(block.position.x || 0)}px`, 
+    top: `${mmToPx(block.position.y || 0)}px`,
+    width: `${mmToPx(block.size?.width || 50)}px`,
+    minHeight: `${mmToPx(block.size?.height || 25)}px`,
     zIndex: block.zIndex || 10,
   };
 
@@ -1638,9 +1638,10 @@ function BlockProperties({
             <Input
               id="block-x"
               type="number"
-              step="0.5"
-              value={pxToMm(block.position?.x || 0)}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: mmToPx(parseFloat(e.target.value) || 0) })}
+              step="1"
+              value={block.position?.x ?? 0}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: parseFloat(e.target.value) || 0 })}
+              onFocus={(e) => e.target.select()}
               className="h-8 text-xs"
             />
           </div>
@@ -1649,9 +1650,10 @@ function BlockProperties({
             <Input
               id="block-y"
               type="number"
-              step="0.5"
-              value={pxToMm(block.position?.y || 0)}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: mmToPx(parseFloat(e.target.value) || 0) })}
+              step="1"
+              value={block.position?.y ?? 0}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: parseFloat(e.target.value) || 0 })}
+              onFocus={(e) => e.target.select()}
               className="h-8 text-xs"
             />
           </div>
@@ -1664,9 +1666,10 @@ function BlockProperties({
             <Input
               id="block-width"
               type="number"
-              step="0.5"
-              value={pxToMm(block.size?.width || 200)}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, width: mmToPx(parseFloat(e.target.value) || 53) })}
+              step="1"
+              value={block.size?.width ?? 50}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, width: parseFloat(e.target.value) || 50 })}
+              onFocus={(e) => e.target.select()}
               className="h-8 text-xs"
             />
           </div>
@@ -1675,9 +1678,10 @@ function BlockProperties({
             <Input
               id="block-height"
               type="number"
-              step="0.5"
-              value={pxToMm(block.size?.height || 100)}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, height: mmToPx(parseFloat(e.target.value) || 26) })}
+              step="1"
+              value={block.size?.height ?? 25}
+              onChange={(e) => onUpdateProperty(sectionId, block.id, 'size', { ...block.size, height: parseFloat(e.target.value) || 25 })}
+              onFocus={(e) => e.target.select()}
               className="h-8 text-xs"
             />
           </div>
