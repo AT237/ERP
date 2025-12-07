@@ -1135,7 +1135,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
           <CardHeader>
             <CardTitle className="text-base">Properties</CardTitle>
             <CardDescription>
-              {selectedSection ? 'Sectie instellingen' : selectedBlock ? 'Blok instellingen' : 'Niets geselecteerd'}
+              {selectedSection ? 'Section Settings' : selectedBlock ? 'Properties' : 'Nothing selected'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1589,19 +1589,14 @@ function BlockProperties({
 
   return (
     <div className="space-y-4">
-      {/* Section Name */}
+      {/* Section: Name on one line */}
       <div className="pb-2 border-b">
-        <div className="text-xs text-muted-foreground">Sectie</div>
-        <div className="text-sm font-medium">{currentSection?.name || 'Onbekend'}</div>
-      </div>
-      
-      <div className="text-sm font-semibold text-orange-600">
-        {block.type}
+        <div className="text-sm font-medium text-orange-600">Section: {currentSection?.name || 'Unknown'}</div>
       </div>
 
-      {/* Position & Size - Always first for all blocks */}
+      {/* Position - Always first for all blocks */}
       <div className="space-y-3">
-        <div className="text-xs font-semibold text-orange-600">Positie</div>
+        <div className="text-xs font-semibold text-orange-600">Position</div>
         <div className="grid grid-cols-2 gap-2">
           <div>
             <Label htmlFor="block-x" className="text-xs">X (px)</Label>
@@ -1625,10 +1620,10 @@ function BlockProperties({
           </div>
         </div>
         
-        <div className="text-xs font-semibold text-orange-600">Grootte</div>
+        <div className="text-xs font-semibold text-orange-600">Size</div>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <Label htmlFor="block-width" className="text-xs">Breedte (px)</Label>
+            <Label htmlFor="block-width" className="text-xs">Width (px)</Label>
             <Input
               id="block-width"
               type="number"
@@ -1638,7 +1633,7 @@ function BlockProperties({
             />
           </div>
           <div>
-            <Label htmlFor="block-height" className="text-xs">Hoogte (px)</Label>
+            <Label htmlFor="block-height" className="text-xs">Height (px)</Label>
             <Input
               id="block-height"
               type="number"
@@ -1653,13 +1648,13 @@ function BlockProperties({
       {/* Text Block Properties */}
       {block.type === "Text" && (
         <div>
-          <Label htmlFor="text-content" className="text-xs">Tekst</Label>
+          <Label htmlFor="text-content" className="text-xs">Text</Label>
           <textarea
             id="text-content"
             value={block.config?.text || ''}
             onChange={(e) => updateConfig('text', e.target.value)}
             className="w-full min-h-[100px] p-2 text-xs border rounded"
-            placeholder="Voer tekst in..."
+            placeholder="Enter text..."
           />
         </div>
       )}
@@ -1667,33 +1662,30 @@ function BlockProperties({
       {/* Image Block Properties */}
       {block.type === "Image" && (
         <div className="space-y-2">
-          <div>
-            <Label htmlFor="image-select" className="text-xs">Afbeelding</Label>
-            <Select 
-              value={block.config?.imageId || ''}
-              onValueChange={(value) => {
-                const selectedImage = images?.find(img => img.id === value);
-                // Update all config properties at once to prevent race condition
-                onUpdateProperty(sectionId, block.id, 'config', { 
-                  ...block.config, 
-                  imageId: value,
-                  src: selectedImage?.imageData || '',
-                  alt: selectedImage?.name || ''
-                });
-              }}
-            >
-              <SelectTrigger id="image-select" className="h-8 text-xs">
-                <SelectValue placeholder="Selecteer afbeelding..." />
-              </SelectTrigger>
-              <SelectContent>
-                {images?.map((img: any) => (
-                  <SelectItem key={img.id} value={img.id}>
-                    {img.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Select 
+            value={block.config?.imageId || ''}
+            onValueChange={(value) => {
+              const selectedImage = images?.find(img => img.id === value);
+              // Update all config properties at once to prevent race condition
+              onUpdateProperty(sectionId, block.id, 'config', { 
+                ...block.config, 
+                imageId: value,
+                src: selectedImage?.imageData || '',
+                alt: selectedImage?.name || ''
+              });
+            }}
+          >
+            <SelectTrigger id="image-select" className="h-8 text-xs">
+              <SelectValue placeholder="Select image..." />
+            </SelectTrigger>
+            <SelectContent>
+              {images?.map((img: any) => (
+                <SelectItem key={img.id} value={img.id}>
+                  {img.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
@@ -1702,18 +1694,18 @@ function BlockProperties({
         <div className="space-y-3">
           {allowedTables.length === 0 ? (
             <div className="p-3 border border-orange-200 bg-orange-50 rounded text-xs text-orange-700">
-              ⚠️ Geen databronnen geselecteerd. Klik op "Databron" in de toolbar om tabellen te selecteren.
+              No data sources selected. Click "Data Source" in the toolbar to select tables.
             </div>
           ) : (
             <>
               <div>
-                <Label htmlFor="data-table" className="text-xs">Tabel</Label>
+                <Label htmlFor="data-table" className="text-xs">Table</Label>
                 <Select 
                   value={block.config?.tableName || ''}
                   onValueChange={(value) => updateConfig('tableName', value)}
                 >
                   <SelectTrigger id="data-table" className="h-8 text-xs">
-                    <SelectValue placeholder="Selecteer tabel..." />
+                    <SelectValue placeholder="Select table..." />
                   </SelectTrigger>
                   <SelectContent>
                     {allowedTables.map(tableName => {
@@ -1730,13 +1722,13 @@ function BlockProperties({
 
               {selectedTable && (
                 <div>
-                  <Label htmlFor="data-field" className="text-xs">Veld</Label>
+                  <Label htmlFor="data-field" className="text-xs">Field</Label>
                   <Select 
                     value={block.config?.fieldName || ''}
                     onValueChange={(value) => updateConfig('fieldName', value)}
                   >
                     <SelectTrigger id="data-field" className="h-8 text-xs">
-                      <SelectValue placeholder="Selecteer veld..." />
+                      <SelectValue placeholder="Select field..." />
                     </SelectTrigger>
                     <SelectContent>
                       {selectedTable.fields.map((field: string) => (
@@ -1756,12 +1748,12 @@ function BlockProperties({
                   value={block.config?.label || ''}
                   onChange={(e) => updateConfig('label', e.target.value)}
                   className="h-8 text-xs"
-                  placeholder="Veld Label:"
+                  placeholder="Field Label:"
                 />
               </div>
 
               <div>
-                <Label htmlFor="data-format" className="text-xs">Formaat</Label>
+                <Label htmlFor="data-format" className="text-xs">Format</Label>
                 <Select 
                   value={block.config?.format || 'text'}
                   onValueChange={(value) => updateConfig('format', value)}
@@ -1770,10 +1762,10 @@ function BlockProperties({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="text">Tekst</SelectItem>
-                    <SelectItem value="number">Nummer</SelectItem>
-                    <SelectItem value="currency">Valuta</SelectItem>
-                    <SelectItem value="date">Datum</SelectItem>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="number">Number</SelectItem>
+                    <SelectItem value="currency">Currency</SelectItem>
+                    <SelectItem value="date">Date</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1792,7 +1784,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
     <div className="space-y-4">
       {/* Name */}
       <div>
-        <Label htmlFor="section-name" className="text-xs">Naam</Label>
+        <Label htmlFor="section-name" className="text-xs">Name</Label>
         <Input
           id="section-name"
           value={section.name}
@@ -1803,7 +1795,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
 
       {/* Height */}
       <div>
-        <Label htmlFor="section-height" className="text-xs">Hoogte (px)</Label>
+        <Label htmlFor="section-height" className="text-xs">Height (px)</Label>
         <Input
           id="section-height"
           type="number"
@@ -1815,7 +1807,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
 
       {/* Can Grow / Can Shrink */}
       <div className="space-y-2">
-        <Label className="text-xs font-semibold">Hoogte Gedrag</Label>
+        <Label className="text-xs font-semibold">Height Behavior</Label>
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <input
@@ -1825,7 +1817,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               onChange={(e) => onUpdateProperty(section.id, 'config.canGrow', e.target.checked)}
               className="h-4 w-4"
             />
-            <Label htmlFor="can-grow" className="text-xs font-normal">Can grow (hoogte neemt toe bij meer data)</Label>
+            <Label htmlFor="can-grow" className="text-xs font-normal">Can grow (height increases with more data)</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -1835,14 +1827,14 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               onChange={(e) => onUpdateProperty(section.id, 'config.canShrink', e.target.checked)}
               className="h-4 w-4"
             />
-            <Label htmlFor="can-shrink" className="text-xs font-normal">Can shrink (hoogte neemt af bij witte ruimte)</Label>
+            <Label htmlFor="can-shrink" className="text-xs font-normal">Can shrink (height decreases with whitespace)</Label>
           </div>
         </div>
       </div>
 
       {/* Background Color */}
       <div>
-        <Label htmlFor="section-bg" className="text-xs">Achtergrondkleur</Label>
+        <Label htmlFor="section-bg" className="text-xs">Background Color</Label>
         <Input
           id="section-bg"
           type="color"
@@ -1854,7 +1846,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
 
       {/* Print Rules */}
       <div className="space-y-2">
-        <Label className="text-xs font-semibold">Print Regels</Label>
+        <Label className="text-xs font-semibold">Print Rules</Label>
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <input
@@ -1864,7 +1856,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               onChange={(e) => onUpdateProperty(section.id, 'config.printRules.everyPage', e.target.checked)}
               className="h-4 w-4"
             />
-            <Label htmlFor="print-every" className="text-xs font-normal">Elke pagina</Label>
+            <Label htmlFor="print-every" className="text-xs font-normal">Every page</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -1874,7 +1866,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               onChange={(e) => onUpdateProperty(section.id, 'config.printRules.firstPage', e.target.checked)}
               className="h-4 w-4"
             />
-            <Label htmlFor="print-first" className="text-xs font-normal">Alleen eerste pagina</Label>
+            <Label htmlFor="print-first" className="text-xs font-normal">First page only</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -1884,7 +1876,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               onChange={(e) => onUpdateProperty(section.id, 'config.printRules.lastPage', e.target.checked)}
               className="h-4 w-4"
             />
-            <Label htmlFor="print-last" className="text-xs font-normal">Alleen laatste pagina</Label>
+            <Label htmlFor="print-last" className="text-xs font-normal">Last page only</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -1894,7 +1886,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               onChange={(e) => onUpdateProperty(section.id, 'config.printRules.oddPages', e.target.checked)}
               className="h-4 w-4"
             />
-            <Label htmlFor="print-odd" className="text-xs font-normal">Alleen oneven pagina's</Label>
+            <Label htmlFor="print-odd" className="text-xs font-normal">Odd pages only</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -1904,14 +1896,14 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               onChange={(e) => onUpdateProperty(section.id, 'config.printRules.evenPages', e.target.checked)}
               className="h-4 w-4"
             />
-            <Label htmlFor="print-even" className="text-xs font-normal">Alleen even pagina's</Label>
+            <Label htmlFor="print-even" className="text-xs font-normal">Even pages only</Label>
           </div>
         </div>
       </div>
 
       {/* Layout Grid */}
       <div className="space-y-2 border-t pt-4">
-        <Label className="text-xs font-semibold">Hoogte Verdeling</Label>
+        <Label className="text-xs font-semibold">Height Division</Label>
         <div className="space-y-3">
           {/* Enable Grid Toggle */}
           <div className="flex items-center space-x-2">
@@ -1928,14 +1920,14 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               }}
               className="h-4 w-4"
             />
-            <Label htmlFor="grid-enabled" className="text-xs font-normal">Grid inschakelen</Label>
+            <Label htmlFor="grid-enabled" className="text-xs font-normal">Enable grid</Label>
           </div>
 
           {/* Grid Settings (only show when enabled) */}
           {section.config.layoutGrid && (
             <>
               <div>
-                <Label htmlFor="grid-rows" className="text-xs">Aantal rijen</Label>
+                <Label htmlFor="grid-rows" className="text-xs">Number of rows</Label>
                 <Input
                   id="grid-rows"
                   type="number"
@@ -1948,7 +1940,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               </div>
 
               <div>
-                <Label htmlFor="grid-gutter" className="text-xs">Tussenruimte (px)</Label>
+                <Label htmlFor="grid-gutter" className="text-xs">Gutter (px)</Label>
                 <Input
                   id="grid-gutter"
                   type="number"
