@@ -1903,6 +1903,37 @@ function BlockProperties({
             />
           </div>
         </div>
+
+        {/* Image Selection - only for Image blocks, between Size and Alignment */}
+        {block.type === "Image" && (
+          <div className="pt-2">
+            <div className="text-xs font-bold pb-1">Afbeelding</div>
+            <Select 
+              value={block.config?.imageId || ''}
+              onValueChange={(value) => {
+                const selectedImage = images?.find(img => img.id === value);
+                onUpdateProperty(sectionId, block.id, 'config', { 
+                  ...block.config, 
+                  imageId: value,
+                  src: selectedImage?.imageData || '',
+                  alt: selectedImage?.name || '',
+                  imageDescription: selectedImage?.name || 'Image'
+                });
+              }}
+            >
+              <SelectTrigger id="image-select" className="h-8 text-xs">
+                <SelectValue placeholder="Selecteer afbeelding..." />
+              </SelectTrigger>
+              <SelectContent>
+                {images?.map((img: any) => (
+                  <SelectItem key={img.id} value={img.id}>
+                    {img.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         
         {/* Alignment */}
         <div className="text-xs font-bold pt-2">Alignment</div>
@@ -2007,6 +2038,29 @@ function BlockProperties({
             />
             <Label htmlFor="block-can-shrink" className="text-xs font-normal">Can shrink</Label>
           </div>
+          {/* Lock Aspect Ratio - only for Image blocks */}
+          {block.type === "Image" && (
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="lock-aspect-ratio"
+                checked={block.config?.lockAspectRatio || false}
+                onChange={(e) => {
+                  const isLocked = e.target.checked;
+                  const currentWidth = block.size?.width ?? 50;
+                  const currentHeight = block.size?.height ?? 25;
+                  const aspectRatio = currentWidth / currentHeight;
+                  onUpdateProperty(sectionId, block.id, 'config', { 
+                    ...block.config, 
+                    lockAspectRatio: isLocked,
+                    aspectRatio: isLocked ? aspectRatio : block.config?.aspectRatio
+                  });
+                }}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="lock-aspect-ratio" className="text-xs font-normal">Vergrendel verhouding</Label>
+            </div>
+          )}
         </div>
       </div>
 
@@ -2021,55 +2075,6 @@ function BlockProperties({
             className="w-full min-h-[100px] p-2 text-xs border rounded"
             placeholder="Enter text..."
           />
-        </div>
-      )}
-
-      {/* Image Block Properties */}
-      {block.type === "Image" && (
-        <div className="space-y-2">
-          <Select 
-            value={block.config?.imageId || ''}
-            onValueChange={(value) => {
-              const selectedImage = images?.find(img => img.id === value);
-              onUpdateProperty(sectionId, block.id, 'config', { 
-                ...block.config, 
-                imageId: value,
-                src: selectedImage?.imageData || '',
-                alt: selectedImage?.name || '',
-                imageDescription: selectedImage?.name || 'Image'
-              });
-            }}
-          >
-            <SelectTrigger id="image-select" className="h-8 text-xs">
-              <SelectValue placeholder="Select image..." />
-            </SelectTrigger>
-            <SelectContent>
-              {images?.map((img: any) => (
-                <SelectItem key={img.id} value={img.id}>
-                  {img.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <div className="flex items-center space-x-2 pt-2">
-            <input
-              type="checkbox"
-              id="lock-aspect-ratio"
-              checked={block.config?.lockAspectRatio || false}
-              onChange={(e) => {
-                const currentWidth = block.size?.width ?? 50;
-                const currentHeight = block.size?.height ?? 25;
-                const aspectRatio = currentWidth / currentHeight;
-                updateConfig('lockAspectRatio', e.target.checked);
-                if (e.target.checked) {
-                  updateConfig('aspectRatio', aspectRatio);
-                }
-              }}
-              className="h-4 w-4"
-            />
-            <Label htmlFor="lock-aspect-ratio" className="text-xs font-normal">Vergrendel verhouding</Label>
-          </div>
         </div>
       )}
 
