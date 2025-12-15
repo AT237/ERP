@@ -814,14 +814,24 @@ function VisualDesignerView({ layout }: { layout: any }) {
           <div className="h-6 w-px bg-border" />
 
           {/* Grid Toggle */}
-          <Button 
-            size="sm" 
-            variant={showGrid ? "default" : "ghost"} 
-            onClick={() => setShowGrid(!showGrid)}
-          >
-            <Grid3x3 className="h-4 w-4 mr-2" />
-            Grid
-          </Button>
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant={showGrid ? "default" : "ghost"} 
+                  onClick={() => setShowGrid(!showGrid)}
+                  className="px-2"
+                >
+                  <Grid3x3 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Raster</p>
+                <p className="text-xs text-muted-foreground">Toon/verberg rasterlijnen</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           {/* Print Margins */}
           <TooltipProvider delayDuration={300}>
