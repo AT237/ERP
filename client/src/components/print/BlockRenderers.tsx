@@ -195,8 +195,8 @@ export function ImageBlockRenderer({ block, printData }: BlockRendererProps) {
         src={imageSrc}
         alt={alt}
         style={{
-          width: '100%',
-          height: '100%',
+          maxWidth: '100%',
+          maxHeight: '100%',
           objectFit: fit as any,
         }}
       />
