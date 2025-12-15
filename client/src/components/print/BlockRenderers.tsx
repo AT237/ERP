@@ -56,9 +56,20 @@ export function TextBlockRenderer({ block, printData, currentPage = 1, totalPage
   const rawText = block.config?.text || 'Tekst...';
   const processedText = replaceTextVariables(rawText, printData, currentPage, totalPages);
   
+  const textStyle: React.CSSProperties = {
+    fontFamily: block.style?.fontFamily || 'helvetica',
+    fontSize: block.style?.fontSize ? `${block.style.fontSize}pt` : '9pt',
+    fontWeight: block.style?.fontWeight || 'normal',
+    fontStyle: block.style?.fontStyle || 'normal',
+    textDecoration: block.style?.textDecoration || 'none',
+    color: block.style?.color || '#000000',
+    whiteSpace: 'pre-wrap',
+    margin: 0,
+  };
+  
   return (
     <div style={block.style || {}}>
-      <p className="text-sm whitespace-pre-wrap">{processedText}</p>
+      <p style={textStyle}>{processedText}</p>
     </div>
   );
 }

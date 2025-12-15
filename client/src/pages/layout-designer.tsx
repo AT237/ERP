@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES } from '@/components/print/BlockRenderers';
 import type { PrintData } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
@@ -1841,6 +1841,10 @@ function BlockProperties({
     onUpdateProperty(sectionId, block.id, 'config', { ...block.config, [property]: value });
   };
 
+  const updateStyle = (property: string, value: any) => {
+    onUpdateProperty(sectionId, block.id, 'style', { ...block.style, [property]: value });
+  };
+
   const selectedTable = availableTables.find(t => t.name === block.config?.tableName);
   const currentSection = sections.find(s => s.id === sectionId);
   
@@ -2093,14 +2097,120 @@ function BlockProperties({
       {/* Text Block Properties */}
       {block.type === "Text" && (
         <div className="space-y-3">
+          {/* Text Styling */}
           <div>
-            <Label htmlFor={`text-content-${block.id}`} className="text-xs">Text</Label>
+            <Label className="text-xs font-semibold mb-2 block">Tekststijl</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="font-family" className="text-[10px] text-muted-foreground">Lettertype</Label>
+                <Select 
+                  value={block.style?.fontFamily || 'helvetica'}
+                  onValueChange={(value) => updateStyle('fontFamily', value)}
+                >
+                  <SelectTrigger id="font-family" className="h-7 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="helvetica">Helvetica</SelectItem>
+                    <SelectItem value="arial">Arial</SelectItem>
+                    <SelectItem value="times">Times New Roman</SelectItem>
+                    <SelectItem value="courier">Courier</SelectItem>
+                    <SelectItem value="georgia">Georgia</SelectItem>
+                    <SelectItem value="verdana">Verdana</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="font-size" className="text-[10px] text-muted-foreground">Grootte</Label>
+                <Select 
+                  value={String(block.style?.fontSize || 9)}
+                  onValueChange={(value) => updateStyle('fontSize', parseInt(value))}
+                >
+                  <SelectTrigger id="font-size" className="h-7 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="6">6pt</SelectItem>
+                    <SelectItem value="7">7pt</SelectItem>
+                    <SelectItem value="8">8pt</SelectItem>
+                    <SelectItem value="9">9pt</SelectItem>
+                    <SelectItem value="10">10pt</SelectItem>
+                    <SelectItem value="11">11pt</SelectItem>
+                    <SelectItem value="12">12pt</SelectItem>
+                    <SelectItem value="14">14pt</SelectItem>
+                    <SelectItem value="16">16pt</SelectItem>
+                    <SelectItem value="18">18pt</SelectItem>
+                    <SelectItem value="20">20pt</SelectItem>
+                    <SelectItem value="24">24pt</SelectItem>
+                    <SelectItem value="28">28pt</SelectItem>
+                    <SelectItem value="32">32pt</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            {/* Bold, Italic, Underline toggles */}
+            <div className="flex items-center gap-1 mt-2">
+              <Button
+                type="button"
+                variant={block.style?.fontWeight === 'bold' ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => updateStyle('fontWeight', block.style?.fontWeight === 'bold' ? 'normal' : 'bold')}
+                data-testid="btn-bold"
+              >
+                <Bold className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                type="button"
+                variant={block.style?.fontStyle === 'italic' ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => updateStyle('fontStyle', block.style?.fontStyle === 'italic' ? 'normal' : 'italic')}
+                data-testid="btn-italic"
+              >
+                <Italic className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                type="button"
+                variant={block.style?.textDecoration === 'underline' ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => updateStyle('textDecoration', block.style?.textDecoration === 'underline' ? 'none' : 'underline')}
+                data-testid="btn-underline"
+              >
+                <Underline className="h-3.5 w-3.5" />
+              </Button>
+              
+              {/* Color picker */}
+              <div className="flex items-center gap-1 ml-2">
+                <Label className="text-[10px] text-muted-foreground">Kleur:</Label>
+                <input
+                  type="color"
+                  value={block.style?.color || '#000000'}
+                  onChange={(e) => updateStyle('color', e.target.value)}
+                  className="h-7 w-7 p-0.5 border rounded cursor-pointer"
+                  data-testid="input-text-color"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor={`text-content-${block.id}`} className="text-xs">Tekst</Label>
             <textarea
               id={`text-content-${block.id}`}
               value={block.config?.text || ''}
               onChange={(e) => updateConfig('text', e.target.value)}
               className="w-full min-h-[100px] p-2 text-xs border rounded"
-              placeholder="Enter text..."
+              placeholder="Voer tekst in..."
+              style={{
+                fontFamily: block.style?.fontFamily || 'helvetica',
+                fontWeight: block.style?.fontWeight || 'normal',
+                fontStyle: block.style?.fontStyle || 'normal',
+                textDecoration: block.style?.textDecoration || 'none',
+                color: block.style?.color || '#000000',
+              }}
             />
           </div>
           
