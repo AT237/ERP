@@ -484,6 +484,14 @@ function VisualDesignerView({ layout }: { layout: any }) {
   // Save layout mutation
   const saveLayoutMutation = useMutation({
     mutationFn: async () => {
+      // Update layout metadata with print margins
+      await apiRequest('PUT', `/api/layouts/${layout.id}`, {
+        metadata: {
+          ...layout.metadata,
+          printMargins,
+        },
+      });
+
       // Delete existing sections first
       if (existingSections && existingSections.length > 0) {
         for (const section of existingSections) {
@@ -509,7 +517,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
         title: 'Opgeslagen!',
         description: `Layout "${layout.name}" is succesvol opgeslagen`,
       });
-      // Invalidate the query to refetch from database
+      // Invalidate both layouts and sections to refetch from database
+      queryClient.invalidateQueries({ queryKey: ['/api/layouts'] });
       queryClient.invalidateQueries({ queryKey: [`/api/layout-sections?layoutId=${layout.id}`] });
       // Reset sections state so useEffect reloads from database
       setSections([]);
@@ -698,10 +707,17 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [showGrid, setShowGrid] = useState(true);
   const [gridSize, setGridSize] = useState(10);
   
-  // Print margins state (in mm)
+  // Print margins state (in mm) - load from layout metadata
   const [printMargins, setPrintMargins] = useState({ top: 10, right: 10, bottom: 10, left: 10 });
   const [showPrintMarginsDialog, setShowPrintMarginsDialog] = useState(false);
   const [showPrintMargins, setShowPrintMargins] = useState(true);
+
+  // Load print margins from layout metadata
+  useEffect(() => {
+    if (layout?.metadata?.printMargins) {
+      setPrintMargins(layout.metadata.printMargins);
+    }
+  }, [layout?.metadata?.printMargins]);
 
   return (
     <div className="flex flex-col h-full">
