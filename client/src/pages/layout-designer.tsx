@@ -1426,6 +1426,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 allowedTables={allowedTables}
                 availableTables={availableTables}
                 onUpdateProperty={updateBlockProperty}
+                onRemove={() => {
+                  const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
+                  if (sectionId) {
+                    handleRemoveBlock(sectionId, selectedBlock.id);
+                  }
+                }}
               />
             ) : (
               <div className="text-sm text-muted-foreground text-center py-8">
@@ -1828,7 +1834,8 @@ function BlockProperties({
   sections,
   allowedTables,
   availableTables,
-  onUpdateProperty 
+  onUpdateProperty,
+  onRemove
 }: { 
   block: any; 
   sectionId: string;
@@ -1836,6 +1843,7 @@ function BlockProperties({
   allowedTables: string[];
   availableTables: any[];
   onUpdateProperty: (sectionId: string, blockId: string, property: string, value: any) => void;
+  onRemove: () => void;
 }) {
   const updateConfig = (property: string, value: any) => {
     onUpdateProperty(sectionId, block.id, 'config', { ...block.config, [property]: value });
@@ -1855,9 +1863,18 @@ function BlockProperties({
 
   return (
     <div className="space-y-4">
-      {/* Section: Name on one line */}
-      <div className="pb-2 border-b">
+      {/* Header with Section name and Delete button */}
+      <div className="pb-2 border-b flex items-center justify-between">
         <div className="text-sm font-bold">Section: {currentSection?.name || 'Unknown'}</div>
+        <Button
+          variant="destructive"
+          size="sm"
+          className="h-7 px-2"
+          onClick={onRemove}
+          data-testid="btn-delete-block"
+        >
+          <span className="mr-1">×</span> Verwijderen
+        </Button>
       </div>
 
       {/* Position - Always first for all blocks */}

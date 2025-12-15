@@ -56,6 +56,31 @@ export function TextBlockRenderer({ block, printData, currentPage = 1, totalPage
   const rawText = block.config?.text || 'Tekst...';
   const processedText = replaceTextVariables(rawText, printData, currentPage, totalPages);
   
+  // Map alignH/alignV to CSS
+  const getTextAlign = (alignH?: string): 'left' | 'center' | 'right' => {
+    switch (alignH) {
+      case 'center': return 'center';
+      case 'right': return 'right';
+      default: return 'left';
+    }
+  };
+  
+  const getVerticalAlign = (alignV?: string): string => {
+    switch (alignV) {
+      case 'middle': return 'center';
+      case 'bottom': return 'flex-end';
+      default: return 'flex-start';
+    }
+  };
+  
+  const containerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: getVerticalAlign(block.config?.alignV),
+    justifyContent: block.config?.alignH === 'center' ? 'center' : block.config?.alignH === 'right' ? 'flex-end' : 'flex-start',
+    width: '100%',
+    height: '100%',
+  };
+  
   const textStyle: React.CSSProperties = {
     fontFamily: block.style?.fontFamily || 'helvetica',
     fontSize: block.style?.fontSize ? `${block.style.fontSize}pt` : '9pt',
@@ -63,12 +88,14 @@ export function TextBlockRenderer({ block, printData, currentPage = 1, totalPage
     fontStyle: block.style?.fontStyle || 'normal',
     textDecoration: block.style?.textDecoration || 'none',
     color: block.style?.color || '#000000',
+    textAlign: getTextAlign(block.config?.alignH),
     whiteSpace: 'pre-wrap',
     margin: 0,
+    width: '100%',
   };
   
   return (
-    <div style={block.style || {}}>
+    <div style={containerStyle}>
       <p style={textStyle}>{processedText}</p>
     </div>
   );
