@@ -4,13 +4,61 @@ import { resolveAndFormat, PrintData } from '@/utils/field-resolver';
 export interface BlockRendererProps {
   block: any;
   printData: PrintData;
+  currentPage?: number;
+  totalPages?: number;
 }
 
-// Text Block - static text content
-export function TextBlockRenderer({ block }: BlockRendererProps) {
+// Text variables that can be used in text blocks
+export const TEXT_VARIABLES = [
+  { code: '[PAGINANUMMER]', label: 'Paginanummer', description: 'Huidige pagina' },
+  { code: '[TOTAALPAGINAS]', label: 'Totaal paginas', description: 'Totaal aantal paginas' },
+  { code: '[VANDAAG]', label: 'Vandaag', description: 'Huidige datum' },
+  { code: '[DATUM]', label: 'Documentdatum', description: 'Datum van document' },
+  { code: '[JAAR]', label: 'Jaar', description: 'Huidig jaar' },
+];
+
+// Function to replace text variables with actual values
+export function replaceTextVariables(
+  text: string, 
+  printData: PrintData,
+  currentPage: number = 1,
+  totalPages: number = 1
+): string {
+  if (!text) return text;
+  
+  const today = new Date();
+  const todayFormatted = today.toLocaleDateString('nl-NL', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+  
+  // Get document date if available
+  const documentDate = printData.quotation?.createdAt || printData.quotation?.date;
+  const documentDateFormatted = documentDate 
+    ? new Date(documentDate).toLocaleDateString('nl-NL', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+    : todayFormatted;
+
+  return text
+    .replace(/\[PAGINANUMMER\]/g, String(currentPage))
+    .replace(/\[TOTAALPAGINAS\]/g, String(totalPages))
+    .replace(/\[VANDAAG\]/g, todayFormatted)
+    .replace(/\[DATUM\]/g, documentDateFormatted)
+    .replace(/\[JAAR\]/g, String(today.getFullYear()));
+}
+
+// Text Block - static text content with variable support
+export function TextBlockRenderer({ block, printData, currentPage = 1, totalPages = 1 }: BlockRendererProps) {
+  const rawText = block.config?.text || 'Tekst...';
+  const processedText = replaceTextVariables(rawText, printData, currentPage, totalPages);
+  
   return (
     <div style={block.style || {}}>
-      <p className="text-sm">{block.config?.text || 'Tekst...'}</p>
+      <p className="text-sm whitespace-pre-wrap">{processedText}</p>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer } from 'lucide-react';
-import { BlockRenderers, UnknownBlockRenderer } from '@/components/print/BlockRenderers';
+import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES } from '@/components/print/BlockRenderers';
 import type { PrintData } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -2092,15 +2092,63 @@ function BlockProperties({
 
       {/* Text Block Properties */}
       {block.type === "Text" && (
-        <div>
-          <Label htmlFor="text-content" className="text-xs">Text</Label>
-          <textarea
-            id="text-content"
-            value={block.config?.text || ''}
-            onChange={(e) => updateConfig('text', e.target.value)}
-            className="w-full min-h-[100px] p-2 text-xs border rounded"
-            placeholder="Enter text..."
-          />
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor={`text-content-${block.id}`} className="text-xs">Text</Label>
+            <textarea
+              id={`text-content-${block.id}`}
+              value={block.config?.text || ''}
+              onChange={(e) => updateConfig('text', e.target.value)}
+              className="w-full min-h-[100px] p-2 text-xs border rounded"
+              placeholder="Enter text..."
+            />
+          </div>
+          
+          {/* Text Variables */}
+          <div>
+            <Label className="text-xs font-semibold mb-2 block">Variabelen invoegen</Label>
+            <div className="flex flex-wrap gap-1">
+              {TEXT_VARIABLES.map((variable) => (
+                <Tooltip key={variable.code}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => {
+                        const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
+                        if (textarea) {
+                          const start = textarea.selectionStart;
+                          const end = textarea.selectionEnd;
+                          const currentText = block.config?.text || '';
+                          const newText = currentText.substring(0, start) + variable.code + currentText.substring(end);
+                          updateConfig('text', newText);
+                          setTimeout(() => {
+                            textarea.focus();
+                            const newPos = start + variable.code.length;
+                            textarea.setSelectionRange(newPos, newPos);
+                          }, 0);
+                        } else {
+                          updateConfig('text', (block.config?.text || '') + variable.code);
+                        }
+                      }}
+                      data-testid={`btn-var-${variable.code.replace(/[\[\]]/g, '')}`}
+                    >
+                      {variable.label}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">{variable.description}</p>
+                    <p className="text-xs text-muted-foreground">{variable.code}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Klik op een variabele om deze in de tekst in te voegen
+            </p>
+          </div>
         </div>
       )}
 
