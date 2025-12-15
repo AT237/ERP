@@ -2217,47 +2217,43 @@ function BlockProperties({
           {/* Text Variables */}
           <div>
             <Label className="text-xs font-semibold mb-2 block">Variabelen invoegen</Label>
-            <div className="flex flex-wrap gap-1">
-              {TEXT_VARIABLES.map((variable) => (
-                <Tooltip key={variable.code}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-6 px-2 text-xs"
-                      onClick={() => {
-                        const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
-                        if (textarea) {
-                          const start = textarea.selectionStart;
-                          const end = textarea.selectionEnd;
-                          const currentText = block.config?.text || '';
-                          const newText = currentText.substring(0, start) + variable.code + currentText.substring(end);
-                          updateConfig('text', newText);
-                          setTimeout(() => {
-                            textarea.focus();
-                            const newPos = start + variable.code.length;
-                            textarea.setSelectionRange(newPos, newPos);
-                          }, 0);
-                        } else {
-                          updateConfig('text', (block.config?.text || '') + variable.code);
-                        }
-                      }}
-                      data-testid={`btn-var-${variable.code.replace(/[\[\]]/g, '')}`}
-                    >
-                      {variable.label}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">{variable.description}</p>
-                    <p className="text-xs text-muted-foreground">{variable.code}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
+            <div className="flex gap-2">
+              <Select
+                value=""
+                onValueChange={(value) => {
+                  if (!value) return;
+                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
+                  if (textarea) {
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const currentText = block.config?.text || '';
+                    const newText = currentText.substring(0, start) + value + currentText.substring(end);
+                    updateConfig('text', newText);
+                    setTimeout(() => {
+                      textarea.focus();
+                      const newPos = start + value.length;
+                      textarea.setSelectionRange(newPos, newPos);
+                    }, 0);
+                  } else {
+                    updateConfig('text', (block.config?.text || '') + value);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-8 text-xs flex-1" data-testid="select-variable">
+                  <SelectValue placeholder="Kies variabele..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {TEXT_VARIABLES.map((variable) => (
+                    <SelectItem key={variable.code} value={variable.code}>
+                      <div className="flex flex-col">
+                        <span>{variable.label}</span>
+                        <span className="text-[10px] text-muted-foreground">{variable.code}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Klik op een variabele om deze in de tekst in te voegen
-            </p>
           </div>
         </div>
       )}
