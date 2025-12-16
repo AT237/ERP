@@ -2151,38 +2151,22 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, onClick, onRem
         onClick();
       }}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium truncate">
-            {block.type === "Image" 
-              ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
-              : block.type === "Text" 
-                ? (block.config?.text || 'Tekst...') 
-                : block.type === "Data Field" && block.config?.tableName && block.config?.fieldName
-                  ? `${block.config.tableName}.${block.config.fieldName}`
-                  : block.type === "Company Header"
-                    ? (block.config?.company?.name || 'Company Name')
-                    : block.type === "Document Title"
-                      ? (block.config?.text || 'Document Title')
-                      : block.type === "Date Block"
-                        ? (block.config?.date || 'Date')
-                        : block.type === "Text Block"
-                          ? (block.config?.text || 'Text Block')
-                          : block.type}
-          </span>
-        </div>
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100 flex-shrink-0"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-          title="Verwijder"
-        >
-          ×
-        </Button>
+      <div className="text-sm font-medium truncate">
+        {block.type === "Image" 
+          ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
+          : block.type === "Text" 
+            ? (block.config?.text || 'Tekst...') 
+            : block.type === "Data Field" && block.config?.tableName && block.config?.fieldName
+              ? `${block.config.tableName}.${block.config.fieldName}`
+              : block.type === "Company Header"
+                ? (block.config?.company?.name || 'Company Name')
+                : block.type === "Document Title"
+                  ? (block.config?.text || 'Document Title')
+                  : block.type === "Date Block"
+                    ? (block.config?.date || 'Date')
+                    : block.type === "Text Block"
+                      ? (block.config?.text || 'Text Block')
+                      : block.type}
       </div>
     </div>
   );
