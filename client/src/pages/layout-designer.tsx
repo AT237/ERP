@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES } from '@/components/print/BlockRenderers';
@@ -1515,7 +1515,47 @@ function getDefaultConfig(blockType: string) {
 function PreviewView({ layout }: { layout: any }) {
   const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
   const [showQuotationDialog, setShowQuotationDialog] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  const handlePrint = () => {
+    if (!printRef.current) return;
+    
+    const printContent = printRef.current.innerHTML;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({
+        title: 'Print geblokkeerd',
+        description: 'Sta pop-ups toe om te kunnen printen',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Print Preview</title>
+        <style>
+          @page { size: A4; margin: 0; }
+          @media print {
+            body { margin: 0; padding: 0; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        </style>
+      </head>
+      <body>${printContent}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
 
   // Fetch all quotations
   const { data: quotations = [] } = useQuery<any[]>({
@@ -1577,14 +1617,26 @@ function PreviewView({ layout }: { layout: any }) {
           {selectedQuotation ? `Offerte: ${selectedQuotation.quotationNumber}` : 'Selecteer Offerte'}
         </Button>
         {selectedQuotationId && (
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => setSelectedQuotationId(null)}
-            data-testid="button-clear-selection"
-          >
-            Wis Selectie
-          </Button>
+          <>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => setSelectedQuotationId(null)}
+              data-testid="button-clear-selection"
+            >
+              Wis Selectie
+            </Button>
+            <Button 
+              size="sm" 
+              variant="default"
+              onClick={handlePrint}
+              data-testid="button-print-preview"
+              className="bg-orange-500 hover:bg-orange-600"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Afdrukken
+            </Button>
+          </>
         )}
       </div>
 
@@ -1613,7 +1665,7 @@ function PreviewView({ layout }: { layout: any }) {
         </div>
       ) : (
         <div className="w-full flex justify-center">
-          <div className="bg-white mx-auto" style={{ width: '794px', minHeight: '1123px' }}>
+          <div ref={printRef} className="bg-white mx-auto" style={{ width: '794px', minHeight: '1123px' }}>
             <LayoutPreview 
               layout={layout}
               sections={sections}
