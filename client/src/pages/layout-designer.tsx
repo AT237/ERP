@@ -2131,22 +2131,6 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
 
 // Section Block Component (blocks within sections)
 function SectionBlock({ block, sectionId, layerIndex, isSelected, onClick, onRemove, onMoveUp, onMoveDown }: any) {
-  const getBlockIcon = (type: string) => {
-    const icons: { [key: string]: string } = {
-      "Text": "📝",
-      "Image": "🖼️",
-      "Data Field": "🔢",
-      "Company Header": "🏢",
-      "Date Block": "📅",
-      "Line Items Table": "📊",
-      "Totals Summary": "💰",
-      "Footer Block": "📄",
-      "Text Block": "📝",
-      "Page Number": "🔢",
-      "Document Title": "📌",
-    };
-    return icons[type] || "📦";
-  };
 
   const blockStyle: React.CSSProperties = {
     left: `${mmToPx(block.position.x || 0)}px`, 
@@ -2169,7 +2153,6 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, onClick, onRem
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-lg">{getBlockIcon(block.type)}</span>
           <span className="text-sm font-medium truncate">
             {block.type === "Image" 
               ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
