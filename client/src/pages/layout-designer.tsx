@@ -1672,11 +1672,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                 </div>
                               </div>
                             ) : (
-                              section.config.blocks.map((block: any) => (
+                              section.config.blocks.map((block: any, blockIndex: number) => (
                                 <SectionBlock
                                   key={block.id}
                                   block={block}
                                   sectionId={section.id}
+                                  layerIndex={blockIndex}
                                   isSelected={selectedBlock?.id === block.id}
                                   onClick={() => handleBlockClick(block)}
                                   onRemove={() => handleRemoveBlock(section.id, block.id)}
@@ -2129,7 +2130,7 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
 }
 
 // Section Block Component (blocks within sections)
-function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveUp, onMoveDown }: any) {
+function SectionBlock({ block, sectionId, layerIndex, isSelected, onClick, onRemove, onMoveUp, onMoveDown }: any) {
   const getBlockIcon = (type: string) => {
     const icons: { [key: string]: string } = {
       "Text": "📝",
@@ -2152,7 +2153,7 @@ function SectionBlock({ block, sectionId, isSelected, onClick, onRemove, onMoveU
     top: `${mmToPx(block.position.y || 0)}px`,
     width: `${mmToPx(block.size?.width || 50)}px`,
     height: `${mmToPx(block.size?.height || 25)}px`,
-    zIndex: block.zIndex || 10,
+    zIndex: layerIndex + 1,
   };
 
   return (
