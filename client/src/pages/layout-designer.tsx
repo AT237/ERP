@@ -976,14 +976,19 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   disabled={!selectedBlock}
                   onClick={() => {
                     if (!selectedBlock) return;
-                    const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
-                    if (sectionId) {
-                      handleMoveBlockUp(sectionId, selectedBlock.id);
+                    for (const section of sections) {
+                      if (section.config.blocks?.some((b: any) => b.id === selectedBlock.id)) {
+                        handleMoveBlockUp(section.id, selectedBlock.id);
+                        break;
+                      }
                     }
                   }}
                   data-testid="btn-bring-forward"
                 >
-                  <ArrowUp className="h-4 w-4" />
+                  <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="2" y="6" width="8" height="8" rx="1" fill="white" />
+                    <rect x="6" y="2" width="8" height="8" rx="1" fill="currentColor" fillOpacity="0.3" />
+                  </svg>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -1004,14 +1009,19 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   disabled={!selectedBlock}
                   onClick={() => {
                     if (!selectedBlock) return;
-                    const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
-                    if (sectionId) {
-                      handleMoveBlockDown(sectionId, selectedBlock.id);
+                    for (const section of sections) {
+                      if (section.config.blocks?.some((b: any) => b.id === selectedBlock.id)) {
+                        handleMoveBlockDown(section.id, selectedBlock.id);
+                        break;
+                      }
                     }
                   }}
                   data-testid="btn-send-backward"
                 >
-                  <ArrowDown className="h-4 w-4" />
+                  <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="6" y="2" width="8" height="8" rx="1" fill="white" />
+                    <rect x="2" y="6" width="8" height="8" rx="1" fill="currentColor" fillOpacity="0.3" />
+                  </svg>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
