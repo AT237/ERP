@@ -551,6 +551,13 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'block' | 'section'; id: string; sectionId?: string } | null>(null);
   const { toast } = useToast();
   
+  // Drag state for block positioning with alignment guides
+  const [isDraggingBlock, setIsDraggingBlock] = useState(false);
+  const [dragBlockId, setDragBlockId] = useState<string | null>(null);
+  const [dragSectionId, setDragSectionId] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [alignmentGuides, setAlignmentGuides] = useState<{ type: 'h' | 'v'; position: number }[]>([]);
+  
   // Available database tables for selection - field names match API print-data response
   const availableTables = [
     { name: 'quotation', label: 'Offerte', fields: ['number', 'date', 'validUntil', 'description', 'revisionNumber', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
@@ -795,6 +802,107 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const handleSectionClick = (section: any) => {
     setSelectedSection(section);
     setSelectedBlock(null); // Deselect block when section is selected
+  };
+
+  // Block dragging with alignment guides
+  const SNAP_THRESHOLD = 2; // mm tolerance for snapping
+  
+  const handleBlockDragStart = (e: React.MouseEvent, block: any, sectionId: string) => {
+    e.stopPropagation();
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    setDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+    setDragBlockId(block.id);
+    setDragSectionId(sectionId);
+    setIsDraggingBlock(true);
+    setSelectedBlock(block);
+    setSelectedSection(null);
+  };
+
+  const handleBlockDragMove = (e: React.MouseEvent, sectionElement: HTMLElement) => {
+    if (!isDraggingBlock || !dragBlockId || !dragSectionId) return;
+    
+    const section = sections.find(s => s.id === dragSectionId);
+    if (!section) return;
+    
+    const sectionRect = sectionElement.getBoundingClientRect();
+    const rawX = (e.clientX - sectionRect.left - dragOffset.x) / zoom;
+    const rawY = (e.clientY - sectionRect.top - dragOffset.y) / zoom;
+    
+    // Convert to mm
+    let newXMm = pxToMm(rawX);
+    let newYMm = pxToMm(rawY);
+    
+    // Get current block being dragged
+    const currentBlock = section.config.blocks?.find((b: any) => b.id === dragBlockId);
+    if (!currentBlock) return;
+    
+    const blockWidth = currentBlock.size?.width || 50;
+    const blockHeight = currentBlock.size?.height || 25;
+    
+    // Calculate alignment guides
+    const guides: { type: 'h' | 'v'; position: number }[] = [];
+    const otherBlocks = (section.config.blocks || []).filter((b: any) => b.id !== dragBlockId);
+    
+    for (const other of otherBlocks) {
+      const ox = other.position?.x || 0;
+      const oy = other.position?.y || 0;
+      const ow = other.size?.width || 50;
+      const oh = other.size?.height || 25;
+      
+      // Left edge alignment
+      if (Math.abs(newXMm - ox) < SNAP_THRESHOLD) {
+        newXMm = ox;
+        guides.push({ type: 'v', position: mmToPx(ox) });
+      }
+      // Right edge alignment
+      if (Math.abs(newXMm + blockWidth - (ox + ow)) < SNAP_THRESHOLD) {
+        newXMm = ox + ow - blockWidth;
+        guides.push({ type: 'v', position: mmToPx(ox + ow) });
+      }
+      // Top edge alignment
+      if (Math.abs(newYMm - oy) < SNAP_THRESHOLD) {
+        newYMm = oy;
+        guides.push({ type: 'h', position: mmToPx(oy) });
+      }
+      // Bottom edge alignment
+      if (Math.abs(newYMm + blockHeight - (oy + oh)) < SNAP_THRESHOLD) {
+        newYMm = oy + oh - blockHeight;
+        guides.push({ type: 'h', position: mmToPx(oy + oh) });
+      }
+      // Center horizontal alignment
+      const centerX = newXMm + blockWidth / 2;
+      const otherCenterX = ox + ow / 2;
+      if (Math.abs(centerX - otherCenterX) < SNAP_THRESHOLD) {
+        newXMm = otherCenterX - blockWidth / 2;
+        guides.push({ type: 'v', position: mmToPx(otherCenterX) });
+      }
+      // Center vertical alignment
+      const centerY = newYMm + blockHeight / 2;
+      const otherCenterY = oy + oh / 2;
+      if (Math.abs(centerY - otherCenterY) < SNAP_THRESHOLD) {
+        newYMm = otherCenterY - blockHeight / 2;
+        guides.push({ type: 'h', position: mmToPx(otherCenterY) });
+      }
+    }
+    
+    setAlignmentGuides(guides);
+    
+    // Clamp to section bounds
+    newXMm = Math.max(0, Math.min(newXMm, 210 - blockWidth));
+    newYMm = Math.max(0, newYMm);
+    
+    // Update block position
+    updateBlockProperty(dragSectionId, dragBlockId, 'position', { x: newXMm, y: newYMm });
+  };
+
+  const handleBlockDragEnd = () => {
+    setIsDraggingBlock(false);
+    setDragBlockId(null);
+    setDragSectionId(null);
+    setAlignmentGuides([]);
   };
 
   const updateSectionProperty = (sectionId: string, path: string, value: any) => {
@@ -1625,7 +1733,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                 onClick={() => handleSectionClick(section)}
                               >
                             <div
-                              className="relative p-4 h-full"
+                              className="relative p-4 h-full section-container"
+                              data-section-id={section.id}
                               style={{
                                 boxSizing: 'border-box',
                               backgroundImage: showGrid ? `
@@ -1633,9 +1742,17 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                 linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)
                               ` : 'none',
                               backgroundSize: showGrid ? `${gridSize}px ${gridSize}px` : 'auto',
+                              cursor: isDraggingBlock ? 'grabbing' : 'default',
                             }}
                             onDrop={(e) => handleDropOnSection(e, section.id)}
                             onDragOver={handleDragOver}
+                            onMouseMove={(e) => {
+                              if (isDraggingBlock && dragSectionId === section.id) {
+                                handleBlockDragMove(e, e.currentTarget);
+                              }
+                            }}
+                            onMouseUp={handleBlockDragEnd}
+                            onMouseLeave={handleBlockDragEnd}
                           >
                             {/* Height Grid Overlay */}
                             {section.config.layoutGrid && (() => {
@@ -1672,19 +1789,44 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                 </div>
                               </div>
                             ) : (
-                              section.config.blocks.map((block: any, blockIndex: number) => (
-                                <SectionBlock
-                                  key={block.id}
-                                  block={block}
-                                  sectionId={section.id}
-                                  layerIndex={blockIndex}
-                                  isSelected={selectedBlock?.id === block.id}
-                                  onClick={() => handleBlockClick(block)}
-                                  onRemove={() => handleRemoveBlock(section.id, block.id)}
-                                  onMoveUp={() => handleMoveBlockUp(section.id, block.id)}
-                                  onMoveDown={() => handleMoveBlockDown(section.id, block.id)}
-                                />
-                              ))
+                              <>
+                                {section.config.blocks.map((block: any, blockIndex: number) => (
+                                  <SectionBlock
+                                    key={block.id}
+                                    block={block}
+                                    sectionId={section.id}
+                                    layerIndex={blockIndex}
+                                    isSelected={selectedBlock?.id === block.id}
+                                    isDragging={isDraggingBlock && dragBlockId === block.id}
+                                    onClick={() => handleBlockClick(block)}
+                                    onDragStart={(e: React.MouseEvent) => handleBlockDragStart(e, block, section.id)}
+                                  />
+                                ))}
+                                {/* Alignment Guides */}
+                                {isDraggingBlock && dragSectionId === section.id && alignmentGuides.map((guide, i) => (
+                                  guide.type === 'v' ? (
+                                    <div
+                                      key={`guide-v-${i}`}
+                                      className="absolute top-0 bottom-0 pointer-events-none z-50"
+                                      style={{
+                                        left: `${guide.position}px`,
+                                        width: '2px',
+                                        backgroundColor: '#22c55e',
+                                      }}
+                                    />
+                                  ) : (
+                                    <div
+                                      key={`guide-h-${i}`}
+                                      className="absolute left-0 right-0 pointer-events-none z-50"
+                                      style={{
+                                        top: `${guide.position}px`,
+                                        height: '2px',
+                                        backgroundColor: '#22c55e',
+                                      }}
+                                    />
+                                  )
+                                ))}
+                              </>
                             )}
                           </div>
                         </div>
@@ -2130,7 +2272,7 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
 }
 
 // Section Block Component (blocks within sections)
-function SectionBlock({ block, sectionId, layerIndex, isSelected, onClick, onRemove, onMoveUp, onMoveDown }: any) {
+function SectionBlock({ block, sectionId, layerIndex, isSelected, isDragging, onClick, onDragStart }: any) {
 
   const blockStyle: React.CSSProperties = {
     left: `${mmToPx(block.position.x || 0)}px`, 
@@ -2138,20 +2280,26 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, onClick, onRem
     width: `${mmToPx(block.size?.width || 50)}px`,
     height: `${mmToPx(block.size?.height || 25)}px`,
     zIndex: layerIndex + 1,
+    cursor: isDragging ? 'grabbing' : 'grab',
+    opacity: isDragging ? 0.8 : 1,
   };
 
   return (
     <div
-      className={`absolute border-2 rounded shadow-sm cursor-pointer transition-all p-2 bg-white ${
+      className={`absolute border-2 rounded shadow-sm transition-all p-2 bg-white select-none ${
         isSelected ? 'border-orange-500 shadow-md' : 'border-gray-300 hover:border-orange-300'
-      }`}
+      } ${isDragging ? 'shadow-lg' : ''}`}
       style={blockStyle}
       onClick={(e) => {
         e.stopPropagation();
         onClick();
       }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onDragStart(e);
+      }}
     >
-      <div className="text-sm font-medium truncate">
+      <div className="text-sm font-medium truncate pointer-events-none">
         {block.type === "Image" 
           ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
           : block.type === "Text" 
