@@ -2574,6 +2574,15 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
     return icons[type] || "📦";
   };
 
+  // Map config.alignH to CSS textAlign
+  const getTextAlign = (alignH?: string): 'left' | 'center' | 'right' => {
+    switch (alignH) {
+      case 'center': return 'center';
+      case 'right': return 'right';
+      default: return 'left';
+    }
+  };
+
   // Build style object with all properties
   const blockStyle: React.CSSProperties = {
     left: `${block.position.x}px`, 
@@ -2585,7 +2594,7 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
     fontFamily: block.style?.fontFamily || 'helvetica',
     fontWeight: block.style?.fontStyle === 'bold' ? 'bold' : 'normal',
     fontStyle: block.style?.fontStyle === 'italic' ? 'italic' : 'normal',
-    textAlign: (block.style?.textAlign || 'left') as any,
+    textAlign: getTextAlign(block.config?.alignH),
     color: block.style?.color || '#000000',
     backgroundColor: block.style?.backgroundColor || '#ffffff',
     opacity: block.style?.opacity !== undefined ? block.style.opacity : 1,
