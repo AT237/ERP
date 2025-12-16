@@ -885,6 +885,59 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
           <div className="h-6 w-px bg-border" />
 
+          {/* Delete Section */}
+          <TooltipProvider delayDuration={2000}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className={`h-8 px-2 gap-1 ${selectedSection ? 'text-red-600 hover:bg-red-50' : 'opacity-40'}`}
+                  disabled={!selectedSection}
+                  onClick={() => {
+                    if (!selectedSection) return;
+                    handleRemoveSection(selectedSection.id);
+                    toast({ title: 'Sectie verwijderd', description: 'De sectie is verwijderd' });
+                  }}
+                  data-testid="btn-delete-section-toolbar"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="text-xs">Sectie</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Sectie Verwijderen</p>
+                <p className="text-xs text-muted-foreground">Verwijder geselecteerde sectie</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Section Height in mm */}
+          {selectedSection && (
+            <div className="flex items-center gap-1 ml-2">
+              <Label className="text-xs text-muted-foreground whitespace-nowrap">Hoogte:</Label>
+              <Input
+                type="number"
+                className="h-7 w-16 text-xs"
+                value={Math.round(pxToMm(selectedSection.config?.dimensions?.height || 200))}
+                onChange={(e) => {
+                  const mmValue = parseFloat(e.target.value) || 53;
+                  const pxValue = mmToPx(mmValue);
+                  setSections(sections.map(s => 
+                    s.id === selectedSection.id 
+                      ? { ...s, config: { ...s.config, dimensions: { ...s.config.dimensions, height: pxValue } } }
+                      : s
+                  ));
+                  setSelectedSection({ ...selectedSection, config: { ...selectedSection.config, dimensions: { ...selectedSection.config.dimensions, height: pxValue } } });
+                }}
+                data-testid="input-section-height-mm"
+              />
+              <span className="text-xs text-muted-foreground">mm</span>
+            </div>
+          )}
+
+          <div className="h-6 w-px bg-border" />
+
           {/* Add Section & Draggable Block Icons */}
           <TooltipProvider delayDuration={2000}>
             <div className="flex items-center gap-1">
