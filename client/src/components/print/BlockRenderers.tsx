@@ -17,6 +17,17 @@ export const TEXT_VARIABLES = [
   { code: '[JAAR]', label: 'Jaar', description: 'Huidig jaar' },
 ];
 
+// Data field placeholders - use {{table.field}} syntax in text blocks
+export const DATA_FIELD_EXAMPLES = [
+  { code: '{{quotation.number}}', label: 'Offertenummer' },
+  { code: '{{quotation.totalAmount}}', label: 'Totaalbedrag' },
+  { code: '{{quotation.date}}', label: 'Offertedatum' },
+  { code: '{{customer.name}}', label: 'Klantnaam' },
+  { code: '{{customer.email}}', label: 'Klant e-mail' },
+  { code: '{{project.name}}', label: 'Projectnaam' },
+  { code: '{{company.name}}', label: 'Bedrijfsnaam' },
+];
+
 // Function to replace text variables with actual values
 export function replaceTextVariables(
   text: string, 
@@ -43,12 +54,21 @@ export function replaceTextVariables(
       })
     : todayFormatted;
 
-  return text
+  let result = text
     .replace(/\[PAGINANUMMER\]/g, String(currentPage))
     .replace(/\[TOTAALPAGINAS\]/g, String(totalPages))
     .replace(/\[VANDAAG\]/g, todayFormatted)
     .replace(/\[DATUM\]/g, documentDateFormatted)
     .replace(/\[JAAR\]/g, String(today.getFullYear()));
+
+  // Replace data field placeholders: {{tableName.fieldName}}
+  result = result.replace(/\{\{([a-zA-Z_]+)\.([a-zA-Z_]+)\}\}/g, (match, tableName, fieldName) => {
+    const fieldKey = `${tableName}.${fieldName}`;
+    const value = resolveAndFormat(fieldKey, printData, 'text');
+    return value || match; // Return original if not found
+  });
+
+  return result;
 }
 
 // Text Block - static text content with variable support
