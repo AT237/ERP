@@ -749,6 +749,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
     }
   };
 
+  // Move block forward (on top of others) - higher index = rendered later = on top
   const handleMoveBlockUp = (sectionId: string, blockId: string) => {
     const updatedSections = sections.map(s => {
       if (s.id !== sectionId) return s;
@@ -756,9 +757,9 @@ function VisualDesignerView({ layout }: { layout: any }) {
       const blocks = [...(s.config.blocks || [])];
       const index = blocks.findIndex((b: any) => b.id === blockId);
       
-      if (index > 0) {
-        // Swap with previous block
-        [blocks[index - 1], blocks[index]] = [blocks[index], blocks[index - 1]];
+      if (index >= 0 && index < blocks.length - 1) {
+        // Swap with next block (move to higher index = on top)
+        [blocks[index], blocks[index + 1]] = [blocks[index + 1], blocks[index]];
       }
       
       return { ...s, config: { ...s.config, blocks } };
@@ -767,6 +768,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
     setSections(updatedSections);
   };
 
+  // Move block backward (behind others) - lower index = rendered first = behind
   const handleMoveBlockDown = (sectionId: string, blockId: string) => {
     const updatedSections = sections.map(s => {
       if (s.id !== sectionId) return s;
@@ -774,9 +776,9 @@ function VisualDesignerView({ layout }: { layout: any }) {
       const blocks = [...(s.config.blocks || [])];
       const index = blocks.findIndex((b: any) => b.id === blockId);
       
-      if (index >= 0 && index < blocks.length - 1) {
-        // Swap with next block
-        [blocks[index], blocks[index + 1]] = [blocks[index + 1], blocks[index]];
+      if (index > 0) {
+        // Swap with previous block (move to lower index = behind)
+        [blocks[index - 1], blocks[index]] = [blocks[index], blocks[index - 1]];
       }
       
       return { ...s, config: { ...s.config, blocks } };
