@@ -20,8 +20,20 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
   const parts = fieldKey.split('.');
   
   // First part is the table name (quotation, customer, project, company)
-  const tableName = parts[0];
+  // Support both singular and plural forms
+  let tableName = parts[0];
   const fieldPath = parts.slice(1);
+
+  // Normalize table names (plural to singular)
+  const tableAliases: Record<string, string> = {
+    'quotations': 'quotation',
+    'customers': 'customer',
+    'projects': 'project',
+    'companies': 'company',
+  };
+  if (tableAliases[tableName]) {
+    tableName = tableAliases[tableName];
+  }
 
   // Get the data object for this table
   let data: any = null;
