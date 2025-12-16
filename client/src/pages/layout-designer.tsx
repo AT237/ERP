@@ -471,6 +471,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [newSectionType, setNewSectionType] = useState('custom');
   const [showTableSelectorDialog, setShowTableSelectorDialog] = useState(false);
   const [allowedTables, setAllowedTables] = useState<string[]>(layout?.allowedTables || []);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'block' | 'section'; id: string; sectionId?: string } | null>(null);
   const { toast } = useToast();
   
   // Available database tables for selection
@@ -868,12 +870,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
                     if (selectedBlock) {
                       const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
                       if (sectionId) {
-                        handleRemoveBlock(sectionId, selectedBlock.id);
-                        toast({ title: 'Blok verwijderd', description: 'Het blok is verwijderd' });
+                        setDeleteTarget({ type: 'block', id: selectedBlock.id, sectionId });
+                        setShowDeleteConfirmDialog(true);
                       }
                     } else if (selectedSection) {
-                      handleRemoveSection(selectedSection.id);
-                      toast({ title: 'Sectie verwijderd', description: 'De sectie is verwijderd' });
+                      setDeleteTarget({ type: 'section', id: selectedSection.id });
+                      setShowDeleteConfirmDialog(true);
                     }
                   }}
                   data-testid="btn-delete-toolbar"
@@ -1202,6 +1204,44 @@ function VisualDesignerView({ layout }: { layout: any }) {
               });
             }}>
               Opslaan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Verwijderen bevestigen</DialogTitle>
+            <DialogDescription>
+              {deleteTarget?.type === 'block' 
+                ? 'Weet je zeker dat je dit blok wilt verwijderen?' 
+                : 'Weet je zeker dat je deze sectie wilt verwijderen? Alle blokken in deze sectie worden ook verwijderd.'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowDeleteConfirmDialog(false);
+              setDeleteTarget(null);
+            }}>
+              Annuleren
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                if (deleteTarget?.type === 'block' && deleteTarget.sectionId) {
+                  handleRemoveBlock(deleteTarget.sectionId, deleteTarget.id);
+                  toast({ title: 'Blok verwijderd', description: 'Het blok is verwijderd' });
+                } else if (deleteTarget?.type === 'section') {
+                  handleRemoveSection(deleteTarget.id);
+                  toast({ title: 'Sectie verwijderd', description: 'De sectie is verwijderd' });
+                }
+                setShowDeleteConfirmDialog(false);
+                setDeleteTarget(null);
+              }}
+            >
+              Verwijderen
             </Button>
           </DialogFooter>
         </DialogContent>
