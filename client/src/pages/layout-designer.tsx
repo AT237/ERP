@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline, Copy, Trash2 } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES } from '@/components/print/BlockRenderers';
 import type { PrintData } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
@@ -741,6 +741,73 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
           <div className="h-6 w-px bg-border" />
 
+          {/* Copy Block */}
+          <TooltipProvider delayDuration={2000}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className={`h-8 w-8 p-0 ${selectedBlock ? 'text-orange-600 hover:bg-orange-50' : 'opacity-40'}`}
+                  disabled={!selectedBlock}
+                  onClick={() => {
+                    if (!selectedBlock) return;
+                    const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
+                    if (!sectionId) return;
+                    const section = sections.find(s => s.id === sectionId);
+                    if (!section) return;
+                    const copiedBlock = {
+                      ...selectedBlock,
+                      id: `block-${Date.now()}`,
+                      position: { x: (selectedBlock.position?.x || 0) + 5, y: (selectedBlock.position?.y || 0) + 5 },
+                    };
+                    const updatedBlocks = [...(section.config.blocks || []), copiedBlock];
+                    setSections(sections.map(s => s.id === sectionId ? { ...s, config: { ...s.config, blocks: updatedBlocks } } : s));
+                    setSelectedBlock(copiedBlock);
+                    toast({ title: 'Blok gekopieerd', description: 'Het blok is gekopieerd' });
+                  }}
+                  data-testid="btn-copy-block"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Kopiëren</p>
+                <p className="text-xs text-muted-foreground">Kopieer geselecteerd blok</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Delete Block */}
+          <TooltipProvider delayDuration={2000}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className={`h-8 w-8 p-0 ${selectedBlock ? 'text-red-600 hover:bg-red-50' : 'opacity-40'}`}
+                  disabled={!selectedBlock}
+                  onClick={() => {
+                    if (!selectedBlock) return;
+                    const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
+                    if (sectionId) {
+                      handleRemoveBlock(sectionId, selectedBlock.id);
+                    }
+                  }}
+                  data-testid="btn-delete-block-toolbar"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Verwijderen</p>
+                <p className="text-xs text-muted-foreground">Verwijder geselecteerd blok</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <div className="h-6 w-px bg-border" />
+
           {/* Add Section & Draggable Block Icons */}
           <TooltipProvider delayDuration={2000}>
             <div className="flex items-center gap-1">
@@ -1426,12 +1493,6 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 allowedTables={allowedTables}
                 availableTables={availableTables}
                 onUpdateProperty={updateBlockProperty}
-                onRemove={() => {
-                  const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
-                  if (sectionId) {
-                    handleRemoveBlock(sectionId, selectedBlock.id);
-                  }
-                }}
               />
             ) : (
               <div className="text-sm text-muted-foreground text-center py-8">
@@ -1886,8 +1947,7 @@ function BlockProperties({
   sections,
   allowedTables,
   availableTables,
-  onUpdateProperty,
-  onRemove
+  onUpdateProperty
 }: { 
   block: any; 
   sectionId: string;
@@ -1895,7 +1955,6 @@ function BlockProperties({
   allowedTables: string[];
   availableTables: any[];
   onUpdateProperty: (sectionId: string, blockId: string, property: string, value: any) => void;
-  onRemove: () => void;
 }) {
   const updateConfig = (property: string, value: any) => {
     onUpdateProperty(sectionId, block.id, 'config', { ...block.config, [property]: value });
@@ -1915,18 +1974,9 @@ function BlockProperties({
 
   return (
     <div className="space-y-4">
-      {/* Header with Section name and Delete button */}
-      <div className="pb-2 border-b flex items-center justify-between">
+      {/* Header with Section name */}
+      <div className="pb-2 border-b">
         <div className="text-sm font-bold">Section: {currentSection?.name || 'Unknown'}</div>
-        <Button
-          variant="destructive"
-          size="sm"
-          className="h-7 px-2"
-          onClick={onRemove}
-          data-testid="btn-delete-block"
-        >
-          <span className="mr-1">×</span> Verwijderen
-        </Button>
       </div>
 
       {/* Position - Always first for all blocks */}
