@@ -209,8 +209,34 @@ export function PageNumberRenderer({ block }: BlockRendererProps) {
       text = `${currentPage}`;
   }
 
+  // Map alignH/alignV to CSS
+  const getJustify = (alignH?: string): string => {
+    switch (alignH) {
+      case 'center': return 'center';
+      case 'right': return 'flex-end';
+      default: return 'flex-start';
+    }
+  };
+  
+  const getAlignItems = (alignV?: string): string => {
+    switch (alignV) {
+      case 'middle': return 'center';
+      case 'bottom': return 'flex-end';
+      default: return 'flex-start';
+    }
+  };
+
+  const containerStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: getJustify(block.config?.alignH),
+    alignItems: getAlignItems(block.config?.alignV),
+    width: '100%',
+    height: '100%',
+    ...block.style,
+  };
+
   return (
-    <div style={block.style || {}} className="text-sm text-gray-600">
+    <div style={containerStyle} className="text-sm text-gray-600">
       {text}
     </div>
   );
