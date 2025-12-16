@@ -103,14 +103,14 @@ export function TextBlockRenderer({ block, printData, currentPage = 1, totalPage
 
 // Data Field Block - dynamic field from database
 export function DataFieldRenderer({ block, printData }: BlockRendererProps) {
-  const { tableName, fieldName, label, format = 'text' } = block.config || {};
+  const { tableName, fieldName, label } = block.config || {};
   
   if (!tableName || !fieldName) {
     return <div className="text-xs text-gray-400 italic">Veld niet geconfigureerd</div>;
   }
 
   const fieldKey = `${tableName}.${fieldName}`;
-  const value = resolveAndFormat(fieldKey, printData, format);
+  const value = resolveAndFormat(fieldKey, printData, 'text');
 
   return (
     <div style={block.style || {}} className="flex gap-2 text-sm">

@@ -475,17 +475,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'block' | 'section'; id: string; sectionId?: string } | null>(null);
   const { toast } = useToast();
   
-  // Available database tables for selection
+  // Available database tables for selection - field names match API print-data response
   const availableTables = [
-    { name: 'quotations', label: 'Offertes', fields: ['quotationNumber', 'customerId', 'projectId', 'totalAmount', 'validUntil', 'status'] },
-    { name: 'customers', label: 'Klanten', fields: ['customerNumber', 'name', 'email', 'phone', 'address', 'city'] },
-    { name: 'projects', label: 'Projecten', fields: ['projectNumber', 'name', 'customerId', 'status', 'startDate', 'endDate'] },
-    { name: 'invoices', label: 'Facturen', fields: ['invoiceNumber', 'customerId', 'totalAmount', 'dueDate', 'status'] },
-    { name: 'purchase_orders', label: 'Inkooporders', fields: ['poNumber', 'supplierId', 'totalAmount', 'status'] },
-    { name: 'work_orders', label: 'Werkorders', fields: ['woNumber', 'projectId', 'description', 'status'] },
-    { name: 'packing_lists', label: 'Paklijsten', fields: ['plNumber', 'customerId', 'projectId', 'shipDate'] },
-    { name: 'suppliers', label: 'Leveranciers', fields: ['supplierNumber', 'name', 'email', 'phone', 'address'] },
-    { name: 'inventory', label: 'Voorraad', fields: ['itemCode', 'name', 'quantity', 'unitPrice', 'supplier'] },
+    { name: 'quotation', label: 'Offerte', fields: ['number', 'date', 'validUntil', 'description', 'revisionNumber', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
+    { name: 'customer', label: 'Klant', fields: ['customerNumber', 'name', 'email', 'phone', 'address'] },
+    { name: 'project', label: 'Project', fields: ['projectNumber', 'name', 'status', 'startDate', 'endDate'] },
+    { name: 'company', label: 'Bedrijf', fields: ['name', 'email', 'phone', 'address', 'kvkNummer', 'btwNummer', 'website'] },
   ];
 
   // Load existing sections for this layout
@@ -1721,8 +1716,7 @@ function getDefaultConfig(blockType: string) {
       return {
         tableName: null, // Selected from allowedTables
         fieldName: null, // Selected from table fields
-        label: "Veld Label:",
-        format: "text", // 'text', 'number', 'currency', 'date'
+        label: "",
       };
     case "Company Header":
       return {
@@ -2620,24 +2614,6 @@ function BlockProperties({
                   className="h-8 text-xs"
                   placeholder="Field Label:"
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="data-format" className="text-xs">Format</Label>
-                <Select 
-                  value={block.config?.format || 'text'}
-                  onValueChange={(value) => updateConfig('format', value)}
-                >
-                  <SelectTrigger id="data-format" className="h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="text">Text</SelectItem>
-                    <SelectItem value="number">Number</SelectItem>
-                    <SelectItem value="currency">Currency</SelectItem>
-                    <SelectItem value="date">Date</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </>
           )}
