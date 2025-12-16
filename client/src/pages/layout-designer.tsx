@@ -85,6 +85,62 @@ export default function LayoutDesigner() {
     });
   };
 
+  // Duplicate layout mutation
+  const duplicateLayoutMutation = useMutation({
+    mutationFn: async (layoutId: number) => {
+      const layoutToDuplicate = (layouts as any[]).find((l: any) => l.id === layoutId);
+      if (!layoutToDuplicate) throw new Error('Layout not found');
+      
+      // Create new layout with copied data
+      const newLayoutResponse = await apiRequest('POST', '/api/layouts', {
+        name: `${layoutToDuplicate.name} (kopie)`,
+        documentType: layoutToDuplicate.documentType,
+        pageFormat: layoutToDuplicate.pageFormat,
+        orientation: layoutToDuplicate.orientation,
+        isDefault: false,
+        isActive: true,
+        metadata: layoutToDuplicate.metadata,
+      });
+      const newLayout = await newLayoutResponse.json();
+      
+      // Also copy sections if they exist
+      const sectionsResponse = await fetch(`/api/layout-sections?layoutId=${layoutId}`);
+      if (sectionsResponse.ok) {
+        const sections = await sectionsResponse.json();
+        for (const section of sections) {
+          await apiRequest('POST', '/api/layout-sections', {
+            layoutId: newLayout.id,
+            name: section.name,
+            sectionType: section.sectionType,
+            position: section.position,
+            config: section.config,
+          });
+        }
+      }
+      
+      return newLayout;
+    },
+    onSuccess: (newLayout: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/layouts'] });
+      toast({
+        title: 'Layout gedupliceerd',
+        description: 'De layout is succesvol gekopieerd',
+      });
+      setSelectedLayoutId(newLayout.id);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Fout',
+        description: error.message || 'Kon layout niet dupliceren',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleDuplicateLayout = (layoutId: number) => {
+    duplicateLayoutMutation.mutate(layoutId);
+  };
+
   // Filter layouts by document type
   const filteredLayouts = (layouts as any[]).filter((layout: any) => 
     layout.documentType === documentType
@@ -185,6 +241,7 @@ export default function LayoutDesigner() {
                 onSelectLayout={setSelectedLayoutId}
                 selectedLayoutId={selectedLayoutId}
                 onCreateNew={() => setShowNewLayoutDialog(true)}
+                onDuplicate={handleDuplicateLayout}
               />
             </TabsContent>
 
@@ -278,6 +335,7 @@ function LayoutManagerView({
   onSelectLayout,
   selectedLayoutId,
   onCreateNew,
+  onDuplicate,
 }: {
   layouts: any[];
   documentType: string;
@@ -285,6 +343,7 @@ function LayoutManagerView({
   onSelectLayout: (id: number) => void;
   selectedLayoutId: number | null;
   onCreateNew: () => void;
+  onDuplicate: (layoutId: number) => void;
 }) {
   if (isLoading) {
     return (
@@ -355,10 +414,28 @@ function LayoutManagerView({
               </div>
             </div>
             <div className="flex gap-2 mt-4">
-              <Button size="sm" variant="outline" className="flex-1" data-testid={`button-edit-${layout.id}`}>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="flex-1" 
+                data-testid={`button-edit-${layout.id}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectLayout(layout.id);
+                }}
+              >
                 Edit
               </Button>
-              <Button size="sm" variant="outline" className="flex-1" data-testid={`button-duplicate-${layout.id}`}>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="flex-1" 
+                data-testid={`button-duplicate-${layout.id}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDuplicate(layout.id);
+                }}
+              >
                 Duplicate
               </Button>
             </div>
