@@ -892,6 +892,64 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
           <div className="h-6 w-px bg-border" />
 
+          {/* Bring to Front (z-index up) */}
+          <TooltipProvider delayDuration={2000}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className={`h-8 w-8 p-0 ${selectedBlock ? 'hover:bg-muted' : 'opacity-40'}`}
+                  disabled={!selectedBlock}
+                  onClick={() => {
+                    if (!selectedBlock) return;
+                    const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
+                    if (sectionId) {
+                      handleMoveBlockUp(sectionId, selectedBlock.id);
+                    }
+                  }}
+                  data-testid="btn-bring-forward"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Naar voren</p>
+                <p className="text-xs text-muted-foreground">Breng blok naar voren</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Send to Back (z-index down) */}
+          <TooltipProvider delayDuration={2000}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className={`h-8 w-8 p-0 ${selectedBlock ? 'hover:bg-muted' : 'opacity-40'}`}
+                  disabled={!selectedBlock}
+                  onClick={() => {
+                    if (!selectedBlock) return;
+                    const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
+                    if (sectionId) {
+                      handleMoveBlockDown(sectionId, selectedBlock.id);
+                    }
+                  }}
+                  data-testid="btn-send-backward"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Naar achteren</p>
+                <p className="text-xs text-muted-foreground">Stuur blok naar achteren</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <div className="h-6 w-px bg-border" />
+
           {/* Add Section & Draggable Block Icons */}
           <TooltipProvider delayDuration={2000}>
             <div className="flex items-center gap-1">
