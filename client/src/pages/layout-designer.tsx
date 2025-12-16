@@ -454,6 +454,82 @@ const PX_TO_MM = 1 / MM_TO_PX;
 const pxToMm = (px: number): number => Math.round(px * PX_TO_MM * 10) / 10;
 const mmToPx = (mm: number): number => Math.round(mm * MM_TO_PX);
 
+// Data Field Insert Menu Component with collapsible categories
+function DataFieldInsertMenu({ 
+  blockId, 
+  currentText, 
+  onInsert, 
+  availableTables 
+}: { 
+  blockId: string; 
+  currentText: string; 
+  onInsert: (newText: string) => void;
+  availableTables: { name: string; label: string; fields: string[] }[];
+}) {
+  const [expandedTables, setExpandedTables] = useState<string[]>([]);
+
+  const toggleTable = (tableName: string) => {
+    setExpandedTables(prev => 
+      prev.includes(tableName) 
+        ? prev.filter(t => t !== tableName)
+        : [...prev, tableName]
+    );
+  };
+
+  const insertField = (tableName: string, fieldName: string) => {
+    const placeholder = `{{${tableName}.${fieldName}}}`;
+    const textarea = document.getElementById(`text-content-${blockId}`) as HTMLTextAreaElement;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newText = currentText.substring(0, start) + placeholder + currentText.substring(end);
+      onInsert(newText);
+      setTimeout(() => {
+        textarea.focus();
+        const newPos = start + placeholder.length;
+        textarea.setSelectionRange(newPos, newPos);
+      }, 0);
+    } else {
+      onInsert(currentText + placeholder);
+    }
+  };
+
+  return (
+    <div className="border rounded-md max-h-48 overflow-y-auto">
+      {availableTables.map((table) => (
+        <div key={table.name} className="border-b last:border-b-0">
+          <button
+            type="button"
+            className="w-full px-3 py-2 text-left text-xs font-medium flex items-center justify-between hover:bg-muted"
+            onClick={() => toggleTable(table.name)}
+          >
+            <span>{table.name}</span>
+            <span className="text-muted-foreground">
+              {expandedTables.includes(table.name) ? '−' : '+'}
+            </span>
+          </button>
+          {expandedTables.includes(table.name) && (
+            <div className="bg-muted/30 px-2 py-1">
+              {table.fields.map((field) => (
+                <button
+                  key={field}
+                  type="button"
+                  className="w-full px-3 py-1.5 text-left text-xs hover:bg-orange-100 rounded flex items-center gap-2"
+                  onClick={() => insertField(table.name, field)}
+                >
+                  <span className="text-orange-600">+</span>
+                  <span>{field}</span>
+                  <span className="text-[10px] text-muted-foreground ml-auto">{`{{${table.name}.${field}}}`}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Visual Designer Component
 function VisualDesignerView({ layout }: { layout: any }) {
   // Section-based state
@@ -2549,6 +2625,17 @@ function BlockProperties({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Data Fields Insert */}
+          <div>
+            <Label className="text-xs font-semibold mb-2 block">Data invoegen</Label>
+            <DataFieldInsertMenu 
+              blockId={block.id}
+              currentText={block.config?.text || ''}
+              onInsert={(newText) => updateConfig('text', newText)}
+              availableTables={availableTables}
+            />
           </div>
         </div>
       )}
