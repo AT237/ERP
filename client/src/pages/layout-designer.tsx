@@ -576,12 +576,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
     { name: 'quotationRequest', label: 'Offerte Aanvraag', fields: ['requestNumber', 'requestDate', 'status', 'description', 'notes'] },
     
     // Relations
-    { name: 'customer', label: 'Klant', fields: ['customerNumber', 'name', 'kvkNummer', 'generalEmail', 'email', 'phone', 'mobile', 'contactPersonEmail', 'taxId', 'bankAccount', 'invoiceEmail', 'invoiceNotes', 'memo', 'paymentTerms', 'status'] },
+    { name: 'customer', label: 'Klant', fields: ['customerNumber', 'name', 'kvkNummer', 'generalEmail', 'email', 'phone', 'mobile', 'contactPersonEmail', 'taxId', 'bankAccount', 'invoiceEmail', 'invoiceNotes', 'memo', 'paymentTerms', 'status', 'address.street', 'address.houseNumber', 'address.postalCode', 'address.city', 'address.country'] },
     { name: 'customerContact', label: 'Klant Contact', fields: ['name', 'email', 'phone', 'function', 'isPrimary'] },
-    { name: 'supplier', label: 'Leverancier', fields: ['supplierNumber', 'name', 'email', 'phone', 'address', 'contactPerson', 'taxId', 'paymentTerms', 'status'] },
+    { name: 'supplier', label: 'Leverancier', fields: ['supplierNumber', 'name', 'email', 'phone', 'contactPerson', 'taxId', 'paymentTerms', 'status', 'address.street', 'address.houseNumber', 'address.postalCode', 'address.city', 'address.country'] },
     { name: 'prospect', label: 'Prospect', fields: ['prospectNumber', 'companyName', 'contactName', 'email', 'phone', 'status', 'source', 'notes'] },
     { name: 'project', label: 'Project', fields: ['projectNumber', 'name', 'description', 'status', 'startDate', 'endDate', 'totalValue', 'progress'] },
-    { name: 'company', label: 'Bedrijf (Eigen)', fields: ['name', 'legalName', 'email', 'phone', 'website', 'kvkNummer', 'btwNummer', 'iban', 'bankName', 'address', 'postalCode', 'city', 'country'] },
+    { name: 'company', label: 'Bedrijf (Eigen)', fields: ['name', 'legalName', 'email', 'phone', 'website', 'kvkNummer', 'btwNummer', 'iban', 'bankName', 'address.street', 'address.houseNumber', 'address.postalCode', 'address.city', 'address.country'] },
     
     // Products & Inventory
     { name: 'inventoryItem', label: 'Product/Artikel', fields: ['name', 'sku', 'description', 'category', 'unit', 'unitPrice', 'costPrice', 'margin', 'currentStock', 'minimumStock', 'status'] },
