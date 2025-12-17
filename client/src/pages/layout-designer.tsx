@@ -495,7 +495,7 @@ function DataFieldInsertMenu({
   };
 
   return (
-    <div className="border rounded-md max-h-48 overflow-y-auto">
+    <div className="border rounded-md max-h-80 overflow-y-auto">
       {availableTables.map((table) => (
         <div key={table.name} className="border-b last:border-b-0">
           <button
