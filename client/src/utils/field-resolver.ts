@@ -68,9 +68,19 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
 
   if (!data) return null;
 
+  // Field aliases for backward compatibility
+  const fieldAliases: Record<string, string> = {
+    'quotationDate': 'date',
+    'quotationNumber': 'number',
+  };
+
   // Navigate through the path
   let value = data;
-  for (const key of fieldPath) {
+  for (let key of fieldPath) {
+    // Apply field alias if exists
+    if (fieldAliases[key]) {
+      key = fieldAliases[key];
+    }
     if (value && typeof value === 'object' && key in value) {
       value = value[key];
     } else {
