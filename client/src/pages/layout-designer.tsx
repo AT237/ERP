@@ -2674,6 +2674,8 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
 
 // Section Block Component (blocks within sections)
 function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelected, isDragging, onClick, onDragStart }: any) {
+  const isGroup = block.type === "Group";
+  const childBlocks = block.config?.childBlocks || [];
 
   const blockStyle: React.CSSProperties = {
     left: `${mmToPx(block.position.x || 0)}px`, 
@@ -2684,6 +2686,61 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
     cursor: isDragging ? 'grabbing' : 'grab',
     opacity: isDragging ? 0.8 : 1,
   };
+
+  // Special styling for Group blocks
+  if (isGroup) {
+    return (
+      <div
+        className={`absolute rounded transition-all select-none ${
+          isSelected ? 'ring-2 ring-orange-500 ring-offset-1' : isMultiSelected ? 'ring-2 ring-blue-500 ring-offset-1' : ''
+        } ${isDragging ? 'shadow-lg' : ''}`}
+        style={{
+          ...blockStyle,
+          border: '2px dashed #9333ea',
+          backgroundColor: 'rgba(147, 51, 234, 0.05)',
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick(e);
+        }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          onDragStart(e);
+        }}
+      >
+        {/* Group header label */}
+        <div className="absolute -top-4 left-1 px-1 bg-purple-600 text-white text-[8px] font-medium rounded-t pointer-events-none whitespace-nowrap">
+          Groep ({childBlocks.length})
+        </div>
+        
+        {/* Render child blocks inside the group */}
+        <div className="relative w-full h-full overflow-hidden pointer-events-none">
+          {childBlocks.map((child: any, idx: number) => {
+            // Calculate relative position within group (child positions are relative to group origin)
+            const childStyle: React.CSSProperties = {
+              position: 'absolute',
+              left: `${mmToPx(child.position?.x || 0)}px`,
+              top: `${mmToPx(child.position?.y || 0)}px`,
+              width: `${mmToPx(child.size?.width || 40)}px`,
+              height: `${mmToPx(child.size?.height || 20)}px`,
+            };
+            
+            return (
+              <div
+                key={child.id || idx}
+                className="border border-gray-300 bg-white/80 rounded text-[7px] p-0.5 truncate"
+                style={childStyle}
+              >
+                {child.type === "Text" ? (child.config?.text || 'Tekst') : 
+                 child.type === "Data Field" ? `${child.config?.tableName || ''}.${child.config?.fieldName || ''}` :
+                 child.type}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -2701,28 +2758,22 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
       }}
     >
       <div className="text-[9px] font-medium truncate pointer-events-none">
-        {block.type === "Group"
-          ? `Groep (${block.config?.childBlocks?.length || 0} blokken)`
-          : block.type === "Image" 
-            ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
-            : block.type === "Text" 
-              ? (block.config?.text || 'Tekst...') 
-              : block.type === "Data Field" && block.config?.tableName && block.config?.fieldName
-                ? `${block.config.tableName}.${block.config.fieldName}`
-                : block.type === "Company Header"
-                  ? (block.config?.company?.name || 'Company Name')
-                  : block.type === "Document Title"
-                    ? (block.config?.text || 'Document Title')
-                    : block.type === "Date Block"
-                      ? (block.config?.dateSource === 'quotation' ? 'Offertedatum' : block.config?.dateSource === 'validUntil' ? 'Geldig tot' : block.config?.dateSource === 'custom' ? 'Handmatig' : 'Vandaag')
-                      : block.type === "Text Block"
-                        ? (block.config?.text || 'Text Block')
-                        : block.type}
+        {block.type === "Image" 
+          ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
+          : block.type === "Text" 
+            ? (block.config?.text || 'Tekst...') 
+            : block.type === "Data Field" && block.config?.tableName && block.config?.fieldName
+              ? `${block.config.tableName}.${block.config.fieldName}`
+              : block.type === "Company Header"
+                ? (block.config?.company?.name || 'Company Name')
+                : block.type === "Document Title"
+                  ? (block.config?.text || 'Document Title')
+                  : block.type === "Date Block"
+                    ? (block.config?.dateSource === 'quotation' ? 'Offertedatum' : block.config?.dateSource === 'validUntil' ? 'Geldig tot' : block.config?.dateSource === 'custom' ? 'Handmatig' : 'Vandaag')
+                    : block.type === "Text Block"
+                      ? (block.config?.text || 'Text Block')
+                      : block.type}
       </div>
-      {/* Show child blocks indicator for groups */}
-      {block.type === "Group" && block.config?.childBlocks?.length > 0 && (
-        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-300 rounded opacity-50" />
-      )}
     </div>
   );
 }
