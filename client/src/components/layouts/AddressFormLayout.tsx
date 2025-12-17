@@ -110,6 +110,10 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
         description: "Address created successfully",
       });
       setHasUnsavedChanges(false);
+      // Dispatch event synchronously before closing tab to prevent race condition
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-address', hasUnsavedChanges: false }
+      }));
       onSave();
     },
     onError: () => {
@@ -135,6 +139,11 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
         description: "Address updated successfully",
       });
       setHasUnsavedChanges(false);
+      // Dispatch event synchronously before closing tab to prevent race condition
+      const tabId = addressId ? `edit-address-${addressId}` : 'new-address';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       onSave();
     },
     onError: () => {
