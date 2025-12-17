@@ -3040,9 +3040,15 @@ function BlockProperties({
 
   return (
     <div className="space-y-3">
-      {/* Header with Section name and Block type */}
+      {/* Header with editable title and Section name */}
       <div className="pb-2 border-b">
-        <div className="text-sm font-bold">{block.type}</div>
+        <Input
+          value={block.config?.title || block.type}
+          onChange={(e) => updateConfig('title', e.target.value)}
+          className="h-7 text-sm font-bold border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+          placeholder={block.type}
+          data-testid="input-block-title"
+        />
         <div className="text-xs text-muted-foreground">Sectie: {currentSection?.name || 'Unknown'}</div>
       </div>
 
