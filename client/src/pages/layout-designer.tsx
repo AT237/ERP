@@ -2319,17 +2319,22 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
 
   return (
     <div className="font-['Arial',sans-serif]">
-      {sections.map((section: any) => (
+      {sections.map((section: any) => {
+        const sectionHeight = section.config?.dimensions?.height || 200;
+        return (
         <div
           key={section.id}
-          className="relative"
+          className="relative overflow-hidden"
           style={{
             backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
-            height: section.config?.dimensions?.height ? `${section.config.dimensions.height}px` : 'auto',
-            minHeight: section.config?.dimensions?.height ? `${section.config.dimensions.height}px` : '100px',
+            height: `${sectionHeight}px`,
+            minHeight: `${sectionHeight}px`,
+            maxHeight: `${sectionHeight}px`,
             borderColor: section.config?.style?.borderColor || 'transparent',
             borderStyle: section.config?.style?.borderStyle || 'none',
             borderWidth: section.config?.style?.borderWidth || 0,
+            position: 'relative',
+            boxSizing: 'border-box',
           }}
         >
           {/* Render blocks within section */}
@@ -2366,7 +2371,8 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
       
       {sections.length === 0 && (
         <div className="text-center text-gray-400 italic py-8">
