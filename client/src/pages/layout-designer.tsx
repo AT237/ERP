@@ -623,6 +623,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
         sectionType: section.sectionType,
         position: section.position,
         config: {
+          ...section.config, // Preserve all config properties (including heightCanShrink, widthCanShrink, etc.)
           printRules: section.config?.printRules || { everyPage: true },
           dimensions: section.config?.dimensions || { height: 200, unit: 'px' },
           style: section.config?.style || {},
