@@ -1,11 +1,12 @@
 // Block renderer components for layout preview
-import { resolveAndFormat, PrintData, replacePlaceholders, blockHasContent } from '@/utils/field-resolver';
+import { resolveAndFormat, PrintData, replacePlaceholders, blockHasContent, ItemContext } from '@/utils/field-resolver';
 
 export interface BlockRendererProps {
   block: any;
   printData: PrintData;
   currentPage?: number;
   totalPages?: number;
+  itemContext?: ItemContext;
 }
 
 // Text variables that can be used in text blocks
@@ -54,12 +55,23 @@ export const DATA_FIELD_EXAMPLES = [
   { code: '{{company.bankAccount}}', label: 'Bedrijf IBAN' },
 ];
 
+// Item field placeholders - for repeating blocks (line items)
+export const ITEM_FIELD_EXAMPLES = [
+  { code: '{{item.lineNo}}', label: 'Regelnummer' },
+  { code: '{{item.description}}', label: 'Omschrijving' },
+  { code: '{{item.quantity}}', label: 'Aantal' },
+  { code: '{{item.unitPrice}}', label: 'Eenheidsprijs (auto €)' },
+  { code: '{{item.lineTotal}}', label: 'Regeltotaal (auto €)' },
+  { code: '{{item.lineType}}', label: 'Type regel' },
+];
+
 // Function to replace text variables with actual values
 export function replaceTextVariables(
   text: string, 
   printData: PrintData,
   currentPage: number = 1,
-  totalPages: number = 1
+  totalPages: number = 1,
+  itemContext?: ItemContext
 ): string {
   if (!text) return text;
   
@@ -89,15 +101,16 @@ export function replaceTextVariables(
 
   // Replace data field placeholders using the improved replacePlaceholders function
   // This removes empty placeholders and cleans up extra whitespace
-  result = replacePlaceholders(result, printData);
+  // Pass itemContext for {{item.XXX}} placeholders in repeating blocks
+  result = replacePlaceholders(result, printData, itemContext);
 
   return result;
 }
 
 // Text Block - static text content with variable support and inline HTML formatting
-export function TextBlockRenderer({ block, printData, currentPage = 1, totalPages = 1 }: BlockRendererProps) {
+export function TextBlockRenderer({ block, printData, currentPage = 1, totalPages = 1, itemContext }: BlockRendererProps) {
   const rawText = block.config?.text || 'Tekst...';
-  const processedText = replaceTextVariables(rawText, printData, currentPage, totalPages);
+  const processedText = replaceTextVariables(rawText, printData, currentPage, totalPages, itemContext);
   
   // Check if text contains HTML formatting tags
   const hasHtmlFormatting = /<(b|i|u|span|strong|em)[^>]*>/i.test(processedText);

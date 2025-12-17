@@ -2917,14 +2917,60 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
           {/* Render blocks within section */}
           {blocks.length > 0 ? (
             <>
-              {blocks.map((block: any, index: number) => {
+              {blocks.flatMap((block: any, blockIndex: number) => {
                 const dynamicPos = dynamicPositions.get(block.id);
                 
                 // Skip rendering if block should be collapsed
                 if (dynamicPos && !dynamicPos.visible) {
-                  return null;
+                  return [];
                 }
                 
+                // Check if this block should repeat for line items
+                const shouldRepeat = block.config?.repeat?.enabled === true;
+                const repeatPath = block.config?.repeat?.path || 'items';
+                
+                if (shouldRepeat) {
+                  // Get the collection to iterate over
+                  const collection = repeatPath === 'items' ? typedPrintData.items || [] : [];
+                  
+                  if (collection.length === 0) {
+                    return []; // No items to render
+                  }
+                  
+                  // Render one copy of this block for each item
+                  const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
+                  const blockHeight = block.size?.height || 25;
+                  const spacing = block.config?.repeat?.spacing || 0; // mm between rows
+                  
+                  return collection.map((item: any, itemIndex: number) => {
+                    const itemContext = { item, index: itemIndex };
+                    const BlockRenderer = BlockRenderers[block.type];
+                    
+                    const blockStyle: React.CSSProperties = {
+                      position: 'absolute',
+                      left: `${mmToPx(block.position?.x || 0)}px`,
+                      top: `${mmToPx(adjustedY + (itemIndex * (blockHeight + spacing)))}px`,
+                      width: `${mmToPx(block.size?.width || 50)}px`,
+                      height: `${mmToPx(blockHeight)}px`,
+                    };
+                    
+                    if (BlockRenderer) {
+                      return (
+                        <div key={`${block.id}-item-${itemIndex}`} style={blockStyle}>
+                          <BlockRenderer block={block} printData={typedPrintData} itemContext={itemContext} />
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div key={`${block.id}-item-${itemIndex}`} style={blockStyle}>
+                          <UnknownBlockRenderer block={block} printData={typedPrintData} />
+                        </div>
+                      );
+                    }
+                  });
+                }
+                
+                // Regular non-repeating block
                 const BlockRenderer = BlockRenderers[block.type];
                 const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
                 
@@ -2937,17 +2983,17 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
                 };
                 
                 if (BlockRenderer) {
-                  return (
-                    <div key={block.id || index} style={blockStyle}>
+                  return [(
+                    <div key={block.id || blockIndex} style={blockStyle}>
                       <BlockRenderer block={block} printData={typedPrintData} />
                     </div>
-                  );
+                  )];
                 } else {
-                  return (
-                    <div key={block.id || index} style={blockStyle}>
+                  return [(
+                    <div key={block.id || blockIndex} style={blockStyle}>
                       <UnknownBlockRenderer block={block} printData={typedPrintData} />
                     </div>
-                  );
+                  )];
                 }
               })}
             </>
@@ -3427,6 +3473,53 @@ function BlockProperties({
                   onInsert={(newText) => updateConfig('text', newText)}
                   availableTables={availableTables}
                 />
+              </div>
+
+              {/* Repeat for Line Items */}
+              <div className="border-t pt-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={`repeat-enabled-${block.id}`}
+                    checked={block.config?.repeat?.enabled || false}
+                    onChange={(e) => updateConfig('repeat', { 
+                      ...block.config?.repeat, 
+                      enabled: e.target.checked,
+                      path: 'items',
+                      spacing: block.config?.repeat?.spacing || 0
+                    })}
+                    className="h-4 w-4 accent-orange-500"
+                    data-testid="checkbox-repeat-enabled"
+                  />
+                  <Label htmlFor={`repeat-enabled-${block.id}`} className="text-xs font-semibold">
+                    Herhalen voor offerteregels
+                  </Label>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Gebruik {"{{item.description}}"}, {"{{item.quantity}}"}, {"{{item.unitPrice}}"}, {"{{item.lineTotal}}"} als placeholders
+                </p>
+                
+                {block.config?.repeat?.enabled && (
+                  <div className="mt-2">
+                    <Label htmlFor={`repeat-spacing-${block.id}`} className="text-[10px] text-muted-foreground">
+                      Afstand tussen regels (mm)
+                    </Label>
+                    <Input
+                      id={`repeat-spacing-${block.id}`}
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      max="20"
+                      value={block.config?.repeat?.spacing || 0}
+                      onChange={(e) => updateConfig('repeat', { 
+                        ...block.config?.repeat, 
+                        spacing: parseFloat(e.target.value) || 0 
+                      })}
+                      className="h-7 w-20 text-xs mt-1"
+                      data-testid="input-repeat-spacing"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
