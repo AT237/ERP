@@ -6,6 +6,14 @@ export type PrintData = {
   customer: Record<string, any> | null;
   project: Record<string, any> | null;
   company: Record<string, any> | null;
+  items?: Array<{
+    lineNo: number;
+    description: string;
+    quantity: number;
+    unitPrice: string;
+    lineTotal: string;
+    lineType: string;
+  }>;
 };
 
 /**

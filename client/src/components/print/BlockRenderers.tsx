@@ -391,29 +391,47 @@ export function ImageBlockRenderer({ block, printData }: BlockRendererProps) {
 
 // Line Items Table Block - quotation line items
 export function LineItemsTableRenderer({ block, printData }: BlockRendererProps) {
-  // TODO: Extend print-data endpoint to include line items
-  // For now, show placeholder
+  const items = printData.items || [];
   
+  // Format currency
+  const formatCurrency = (value: string | number) => {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(num)) return '€ 0,00';
+    return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(num);
+  };
+  
+  if (items.length === 0) {
+    return (
+      <div style={block.style || {}} className="text-xs text-gray-400 italic p-2">
+        Geen offerteregels beschikbaar
+      </div>
+    );
+  }
+
   return (
-    <div style={block.style || {}} className="border border-gray-300 rounded p-4">
-      <div className="text-sm font-medium mb-2">Offerte Regels</div>
-      <div className="text-xs text-gray-400 italic">
-        Offerte regels worden hier getoond (nog niet geïmplementeerd)
-      </div>
-      <div className="mt-2 border-t pt-2 text-xs text-gray-500">
-        <div className="grid grid-cols-4 gap-2 font-medium mb-1">
-          <div>Omschrijving</div>
-          <div className="text-right">Aantal</div>
-          <div className="text-right">Prijs</div>
-          <div className="text-right">Totaal</div>
-        </div>
-        <div className="grid grid-cols-4 gap-2 text-gray-400">
-          <div>Voorbeeld product</div>
-          <div className="text-right">1</div>
-          <div className="text-right">€ 100,00</div>
-          <div className="text-right">€ 100,00</div>
-        </div>
-      </div>
+    <div style={block.style || {}} className="w-full">
+      <table className="w-full text-xs border-collapse">
+        <thead>
+          <tr className="border-b border-gray-300">
+            <th className="py-1 px-1 text-left w-8">#</th>
+            <th className="py-1 px-1 text-left">Omschrijving</th>
+            <th className="py-1 px-1 text-right w-16">Aantal</th>
+            <th className="py-1 px-1 text-right w-20">Prijs</th>
+            <th className="py-1 px-1 text-right w-20">Totaal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, index) => (
+            <tr key={index} className="border-b border-gray-200">
+              <td className="py-1 px-1 text-gray-500">{item.lineNo}</td>
+              <td className="py-1 px-1">{item.description}</td>
+              <td className="py-1 px-1 text-right">{item.lineType === 'text' ? '' : item.quantity}</td>
+              <td className="py-1 px-1 text-right">{item.lineType === 'text' ? '' : formatCurrency(item.unitPrice)}</td>
+              <td className="py-1 px-1 text-right">{item.lineType === 'text' ? '' : formatCurrency(item.lineTotal)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

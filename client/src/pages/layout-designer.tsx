@@ -2805,6 +2805,7 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
     customer: printData.customer || null,
     project: printData.project || null,
     company: printData.company || null,
+    items: printData.items || [],
   };
 
   return (

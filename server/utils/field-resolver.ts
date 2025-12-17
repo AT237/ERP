@@ -1,6 +1,6 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses } from "../../shared/schema";
-import { eq } from "drizzle-orm";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems } from "../../shared/schema";
+import { eq, asc } from "drizzle-orm";
 
 /**
  * Complete quotation data with all related entities for field binding
@@ -57,6 +57,14 @@ export interface QuotationPrintData {
     bankAccount: string | null;
     bankName: string | null;
   } | null;
+  items: Array<{
+    lineNo: number;
+    description: string;
+    quantity: number;
+    unitPrice: string;
+    lineTotal: string;
+    lineType: string;
+  }>;
 }
 
 /**
@@ -149,6 +157,21 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
     };
   }
 
+  // Load quotation items
+  const items = await db.query.quotationItems.findMany({
+    where: eq(quotationItems.quotationId, quotationId),
+    orderBy: [asc(quotationItems.position)],
+  });
+
+  const itemsData = items.map((item, index) => ({
+    lineNo: index + 1,
+    description: item.description,
+    quantity: item.quantity || 0,
+    unitPrice: item.unitPrice || "0.00",
+    lineTotal: item.lineTotal || "0.00",
+    lineType: item.lineType || "standard",
+  }));
+
   return {
     quotation: {
       number: quotation.quotationNumber,
@@ -168,6 +191,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
     customer: customerData,
     project: projectData,
     company: companyData,
+    items: itemsData,
   };
 }
 
