@@ -314,10 +314,20 @@ export function hasContent(
     if (match) {
       const fieldPath = match[1];
       
-      // Handle {{item.*}} placeholders for repeating sections
+      // Handle {{item.*}} placeholders for repeating sections (supports nested paths)
       if (fieldPath.startsWith('item.') && itemContext?.item) {
-        const itemField = fieldPath.substring(5); // Remove 'item.' prefix
-        const value = itemContext.item[itemField];
+        const itemFieldPath = fieldPath.substring(5); // Remove 'item.' prefix
+        // Support nested paths like item.product.name
+        const pathParts = itemFieldPath.split('.');
+        let value: any = itemContext.item;
+        for (const part of pathParts) {
+          if (value && typeof value === 'object' && part in value) {
+            value = value[part];
+          } else {
+            value = null;
+            break;
+          }
+        }
         if (value !== null && value !== undefined && value !== '') {
           hasAnyValue = true;
           break;
