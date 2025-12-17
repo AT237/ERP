@@ -2701,6 +2701,24 @@ function BlockProperties({
               id={`text-content-${block.id}`}
               value={block.config?.text || ''}
               onChange={(e) => updateConfig('text', e.target.value)}
+              onDoubleClick={(e) => {
+                const textarea = e.currentTarget;
+                const text = textarea.value;
+                const cursorPos = textarea.selectionStart;
+                
+                // Find placeholder at cursor position
+                const regex = /\{\{[^}]+\}\}/g;
+                let match;
+                while ((match = regex.exec(text)) !== null) {
+                  const start = match.index;
+                  const end = start + match[0].length;
+                  if (cursorPos >= start && cursorPos <= end) {
+                    e.preventDefault();
+                    textarea.setSelectionRange(start, end);
+                    return;
+                  }
+                }
+              }}
               className="w-full min-h-[100px] p-2 text-xs border rounded"
               placeholder="Voer tekst in..."
               style={{
