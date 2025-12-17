@@ -2862,14 +2862,15 @@ function PreviewView({ layout }: { layout: any }) {
 // When a block is hidden (hideWhenEmpty), blocks below it shift up automatically
 function calculateDynamicPositions(
   blocks: any[], 
-  printData: PrintData
+  printData: PrintData,
+  itemContext?: { item: any; index: number }
 ): Map<string, { y: number; visible: boolean }> {
   const positions = new Map<string, { y: number; visible: boolean }>();
   
   // First pass: determine which blocks are visible
   const blockVisibility = new Map<string, boolean>();
   for (const block of blocks) {
-    const hasContent = blockHasContent(block, printData);
+    const hasContent = blockHasContent(block, printData, itemContext);
     blockVisibility.set(block.id, hasContent);
   }
   
@@ -2941,8 +2942,8 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
     const configuredHeight = section.config?.dimensions?.height || 200;
     const blocks = section.config?.blocks || [];
     
-    // Calculate dynamic positions for blocks in this section
-    const dynamicPositions = calculateDynamicPositions(blocks, typedPrintData);
+    // Calculate dynamic positions for blocks in this section (pass itemContext for repeating sections)
+    const dynamicPositions = calculateDynamicPositions(blocks, typedPrintData, itemContext);
     
     // Calculate actual content height (bottom of lowest visible block)
     let contentHeight = 0;

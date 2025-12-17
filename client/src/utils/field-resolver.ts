@@ -287,16 +287,18 @@ export function replacePlaceholders(
  * If text contains placeholders, returns true only if at least one placeholder has a value
  * @param text - Text with {{field.path}} placeholders
  * @param printData - The print data object
+ * @param itemContext - Optional item context for {{item.*}} placeholders in repeating sections
  * @returns true if text has meaningful content (placeholders resolved to values)
  */
 export function hasContent(
   text: string,
-  printData: PrintData
+  printData: PrintData,
+  itemContext?: { item: any; index: number }
 ): boolean {
   if (!text) return false;
   
-  // Check if text contains any placeholders
-  const placeholderRegex = /\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)+)(?::([a-zA-Z]+))?\}\}/g;
+  // Check if text contains any placeholders (including item.* placeholders)
+  const placeholderRegex = /\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)*)(?::([a-zA-Z]+))?\}\}/g;
   const placeholders = text.match(placeholderRegex);
   
   if (!placeholders || placeholders.length === 0) {
@@ -308,13 +310,25 @@ export function hasContent(
   let hasAnyValue = false;
   for (const placeholder of placeholders) {
     // Extract field path from placeholder
-    const match = placeholder.match(/\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)+)(?::([a-zA-Z]+))?\}\}/);
+    const match = placeholder.match(/\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)*)(?::([a-zA-Z]+))?\}\}/);
     if (match) {
       const fieldPath = match[1];
-      const value = resolveFieldValue(fieldPath, printData);
-      if (value !== null && value !== undefined && value !== '') {
-        hasAnyValue = true;
-        break;
+      
+      // Handle {{item.*}} placeholders for repeating sections
+      if (fieldPath.startsWith('item.') && itemContext?.item) {
+        const itemField = fieldPath.substring(5); // Remove 'item.' prefix
+        const value = itemContext.item[itemField];
+        if (value !== null && value !== undefined && value !== '') {
+          hasAnyValue = true;
+          break;
+        }
+      } else if (!fieldPath.startsWith('item.')) {
+        // Regular field placeholder
+        const value = resolveFieldValue(fieldPath, printData);
+        if (value !== null && value !== undefined && value !== '') {
+          hasAnyValue = true;
+          break;
+        }
       }
     }
   }
@@ -327,11 +341,13 @@ export function hasContent(
  * Used for collapse/shift logic and hideWhenEmpty feature
  * @param block - The block configuration
  * @param printData - The print data object
+ * @param itemContext - Optional item context for {{item.*}} placeholders in repeating sections
  * @returns true if block should be visible
  */
 export function blockHasContent(
   block: any,
-  printData: PrintData
+  printData: PrintData,
+  itemContext?: { item: any; index: number }
 ): boolean {
   if (!block) return false;
 
@@ -344,7 +360,7 @@ export function blockHasContent(
   switch (block.type) {
     case 'Text':
     case 'Text Block':
-      return hasContent(block.config?.text || '', printData);
+      return hasContent(block.config?.text || '', printData, itemContext);
     
     case 'Data Field':
       const { tableName, fieldName } = block.config || {};
@@ -387,7 +403,7 @@ export function blockHasContent(
     case 'Group':
       // Group has content if any child block has content
       const childBlocks = block.config?.childBlocks || [];
-      return childBlocks.some((child: any) => blockHasContent(child, printData));
+      return childBlocks.some((child: any) => blockHasContent(child, printData, itemContext));
     
     case 'Line Items Table':
       // Has content if there are items
@@ -399,7 +415,7 @@ export function blockHasContent(
       return !!(printData.quotation?.totalAmount || printData.quotation?.subtotal);
     
     case 'Footer Block':
-      return hasContent(block.config?.text || '', printData);
+      return hasContent(block.config?.text || '', printData, itemContext);
     
     default:
       return true; // Default to showing block
