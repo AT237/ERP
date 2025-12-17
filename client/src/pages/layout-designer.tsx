@@ -3165,27 +3165,25 @@ function BlockProperties({
           </div>
         </div>
 
-        {/* Hide When Empty - for blocks that can have placeholders */}
-        {(block.type === "Text" || block.type === "Data Field" || block.type === "Text Block" || block.type === "Company Header") && (
-          <div className="pt-2 border-t">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="hide-when-empty"
-                checked={block.config?.hideWhenEmpty || false}
-                onChange={(e) => updateConfig('hideWhenEmpty', e.target.checked)}
-                className="h-4 w-4 accent-orange-500"
-                data-testid="checkbox-hide-when-empty"
-              />
-              <Label htmlFor="hide-when-empty" className="text-xs font-normal">
-                Verberg als placeholder leeg is
-              </Label>
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Als aangevinkt, wordt dit blok niet getoond wanneer de placeholder (bijv. {"{{company.iban}}"}) geen data bevat.
-            </p>
+        {/* Hide When Empty - for all block types */}
+        <div className="pt-2 border-t">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="hide-when-empty"
+              checked={block.config?.hideWhenEmpty || false}
+              onChange={(e) => updateConfig('hideWhenEmpty', e.target.checked)}
+              className="h-4 w-4 accent-orange-500"
+              data-testid="checkbox-hide-when-empty"
+            />
+            <Label htmlFor="hide-when-empty" className="text-xs font-normal">
+              Verberg als leeg
+            </Label>
           </div>
-        )}
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Als aangevinkt, wordt dit blok niet getoond wanneer de data leeg is.
+          </p>
+        </div>
 
         {/* Image Selection - only for Image blocks, between Size and Alignment */}
         {block.type === "Image" && (

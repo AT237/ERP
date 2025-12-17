@@ -267,10 +267,10 @@ export function hasContent(
 
 /**
  * Check if a block has any content after placeholder resolution
- * Used for collapse/shift logic
+ * Used for collapse/shift logic and hideWhenEmpty feature
  * @param block - The block configuration
  * @param printData - The print data object
- * @returns true if block has displayable content
+ * @returns true if block should be visible
  */
 export function blockHasContent(
   block: any,
@@ -278,54 +278,73 @@ export function blockHasContent(
 ): boolean {
   if (!block) return false;
 
-  // Helper to check actual content
-  const checkContent = (): boolean => {
-    switch (block.type) {
-      case 'Text':
-      case 'Text Block':
-        return hasContent(block.config?.text || '', printData);
-      
-      case 'Data Field':
-        const { tableName, fieldName } = block.config || {};
-        if (!tableName || !fieldName) return false;
-        const fieldKey = `${tableName}.${fieldName}`;
-        const value = resolveFieldValue(fieldKey, printData);
-        return value !== null && value !== undefined && value !== '';
-      
-      case 'Company Header':
-        return !!printData.company;
-      
-      case 'Document Title':
-      case 'Date Block':
-      case 'Page Number':
-        return true; // These always have content
-      
-      case 'Image':
-        // Check all possible image config properties (top-level and nested)
-        return !!(
-          block.config?.imagePath || 
-          block.config?.imageUrl || 
-          block.config?.src || 
-          block.config?.imageId ||
-          block.config?.image?.id ||
-          block.config?.image?.url ||
-          block.config?.image?.path ||
-          block.config?.image?.src
-        );
-      
-      default:
-        return true; // Default to showing block
-    }
-  };
-
-  const hasActualContent = checkContent();
-
-  // If hideWhenEmpty is enabled and there's no content, hide the block
-  if (block.config?.hideWhenEmpty && !hasActualContent) {
-    return false;
+  // If hideWhenEmpty is not enabled, always show block (backward compatible)
+  if (!block.config?.hideWhenEmpty) {
+    return true;
   }
 
-  // If hideWhenEmpty is not enabled, always show block (backward compatible)
-  // Only hide if it's in a collapseEmpty group context (handled elsewhere)
-  return true;
+  // hideWhenEmpty is enabled - check if block has actual content
+  switch (block.type) {
+    case 'Text':
+    case 'Text Block':
+      return hasContent(block.config?.text || '', printData);
+    
+    case 'Data Field':
+      const { tableName, fieldName } = block.config || {};
+      if (!tableName || !fieldName) return false;
+      const fieldKey = `${tableName}.${fieldName}`;
+      const value = resolveFieldValue(fieldKey, printData);
+      return value !== null && value !== undefined && value !== '';
+    
+    case 'Company Header':
+      return !!printData.company;
+    
+    case 'Document Title':
+      return !!(block.config?.text || block.config?.title);
+    
+    case 'Date Block':
+      // Check if date source has a value
+      const dateSource = block.config?.dateSource;
+      if (dateSource === 'quotation') {
+        return !!(printData.quotation?.date || printData.quotation?.createdAt);
+      } else if (dateSource === 'validUntil') {
+        return !!printData.quotation?.validUntil;
+      }
+      return true; // Today/custom dates always have content
+    
+    case 'Page Number':
+      return true; // Page numbers always have content
+    
+    case 'Image':
+      return !!(
+        block.config?.imagePath || 
+        block.config?.imageUrl || 
+        block.config?.src || 
+        block.config?.imageId ||
+        block.config?.image?.id ||
+        block.config?.image?.url ||
+        block.config?.image?.path ||
+        block.config?.image?.src
+      );
+    
+    case 'Group':
+      // Group has content if any child block has content
+      const childBlocks = block.config?.childBlocks || [];
+      return childBlocks.some((child: any) => blockHasContent(child, printData));
+    
+    case 'Line Items Table':
+      // Has content if there are items
+      const items = printData.quotation?.items || [];
+      return items.length > 0;
+    
+    case 'Totals Summary':
+      // Has content if there's a total amount
+      return !!(printData.quotation?.totalAmount || printData.quotation?.subtotal);
+    
+    case 'Footer Block':
+      return hasContent(block.config?.text || '', printData);
+    
+    default:
+      return true; // Default to showing block
+  }
 }
