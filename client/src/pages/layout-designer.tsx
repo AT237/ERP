@@ -1269,7 +1269,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
           <TooltipProvider delayDuration={2000}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
                   <Save className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -1363,7 +1363,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  className={`h-8 w-8 p-0 ${selectedBlock ? 'hover:bg-muted' : 'opacity-40'}`}
+                  className={`h-8 w-8 p-0 ${selectedBlock ? 'text-orange-600 hover:bg-orange-50' : 'opacity-40'}`}
                   disabled={!selectedBlock}
                   onClick={() => {
                     if (!selectedBlock) return;
@@ -1396,7 +1396,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  className={`h-8 w-8 p-0 ${selectedBlock ? 'hover:bg-muted' : 'opacity-40'}`}
+                  className={`h-8 w-8 p-0 ${selectedBlock ? 'text-orange-600 hover:bg-orange-50' : 'opacity-40'}`}
                   disabled={!selectedBlock}
                   onClick={() => {
                     if (!selectedBlock) return;
@@ -1422,51 +1422,65 @@ function VisualDesignerView({ layout }: { layout: any }) {
             </Tooltip>
           </TooltipProvider>
 
-          {/* Group Blocks - only show when multiple blocks are selected */}
-          {selectedBlockIds.length >= 2 && (
-            <TooltipProvider delayDuration={2000}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
-                    onClick={() => handleGroupBlocks()}
-                    data-testid="btn-group-blocks"
-                  >
-                    <Group className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="font-medium">Groeperen</p>
-                  <p className="text-xs text-muted-foreground">Groepeer {selectedBlockIds.length} geselecteerde blokken</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          {/* Group Blocks - always visible, active when multiple blocks selected */}
+          <TooltipProvider delayDuration={2000}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className={`h-8 w-8 p-0 ${
+                    selectedBlockIds.length >= 2 
+                      ? 'text-orange-600 bg-orange-100 hover:bg-orange-200' 
+                      : 'text-gray-400 hover:bg-muted opacity-50'
+                  }`}
+                  disabled={selectedBlockIds.length < 2}
+                  onClick={() => handleGroupBlocks()}
+                  data-testid="btn-group-blocks"
+                >
+                  <Group className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Groeperen</p>
+                <p className="text-xs text-muted-foreground">
+                  {selectedBlockIds.length >= 2 
+                    ? `Groepeer ${selectedBlockIds.length} geselecteerde blokken` 
+                    : 'Selecteer minimaal 2 blokken met Ctrl+klik'}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-          {/* Ungroup Block - only show when a group is selected */}
-          {selectedBlock?.type === 'Group' && (
-            <TooltipProvider delayDuration={2000}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="h-8 w-8 p-0 text-purple-600 hover:bg-purple-50"
-                    onClick={() => handleUngroupBlock()}
-                    data-testid="btn-ungroup-blocks"
-                  >
-                    <Ungroup className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="font-medium">Ontgroeperen</p>
-                  <p className="text-xs text-muted-foreground">Haal blokken uit groep</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          {/* Ungroup Block - always visible, active when group is selected */}
+          <TooltipProvider delayDuration={2000}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className={`h-8 w-8 p-0 ${
+                    selectedBlock?.type === 'Group' 
+                      ? 'text-orange-600 bg-orange-100 hover:bg-orange-200' 
+                      : 'text-gray-400 hover:bg-muted opacity-50'
+                  }`}
+                  disabled={selectedBlock?.type !== 'Group'}
+                  onClick={() => handleUngroupBlock()}
+                  data-testid="btn-ungroup-blocks"
+                >
+                  <Ungroup className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Ontgroeperen</p>
+                <p className="text-xs text-muted-foreground">
+                  {selectedBlock?.type === 'Group' 
+                    ? 'Haal blokken uit groep' 
+                    : 'Selecteer eerst een groep'}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <div className="h-6 w-px bg-border" />
 
@@ -1478,7 +1492,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50"
                     onClick={() => setShowNewSectionDialog(true)}
                   >
                     <Plus className="h-4 w-4" />
