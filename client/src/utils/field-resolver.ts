@@ -254,41 +254,54 @@ export function blockHasContent(
 ): boolean {
   if (!block) return false;
 
-  // Handle different block types
-  switch (block.type) {
-    case 'Text':
-    case 'Text Block':
-      return hasContent(block.config?.text || '', printData);
-    
-    case 'Data Field':
-      const { tableName, fieldName } = block.config || {};
-      if (!tableName || !fieldName) return false;
-      const fieldKey = `${tableName}.${fieldName}`;
-      const value = resolveFieldValue(fieldKey, printData);
-      return value !== null && value !== undefined && value !== '';
-    
-    case 'Company Header':
-      return !!printData.company;
-    
-    case 'Document Title':
-    case 'Date Block':
-    case 'Page Number':
-      return true; // These always have content
-    
-    case 'Image':
-      // Check all possible image config properties (top-level and nested)
-      return !!(
-        block.config?.imagePath || 
-        block.config?.imageUrl || 
-        block.config?.src || 
-        block.config?.imageId ||
-        block.config?.image?.id ||
-        block.config?.image?.url ||
-        block.config?.image?.path ||
-        block.config?.image?.src
-      );
-    
-    default:
-      return true; // Default to showing block
+  // Helper to check actual content
+  const checkContent = (): boolean => {
+    switch (block.type) {
+      case 'Text':
+      case 'Text Block':
+        return hasContent(block.config?.text || '', printData);
+      
+      case 'Data Field':
+        const { tableName, fieldName } = block.config || {};
+        if (!tableName || !fieldName) return false;
+        const fieldKey = `${tableName}.${fieldName}`;
+        const value = resolveFieldValue(fieldKey, printData);
+        return value !== null && value !== undefined && value !== '';
+      
+      case 'Company Header':
+        return !!printData.company;
+      
+      case 'Document Title':
+      case 'Date Block':
+      case 'Page Number':
+        return true; // These always have content
+      
+      case 'Image':
+        // Check all possible image config properties (top-level and nested)
+        return !!(
+          block.config?.imagePath || 
+          block.config?.imageUrl || 
+          block.config?.src || 
+          block.config?.imageId ||
+          block.config?.image?.id ||
+          block.config?.image?.url ||
+          block.config?.image?.path ||
+          block.config?.image?.src
+        );
+      
+      default:
+        return true; // Default to showing block
+    }
+  };
+
+  const hasActualContent = checkContent();
+
+  // If hideWhenEmpty is enabled and there's no content, hide the block
+  if (block.config?.hideWhenEmpty && !hasActualContent) {
+    return false;
   }
+
+  // If hideWhenEmpty is not enabled, always show block (backward compatible)
+  // Only hide if it's in a collapseEmpty group context (handled elsewhere)
+  return true;
 }
