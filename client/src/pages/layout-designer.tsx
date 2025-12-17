@@ -536,6 +536,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [sections, setSections] = useState<any[]>([]);
   const [selectedSection, setSelectedSection] = useState<any>(null);
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
+  const [selectedBlockIds, setSelectedBlockIds] = useState<string[]>([]); // Multi-select support
   const [draggedBlockType, setDraggedBlockType] = useState<string | null>(null);
   const [zoom, setZoom] = useState(() => {
     const saved = localStorage.getItem('layout-designer-zoom');
@@ -836,9 +837,27 @@ function VisualDesignerView({ layout }: { layout: any }) {
     setSections(updatedSections);
   };
 
-  const handleBlockClick = (block: any) => {
-    setSelectedBlock(block);
-    setSelectedSection(null); // Deselect section when block is selected
+  const handleBlockClick = (block: any, e?: React.MouseEvent) => {
+    const isCtrlPressed = e?.ctrlKey || e?.metaKey;
+    
+    if (isCtrlPressed) {
+      // Multi-select with Ctrl/Cmd
+      setSelectedBlockIds(prev => {
+        if (prev.includes(block.id)) {
+          // Remove from selection
+          return prev.filter(id => id !== block.id);
+        } else {
+          // Add to selection
+          return [...prev, block.id];
+        }
+      });
+      setSelectedBlock(null);
+    } else {
+      // Single select - clear multi-select
+      setSelectedBlock(block);
+      setSelectedBlockIds([]);
+    }
+    setSelectedSection(null);
   };
 
   const handleSectionClick = (section: any) => {
@@ -1905,8 +1924,9 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                     sectionId={section.id}
                                     layerIndex={blockIndex}
                                     isSelected={selectedBlock?.id === block.id}
+                                    isMultiSelected={selectedBlockIds.includes(block.id)}
                                     isDragging={isDraggingBlock && dragBlockId === block.id}
-                                    onClick={() => handleBlockClick(block)}
+                                    onClick={(e: React.MouseEvent) => handleBlockClick(block, e)}
                                     onDragStart={(e: React.MouseEvent) => handleBlockDragStart(e, block, section.id)}
                                   />
                                 ))}
@@ -2479,7 +2499,7 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
 }
 
 // Section Block Component (blocks within sections)
-function SectionBlock({ block, sectionId, layerIndex, isSelected, isDragging, onClick, onDragStart }: any) {
+function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelected, isDragging, onClick, onDragStart }: any) {
 
   const blockStyle: React.CSSProperties = {
     left: `${mmToPx(block.position.x || 0)}px`, 
@@ -2493,13 +2513,13 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isDragging, on
 
   return (
     <div
-      className={`absolute border rounded shadow-sm transition-all p-1 bg-white select-none ${
-        isSelected ? 'border-orange-500 shadow-md' : 'border-gray-300 hover:border-orange-300'
+      className={`absolute border-2 rounded shadow-sm transition-all p-1 bg-white select-none ${
+        isSelected ? 'border-orange-500 shadow-md' : isMultiSelected ? 'border-blue-500 shadow-md' : 'border-gray-300 hover:border-orange-300'
       } ${isDragging ? 'shadow-lg' : ''}`}
       style={blockStyle}
       onClick={(e) => {
         e.stopPropagation();
-        onClick();
+        onClick(e);
       }}
       onMouseDown={(e) => {
         e.preventDefault();
