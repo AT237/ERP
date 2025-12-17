@@ -25,7 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { QuotationPrintDialog } from "@/components/print/QuotationPrintDialog";
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem } from "@shared/schema";
+import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem, Project } from "@shared/schema";
 import { insertInventoryItemSchema } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -55,6 +55,7 @@ const quotationFormSchema = insertQuotationSchema.omit({
   validUntil: z.string().optional(),
   isBudgetQuotation: z.boolean().optional(),
   validityDays: z.number().optional(),
+  projectId: z.string().optional(),
 });
 
 const quotationItemFormSchema = insertQuotationItemSchema.extend({
@@ -155,6 +156,15 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     refetchOnWindowFocus: false,
   });
 
+  // Lazy load projects only when needed
+  const [shouldLoadProjects, setShouldLoadProjects] = useState(false);
+  const { data: projects = [] } = useQuery<Project[]>({
+    queryKey: ["/api/projects"],
+    enabled: shouldLoadProjects,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+
   // Fetch existing quotation details (combined: quotation + items + customer) if editing
   const { data: quotationDetails, isLoading: quotationLoading } = useQuery<{
     quotation: Quotation,
@@ -204,6 +214,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     defaultValues: {
       quotationNumber: "Auto-generated",
       customerId: "",
+      projectId: "",
       description: "",
       revisionNumber: "V1.0",
       status: "draft",
@@ -392,6 +403,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       quotationForm.reset({
         quotationNumber: existingQuotation.quotationNumber,
         customerId: existingQuotation.customerId,
+        projectId: existingQuotation.projectId || "",
         description: existingQuotation.description || "",
         revisionNumber: existingQuotation.revisionNumber || "V1.0",
         status: existingQuotation.status || "draft",
@@ -1258,6 +1270,36 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 isRequired: true
               },
               testId: "field-customer"
+            },
+            // Positie 2: Project
+            {
+              key: "projectId",
+              label: "Project",
+              type: "custom",
+              layout: "single",
+              customComponent: (
+                <Select
+                  value={quotationForm.watch("projectId") || ""}
+                  onValueChange={(value) => quotationForm.setValue("projectId", value === "none" ? "" : value)}
+                  onOpenChange={(open) => { if (open) setShouldLoadProjects(true); }}
+                >
+                  <SelectTrigger className="w-full" data-testid="select-project">
+                    <SelectValue placeholder="Selecteer project..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Geen project</SelectItem>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.projectNumber} - {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ),
+              validation: {
+                error: quotationForm.formState.errors.projectId?.message
+              },
+              testId: "field-project"
             },
             // Positie 3: Quotation Date
             {
