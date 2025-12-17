@@ -136,6 +136,19 @@ export function TextBlockRenderer({ block, printData, currentPage = 1, totalPage
       default: return 'flex-start';
     }
   };
+
+  const getFontFamily = (font?: string): string => {
+    const fontMap: Record<string, string> = {
+      'helvetica': 'Helvetica, Arial, sans-serif',
+      'arial': 'Arial, sans-serif',
+      'calibri': 'Calibri, "Segoe UI", sans-serif',
+      'times': '"Times New Roman", Times, serif',
+      'courier': '"Courier New", Courier, monospace',
+      'georgia': 'Georgia, serif',
+      'verdana': 'Verdana, sans-serif',
+    };
+    return fontMap[font || 'helvetica'] || font || 'Helvetica, Arial, sans-serif';
+  };
   
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -146,7 +159,7 @@ export function TextBlockRenderer({ block, printData, currentPage = 1, totalPage
   };
   
   const textStyle: React.CSSProperties = {
-    fontFamily: block.style?.fontFamily || 'helvetica',
+    fontFamily: getFontFamily(block.style?.fontFamily),
     fontSize: block.style?.fontSize ? `${block.style.fontSize}pt` : '9pt',
     fontWeight: block.style?.fontWeight || 'normal',
     fontStyle: block.style?.fontStyle || 'normal',

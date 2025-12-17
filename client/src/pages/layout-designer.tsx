@@ -3384,6 +3384,7 @@ function BlockProperties({
                       <SelectContent>
                         <SelectItem value="helvetica">Helvetica</SelectItem>
                         <SelectItem value="arial">Arial</SelectItem>
+                        <SelectItem value="calibri">Calibri</SelectItem>
                         <SelectItem value="times">Times New Roman</SelectItem>
                         <SelectItem value="courier">Courier</SelectItem>
                         <SelectItem value="georgia">Georgia</SelectItem>
@@ -4650,6 +4651,19 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
     }
   };
 
+  const getFontFamily = (font?: string): string => {
+    const fontMap: Record<string, string> = {
+      'helvetica': 'Helvetica, Arial, sans-serif',
+      'arial': 'Arial, sans-serif',
+      'calibri': 'Calibri, "Segoe UI", sans-serif',
+      'times': '"Times New Roman", Times, serif',
+      'courier': '"Courier New", Courier, monospace',
+      'georgia': 'Georgia, serif',
+      'verdana': 'Verdana, sans-serif',
+    };
+    return fontMap[font || 'helvetica'] || font || 'Helvetica, Arial, sans-serif';
+  };
+
   // Build style object with all properties
   const blockStyle: React.CSSProperties = {
     left: `${block.position.x}px`, 
@@ -4658,7 +4672,7 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
     minHeight: `${block.size?.height || 100}px`,
     zIndex: block.zIndex || 0,
     fontSize: `${block.style?.fontSize || 9}px`,
-    fontFamily: block.style?.fontFamily || 'helvetica',
+    fontFamily: getFontFamily(block.style?.fontFamily),
     fontWeight: block.style?.fontStyle === 'bold' ? 'bold' : 'normal',
     fontStyle: block.style?.fontStyle === 'italic' ? 'italic' : 'normal',
     textAlign: getTextAlign(block.config?.alignH),
