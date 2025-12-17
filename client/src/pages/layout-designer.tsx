@@ -2319,7 +2319,7 @@ function getDefaultConfig(blockType: string) {
   switch (blockType) {
     case "Text":
       return {
-        text: "Voer tekst in...",
+        text: "",
         editable: true,
       };
     case "Image":
@@ -3534,7 +3534,7 @@ function BlockProperties({
                   }
                 }
               }}
-              className="w-full min-h-[100px] p-2 text-xs border rounded"
+              className="w-full min-h-[100px] p-2 text-xs border rounded placeholder:text-gray-400 placeholder:italic"
               placeholder="Voer tekst in..."
               style={{
                 fontFamily: block.style?.fontFamily || 'helvetica',
