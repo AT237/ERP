@@ -2937,6 +2937,126 @@ function BlockProperties({
 
           <div>
             <Label htmlFor={`text-content-${block.id}`} className="text-xs">Tekst</Label>
+            
+            {/* Inline formatting toolbar for selected text */}
+            <div className="flex items-center gap-1 mb-1 p-1 bg-muted/50 rounded border text-[10px]">
+              <span className="text-muted-foreground mr-1">Selectie:</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                title="Maak selectie vet"
+                onClick={() => {
+                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
+                  if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = block.config?.text || '';
+                    const selected = text.substring(start, end);
+                    const newText = text.substring(0, start) + `<b>${selected}</b>` + text.substring(end);
+                    updateConfig('text', newText);
+                  }
+                }}
+              >
+                <Bold className="h-3 w-3" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                title="Maak selectie cursief"
+                onClick={() => {
+                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
+                  if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = block.config?.text || '';
+                    const selected = text.substring(start, end);
+                    const newText = text.substring(0, start) + `<i>${selected}</i>` + text.substring(end);
+                    updateConfig('text', newText);
+                  }
+                }}
+              >
+                <Italic className="h-3 w-3" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                title="Onderstreep selectie"
+                onClick={() => {
+                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
+                  if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = block.config?.text || '';
+                    const selected = text.substring(start, end);
+                    const newText = text.substring(0, start) + `<u>${selected}</u>` + text.substring(end);
+                    updateConfig('text', newText);
+                  }
+                }}
+              >
+                <Underline className="h-3 w-3" />
+              </Button>
+              <div className="h-4 w-px bg-border mx-1" />
+              <Select
+                value=""
+                onValueChange={(font) => {
+                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
+                  if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = block.config?.text || '';
+                    const selected = text.substring(start, end);
+                    const newText = text.substring(0, start) + `<span style="font-family:${font}">${selected}</span>` + text.substring(end);
+                    updateConfig('text', newText);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-6 text-[10px] w-20">
+                  <SelectValue placeholder="Font" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Arial">Arial</SelectItem>
+                  <SelectItem value="Helvetica">Helvetica</SelectItem>
+                  <SelectItem value="Times New Roman">Times</SelectItem>
+                  <SelectItem value="Courier New">Courier</SelectItem>
+                  <SelectItem value="Georgia">Georgia</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value=""
+                onValueChange={(size) => {
+                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
+                  if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = block.config?.text || '';
+                    const selected = text.substring(start, end);
+                    const newText = text.substring(0, start) + `<span style="font-size:${size}pt">${selected}</span>` + text.substring(end);
+                    updateConfig('text', newText);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-6 text-[10px] w-14">
+                  <SelectValue placeholder="Grootte" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="8">8pt</SelectItem>
+                  <SelectItem value="9">9pt</SelectItem>
+                  <SelectItem value="10">10pt</SelectItem>
+                  <SelectItem value="11">11pt</SelectItem>
+                  <SelectItem value="12">12pt</SelectItem>
+                  <SelectItem value="14">14pt</SelectItem>
+                  <SelectItem value="16">16pt</SelectItem>
+                  <SelectItem value="18">18pt</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
             <textarea
               id={`text-content-${block.id}`}
               value={block.config?.text || ''}

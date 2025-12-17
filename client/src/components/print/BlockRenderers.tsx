@@ -94,10 +94,18 @@ export function replaceTextVariables(
   return result;
 }
 
-// Text Block - static text content with variable support
+// Text Block - static text content with variable support and inline HTML formatting
 export function TextBlockRenderer({ block, printData, currentPage = 1, totalPages = 1 }: BlockRendererProps) {
   const rawText = block.config?.text || 'Tekst...';
   const processedText = replaceTextVariables(rawText, printData, currentPage, totalPages);
+  
+  // Check if text contains HTML formatting tags
+  const hasHtmlFormatting = /<(b|i|u|span|strong|em)[^>]*>/i.test(processedText);
+  
+  // Convert newlines to <br> for HTML rendering
+  const htmlText = hasHtmlFormatting 
+    ? processedText.replace(/\n/g, '<br />')
+    : processedText;
   
   // Map alignH/alignV to CSS
   const getTextAlign = (alignH?: string): 'left' | 'center' | 'right' => {
@@ -136,6 +144,18 @@ export function TextBlockRenderer({ block, printData, currentPage = 1, totalPage
     margin: 0,
     width: '100%',
   };
+  
+  // Render with HTML if formatting tags are present
+  if (hasHtmlFormatting) {
+    return (
+      <div style={containerStyle}>
+        <div 
+          style={textStyle}
+          dangerouslySetInnerHTML={{ __html: htmlText }}
+        />
+      </div>
+    );
+  }
   
   return (
     <div style={containerStyle}>
