@@ -4365,6 +4365,52 @@ function SectionProperties({
         </div>
       </div>
 
+      {/* Repeat for Line Items */}
+      <div className="space-y-3 pt-2 border-t">
+        <div className="text-xs font-bold text-orange-600">Herhalen</div>
+        
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="section-repeat-enabled"
+            checked={section.config.repeat?.enabled || false}
+            onChange={(e) => {
+              onUpdateProperty(section.id, 'config.repeat', {
+                ...section.config.repeat,
+                enabled: e.target.checked,
+                path: 'items'
+              });
+            }}
+            className="h-4 w-4 accent-orange-500"
+          />
+          <Label htmlFor="section-repeat-enabled" className="text-xs font-normal">
+            Herhalen voor offerteregels
+          </Label>
+        </div>
+        
+        <p className="text-[10px] text-muted-foreground">
+          Sectie wordt herhaald voor elke offerteregel. Gebruik {"{{item.description}}"}, {"{{item.quantity}}"}, {"{{item.unitPrice}}"}, {"{{item.lineTotal}}"} in tekstblokken.
+        </p>
+        
+        {section.config.repeat?.enabled && (
+          <div>
+            <Label htmlFor="section-repeat-spacing" className="text-[10px] text-muted-foreground">
+              Afstand tussen herhalingen (mm)
+            </Label>
+            <Input
+              id="section-repeat-spacing"
+              type="number"
+              step="0.5"
+              min="0"
+              max="20"
+              value={section.config.repeat?.spacingMm || 0}
+              onChange={(e) => onUpdateProperty(section.id, 'config.repeat.spacingMm', parseFloat(e.target.value) || 0)}
+              className="h-7 w-20 text-xs mt-1"
+            />
+          </div>
+        )}
+      </div>
+
       {/* Background Color */}
       <div>
         <Label htmlFor="section-bg" className="text-xs">Achtergrondkleur</Label>
