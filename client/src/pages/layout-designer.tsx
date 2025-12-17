@@ -2238,7 +2238,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                 width: '100%'
                               }}
                             >
-                              <span className="font-medium text-sm text-gray-700" style={{ transform: 'rotate(180deg)' }}>
+                                <span className="font-medium text-sm text-gray-700 flex items-center gap-1" style={{ transform: 'rotate(180deg)' }}>
+                                {section.config?.repeat?.enabled && <Repeat className="h-3 w-3 text-orange-500" />}
                                 {section.name}
                               </span>
                             </div>
@@ -2931,9 +2932,139 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
     items: printData.items || [],
   };
 
+  // Helper function to render a single section instance
+  const renderSectionInstance = (
+    section: any, 
+    keyPrefix: string, 
+    itemContext?: { item: any; index: number }
+  ) => {
+    const configuredHeight = section.config?.dimensions?.height || 200;
+    const blocks = section.config?.blocks || [];
+    
+    // Calculate dynamic positions for blocks in this section
+    const dynamicPositions = calculateDynamicPositions(blocks, typedPrintData);
+    
+    // Calculate actual content height (bottom of lowest visible block)
+    let contentHeight = 0;
+    for (const block of blocks) {
+      const dynamicPos = dynamicPositions.get(block.id);
+      if (dynamicPos?.visible !== false) {
+        const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
+        const blockHeight = block.size?.height || 25;
+        const blockBottom = mmToPx(adjustedY + blockHeight);
+        contentHeight = Math.max(contentHeight, blockBottom);
+      }
+    }
+    
+    // Get bottom margin from config (in mm, convert to px)
+    const bottomMarginMm = section.config?.bottomMarginMm || 0;
+    const bottomMarginPx = mmToPx(bottomMarginMm);
+    
+    // Get spacing for repeating sections
+    const repeatSpacingMm = section.config?.repeat?.spacingMm || 0;
+    const repeatSpacingPx = mmToPx(repeatSpacingMm);
+    
+    // Add bottom margin to content height
+    contentHeight = contentHeight > 0 ? contentHeight + bottomMarginPx : 0;
+    
+    // Determine final section height based on canGrow/canShrink
+    let sectionHeight = configuredHeight;
+    const heightCanShrink = section.config?.heightCanShrink || false;
+    const heightCanGrow = section.config?.heightCanGrow || false;
+    
+    if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
+      sectionHeight = contentHeight;
+    }
+    if (heightCanGrow && contentHeight > configuredHeight) {
+      sectionHeight = contentHeight;
+    }
+    
+    if (!heightCanShrink && bottomMarginPx > 0) {
+      sectionHeight = configuredHeight + bottomMarginPx;
+    }
+    
+    return (
+      <div
+        key={keyPrefix}
+        className="relative overflow-hidden"
+        style={{
+          backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
+          height: `${sectionHeight}px`,
+          minHeight: heightCanShrink ? 'auto' : `${sectionHeight}px`,
+          maxHeight: heightCanGrow ? 'none' : `${sectionHeight}px`,
+          borderColor: section.config?.style?.borderColor || 'transparent',
+          borderStyle: section.config?.style?.borderStyle || 'none',
+          borderWidth: section.config?.style?.borderWidth || 0,
+          position: 'relative',
+          boxSizing: 'border-box',
+          marginBottom: itemContext ? `${repeatSpacingPx}px` : undefined,
+        }}
+      >
+        {blocks.length > 0 ? (
+          <>
+            {blocks.map((block: any, blockIndex: number) => {
+              const dynamicPos = dynamicPositions.get(block.id);
+              
+              if (dynamicPos && !dynamicPos.visible) {
+                return null;
+              }
+              
+              const BlockRenderer = BlockRenderers[block.type];
+              const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
+              
+              const blockStyle: React.CSSProperties = {
+                position: 'absolute',
+                left: `${mmToPx(block.position?.x || 0)}px`,
+                top: `${mmToPx(adjustedY)}px`,
+                width: `${mmToPx(block.size?.width || 50)}px`,
+                height: `${mmToPx(block.size?.height || 25)}px`,
+              };
+              
+              if (BlockRenderer) {
+                return (
+                  <div key={`${keyPrefix}-block-${block.id || blockIndex}`} style={blockStyle}>
+                    <BlockRenderer block={block} printData={typedPrintData} itemContext={itemContext} />
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={`${keyPrefix}-block-${block.id || blockIndex}`} style={blockStyle}>
+                    <UnknownBlockRenderer block={block} printData={typedPrintData} />
+                  </div>
+                );
+              }
+            })}
+          </>
+        ) : (
+          <div className="text-sm text-gray-400 italic text-center py-8">
+            Geen blokken in deze sectie
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="font-['Arial',sans-serif]">
-      {sections.map((section: any) => {
+      {sections.flatMap((section: any) => {
+        // Check if this section should repeat for line items
+        const shouldRepeat = section.config?.repeat?.enabled === true;
+        
+        if (shouldRepeat) {
+          const items = typedPrintData.items || [];
+          
+          if (items.length === 0) {
+            return []; // No items to render
+          }
+          
+          // Render one copy of this section for each item
+          return items.map((item: any, itemIndex: number) => {
+            const itemContext = { item, index: itemIndex };
+            return renderSectionInstance(section, `${section.id}-item-${itemIndex}`, itemContext);
+          });
+        }
+        
+        // Regular non-repeating section - use original logic
         const configuredHeight = section.config?.dimensions?.height || 200;
         const blocks = section.config?.blocks || [];
         
