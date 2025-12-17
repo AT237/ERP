@@ -178,23 +178,72 @@ export function resolveAndFormat(
 }
 
 /**
+ * Item context for repeating blocks (line items)
+ */
+export type ItemContext = {
+  item: Record<string, any>;
+  index: number;
+};
+
+/**
+ * Resolve a value from item context (for {{item.XXX}} placeholders)
+ */
+function resolveItemValue(fieldPath: string, itemContext: ItemContext): any {
+  if (!fieldPath || !itemContext?.item) return null;
+  
+  const parts = fieldPath.split('.');
+  let value: any = itemContext.item;
+  
+  for (const part of parts) {
+    if (value === null || value === undefined) return null;
+    value = value[part];
+  }
+  
+  return value;
+}
+
+/**
  * Replace all placeholders in text with resolved values
  * Removes empty placeholders and cleans up extra whitespace
  * Supports format specifier: {{field.path:format}} where format is text, date, currency, or number
+ * Supports item context for repeating blocks: {{item.description}}, {{item.quantity}}, etc.
  * @param text - Text with {{field.path}} or {{field.path:format}} placeholders
  * @param printData - The print data object
+ * @param itemContext - Optional item context for repeating blocks
  * @returns Cleaned text with resolved values
  */
 export function replacePlaceholders(
   text: string,
-  printData: PrintData
+  printData: PrintData,
+  itemContext?: ItemContext
 ): string {
   if (!text) return '';
 
   // Replace data field placeholders with optional format specifier
   // Syntax: {{tableName.fieldName}} or {{tableName.fieldName:format}}
+  // Also supports {{item.fieldName}} for repeating blocks
   // Formats: text (default), date, currency, number
-  let result = text.replace(/\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)+)(?::([a-zA-Z]+))?\}\}/g, (match, fieldPath, format) => {
+  let result = text.replace(/\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)*)(?::([a-zA-Z]+))?\}\}/g, (match, fieldPath, format) => {
+    // Check if this is an item placeholder
+    if (fieldPath.startsWith('item.') && itemContext) {
+      const itemFieldPath = fieldPath.substring(5); // Remove 'item.' prefix
+      const itemValue = resolveItemValue(itemFieldPath, itemContext);
+      
+      // Auto-detect format for item fields
+      let resolvedFormat = format || 'text';
+      if (!format) {
+        const fieldName = itemFieldPath.toLowerCase();
+        if (fieldName.includes('price') || fieldName.includes('total') || 
+            fieldName.includes('amount') || fieldName === 'unitprice' || 
+            fieldName === 'linetotal') {
+          resolvedFormat = 'currency';
+        }
+      }
+      
+      return formatFieldValue(itemValue, resolvedFormat);
+    }
+    
+    // Regular placeholder resolution
     // Auto-detect format based on field name if not specified
     let resolvedFormat = format || 'text';
     if (!format) {
