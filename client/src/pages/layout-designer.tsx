@@ -561,9 +561,21 @@ function VisualDesignerView({ layout }: { layout: any }) {
   // Available database tables for selection - field names match API print-data response
   const availableTables = [
     { name: 'quotation', label: 'Offerte', fields: ['number', 'date', 'validUntil', 'description', 'revisionNumber', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
-    { name: 'customer', label: 'Klant', fields: ['customerNumber', 'name', 'email', 'phone', 'address'] },
-    { name: 'project', label: 'Project', fields: ['projectNumber', 'name', 'status', 'startDate', 'endDate'] },
-    { name: 'company', label: 'Bedrijf', fields: ['name', 'email', 'phone', 'address', 'kvkNummer', 'btwNummer', 'website'] },
+    { name: 'customer', label: 'Klant', fields: ['customerNumber', 'name', 'email', 'phone', 'address', 'city', 'postalCode', 'country'] },
+    { name: 'supplier', label: 'Leverancier', fields: ['supplierNumber', 'name', 'email', 'phone', 'address', 'city', 'postalCode', 'country', 'contactPerson'] },
+    { name: 'project', label: 'Project', fields: ['projectNumber', 'name', 'status', 'startDate', 'endDate', 'description'] },
+    { name: 'company', label: 'Bedrijf', fields: ['name', 'email', 'phone', 'address', 'city', 'postalCode', 'country', 'kvkNummer', 'btwNummer', 'website', 'iban', 'bankName'] },
+    { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'date', 'dueDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'paymentTerms'] },
+    { name: 'purchaseOrder', label: 'Inkooporder', fields: ['poNumber', 'date', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'deliveryDate'] },
+    { name: 'packingList', label: 'Paklijst', fields: ['packingListNumber', 'date', 'status', 'totalWeight', 'totalPackages'] },
+    { name: 'workOrder', label: 'Werkorder', fields: ['workOrderNumber', 'date', 'status', 'description', 'assignedTo'] },
+    { name: 'salesOrder', label: 'Verkooporder', fields: ['salesOrderNumber', 'date', 'status', 'subtotal', 'taxAmount', 'totalAmount'] },
+    { name: 'address', label: 'Adres', fields: ['street', 'houseNumber', 'postalCode', 'city', 'country', 'province'] },
+    { name: 'country', label: 'Land', fields: ['code', 'name', 'region'] },
+    { name: 'city', label: 'Stad', fields: ['name', 'postalCode', 'province', 'country'] },
+    { name: 'paymentTerms', label: 'Betalingsvoorwaarden', fields: ['code', 'description', 'days'] },
+    { name: 'incoterms', label: 'Incoterms', fields: ['code', 'description'] },
+    { name: 'vatRate', label: 'BTW Tarief', fields: ['code', 'percentage', 'description'] },
   ];
 
   // Load existing sections for this layout
@@ -1383,7 +1395,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
       {/* Table Selector Dialog */}
       <Dialog open={showTableSelectorDialog} onOpenChange={setShowTableSelectorDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>Databronnen Selecteren</DialogTitle>
             <DialogDescription>
@@ -1391,55 +1403,65 @@ function VisualDesignerView({ layout }: { layout: any }) {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4">
-            <div className="flex gap-2 mb-3">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setAllowedTables(availableTables.map(t => t.name))}
-              >
-                Selecteer alles
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setAllowedTables([])}
-              >
-                Deselecteer alles
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {availableTables.map((table) => (
-                <div
-                  key={table.name}
-                  className={`p-3 border rounded cursor-pointer transition-all ${
-                    allowedTables.includes(table.name)
-                      ? 'border-orange-500 bg-orange-50'
-                      : 'border-border hover:bg-accent'
-                  }`}
-                  onClick={() => {
-                    if (allowedTables.includes(table.name)) {
-                      setAllowedTables(allowedTables.filter(t => t !== table.name));
-                    } else {
-                      setAllowedTables([...allowedTables, table.name]);
-                    }
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-sm">{table.label}</span>
-                    {allowedTables.includes(table.name) && (
-                      <Badge variant="secondary" className="text-xs">✓</Badge>
-                    )}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {table.fields.length} velden beschikbaar
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="py-4 overflow-auto max-h-[50vh]">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-white border-b">
+                <tr>
+                  <th className="text-left py-2 px-3 w-10">
+                    <input
+                      type="checkbox"
+                      checked={allowedTables.length === availableTables.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setAllowedTables(availableTables.map(t => t.name));
+                        } else {
+                          setAllowedTables([]);
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                  </th>
+                  <th className="text-left py-2 px-3 font-medium">Tabel</th>
+                  <th className="text-left py-2 px-3 font-medium">Naam</th>
+                  <th className="text-left py-2 px-3 font-medium text-right">Velden</th>
+                </tr>
+              </thead>
+              <tbody>
+                {availableTables.map((table) => (
+                  <tr 
+                    key={table.name}
+                    className={`border-b cursor-pointer hover:bg-gray-50 ${
+                      allowedTables.includes(table.name) ? 'bg-orange-50' : ''
+                    }`}
+                    onClick={() => {
+                      if (allowedTables.includes(table.name)) {
+                        setAllowedTables(allowedTables.filter(t => t !== table.name));
+                      } else {
+                        setAllowedTables([...allowedTables, table.name]);
+                      }
+                    }}
+                  >
+                    <td className="py-2 px-3">
+                      <input
+                        type="checkbox"
+                        checked={allowedTables.includes(table.name)}
+                        onChange={() => {}}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                    </td>
+                    <td className="py-2 px-3 font-medium">{table.label}</td>
+                    <td className="py-2 px-3 text-muted-foreground">{table.name}</td>
+                    <td className="py-2 px-3 text-right text-muted-foreground">{table.fields.length}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <DialogFooter>
+            <div className="text-sm text-muted-foreground mr-auto">
+              {allowedTables.length} van {availableTables.length} geselecteerd
+            </div>
             <Button variant="outline" onClick={() => setShowTableSelectorDialog(false)}>
               Sluiten
             </Button>
