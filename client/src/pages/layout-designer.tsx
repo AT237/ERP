@@ -3039,788 +3039,656 @@ function BlockProperties({
   });
 
   return (
-    <div className="space-y-4">
-      {/* Header with Section name */}
+    <div className="space-y-3">
+      {/* Header with Section name and Block type */}
       <div className="pb-2 border-b">
-        <div className="text-sm font-bold">Section: {currentSection?.name || 'Unknown'}</div>
+        <div className="text-sm font-bold">{block.type}</div>
+        <div className="text-xs text-muted-foreground">Sectie: {currentSection?.name || 'Unknown'}</div>
       </div>
 
-      {/* Group Block Properties - Show first for groups */}
-      {block.type === "Group" && (
-        <div className="space-y-3 pb-3 border-b">
-          <div className="text-xs font-bold text-orange-600">Groep Eigenschappen</div>
-          
-          {/* Group Name */}
-          <div>
-            <Label htmlFor="group-name" className="text-xs">Groepnaam</Label>
-            <Input
-              id="group-name"
-              value={block.config?.groupName || ''}
-              onChange={(e) => updateConfig('groupName', e.target.value)}
-              placeholder="Groep"
-              className="h-8 text-xs"
-              data-testid="input-group-name"
-            />
-          </div>
-          
-          <div className="bg-orange-50 p-2 rounded text-xs">
-            <div className="font-medium mb-1">Bevat {block.config?.childBlocks?.length || 0} blokken</div>
-            {block.config?.childBlocks?.map((child: any, idx: number) => (
-              <div key={idx} className="text-muted-foreground pl-2">
-                • {child.type}
+      {/* Two-tab layout */}
+      <Tabs defaultValue="inhoud" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 h-8">
+          <TabsTrigger value="inhoud" className="text-xs" data-testid="tabs-trigger-inhoud">Inhoud</TabsTrigger>
+          <TabsTrigger value="layout" className="text-xs" data-testid="tabs-trigger-layout">Layout</TabsTrigger>
+        </TabsList>
+
+        {/* INHOUD TAB - Content, text, data bindings */}
+        <TabsContent value="inhoud" className="space-y-3 mt-3">
+          {/* Group Block Content */}
+          {block.type === "Group" && (
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="group-name" className="text-xs">Groepnaam</Label>
+                <Input
+                  id="group-name"
+                  value={block.config?.groupName || ''}
+                  onChange={(e) => updateConfig('groupName', e.target.value)}
+                  placeholder="Groep"
+                  className="h-8 text-xs"
+                  data-testid="input-group-name"
+                />
               </div>
-            ))}
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="collapse-empty"
-              checked={block.config?.collapseEmpty || false}
-              onChange={(e) => updateConfig('collapseEmpty', e.target.checked)}
-              className="h-4 w-4 accent-orange-500"
-              data-testid="checkbox-collapse-empty"
-            />
-            <Label htmlFor="collapse-empty" className="text-xs font-normal">
-              Opschuiven bij lege velden
-            </Label>
-          </div>
-          <p className="text-[10px] text-muted-foreground">
-            Als aangevinkt, schuiven onderliggende blokken omhoog wanneer een blok in deze groep leeg is (geen data).
-          </p>
-        </div>
-      )}
-
-      {/* Position - Always first for all blocks */}
-      <div className="space-y-3">
-        <div className="text-xs font-bold">Position</div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <Label htmlFor="block-x" className="text-xs">X (mm)</Label>
-            <Input
-              id="block-x"
-              type="number"
-              step="1"
-              value={block.position?.x ?? 0}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: parseFloat(e.target.value) || 0 })}
-              onFocus={(e) => e.target.select()}
-              className="h-8 text-xs"
-            />
-          </div>
-          <div>
-            <Label htmlFor="block-y" className="text-xs">Y (mm)</Label>
-            <Input
-              id="block-y"
-              type="number"
-              step="1"
-              value={block.position?.y ?? 0}
-              onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: parseFloat(e.target.value) || 0 })}
-              onFocus={(e) => e.target.select()}
-              className="h-8 text-xs"
-            />
-          </div>
-        </div>
-        
-        <div className="text-xs font-bold">Size</div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <Label htmlFor="block-width" className="text-xs">Width (mm)</Label>
-            <Input
-              id="block-width"
-              type="number"
-              step="1"
-              value={block.size?.width ?? 50}
-              onChange={(e) => {
-                const newWidth = parseFloat(e.target.value) || 50;
-                if (block.type === "Image" && block.config?.lockAspectRatio && block.config?.aspectRatio) {
-                  const newHeight = Math.round(newWidth / block.config.aspectRatio * 10) / 10;
-                  onUpdateProperty(sectionId, block.id, 'size', { width: newWidth, height: newHeight });
-                } else {
-                  onUpdateProperty(sectionId, block.id, 'size', { ...block.size, width: newWidth });
-                }
-              }}
-              onFocus={(e) => e.target.select()}
-              className="h-8 text-xs"
-            />
-          </div>
-          <div>
-            <Label htmlFor="block-height" className="text-xs">Height (mm)</Label>
-            <Input
-              id="block-height"
-              type="number"
-              step="1"
-              value={block.size?.height ?? 25}
-              onChange={(e) => {
-                const newHeight = parseFloat(e.target.value) || 25;
-                if (block.type === "Image" && block.config?.lockAspectRatio && block.config?.aspectRatio) {
-                  const newWidth = Math.round(newHeight * block.config.aspectRatio * 10) / 10;
-                  onUpdateProperty(sectionId, block.id, 'size', { width: newWidth, height: newHeight });
-                } else {
-                  onUpdateProperty(sectionId, block.id, 'size', { ...block.size, height: newHeight });
-                }
-              }}
-              onFocus={(e) => e.target.select()}
-              className="h-8 text-xs"
-            />
-          </div>
-        </div>
-
-        {/* Hide When Empty - for all block types */}
-        <div className="pt-2 border-t">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="hide-when-empty"
-              checked={block.config?.hideWhenEmpty || false}
-              onChange={(e) => updateConfig('hideWhenEmpty', e.target.checked)}
-              className="h-4 w-4 accent-orange-500"
-              data-testid="checkbox-hide-when-empty"
-            />
-            <Label htmlFor="hide-when-empty" className="text-xs font-normal">
-              Verberg als leeg
-            </Label>
-          </div>
-          <p className="text-[10px] text-muted-foreground mt-1">
-            Als aangevinkt, wordt dit blok niet getoond wanneer de data leeg is.
-          </p>
-        </div>
-
-        {/* Image Selection - only for Image blocks, between Size and Alignment */}
-        {block.type === "Image" && (
-          <div className="pt-2">
-            <div className="text-xs font-bold pb-1">Afbeelding</div>
-            <Select 
-              value={block.config?.imageId || ''}
-              onValueChange={(value) => {
-                const selectedImage = images?.find(img => img.id === value);
-                onUpdateProperty(sectionId, block.id, 'config', { 
-                  ...block.config, 
-                  imageId: value,
-                  src: selectedImage?.imageData || '',
-                  alt: selectedImage?.name || '',
-                  imageDescription: selectedImage?.name || 'Image'
-                });
-              }}
-            >
-              <SelectTrigger id="image-select" className="h-8 text-xs">
-                <SelectValue placeholder="Selecteer afbeelding..." />
-              </SelectTrigger>
-              <SelectContent>
-                {images?.map((img: any) => (
-                  <SelectItem key={img.id} value={img.id}>
-                    {img.name}
-                  </SelectItem>
+              
+              <div className="bg-orange-50 p-2 rounded text-xs">
+                <div className="font-medium mb-1">Bevat {block.config?.childBlocks?.length || 0} blokken</div>
+                {block.config?.childBlocks?.map((child: any, idx: number) => (
+                  <div key={idx} className="text-muted-foreground pl-2">
+                    • {child.type}
+                  </div>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        
-        {/* Alignment */}
-        <div className="text-xs font-bold pt-2">Alignment</div>
-        <div className="space-y-2">
-          <div className="flex gap-1">
-            <button
-              type="button"
-              onClick={() => updateConfig('alignH', 'left')}
-              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignH === 'left' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
-              title="Left"
-            >
-              <div className="flex flex-col gap-0.5">
-                <div className="w-4 h-0.5 bg-current"></div>
-                <div className="w-3 h-0.5 bg-current"></div>
-                <div className="w-4 h-0.5 bg-current"></div>
               </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => updateConfig('alignH', 'center')}
-              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignH === 'center' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
-              title="Center"
-            >
-              <div className="flex flex-col gap-0.5 items-center">
-                <div className="w-4 h-0.5 bg-current"></div>
-                <div className="w-3 h-0.5 bg-current"></div>
-                <div className="w-4 h-0.5 bg-current"></div>
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => updateConfig('alignH', 'right')}
-              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignH === 'right' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
-              title="Right"
-            >
-              <div className="flex flex-col gap-0.5 items-end">
-                <div className="w-4 h-0.5 bg-current"></div>
-                <div className="w-3 h-0.5 bg-current"></div>
-                <div className="w-4 h-0.5 bg-current"></div>
-              </div>
-            </button>
-          </div>
-          <div className="flex gap-1">
-            <button
-              type="button"
-              onClick={() => updateConfig('alignV', 'top')}
-              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignV === 'top' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
-              title="Top"
-            >
-              <div className="flex gap-0.5 items-start h-4">
-                <div className="w-0.5 h-4 bg-current"></div>
-                <div className="w-0.5 h-3 bg-current"></div>
-                <div className="w-0.5 h-4 bg-current"></div>
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => updateConfig('alignV', 'middle')}
-              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignV === 'middle' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
-              title="Middle"
-            >
-              <div className="flex gap-0.5 items-center h-4">
-                <div className="w-0.5 h-4 bg-current"></div>
-                <div className="w-0.5 h-3 bg-current"></div>
-                <div className="w-0.5 h-4 bg-current"></div>
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => updateConfig('alignV', 'bottom')}
-              className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignV === 'bottom' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
-              title="Bottom"
-            >
-              <div className="flex gap-0.5 items-end h-4">
-                <div className="w-0.5 h-4 bg-current"></div>
-                <div className="w-0.5 h-3 bg-current"></div>
-                <div className="w-0.5 h-4 bg-current"></div>
-              </div>
-            </button>
-          </div>
-        </div>
 
-        {/* Dynamic Layout Section - combined */}
-        <div className="space-y-3 pt-2 border-t">
-          <div className="text-xs font-bold text-orange-600">Dynamisch</div>
-          
-          {/* Height behavior */}
-          <div className="space-y-1">
-            <Label className="text-xs font-medium">Hoogte</Label>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  id="block-height-can-grow"
-                  checked={block.config?.heightCanGrow || false}
-                  onChange={(e) => updateConfig('heightCanGrow', e.target.checked)}
-                  className="h-3.5 w-3.5"
+                  id="collapse-empty"
+                  checked={block.config?.collapseEmpty || false}
+                  onChange={(e) => updateConfig('collapseEmpty', e.target.checked)}
+                  className="h-4 w-4 accent-orange-500"
+                  data-testid="checkbox-collapse-empty"
                 />
-                <Label htmlFor="block-height-can-grow" className="text-xs font-normal">Kan groeien</Label>
+                <Label htmlFor="collapse-empty" className="text-xs font-normal">
+                  Opschuiven bij lege velden
+                </Label>
               </div>
-              <div className="flex items-center space-x-1">
-                <input
-                  type="checkbox"
-                  id="block-height-can-shrink"
-                  checked={block.config?.heightCanShrink || false}
-                  onChange={(e) => updateConfig('heightCanShrink', e.target.checked)}
-                  className="h-3.5 w-3.5"
-                />
-                <Label htmlFor="block-height-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
-              </div>
-            </div>
-          </div>
-          
-          {/* Width behavior */}
-          <div className="space-y-1">
-            <Label className="text-xs font-medium">Breedte</Label>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center space-x-1">
-                <input
-                  type="checkbox"
-                  id="block-width-can-grow"
-                  checked={block.config?.widthCanGrow || false}
-                  onChange={(e) => updateConfig('widthCanGrow', e.target.checked)}
-                  className="h-3.5 w-3.5"
-                />
-                <Label htmlFor="block-width-can-grow" className="text-xs font-normal">Kan groeien</Label>
-              </div>
-              <div className="flex items-center space-x-1">
-                <input
-                  type="checkbox"
-                  id="block-width-can-shrink"
-                  checked={block.config?.widthCanShrink || false}
-                  onChange={(e) => updateConfig('widthCanShrink', e.target.checked)}
-                  className="h-3.5 w-3.5"
-                />
-                <Label htmlFor="block-width-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
-              </div>
-            </div>
-          </div>
-
-          {/* Lock Aspect Ratio - only for Image blocks */}
-          {block.type === "Image" && (
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="lock-aspect-ratio"
-                checked={block.config?.lockAspectRatio || false}
-                onChange={(e) => {
-                  const isLocked = e.target.checked;
-                  const currentWidth = block.size?.width ?? 50;
-                  const currentHeight = block.size?.height ?? 25;
-                  const aspectRatio = currentWidth / currentHeight;
-                  onUpdateProperty(sectionId, block.id, 'config', { 
-                    ...block.config, 
-                    lockAspectRatio: isLocked,
-                    aspectRatio: isLocked ? aspectRatio : block.config?.aspectRatio
-                  });
-                }}
-                className="h-3.5 w-3.5"
-              />
-              <Label htmlFor="lock-aspect-ratio" className="text-xs font-normal">Vergrendel verhouding</Label>
             </div>
           )}
 
-          {/* Collapse when empty */}
-          <div className="flex items-center space-x-2 pt-1">
-            <input
-              type="checkbox"
-              id="collapse-when-empty"
-              checked={block.config?.collapseWhenEmpty || false}
-              onChange={(e) => updateConfig('collapseWhenEmpty', e.target.checked)}
-              className="h-3.5 w-3.5"
-              data-testid="checkbox-collapse-when-empty"
-            />
-            <Label htmlFor="collapse-when-empty" className="text-xs font-normal">Verbergen als leeg</Label>
-          </div>
-        </div>
-      </div>
-
-      {/* Text Block Properties */}
-      {block.type === "Text" && (
-        <div className="space-y-3">
-          {/* Text Styling */}
-          <div>
-            <Label className="text-xs font-semibold mb-2 block">Tekststijl</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="font-family" className="text-[10px] text-muted-foreground">Lettertype</Label>
-                <Select 
-                  value={block.style?.fontFamily || 'helvetica'}
-                  onValueChange={(value) => updateStyle('fontFamily', value)}
-                >
-                  <SelectTrigger id="font-family" className="h-7 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="helvetica">Helvetica</SelectItem>
-                    <SelectItem value="arial">Arial</SelectItem>
-                    <SelectItem value="times">Times New Roman</SelectItem>
-                    <SelectItem value="courier">Courier</SelectItem>
-                    <SelectItem value="georgia">Georgia</SelectItem>
-                    <SelectItem value="verdana">Verdana</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="font-size" className="text-[10px] text-muted-foreground">Grootte</Label>
-                <Select 
-                  value={String(block.style?.fontSize || 9)}
-                  onValueChange={(value) => updateStyle('fontSize', parseInt(value))}
-                >
-                  <SelectTrigger id="font-size" className="h-7 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="6">6pt</SelectItem>
-                    <SelectItem value="7">7pt</SelectItem>
-                    <SelectItem value="8">8pt</SelectItem>
-                    <SelectItem value="9">9pt</SelectItem>
-                    <SelectItem value="10">10pt</SelectItem>
-                    <SelectItem value="11">11pt</SelectItem>
-                    <SelectItem value="12">12pt</SelectItem>
-                    <SelectItem value="14">14pt</SelectItem>
-                    <SelectItem value="16">16pt</SelectItem>
-                    <SelectItem value="18">18pt</SelectItem>
-                    <SelectItem value="20">20pt</SelectItem>
-                    <SelectItem value="24">24pt</SelectItem>
-                    <SelectItem value="28">28pt</SelectItem>
-                    <SelectItem value="32">32pt</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            {/* Bold, Italic, Underline toggles */}
-            <div className="flex items-center gap-1 mt-2">
-              <Button
-                type="button"
-                variant={block.style?.fontWeight === 'bold' ? 'default' : 'outline'}
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={() => updateStyle('fontWeight', block.style?.fontWeight === 'bold' ? 'normal' : 'bold')}
-                data-testid="btn-bold"
-              >
-                <Bold className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant={block.style?.fontStyle === 'italic' ? 'default' : 'outline'}
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={() => updateStyle('fontStyle', block.style?.fontStyle === 'italic' ? 'normal' : 'italic')}
-                data-testid="btn-italic"
-              >
-                <Italic className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant={block.style?.textDecoration === 'underline' ? 'default' : 'outline'}
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={() => updateStyle('textDecoration', block.style?.textDecoration === 'underline' ? 'none' : 'underline')}
-                data-testid="btn-underline"
-              >
-                <Underline className="h-3.5 w-3.5" />
-              </Button>
-              
-              {/* Color picker */}
-              <div className="flex items-center gap-1 ml-2">
-                <Label className="text-[10px] text-muted-foreground">Kleur:</Label>
-                <input
-                  type="color"
-                  value={block.style?.color || '#000000'}
-                  onChange={(e) => updateStyle('color', e.target.value)}
-                  className="h-7 w-7 p-0.5 border rounded cursor-pointer"
-                  data-testid="input-text-color"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor={`text-content-${block.id}`} className="text-xs">Tekst</Label>
-            
-            {/* Inline formatting toolbar for selected text */}
-            <div className="flex items-center gap-1 mb-1 p-1 bg-muted/50 rounded border text-[10px]">
-              <span className="text-muted-foreground mr-1">Selectie:</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                title="Maak selectie vet"
-                onClick={() => {
-                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
-                  if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const text = block.config?.text || '';
-                    const selected = text.substring(start, end);
-                    const newText = text.substring(0, start) + `<b>${selected}</b>` + text.substring(end);
-                    updateConfig('text', newText);
-                  }
-                }}
-              >
-                <Bold className="h-3 w-3" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                title="Maak selectie cursief"
-                onClick={() => {
-                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
-                  if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const text = block.config?.text || '';
-                    const selected = text.substring(start, end);
-                    const newText = text.substring(0, start) + `<i>${selected}</i>` + text.substring(end);
-                    updateConfig('text', newText);
-                  }
-                }}
-              >
-                <Italic className="h-3 w-3" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                title="Onderstreep selectie"
-                onClick={() => {
-                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
-                  if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const text = block.config?.text || '';
-                    const selected = text.substring(start, end);
-                    const newText = text.substring(0, start) + `<u>${selected}</u>` + text.substring(end);
-                    updateConfig('text', newText);
-                  }
-                }}
-              >
-                <Underline className="h-3 w-3" />
-              </Button>
-              <div className="h-4 w-px bg-border mx-1" />
-              <Select
-                value=""
-                onValueChange={(font) => {
-                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
-                  if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const text = block.config?.text || '';
-                    const selected = text.substring(start, end);
-                    const newText = text.substring(0, start) + `<span style="font-family:${font}">${selected}</span>` + text.substring(end);
-                    updateConfig('text', newText);
-                  }
-                }}
-              >
-                <SelectTrigger className="h-6 text-[10px] w-20">
-                  <SelectValue placeholder="Font" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Arial">Arial</SelectItem>
-                  <SelectItem value="Helvetica">Helvetica</SelectItem>
-                  <SelectItem value="Times New Roman">Times</SelectItem>
-                  <SelectItem value="Courier New">Courier</SelectItem>
-                  <SelectItem value="Georgia">Georgia</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value=""
-                onValueChange={(size) => {
-                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
-                  if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const text = block.config?.text || '';
-                    const selected = text.substring(start, end);
-                    const newText = text.substring(0, start) + `<span style="font-size:${size}pt">${selected}</span>` + text.substring(end);
-                    updateConfig('text', newText);
-                  }
-                }}
-              >
-                <SelectTrigger className="h-6 text-[10px] w-14">
-                  <SelectValue placeholder="Grootte" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="8">8pt</SelectItem>
-                  <SelectItem value="9">9pt</SelectItem>
-                  <SelectItem value="10">10pt</SelectItem>
-                  <SelectItem value="11">11pt</SelectItem>
-                  <SelectItem value="12">12pt</SelectItem>
-                  <SelectItem value="14">14pt</SelectItem>
-                  <SelectItem value="16">16pt</SelectItem>
-                  <SelectItem value="18">18pt</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <textarea
-              id={`text-content-${block.id}`}
-              value={block.config?.text || ''}
-              onChange={(e) => updateConfig('text', e.target.value)}
-              onDoubleClick={(e) => {
-                const textarea = e.currentTarget;
-                const text = textarea.value;
-                const cursorPos = textarea.selectionStart;
-                
-                // Find placeholder at cursor position
-                const regex = /\{\{[^}]+\}\}/g;
-                let match;
-                while ((match = regex.exec(text)) !== null) {
-                  const start = match.index;
-                  const end = start + match[0].length;
-                  if (cursorPos >= start && cursorPos <= end) {
-                    e.preventDefault();
-                    textarea.setSelectionRange(start, end);
-                    return;
-                  }
-                }
-              }}
-              className="w-full min-h-[100px] p-2 text-xs border rounded placeholder:text-gray-400 placeholder:italic"
-              placeholder="Voer tekst in..."
-              style={{
-                fontFamily: block.style?.fontFamily || 'helvetica',
-                fontWeight: block.style?.fontWeight || 'normal',
-                fontStyle: block.style?.fontStyle || 'normal',
-                textDecoration: block.style?.textDecoration || 'none',
-                color: block.style?.color || '#000000',
-              }}
-            />
-          </div>
-          
-          {/* Text Variables */}
-          <div>
-            <Label className="text-xs font-semibold mb-2 block">Variabelen invoegen</Label>
-            <div className="flex gap-2">
-              <Select
-                value=""
+          {/* Image Selection - for Image blocks */}
+          {block.type === "Image" && (
+            <div>
+              <Label className="text-xs font-semibold">Afbeelding</Label>
+              <Select 
+                value={block.config?.imageId || ''}
                 onValueChange={(value) => {
-                  if (!value) return;
-                  const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
-                  if (textarea) {
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const currentText = block.config?.text || '';
-                    const newText = currentText.substring(0, start) + value + currentText.substring(end);
-                    updateConfig('text', newText);
-                    setTimeout(() => {
-                      textarea.focus();
-                      const newPos = start + value.length;
-                      textarea.setSelectionRange(newPos, newPos);
-                    }, 0);
-                  } else {
-                    updateConfig('text', (block.config?.text || '') + value);
-                  }
+                  const selectedImage = images?.find(img => img.id === value);
+                  onUpdateProperty(sectionId, block.id, 'config', { 
+                    ...block.config, 
+                    imageId: value,
+                    src: selectedImage?.imageData || '',
+                    alt: selectedImage?.name || '',
+                    imageDescription: selectedImage?.name || 'Image'
+                  });
                 }}
               >
-                <SelectTrigger className="h-8 text-xs flex-1" data-testid="select-variable">
-                  <SelectValue placeholder="Kies variabele..." />
+                <SelectTrigger id="image-select" className="h-8 text-xs mt-1">
+                  <SelectValue placeholder="Selecteer afbeelding..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {TEXT_VARIABLES.map((variable) => (
-                    <SelectItem key={variable.code} value={variable.code}>
-                      <div className="flex flex-col">
-                        <span>{variable.label}</span>
-                        <span className="text-[10px] text-muted-foreground">{variable.code}</span>
-                      </div>
+                  {images?.map((img: any) => (
+                    <SelectItem key={img.id} value={img.id}>
+                      {img.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          )}
 
-          {/* Data Fields Insert */}
-          <div>
-            <Label className="text-xs font-semibold mb-2 block">Data invoegen</Label>
-            <DataFieldInsertMenu 
-              blockId={block.id}
-              currentText={block.config?.text || ''}
-              onInsert={(newText) => updateConfig('text', newText)}
-              availableTables={availableTables}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Data Field Block Properties */}
-      {block.type === "Data Field" && (
-        <div className="space-y-3">
-          {allowedTables.length === 0 ? (
-            <div className="p-3 border border-orange-200 bg-orange-50 rounded text-xs text-orange-700">
-              No data sources selected. Click "Data Source" in the toolbar to select tables.
-            </div>
-          ) : (
-            <>
+          {/* Text Block Properties */}
+          {block.type === "Text" && (
+            <div className="space-y-3 border-t pt-3">
+              {/* Text Styling */}
               <div>
-                <Label htmlFor="data-table" className="text-xs">Table</Label>
-                <Select 
-                  value={block.config?.tableName || ''}
-                  onValueChange={(value) => updateConfig('tableName', value)}
+                <Label className="text-xs font-semibold mb-2 block">Tekststijl</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="font-family" className="text-[10px] text-muted-foreground">Lettertype</Label>
+                    <Select 
+                      value={block.style?.fontFamily || 'helvetica'}
+                      onValueChange={(value) => updateStyle('fontFamily', value)}
+                    >
+                      <SelectTrigger id="font-family" className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="helvetica">Helvetica</SelectItem>
+                        <SelectItem value="arial">Arial</SelectItem>
+                        <SelectItem value="times">Times New Roman</SelectItem>
+                        <SelectItem value="courier">Courier</SelectItem>
+                        <SelectItem value="georgia">Georgia</SelectItem>
+                        <SelectItem value="verdana">Verdana</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="font-size" className="text-[10px] text-muted-foreground">Grootte</Label>
+                    <Select 
+                      value={String(block.style?.fontSize || 9)}
+                      onValueChange={(value) => updateStyle('fontSize', parseInt(value))}
+                    >
+                      <SelectTrigger id="font-size" className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="6">6pt</SelectItem>
+                        <SelectItem value="7">7pt</SelectItem>
+                        <SelectItem value="8">8pt</SelectItem>
+                        <SelectItem value="9">9pt</SelectItem>
+                        <SelectItem value="10">10pt</SelectItem>
+                        <SelectItem value="11">11pt</SelectItem>
+                        <SelectItem value="12">12pt</SelectItem>
+                        <SelectItem value="14">14pt</SelectItem>
+                        <SelectItem value="16">16pt</SelectItem>
+                        <SelectItem value="18">18pt</SelectItem>
+                        <SelectItem value="20">20pt</SelectItem>
+                        <SelectItem value="24">24pt</SelectItem>
+                        <SelectItem value="28">28pt</SelectItem>
+                        <SelectItem value="32">32pt</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                {/* Bold, Italic, Underline toggles */}
+                <div className="flex items-center gap-1 mt-2">
+                  <Button
+                    type="button"
+                    variant={block.style?.fontWeight === 'bold' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => updateStyle('fontWeight', block.style?.fontWeight === 'bold' ? 'normal' : 'bold')}
+                    data-testid="btn-bold"
+                  >
+                    <Bold className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={block.style?.fontStyle === 'italic' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => updateStyle('fontStyle', block.style?.fontStyle === 'italic' ? 'normal' : 'italic')}
+                    data-testid="btn-italic"
+                  >
+                    <Italic className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={block.style?.textDecoration === 'underline' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => updateStyle('textDecoration', block.style?.textDecoration === 'underline' ? 'none' : 'underline')}
+                    data-testid="btn-underline"
+                  >
+                    <Underline className="h-3.5 w-3.5" />
+                  </Button>
+                  
+                  {/* Color picker */}
+                  <div className="flex items-center gap-1 ml-2">
+                    <Label className="text-[10px] text-muted-foreground">Kleur:</Label>
+                    <input
+                      type="color"
+                      value={block.style?.color || '#000000'}
+                      onChange={(e) => updateStyle('color', e.target.value)}
+                      className="h-7 w-7 p-0.5 border rounded cursor-pointer"
+                      data-testid="input-text-color"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor={`text-content-${block.id}`} className="text-xs">Tekst</Label>
+                <textarea
+                  id={`text-content-${block.id}`}
+                  value={block.config?.text || ''}
+                  onChange={(e) => updateConfig('text', e.target.value)}
+                  className="w-full min-h-[80px] p-2 text-xs border rounded placeholder:text-gray-400 placeholder:italic"
+                  placeholder="Voer tekst in..."
+                  style={{
+                    fontFamily: block.style?.fontFamily || 'helvetica',
+                    fontWeight: block.style?.fontWeight || 'normal',
+                    fontStyle: block.style?.fontStyle || 'normal',
+                    textDecoration: block.style?.textDecoration || 'none',
+                    color: block.style?.color || '#000000',
+                  }}
+                />
+              </div>
+              
+              {/* Text Variables */}
+              <div>
+                <Label className="text-xs font-semibold mb-2 block">Variabelen invoegen</Label>
+                <Select
+                  value=""
+                  onValueChange={(value) => {
+                    if (!value) return;
+                    const textarea = document.getElementById(`text-content-${block.id}`) as HTMLTextAreaElement;
+                    if (textarea) {
+                      const start = textarea.selectionStart;
+                      const end = textarea.selectionEnd;
+                      const currentText = block.config?.text || '';
+                      const newText = currentText.substring(0, start) + value + currentText.substring(end);
+                      updateConfig('text', newText);
+                    } else {
+                      updateConfig('text', (block.config?.text || '') + value);
+                    }
+                  }}
                 >
-                  <SelectTrigger id="data-table" className="h-8 text-xs">
-                    <SelectValue placeholder="Select table..." />
+                  <SelectTrigger className="h-8 text-xs" data-testid="select-variable">
+                    <SelectValue placeholder="Kies variabele..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {allowedTables.map(tableName => {
-                      const table = availableTables.find(t => t.name === tableName);
-                      return table ? (
-                        <SelectItem key={table.name} value={table.name}>
-                          {table.label}
-                        </SelectItem>
-                      ) : null;
-                    })}
+                    {TEXT_VARIABLES.map((variable) => (
+                      <SelectItem key={variable.code} value={variable.code}>
+                        <div className="flex flex-col">
+                          <span>{variable.label}</span>
+                          <span className="text-[10px] text-muted-foreground">{variable.code}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {selectedTable && (
-                <div>
-                  <Label htmlFor="data-field" className="text-xs">Field</Label>
-                  <Select 
-                    value={block.config?.fieldName || ''}
-                    onValueChange={(value) => updateConfig('fieldName', value)}
-                  >
-                    <SelectTrigger id="data-field" className="h-8 text-xs">
-                      <SelectValue placeholder="Select field..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedTable.fields.map((field: string) => (
-                        <SelectItem key={field} value={field}>
-                          {field}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
+              {/* Data Fields Insert */}
               <div>
-                <Label htmlFor="data-label" className="text-xs">Label</Label>
-                <Input
-                  id="data-label"
-                  value={block.config?.label || ''}
-                  onChange={(e) => updateConfig('label', e.target.value)}
-                  className="h-8 text-xs"
-                  placeholder="Field Label:"
+                <Label className="text-xs font-semibold mb-2 block">Data invoegen</Label>
+                <DataFieldInsertMenu 
+                  blockId={block.id}
+                  currentText={block.config?.text || ''}
+                  onInsert={(newText) => updateConfig('text', newText)}
+                  availableTables={availableTables}
                 />
               </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Date Block Properties */}
-      {block.type === "Date Block" && (
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="date-label" className="text-xs">Label</Label>
-            <Input
-              id="date-label"
-              value={block.config?.label || 'Date:'}
-              onChange={(e) => updateConfig('label', e.target.value)}
-              className="h-8 text-xs"
-              placeholder="Date:"
-              data-testid="input-date-label"
-            />
-          </div>
-          <div>
-            <Label htmlFor="date-source" className="text-xs">Datumbron</Label>
-            <Select 
-              value={block.config?.dateSource || 'quotation'}
-              onValueChange={(value) => updateConfig('dateSource', value)}
-            >
-              <SelectTrigger id="date-source" className="h-8 text-xs" data-testid="select-date-source">
-                <SelectValue placeholder="Kies datumbron..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="quotation">Offertedatum</SelectItem>
-                <SelectItem value="validUntil">Geldig tot</SelectItem>
-                <SelectItem value="today">Vandaag</SelectItem>
-                <SelectItem value="custom">Handmatig</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {block.config?.dateSource === 'custom' && (
-            <div>
-              <Label htmlFor="date-custom" className="text-xs">Datum</Label>
-              <Input
-                id="date-custom"
-                type="date"
-                value={block.config?.date || ''}
-                onChange={(e) => updateConfig('date', e.target.value)}
-                className="h-8 text-xs"
-                data-testid="input-date-custom"
-              />
             </div>
           )}
-        </div>
-      )}
 
+          {/* Data Field Block Properties */}
+          {block.type === "Data Field" && (
+            <div className="space-y-3 border-t pt-3">
+              {allowedTables.length === 0 ? (
+                <div className="p-3 border border-orange-200 bg-orange-50 rounded text-xs text-orange-700">
+                  Geen databronnen geselecteerd. Klik op "Databron" in de werkbalk.
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <Label htmlFor="data-table" className="text-xs">Tabel</Label>
+                    <Select 
+                      value={block.config?.tableName || ''}
+                      onValueChange={(value) => updateConfig('tableName', value)}
+                    >
+                      <SelectTrigger id="data-table" className="h-8 text-xs">
+                        <SelectValue placeholder="Selecteer tabel..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allowedTables.map(tableName => {
+                          const table = availableTables.find(t => t.name === tableName);
+                          return table ? (
+                            <SelectItem key={table.name} value={table.name}>
+                              {table.label}
+                            </SelectItem>
+                          ) : null;
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedTable && (
+                    <div>
+                      <Label htmlFor="data-field" className="text-xs">Veld</Label>
+                      <Select 
+                        value={block.config?.fieldName || ''}
+                        onValueChange={(value) => updateConfig('fieldName', value)}
+                      >
+                        <SelectTrigger id="data-field" className="h-8 text-xs">
+                          <SelectValue placeholder="Selecteer veld..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {selectedTable.fields.map((field: string) => (
+                            <SelectItem key={field} value={field}>
+                              {field}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div>
+                    <Label htmlFor="data-label" className="text-xs">Label</Label>
+                    <Input
+                      id="data-label"
+                      value={block.config?.label || ''}
+                      onChange={(e) => updateConfig('label', e.target.value)}
+                      className="h-8 text-xs"
+                      placeholder="Veldlabel:"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Date Block Properties */}
+          {block.type === "Date Block" && (
+            <div className="space-y-3 border-t pt-3">
+              <div>
+                <Label htmlFor="date-label" className="text-xs">Label</Label>
+                <Input
+                  id="date-label"
+                  value={block.config?.label || 'Datum:'}
+                  onChange={(e) => updateConfig('label', e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="Datum:"
+                  data-testid="input-date-label"
+                />
+              </div>
+              <div>
+                <Label htmlFor="date-source" className="text-xs">Datumbron</Label>
+                <Select 
+                  value={block.config?.dateSource || 'quotation'}
+                  onValueChange={(value) => updateConfig('dateSource', value)}
+                >
+                  <SelectTrigger id="date-source" className="h-8 text-xs" data-testid="select-date-source">
+                    <SelectValue placeholder="Kies datumbron..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="quotation">Offertedatum</SelectItem>
+                    <SelectItem value="validUntil">Geldig tot</SelectItem>
+                    <SelectItem value="today">Vandaag</SelectItem>
+                    <SelectItem value="custom">Handmatig</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {block.config?.dateSource === 'custom' && (
+                <div>
+                  <Label htmlFor="date-custom" className="text-xs">Datum</Label>
+                  <Input
+                    id="date-custom"
+                    type="date"
+                    value={block.config?.date || ''}
+                    onChange={(e) => updateConfig('date', e.target.value)}
+                    className="h-8 text-xs"
+                    data-testid="input-date-custom"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Hide When Empty - for all block types */}
+          <div className="pt-2 border-t">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="hide-when-empty"
+                checked={block.config?.hideWhenEmpty || false}
+                onChange={(e) => updateConfig('hideWhenEmpty', e.target.checked)}
+                className="h-4 w-4 accent-orange-500"
+                data-testid="checkbox-hide-when-empty"
+              />
+              <Label htmlFor="hide-when-empty" className="text-xs font-normal">
+                Verberg als leeg
+              </Label>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Blok wordt niet getoond wanneer de data leeg is.
+            </p>
+          </div>
+        </TabsContent>
+
+        {/* LAYOUT TAB - Position, size, alignment, dynamic behavior */}
+        <TabsContent value="layout" className="space-y-3 mt-3">
+          {/* Position */}
+          <div>
+            <div className="text-xs font-bold mb-2">Positie</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="block-x" className="text-xs">X (mm)</Label>
+                <Input
+                  id="block-x"
+                  type="number"
+                  step="1"
+                  value={block.position?.x ?? 0}
+                  onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: parseFloat(e.target.value) || 0 })}
+                  onFocus={(e) => e.target.select()}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div>
+                <Label htmlFor="block-y" className="text-xs">Y (mm)</Label>
+                <Input
+                  id="block-y"
+                  type="number"
+                  step="1"
+                  value={block.position?.y ?? 0}
+                  onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: parseFloat(e.target.value) || 0 })}
+                  onFocus={(e) => e.target.select()}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Size */}
+          <div>
+            <div className="text-xs font-bold mb-2">Afmetingen</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="block-width" className="text-xs">Breedte (mm)</Label>
+                <Input
+                  id="block-width"
+                  type="number"
+                  step="1"
+                  value={block.size?.width ?? 50}
+                  onChange={(e) => {
+                    const newWidth = parseFloat(e.target.value) || 50;
+                    if (block.type === "Image" && block.config?.lockAspectRatio && block.config?.aspectRatio) {
+                      const newHeight = Math.round(newWidth / block.config.aspectRatio * 10) / 10;
+                      onUpdateProperty(sectionId, block.id, 'size', { width: newWidth, height: newHeight });
+                    } else {
+                      onUpdateProperty(sectionId, block.id, 'size', { ...block.size, width: newWidth });
+                    }
+                  }}
+                  onFocus={(e) => e.target.select()}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div>
+                <Label htmlFor="block-height" className="text-xs">Hoogte (mm)</Label>
+                <Input
+                  id="block-height"
+                  type="number"
+                  step="1"
+                  value={block.size?.height ?? 25}
+                  onChange={(e) => {
+                    const newHeight = parseFloat(e.target.value) || 25;
+                    if (block.type === "Image" && block.config?.lockAspectRatio && block.config?.aspectRatio) {
+                      const newWidth = Math.round(newHeight * block.config.aspectRatio * 10) / 10;
+                      onUpdateProperty(sectionId, block.id, 'size', { width: newWidth, height: newHeight });
+                    } else {
+                      onUpdateProperty(sectionId, block.id, 'size', { ...block.size, height: newHeight });
+                    }
+                  }}
+                  onFocus={(e) => e.target.select()}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </div>
+          </div>
+        
+          {/* Alignment */}
+          <div>
+            <div className="text-xs font-bold mb-2">Uitlijning</div>
+            <div className="space-y-2">
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => updateConfig('alignH', 'left')}
+                  className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignH === 'left' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+                  title="Links"
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <div className="w-4 h-0.5 bg-current"></div>
+                    <div className="w-3 h-0.5 bg-current"></div>
+                    <div className="w-4 h-0.5 bg-current"></div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateConfig('alignH', 'center')}
+                  className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignH === 'center' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+                  title="Midden"
+                >
+                  <div className="flex flex-col gap-0.5 items-center">
+                    <div className="w-4 h-0.5 bg-current"></div>
+                    <div className="w-3 h-0.5 bg-current"></div>
+                    <div className="w-4 h-0.5 bg-current"></div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateConfig('alignH', 'right')}
+                  className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignH === 'right' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+                  title="Rechts"
+                >
+                  <div className="flex flex-col gap-0.5 items-end">
+                    <div className="w-4 h-0.5 bg-current"></div>
+                    <div className="w-3 h-0.5 bg-current"></div>
+                    <div className="w-4 h-0.5 bg-current"></div>
+                  </div>
+                </button>
+              </div>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => updateConfig('alignV', 'top')}
+                  className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignV === 'top' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+                  title="Boven"
+                >
+                  <div className="flex gap-0.5 items-start h-4">
+                    <div className="w-0.5 h-4 bg-current"></div>
+                    <div className="w-0.5 h-3 bg-current"></div>
+                    <div className="w-0.5 h-4 bg-current"></div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateConfig('alignV', 'middle')}
+                  className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignV === 'middle' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+                  title="Midden"
+                >
+                  <div className="flex gap-0.5 items-center h-4">
+                    <div className="w-0.5 h-4 bg-current"></div>
+                    <div className="w-0.5 h-3 bg-current"></div>
+                    <div className="w-0.5 h-4 bg-current"></div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateConfig('alignV', 'bottom')}
+                  className={`flex-1 h-8 border rounded flex items-center justify-center ${block.config?.alignV === 'bottom' ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+                  title="Onder"
+                >
+                  <div className="flex gap-0.5 items-end h-4">
+                    <div className="w-0.5 h-4 bg-current"></div>
+                    <div className="w-0.5 h-3 bg-current"></div>
+                    <div className="w-0.5 h-4 bg-current"></div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Dynamic Layout Section */}
+          <div className="space-y-3 pt-2 border-t">
+            <div className="text-xs font-bold text-orange-600">Dynamisch gedrag</div>
+            
+            {/* Height behavior */}
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Hoogte</Label>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="checkbox"
+                    id="block-height-can-grow"
+                    checked={block.config?.heightCanGrow || false}
+                    onChange={(e) => updateConfig('heightCanGrow', e.target.checked)}
+                    className="h-3.5 w-3.5"
+                  />
+                  <Label htmlFor="block-height-can-grow" className="text-xs font-normal">Kan groeien</Label>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="checkbox"
+                    id="block-height-can-shrink"
+                    checked={block.config?.heightCanShrink || false}
+                    onChange={(e) => updateConfig('heightCanShrink', e.target.checked)}
+                    className="h-3.5 w-3.5"
+                  />
+                  <Label htmlFor="block-height-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Width behavior */}
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Breedte</Label>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="checkbox"
+                    id="block-width-can-grow"
+                    checked={block.config?.widthCanGrow || false}
+                    onChange={(e) => updateConfig('widthCanGrow', e.target.checked)}
+                    className="h-3.5 w-3.5"
+                  />
+                  <Label htmlFor="block-width-can-grow" className="text-xs font-normal">Kan groeien</Label>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="checkbox"
+                    id="block-width-can-shrink"
+                    checked={block.config?.widthCanShrink || false}
+                    onChange={(e) => updateConfig('widthCanShrink', e.target.checked)}
+                    className="h-3.5 w-3.5"
+                  />
+                  <Label htmlFor="block-width-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
+                </div>
+              </div>
+            </div>
+
+            {/* Lock Aspect Ratio - only for Image blocks */}
+            {block.type === "Image" && (
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="lock-aspect-ratio"
+                  checked={block.config?.lockAspectRatio || false}
+                  onChange={(e) => {
+                    const isLocked = e.target.checked;
+                    const currentWidth = block.size?.width ?? 50;
+                    const currentHeight = block.size?.height ?? 25;
+                    const aspectRatio = currentWidth / currentHeight;
+                    onUpdateProperty(sectionId, block.id, 'config', { 
+                      ...block.config, 
+                      lockAspectRatio: isLocked,
+                      aspectRatio: isLocked ? aspectRatio : block.config?.aspectRatio
+                    });
+                  }}
+                  className="h-3.5 w-3.5"
+                />
+                <Label htmlFor="lock-aspect-ratio" className="text-xs font-normal">Vergrendel verhouding</Label>
+              </div>
+            )}
+
+            {/* Collapse when empty */}
+            <div className="flex items-center space-x-2 pt-1">
+              <input
+                type="checkbox"
+                id="collapse-when-empty"
+                checked={block.config?.collapseWhenEmpty || false}
+                onChange={(e) => updateConfig('collapseWhenEmpty', e.target.checked)}
+                className="h-3.5 w-3.5"
+                data-testid="checkbox-collapse-when-empty"
+              />
+              <Label htmlFor="collapse-when-empty" className="text-xs font-normal">Inkrimpen als leeg</Label>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
