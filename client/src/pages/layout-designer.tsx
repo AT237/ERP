@@ -805,7 +805,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
   };
 
   // Block dragging with alignment guides
-  const SNAP_THRESHOLD = 2; // mm tolerance for snapping
+  const SNAP_THRESHOLD = 5; // mm tolerance for snapping (increased for easier snapping)
   
   const handleBlockDragStart = (e: React.MouseEvent, block: any, sectionId: string) => {
     e.stopPropagation();
@@ -846,45 +846,85 @@ function VisualDesignerView({ layout }: { layout: any }) {
     const guides: { type: 'h' | 'v'; position: number }[] = [];
     const otherBlocks = (section.config.blocks || []).filter((b: any) => b.id !== dragBlockId);
     
+    // Track if we snapped to prevent multiple snaps
+    let snappedX = false;
+    let snappedY = false;
+    
     for (const other of otherBlocks) {
       const ox = other.position?.x || 0;
       const oy = other.position?.y || 0;
       const ow = other.size?.width || 50;
       const oh = other.size?.height || 25;
       
-      // Left edge alignment
-      if (Math.abs(newXMm - ox) < SNAP_THRESHOLD) {
+      // Left edge alignment (both blocks have same left edge)
+      if (!snappedX && Math.abs(newXMm - ox) < SNAP_THRESHOLD) {
         newXMm = ox;
         guides.push({ type: 'v', position: mmToPx(ox) });
+        snappedX = true;
       }
-      // Right edge alignment
-      if (Math.abs(newXMm + blockWidth - (ox + ow)) < SNAP_THRESHOLD) {
+      // Right edge alignment (both blocks have same right edge)
+      if (!snappedX && Math.abs(newXMm + blockWidth - (ox + ow)) < SNAP_THRESHOLD) {
         newXMm = ox + ow - blockWidth;
         guides.push({ type: 'v', position: mmToPx(ox + ow) });
+        snappedX = true;
       }
-      // Top edge alignment
-      if (Math.abs(newYMm - oy) < SNAP_THRESHOLD) {
+      // Left edge to right edge (block's left aligns with other's right)
+      if (!snappedX && Math.abs(newXMm - (ox + ow)) < SNAP_THRESHOLD) {
+        newXMm = ox + ow;
+        guides.push({ type: 'v', position: mmToPx(ox + ow) });
+        snappedX = true;
+      }
+      // Right edge to left edge (block's right aligns with other's left)
+      if (!snappedX && Math.abs(newXMm + blockWidth - ox) < SNAP_THRESHOLD) {
+        newXMm = ox - blockWidth;
+        guides.push({ type: 'v', position: mmToPx(ox) });
+        snappedX = true;
+      }
+      
+      // Top edge alignment (same top)
+      if (!snappedY && Math.abs(newYMm - oy) < SNAP_THRESHOLD) {
         newYMm = oy;
         guides.push({ type: 'h', position: mmToPx(oy) });
+        snappedY = true;
       }
-      // Bottom edge alignment
-      if (Math.abs(newYMm + blockHeight - (oy + oh)) < SNAP_THRESHOLD) {
+      // Bottom edge alignment (same bottom)
+      if (!snappedY && Math.abs(newYMm + blockHeight - (oy + oh)) < SNAP_THRESHOLD) {
         newYMm = oy + oh - blockHeight;
         guides.push({ type: 'h', position: mmToPx(oy + oh) });
+        snappedY = true;
       }
+      // Top to bottom (block's top aligns with other's bottom - stacking vertically)
+      if (!snappedY && Math.abs(newYMm - (oy + oh)) < SNAP_THRESHOLD) {
+        newYMm = oy + oh;
+        guides.push({ type: 'h', position: mmToPx(oy + oh) });
+        snappedY = true;
+      }
+      // Bottom to top (block's bottom aligns with other's top)
+      if (!snappedY && Math.abs(newYMm + blockHeight - oy) < SNAP_THRESHOLD) {
+        newYMm = oy - blockHeight;
+        guides.push({ type: 'h', position: mmToPx(oy) });
+        snappedY = true;
+      }
+      
       // Center horizontal alignment
-      const centerX = newXMm + blockWidth / 2;
-      const otherCenterX = ox + ow / 2;
-      if (Math.abs(centerX - otherCenterX) < SNAP_THRESHOLD) {
-        newXMm = otherCenterX - blockWidth / 2;
-        guides.push({ type: 'v', position: mmToPx(otherCenterX) });
+      if (!snappedX) {
+        const centerX = newXMm + blockWidth / 2;
+        const otherCenterX = ox + ow / 2;
+        if (Math.abs(centerX - otherCenterX) < SNAP_THRESHOLD) {
+          newXMm = otherCenterX - blockWidth / 2;
+          guides.push({ type: 'v', position: mmToPx(otherCenterX) });
+          snappedX = true;
+        }
       }
       // Center vertical alignment
-      const centerY = newYMm + blockHeight / 2;
-      const otherCenterY = oy + oh / 2;
-      if (Math.abs(centerY - otherCenterY) < SNAP_THRESHOLD) {
-        newYMm = otherCenterY - blockHeight / 2;
-        guides.push({ type: 'h', position: mmToPx(otherCenterY) });
+      if (!snappedY) {
+        const centerY = newYMm + blockHeight / 2;
+        const otherCenterY = oy + oh / 2;
+        if (Math.abs(centerY - otherCenterY) < SNAP_THRESHOLD) {
+          newYMm = otherCenterY - blockHeight / 2;
+          guides.push({ type: 'h', position: mmToPx(otherCenterY) });
+          snappedY = true;
+        }
       }
     }
     
