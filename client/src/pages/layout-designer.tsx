@@ -4153,6 +4153,7 @@ function SectionProperties({
   const currentIndex = sortedSections.findIndex(s => s.id === section.id);
   const [templateName, setTemplateName] = useState('');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showOverwriteConfirm, setShowOverwriteConfirm] = useState<string | null>(null);
   const { toast } = useToast();
   
   const { data: templates = [], refetch: refetchTemplates } = useQuery({
@@ -4175,13 +4176,19 @@ function SectionProperties({
     }
   });
 
-  const deleteTemplateMutation = useMutation({
-    mutationFn: async (id: string) => {
+  const overwriteTemplateMutation = useMutation({
+    mutationFn: async ({ id, config }: { id: string; config: any }) => {
       await apiRequest('DELETE', `/api/section-templates/${id}`);
+      const response = await apiRequest('POST', '/api/section-templates', config);
+      return response.json();
     },
     onSuccess: () => {
-      toast({ title: 'Template verwijderd' });
+      toast({ title: 'Template overschreven', description: 'De template is bijgewerkt met de huidige sectie.' });
+      setShowOverwriteConfirm(null);
       refetchTemplates();
+    },
+    onError: () => {
+      toast({ title: 'Fout', description: 'Kon template niet overschrijven.', variant: 'destructive' });
     }
   });
 
@@ -4198,11 +4205,16 @@ function SectionProperties({
     saveTemplateMutation.mutate({ name: templateName.trim(), config: templateConfig });
   };
 
-  const handleLoadTemplate = (template: any) => {
-    if (onLoadTemplate && template.config) {
-      onLoadTemplate(section.id, template.config);
-      toast({ title: 'Template geladen', description: `"${template.name}" toegepast op sectie.` });
-    }
+  const handleOverwriteTemplate = (template: any) => {
+    const templateConfig = {
+      sectionName: section.name,
+      sectionConfig: section.config,
+      blocks: section.config.blocks || []
+    };
+    overwriteTemplateMutation.mutate({ 
+      id: template.id, 
+      config: { name: template.name, config: templateConfig }
+    });
   };
   
   return (
@@ -4503,36 +4515,57 @@ function SectionProperties({
           Sectie Templates
         </Label>
         
-        {/* Load Template */}
+        {/* Existing Templates - Only overwrite allowed */}
         {(templates as any[]).length > 0 && (
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Template laden</Label>
+            <Label className="text-xs text-muted-foreground">Bestaande templates</Label>
             <div className="space-y-1 max-h-32 overflow-y-auto">
               {(templates as any[]).map((template: any) => (
-                <div key={template.id} className="flex items-center justify-between gap-1 p-1.5 rounded border hover:bg-accent/50">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs flex-1 justify-start"
-                    onClick={() => handleLoadTemplate(template)}
-                  >
-                    {template.name}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                    onClick={() => deleteTemplateMutation.mutate(template.id)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                <div key={template.id} className="flex items-center justify-between gap-1 p-1.5 rounded border">
+                  {showOverwriteConfirm === template.id ? (
+                    <div className="flex-1 space-y-1">
+                      <p className="text-xs text-orange-600 font-medium">Overschrijven?</p>
+                      <p className="text-[10px] text-muted-foreground">"{template.name}" wordt vervangen door de huidige sectie.</p>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="h-6 text-xs bg-orange-500 hover:bg-orange-600"
+                          onClick={() => handleOverwriteTemplate(template)}
+                          disabled={overwriteTemplateMutation.isPending}
+                        >
+                          {overwriteTemplateMutation.isPending ? 'Bezig...' : 'Ja, overschrijven'}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-6 text-xs"
+                          onClick={() => setShowOverwriteConfirm(null)}
+                        >
+                          Annuleren
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="text-xs flex-1">{template.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs text-orange-600 hover:text-orange-700"
+                        onClick={() => setShowOverwriteConfirm(template.id)}
+                      >
+                        Overschrijven
+                      </Button>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Save as Template */}
+        {/* Save as New Template */}
         {!showSaveDialog ? (
           <Button
             variant="outline"
@@ -4541,7 +4574,7 @@ function SectionProperties({
             onClick={() => setShowSaveDialog(true)}
           >
             <Save className="h-3 w-3 mr-1" />
-            Opslaan als template
+            Opslaan als nieuwe template
           </Button>
         ) : (
           <div className="space-y-2">
