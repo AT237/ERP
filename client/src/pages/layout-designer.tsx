@@ -3098,27 +3098,60 @@ function BlockProperties({
           </div>
         </div>
 
-        {/* Can Grow / Can Shrink for blocks */}
-        <div className="space-y-2 pt-2">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="block-can-grow"
-              checked={block.config?.canGrow || false}
-              onChange={(e) => updateConfig('canGrow', e.target.checked)}
-              className="h-4 w-4"
-            />
-            <Label htmlFor="block-can-grow" className="text-xs font-normal">Can grow</Label>
+        {/* Can Grow / Can Shrink for blocks - organized by dimension */}
+        <div className="space-y-3 pt-2">
+          {/* Height behavior */}
+          <div className="space-y-1">
+            <Label className="text-xs font-semibold">Height</Label>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center space-x-1">
+                <input
+                  type="checkbox"
+                  id="block-height-can-grow"
+                  checked={block.config?.heightCanGrow || false}
+                  onChange={(e) => updateConfig('heightCanGrow', e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                <Label htmlFor="block-height-can-grow" className="text-[10px] font-normal">Can grow</Label>
+              </div>
+              <div className="flex items-center space-x-1">
+                <input
+                  type="checkbox"
+                  id="block-height-can-shrink"
+                  checked={block.config?.heightCanShrink || false}
+                  onChange={(e) => updateConfig('heightCanShrink', e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                <Label htmlFor="block-height-can-shrink" className="text-[10px] font-normal">Can shrink</Label>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="block-can-shrink"
-              checked={block.config?.canShrink || false}
-              onChange={(e) => updateConfig('canShrink', e.target.checked)}
-              className="h-4 w-4"
-            />
-            <Label htmlFor="block-can-shrink" className="text-xs font-normal">Can shrink</Label>
+          
+          {/* Width behavior */}
+          <div className="space-y-1">
+            <Label className="text-xs font-semibold">Width</Label>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center space-x-1">
+                <input
+                  type="checkbox"
+                  id="block-width-can-grow"
+                  checked={block.config?.widthCanGrow || false}
+                  onChange={(e) => updateConfig('widthCanGrow', e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                <Label htmlFor="block-width-can-grow" className="text-[10px] font-normal">Can grow</Label>
+              </div>
+              <div className="flex items-center space-x-1">
+                <input
+                  type="checkbox"
+                  id="block-width-can-shrink"
+                  checked={block.config?.widthCanShrink || false}
+                  onChange={(e) => updateConfig('widthCanShrink', e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                <Label htmlFor="block-width-can-shrink" className="text-[10px] font-normal">Can shrink</Label>
+              </div>
+            </div>
           </div>
           {/* Lock Aspect Ratio - only for Image blocks */}
           {block.type === "Image" && (
@@ -3675,29 +3708,59 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
         />
       </div>
 
-      {/* Can Grow / Can Shrink */}
-      <div className="space-y-2">
-        <Label className="text-xs font-semibold">Height Behavior</Label>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="can-grow"
-              checked={section.config.canGrow || false}
-              onChange={(e) => onUpdateProperty(section.id, 'config.canGrow', e.target.checked)}
-              className="h-4 w-4"
-            />
-            <Label htmlFor="can-grow" className="text-xs font-normal">Can grow (height increases with more data)</Label>
+      {/* Can Grow / Can Shrink - organized by dimension */}
+      <div className="space-y-3">
+        {/* Height behavior */}
+        <div className="space-y-1">
+          <Label className="text-xs font-semibold">Height</Label>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-1">
+              <input
+                type="checkbox"
+                id="section-height-can-grow"
+                checked={section.config.heightCanGrow || false}
+                onChange={(e) => onUpdateProperty(section.id, 'config.heightCanGrow', e.target.checked)}
+                className="h-3.5 w-3.5"
+              />
+              <Label htmlFor="section-height-can-grow" className="text-[10px] font-normal">Can grow</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <input
+                type="checkbox"
+                id="section-height-can-shrink"
+                checked={section.config.heightCanShrink || false}
+                onChange={(e) => onUpdateProperty(section.id, 'config.heightCanShrink', e.target.checked)}
+                className="h-3.5 w-3.5"
+              />
+              <Label htmlFor="section-height-can-shrink" className="text-[10px] font-normal">Can shrink</Label>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="can-shrink"
-              checked={section.config.canShrink || false}
-              onChange={(e) => onUpdateProperty(section.id, 'config.canShrink', e.target.checked)}
-              className="h-4 w-4"
-            />
-            <Label htmlFor="can-shrink" className="text-xs font-normal">Can shrink (height decreases with whitespace)</Label>
+        </div>
+        
+        {/* Width behavior */}
+        <div className="space-y-1">
+          <Label className="text-xs font-semibold">Width</Label>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-1">
+              <input
+                type="checkbox"
+                id="section-width-can-grow"
+                checked={section.config.widthCanGrow || false}
+                onChange={(e) => onUpdateProperty(section.id, 'config.widthCanGrow', e.target.checked)}
+                className="h-3.5 w-3.5"
+              />
+              <Label htmlFor="section-width-can-grow" className="text-[10px] font-normal">Can grow</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <input
+                type="checkbox"
+                id="section-width-can-shrink"
+                checked={section.config.widthCanShrink || false}
+                onChange={(e) => onUpdateProperty(section.id, 'config.widthCanShrink', e.target.checked)}
+                className="h-3.5 w-3.5"
+              />
+              <Label htmlFor="section-width-can-shrink" className="text-[10px] font-normal">Can shrink</Label>
+            </div>
           </div>
         </div>
       </div>
