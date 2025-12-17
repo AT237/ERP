@@ -12,6 +12,12 @@ import { LayoutForm2, type FormSection2, type FormRow, type FormField2, createFi
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
+import { 
+  Popover, PopoverContent, PopoverTrigger 
+} from "@/components/ui/popover";
+import { 
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList 
+} from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,7 +25,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, Printer } from "lucide-react";
+import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, Printer, Search, ChevronsUpDown } from "lucide-react";
 import { CustomerSelect } from "@/components/ui/customer-select";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn } from '@/components/layouts/DataTableLayout';
@@ -93,6 +99,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>("");
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
+  const [projectPopoverOpen, setProjectPopoverOpen] = useState(false);
   const { toast } = useToast();
 
   // Data table state for quotation items
@@ -1278,23 +1285,79 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               type: "custom",
               layout: "single",
               customComponent: (
-                <Select
-                  value={quotationForm.watch("projectId") || ""}
-                  onValueChange={(value) => quotationForm.setValue("projectId", value === "none" ? "" : value)}
-                  onOpenChange={(open) => { if (open) setShouldLoadProjects(true); }}
-                >
-                  <SelectTrigger className="w-full" data-testid="select-project">
-                    <SelectValue placeholder="Selecteer project..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Geen project</SelectItem>
-                    {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.projectNumber} - {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={projectPopoverOpen} onOpenChange={(isOpen) => {
+                  setProjectPopoverOpen(isOpen);
+                  if (isOpen) setShouldLoadProjects(true);
+                }}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={projectPopoverOpen}
+                      className="w-full justify-between"
+                      data-testid="select-project"
+                    >
+                      {quotationForm.watch("projectId") 
+                        ? projects.find(p => p.id === quotationForm.watch("projectId"))?.name || "Selecteer project..."
+                        : "Selecteer project..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    className="p-0 max-h-[300px]" 
+                    align="start" 
+                    sideOffset={4}
+                    style={{ width: 'var(--radix-popover-trigger-width)' }}
+                  >
+                    <Command>
+                      <div className="flex items-center border-b px-3">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        <CommandInput placeholder="Zoek project..." className="border-0 focus:ring-0" />
+                      </div>
+                      <CommandList>
+                        <CommandEmpty>Geen projecten gevonden</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="none"
+                            onSelect={() => {
+                              quotationForm.setValue("projectId", "");
+                              setProjectPopoverOpen(false);
+                            }}
+                          >
+                            <span className="text-muted-foreground">Geen project</span>
+                          </CommandItem>
+                          {projects.map((project) => (
+                            <CommandItem
+                              key={project.id}
+                              value={project.name}
+                              onSelect={() => {
+                                quotationForm.setValue("projectId", project.id);
+                                setProjectPopoverOpen(false);
+                              }}
+                            >
+                              <span className="font-medium">{project.projectNumber}</span>
+                              <span className="ml-2 text-muted-foreground">{project.name}</span>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                      <div className="border-t p-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                          onClick={() => {
+                            setProjectPopoverOpen(false);
+                            navigate("/projects/new");
+                          }}
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Nieuw project aanmaken
+                        </Button>
+                      </div>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               ),
               validation: {
                 error: quotationForm.formState.errors.projectId?.message
