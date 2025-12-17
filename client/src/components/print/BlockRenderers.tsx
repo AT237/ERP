@@ -18,17 +18,18 @@ export const TEXT_VARIABLES = [
 ];
 
 // Data field placeholders - use {{table.field}} or {{table.subTable.field}} syntax in text blocks
+// Shorthand: {{address.field}} = {{customer.address.field}}
 export const DATA_FIELD_EXAMPLES = [
   { code: '{{quotation.number}}', label: 'Offertenummer' },
   { code: '{{quotation.totalAmount}}', label: 'Totaalbedrag' },
   { code: '{{quotation.date}}', label: 'Offertedatum' },
   { code: '{{customer.name}}', label: 'Klantnaam' },
   { code: '{{customer.email}}', label: 'Klant e-mail' },
-  { code: '{{customer.address.street}}', label: 'Klant straat' },
-  { code: '{{customer.address.houseNumber}}', label: 'Klant huisnummer' },
-  { code: '{{customer.address.postalCode}}', label: 'Klant postcode' },
-  { code: '{{customer.address.city}}', label: 'Klant plaats' },
-  { code: '{{customer.address.country}}', label: 'Klant land' },
+  { code: '{{address.street}}', label: 'Klant straat' },
+  { code: '{{address.houseNumber}}', label: 'Klant huisnummer' },
+  { code: '{{address.postalCode}}', label: 'Klant postcode' },
+  { code: '{{address.city}}', label: 'Klant plaats' },
+  { code: '{{address.country}}', label: 'Klant land' },
   { code: '{{project.name}}', label: 'Projectnaam' },
   { code: '{{company.name}}', label: 'Bedrijfsnaam' },
 ];

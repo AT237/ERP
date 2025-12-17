@@ -17,11 +17,23 @@ export type PrintData = {
 export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
   if (!fieldKey || !printData) return null;
 
-  const parts = fieldKey.split('.');
+  let parts = fieldKey.split('.');
   
   // First part is the table name (quotation, customer, project, company)
   // Support both singular and plural forms
   let tableName = parts[0];
+
+  // Handle shorthand aliases like "address" -> "customer.address"
+  const shorthandAliases: Record<string, { table: string; prefix: string[] }> = {
+    'address': { table: 'customer', prefix: ['address'] },
+  };
+  
+  if (shorthandAliases[tableName]) {
+    const alias = shorthandAliases[tableName];
+    tableName = alias.table;
+    parts = [tableName, ...alias.prefix, ...parts.slice(1)];
+  }
+
   const fieldPath = parts.slice(1);
 
   // Normalize table names (plural to singular)
