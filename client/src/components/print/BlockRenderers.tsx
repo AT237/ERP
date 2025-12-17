@@ -22,19 +22,28 @@ export const TEXT_VARIABLES = [
 // Auto-detection: fields with 'date', 'amount', 'price', 'total' are auto-formatted
 // Shorthand: {{address.field}} = {{customer.address.field}}
 export const DATA_FIELD_EXAMPLES = [
-  { code: '{{quotation.quotationNumber}}', label: 'Offertenummer' },
-  { code: '{{quotation.totalAmount}}', label: 'Totaalbedrag (auto €)' },
+  { code: '{{quotation.number}}', label: 'Offertenummer' },
   { code: '{{quotation.date}}', label: 'Offertedatum (auto datum)' },
-  { code: '{{quotation.createdAt}}', label: 'Aanmaakdatum (auto datum)' },
+  { code: '{{quotation.validUntil}}', label: 'Geldig tot (auto datum)' },
+  { code: '{{quotation.totalAmount}}', label: 'Totaalbedrag (auto €)' },
+  { code: '{{quotation.subtotal}}', label: 'Subtotaal (auto €)' },
+  { code: '{{quotation.taxAmount}}', label: 'BTW bedrag (auto €)' },
+  { code: '{{quotation.description}}', label: 'Omschrijving' },
+  { code: '{{quotation.status}}', label: 'Status' },
   { code: '{{customer.name}}', label: 'Klantnaam' },
+  { code: '{{customer.customerNumber}}', label: 'Klantnummer' },
   { code: '{{customer.email}}', label: 'Klant e-mail' },
+  { code: '{{customer.phone}}', label: 'Klant telefoon' },
   { code: '{{address.street}}', label: 'Klant straat' },
   { code: '{{address.houseNumber}}', label: 'Klant huisnummer' },
   { code: '{{address.postalCode}}', label: 'Klant postcode' },
   { code: '{{address.city}}', label: 'Klant plaats' },
   { code: '{{address.country}}', label: 'Klant land' },
   { code: '{{project.name}}', label: 'Projectnaam' },
+  { code: '{{project.projectNumber}}', label: 'Projectnummer' },
   { code: '{{company.name}}', label: 'Bedrijfsnaam' },
+  { code: '{{company.email}}', label: 'Bedrijf e-mail' },
+  { code: '{{company.phone}}', label: 'Bedrijf telefoon' },
 ];
 
 // Function to replace text variables with actual values

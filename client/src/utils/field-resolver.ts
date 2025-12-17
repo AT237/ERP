@@ -160,17 +160,19 @@ export function replacePlaceholders(
     // Auto-detect format based on field name if not specified
     let resolvedFormat = format || 'text';
     if (!format) {
-      const fieldName = fieldPath.split('.').pop()?.toLowerCase() || '';
-      // Auto-detect date fields
-      if (fieldName.includes('date') || fieldName.includes('datum') || 
-          fieldName === 'createdat' || fieldName === 'updatedat' ||
-          fieldName === 'createdAt' || fieldName === 'updatedAt') {
+      const fieldName = fieldPath.split('.').pop() || '';
+      const fieldNameLower = fieldName.toLowerCase();
+      // Auto-detect date fields (check both original and lowercase)
+      if (fieldNameLower.includes('date') || fieldNameLower.includes('datum') || 
+          fieldNameLower.includes('createdat') || fieldNameLower.includes('updatedat') ||
+          fieldNameLower === 'validuntil' || fieldNameLower.includes('quotationdate')) {
         resolvedFormat = 'date';
       }
       // Auto-detect currency fields
-      else if (fieldName.includes('amount') || fieldName.includes('price') || 
-               fieldName.includes('total') || fieldName.includes('bedrag') ||
-               fieldName.includes('prijs')) {
+      else if (fieldNameLower.includes('amount') || fieldNameLower.includes('price') || 
+               fieldNameLower.includes('total') || fieldNameLower.includes('bedrag') ||
+               fieldNameLower.includes('prijs') || fieldNameLower.includes('subtotal') ||
+               fieldNameLower.includes('taxamount')) {
         resolvedFormat = 'currency';
       }
     }
