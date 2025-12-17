@@ -1193,6 +1193,48 @@ function VisualDesignerView({ layout }: { layout: any }) {
     }
   };
 
+  // Move block from one section to another
+  const moveBlockToSection = (fromSectionId: string, toSectionId: string, blockId: string) => {
+    if (fromSectionId === toSectionId) return;
+    
+    // Find the block to move
+    const fromSection = sections.find(s => s.id === fromSectionId);
+    const blockToMove = fromSection?.config.blocks?.find((b: any) => b.id === blockId);
+    if (!blockToMove) return;
+    
+    const updatedSections = sections.map(s => {
+      if (s.id === fromSectionId) {
+        // Remove block from source section
+        return {
+          ...s,
+          config: {
+            ...s.config,
+            blocks: (s.config.blocks || []).filter((b: any) => b.id !== blockId),
+          },
+        };
+      }
+      if (s.id === toSectionId) {
+        // Add block to target section
+        return {
+          ...s,
+          config: {
+            ...s.config,
+            blocks: [...(s.config.blocks || []), blockToMove],
+          },
+        };
+      }
+      return s;
+    });
+    
+    setSections(updatedSections);
+    
+    // Update selected section to the new section
+    const newSection = updatedSections.find(s => s.id === toSectionId);
+    if (newSection) {
+      setSelectedSection(newSection);
+    }
+  };
+
   // Update property of a child block within a group
   const updateChildBlockProperty = (sectionId: string, parentGroupId: string, childBlockId: string, property: string, value: any) => {
     const updatedSections = sections.map(s => {
@@ -2377,6 +2419,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 allowedTables={allowedTables}
                 availableTables={availableTables}
                 onUpdateProperty={updateBlockProperty}
+                onMoveBlock={moveBlockToSection}
               />
             ) : (
               <div className="text-sm text-muted-foreground text-center py-8">
@@ -3013,7 +3056,8 @@ function BlockProperties({
   sections,
   allowedTables,
   availableTables,
-  onUpdateProperty
+  onUpdateProperty,
+  onMoveBlock
 }: { 
   block: any; 
   sectionId: string;
@@ -3021,6 +3065,7 @@ function BlockProperties({
   allowedTables: string[];
   availableTables: any[];
   onUpdateProperty: (sectionId: string, blockId: string, property: string, value: any) => void;
+  onMoveBlock?: (fromSectionId: string, toSectionId: string, blockId: string) => void;
 }) {
   const updateConfig = (property: string, value: any) => {
     onUpdateProperty(sectionId, block.id, 'config', { ...block.config, [property]: value });
@@ -3437,6 +3482,32 @@ function BlockProperties({
 
         {/* LAYOUT TAB - Position, size, alignment, dynamic behavior */}
         <TabsContent value="layout" className="space-y-3 mt-3">
+          {/* Move to Section */}
+          {onMoveBlock && sections.length > 1 && (
+            <div>
+              <Label htmlFor="move-to-section" className="text-xs font-bold">Verplaats naar sectie</Label>
+              <Select 
+                value={sectionId}
+                onValueChange={(newSectionId) => {
+                  if (newSectionId !== sectionId) {
+                    onMoveBlock(sectionId, newSectionId, block.id);
+                  }
+                }}
+              >
+                <SelectTrigger id="move-to-section" className="h-8 text-xs mt-1" data-testid="select-move-section">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {sections.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Position */}
           <div>
             <div className="text-xs font-bold mb-2">Positie</div>
