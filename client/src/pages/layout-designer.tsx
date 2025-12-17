@@ -3054,9 +3054,9 @@ function BlockProperties({
 
       {/* Two-tab layout */}
       <Tabs defaultValue="inhoud" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-8">
-          <TabsTrigger value="inhoud" className="text-xs" data-testid="tabs-trigger-inhoud">Inhoud</TabsTrigger>
-          <TabsTrigger value="layout" className="text-xs" data-testid="tabs-trigger-layout">Layout</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 h-8 bg-orange-100">
+          <TabsTrigger value="inhoud" className="text-xs data-[state=active]:bg-orange-500 data-[state=active]:text-white" data-testid="tabs-trigger-inhoud">Inhoud</TabsTrigger>
+          <TabsTrigger value="layout" className="text-xs data-[state=active]:bg-orange-500 data-[state=active]:text-white" data-testid="tabs-trigger-layout">Layout</TabsTrigger>
         </TabsList>
 
         {/* INHOUD TAB - Content, text, data bindings */}
