@@ -1007,7 +1007,7 @@ export const sectionTemplates = pgTable("section_templates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   description: text("description"),
-  sectionType: text("section_type").notNull(),
+  sectionType: text("section_type").default('general'),
   config: jsonb("config").$type<SectionConfig>().default(sql`'{}'::jsonb`),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -1017,6 +1017,7 @@ export const insertSectionTemplateSchema = createInsertSchema(sectionTemplates).
   id: true,
   createdAt: true,
   updatedAt: true,
+  sectionType: true,
 });
 
 // Types for Layout Management
