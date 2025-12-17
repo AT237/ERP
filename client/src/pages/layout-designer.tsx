@@ -1269,7 +1269,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
           <TooltipProvider delayDuration={2000}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 hover:bg-muted" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-500 hover:bg-orange-500 hover:text-white" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
                   <Save className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -1289,7 +1289,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  className={`h-8 w-8 p-0 ${selectedBlock ? 'border-2 border-orange-500 hover:bg-muted' : 'opacity-40'}`}
+                  className={`h-8 w-8 p-0 ${selectedBlock ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-gray-400 opacity-40'}`}
                   disabled={!selectedBlock}
                   onClick={() => {
                     if (!selectedBlock) return;
@@ -1326,7 +1326,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  className={`h-8 w-8 p-0 ${(selectedBlock || selectedSection) ? 'text-red-600 hover:bg-red-50' : 'opacity-40'}`}
+                  className={`h-8 w-8 p-0 ${(selectedBlock || selectedSection) ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-gray-400 opacity-40'}`}
                   disabled={!selectedBlock && !selectedSection}
                   onClick={() => {
                     if (selectedBlock) {
@@ -1363,7 +1363,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  className={`h-8 w-8 p-0 ${selectedBlock ? 'border-2 border-orange-500 hover:bg-muted' : 'opacity-40'}`}
+                  className={`h-8 w-8 p-0 ${selectedBlock ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-gray-400 opacity-40'}`}
                   disabled={!selectedBlock}
                   onClick={() => {
                     if (!selectedBlock) return;
@@ -1396,7 +1396,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  className={`h-8 w-8 p-0 ${selectedBlock ? 'border-2 border-orange-500 hover:bg-muted' : 'opacity-40'}`}
+                  className={`h-8 w-8 p-0 ${selectedBlock ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-gray-400 opacity-40'}`}
                   disabled={!selectedBlock}
                   onClick={() => {
                     if (!selectedBlock) return;
@@ -1431,8 +1431,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   variant="ghost" 
                   className={`h-8 w-8 p-0 ${
                     selectedBlockIds.length >= 2 
-                      ? 'border-2 border-orange-500 hover:bg-muted' 
-                      : 'text-gray-400 hover:bg-muted opacity-50'
+                      ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                      : 'text-gray-400 opacity-50'
                   }`}
                   disabled={selectedBlockIds.length < 2}
                   onClick={() => handleGroupBlocks()}
@@ -1461,8 +1461,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   variant="ghost" 
                   className={`h-8 w-8 p-0 ${
                     selectedBlock?.type === 'Group' 
-                      ? 'border-2 border-orange-500 hover:bg-muted' 
-                      : 'text-gray-400 hover:bg-muted opacity-50'
+                      ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                      : 'text-gray-400 opacity-50'
                   }`}
                   disabled={selectedBlock?.type !== 'Group'}
                   onClick={() => handleUngroupBlock()}
@@ -1492,7 +1492,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-8 w-8 p-0 hover:bg-muted"
+                    className="h-8 w-8 p-0 text-gray-500 hover:bg-orange-500 hover:text-white"
                     onClick={() => setShowNewSectionDialog(true)}
                   >
                     <Plus className="h-4 w-4" />
