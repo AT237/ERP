@@ -2392,7 +2392,7 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isDragging, on
 
   return (
     <div
-      className={`absolute border-2 rounded shadow-sm transition-all p-2 bg-white select-none ${
+      className={`absolute border rounded shadow-sm transition-all p-1 bg-white select-none ${
         isSelected ? 'border-orange-500 shadow-md' : 'border-gray-300 hover:border-orange-300'
       } ${isDragging ? 'shadow-lg' : ''}`}
       style={blockStyle}
@@ -2405,7 +2405,7 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isDragging, on
         onDragStart(e);
       }}
     >
-      <div className="text-sm font-medium truncate pointer-events-none">
+      <div className="text-[9px] font-medium truncate pointer-events-none">
         {block.type === "Image" 
           ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
           : block.type === "Text" 
