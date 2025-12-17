@@ -471,26 +471,31 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
   
   // If collapseEmpty is enabled, filter out empty blocks and recalculate positions
   let visibleBlocks = childBlocks;
-  let yOffset = 0;
+  let cumulativeOffset = 0;
   
   if (collapseEmpty) {
+    // Sort blocks by y-position first for correct collapse order
+    const sortedBlocks = [...childBlocks].sort((a: any, b: any) => 
+      (a.position?.y || 0) - (b.position?.y || 0)
+    );
+    
     visibleBlocks = [];
-    for (const childBlock of childBlocks) {
+    for (const childBlock of sortedBlocks) {
       // Check if block has content
       const hasContent = blockHasContent(childBlock, printData);
       
       if (hasContent) {
-        // Shift block up by accumulated offset from hidden blocks
+        // Shift block up by accumulated offset from ALL previously hidden blocks
         visibleBlocks.push({
           ...childBlock,
           position: {
             x: childBlock.position?.x || 0,
-            y: (childBlock.position?.y || 0) - yOffset,
+            y: (childBlock.position?.y || 0) - cumulativeOffset,
           }
         });
       } else {
-        // Add height of hidden block to offset (including some gap)
-        yOffset += (childBlock.size?.height || 25) + 2; // 2mm gap
+        // Add height of this hidden block to cumulative offset (no extra gap needed)
+        cumulativeOffset += (childBlock.size?.height || 25);
       }
     }
   }
