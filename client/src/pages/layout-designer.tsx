@@ -1850,12 +1850,12 @@ function VisualDesignerView({ layout }: { layout: any }) {
             {sectionTemplates.length > 0 && (
               <div className="space-y-2">
                 <Label htmlFor="section-template">Opgeslagen Template</Label>
-                <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                <Select value={selectedTemplateId || 'none'} onValueChange={(val) => setSelectedTemplateId(val === 'none' ? '' : val)}>
                   <SelectTrigger id="section-template">
                     <SelectValue placeholder="Geen template (lege sectie)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Geen template (lege sectie)</SelectItem>
+                    <SelectItem value="none">Geen template (lege sectie)</SelectItem>
                     {sectionTemplates.map((template: any) => (
                       <SelectItem key={template.id} value={template.id}>
                         {template.name}
