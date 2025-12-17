@@ -2734,7 +2734,8 @@ function PreviewView({ layout }: { layout: any }) {
   );
 }
 
-// Helper function to calculate dynamic block positions with shift groups
+// Helper function to calculate dynamic block positions
+// When a block is hidden (hideWhenEmpty), blocks below it shift up automatically
 function calculateDynamicPositions(
   blocks: any[], 
   printData: PrintData
@@ -2745,70 +2746,41 @@ function calculateDynamicPositions(
   const blockVisibility = new Map<string, boolean>();
   for (const block of blocks) {
     const hasContent = blockHasContent(block, printData);
-    // Block is hidden if hideWhenEmpty is set and there's no content
-    const shouldHide = !hasContent; // blockHasContent already checks hideWhenEmpty internally
     blockVisibility.set(block.id, hasContent);
   }
   
-  // Group blocks by shiftGroup
-  const shiftGroups = new Map<string, any[]>();
-  for (const block of blocks) {
-    const group = block.config?.shiftGroup;
-    if (group) {
-      if (!shiftGroups.has(group)) {
-        shiftGroups.set(group, []);
-      }
-      shiftGroups.get(group)!.push(block);
-    }
-  }
+  // Sort ALL blocks by Y position
+  const sortedBlocks = [...blocks].sort((a, b) => 
+    (a.position?.y || 0) - (b.position?.y || 0)
+  );
   
-  // For each shift group, calculate cumulative offset from collapsed blocks
-  const groupOffsets = new Map<string, number>();
-  Array.from(shiftGroups.entries()).forEach(([groupName, groupBlocks]) => {
-    // Sort blocks by Y position within the group
-    const sortedBlocks = [...groupBlocks].sort((a, b) => 
-      (a.position?.y || 0) - (b.position?.y || 0)
-    );
-    
-    let cumulativeOffset = 0;
-    for (const block of sortedBlocks) {
-      const isVisible = blockVisibility.get(block.id) ?? true;
-      if (!isVisible) {
-        // Add this block's height to the offset for blocks below
-        cumulativeOffset += block.size?.height || 0;
-      }
-    }
-    groupOffsets.set(groupName, cumulativeOffset);
-  });
-  
-  // Second pass: calculate adjusted Y positions
-  for (const block of blocks) {
+  // Calculate cumulative offset from hidden blocks for each visible block
+  // All blocks below a hidden block shift up by the hidden block's height
+  for (const block of sortedBlocks) {
     const isVisible = blockVisibility.get(block.id) ?? true;
-    let adjustedY = block.position?.y || 0;
+    const originalY = block.position?.y || 0;
     
-    if (isVisible && block.config?.shiftGroup) {
-      const group = block.config.shiftGroup;
-      const groupBlocks = shiftGroups.get(group) || [];
-      
-      // Sort blocks in this group by Y position
-      const sortedBlocks = [...groupBlocks].sort((a, b) => 
-        (a.position?.y || 0) - (b.position?.y || 0)
-      );
-      
-      // Calculate offset from collapsed blocks above this one
+    if (!isVisible) {
+      // Hidden block - store original position but mark as not visible
+      positions.set(block.id, { y: originalY, visible: false });
+    } else {
+      // Visible block - calculate offset from all hidden blocks above it
       let offsetFromAbove = 0;
       for (const otherBlock of sortedBlocks) {
-        if ((otherBlock.position?.y || 0) < (block.position?.y || 0)) {
+        const otherY = otherBlock.position?.y || 0;
+        const otherBottom = otherY + (otherBlock.size?.height || 0);
+        
+        // Only consider blocks that are fully above this one
+        if (otherBottom <= originalY) {
           const otherVisible = blockVisibility.get(otherBlock.id) ?? true;
           if (!otherVisible) {
             offsetFromAbove += otherBlock.size?.height || 0;
           }
         }
       }
-      adjustedY -= offsetFromAbove;
+      
+      positions.set(block.id, { y: originalY - offsetFromAbove, visible: true });
     }
-    
-    positions.set(block.id, { y: adjustedY, visible: isVisible });
   }
   
   return positions;
