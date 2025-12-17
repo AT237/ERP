@@ -754,11 +754,25 @@ function VisualDesignerView({ layout }: { layout: any }) {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    // Determine default size based on block type
+    const getDefaultSize = (type: string) => {
+      switch (type) {
+        case "Line Items Table":
+          return { width: 180, height: 60 }; // Larger size for table
+        case "Line":
+          return { width: 100, height: 2 }; // Line is thin
+        case "Rectangle":
+          return { width: 60, height: 40 };
+        default:
+          return { width: 50, height: 25 };
+      }
+    };
+
     const newBlock = {
       id: `block-${Date.now()}`,
       type: draggedBlockType,
       position: { x: pxToMm(x), y: pxToMm(y) },
-      size: { width: 50, height: 25 },
+      size: getDefaultSize(draggedBlockType),
       style: {
         fontSize: 9,
         fontFamily: 'helvetica',
@@ -1685,6 +1699,22 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 </TooltipContent>
               </Tooltip>
 
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    draggable
+                    onDragStart={() => handleDragStart("Line Items Table")}
+                    className="h-8 w-8 flex items-center justify-center rounded cursor-grab hover:bg-muted transition-colors"
+                  >
+                    <Table2 className="h-4 w-4" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">Offerteregels</p>
+                  <p className="text-xs text-muted-foreground">Tabel met offerte items</p>
+                </TooltipContent>
+              </Tooltip>
+
             </div>
           </TooltipProvider>
 
@@ -2517,6 +2547,19 @@ function getDefaultConfig(blockType: string) {
         format: "of_total",
         currentPage: 1,
         totalPages: 1,
+      };
+    case "Line Items Table":
+      return {
+        showHeader: true,
+        headerLabels: {
+          position: "Pos",
+          description: "Omschrijving",
+          quantity: "Aantal",
+          unitPrice: "Prijs",
+          total: "Totaal",
+        },
+        zebraStriping: false,
+        showBorders: true,
       };
     default:
       return {};

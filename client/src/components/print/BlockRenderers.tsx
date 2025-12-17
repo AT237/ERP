@@ -392,6 +392,20 @@ export function ImageBlockRenderer({ block, printData }: BlockRendererProps) {
 // Line Items Table Block - quotation line items
 export function LineItemsTableRenderer({ block, printData }: BlockRendererProps) {
   const items = printData.items || [];
+  const config = block.config || {};
+  
+  // Get header labels from config or use defaults
+  const headerLabels = config.headerLabels || {
+    position: "Pos",
+    description: "Omschrijving",
+    quantity: "Aantal",
+    unitPrice: "Prijs",
+    total: "Totaal",
+  };
+  
+  const showHeader = config.showHeader !== false;
+  const showBorders = config.showBorders !== false;
+  const zebraStriping = config.zebraStriping === true;
   
   // Format currency
   const formatCurrency = (value: string | number) => {
@@ -400,7 +414,10 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
     return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(num);
   };
   
-  if (items.length === 0) {
+  // Sort items by lineNo/position
+  const sortedItems = [...items].sort((a, b) => a.lineNo - b.lineNo);
+  
+  if (sortedItems.length === 0) {
     return (
       <div style={block.style || {}} className="text-xs text-gray-400 italic p-2">
         Geen offerteregels beschikbaar
@@ -409,27 +426,37 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
   }
 
   return (
-    <div style={block.style || {}} className="w-full">
-      <table className="w-full text-xs border-collapse">
-        <thead>
-          <tr className="border-b border-gray-300">
-            <th className="py-1 px-1 text-left w-8">#</th>
-            <th className="py-1 px-1 text-left">Omschrijving</th>
-            <th className="py-1 px-1 text-right w-16">Aantal</th>
-            <th className="py-1 px-1 text-right w-20">Prijs</th>
-            <th className="py-1 px-1 text-right w-20">Totaal</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item, index) => (
-            <tr key={index} className="border-b border-gray-200">
-              <td className="py-1 px-1 text-gray-500">{item.lineNo}</td>
-              <td className="py-1 px-1">{item.description}</td>
-              <td className="py-1 px-1 text-right">{item.lineType === 'text' ? '' : item.quantity}</td>
-              <td className="py-1 px-1 text-right">{item.lineType === 'text' ? '' : formatCurrency(item.unitPrice)}</td>
-              <td className="py-1 px-1 text-right">{item.lineType === 'text' ? '' : formatCurrency(item.lineTotal)}</td>
+    <div style={block.style || {}} className="w-full h-full overflow-hidden">
+      <table className="w-full text-xs border-collapse" style={{ fontSize: block.style?.fontSize || 9 }}>
+        {showHeader && (
+          <thead>
+            <tr className={showBorders ? "border-b border-gray-300" : ""}>
+              <th className="py-1 px-1 text-left w-8 font-semibold">{headerLabels.position}</th>
+              <th className="py-1 px-1 text-left font-semibold">{headerLabels.description}</th>
+              <th className="py-1 px-1 text-right w-14 font-semibold">{headerLabels.quantity}</th>
+              <th className="py-1 px-1 text-right w-18 font-semibold">{headerLabels.unitPrice}</th>
+              <th className="py-1 px-1 text-right w-18 font-semibold">{headerLabels.total}</th>
             </tr>
-          ))}
+          </thead>
+        )}
+        <tbody>
+          {sortedItems.map((item, index) => {
+            const isTextLine = item.lineType === 'text';
+            const rowClass = [
+              showBorders ? "border-b border-gray-200" : "",
+              zebraStriping && index % 2 === 1 ? "bg-gray-50" : "",
+            ].filter(Boolean).join(" ");
+            
+            return (
+              <tr key={index} className={rowClass}>
+                <td className="py-1 px-1 text-gray-500">{item.lineNo}</td>
+                <td className={`py-1 px-1 ${isTextLine ? 'font-medium' : ''}`}>{item.description}</td>
+                <td className="py-1 px-1 text-right">{isTextLine ? '' : item.quantity}</td>
+                <td className="py-1 px-1 text-right">{isTextLine ? '' : formatCurrency(item.unitPrice)}</td>
+                <td className="py-1 px-1 text-right">{isTextLine ? '' : formatCurrency(item.lineTotal)}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
