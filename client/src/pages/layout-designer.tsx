@@ -2759,6 +2759,8 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
   };
 
   // Special styling for Group blocks
+  const groupName = block.config?.groupName || 'Groep';
+  
   if (isGroup) {
     return (
       <div
@@ -2767,24 +2769,31 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
         } ${isDragging ? 'shadow-lg' : ''}`}
         style={{
           ...blockStyle,
-          border: '2px dashed #9333ea',
-          backgroundColor: 'rgba(147, 51, 234, 0.05)',
+          border: '2px dashed #f97316',
+          backgroundColor: 'rgba(249, 115, 22, 0.05)',
         }}
         onClick={(e) => {
           e.stopPropagation();
           onClick(e);
         }}
         onMouseDown={(e) => {
-          // Only start drag if not clicking on a child block
-          if (!(e.target as HTMLElement).closest('[data-child-block]')) {
+          // Only start drag if not clicking on a child block or label
+          if (!(e.target as HTMLElement).closest('[data-child-block]') && !(e.target as HTMLElement).closest('[data-group-label]')) {
             e.preventDefault();
             onDragStart(e);
           }
         }}
       >
-        {/* Group header label */}
-        <div className="absolute -top-4 left-1 px-1 bg-purple-600 text-white text-[8px] font-medium rounded-t pointer-events-none whitespace-nowrap">
-          Groep ({childBlocks.length})
+        {/* Group header label - clickable to select group */}
+        <div 
+          data-group-label="true"
+          className="absolute -top-4 left-1 px-1.5 bg-orange-500 text-white text-[8px] font-medium rounded-t cursor-pointer whitespace-nowrap hover:bg-orange-600 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick(e);
+          }}
+        >
+          {groupName} ({childBlocks.length})
         </div>
         
         {/* Render child blocks inside the group - clickable */}
@@ -3587,9 +3596,22 @@ function BlockProperties({
       {/* Group Block Properties */}
       {block.type === "Group" && (
         <div className="space-y-3">
-          <div className="text-xs font-bold text-blue-600">Groep Eigenschappen</div>
+          <div className="text-xs font-bold text-orange-600">Groep Eigenschappen</div>
           
-          <div className="bg-blue-50 p-2 rounded text-xs">
+          {/* Group Name */}
+          <div>
+            <Label htmlFor="group-name" className="text-xs">Groepnaam</Label>
+            <Input
+              id="group-name"
+              value={block.config?.groupName || ''}
+              onChange={(e) => updateConfig('groupName', e.target.value)}
+              placeholder="Groep"
+              className="h-8 text-xs"
+              data-testid="input-group-name"
+            />
+          </div>
+          
+          <div className="bg-orange-50 p-2 rounded text-xs">
             <div className="font-medium mb-1">Bevat {block.config?.childBlocks?.length || 0} blokken</div>
             {block.config?.childBlocks?.map((child: any, idx: number) => (
               <div key={idx} className="text-muted-foreground pl-2">
@@ -3604,7 +3626,7 @@ function BlockProperties({
               id="collapse-empty"
               checked={block.config?.collapseEmpty || false}
               onChange={(e) => updateConfig('collapseEmpty', e.target.checked)}
-              className="h-4 w-4"
+              className="h-4 w-4 accent-orange-500"
               data-testid="checkbox-collapse-empty"
             />
             <Label htmlFor="collapse-empty" className="text-xs font-normal">
