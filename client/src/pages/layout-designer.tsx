@@ -1353,6 +1353,82 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
           <div className="h-6 w-px bg-border" />
 
+          {/* Section Move Up */}
+          <TooltipProvider delayDuration={2000}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className={`h-8 w-8 p-0 ${selectedSection && sections.findIndex(s => s.id === selectedSection.id) > 0 ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-gray-400 opacity-40'}`}
+                  disabled={!selectedSection || sections.findIndex(s => s.id === selectedSection.id) <= 0}
+                  onClick={() => {
+                    if (!selectedSection) return;
+                    const currentIndex = sections.findIndex(s => s.id === selectedSection.id);
+                    if (currentIndex <= 0) return;
+                    
+                    setSections(prev => {
+                      const newSections = [...prev];
+                      const sectionToMove = newSections.find(s => s.id === selectedSection.id);
+                      if (!sectionToMove) return prev;
+                      
+                      const filtered = newSections.filter(s => s.id !== selectedSection.id);
+                      filtered.splice(currentIndex - 1, 0, sectionToMove);
+                      
+                      return filtered.map((s, index) => ({ ...s, position: index }));
+                    });
+                  }}
+                  data-testid="btn-section-up"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Sectie omhoog</p>
+                <p className="text-xs text-muted-foreground">Verplaats sectie naar boven</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Section Move Down */}
+          <TooltipProvider delayDuration={2000}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className={`h-8 w-8 p-0 ${selectedSection && sections.findIndex(s => s.id === selectedSection.id) < sections.length - 1 ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-gray-400 opacity-40'}`}
+                  disabled={!selectedSection || sections.findIndex(s => s.id === selectedSection.id) >= sections.length - 1}
+                  onClick={() => {
+                    if (!selectedSection) return;
+                    const currentIndex = sections.findIndex(s => s.id === selectedSection.id);
+                    if (currentIndex >= sections.length - 1) return;
+                    
+                    setSections(prev => {
+                      const newSections = [...prev];
+                      const sectionToMove = newSections.find(s => s.id === selectedSection.id);
+                      if (!sectionToMove) return prev;
+                      
+                      const filtered = newSections.filter(s => s.id !== selectedSection.id);
+                      filtered.splice(currentIndex + 1, 0, sectionToMove);
+                      
+                      return filtered.map((s, index) => ({ ...s, position: index }));
+                    });
+                  }}
+                  data-testid="btn-section-down"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">Sectie omlaag</p>
+                <p className="text-xs text-muted-foreground">Verplaats sectie naar beneden</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <div className="h-6 w-px bg-border" />
+
           {/* Bring to Front (z-index up) */}
           <TooltipProvider delayDuration={2000}>
             <Tooltip>
