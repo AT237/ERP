@@ -68,7 +68,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/customers/:id", async (req, res) => {
     try {
       const customerData = insertCustomerSchema.partial().parse(req.body);
-      const customer = await storage.updateCustomer(req.params.id, customerData);
+      // Convert empty strings to null for nullable foreign key fields
+      const cleanedData = {
+        ...customerData,
+        addressId: customerData.addressId === '' ? null : customerData.addressId,
+        paymentDaysId: customerData.paymentDaysId === '' ? null : customerData.paymentDaysId,
+        paymentScheduleId: customerData.paymentScheduleId === '' ? null : customerData.paymentScheduleId,
+      };
+      const customer = await storage.updateCustomer(req.params.id, cleanedData);
       res.json(customer);
     } catch (error) {
       console.error("Error updating customer:", error);
@@ -79,7 +86,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/customers/:id", async (req, res) => {
     try {
       const customerData = insertCustomerSchema.partial().parse(req.body);
-      const customer = await storage.updateCustomer(req.params.id, customerData);
+      // Convert empty strings to null for nullable foreign key fields
+      const cleanedData = {
+        ...customerData,
+        addressId: customerData.addressId === '' ? null : customerData.addressId,
+        paymentDaysId: customerData.paymentDaysId === '' ? null : customerData.paymentDaysId,
+        paymentScheduleId: customerData.paymentScheduleId === '' ? null : customerData.paymentScheduleId,
+      };
+      const customer = await storage.updateCustomer(req.params.id, cleanedData);
       res.json(customer);
     } catch (error) {
       console.error("Error updating customer:", error);
