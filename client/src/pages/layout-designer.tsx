@@ -2677,8 +2677,9 @@ function calculateDynamicPositions(
   const blockVisibility = new Map<string, boolean>();
   for (const block of blocks) {
     const hasContent = blockHasContent(block, printData);
-    const shouldCollapse = block.config?.collapseWhenEmpty && !hasContent;
-    blockVisibility.set(block.id, !shouldCollapse);
+    // Block is hidden if: hideWhenEmpty is set and there's no content, OR collapseWhenEmpty is set and no content
+    const shouldHide = !hasContent; // blockHasContent already checks hideWhenEmpty internally
+    blockVisibility.set(block.id, hasContent);
   }
   
   // Group blocks by shiftGroup

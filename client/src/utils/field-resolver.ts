@@ -226,10 +226,11 @@ export function replacePlaceholders(
 }
 
 /**
- * Check if text contains any unresolved placeholders after processing
+ * Check if text has content after placeholder resolution
+ * If text contains placeholders, returns true only if at least one placeholder has a value
  * @param text - Text with {{field.path}} placeholders
  * @param printData - The print data object
- * @returns true if all placeholders resolve to non-empty values
+ * @returns true if text has meaningful content (placeholders resolved to values)
  */
 export function hasContent(
   text: string,
@@ -237,8 +238,31 @@ export function hasContent(
 ): boolean {
   if (!text) return false;
   
-  const processedText = replacePlaceholders(text, printData);
-  return processedText.length > 0;
+  // Check if text contains any placeholders
+  const placeholderRegex = /\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)+)(?::([a-zA-Z]+))?\}\}/g;
+  const placeholders = text.match(placeholderRegex);
+  
+  if (!placeholders || placeholders.length === 0) {
+    // No placeholders, text always has content if not empty
+    return text.trim().length > 0;
+  }
+  
+  // Text has placeholders - check if at least one resolves to a non-empty value
+  let hasAnyValue = false;
+  for (const placeholder of placeholders) {
+    // Extract field path from placeholder
+    const match = placeholder.match(/\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)+)(?::([a-zA-Z]+))?\}\}/);
+    if (match) {
+      const fieldPath = match[1];
+      const value = resolveFieldValue(fieldPath, printData);
+      if (value !== null && value !== undefined && value !== '') {
+        hasAnyValue = true;
+        break;
+      }
+    }
+  }
+  
+  return hasAnyValue;
 }
 
 /**
