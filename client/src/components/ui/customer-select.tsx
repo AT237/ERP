@@ -306,7 +306,18 @@ export function CustomerSelect({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        openEditDialog(customer);
+                        // Open customer in tab-based form (same as Add but with existing customer ID)
+                        const uniqueTabId = `customer-edit-${customer.id}-${Date.now()}`;
+                        window.dispatchEvent(new CustomEvent('open-form-tab', {
+                          detail: {
+                            id: uniqueTabId,
+                            name: customer.name || 'Edit Customer',
+                            formType: 'customer',
+                            entityId: customer.id,
+                            parentId: parentId || testId
+                          }
+                        }));
+                        setOpen(false); // Close the dropdown
                       }}
                       data-testid={`${testId}-edit-${customer.id}`}
                     >

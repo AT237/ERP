@@ -55,6 +55,7 @@ interface Tab {
   content?: React.ReactNode;
   formType?: string;
   parentId?: string;
+  entityId?: string;
 }
 
 export default function Layout({ children }: LayoutProps) {
@@ -323,7 +324,8 @@ export default function Layout({ children }: LayoutProps) {
             name: formInfo.name,
             type: 'form' as const,
             formType: formInfo.formType,
-            parentId: formInfo.parentId
+            parentId: formInfo.parentId,
+            entityId: formInfo.entityId
           };
           
           return [...prevTabs, newTab];
@@ -806,10 +808,12 @@ export default function Layout({ children }: LayoutProps) {
       }
       
       if (activeTab.formType === 'customer') {
-        // Extract customerId from tab.id if editing
-        const customerId = activeTab.id.startsWith('edit-customer-') 
-          ? activeTab.id.replace('edit-customer-', '') 
-          : undefined;
+        // Use entityId from tab if available, otherwise try to extract from tab.id
+        const customerId = activeTab.entityId || (
+          activeTab.id.startsWith('edit-customer-') 
+            ? activeTab.id.replace('edit-customer-', '') 
+            : undefined
+        );
         
         return (
           <Suspense fallback={<div></div>}>
