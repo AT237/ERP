@@ -130,6 +130,25 @@ export function formatFieldValue(value: any, format: string = 'text'): string {
 
     case 'text':
     default:
+      // Handle address objects - convert to formatted string
+      if (typeof value === 'object' && value !== null) {
+        // Check if this looks like an address object
+        if ('street' in value || 'city' in value || 'postalCode' in value) {
+          const parts = [];
+          if (value.street) {
+            parts.push(value.street + (value.houseNumber ? ' ' + value.houseNumber : ''));
+          }
+          if (value.postalCode || value.city) {
+            parts.push((value.postalCode || '') + ' ' + (value.city || '').trim());
+          }
+          if (value.country && value.country !== 'Netherlands' && value.country !== 'NL') {
+            parts.push(value.country);
+          }
+          return parts.filter(p => p.trim()).join(', ');
+        }
+        // For other objects, return empty to avoid [object Object]
+        return '';
+      }
       return String(value);
   }
 }

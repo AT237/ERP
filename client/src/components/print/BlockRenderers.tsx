@@ -44,6 +44,14 @@ export const DATA_FIELD_EXAMPLES = [
   { code: '{{company.name}}', label: 'Bedrijfsnaam' },
   { code: '{{company.email}}', label: 'Bedrijf e-mail' },
   { code: '{{company.phone}}', label: 'Bedrijf telefoon' },
+  { code: '{{company.address.street}}', label: 'Bedrijf straat' },
+  { code: '{{company.address.houseNumber}}', label: 'Bedrijf huisnummer' },
+  { code: '{{company.address.postalCode}}', label: 'Bedrijf postcode' },
+  { code: '{{company.address.city}}', label: 'Bedrijf plaats' },
+  { code: '{{company.address.country}}', label: 'Bedrijf land' },
+  { code: '{{company.kvkNummer}}', label: 'Bedrijf KVK' },
+  { code: '{{company.btwNummer}}', label: 'Bedrijf BTW' },
+  { code: '{{company.bankAccount}}', label: 'Bedrijf IBAN' },
 ];
 
 // Function to replace text variables with actual values
