@@ -2677,7 +2677,7 @@ function calculateDynamicPositions(
   const blockVisibility = new Map<string, boolean>();
   for (const block of blocks) {
     const hasContent = blockHasContent(block, printData);
-    // Block is hidden if: hideWhenEmpty is set and there's no content, OR collapseWhenEmpty is set and no content
+    // Block is hidden if hideWhenEmpty is set and there's no content
     const shouldHide = !hasContent; // blockHasContent already checks hideWhenEmpty internally
     blockVisibility.set(block.id, hasContent);
   }
@@ -3680,18 +3680,6 @@ function BlockProperties({
               </div>
             )}
 
-            {/* Collapse when empty */}
-            <div className="flex items-center space-x-2 pt-1">
-              <input
-                type="checkbox"
-                id="collapse-when-empty"
-                checked={block.config?.collapseWhenEmpty || false}
-                onChange={(e) => updateConfig('collapseWhenEmpty', e.target.checked)}
-                className="h-3.5 w-3.5"
-                data-testid="checkbox-collapse-when-empty"
-              />
-              <Label htmlFor="collapse-when-empty" className="text-xs font-normal">Inkrimpen als leeg</Label>
-            </div>
           </div>
         </TabsContent>
       </Tabs>
