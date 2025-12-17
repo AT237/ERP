@@ -537,6 +537,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [selectedSection, setSelectedSection] = useState<any>(null);
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
   const [selectedBlockIds, setSelectedBlockIds] = useState<string[]>([]); // Multi-select support
+  const [selectedChildBlock, setSelectedChildBlock] = useState<{ block: any; parentGroupId: string } | null>(null); // Child block within group
   const [draggedBlockType, setDraggedBlockType] = useState<string | null>(null);
   const [zoom, setZoom] = useState(() => {
     const saved = localStorage.getItem('layout-designer-zoom');
@@ -857,6 +858,15 @@ function VisualDesignerView({ layout }: { layout: any }) {
       setSelectedBlock(block);
       setSelectedBlockIds([]);
     }
+    setSelectedSection(null);
+    setSelectedChildBlock(null); // Clear child selection when clicking a block
+  };
+
+  // Handle clicking on a child block within a group
+  const handleChildBlockClick = (childBlock: any, parentGroupId: string) => {
+    setSelectedChildBlock({ block: childBlock, parentGroupId });
+    setSelectedBlock(null);
+    setSelectedBlockIds([]);
     setSelectedSection(null);
   };
 
@@ -1182,6 +1192,48 @@ function VisualDesignerView({ layout }: { layout: any }) {
       const updatedBlock = updatedSection?.config.blocks?.find((b: any) => b.id === blockId);
       if (updatedBlock) {
         setSelectedBlock(updatedBlock);
+      }
+    }
+  };
+
+  // Update property of a child block within a group
+  const updateChildBlockProperty = (sectionId: string, parentGroupId: string, childBlockId: string, property: string, value: any) => {
+    const updatedSections = sections.map(s => {
+      if (s.id !== sectionId) return s;
+      
+      return {
+        ...s,
+        config: {
+          ...s.config,
+          blocks: (s.config.blocks || []).map((b: any) => {
+            if (b.id !== parentGroupId || b.type !== 'Group') return b;
+            
+            // Update the child block within the group
+            const updatedChildBlocks = (b.config?.childBlocks || []).map((child: any) =>
+              child.id === childBlockId ? { ...child, [property]: value } : child
+            );
+            
+            return {
+              ...b,
+              config: {
+                ...b.config,
+                childBlocks: updatedChildBlocks,
+              },
+            };
+          }),
+        },
+      };
+    });
+    
+    setSections(updatedSections);
+    
+    // Update selectedChildBlock if it's the one being modified
+    if (selectedChildBlock?.block.id === childBlockId) {
+      const updatedSection = updatedSections.find(s => s.id === sectionId);
+      const updatedGroup = updatedSection?.config.blocks?.find((b: any) => b.id === parentGroupId);
+      const updatedChild = updatedGroup?.config?.childBlocks?.find((c: any) => c.id === childBlockId);
+      if (updatedChild) {
+        setSelectedChildBlock({ block: updatedChild, parentGroupId });
       }
     }
   };
@@ -2102,6 +2154,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                     isDragging={isDraggingBlock && dragBlockId === block.id}
                                     onClick={(e: React.MouseEvent) => handleBlockClick(block, e)}
                                     onDragStart={(e: React.MouseEvent) => handleBlockDragStart(e, block, section.id)}
+                                    selectedChildId={selectedChildBlock && selectedChildBlock.parentGroupId === block.id ? selectedChildBlock.block.id : null}
+                                    onChildClick={handleChildBlockClick}
                                   />
                                 ))}
                                 {/* Alignment Guides */}
@@ -2195,6 +2249,23 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 section={selectedSection}
                 onUpdateProperty={updateSectionProperty}
               />
+            ) : selectedChildBlock ? (
+              // Child block properties - show within context of parent group
+              <div className="space-y-3">
+                <div className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                  Bewerken in Groep
+                </div>
+                <BlockProperties 
+                  block={selectedChildBlock.block}
+                  sectionId={sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedChildBlock.parentGroupId))?.id}
+                  sections={sections}
+                  allowedTables={allowedTables}
+                  availableTables={availableTables}
+                  onUpdateProperty={(sectionId, _blockId, property, value) => {
+                    updateChildBlockProperty(sectionId, selectedChildBlock.parentGroupId, selectedChildBlock.block.id, property, value);
+                  }}
+                />
+              </div>
             ) : selectedBlock ? (
               <BlockProperties 
                 block={selectedBlock}
@@ -2673,7 +2744,7 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
 }
 
 // Section Block Component (blocks within sections)
-function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelected, isDragging, onClick, onDragStart }: any) {
+function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelected, isDragging, onClick, onDragStart, selectedChildId, onChildClick }: any) {
   const isGroup = block.type === "Group";
   const childBlocks = block.config?.childBlocks || [];
 
@@ -2704,8 +2775,11 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
           onClick(e);
         }}
         onMouseDown={(e) => {
-          e.preventDefault();
-          onDragStart(e);
+          // Only start drag if not clicking on a child block
+          if (!(e.target as HTMLElement).closest('[data-child-block]')) {
+            e.preventDefault();
+            onDragStart(e);
+          }
         }}
       >
         {/* Group header label */}
@@ -2713,23 +2787,35 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
           Groep ({childBlocks.length})
         </div>
         
-        {/* Render child blocks inside the group */}
-        <div className="relative w-full h-full overflow-hidden pointer-events-none">
+        {/* Render child blocks inside the group - clickable */}
+        <div className="relative w-full h-full overflow-visible">
           {childBlocks.map((child: any, idx: number) => {
-            // Calculate relative position within group (child positions are relative to group origin)
+            const isChildSelected = selectedChildId === child.id;
             const childStyle: React.CSSProperties = {
               position: 'absolute',
               left: `${mmToPx(child.position?.x || 0)}px`,
               top: `${mmToPx(child.position?.y || 0)}px`,
               width: `${mmToPx(child.size?.width || 40)}px`,
               height: `${mmToPx(child.size?.height || 20)}px`,
+              cursor: 'pointer',
             };
             
             return (
               <div
                 key={child.id || idx}
-                className="border border-gray-300 bg-white/80 rounded text-[7px] p-0.5 truncate"
+                data-child-block="true"
+                className={`rounded text-[7px] p-0.5 truncate transition-all ${
+                  isChildSelected 
+                    ? 'border-2 border-orange-500 bg-orange-50 shadow-md' 
+                    : 'border border-gray-300 bg-white/80 hover:border-orange-300'
+                }`}
                 style={childStyle}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onChildClick) {
+                    onChildClick(child, block.id);
+                  }
+                }}
               >
                 {child.type === "Text" ? (child.config?.text || 'Tekst') : 
                  child.type === "Data Field" ? `${child.config?.tableName || ''}.${child.config?.fieldName || ''}` :
@@ -3068,21 +3154,6 @@ function BlockProperties({
             Blok verdwijnt als alle velden leeg zijn
           </div>
           
-          <div className="pt-1">
-            <Label htmlFor="shift-group" className="text-xs font-normal">Verschuifgroep</Label>
-            <Input
-              id="shift-group"
-              type="text"
-              value={block.config?.shiftGroup || ''}
-              onChange={(e) => updateConfig('shiftGroup', e.target.value)}
-              placeholder="bijv. adres, contact"
-              className="h-7 text-xs mt-1"
-              data-testid="input-shift-group"
-            />
-            <div className="text-[10px] text-muted-foreground mt-1">
-              Blokken in dezelfde groep schuiven omhoog als een blok erboven leeg is
-            </div>
-          </div>
         </div>
       </div>
 
