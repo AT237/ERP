@@ -558,24 +558,52 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [alignmentGuides, setAlignmentGuides] = useState<{ type: 'h' | 'v'; position: number }[]>([]);
   
-  // Available database tables for selection - field names match API print-data response
+  // Available database tables for selection - all tables related to quotations and documents
   const availableTables = [
-    { name: 'quotation', label: 'Offerte', fields: ['number', 'date', 'validUntil', 'description', 'revisionNumber', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
-    { name: 'customer', label: 'Klant', fields: ['customerNumber', 'name', 'email', 'phone', 'address', 'city', 'postalCode', 'country'] },
-    { name: 'supplier', label: 'Leverancier', fields: ['supplierNumber', 'name', 'email', 'phone', 'address', 'city', 'postalCode', 'country', 'contactPerson'] },
-    { name: 'project', label: 'Project', fields: ['projectNumber', 'name', 'status', 'startDate', 'endDate', 'description'] },
-    { name: 'company', label: 'Bedrijf', fields: ['name', 'email', 'phone', 'address', 'city', 'postalCode', 'country', 'kvkNummer', 'btwNummer', 'website', 'iban', 'bankName'] },
-    { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'date', 'dueDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'paymentTerms'] },
-    { name: 'purchaseOrder', label: 'Inkooporder', fields: ['poNumber', 'date', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'deliveryDate'] },
-    { name: 'packingList', label: 'Paklijst', fields: ['packingListNumber', 'date', 'status', 'totalWeight', 'totalPackages'] },
-    { name: 'workOrder', label: 'Werkorder', fields: ['workOrderNumber', 'date', 'status', 'description', 'assignedTo'] },
-    { name: 'salesOrder', label: 'Verkooporder', fields: ['salesOrderNumber', 'date', 'status', 'subtotal', 'taxAmount', 'totalAmount'] },
-    { name: 'address', label: 'Adres', fields: ['street', 'houseNumber', 'postalCode', 'city', 'country', 'province'] },
-    { name: 'country', label: 'Land', fields: ['code', 'name', 'region'] },
-    { name: 'city', label: 'Stad', fields: ['name', 'postalCode', 'province', 'country'] },
+    // Document Types
+    { name: 'quotation', label: 'Offerte', fields: ['quotationNumber', 'quotationDate', 'validUntil', 'validityDays', 'description', 'revisionNumber', 'status', 'isBudgetQuotation', 'subtotal', 'taxAmount', 'totalAmount', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
+    { name: 'quotationItems', label: 'Offerte Regels', fields: ['lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'taxRate', 'lineTotal', 'notes'] },
+    { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'status', 'dueDate', 'subtotal', 'taxAmount', 'totalAmount', 'paidAmount', 'notes'] },
+    { name: 'invoiceItems', label: 'Factuur Regels', fields: ['lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'taxRate', 'lineTotal'] },
+    { name: 'proformaInvoice', label: 'Proforma Factuur', fields: ['invoiceNumber', 'status', 'dueDate', 'subtotal', 'taxAmount', 'totalAmount'] },
+    { name: 'purchaseOrder', label: 'Inkooporder', fields: ['orderNumber', 'orderDate', 'expectedDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
+    { name: 'purchaseOrderItems', label: 'Inkooporder Regels', fields: ['lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
+    { name: 'salesOrder', label: 'Verkooporder', fields: ['orderNumber', 'orderDate', 'expectedDeliveryDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
+    { name: 'salesOrderItems', label: 'Verkooporder Regels', fields: ['lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
+    { name: 'workOrder', label: 'Werkorder', fields: ['workOrderNumber', 'orderDate', 'dueDate', 'status', 'priority', 'description', 'assignedTo', 'notes'] },
+    { name: 'packingList', label: 'Paklijst', fields: ['packingListNumber', 'packingDate', 'status', 'shippingMethod', 'trackingNumber', 'totalWeight', 'totalPackages', 'notes'] },
+    { name: 'packingListItems', label: 'Paklijst Regels', fields: ['lineNumber', 'description', 'quantity', 'weight', 'packageNumber'] },
+    { name: 'quotationRequest', label: 'Offerte Aanvraag', fields: ['requestNumber', 'requestDate', 'status', 'description', 'notes'] },
+    
+    // Relations
+    { name: 'customer', label: 'Klant', fields: ['customerNumber', 'name', 'kvkNummer', 'generalEmail', 'email', 'phone', 'mobile', 'contactPersonEmail', 'taxId', 'bankAccount', 'invoiceEmail', 'invoiceNotes', 'memo', 'paymentTerms', 'status'] },
+    { name: 'customerContact', label: 'Klant Contact', fields: ['name', 'email', 'phone', 'function', 'isPrimary'] },
+    { name: 'supplier', label: 'Leverancier', fields: ['supplierNumber', 'name', 'email', 'phone', 'address', 'contactPerson', 'taxId', 'paymentTerms', 'status'] },
+    { name: 'prospect', label: 'Prospect', fields: ['prospectNumber', 'companyName', 'contactName', 'email', 'phone', 'status', 'source', 'notes'] },
+    { name: 'project', label: 'Project', fields: ['projectNumber', 'name', 'description', 'status', 'startDate', 'endDate', 'totalValue', 'progress'] },
+    { name: 'company', label: 'Bedrijf (Eigen)', fields: ['name', 'legalName', 'email', 'phone', 'website', 'kvkNummer', 'btwNummer', 'iban', 'bankName', 'address', 'postalCode', 'city', 'country'] },
+    
+    // Products & Inventory
+    { name: 'inventoryItem', label: 'Product/Artikel', fields: ['name', 'sku', 'description', 'category', 'unit', 'unitPrice', 'costPrice', 'margin', 'currentStock', 'minimumStock', 'status'] },
+    
+    // Addresses & Locations
+    { name: 'address', label: 'Adres', fields: ['street', 'houseNumber', 'postalCode', 'city', 'country', 'province', 'type'] },
+    { name: 'country', label: 'Land', fields: ['code', 'name', 'region', 'phoneCode'] },
+    { name: 'city', label: 'Stad', fields: ['name', 'postalCode', 'province'] },
+    { name: 'language', label: 'Taal', fields: ['code', 'name'] },
+    
+    // Master Data
+    { name: 'unitOfMeasure', label: 'Eenheid', fields: ['code', 'name', 'description', 'symbol'] },
+    { name: 'paymentDays', label: 'Betalingsdagen', fields: ['code', 'days', 'description'] },
+    { name: 'paymentSchedule', label: 'Betalingsschema', fields: ['code', 'name', 'description'] },
     { name: 'paymentTerms', label: 'Betalingsvoorwaarden', fields: ['code', 'description', 'days'] },
-    { name: 'incoterms', label: 'Incoterms', fields: ['code', 'description'] },
-    { name: 'vatRate', label: 'BTW Tarief', fields: ['code', 'percentage', 'description'] },
+    { name: 'incoterms', label: 'Incoterms', fields: ['code', 'name', 'description'] },
+    { name: 'vatRate', label: 'BTW Tarief', fields: ['code', 'percentage', 'description', 'isDefault'] },
+    { name: 'status', label: 'Status', fields: ['code', 'name', 'category', 'color', 'order'] },
+    
+    // Content
+    { name: 'textSnippet', label: 'Tekst Snippet', fields: ['title', 'content', 'category', 'language', 'version'] },
+    { name: 'image', label: 'Afbeelding', fields: ['name', 'description', 'url', 'category', 'width', 'height'] },
   ];
 
   // Load existing sections for this layout
