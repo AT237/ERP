@@ -3873,7 +3873,14 @@ function SectionProperties({
               type="checkbox"
               id="print-every"
               checked={section.config.printRules?.everyPage || false}
-              onChange={(e) => onUpdateProperty(section.id, 'config.printRules.everyPage', e.target.checked)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  // "Elke pagina" is exclusief - zet alle andere uit
+                  onUpdateProperty(section.id, 'config.printRules', { everyPage: true });
+                } else {
+                  onUpdateProperty(section.id, 'config.printRules.everyPage', false);
+                }
+              }}
               className="h-3.5 w-3.5"
             />
             <Label htmlFor="print-every" className="text-xs font-normal">Elke pagina</Label>
@@ -3883,7 +3890,10 @@ function SectionProperties({
               type="checkbox"
               id="print-first"
               checked={section.config.printRules?.firstPage || false}
-              onChange={(e) => onUpdateProperty(section.id, 'config.printRules.firstPage', e.target.checked)}
+              onChange={(e) => {
+                onUpdateProperty(section.id, 'config.printRules.everyPage', false);
+                onUpdateProperty(section.id, 'config.printRules.firstPage', e.target.checked);
+              }}
               className="h-3.5 w-3.5"
             />
             <Label htmlFor="print-first" className="text-xs font-normal">Alleen eerste pagina</Label>
@@ -3893,7 +3903,10 @@ function SectionProperties({
               type="checkbox"
               id="print-last"
               checked={section.config.printRules?.lastPage || false}
-              onChange={(e) => onUpdateProperty(section.id, 'config.printRules.lastPage', e.target.checked)}
+              onChange={(e) => {
+                onUpdateProperty(section.id, 'config.printRules.everyPage', false);
+                onUpdateProperty(section.id, 'config.printRules.lastPage', e.target.checked);
+              }}
               className="h-3.5 w-3.5"
             />
             <Label htmlFor="print-last" className="text-xs font-normal">Alleen laatste pagina</Label>
@@ -3903,7 +3916,13 @@ function SectionProperties({
               type="checkbox"
               id="print-odd"
               checked={section.config.printRules?.oddPages || false}
-              onChange={(e) => onUpdateProperty(section.id, 'config.printRules.oddPages', e.target.checked)}
+              onChange={(e) => {
+                onUpdateProperty(section.id, 'config.printRules.everyPage', false);
+                if (e.target.checked) {
+                  onUpdateProperty(section.id, 'config.printRules.evenPages', false);
+                }
+                onUpdateProperty(section.id, 'config.printRules.oddPages', e.target.checked);
+              }}
               className="h-3.5 w-3.5"
             />
             <Label htmlFor="print-odd" className="text-xs font-normal">Alleen oneven pagina's</Label>
@@ -3913,7 +3932,13 @@ function SectionProperties({
               type="checkbox"
               id="print-even"
               checked={section.config.printRules?.evenPages || false}
-              onChange={(e) => onUpdateProperty(section.id, 'config.printRules.evenPages', e.target.checked)}
+              onChange={(e) => {
+                onUpdateProperty(section.id, 'config.printRules.everyPage', false);
+                if (e.target.checked) {
+                  onUpdateProperty(section.id, 'config.printRules.oddPages', false);
+                }
+                onUpdateProperty(section.id, 'config.printRules.evenPages', e.target.checked);
+              }}
               className="h-3.5 w-3.5"
             />
             <Label htmlFor="print-even" className="text-xs font-normal">Alleen even pagina's</Label>
