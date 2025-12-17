@@ -2831,8 +2831,12 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
           }
         }
         
-        // Add small padding to content height
-        contentHeight = contentHeight > 0 ? contentHeight + 10 : 0;
+        // Get bottom margin from config (in mm, convert to px)
+        const bottomMarginMm = section.config?.bottomMarginMm || 0;
+        const bottomMarginPx = mmToPx(bottomMarginMm);
+        
+        // Add bottom margin to content height
+        contentHeight = contentHeight > 0 ? contentHeight + bottomMarginPx : 0;
         
         // Determine final section height based on canGrow/canShrink
         let sectionHeight = configuredHeight;
@@ -2840,12 +2844,17 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
         const heightCanGrow = section.config?.heightCanGrow || false;
         
         if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
-          // Shrink section to fit content
+          // Shrink section to fit content (includes bottom margin)
           sectionHeight = contentHeight;
         }
         if (heightCanGrow && contentHeight > configuredHeight) {
           // Grow section to fit content
           sectionHeight = contentHeight;
+        }
+        
+        // Ensure minimum bottom margin even when not shrinking
+        if (!heightCanShrink && bottomMarginPx > 0) {
+          sectionHeight = configuredHeight + bottomMarginPx;
         }
         
         return (
@@ -3801,6 +3810,26 @@ function SectionProperties({
           }}
           className="h-8 text-xs"
         />
+      </div>
+
+      {/* Bottom Margin */}
+      <div>
+        <Label htmlFor="section-bottom-margin" className="text-xs">Ondermarge (mm)</Label>
+        <Input
+          id="section-bottom-margin"
+          type="number"
+          step="1"
+          min="0"
+          value={section.config.bottomMarginMm || 0}
+          onChange={(e) => {
+            const mmValue = parseInt(e.target.value) || 0;
+            onUpdateProperty(section.id, 'config.bottomMarginMm', mmValue);
+          }}
+          className="h-8 text-xs"
+        />
+        <p className="text-[10px] text-muted-foreground mt-1">
+          Minimale ruimte onder deze sectie
+        </p>
       </div>
 
       {/* Dynamic Section */}
