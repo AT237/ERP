@@ -2701,22 +2701,28 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
       }}
     >
       <div className="text-[9px] font-medium truncate pointer-events-none">
-        {block.type === "Image" 
-          ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
-          : block.type === "Text" 
-            ? (block.config?.text || 'Tekst...') 
-            : block.type === "Data Field" && block.config?.tableName && block.config?.fieldName
-              ? `${block.config.tableName}.${block.config.fieldName}`
-              : block.type === "Company Header"
-                ? (block.config?.company?.name || 'Company Name')
-                : block.type === "Document Title"
-                  ? (block.config?.text || 'Document Title')
-                  : block.type === "Date Block"
-                    ? (block.config?.dateSource === 'quotation' ? 'Offertedatum' : block.config?.dateSource === 'validUntil' ? 'Geldig tot' : block.config?.dateSource === 'custom' ? 'Handmatig' : 'Vandaag')
-                    : block.type === "Text Block"
-                      ? (block.config?.text || 'Text Block')
-                      : block.type}
+        {block.type === "Group"
+          ? `Groep (${block.config?.childBlocks?.length || 0} blokken)`
+          : block.type === "Image" 
+            ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
+            : block.type === "Text" 
+              ? (block.config?.text || 'Tekst...') 
+              : block.type === "Data Field" && block.config?.tableName && block.config?.fieldName
+                ? `${block.config.tableName}.${block.config.fieldName}`
+                : block.type === "Company Header"
+                  ? (block.config?.company?.name || 'Company Name')
+                  : block.type === "Document Title"
+                    ? (block.config?.text || 'Document Title')
+                    : block.type === "Date Block"
+                      ? (block.config?.dateSource === 'quotation' ? 'Offertedatum' : block.config?.dateSource === 'validUntil' ? 'Geldig tot' : block.config?.dateSource === 'custom' ? 'Handmatig' : 'Vandaag')
+                      : block.type === "Text Block"
+                        ? (block.config?.text || 'Text Block')
+                        : block.type}
       </div>
+      {/* Show child blocks indicator for groups */}
+      {block.type === "Group" && block.config?.childBlocks?.length > 0 && (
+        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-blue-300 rounded opacity-50" />
+      )}
     </div>
   );
 }
@@ -3453,6 +3459,39 @@ function BlockProperties({
               />
             </div>
           )}
+        </div>
+      )}
+
+      {/* Group Block Properties */}
+      {block.type === "Group" && (
+        <div className="space-y-3">
+          <div className="text-xs font-bold text-blue-600">Groep Eigenschappen</div>
+          
+          <div className="bg-blue-50 p-2 rounded text-xs">
+            <div className="font-medium mb-1">Bevat {block.config?.childBlocks?.length || 0} blokken</div>
+            {block.config?.childBlocks?.map((child: any, idx: number) => (
+              <div key={idx} className="text-muted-foreground pl-2">
+                • {child.type}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="collapse-empty"
+              checked={block.config?.collapseEmpty || false}
+              onChange={(e) => updateConfig('collapseEmpty', e.target.checked)}
+              className="h-4 w-4"
+              data-testid="checkbox-collapse-empty"
+            />
+            <Label htmlFor="collapse-empty" className="text-xs font-normal">
+              Opschuiven bij lege velden
+            </Label>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Als aangevinkt, schuiven onderliggende blokken omhoog wanneer een blok in deze groep leeg is (geen data).
+          </p>
         </div>
       )}
 
