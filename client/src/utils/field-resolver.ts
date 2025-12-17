@@ -142,7 +142,8 @@ export function resolveAndFormat(
 /**
  * Replace all placeholders in text with resolved values
  * Removes empty placeholders and cleans up extra whitespace
- * @param text - Text with {{field.path}} placeholders
+ * Supports format specifier: {{field.path:format}} where format is text, date, currency, or number
+ * @param text - Text with {{field.path}} or {{field.path:format}} placeholders
  * @param printData - The print data object
  * @returns Cleaned text with resolved values
  */
@@ -152,9 +153,29 @@ export function replacePlaceholders(
 ): string {
   if (!text) return '';
 
-  // Replace data field placeholders: {{tableName.fieldName}} or {{tableName.subTable.fieldName}}
-  let result = text.replace(/\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)+)\}\}/g, (match, fieldPath) => {
-    const value = resolveAndFormat(fieldPath, printData, 'text');
+  // Replace data field placeholders with optional format specifier
+  // Syntax: {{tableName.fieldName}} or {{tableName.fieldName:format}}
+  // Formats: text (default), date, currency, number
+  let result = text.replace(/\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)+)(?::([a-zA-Z]+))?\}\}/g, (match, fieldPath, format) => {
+    // Auto-detect format based on field name if not specified
+    let resolvedFormat = format || 'text';
+    if (!format) {
+      const fieldName = fieldPath.split('.').pop()?.toLowerCase() || '';
+      // Auto-detect date fields
+      if (fieldName.includes('date') || fieldName.includes('datum') || 
+          fieldName === 'createdat' || fieldName === 'updatedat' ||
+          fieldName === 'createdAt' || fieldName === 'updatedAt') {
+        resolvedFormat = 'date';
+      }
+      // Auto-detect currency fields
+      else if (fieldName.includes('amount') || fieldName.includes('price') || 
+               fieldName.includes('total') || fieldName.includes('bedrag') ||
+               fieldName.includes('prijs')) {
+        resolvedFormat = 'currency';
+      }
+    }
+    
+    const value = resolveAndFormat(fieldPath, printData, resolvedFormat);
     // Return empty string if no value (will be cleaned up later)
     return value || '';
   });

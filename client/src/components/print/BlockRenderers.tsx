@@ -17,12 +17,15 @@ export const TEXT_VARIABLES = [
   { code: '[JAAR]', label: 'Jaar', description: 'Huidig jaar' },
 ];
 
-// Data field placeholders - use {{table.field}} or {{table.subTable.field}} syntax in text blocks
+// Data field placeholders - use {{table.field}} or {{table.field:format}} syntax in text blocks
+// Formats: text (default), date, currency, number
+// Auto-detection: fields with 'date', 'amount', 'price', 'total' are auto-formatted
 // Shorthand: {{address.field}} = {{customer.address.field}}
 export const DATA_FIELD_EXAMPLES = [
-  { code: '{{quotation.number}}', label: 'Offertenummer' },
-  { code: '{{quotation.totalAmount}}', label: 'Totaalbedrag' },
-  { code: '{{quotation.date}}', label: 'Offertedatum' },
+  { code: '{{quotation.quotationNumber}}', label: 'Offertenummer' },
+  { code: '{{quotation.totalAmount}}', label: 'Totaalbedrag (auto €)' },
+  { code: '{{quotation.date}}', label: 'Offertedatum (auto datum)' },
+  { code: '{{quotation.createdAt}}', label: 'Aanmaakdatum (auto datum)' },
   { code: '{{customer.name}}', label: 'Klantnaam' },
   { code: '{{customer.email}}', label: 'Klant e-mail' },
   { code: '{{address.street}}', label: 'Klant straat' },
