@@ -13,7 +13,7 @@ import {
   insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertIncotermSchema,
   insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
-  insertLayoutElementSchema, insertDocumentLayoutFieldSchema
+  insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { db, checkDatabaseStatus } from './db';
@@ -2225,6 +2225,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting layout section:", error);
       res.status(500).json({ message: "Failed to delete layout section" });
+    }
+  });
+
+  // Section Templates
+  app.get("/api/section-templates", async (req, res) => {
+    try {
+      const templates = await storage.getSectionTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching section templates:", error);
+      res.status(500).json({ message: "Failed to fetch section templates" });
+    }
+  });
+
+  app.get("/api/section-templates/:id", async (req, res) => {
+    try {
+      const template = await storage.getSectionTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ message: "Section template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching section template:", error);
+      res.status(500).json({ message: "Failed to fetch section template" });
+    }
+  });
+
+  app.post("/api/section-templates", async (req, res) => {
+    try {
+      const templateData = insertSectionTemplateSchema.parse(req.body);
+      const template = await storage.createSectionTemplate(templateData);
+      res.status(201).json(template);
+    } catch (error) {
+      console.error("Error creating section template:", error);
+      res.status(400).json({ message: "Failed to create section template" });
+    }
+  });
+
+  app.delete("/api/section-templates/:id", async (req, res) => {
+    try {
+      await storage.deleteSectionTemplate(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting section template:", error);
+      res.status(500).json({ message: "Failed to delete section template" });
     }
   });
 

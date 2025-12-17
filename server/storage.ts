@@ -3,7 +3,7 @@ import {
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
   unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, incoterms, vatRates, cities, statuses, companyProfiles, textSnippets, textSnippetUsages,
-  documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields,
+  documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields, sectionTemplates,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type Prospect, type InsertProspect, type InventoryItem, type InsertInventoryItem,
   type Project, type InsertProject, type Quotation, type InsertQuotation,
@@ -21,7 +21,8 @@ import {
   type TextSnippet, type InsertTextSnippet, type TextSnippetUsage, type InsertTextSnippetUsage,
   type DocumentLayout, type InsertDocumentLayout, type LayoutBlock, type InsertLayoutBlock,
   type LayoutSection, type InsertLayoutSection, type LayoutElement, type InsertLayoutElement,
-  type DocumentLayoutField, type InsertDocumentLayoutField
+  type DocumentLayoutField, type InsertDocumentLayoutField,
+  type SectionTemplate, type InsertSectionTemplate
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, or, ilike } from "drizzle-orm";
@@ -284,6 +285,12 @@ export interface IStorage {
   createDocumentLayoutField(field: InsertDocumentLayoutField): Promise<DocumentLayoutField>;
   updateDocumentLayoutField(id: string, field: Partial<InsertDocumentLayoutField>): Promise<DocumentLayoutField>;
   deleteDocumentLayoutField(id: string): Promise<void>;
+
+  // Section Templates
+  getSectionTemplates(): Promise<SectionTemplate[]>;
+  getSectionTemplate(id: string): Promise<SectionTemplate | undefined>;
+  createSectionTemplate(template: InsertSectionTemplate): Promise<SectionTemplate>;
+  deleteSectionTemplate(id: string): Promise<void>;
 
   // Conversion methods
   convertQuotationToSalesOrder(quotationId: string): Promise<SalesOrder>;
@@ -1632,6 +1639,29 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDocumentLayoutField(id: string): Promise<void> {
     await db.delete(documentLayoutFields).where(eq(documentLayoutFields.id, id));
+  }
+
+  // Section Templates
+  async getSectionTemplates(): Promise<SectionTemplate[]> {
+    return await db.select().from(sectionTemplates).orderBy(desc(sectionTemplates.createdAt));
+  }
+
+  async getSectionTemplate(id: string): Promise<SectionTemplate | undefined> {
+    const [template] = await db.select().from(sectionTemplates).where(eq(sectionTemplates.id, id));
+    return template || undefined;
+  }
+
+  async createSectionTemplate(template: InsertSectionTemplate): Promise<SectionTemplate> {
+    const normalizedTemplate = {
+      ...template,
+      config: template.config ? JSON.parse(JSON.stringify(template.config)) : undefined
+    };
+    const [created] = await db.insert(sectionTemplates).values(normalizedTemplate).returning();
+    return created;
+  }
+
+  async deleteSectionTemplate(id: string): Promise<void> {
+    await db.delete(sectionTemplates).where(eq(sectionTemplates.id, id));
   }
 
   // Initialize basic country data
