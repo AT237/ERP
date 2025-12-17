@@ -675,6 +675,84 @@ export function RectangleBlockRenderer({ block }: BlockRendererProps) {
   );
 }
 
+// Item Repeater Block - repeats child content for each quotation line item
+export function ItemRepeaterRenderer({ block, printData, currentPage = 1, totalPages = 1 }: BlockRendererProps) {
+  const items = printData.items || [];
+  const config = block.config || {};
+  const itemSpacing = config.itemSpacing || 5;
+  
+  const sortedItems = [...items].sort((a, b) => (a.lineNo || 0) - (b.lineNo || 0));
+  
+  if (sortedItems.length === 0) {
+    return (
+      <div style={block.style || {}} className="text-xs text-gray-400 italic p-2">
+        Geen offerteregels beschikbaar
+      </div>
+    );
+  }
+
+  const getFontFamily = (font?: string): string => {
+    const fontMap: Record<string, string> = {
+      'helvetica': 'Helvetica, Arial, sans-serif',
+      'arial': 'Arial, sans-serif',
+      'calibri': 'Calibri, "Segoe UI", sans-serif',
+      'times': '"Times New Roman", Times, serif',
+      'courier': '"Courier New", Courier, monospace',
+      'georgia': 'Georgia, serif',
+      'verdana': 'Verdana, sans-serif',
+    };
+    return fontMap[font || 'helvetica'] || font || 'Helvetica, Arial, sans-serif';
+  };
+
+  return (
+    <div style={{ ...block.style, width: '100%' }} className="flex flex-col">
+      {sortedItems.map((item, index) => {
+        const itemContext = { item, index };
+        
+        return (
+          <div 
+            key={index} 
+            style={{ 
+              marginBottom: index < sortedItems.length - 1 ? `${itemSpacing}px` : 0,
+              position: 'relative',
+              width: '100%',
+              minHeight: block.size?.height || 20,
+            }}
+          >
+            {(config.childBlocks || []).map((childBlock: any, childIndex: number) => {
+              const Renderer = BlockRenderers[childBlock.type] || UnknownBlockRenderer;
+              
+              return (
+                <div
+                  key={childIndex}
+                  style={{
+                    position: 'absolute',
+                    left: `${childBlock.position?.x || 0}px`,
+                    top: `${childBlock.position?.y || 0}px`,
+                    width: `${childBlock.size?.width || 50}px`,
+                    minHeight: `${childBlock.size?.height || 20}px`,
+                    fontSize: `${childBlock.style?.fontSize || 9}pt`,
+                    fontFamily: getFontFamily(childBlock.style?.fontFamily),
+                    color: childBlock.style?.color || '#000000',
+                  }}
+                >
+                  <Renderer 
+                    block={childBlock} 
+                    printData={printData}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    itemContext={itemContext}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // Main block renderer map
 export const BlockRenderers: Record<string, React.FC<BlockRendererProps>> = {
   'Text': TextBlockRenderer,
@@ -686,6 +764,7 @@ export const BlockRenderers: Record<string, React.FC<BlockRendererProps>> = {
   'Page Number': PageNumberRenderer,
   'Image': ImageBlockRenderer,
   'Line Items Table': LineItemsTableRenderer,
+  'Item Repeater': ItemRepeaterRenderer,
   'Totals Summary': TotalsSummaryRenderer,
   'Footer Block': FooterBlockRenderer,
   'Group': GroupBlockRenderer,

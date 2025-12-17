@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline, Copy, Trash2, Group, Ungroup, Minus, Square } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline, Copy, Trash2, Group, Ungroup, Minus, Square, Repeat } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES } from '@/components/print/BlockRenderers';
 import { PrintData, blockHasContent } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
@@ -774,9 +774,11 @@ function VisualDesignerView({ layout }: { layout: any }) {
     const getDefaultSize = (type: string) => {
       switch (type) {
         case "Line Items Table":
-          return { width: 180, height: 60 }; // Larger size for table
+          return { width: 180, height: 60 };
+        case "Item Repeater":
+          return { width: 180, height: 25 };
         case "Line":
-          return { width: 100, height: 2 }; // Line is thin
+          return { width: 100, height: 2 };
         case "Rectangle":
           return { width: 60, height: 40 };
         default:
@@ -1726,8 +1728,24 @@ function VisualDesignerView({ layout }: { layout: any }) {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="font-medium">Offerteregels</p>
-                  <p className="text-xs text-muted-foreground">Tabel met offerte items</p>
+                  <p className="font-medium">Offerteregels Tabel</p>
+                  <p className="text-xs text-muted-foreground">Standaard tabel met offerte items</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    draggable
+                    onDragStart={() => handleDragStart("Item Repeater")}
+                    className="h-8 w-8 flex items-center justify-center rounded cursor-grab hover:bg-muted transition-colors"
+                  >
+                    <Repeat className="h-4 w-4" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">Herhalende Items</p>
+                  <p className="text-xs text-muted-foreground">Custom layout per offerteregel</p>
                 </TooltipContent>
               </Tooltip>
 
@@ -2616,6 +2634,12 @@ function getDefaultConfig(blockType: string) {
         },
         zebraStriping: false,
         showBorders: true,
+      };
+    case "Item Repeater":
+      return {
+        dataSource: "quotationItems",
+        itemSpacing: 5,
+        childBlocks: [],
       };
     default:
       return {};
@@ -4633,6 +4657,7 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
       "Company Header": "🏢",
       "Date Block": "📅",
       "Line Items Table": "📊",
+      "Item Repeater": "🔄",
       "Totals Summary": "💰",
       "Footer Block": "📄",
       "Text Block": "📝",
