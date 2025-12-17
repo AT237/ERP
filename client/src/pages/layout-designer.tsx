@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline, Copy, Trash2 } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline, Copy, Trash2, Group, Ungroup } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES } from '@/components/print/BlockRenderers';
 import { PrintData, blockHasContent } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
@@ -865,6 +865,134 @@ function VisualDesignerView({ layout }: { layout: any }) {
     setSelectedBlock(null); // Deselect block when section is selected
   };
 
+  // Group selected blocks into a single Group block
+  const handleGroupBlocks = () => {
+    if (selectedBlockIds.length < 2) return;
+    
+    // Find the section containing the selected blocks
+    let targetSection: any = null;
+    let blocksToGroup: any[] = [];
+    
+    for (const section of sections) {
+      const sectionBlocks = section.config.blocks || [];
+      const matchingBlocks = sectionBlocks.filter((b: any) => selectedBlockIds.includes(b.id));
+      if (matchingBlocks.length > 0) {
+        targetSection = section;
+        blocksToGroup = matchingBlocks;
+        break;
+      }
+    }
+    
+    if (!targetSection || blocksToGroup.length < 2) {
+      toast({ title: 'Fout', description: 'Selecteer minimaal 2 blokken in dezelfde sectie', variant: 'destructive' });
+      return;
+    }
+    
+    // Calculate bounding box of all selected blocks
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const block of blocksToGroup) {
+      const x = block.position?.x || 0;
+      const y = block.position?.y || 0;
+      const w = block.size?.width || 50;
+      const h = block.size?.height || 25;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x + w);
+      maxY = Math.max(maxY, y + h);
+    }
+    
+    // Convert child blocks to relative positions within the group
+    const childBlocks = blocksToGroup.map((block: any) => ({
+      ...block,
+      position: {
+        x: (block.position?.x || 0) - minX,
+        y: (block.position?.y || 0) - minY,
+      }
+    }));
+    
+    // Create the group block
+    const groupBlock = {
+      id: `group-${Date.now()}`,
+      type: 'Group',
+      position: { x: minX, y: minY },
+      size: { width: maxX - minX, height: maxY - minY },
+      config: {
+        childBlocks,
+        collapseEmpty: false, // Default: don't collapse when empty
+      },
+      style: {},
+    };
+    
+    // Update the section: remove grouped blocks, add group block
+    const updatedSections = sections.map(s => {
+      if (s.id !== targetSection.id) return s;
+      
+      const remainingBlocks = (s.config.blocks || []).filter(
+        (b: any) => !selectedBlockIds.includes(b.id)
+      );
+      
+      return {
+        ...s,
+        config: {
+          ...s.config,
+          blocks: [...remainingBlocks, groupBlock],
+        },
+      };
+    });
+    
+    setSections(updatedSections);
+    setSelectedBlockIds([]);
+    setSelectedBlock(groupBlock);
+    toast({ title: 'Gegroepeerd', description: `${blocksToGroup.length} blokken zijn gegroepeerd` });
+  };
+
+  // Ungroup a Group block back into individual blocks
+  const handleUngroupBlock = () => {
+    if (!selectedBlock || selectedBlock.type !== 'Group') return;
+    
+    // Find the section containing the group
+    let targetSection: any = null;
+    for (const section of sections) {
+      if (section.config.blocks?.some((b: any) => b.id === selectedBlock.id)) {
+        targetSection = section;
+        break;
+      }
+    }
+    
+    if (!targetSection) return;
+    
+    // Get child blocks and convert back to absolute positions
+    const childBlocks = (selectedBlock.config?.childBlocks || []).map((block: any) => ({
+      ...block,
+      id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      position: {
+        x: (selectedBlock.position?.x || 0) + (block.position?.x || 0),
+        y: (selectedBlock.position?.y || 0) + (block.position?.y || 0),
+      }
+    }));
+    
+    // Update the section: remove group block, add child blocks
+    const updatedSections = sections.map(s => {
+      if (s.id !== targetSection.id) return s;
+      
+      const otherBlocks = (s.config.blocks || []).filter(
+        (b: any) => b.id !== selectedBlock.id
+      );
+      
+      return {
+        ...s,
+        config: {
+          ...s.config,
+          blocks: [...otherBlocks, ...childBlocks],
+        },
+      };
+    });
+    
+    setSections(updatedSections);
+    setSelectedBlock(null);
+    toast({ title: 'Ontgroepeerd', description: `${childBlocks.length} blokken zijn vrijgegeven` });
+  };
+
   // Block dragging with alignment guides
   const SNAP_THRESHOLD = 5; // mm tolerance for snapping (increased for easier snapping)
   
@@ -1241,6 +1369,52 @@ function VisualDesignerView({ layout }: { layout: any }) {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+
+          {/* Group Blocks - only show when multiple blocks are selected */}
+          {selectedBlockIds.length >= 2 && (
+            <TooltipProvider delayDuration={2000}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
+                    onClick={() => handleGroupBlocks()}
+                    data-testid="btn-group-blocks"
+                  >
+                    <Group className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">Groeperen</p>
+                  <p className="text-xs text-muted-foreground">Groepeer {selectedBlockIds.length} geselecteerde blokken</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* Ungroup Block - only show when a group is selected */}
+          {selectedBlock?.type === 'Group' && (
+            <TooltipProvider delayDuration={2000}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-8 w-8 p-0 text-purple-600 hover:bg-purple-50"
+                    onClick={() => handleUngroupBlock()}
+                    data-testid="btn-ungroup-blocks"
+                  >
+                    <Ungroup className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">Ontgroeperen</p>
+                  <p className="text-xs text-muted-foreground">Haal blokken uit groep</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
 
           <div className="h-6 w-px bg-border" />
 
