@@ -461,6 +461,87 @@ export function FooterBlockRenderer({ block }: BlockRendererProps) {
   );
 }
 
+// Group Block - container for multiple blocks with optional collapse-when-empty
+export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPages = 1 }: BlockRendererProps) {
+  const childBlocks = block.config?.childBlocks || [];
+  const collapseEmpty = block.config?.collapseEmpty || false;
+  
+  // Convert mm to px for rendering
+  const mmToPx = (mm: number) => mm * 3.7795275591;
+  
+  // If collapseEmpty is enabled, filter out empty blocks and recalculate positions
+  let visibleBlocks = childBlocks;
+  let yOffset = 0;
+  
+  if (collapseEmpty) {
+    visibleBlocks = [];
+    for (const childBlock of childBlocks) {
+      // Check if block has content
+      const hasContent = blockHasContent(childBlock, printData);
+      
+      if (hasContent) {
+        // Shift block up by accumulated offset from hidden blocks
+        visibleBlocks.push({
+          ...childBlock,
+          position: {
+            x: childBlock.position?.x || 0,
+            y: (childBlock.position?.y || 0) - yOffset,
+          }
+        });
+      } else {
+        // Add height of hidden block to offset (including some gap)
+        yOffset += (childBlock.size?.height || 25) + 2; // 2mm gap
+      }
+    }
+  }
+  
+  // If no visible blocks and collapseEmpty is enabled, render nothing (fully collapse)
+  if (collapseEmpty && visibleBlocks.length === 0) {
+    return null;
+  }
+  
+  // Calculate actual height needed based on visible blocks
+  let calculatedHeight = 0;
+  if (collapseEmpty && visibleBlocks.length > 0) {
+    for (const vBlock of visibleBlocks) {
+      const blockBottom = (vBlock.position?.y || 0) + (vBlock.size?.height || 25);
+      calculatedHeight = Math.max(calculatedHeight, blockBottom);
+    }
+  }
+  
+  const containerStyle: React.CSSProperties = {
+    position: 'relative',
+    width: '100%',
+    height: collapseEmpty && calculatedHeight > 0 ? `${mmToPx(calculatedHeight)}px` : '100%',
+    overflow: 'visible',
+  };
+  
+  return (
+    <div style={containerStyle}>
+      {visibleBlocks.map((childBlock: any, index: number) => {
+        const BlockRenderer = BlockRenderers[childBlock.type];
+        
+        const blockStyle: React.CSSProperties = {
+          position: 'absolute',
+          left: `${mmToPx(childBlock.position?.x || 0)}px`,
+          top: `${mmToPx(childBlock.position?.y || 0)}px`,
+          width: `${mmToPx(childBlock.size?.width || 50)}px`,
+          height: `${mmToPx(childBlock.size?.height || 25)}px`,
+        };
+        
+        if (BlockRenderer) {
+          return (
+            <div key={childBlock.id || index} style={blockStyle}>
+              <BlockRenderer block={childBlock} printData={printData} currentPage={currentPage} totalPages={totalPages} />
+            </div>
+          );
+        }
+        return null;
+      })}
+    </div>
+  );
+}
+
 // Main block renderer map
 export const BlockRenderers: Record<string, React.FC<BlockRendererProps>> = {
   'Text': TextBlockRenderer,
@@ -474,6 +555,7 @@ export const BlockRenderers: Record<string, React.FC<BlockRendererProps>> = {
   'Line Items Table': LineItemsTableRenderer,
   'Totals Summary': TotalsSummaryRenderer,
   'Footer Block': FooterBlockRenderer,
+  'Group': GroupBlockRenderer,
 };
 
 // Fallback renderer for unknown block types
