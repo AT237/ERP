@@ -2666,11 +2666,40 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
   return (
     <div className="font-['Arial',sans-serif]">
       {sections.map((section: any) => {
-        const sectionHeight = section.config?.dimensions?.height || 200;
+        const configuredHeight = section.config?.dimensions?.height || 200;
         const blocks = section.config?.blocks || [];
         
         // Calculate dynamic positions for blocks in this section
         const dynamicPositions = calculateDynamicPositions(blocks, typedPrintData);
+        
+        // Calculate actual content height (bottom of lowest visible block)
+        let contentHeight = 0;
+        for (const block of blocks) {
+          const dynamicPos = dynamicPositions.get(block.id);
+          if (dynamicPos?.visible !== false) {
+            const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
+            const blockHeight = block.size?.height || 25;
+            const blockBottom = mmToPx(adjustedY + blockHeight);
+            contentHeight = Math.max(contentHeight, blockBottom);
+          }
+        }
+        
+        // Add small padding to content height
+        contentHeight = contentHeight > 0 ? contentHeight + 10 : 0;
+        
+        // Determine final section height based on canGrow/canShrink
+        let sectionHeight = configuredHeight;
+        const heightCanShrink = section.config?.heightCanShrink || false;
+        const heightCanGrow = section.config?.heightCanGrow || false;
+        
+        if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
+          // Shrink section to fit content
+          sectionHeight = contentHeight;
+        }
+        if (heightCanGrow && contentHeight > configuredHeight) {
+          // Grow section to fit content
+          sectionHeight = contentHeight;
+        }
         
         return (
         <div
@@ -2679,8 +2708,8 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
           style={{
             backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
             height: `${sectionHeight}px`,
-            minHeight: `${sectionHeight}px`,
-            maxHeight: `${sectionHeight}px`,
+            minHeight: heightCanShrink ? 'auto' : `${sectionHeight}px`,
+            maxHeight: heightCanGrow ? 'none' : `${sectionHeight}px`,
             borderColor: section.config?.style?.borderColor || 'transparent',
             borderStyle: section.config?.style?.borderStyle || 'none',
             borderWidth: section.config?.style?.borderWidth || 0,
