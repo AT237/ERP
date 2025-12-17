@@ -3047,10 +3047,15 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
     );
   }
 
+  // For Line and Rectangle, use minimal styling to show the actual shape
+  const isDrawingBlock = block.type === "Line" || block.type === "Rectangle";
+  
   return (
     <div
-      className={`absolute border-2 rounded shadow-sm transition-all p-1 bg-white select-none ${
-        isSelected ? 'border-orange-500 shadow-md' : isMultiSelected ? 'border-blue-500 shadow-md' : 'border-gray-300 hover:border-orange-300'
+      className={`absolute transition-all select-none ${
+        isDrawingBlock 
+          ? `${isSelected ? 'ring-2 ring-orange-500 ring-offset-1' : isMultiSelected ? 'ring-2 ring-blue-500 ring-offset-1' : 'hover:ring-2 hover:ring-orange-300 hover:ring-offset-1'}`
+          : `border-2 rounded shadow-sm p-1 bg-white ${isSelected ? 'border-orange-500 shadow-md' : isMultiSelected ? 'border-blue-500 shadow-md' : 'border-gray-300 hover:border-orange-300'}`
       } ${isDragging ? 'shadow-lg' : ''}`}
       style={blockStyle}
       onClick={(e) => {
@@ -3062,23 +3067,54 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
         onDragStart(e);
       }}
     >
-      <div className="text-[9px] font-medium truncate pointer-events-none">
-        {block.type === "Image" 
-          ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
-          : block.type === "Text" 
-            ? (block.config?.text || 'Tekst...') 
-            : block.type === "Data Field" && block.config?.tableName && block.config?.fieldName
-              ? `${block.config.tableName}.${block.config.fieldName}`
-              : block.type === "Company Header"
-                ? (block.config?.company?.name || 'Company Name')
-                : block.type === "Document Title"
-                  ? (block.config?.text || 'Document Title')
-                  : block.type === "Date Block"
-                    ? (block.config?.dateSource === 'quotation' ? 'Offertedatum' : block.config?.dateSource === 'validUntil' ? 'Geldig tot' : block.config?.dateSource === 'custom' ? 'Handmatig' : 'Vandaag')
-                    : block.type === "Text Block"
-                      ? (block.config?.text || 'Text Block')
-                      : block.type}
-      </div>
+      {/* Line Block - visual representation */}
+      {block.type === "Line" ? (
+        <div 
+          className="w-full h-full flex items-center justify-center pointer-events-none"
+          style={{
+            flexDirection: block.config?.orientation === 'vertical' ? 'row' : 'column',
+          }}
+        >
+          <div 
+            style={{
+              width: block.config?.orientation === 'vertical' ? `${block.config?.strokeWidth || 1}px` : '100%',
+              height: block.config?.orientation === 'vertical' ? '100%' : `${block.config?.strokeWidth || 1}px`,
+              backgroundColor: block.config?.strokeColor || '#000000',
+              borderStyle: block.config?.strokeStyle === 'dashed' ? 'dashed' : block.config?.strokeStyle === 'dotted' ? 'dotted' : 'solid',
+            }}
+          />
+        </div>
+      ) : block.type === "Rectangle" ? (
+        /* Rectangle Block - visual representation */
+        <div 
+          className="w-full h-full pointer-events-none"
+          style={{
+            border: `${block.config?.strokeWidth || 1}px ${block.config?.strokeStyle === 'dashed' ? 'dashed' : block.config?.strokeStyle === 'dotted' ? 'dotted' : 'solid'} ${block.config?.strokeColor || '#000000'}`,
+            backgroundColor: block.config?.fillColor || 'transparent',
+            borderRadius: `${block.config?.borderRadius || 0}px`,
+            boxSizing: 'border-box',
+          }}
+        />
+      ) : (
+        /* Default text display for other block types */
+        <div className="text-[9px] font-medium truncate pointer-events-none">
+          {block.type === "Image" 
+            ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
+            : block.type === "Text" 
+              ? (block.config?.text || 'Tekst...') 
+              : block.type === "Data Field" && block.config?.tableName && block.config?.fieldName
+                ? `${block.config.tableName}.${block.config.fieldName}`
+                : block.type === "Company Header"
+                  ? (block.config?.company?.name || 'Company Name')
+                  : block.type === "Document Title"
+                    ? (block.config?.text || 'Document Title')
+                    : block.type === "Date Block"
+                      ? (block.config?.dateSource === 'quotation' ? 'Offertedatum' : block.config?.dateSource === 'validUntil' ? 'Geldig tot' : block.config?.dateSource === 'custom' ? 'Handmatig' : 'Vandaag')
+                      : block.type === "Text Block"
+                        ? (block.config?.text || 'Text Block')
+                        : block.type}
+        </div>
+      )}
     </div>
   );
 }
