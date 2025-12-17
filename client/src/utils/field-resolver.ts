@@ -111,9 +111,10 @@ export function formatFieldValue(value: any, format: string = 'text'): string {
       if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
         return '';
       }
+      // Format as DD/MM/YYYY
       return new Intl.DateTimeFormat('nl-NL', {
         day: '2-digit',
-        month: 'long',
+        month: '2-digit',
         year: 'numeric',
       }).format(date);
 

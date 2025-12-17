@@ -212,7 +212,7 @@ export function DateBlockRenderer({ block, printData }: BlockRendererProps) {
   const formattedDate = dateValue && !isNaN(dateValue.getTime())
     ? dateValue.toLocaleDateString('nl-NL', {
         day: '2-digit',
-        month: 'long',
+        month: '2-digit',
         year: 'numeric',
       })
     : '';
