@@ -3786,26 +3786,6 @@ function SectionProperties({
         />
       </div>
 
-      {/* Position */}
-      <div>
-        <Label htmlFor="section-position" className="text-xs">Positie</Label>
-        <Select
-          value={currentIndex.toString()}
-          onValueChange={(value) => onReorderSection(section.id, parseInt(value))}
-        >
-          <SelectTrigger className="h-8 text-xs" id="section-position">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {sortedSections.map((s, index) => (
-              <SelectItem key={s.id} value={index.toString()}>
-                {index + 1}. {s.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Height */}
       <div>
         <Label htmlFor="section-height" className="text-xs">Hoogte (mm)</Label>
