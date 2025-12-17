@@ -625,8 +625,10 @@ function VisualDesignerView({ layout }: { layout: any }) {
           dimensions: section.config?.dimensions || { height: 200, unit: 'px' },
           style: section.config?.style || {},
           blocks: section.config?.blocks || [],
-          layoutGrid: section.config?.layoutGrid, // Preserve layout grid settings
+          layoutGrid: section.config?.layoutGrid,
           metadata: section.config?.metadata || {},
+          canGrow: section.config?.canGrow || false,
+          canShrink: section.config?.canShrink || false,
         },
       }));
       setSections(loadedSections.sort((a, b) => a.position - b.position));
