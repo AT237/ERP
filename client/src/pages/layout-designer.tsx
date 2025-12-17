@@ -547,6 +547,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [showNewSectionDialog, setShowNewSectionDialog] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
   const [newSectionType, setNewSectionType] = useState('custom');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [showTableSelectorDialog, setShowTableSelectorDialog] = useState(false);
   const [allowedTables, setAllowedTables] = useState<string[]>(layout?.allowedTables || []);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
@@ -614,6 +615,10 @@ function VisualDesignerView({ layout }: { layout: any }) {
     enabled: !!layout?.id,
   });
 
+  const { data: sectionTemplates = [] } = useQuery<any[]>({
+    queryKey: ['/api/section-templates'],
+  });
+
   // Load sections into state when they're fetched
   useEffect(() => {
     if (existingSections && existingSections.length > 0 && sections.length === 0) {
@@ -662,12 +667,22 @@ function VisualDesignerView({ layout }: { layout: any }) {
       return;
     }
 
+    // Check if a template is selected
+    const selectedTemplate = sectionTemplates.find((t: any) => t.id === selectedTemplateId);
+    const templateConfig = selectedTemplate?.config;
+
     const newSection = {
       id: `section-${Date.now()}`,
       name: newSectionName,
       sectionType: newSectionType,
       position: sections.length,
-      config: {
+      config: templateConfig ? {
+        ...templateConfig.sectionConfig,
+        blocks: (templateConfig.blocks || []).map((b: any) => ({
+          ...b,
+          id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        })),
+      } : {
         printRules: { everyPage: true },
         dimensions: { height: 200, unit: 'px' as const },
         style: { backgroundColor: '#ffffff' },
@@ -681,6 +696,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
     setShowNewSectionDialog(false);
     setNewSectionName('');
     setNewSectionType('custom');
+    setSelectedTemplateId('');
   };
 
   // Save layout mutation
@@ -1830,6 +1846,28 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 </SelectContent>
               </Select>
             </div>
+
+            {sectionTemplates.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="section-template">Opgeslagen Template</Label>
+                <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                  <SelectTrigger id="section-template">
+                    <SelectValue placeholder="Geen template (lege sectie)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Geen template (lege sectie)</SelectItem>
+                    {sectionTemplates.map((template: any) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Selecteer een opgeslagen template om de sectie mee te vullen
+                </p>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
