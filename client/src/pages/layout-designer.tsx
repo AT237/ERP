@@ -3187,11 +3187,13 @@ function BlockProperties({
           </div>
         </div>
 
-        {/* Can Grow / Can Shrink for blocks - organized by dimension */}
-        <div className="space-y-3 pt-2">
+        {/* Dynamic Layout Section - combined */}
+        <div className="space-y-3 pt-2 border-t">
+          <div className="text-xs font-bold text-orange-600">Dynamisch</div>
+          
           {/* Height behavior */}
           <div className="space-y-1">
-            <Label className="text-xs font-semibold">Height</Label>
+            <Label className="text-xs font-medium">Hoogte</Label>
             <div className="flex items-center gap-4">
               <div className="flex items-center space-x-1">
                 <input
@@ -3201,7 +3203,7 @@ function BlockProperties({
                   onChange={(e) => updateConfig('heightCanGrow', e.target.checked)}
                   className="h-3.5 w-3.5"
                 />
-                <Label htmlFor="block-height-can-grow" className="text-[10px] font-normal">Can grow</Label>
+                <Label htmlFor="block-height-can-grow" className="text-xs font-normal">Kan groeien</Label>
               </div>
               <div className="flex items-center space-x-1">
                 <input
@@ -3211,14 +3213,14 @@ function BlockProperties({
                   onChange={(e) => updateConfig('heightCanShrink', e.target.checked)}
                   className="h-3.5 w-3.5"
                 />
-                <Label htmlFor="block-height-can-shrink" className="text-[10px] font-normal">Can shrink</Label>
+                <Label htmlFor="block-height-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
               </div>
             </div>
           </div>
           
           {/* Width behavior */}
           <div className="space-y-1">
-            <Label className="text-xs font-semibold">Width</Label>
+            <Label className="text-xs font-medium">Breedte</Label>
             <div className="flex items-center gap-4">
               <div className="flex items-center space-x-1">
                 <input
@@ -3228,7 +3230,7 @@ function BlockProperties({
                   onChange={(e) => updateConfig('widthCanGrow', e.target.checked)}
                   className="h-3.5 w-3.5"
                 />
-                <Label htmlFor="block-width-can-grow" className="text-[10px] font-normal">Can grow</Label>
+                <Label htmlFor="block-width-can-grow" className="text-xs font-normal">Kan groeien</Label>
               </div>
               <div className="flex items-center space-x-1">
                 <input
@@ -3238,10 +3240,11 @@ function BlockProperties({
                   onChange={(e) => updateConfig('widthCanShrink', e.target.checked)}
                   className="h-3.5 w-3.5"
                 />
-                <Label htmlFor="block-width-can-shrink" className="text-[10px] font-normal">Can shrink</Label>
+                <Label htmlFor="block-width-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
               </div>
             </div>
           </div>
+
           {/* Lock Aspect Ratio - only for Image blocks */}
           {block.type === "Image" && (
             <div className="flex items-center space-x-2">
@@ -3260,31 +3263,24 @@ function BlockProperties({
                     aspectRatio: isLocked ? aspectRatio : block.config?.aspectRatio
                   });
                 }}
-                className="h-4 w-4"
+                className="h-3.5 w-3.5"
               />
               <Label htmlFor="lock-aspect-ratio" className="text-xs font-normal">Vergrendel verhouding</Label>
             </div>
           )}
-        </div>
 
-        {/* Dynamic Layout Options */}
-        <div className="space-y-2 pt-2 border-t">
-          <div className="text-xs font-bold">Dynamische layout</div>
-          <div className="flex items-center space-x-2">
+          {/* Collapse when empty */}
+          <div className="flex items-center space-x-2 pt-1">
             <input
               type="checkbox"
               id="collapse-when-empty"
               checked={block.config?.collapseWhenEmpty || false}
               onChange={(e) => updateConfig('collapseWhenEmpty', e.target.checked)}
-              className="h-4 w-4"
+              className="h-3.5 w-3.5"
               data-testid="checkbox-collapse-when-empty"
             />
             <Label htmlFor="collapse-when-empty" className="text-xs font-normal">Verbergen als leeg</Label>
           </div>
-          <div className="text-[10px] text-muted-foreground pl-6">
-            Blok verdwijnt als alle velden leeg zijn
-          </div>
-          
         </div>
       </div>
 
@@ -3725,7 +3721,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
     <div className="space-y-4">
       {/* Name */}
       <div>
-        <Label htmlFor="section-name" className="text-xs">Name</Label>
+        <Label htmlFor="section-name" className="text-xs">Naam</Label>
         <Input
           id="section-name"
           value={section.name}
@@ -3736,7 +3732,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
 
       {/* Height */}
       <div>
-        <Label htmlFor="section-height" className="text-xs">Height (mm)</Label>
+        <Label htmlFor="section-height" className="text-xs">Hoogte (mm)</Label>
         <Input
           id="section-height"
           type="number"
@@ -3751,11 +3747,13 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
         />
       </div>
 
-      {/* Can Grow / Can Shrink - organized by dimension */}
-      <div className="space-y-3">
+      {/* Dynamic Section */}
+      <div className="space-y-3 pt-2 border-t">
+        <div className="text-xs font-bold text-orange-600">Dynamisch</div>
+        
         {/* Height behavior */}
         <div className="space-y-1">
-          <Label className="text-xs font-semibold">Height</Label>
+          <Label className="text-xs font-medium">Hoogte</Label>
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-1">
               <input
@@ -3765,7 +3763,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
                 onChange={(e) => onUpdateProperty(section.id, 'config.heightCanGrow', e.target.checked)}
                 className="h-3.5 w-3.5"
               />
-              <Label htmlFor="section-height-can-grow" className="text-[10px] font-normal">Can grow</Label>
+              <Label htmlFor="section-height-can-grow" className="text-xs font-normal">Kan groeien</Label>
             </div>
             <div className="flex items-center space-x-1">
               <input
@@ -3775,14 +3773,14 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
                 onChange={(e) => onUpdateProperty(section.id, 'config.heightCanShrink', e.target.checked)}
                 className="h-3.5 w-3.5"
               />
-              <Label htmlFor="section-height-can-shrink" className="text-[10px] font-normal">Can shrink</Label>
+              <Label htmlFor="section-height-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
             </div>
           </div>
         </div>
         
         {/* Width behavior */}
         <div className="space-y-1">
-          <Label className="text-xs font-semibold">Width</Label>
+          <Label className="text-xs font-medium">Breedte</Label>
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-1">
               <input
@@ -3792,7 +3790,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
                 onChange={(e) => onUpdateProperty(section.id, 'config.widthCanGrow', e.target.checked)}
                 className="h-3.5 w-3.5"
               />
-              <Label htmlFor="section-width-can-grow" className="text-[10px] font-normal">Can grow</Label>
+              <Label htmlFor="section-width-can-grow" className="text-xs font-normal">Kan groeien</Label>
             </div>
             <div className="flex items-center space-x-1">
               <input
@@ -3802,7 +3800,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
                 onChange={(e) => onUpdateProperty(section.id, 'config.widthCanShrink', e.target.checked)}
                 className="h-3.5 w-3.5"
               />
-              <Label htmlFor="section-width-can-shrink" className="text-[10px] font-normal">Can shrink</Label>
+              <Label htmlFor="section-width-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
             </div>
           </div>
         </div>
@@ -3810,7 +3808,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
 
       {/* Background Color */}
       <div>
-        <Label htmlFor="section-bg" className="text-xs">Background Color</Label>
+        <Label htmlFor="section-bg" className="text-xs">Achtergrondkleur</Label>
         <Input
           id="section-bg"
           type="color"
@@ -3822,7 +3820,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
 
       {/* Print Rules */}
       <div className="space-y-2">
-        <Label className="text-xs font-semibold">Print Rules</Label>
+        <Label className="text-xs font-semibold">Afdrukregels</Label>
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <input
@@ -3830,9 +3828,9 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               id="print-every"
               checked={section.config.printRules?.everyPage || false}
               onChange={(e) => onUpdateProperty(section.id, 'config.printRules.everyPage', e.target.checked)}
-              className="h-4 w-4"
+              className="h-3.5 w-3.5"
             />
-            <Label htmlFor="print-every" className="text-xs font-normal">Every page</Label>
+            <Label htmlFor="print-every" className="text-xs font-normal">Elke pagina</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -3840,9 +3838,9 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               id="print-first"
               checked={section.config.printRules?.firstPage || false}
               onChange={(e) => onUpdateProperty(section.id, 'config.printRules.firstPage', e.target.checked)}
-              className="h-4 w-4"
+              className="h-3.5 w-3.5"
             />
-            <Label htmlFor="print-first" className="text-xs font-normal">First page only</Label>
+            <Label htmlFor="print-first" className="text-xs font-normal">Alleen eerste pagina</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -3850,9 +3848,9 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               id="print-last"
               checked={section.config.printRules?.lastPage || false}
               onChange={(e) => onUpdateProperty(section.id, 'config.printRules.lastPage', e.target.checked)}
-              className="h-4 w-4"
+              className="h-3.5 w-3.5"
             />
-            <Label htmlFor="print-last" className="text-xs font-normal">Last page only</Label>
+            <Label htmlFor="print-last" className="text-xs font-normal">Alleen laatste pagina</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -3860,9 +3858,9 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               id="print-odd"
               checked={section.config.printRules?.oddPages || false}
               onChange={(e) => onUpdateProperty(section.id, 'config.printRules.oddPages', e.target.checked)}
-              className="h-4 w-4"
+              className="h-3.5 w-3.5"
             />
-            <Label htmlFor="print-odd" className="text-xs font-normal">Odd pages only</Label>
+            <Label htmlFor="print-odd" className="text-xs font-normal">Alleen oneven pagina's</Label>
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -3870,16 +3868,16 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               id="print-even"
               checked={section.config.printRules?.evenPages || false}
               onChange={(e) => onUpdateProperty(section.id, 'config.printRules.evenPages', e.target.checked)}
-              className="h-4 w-4"
+              className="h-3.5 w-3.5"
             />
-            <Label htmlFor="print-even" className="text-xs font-normal">Even pages only</Label>
+            <Label htmlFor="print-even" className="text-xs font-normal">Alleen even pagina's</Label>
           </div>
         </div>
       </div>
 
       {/* Layout Grid */}
       <div className="space-y-2 border-t pt-4">
-        <Label className="text-xs font-semibold">Height Division</Label>
+        <Label className="text-xs font-semibold">Hoogteverdeling</Label>
         <div className="space-y-3">
           {/* Enable Grid Toggle */}
           <div className="flex items-center space-x-2">
@@ -3894,16 +3892,16 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
                   onUpdateProperty(section.id, 'config.layoutGrid', undefined);
                 }
               }}
-              className="h-4 w-4"
+              className="h-3.5 w-3.5"
             />
-            <Label htmlFor="grid-enabled" className="text-xs font-normal">Enable grid</Label>
+            <Label htmlFor="grid-enabled" className="text-xs font-normal">Raster inschakelen</Label>
           </div>
 
           {/* Grid Settings (only show when enabled) */}
           {section.config.layoutGrid && (
             <>
               <div>
-                <Label htmlFor="grid-rows" className="text-xs">Number of rows</Label>
+                <Label htmlFor="grid-rows" className="text-xs">Aantal rijen</Label>
                 <Input
                   id="grid-rows"
                   type="number"
@@ -3916,7 +3914,7 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
               </div>
 
               <div>
-                <Label htmlFor="grid-gutter" className="text-xs">Gutter (mm)</Label>
+                <Label htmlFor="grid-gutter" className="text-xs">Tussenruimte (mm)</Label>
                 <Input
                   id="grid-gutter"
                   type="number"
