@@ -258,6 +258,8 @@ export default function Projects() {
         // Sorting
         sortConfig={tableState.sortConfig}
         onSort={tableState.handleSort}
+        applyFiltersAndSearch={tableState.applyFiltersAndSearch}
+        applySorting={tableState.applySorting}
         
         // Row selection
         selectedRows={tableState.selectedRows}
