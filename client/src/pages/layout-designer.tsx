@@ -2941,6 +2941,52 @@ function BlockProperties({
         <div className="text-sm font-bold">Section: {currentSection?.name || 'Unknown'}</div>
       </div>
 
+      {/* Group Block Properties - Show first for groups */}
+      {block.type === "Group" && (
+        <div className="space-y-3 pb-3 border-b">
+          <div className="text-xs font-bold text-orange-600">Groep Eigenschappen</div>
+          
+          {/* Group Name */}
+          <div>
+            <Label htmlFor="group-name" className="text-xs">Groepnaam</Label>
+            <Input
+              id="group-name"
+              value={block.config?.groupName || ''}
+              onChange={(e) => updateConfig('groupName', e.target.value)}
+              placeholder="Groep"
+              className="h-8 text-xs"
+              data-testid="input-group-name"
+            />
+          </div>
+          
+          <div className="bg-orange-50 p-2 rounded text-xs">
+            <div className="font-medium mb-1">Bevat {block.config?.childBlocks?.length || 0} blokken</div>
+            {block.config?.childBlocks?.map((child: any, idx: number) => (
+              <div key={idx} className="text-muted-foreground pl-2">
+                • {child.type}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="collapse-empty"
+              checked={block.config?.collapseEmpty || false}
+              onChange={(e) => updateConfig('collapseEmpty', e.target.checked)}
+              className="h-4 w-4 accent-orange-500"
+              data-testid="checkbox-collapse-empty"
+            />
+            <Label htmlFor="collapse-empty" className="text-xs font-normal">
+              Opschuiven bij lege velden
+            </Label>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Als aangevinkt, schuiven onderliggende blokken omhoog wanneer een blok in deze groep leeg is (geen data).
+          </p>
+        </div>
+      )}
+
       {/* Position - Always first for all blocks */}
       <div className="space-y-3">
         <div className="text-xs font-bold">Position</div>
@@ -3652,52 +3698,6 @@ function BlockProperties({
               />
             </div>
           )}
-        </div>
-      )}
-
-      {/* Group Block Properties */}
-      {block.type === "Group" && (
-        <div className="space-y-3">
-          <div className="text-xs font-bold text-orange-600">Groep Eigenschappen</div>
-          
-          {/* Group Name */}
-          <div>
-            <Label htmlFor="group-name" className="text-xs">Groepnaam</Label>
-            <Input
-              id="group-name"
-              value={block.config?.groupName || ''}
-              onChange={(e) => updateConfig('groupName', e.target.value)}
-              placeholder="Groep"
-              className="h-8 text-xs"
-              data-testid="input-group-name"
-            />
-          </div>
-          
-          <div className="bg-orange-50 p-2 rounded text-xs">
-            <div className="font-medium mb-1">Bevat {block.config?.childBlocks?.length || 0} blokken</div>
-            {block.config?.childBlocks?.map((child: any, idx: number) => (
-              <div key={idx} className="text-muted-foreground pl-2">
-                • {child.type}
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="collapse-empty"
-              checked={block.config?.collapseEmpty || false}
-              onChange={(e) => updateConfig('collapseEmpty', e.target.checked)}
-              className="h-4 w-4 accent-orange-500"
-              data-testid="checkbox-collapse-empty"
-            />
-            <Label htmlFor="collapse-empty" className="text-xs font-normal">
-              Opschuiven bij lege velden
-            </Label>
-          </div>
-          <p className="text-[10px] text-muted-foreground">
-            Als aangevinkt, schuiven onderliggende blokken omhoog wanneer een blok in deze groep leeg is (geen data).
-          </p>
         </div>
       )}
 
