@@ -2258,7 +2258,23 @@ function VisualDesignerView({ layout }: { layout: any }) {
             {selectedSection ? (
               <SectionProperties 
                 section={selectedSection}
+                sections={sections}
                 onUpdateProperty={updateSectionProperty}
+                onReorderSection={(sectionId, newPosition) => {
+                  setSections(prev => {
+                    const sectionToMove = prev.find(s => s.id === sectionId);
+                    if (!sectionToMove) return prev;
+                    
+                    // Remove section from current position
+                    const filtered = prev.filter(s => s.id !== sectionId);
+                    
+                    // Insert at new position
+                    filtered.splice(newPosition, 0, sectionToMove);
+                    
+                    // Renumber all positions
+                    return filtered.map((s, index) => ({ ...s, position: index }));
+                  });
+                }}
               />
             ) : selectedChildBlock ? (
               // Child block properties - show within context of parent group
@@ -3713,7 +3729,20 @@ function BlockProperties({
 }
 
 // Section Properties Component
-function SectionProperties({ section, onUpdateProperty }: { section: any; onUpdateProperty: (id: string, path: string, value: any) => void }) {
+function SectionProperties({ 
+  section, 
+  sections,
+  onUpdateProperty,
+  onReorderSection 
+}: { 
+  section: any; 
+  sections: any[];
+  onUpdateProperty: (id: string, path: string, value: any) => void;
+  onReorderSection: (sectionId: string, newPosition: number) => void;
+}) {
+  const sortedSections = [...sections].sort((a, b) => a.position - b.position);
+  const currentIndex = sortedSections.findIndex(s => s.id === section.id);
+  
   return (
     <div className="space-y-4">
       {/* Name */}
@@ -3725,6 +3754,26 @@ function SectionProperties({ section, onUpdateProperty }: { section: any; onUpda
           onChange={(e) => onUpdateProperty(section.id, 'name', e.target.value)}
           className="h-8 text-xs"
         />
+      </div>
+
+      {/* Position */}
+      <div>
+        <Label htmlFor="section-position" className="text-xs">Positie</Label>
+        <Select
+          value={currentIndex.toString()}
+          onValueChange={(value) => onReorderSection(section.id, parseInt(value))}
+        >
+          <SelectTrigger className="h-8 text-xs" id="section-position">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {sortedSections.map((s, index) => (
+              <SelectItem key={s.id} value={index.toString()}>
+                {index + 1}. {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Height */}
