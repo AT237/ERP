@@ -4163,6 +4163,13 @@ function SectionProperties({
   const saveTemplateMutation = useMutation({
     mutationFn: async (data: { name: string; config: any }) => {
       const response = await apiRequest('POST', '/api/section-templates', data);
+      if (!response.ok) {
+        const errorText = await response.text();
+        if (response.status === 413 || errorText.includes('too large')) {
+          throw new Error('Template is te groot om op te slaan. Verwijder grote afbeeldingen of verminder het aantal blokken.');
+        }
+        throw new Error(errorText || 'Kon template niet opslaan.');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -4171,8 +4178,8 @@ function SectionProperties({
       setTemplateName('');
       refetchTemplates();
     },
-    onError: () => {
-      toast({ title: 'Fout', description: 'Kon template niet opslaan.', variant: 'destructive' });
+    onError: (error: Error) => {
+      toast({ title: 'Fout bij opslaan', description: error.message, variant: 'destructive' });
     }
   });
 
@@ -4180,6 +4187,13 @@ function SectionProperties({
     mutationFn: async ({ id, config }: { id: string; config: any }) => {
       await apiRequest('DELETE', `/api/section-templates/${id}`);
       const response = await apiRequest('POST', '/api/section-templates', config);
+      if (!response.ok) {
+        const errorText = await response.text();
+        if (response.status === 413 || errorText.includes('too large')) {
+          throw new Error('Template is te groot om op te slaan. Verwijder grote afbeeldingen of verminder het aantal blokken.');
+        }
+        throw new Error(errorText || 'Kon template niet overschrijven.');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -4187,8 +4201,8 @@ function SectionProperties({
       setShowOverwriteConfirm(null);
       refetchTemplates();
     },
-    onError: () => {
-      toast({ title: 'Fout', description: 'Kon template niet overschrijven.', variant: 'destructive' });
+    onError: (error: Error) => {
+      toast({ title: 'Fout bij overschrijven', description: error.message, variant: 'destructive' });
     }
   });
 
