@@ -2439,6 +2439,24 @@ function VisualDesignerView({ layout }: { layout: any }) {
                     return filtered.map((s, index) => ({ ...s, position: index }));
                   });
                 }}
+                onLoadTemplate={(sectionId, templateConfig) => {
+                  setSections(prev => prev.map(s => {
+                    if (s.id !== sectionId) return s;
+                    const newBlocks = (templateConfig.blocks || []).map((b: any) => ({
+                      ...b,
+                      id: crypto.randomUUID()
+                    }));
+                    return {
+                      ...s,
+                      name: templateConfig.sectionName || s.name,
+                      config: {
+                        ...s.config,
+                        ...(templateConfig.sectionConfig || {}),
+                        blocks: newBlocks.length > 0 ? newBlocks : s.config.blocks
+                      }
+                    };
+                  }));
+                }}
               />
             ) : selectedChildBlock ? (
               // Child block properties - show within context of parent group
@@ -4084,15 +4102,70 @@ function SectionProperties({
   section, 
   sections,
   onUpdateProperty,
-  onReorderSection 
+  onReorderSection,
+  onLoadTemplate
 }: { 
   section: any; 
   sections: any[];
   onUpdateProperty: (id: string, path: string, value: any) => void;
   onReorderSection: (sectionId: string, newPosition: number) => void;
+  onLoadTemplate?: (sectionId: string, templateConfig: any) => void;
 }) {
   const sortedSections = [...sections].sort((a, b) => a.position - b.position);
   const currentIndex = sortedSections.findIndex(s => s.id === section.id);
+  const [templateName, setTemplateName] = useState('');
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const { toast } = useToast();
+  
+  const { data: templates = [], refetch: refetchTemplates } = useQuery({
+    queryKey: ['/api/section-templates']
+  });
+  
+  const saveTemplateMutation = useMutation({
+    mutationFn: async (data: { name: string; config: any }) => {
+      const response = await apiRequest('POST', '/api/section-templates', data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: 'Template opgeslagen', description: 'De sectie is opgeslagen als template.' });
+      setShowSaveDialog(false);
+      setTemplateName('');
+      refetchTemplates();
+    },
+    onError: () => {
+      toast({ title: 'Fout', description: 'Kon template niet opslaan.', variant: 'destructive' });
+    }
+  });
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest('DELETE', `/api/section-templates/${id}`);
+    },
+    onSuccess: () => {
+      toast({ title: 'Template verwijderd' });
+      refetchTemplates();
+    }
+  });
+
+  const handleSaveAsTemplate = () => {
+    if (!templateName.trim()) {
+      toast({ title: 'Voer een naam in', variant: 'destructive' });
+      return;
+    }
+    const templateConfig = {
+      sectionName: section.name,
+      sectionConfig: section.config,
+      blocks: section.config.blocks || []
+    };
+    saveTemplateMutation.mutate({ name: templateName.trim(), config: templateConfig });
+  };
+
+  const handleLoadTemplate = (template: any) => {
+    if (onLoadTemplate && template.config) {
+      onLoadTemplate(section.id, template.config);
+      toast({ title: 'Template geladen', description: `"${template.name}" toegepast op sectie.` });
+    }
+  };
   
   return (
     <div className="space-y-4">
@@ -4383,6 +4456,85 @@ function SectionProperties({
             </>
           )}
         </div>
+      </div>
+
+      {/* Section Templates */}
+      <div className="space-y-2 border-t pt-4">
+        <Label className="text-xs font-semibold flex items-center gap-1">
+          <Save className="h-3 w-3" />
+          Sectie Templates
+        </Label>
+        
+        {/* Load Template */}
+        {(templates as any[]).length > 0 && (
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Template laden</Label>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {(templates as any[]).map((template: any) => (
+                <div key={template.id} className="flex items-center justify-between gap-1 p-1.5 rounded border hover:bg-accent/50">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs flex-1 justify-start"
+                    onClick={() => handleLoadTemplate(template)}
+                  >
+                    {template.name}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                    onClick={() => deleteTemplateMutation.mutate(template.id)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Save as Template */}
+        {!showSaveDialog ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full h-7 text-xs"
+            onClick={() => setShowSaveDialog(true)}
+          >
+            <Save className="h-3 w-3 mr-1" />
+            Opslaan als template
+          </Button>
+        ) : (
+          <div className="space-y-2">
+            <Input
+              placeholder="Template naam..."
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              className="h-7 text-xs"
+              autoFocus
+            />
+            <div className="flex gap-1">
+              <Button
+                variant="default"
+                size="sm"
+                className="flex-1 h-7 text-xs bg-orange-500 hover:bg-orange-600"
+                onClick={handleSaveAsTemplate}
+                disabled={saveTemplateMutation.isPending}
+              >
+                {saveTemplateMutation.isPending ? 'Opslaan...' : 'Opslaan'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => { setShowSaveDialog(false); setTemplateName(''); }}
+              >
+                Annuleren
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
