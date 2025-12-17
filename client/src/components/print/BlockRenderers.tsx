@@ -1,5 +1,5 @@
 // Block renderer components for layout preview
-import { resolveAndFormat, PrintData } from '@/utils/field-resolver';
+import { resolveAndFormat, PrintData, replacePlaceholders, blockHasContent } from '@/utils/field-resolver';
 
 export interface BlockRendererProps {
   block: any;
@@ -67,12 +67,9 @@ export function replaceTextVariables(
     .replace(/\[DATUM\]/g, documentDateFormatted)
     .replace(/\[JAAR\]/g, String(today.getFullYear()));
 
-  // Replace data field placeholders: {{tableName.fieldName}} or {{tableName.subTable.fieldName}}
-  // Support nested fields like {{customer.address.city}}
-  result = result.replace(/\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)+)\}\}/g, (match, fieldPath) => {
-    const value = resolveAndFormat(fieldPath, printData, 'text');
-    return value || match; // Return original if not found
-  });
+  // Replace data field placeholders using the improved replacePlaceholders function
+  // This removes empty placeholders and cleans up extra whitespace
+  result = replacePlaceholders(result, printData);
 
   return result;
 }

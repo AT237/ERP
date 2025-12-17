@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline, Copy, Trash2 } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES } from '@/components/print/BlockRenderers';
-import type { PrintData } from '@/utils/field-resolver';
+import { PrintData, blockHasContent } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -2296,6 +2296,85 @@ function PreviewView({ layout }: { layout: any }) {
   );
 }
 
+// Helper function to calculate dynamic block positions with shift groups
+function calculateDynamicPositions(
+  blocks: any[], 
+  printData: PrintData
+): Map<string, { y: number; visible: boolean }> {
+  const positions = new Map<string, { y: number; visible: boolean }>();
+  
+  // First pass: determine which blocks are visible
+  const blockVisibility = new Map<string, boolean>();
+  for (const block of blocks) {
+    const hasContent = blockHasContent(block, printData);
+    const shouldCollapse = block.config?.collapseWhenEmpty && !hasContent;
+    blockVisibility.set(block.id, !shouldCollapse);
+  }
+  
+  // Group blocks by shiftGroup
+  const shiftGroups = new Map<string, any[]>();
+  for (const block of blocks) {
+    const group = block.config?.shiftGroup;
+    if (group) {
+      if (!shiftGroups.has(group)) {
+        shiftGroups.set(group, []);
+      }
+      shiftGroups.get(group)!.push(block);
+    }
+  }
+  
+  // For each shift group, calculate cumulative offset from collapsed blocks
+  const groupOffsets = new Map<string, number>();
+  Array.from(shiftGroups.entries()).forEach(([groupName, groupBlocks]) => {
+    // Sort blocks by Y position within the group
+    const sortedBlocks = [...groupBlocks].sort((a, b) => 
+      (a.position?.y || 0) - (b.position?.y || 0)
+    );
+    
+    let cumulativeOffset = 0;
+    for (const block of sortedBlocks) {
+      const isVisible = blockVisibility.get(block.id) ?? true;
+      if (!isVisible) {
+        // Add this block's height to the offset for blocks below
+        cumulativeOffset += block.size?.height || 0;
+      }
+    }
+    groupOffsets.set(groupName, cumulativeOffset);
+  });
+  
+  // Second pass: calculate adjusted Y positions
+  for (const block of blocks) {
+    const isVisible = blockVisibility.get(block.id) ?? true;
+    let adjustedY = block.position?.y || 0;
+    
+    if (isVisible && block.config?.shiftGroup) {
+      const group = block.config.shiftGroup;
+      const groupBlocks = shiftGroups.get(group) || [];
+      
+      // Sort blocks in this group by Y position
+      const sortedBlocks = [...groupBlocks].sort((a, b) => 
+        (a.position?.y || 0) - (b.position?.y || 0)
+      );
+      
+      // Calculate offset from collapsed blocks above this one
+      let offsetFromAbove = 0;
+      for (const otherBlock of sortedBlocks) {
+        if ((otherBlock.position?.y || 0) < (block.position?.y || 0)) {
+          const otherVisible = blockVisibility.get(otherBlock.id) ?? true;
+          if (!otherVisible) {
+            offsetFromAbove += otherBlock.size?.height || 0;
+          }
+        }
+      }
+      adjustedY -= offsetFromAbove;
+    }
+    
+    positions.set(block.id, { y: adjustedY, visible: isVisible });
+  }
+  
+  return positions;
+}
+
 // Layout Preview Renderer Component
 function LayoutPreview({ layout, sections, printData }: { layout: any; sections: any[]; printData: any }) {
   if (!printData) {
@@ -2321,6 +2400,11 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
     <div className="font-['Arial',sans-serif]">
       {sections.map((section: any) => {
         const sectionHeight = section.config?.dimensions?.height || 200;
+        const blocks = section.config?.blocks || [];
+        
+        // Calculate dynamic positions for blocks in this section
+        const dynamicPositions = calculateDynamicPositions(blocks, typedPrintData);
+        
         return (
         <div
           key={section.id}
@@ -2338,14 +2422,23 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
           }}
         >
           {/* Render blocks within section */}
-          {section.config?.blocks?.length > 0 ? (
+          {blocks.length > 0 ? (
             <>
-              {section.config.blocks.map((block: any, index: number) => {
+              {blocks.map((block: any, index: number) => {
+                const dynamicPos = dynamicPositions.get(block.id);
+                
+                // Skip rendering if block should be collapsed
+                if (dynamicPos && !dynamicPos.visible) {
+                  return null;
+                }
+                
                 const BlockRenderer = BlockRenderers[block.type];
+                const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
+                
                 const blockStyle: React.CSSProperties = {
                   position: 'absolute',
                   left: `${mmToPx(block.position?.x || 0)}px`,
-                  top: `${mmToPx(block.position?.y || 0)}px`,
+                  top: `${mmToPx(adjustedY)}px`,
                   width: `${mmToPx(block.size?.width || 50)}px`,
                   height: `${mmToPx(block.size?.height || 25)}px`,
                 };
@@ -2702,6 +2795,41 @@ function BlockProperties({
               <Label htmlFor="lock-aspect-ratio" className="text-xs font-normal">Vergrendel verhouding</Label>
             </div>
           )}
+        </div>
+
+        {/* Dynamic Layout Options */}
+        <div className="space-y-2 pt-2 border-t">
+          <div className="text-xs font-bold">Dynamische layout</div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="collapse-when-empty"
+              checked={block.config?.collapseWhenEmpty || false}
+              onChange={(e) => updateConfig('collapseWhenEmpty', e.target.checked)}
+              className="h-4 w-4"
+              data-testid="checkbox-collapse-when-empty"
+            />
+            <Label htmlFor="collapse-when-empty" className="text-xs font-normal">Verbergen als leeg</Label>
+          </div>
+          <div className="text-[10px] text-muted-foreground pl-6">
+            Blok verdwijnt als alle velden leeg zijn
+          </div>
+          
+          <div className="pt-1">
+            <Label htmlFor="shift-group" className="text-xs font-normal">Verschuifgroep</Label>
+            <Input
+              id="shift-group"
+              type="text"
+              value={block.config?.shiftGroup || ''}
+              onChange={(e) => updateConfig('shiftGroup', e.target.value)}
+              placeholder="bijv. adres, contact"
+              className="h-7 text-xs mt-1"
+              data-testid="input-shift-group"
+            />
+            <div className="text-[10px] text-muted-foreground mt-1">
+              Blokken in dezelfde groep schuiven omhoog als een blok erboven leeg is
+            </div>
+          </div>
         </div>
       </div>
 
