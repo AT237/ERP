@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline, Copy, Trash2, Group, Ungroup } from 'lucide-react';
+import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline, Copy, Trash2, Group, Ungroup, Minus, Square } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES } from '@/components/print/BlockRenderers';
 import { PrintData, blockHasContent } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
@@ -1657,15 +1657,31 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 <TooltipTrigger asChild>
                   <div
                     draggable
-                    onDragStart={() => handleDragStart("Data Field")}
+                    onDragStart={() => handleDragStart("Line")}
                     className="h-8 w-8 flex items-center justify-center rounded cursor-grab hover:bg-muted transition-colors"
                   >
-                    <Table2 className="h-4 w-4" />
+                    <Minus className="h-4 w-4" />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="font-medium">Data Field</p>
-                  <p className="text-xs text-muted-foreground">Database field value</p>
+                  <p className="font-medium">Lijn</p>
+                  <p className="text-xs text-muted-foreground">Horizontale of verticale lijn</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    draggable
+                    onDragStart={() => handleDragStart("Rectangle")}
+                    className="h-8 w-8 flex items-center justify-center rounded cursor-grab hover:bg-muted transition-colors"
+                  >
+                    <Square className="h-4 w-4" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">Kader</p>
+                  <p className="text-xs text-muted-foreground">Rechthoek met rand</p>
                 </TooltipContent>
               </Tooltip>
 
@@ -2462,11 +2478,20 @@ function getDefaultConfig(blockType: string) {
         height: 100,
         fit: "contain", // 'contain', 'cover', 'fill'
       };
-    case "Data Field":
+    case "Line":
       return {
-        tableName: null, // Selected from allowedTables
-        fieldName: null, // Selected from table fields
-        label: "",
+        orientation: "horizontal", // 'horizontal' or 'vertical'
+        strokeWidth: 1,
+        strokeColor: "#000000",
+        strokeStyle: "solid", // 'solid', 'dashed', 'dotted'
+      };
+    case "Rectangle":
+      return {
+        strokeWidth: 1,
+        strokeColor: "#000000",
+        strokeStyle: "solid", // 'solid', 'dashed', 'dotted'
+        fillColor: "transparent",
+        borderRadius: 0,
       };
     case "Company Header":
       return {
@@ -3465,6 +3490,148 @@ function BlockProperties({
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Line Block Properties */}
+          {block.type === "Line" && (
+            <div className="space-y-3 border-t pt-3">
+              <div>
+                <Label htmlFor="line-orientation" className="text-xs">Richting</Label>
+                <Select 
+                  value={block.config?.orientation || 'horizontal'}
+                  onValueChange={(value) => updateConfig('orientation', value)}
+                >
+                  <SelectTrigger id="line-orientation" className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="horizontal">Horizontaal</SelectItem>
+                    <SelectItem value="vertical">Verticaal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label htmlFor="line-stroke-width" className="text-xs">Dikte (px)</Label>
+                  <Input
+                    id="line-stroke-width"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={block.config?.strokeWidth || 1}
+                    onChange={(e) => updateConfig('strokeWidth', parseInt(e.target.value) || 1)}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="line-stroke-color" className="text-xs">Kleur</Label>
+                  <input
+                    id="line-stroke-color"
+                    type="color"
+                    value={block.config?.strokeColor || '#000000'}
+                    onChange={(e) => updateConfig('strokeColor', e.target.value)}
+                    className="h-8 w-full p-1 border rounded cursor-pointer"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="line-stroke-style" className="text-xs">Stijl</Label>
+                <Select 
+                  value={block.config?.strokeStyle || 'solid'}
+                  onValueChange={(value) => updateConfig('strokeStyle', value)}
+                >
+                  <SelectTrigger id="line-stroke-style" className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="solid">Doorgetrokken</SelectItem>
+                    <SelectItem value="dashed">Gestreept</SelectItem>
+                    <SelectItem value="dotted">Gestippeld</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* Rectangle Block Properties */}
+          {block.type === "Rectangle" && (
+            <div className="space-y-3 border-t pt-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label htmlFor="rect-stroke-width" className="text-xs">Randdikte (px)</Label>
+                  <Input
+                    id="rect-stroke-width"
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={block.config?.strokeWidth || 1}
+                    onChange={(e) => updateConfig('strokeWidth', parseInt(e.target.value) || 1)}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="rect-stroke-color" className="text-xs">Randkleur</Label>
+                  <input
+                    id="rect-stroke-color"
+                    type="color"
+                    value={block.config?.strokeColor || '#000000'}
+                    onChange={(e) => updateConfig('strokeColor', e.target.value)}
+                    className="h-8 w-full p-1 border rounded cursor-pointer"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="rect-stroke-style" className="text-xs">Randstijl</Label>
+                <Select 
+                  value={block.config?.strokeStyle || 'solid'}
+                  onValueChange={(value) => updateConfig('strokeStyle', value)}
+                >
+                  <SelectTrigger id="rect-stroke-style" className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="solid">Doorgetrokken</SelectItem>
+                    <SelectItem value="dashed">Gestreept</SelectItem>
+                    <SelectItem value="dotted">Gestippeld</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label htmlFor="rect-fill-color" className="text-xs">Vulkleur</Label>
+                  <div className="flex gap-1">
+                    <input
+                      id="rect-fill-color"
+                      type="color"
+                      value={block.config?.fillColor === 'transparent' ? '#ffffff' : (block.config?.fillColor || '#ffffff')}
+                      onChange={(e) => updateConfig('fillColor', e.target.value)}
+                      className="h-8 flex-1 p-1 border rounded cursor-pointer"
+                    />
+                    <Button
+                      type="button"
+                      variant={block.config?.fillColor === 'transparent' ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-8 text-xs px-2"
+                      onClick={() => updateConfig('fillColor', 'transparent')}
+                    >
+                      Geen
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="rect-border-radius" className="text-xs">Hoekradius (px)</Label>
+                  <Input
+                    id="rect-border-radius"
+                    type="number"
+                    min="0"
+                    max="50"
+                    value={block.config?.borderRadius || 0}
+                    onChange={(e) => updateConfig('borderRadius', parseInt(e.target.value) || 0)}
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
             </div>
           )}
 

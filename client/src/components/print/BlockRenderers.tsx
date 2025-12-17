@@ -547,6 +547,63 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
   );
 }
 
+// Line Block - horizontal or vertical line
+export function LineBlockRenderer({ block }: BlockRendererProps) {
+  const { orientation = 'horizontal', strokeWidth = 1, strokeColor = '#000000', strokeStyle = 'solid' } = block.config || {};
+  
+  const borderStyle = strokeStyle === 'dashed' ? 'dashed' : strokeStyle === 'dotted' ? 'dotted' : 'solid';
+  
+  if (orientation === 'vertical') {
+    return (
+      <div 
+        style={{
+          width: `${strokeWidth}px`,
+          height: '100%',
+          backgroundColor: strokeColor,
+          borderStyle: borderStyle,
+        }}
+      />
+    );
+  }
+  
+  return (
+    <div 
+      style={{
+        width: '100%',
+        height: `${strokeWidth}px`,
+        backgroundColor: strokeColor,
+        borderStyle: borderStyle,
+      }}
+    />
+  );
+}
+
+// Rectangle Block - box with optional fill
+export function RectangleBlockRenderer({ block }: BlockRendererProps) {
+  const { 
+    strokeWidth = 1, 
+    strokeColor = '#000000', 
+    strokeStyle = 'solid',
+    fillColor = 'transparent',
+    borderRadius = 0,
+  } = block.config || {};
+  
+  const borderStyleValue = strokeStyle === 'dashed' ? 'dashed' : strokeStyle === 'dotted' ? 'dotted' : 'solid';
+  
+  return (
+    <div 
+      style={{
+        width: '100%',
+        height: '100%',
+        border: `${strokeWidth}px ${borderStyleValue} ${strokeColor}`,
+        backgroundColor: fillColor,
+        borderRadius: `${borderRadius}px`,
+        boxSizing: 'border-box',
+      }}
+    />
+  );
+}
+
 // Main block renderer map
 export const BlockRenderers: Record<string, React.FC<BlockRendererProps>> = {
   'Text': TextBlockRenderer,
@@ -561,6 +618,8 @@ export const BlockRenderers: Record<string, React.FC<BlockRendererProps>> = {
   'Totals Summary': TotalsSummaryRenderer,
   'Footer Block': FooterBlockRenderer,
   'Group': GroupBlockRenderer,
+  'Line': LineBlockRenderer,
+  'Rectangle': RectangleBlockRenderer,
 };
 
 // Fallback renderer for unknown block types
