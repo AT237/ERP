@@ -11,18 +11,28 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AddressSelectWithAdd } from "@/components/ui/address-select-with-add";
 import { ContactPersonSelectWithAdd } from "@/components/ui/contact-person-select-with-add";
 import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
 import { LanguageSelectWithAdd } from "@/components/ui/language-select-with-add";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
 import { PaymentScheduleSelectWithAdd } from "@/components/ui/payment-schedule-select-with-add";
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Users, User, Building, CreditCard, FileText } from "lucide-react";
+import { Save, ArrowLeft, Users, User, Building, CreditCard, FileText, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Customer, InsertCustomer, Country } from "@shared/schema";
 import { z } from "zod";
@@ -79,6 +89,34 @@ interface Memo {
   createdAt: Date;
 }
 
+// Field label mapping for validation dialog
+const fieldLabelMap: Record<string, { label: string; section: string }> = {
+  name: { label: "Company Name", section: "general" },
+  kvkNummer: { label: "KVK Number", section: "general" },
+  countryCode: { label: "Country", section: "general" },
+  areaCode: { label: "Area Code", section: "general" },
+  taxId: { label: "BTW Number", section: "general" },
+  email: { label: "Email", section: "general" },
+  phone: { label: "Phone", section: "general" },
+  mobile: { label: "Mobile", section: "general" },
+  addressId: { label: "Address", section: "general" },
+  languageCode: { label: "Language", section: "general" },
+  paymentTerms: { label: "Payment Terms", section: "payment" },
+  paymentDaysId: { label: "Payment Day", section: "payment" },
+  paymentScheduleId: { label: "Payment Schedule", section: "payment" },
+  invoiceEmail: { label: "Invoice Email", section: "invoicing" },
+  invoiceNotes: { label: "Invoice Notes", section: "invoicing" },
+  bankAccount: { label: "Bank Account", section: "payment" },
+  status: { label: "Status", section: "general" },
+};
+
+interface ValidationError {
+  field: string;
+  label: string;
+  message: string;
+  section: string;
+}
+
 export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFormLayoutProps) {
   const [activeTab, setActiveTab] = useState("general");
   const [activeSection, setActiveSection] = useState("general");
@@ -90,6 +128,10 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   const [originalValues, setOriginalValues] = useState<FormFieldValues>({});
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Validation dialog state
+  const [validationDialogOpen, setValidationDialogOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   
   const { toast } = useToast();
   const isEditing = !!customerId;
@@ -415,6 +457,44 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
     }
   };
 
+  // Handler for validation errors - shows dialog instead of toast
+  const onInvalid = (errors: FieldErrors) => {
+    const errorList: ValidationError[] = [];
+    
+    for (const [field, error] of Object.entries(errors)) {
+      const fieldInfo = fieldLabelMap[field] || { label: field, section: "general" };
+      errorList.push({
+        field,
+        label: fieldInfo.label,
+        message: (error as any)?.message || "Dit veld is verplicht",
+        section: fieldInfo.section,
+      });
+    }
+    
+    setValidationErrors(errorList);
+    setValidationDialogOpen(true);
+  };
+
+  // Handle "Show fields" action - navigate to first invalid field
+  const handleShowFields = () => {
+    if (validationErrors.length > 0) {
+      const firstError = validationErrors[0];
+      // Navigate to the section containing the first error
+      setActiveSection(firstError.section);
+      setActiveTab(firstError.section);
+      
+      // Try to focus the field after a short delay for DOM update
+      setTimeout(() => {
+        const fieldElement = document.querySelector(`[name="${firstError.field}"], [data-testid="input-customer-${firstError.field}"], [data-testid="select-${firstError.field}"]`) as HTMLElement;
+        if (fieldElement) {
+          fieldElement.focus();
+          fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+    setValidationDialogOpen(false);
+  };
+
   const handleAddMemo = () => {
     if (newMemo.title.trim() && newMemo.content.trim()) {
       const memo: Memo = {
@@ -451,7 +531,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       key: 'save',
       label: isEditing ? 'Update Customer' : 'Save Customer',
       icon: <Save size={14} />,
-      onClick: form.handleSubmit(onSubmit),
+      onClick: form.handleSubmit(onSubmit, onInvalid),
       variant: 'default',
       disabled: createMutation.isPending || updateMutation.isPending,
       loading: createMutation.isPending || updateMutation.isPending,
@@ -766,6 +846,41 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         }}
         isLoading={isLoadingCustomer}
       />
+
+      {/* Validation Error Dialog */}
+      <AlertDialog open={validationDialogOpen} onOpenChange={setValidationDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Verplichte velden ontbreken
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>De volgende velden moeten nog ingevuld worden:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  {validationErrors.map((error, index) => (
+                    <li key={index} className="text-sm">
+                      <span className="font-medium">{error.label}</span>
+                      {error.message !== "Dit veld is verplicht" && (
+                        <span className="text-muted-foreground"> - {error.message}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setValidationDialogOpen(false)}>
+              Negeren
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleShowFields} className="bg-orange-600 hover:bg-orange-700">
+              Toon velden
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
