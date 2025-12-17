@@ -3867,83 +3867,104 @@ function SectionProperties({
       {/* Print Rules */}
       <div className="space-y-2">
         <Label className="text-xs font-semibold">Afdrukregels</Label>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="print-every"
-              checked={section.config.printRules?.everyPage || false}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  // "Elke pagina" is exclusief - zet alle andere uit
-                  onUpdateProperty(section.id, 'config.printRules', { everyPage: true });
-                } else {
-                  onUpdateProperty(section.id, 'config.printRules.everyPage', false);
-                }
-              }}
-              className="h-3.5 w-3.5"
-            />
-            <Label htmlFor="print-every" className="text-xs font-normal">Elke pagina</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="print-first"
-              checked={section.config.printRules?.firstPage || false}
-              onChange={(e) => {
-                onUpdateProperty(section.id, 'config.printRules.everyPage', false);
-                onUpdateProperty(section.id, 'config.printRules.firstPage', e.target.checked);
-              }}
-              className="h-3.5 w-3.5"
-            />
-            <Label htmlFor="print-first" className="text-xs font-normal">Alleen eerste pagina</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="print-last"
-              checked={section.config.printRules?.lastPage || false}
-              onChange={(e) => {
-                onUpdateProperty(section.id, 'config.printRules.everyPage', false);
-                onUpdateProperty(section.id, 'config.printRules.lastPage', e.target.checked);
-              }}
-              className="h-3.5 w-3.5"
-            />
-            <Label htmlFor="print-last" className="text-xs font-normal">Alleen laatste pagina</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="print-odd"
-              checked={section.config.printRules?.oddPages || false}
-              onChange={(e) => {
-                onUpdateProperty(section.id, 'config.printRules.everyPage', false);
-                if (e.target.checked) {
-                  onUpdateProperty(section.id, 'config.printRules.evenPages', false);
-                }
-                onUpdateProperty(section.id, 'config.printRules.oddPages', e.target.checked);
-              }}
-              className="h-3.5 w-3.5"
-            />
-            <Label htmlFor="print-odd" className="text-xs font-normal">Alleen oneven pagina's</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="print-even"
-              checked={section.config.printRules?.evenPages || false}
-              onChange={(e) => {
-                onUpdateProperty(section.id, 'config.printRules.everyPage', false);
-                if (e.target.checked) {
-                  onUpdateProperty(section.id, 'config.printRules.oddPages', false);
-                }
-                onUpdateProperty(section.id, 'config.printRules.evenPages', e.target.checked);
-              }}
-              className="h-3.5 w-3.5"
-            />
-            <Label htmlFor="print-even" className="text-xs font-normal">Alleen even pagina's</Label>
-          </div>
-        </div>
+        {(() => {
+          const handlePrintRuleChange = (rule: string, checked: boolean) => {
+            const currentRules = { ...section.config.printRules };
+            
+            if (rule === 'everyPage') {
+              if (checked) {
+                // "Elke pagina" is exclusief - reset alles
+                onUpdateProperty(section.id, 'config.printRules', { everyPage: true });
+              } else {
+                onUpdateProperty(section.id, 'config.printRules', { everyPage: false });
+              }
+              return;
+            }
+            
+            // Voor alle andere regels: zet everyPage uit
+            const newRules = {
+              everyPage: false,
+              firstPage: currentRules.firstPage || false,
+              lastPage: currentRules.lastPage || false,
+              oddPages: currentRules.oddPages || false,
+              evenPages: currentRules.evenPages || false,
+            };
+            
+            // Pas de specifieke regel aan
+            if (rule === 'firstPage') newRules.firstPage = checked;
+            if (rule === 'lastPage') newRules.lastPage = checked;
+            if (rule === 'oddPages') {
+              newRules.oddPages = checked;
+              if (checked) newRules.evenPages = false; // Wederzijds exclusief
+            }
+            if (rule === 'evenPages') {
+              newRules.evenPages = checked;
+              if (checked) newRules.oddPages = false; // Wederzijds exclusief
+            }
+            
+            // Als geen enkele specifieke regel meer aan staat, zet everyPage terug
+            if (!newRules.firstPage && !newRules.lastPage && !newRules.oddPages && !newRules.evenPages) {
+              newRules.everyPage = true;
+            }
+            
+            onUpdateProperty(section.id, 'config.printRules', newRules);
+          };
+          
+          return (
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="print-every"
+                  checked={section.config.printRules?.everyPage || false}
+                  onChange={(e) => handlePrintRuleChange('everyPage', e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                <Label htmlFor="print-every" className="text-xs font-normal">Elke pagina</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="print-first"
+                  checked={section.config.printRules?.firstPage || false}
+                  onChange={(e) => handlePrintRuleChange('firstPage', e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                <Label htmlFor="print-first" className="text-xs font-normal">Alleen eerste pagina</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="print-last"
+                  checked={section.config.printRules?.lastPage || false}
+                  onChange={(e) => handlePrintRuleChange('lastPage', e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                <Label htmlFor="print-last" className="text-xs font-normal">Alleen laatste pagina</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="print-odd"
+                  checked={section.config.printRules?.oddPages || false}
+                  onChange={(e) => handlePrintRuleChange('oddPages', e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                <Label htmlFor="print-odd" className="text-xs font-normal">Alleen oneven pagina's</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="print-even"
+                  checked={section.config.printRules?.evenPages || false}
+                  onChange={(e) => handlePrintRuleChange('evenPages', e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                <Label htmlFor="print-even" className="text-xs font-normal">Alleen even pagina's</Label>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Layout Grid */}
