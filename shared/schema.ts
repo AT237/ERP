@@ -1002,6 +1002,23 @@ export const insertDocumentLayoutFieldSchema = createInsertSchema(documentLayout
   createdAt: true,
 });
 
+// Section Templates - Saved section configurations for reuse
+export const sectionTemplates = pgTable("section_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  sectionType: text("section_type").notNull(),
+  config: jsonb("config").$type<SectionConfig>().default(sql`'{}'::jsonb`),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSectionTemplateSchema = createInsertSchema(sectionTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types for Layout Management
 export type DocumentLayout = typeof documentLayouts.$inferSelect;
 export type InsertDocumentLayout = z.infer<typeof insertDocumentLayoutSchema>;
@@ -1013,3 +1030,5 @@ export type LayoutElement = typeof layoutElements.$inferSelect;
 export type InsertLayoutElement = z.infer<typeof insertLayoutElementSchema>;
 export type DocumentLayoutField = typeof documentLayoutFields.$inferSelect;
 export type InsertDocumentLayoutField = z.infer<typeof insertDocumentLayoutFieldSchema>;
+export type SectionTemplate = typeof sectionTemplates.$inferSelect;
+export type InsertSectionTemplate = z.infer<typeof insertSectionTemplateSchema>;
