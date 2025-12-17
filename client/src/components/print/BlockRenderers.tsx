@@ -192,25 +192,35 @@ export function CompanyHeaderRenderer({ block, printData }: BlockRendererProps) 
   );
 }
 
-// Date Block - current date or specific date
-export function DateBlockRenderer({ block }: BlockRendererProps) {
-  const label = block.config?.label || 'Datum:';
-  const date = block.config?.date 
-    ? new Date(block.config.date).toLocaleDateString('nl-NL', {
+// Date Block - current date, specific date, or from document data
+export function DateBlockRenderer({ block, printData }: BlockRendererProps) {
+  const label = block.config?.label || 'Date:';
+  const dateSource = block.config?.dateSource || 'today'; // 'today', 'quotation', 'custom'
+  
+  let dateValue: Date | null = null;
+  
+  if (dateSource === 'quotation' && printData?.quotation?.date) {
+    dateValue = new Date(printData.quotation.date);
+  } else if (dateSource === 'validUntil' && printData?.quotation?.validUntil) {
+    dateValue = new Date(printData.quotation.validUntil);
+  } else if (dateSource === 'custom' && block.config?.date) {
+    dateValue = new Date(block.config.date);
+  } else {
+    dateValue = new Date(); // default to today
+  }
+  
+  const formattedDate = dateValue && !isNaN(dateValue.getTime())
+    ? dateValue.toLocaleDateString('nl-NL', {
         day: '2-digit',
         month: 'long',
         year: 'numeric',
       })
-    : new Date().toLocaleDateString('nl-NL', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      });
+    : '';
 
   return (
     <div style={block.style || {}} className="flex gap-2 text-sm">
       <span className="font-medium">{label}</span>
-      <span>{date}</span>
+      <span>{formattedDate}</span>
     </div>
   );
 }

@@ -2064,7 +2064,7 @@ function getDefaultConfig(blockType: string) {
     case "Date Block":
       return {
         label: "Date:",
-        date: new Date().toLocaleDateString('nl-NL'),
+        dateSource: "quotation", // 'today', 'quotation', 'validUntil', 'custom'
       };
     case "Document Title":
       return {
@@ -2516,7 +2516,7 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isDragging, on
                 : block.type === "Document Title"
                   ? (block.config?.text || 'Document Title')
                   : block.type === "Date Block"
-                    ? (block.config?.date || 'Date')
+                    ? (block.config?.dateSource === 'quotation' ? 'Offertedatum' : block.config?.dateSource === 'validUntil' ? 'Geldig tot' : block.config?.dateSource === 'custom' ? 'Handmatig' : 'Vandaag')
                     : block.type === "Text Block"
                       ? (block.config?.text || 'Text Block')
                       : block.type}
@@ -3093,6 +3093,53 @@ function BlockProperties({
         </div>
       )}
 
+      {/* Date Block Properties */}
+      {block.type === "Date Block" && (
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="date-label" className="text-xs">Label</Label>
+            <Input
+              id="date-label"
+              value={block.config?.label || 'Date:'}
+              onChange={(e) => updateConfig('label', e.target.value)}
+              className="h-8 text-xs"
+              placeholder="Date:"
+              data-testid="input-date-label"
+            />
+          </div>
+          <div>
+            <Label htmlFor="date-source" className="text-xs">Datumbron</Label>
+            <Select 
+              value={block.config?.dateSource || 'quotation'}
+              onValueChange={(value) => updateConfig('dateSource', value)}
+            >
+              <SelectTrigger id="date-source" className="h-8 text-xs" data-testid="select-date-source">
+                <SelectValue placeholder="Kies datumbron..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="quotation">Offertedatum</SelectItem>
+                <SelectItem value="validUntil">Geldig tot</SelectItem>
+                <SelectItem value="today">Vandaag</SelectItem>
+                <SelectItem value="custom">Handmatig</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {block.config?.dateSource === 'custom' && (
+            <div>
+              <Label htmlFor="date-custom" className="text-xs">Datum</Label>
+              <Input
+                id="date-custom"
+                type="date"
+                value={block.config?.date || ''}
+                onChange={(e) => updateConfig('date', e.target.value)}
+                className="h-8 text-xs"
+                data-testid="input-date-custom"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
     </div>
   );
 }
@@ -3384,7 +3431,7 @@ function CanvasBlock({ block, isSelected, onClick, onRemove }: any) {
           <div className="font-bold">{block.config.text}</div>
         )}
         {block.type === "Date Block" && (
-          <div>{block.config.date}</div>
+          <div>{block.config?.label || 'Date:'} ({block.config?.dateSource === 'quotation' ? 'Offertedatum' : block.config?.dateSource === 'validUntil' ? 'Geldig tot' : block.config?.dateSource === 'custom' ? 'Handmatig' : 'Vandaag'})</div>
         )}
         {block.type === "Text Block" && (
           <div className="truncate">{block.config.text}</div>
