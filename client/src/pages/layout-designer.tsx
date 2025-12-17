@@ -1392,6 +1392,22 @@ function VisualDesignerView({ layout }: { layout: any }) {
           </DialogHeader>
           
           <div className="py-4">
+            <div className="flex gap-2 mb-3">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setAllowedTables(availableTables.map(t => t.name))}
+              >
+                Selecteer alles
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setAllowedTables([])}
+              >
+                Deselecteer alles
+              </Button>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               {availableTables.map((table) => (
                 <div
