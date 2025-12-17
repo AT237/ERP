@@ -1907,7 +1907,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
               {/* Layout Container with Rulers */}
               <div className="flex flex-col">
                 {/* Top Ruler - Horizontal (210mm) */}
-                <div className="flex">
+                <div className="flex pointer-events-none">
                   <div style={{ width: sections.length > 0 ? '40px' : '0px' }}></div>
                   <div 
                     className="bg-gray-100 border-b border-gray-300 relative"
@@ -2204,7 +2204,7 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
                   {/* Right Ruler - Vertical (297mm) */}
                   <div 
-                    className="bg-gray-100 border-l border-gray-300 relative flex-shrink-0"
+                    className="bg-gray-100 border-l border-gray-300 relative flex-shrink-0 pointer-events-none"
                     style={{ width: '20px', height: '1123px' }}
                   >
                     {Array.from({ length: 298 }).map((_, i) => {
