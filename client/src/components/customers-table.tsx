@@ -8,6 +8,17 @@ import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layo
 import { useDataTable } from '@/hooks/useDataTable';
 import { useLocation } from 'wouter';
 
+interface ExtendedCustomer extends Customer {
+  street?: string;
+  houseNumber?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
+  primaryContactName?: string;
+  primaryContactEmail?: string;
+  primaryContactPhone?: string;
+}
+
 const defaultColumns: ColumnConfig[] = [
   { key: 'customerNumber', label: 'Customer Number', visible: true, width: 120, filterable: true, sortable: true },
   { 
@@ -51,10 +62,10 @@ const defaultColumns: ColumnConfig[] = [
     ) : ''
   },
   { key: 'taxId', label: 'Tax ID', visible: false, width: 150, filterable: true, sortable: true },
-  { key: 'countryCode', label: 'Country', visible: true, width: 100, filterable: true, sortable: true },
+  { key: 'countryCode', label: 'Country Code', visible: false, width: 100, filterable: true, sortable: true },
   { key: 'generalEmail', label: 'General Email', visible: false, width: 200, filterable: true, sortable: true },
   { key: 'mobile', label: 'Mobile', visible: false, width: 140, filterable: true, sortable: true },
-  { key: 'language', label: 'Language', visible: false, width: 100, filterable: true, sortable: true },
+  { key: 'languageCode', label: 'Language', visible: false, width: 100, filterable: true, sortable: true },
   { key: 'status', label: 'Status', visible: true, width: 100, filterable: true, sortable: true,
     renderCell: (value: string) => (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -76,6 +87,42 @@ const defaultColumns: ColumnConfig[] = [
     renderCell: (value: Date | string) => 
       new Date(value).toLocaleDateString('nl-NL')
   },
+  // Address fields (from related address)
+  { key: 'street', label: 'Street', visible: false, width: 150, filterable: true, sortable: true },
+  { key: 'houseNumber', label: 'House Nr', visible: false, width: 80, filterable: true, sortable: true },
+  { key: 'postalCode', label: 'Postal Code', visible: false, width: 100, filterable: true, sortable: true },
+  { key: 'city', label: 'City', visible: false, width: 120, filterable: true, sortable: true },
+  { key: 'country', label: 'Country', visible: false, width: 120, filterable: true, sortable: true },
+  // Primary contact fields
+  { key: 'primaryContactName', label: 'Contact Person', visible: false, width: 150, filterable: true, sortable: true },
+  { 
+    key: 'primaryContactEmail', 
+    label: 'Contact Email', 
+    visible: false, 
+    width: 180, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => value ? (
+      <a href={`mailto:${value}`} className="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+        <Mail className="w-3 h-3" />
+        {value}
+      </a>
+    ) : ''
+  },
+  { 
+    key: 'primaryContactPhone', 
+    label: 'Contact Phone', 
+    visible: false, 
+    width: 140, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => value ? (
+      <a href={`tel:${value}`} className="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+        <Phone className="w-3 h-3" />
+        {value}
+      </a>
+    ) : ''
+  },
 ];
 
 export default function CustomersTable() {
@@ -87,9 +134,9 @@ export default function CustomersTable() {
     defaultColumns
   });
 
-  // Data fetching
-  const { data: customers = [], isLoading } = useQuery<Customer[]>({
-    queryKey: ["/api/customers"],
+  // Data fetching - use extended endpoint for related data
+  const { data: customers = [], isLoading } = useQuery<ExtendedCustomer[]>({
+    queryKey: ["/api/customers/extended"],
   });
 
   const deleteMutation = useMutation({
@@ -97,6 +144,7 @@ export default function CustomersTable() {
       await apiRequest("DELETE", `/api/customers/${id}`);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
@@ -135,7 +183,7 @@ export default function CustomersTable() {
   };
 
   // Render table data with proper formatting
-  const renderTableData = (customers: Customer[]) => {
+  const renderTableData = (customers: ExtendedCustomer[]) => {
     return customers.map((customer) => ({
       ...customer,
       name: customer.name || '',
@@ -146,8 +194,17 @@ export default function CustomersTable() {
       countryCode: customer.countryCode || '',
       generalEmail: customer.generalEmail || '',
       mobile: customer.mobile || '',
-      language: customer.language || '',
+      languageCode: customer.languageCode || '',
       status: customer.status || 'active',
+      // Extended fields from related tables
+      street: customer.street || '',
+      houseNumber: customer.houseNumber || '',
+      postalCode: customer.postalCode || '',
+      city: customer.city || '',
+      country: customer.country || '',
+      primaryContactName: customer.primaryContactName || '',
+      primaryContactEmail: customer.primaryContactEmail || '',
+      primaryContactPhone: customer.primaryContactPhone || '',
     }));
   };
 

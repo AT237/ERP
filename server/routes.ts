@@ -41,6 +41,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Customers with extended data (address, primary contact)
+  app.get("/api/customers/extended", async (req, res) => {
+    try {
+      const customers = await storage.getCustomers();
+      const addresses = await storage.getAddresses();
+      const contacts = await storage.getCustomerContacts();
+      
+      // Create lookup maps
+      const addressMap = new Map(addresses.map(a => [a.id, a]));
+      
+      // Group contacts by customer and find primary contact
+      const primaryContactMap = new Map<string, typeof contacts[0]>();
+      for (const contact of contacts) {
+        if (contact.customerId && contact.isPrimary) {
+          primaryContactMap.set(contact.customerId, contact);
+        }
+      }
+      
+      // Enrich customers with related data
+      const enrichedCustomers = customers.map(customer => {
+        const address = customer.addressId ? addressMap.get(customer.addressId) : null;
+        const primaryContact = primaryContactMap.get(customer.id);
+        
+        return {
+          ...customer,
+          // Address fields
+          street: address?.street || '',
+          houseNumber: address?.houseNumber || '',
+          postalCode: address?.postalCode || '',
+          city: address?.city || '',
+          country: address?.country || '',
+          // Primary contact fields
+          primaryContactName: primaryContact?.name || '',
+          primaryContactEmail: primaryContact?.email || '',
+          primaryContactPhone: primaryContact?.phone || '',
+        };
+      });
+      
+      res.json(enrichedCustomers);
+    } catch (error) {
+      console.error("Error fetching extended customers:", error);
+      res.status(500).json({ message: "Failed to fetch customers" });
+    }
+  });
+
   app.get("/api/customers/:id", async (req, res) => {
     try {
       const customer = await storage.getCustomer(req.params.id);
@@ -74,6 +119,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         addressId: customerData.addressId === '' ? null : customerData.addressId,
         paymentDaysId: customerData.paymentDaysId === '' ? null : customerData.paymentDaysId,
         paymentScheduleId: customerData.paymentScheduleId === '' ? null : customerData.paymentScheduleId,
+        countryCode: customerData.countryCode === '' ? null : customerData.countryCode,
+        languageCode: customerData.languageCode === '' ? null : customerData.languageCode,
       };
       const customer = await storage.updateCustomer(req.params.id, cleanedData);
       res.json(customer);
@@ -92,6 +139,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         addressId: customerData.addressId === '' ? null : customerData.addressId,
         paymentDaysId: customerData.paymentDaysId === '' ? null : customerData.paymentDaysId,
         paymentScheduleId: customerData.paymentScheduleId === '' ? null : customerData.paymentScheduleId,
+        countryCode: customerData.countryCode === '' ? null : customerData.countryCode,
+        languageCode: customerData.languageCode === '' ? null : customerData.languageCode,
       };
       const customer = await storage.updateCustomer(req.params.id, cleanedData);
       res.json(customer);
