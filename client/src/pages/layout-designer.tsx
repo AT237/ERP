@@ -2280,7 +2280,17 @@ function VisualDesignerView({ layout }: { layout: any }) {
                               }}
                             >
                                 <span className="font-medium text-sm text-gray-700 flex items-center gap-1" style={{ transform: 'rotate(180deg)' }}>
-                                {section.config?.repeat?.enabled && <Repeat className="h-3 w-3 text-orange-500" />}
+                                {/* Show repeat icon if section contains item placeholders */}
+                                {(() => {
+                                  const blocks = section.config?.blocks || [];
+                                  const hasItemPlaceholders = blocks.some((block: any) => {
+                                    const content = block.config?.content || block.content || '';
+                                    if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) return true;
+                                    const dataField = block.config?.dataField || '';
+                                    return typeof dataField === 'string' && dataField.startsWith('item.');
+                                  });
+                                  return hasItemPlaceholders ? <Repeat className="h-3 w-3 text-green-600" /> : null;
+                                })()}
                                 {section.name}
                               </span>
                             </div>
@@ -2972,6 +2982,40 @@ function calculateDynamicPositions(
   return positions;
 }
 
+// Helper function to detect if a section contains {{item.*}} placeholders
+function sectionContainsItemPlaceholders(section: any): boolean {
+  const blocks = section.config?.blocks || [];
+  
+  for (const block of blocks) {
+    // Check block content for {{item.*}} patterns
+    const content = block.config?.content || block.content || '';
+    if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) {
+      return true;
+    }
+    
+    // Check data field bindings
+    const dataField = block.config?.dataField || '';
+    if (typeof dataField === 'string' && dataField.startsWith('item.')) {
+      return true;
+    }
+    
+    // Check child blocks in groups
+    const childBlocks = block.config?.childBlocks || [];
+    for (const child of childBlocks) {
+      const childContent = child.config?.content || child.content || '';
+      if (typeof childContent === 'string' && /\{\{item\.[^}]+\}\}/.test(childContent)) {
+        return true;
+      }
+      const childDataField = child.config?.dataField || '';
+      if (typeof childDataField === 'string' && childDataField.startsWith('item.')) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
 // Layout Preview Renderer Component
 function LayoutPreview({ layout, sections, printData }: { layout: any; sections: any[]; printData: any }) {
   if (!printData) {
@@ -3109,8 +3153,11 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
   return (
     <div className="font-['Arial',sans-serif]">
       {sections.flatMap((section: any) => {
-        // Check if this section should repeat for line items
-        const shouldRepeat = section.config?.repeat?.enabled === true;
+        // Auto-detect if this section should repeat for line items
+        // Section repeats if it contains {{item.*}} placeholders OR if manually enabled
+        const hasItemPlaceholders = sectionContainsItemPlaceholders(section);
+        const manuallyEnabled = section.config?.repeat?.enabled === true;
+        const shouldRepeat = hasItemPlaceholders || manuallyEnabled;
         
         if (shouldRepeat) {
           const items = typedPrintData.items || [];
@@ -4558,50 +4605,81 @@ function SectionProperties({
         </div>
       </div>
 
-      {/* Repeat for Line Items */}
+      {/* Repeat for Line Items - Auto-detected */}
       <div className="space-y-3 pt-2 border-t">
         <div className="text-xs font-bold text-orange-600">Herhalen</div>
         
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="section-repeat-enabled"
-            checked={section.config.repeat?.enabled || false}
-            onChange={(e) => {
-              onUpdateProperty(section.id, 'config.repeat', {
-                ...section.config.repeat,
-                enabled: e.target.checked,
-                path: 'items'
-              });
-            }}
-            className="h-4 w-4 accent-orange-500"
-          />
-          <Label htmlFor="section-repeat-enabled" className="text-xs font-normal">
-            Herhalen voor offerteregels
-          </Label>
-        </div>
+        {/* Auto-detection indicator */}
+        {(() => {
+          const blocks = section.config?.blocks || [];
+          const hasItemPlaceholders = blocks.some((block: any) => {
+            const content = block.config?.content || block.content || '';
+            if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) return true;
+            const dataField = block.config?.dataField || '';
+            if (typeof dataField === 'string' && dataField.startsWith('item.')) return true;
+            const childBlocks = block.config?.childBlocks || [];
+            return childBlocks.some((child: any) => {
+              const childContent = child.config?.content || child.content || '';
+              if (typeof childContent === 'string' && /\{\{item\.[^}]+\}\}/.test(childContent)) return true;
+              const childDataField = child.config?.dataField || '';
+              return typeof childDataField === 'string' && childDataField.startsWith('item.');
+            });
+          });
+          
+          return (
+            <div className={`p-2 rounded-md ${hasItemPlaceholders ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                {hasItemPlaceholders ? (
+                  <>
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-xs font-medium text-green-700">Herhaalt automatisch</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-2 h-2 rounded-full bg-gray-400" />
+                    <span className="text-xs font-medium text-gray-600">Eenmalig (geen item-placeholders)</span>
+                  </>
+                )}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {hasItemPlaceholders 
+                  ? 'Deze sectie bevat {{item.*}} placeholders en herhaalt voor elke offerteregel.'
+                  : 'Voeg {{item.description}}, {{item.quantity}}, {{item.unitPrice}} of {{item.lineTotal}} toe om te herhalen.'}
+              </p>
+            </div>
+          );
+        })()}
         
-        <p className="text-[10px] text-muted-foreground">
-          Sectie wordt herhaald voor elke offerteregel. Gebruik {"{{item.description}}"}, {"{{item.quantity}}"}, {"{{item.unitPrice}}"}, {"{{item.lineTotal}}"} in tekstblokken.
-        </p>
-        
-        {section.config.repeat?.enabled && (
-          <div>
-            <Label htmlFor="section-repeat-spacing" className="text-[10px] text-muted-foreground">
-              Afstand tussen herhalingen (mm)
-            </Label>
-            <Input
-              id="section-repeat-spacing"
-              type="number"
-              step="0.5"
-              min="0"
-              max="20"
-              value={section.config.repeat?.spacingMm || 0}
-              onChange={(e) => onUpdateProperty(section.id, 'config.repeat.spacingMm', parseFloat(e.target.value) || 0)}
-              className="h-7 w-20 text-xs mt-1"
-            />
-          </div>
-        )}
+        {/* Spacing setting - only show if section has item placeholders */}
+        {(() => {
+          const blocks = section.config?.blocks || [];
+          const hasItemPlaceholders = blocks.some((block: any) => {
+            const content = block.config?.content || block.content || '';
+            if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) return true;
+            const dataField = block.config?.dataField || '';
+            return typeof dataField === 'string' && dataField.startsWith('item.');
+          });
+          
+          if (!hasItemPlaceholders) return null;
+          
+          return (
+            <div>
+              <Label htmlFor="section-repeat-spacing" className="text-[10px] text-muted-foreground">
+                Afstand tussen herhalingen (mm)
+              </Label>
+              <Input
+                id="section-repeat-spacing"
+                type="number"
+                step="0.5"
+                min="0"
+                max="20"
+                value={section.config.repeat?.spacingMm || 0}
+                onChange={(e) => onUpdateProperty(section.id, 'config.repeat.spacingMm', parseFloat(e.target.value) || 0)}
+                className="h-7 w-20 text-xs mt-1"
+              />
+            </div>
+          );
+        })()}
       </div>
 
       {/* Background Color */}
