@@ -558,6 +558,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const [isDraggingBlock, setIsDraggingBlock] = useState(false);
   const [dragBlockId, setDragBlockId] = useState<string | null>(null);
   const [dragSectionId, setDragSectionId] = useState<string | null>(null);
+  const [hoverSectionId, setHoverSectionId] = useState<string | null>(null);
+  const [sectionChangedFlash, setSectionChangedFlash] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [alignmentGuides, setAlignmentGuides] = useState<{ type: 'h' | 'v'; position: number }[]>([]);
   
@@ -1167,9 +1169,52 @@ function VisualDesignerView({ layout }: { layout: any }) {
   };
 
   const handleBlockDragEnd = () => {
+    // Check if block should be moved to a different section
+    if (isDraggingBlock && dragBlockId && dragSectionId && hoverSectionId && hoverSectionId !== dragSectionId) {
+      // Find the block in the source section
+      const sourceSection = sections.find(s => s.id === dragSectionId);
+      const blockToMove = sourceSection?.config.blocks?.find((b: any) => b.id === dragBlockId);
+      
+      if (blockToMove) {
+        // Move block to new section
+        const updatedSections = sections.map(s => {
+          if (s.id === dragSectionId) {
+            // Remove from source section
+            return {
+              ...s,
+              config: {
+                ...s.config,
+                blocks: (s.config.blocks || []).filter((b: any) => b.id !== dragBlockId),
+              },
+            };
+          }
+          if (s.id === hoverSectionId) {
+            // Add to target section
+            return {
+              ...s,
+              config: {
+                ...s.config,
+                blocks: [...(s.config.blocks || []), blockToMove],
+              },
+            };
+          }
+          return s;
+        });
+        
+        setSections(updatedSections);
+        
+        // Flash effect on target section
+        setSectionChangedFlash(hoverSectionId);
+        setTimeout(() => setSectionChangedFlash(null), 500);
+        
+        toast({ title: 'Blok verplaatst', description: 'Blok is naar een andere sectie verplaatst' });
+      }
+    }
+    
     setIsDraggingBlock(false);
     setDragBlockId(null);
     setDragSectionId(null);
+    setHoverSectionId(null);
     setAlignmentGuides([]);
   };
 
@@ -1330,6 +1375,18 @@ function VisualDesignerView({ layout }: { layout: any }) {
       setPrintMargins(layout.metadata.printMargins);
     }
   }, [layout?.metadata?.printMargins]);
+
+  // Global mouseup handler for cross-section block dragging
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDraggingBlock) {
+        handleBlockDragEnd();
+      }
+    };
+    
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => document.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, [isDraggingBlock, dragBlockId, dragSectionId, hoverSectionId]);
 
   return (
     <div className="flex flex-col h-full">
@@ -2292,14 +2349,35 @@ function VisualDesignerView({ layout }: { layout: any }) {
                                   selectedSection?.id === section.id 
                                     ? 'ring-4 ring-orange-500 ring-inset' 
                                     : ''
-                                } ${index > 0 ? 'border-t-2 border-dashed border-gray-300' : ''}`}
+                                } ${index > 0 ? 'border-t-2 border-dashed border-gray-300' : ''} ${
+                                  isDraggingBlock && hoverSectionId === section.id && dragSectionId !== section.id
+                                    ? 'ring-4 ring-green-500 ring-inset'
+                                    : ''
+                                } ${
+                                  sectionChangedFlash === section.id
+                                    ? 'animate-pulse bg-green-100'
+                                    : ''
+                                }`}
                                 style={{
-                                  backgroundColor: section.config.style?.backgroundColor || '#ffffff',
+                                  backgroundColor: sectionChangedFlash === section.id ? undefined : (section.config.style?.backgroundColor || '#ffffff'),
                                   height: `${sectionHeight}px`,
                                   minHeight: `${sectionHeight}px`,
                                   boxSizing: 'border-box',
                                 }}
                                 onClick={() => handleSectionClick(section)}
+                                onMouseEnter={() => {
+                                  if (isDraggingBlock) {
+                                    setHoverSectionId(section.id);
+                                  }
+                                }}
+                                onMouseLeave={() => {
+                                  if (isDraggingBlock && hoverSectionId === section.id) {
+                                    // Don't clear hover if we're still in the drag section
+                                    if (section.id !== dragSectionId) {
+                                      setHoverSectionId(null);
+                                    }
+                                  }
+                                }}
                               >
                             <div
                               className="relative p-4 h-full section-container"
@@ -2321,7 +2399,6 @@ function VisualDesignerView({ layout }: { layout: any }) {
                               }
                             }}
                             onMouseUp={handleBlockDragEnd}
-                            onMouseLeave={handleBlockDragEnd}
                           >
                             {/* Height Grid Overlay */}
                             {section.config.layoutGrid && (() => {
