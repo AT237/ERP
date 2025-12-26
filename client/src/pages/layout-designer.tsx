@@ -2986,30 +2986,38 @@ function calculateDynamicPositions(
 function sectionContainsItemPlaceholders(section: any): boolean {
   const blocks = section.config?.blocks || [];
   
+  // Helper to check any string for item placeholders
+  const hasItemPattern = (str: any): boolean => {
+    if (typeof str !== 'string') return false;
+    return /\{\{item\.[^}]+\}\}/.test(str);
+  };
+  
+  // Helper to check if a data field starts with item.
+  const isItemField = (str: any): boolean => {
+    if (typeof str !== 'string') return false;
+    return str.startsWith('item.');
+  };
+  
   for (const block of blocks) {
-    // Check block content for {{item.*}} patterns
-    const content = block.config?.content || block.content || '';
-    if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) {
-      return true;
-    }
+    // Check various content locations
+    if (hasItemPattern(block.config?.content)) return true;
+    if (hasItemPattern(block.content)) return true;
+    if (hasItemPattern(block.config?.text)) return true;
+    if (hasItemPattern(block.text)) return true;
     
     // Check data field bindings
-    const dataField = block.config?.dataField || '';
-    if (typeof dataField === 'string' && dataField.startsWith('item.')) {
-      return true;
-    }
+    if (isItemField(block.config?.dataField)) return true;
+    if (isItemField(block.dataField)) return true;
     
     // Check child blocks in groups
     const childBlocks = block.config?.childBlocks || [];
     for (const child of childBlocks) {
-      const childContent = child.config?.content || child.content || '';
-      if (typeof childContent === 'string' && /\{\{item\.[^}]+\}\}/.test(childContent)) {
-        return true;
-      }
-      const childDataField = child.config?.dataField || '';
-      if (typeof childDataField === 'string' && childDataField.startsWith('item.')) {
-        return true;
-      }
+      if (hasItemPattern(child.config?.content)) return true;
+      if (hasItemPattern(child.content)) return true;
+      if (hasItemPattern(child.config?.text)) return true;
+      if (hasItemPattern(child.text)) return true;
+      if (isItemField(child.config?.dataField)) return true;
+      if (isItemField(child.dataField)) return true;
     }
   }
   
