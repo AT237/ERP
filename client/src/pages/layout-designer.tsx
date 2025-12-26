@@ -2982,20 +2982,22 @@ function calculateDynamicPositions(
   return positions;
 }
 
-// Helper function to detect if a section contains {{item.*}} placeholders
+// Helper function to detect if a section contains item-level placeholders
+// Supports both {{item.*}} and {{quotationItems.*}} formats
 function sectionContainsItemPlaceholders(section: any): boolean {
   const blocks = section.config?.blocks || [];
   
-  // Helper to check any string for item placeholders
+  // Helper to check any string for item placeholders (both formats)
   const hasItemPattern = (str: any): boolean => {
     if (typeof str !== 'string') return false;
-    return /\{\{item\.[^}]+\}\}/.test(str);
+    // Match {{item.*}} or {{quotationItems.*}} or {{quotationItem.*}}
+    return /\{\{(item|quotationItems?)\.[^}]+\}\}/.test(str);
   };
   
-  // Helper to check if a data field starts with item.
+  // Helper to check if a data field starts with item. or quotationItems.
   const isItemField = (str: any): boolean => {
     if (typeof str !== 'string') return false;
-    return str.startsWith('item.');
+    return str.startsWith('item.') || str.startsWith('quotationItems.') || str.startsWith('quotationItem.');
   };
   
   for (const block of blocks) {

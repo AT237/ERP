@@ -221,12 +221,24 @@ export function replacePlaceholders(
 
   // Replace data field placeholders with optional format specifier
   // Syntax: {{tableName.fieldName}} or {{tableName.fieldName:format}}
-  // Also supports {{item.fieldName}} for repeating blocks
+  // Also supports {{item.fieldName}} or {{quotationItems.fieldName}} for repeating blocks
   // Formats: text (default), date, currency, number
   let result = text.replace(/\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)*)(?::([a-zA-Z]+))?\}\}/g, (match, fieldPath, format) => {
-    // Check if this is an item placeholder
-    if (fieldPath.startsWith('item.') && itemContext) {
-      const itemFieldPath = fieldPath.substring(5); // Remove 'item.' prefix
+    // Check if this is an item placeholder (supports item.*, quotationItems.*, quotationItem.*)
+    const isItemPlaceholder = fieldPath.startsWith('item.') || 
+                               fieldPath.startsWith('quotationItems.') || 
+                               fieldPath.startsWith('quotationItem.');
+    
+    if (isItemPlaceholder && itemContext) {
+      // Normalize the field path by removing the prefix
+      let itemFieldPath: string;
+      if (fieldPath.startsWith('quotationItems.')) {
+        itemFieldPath = fieldPath.substring(15); // Remove 'quotationItems.' prefix
+      } else if (fieldPath.startsWith('quotationItem.')) {
+        itemFieldPath = fieldPath.substring(14); // Remove 'quotationItem.' prefix
+      } else {
+        itemFieldPath = fieldPath.substring(5); // Remove 'item.' prefix
+      }
       const itemValue = resolveItemValue(itemFieldPath, itemContext);
       
       // Auto-detect format for item fields
@@ -314,9 +326,22 @@ export function hasContent(
     if (match) {
       const fieldPath = match[1];
       
-      // Handle {{item.*}} placeholders for repeating sections (supports nested paths)
-      if (fieldPath.startsWith('item.') && itemContext?.item) {
-        const itemFieldPath = fieldPath.substring(5); // Remove 'item.' prefix
+      // Handle item placeholders for repeating sections (supports nested paths)
+      // Supports {{item.*}}, {{quotationItems.*}}, {{quotationItem.*}}
+      const isItemPlaceholder = fieldPath.startsWith('item.') || 
+                                 fieldPath.startsWith('quotationItems.') || 
+                                 fieldPath.startsWith('quotationItem.');
+      
+      if (isItemPlaceholder && itemContext?.item) {
+        // Normalize the field path by removing the prefix
+        let itemFieldPath: string;
+        if (fieldPath.startsWith('quotationItems.')) {
+          itemFieldPath = fieldPath.substring(15);
+        } else if (fieldPath.startsWith('quotationItem.')) {
+          itemFieldPath = fieldPath.substring(14);
+        } else {
+          itemFieldPath = fieldPath.substring(5);
+        }
         // Support nested paths like item.product.name
         const pathParts = itemFieldPath.split('.');
         let value: any = itemContext.item;
@@ -332,7 +357,7 @@ export function hasContent(
           hasAnyValue = true;
           break;
         }
-      } else if (!fieldPath.startsWith('item.')) {
+      } else if (!isItemPlaceholder) {
         // Regular field placeholder
         const value = resolveFieldValue(fieldPath, printData);
         if (value !== null && value !== undefined && value !== '') {
