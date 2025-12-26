@@ -1733,22 +1733,6 @@ function VisualDesignerView({ layout }: { layout: any }) {
                 </TooltipContent>
               </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div
-                    draggable
-                    onDragStart={() => handleDragStart("Item Repeater")}
-                    className="h-8 w-8 flex items-center justify-center rounded cursor-grab hover:bg-muted transition-colors"
-                  >
-                    <Repeat className="h-4 w-4" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="font-medium">Herhalende Items</p>
-                  <p className="text-xs text-muted-foreground">Custom layout per offerteregel</p>
-                </TooltipContent>
-              </Tooltip>
-
             </div>
           </TooltipProvider>
 
