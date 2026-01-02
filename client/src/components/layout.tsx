@@ -71,6 +71,17 @@ export default function Layout({ children }: LayoutProps) {
       return { id: `customer-${customerId}`, name: 'Loading...' };
     }
     
+    // Check for quotation line item routes
+    const quotationItemNewMatch = path.match(/^\/quotations\/([^/]+)\/items\/new$/);
+    if (quotationItemNewMatch) {
+      return { id: `quotation-line-new-${quotationItemNewMatch[1]}`, name: 'Offerteregel' };
+    }
+    
+    const quotationItemEditMatch = path.match(/^\/quotations\/([^/]+)\/items\/([^/]+)$/);
+    if (quotationItemEditMatch) {
+      return { id: `quotation-line-${quotationItemEditMatch[2]}`, name: 'Offerteregel' };
+    }
+    
     switch (path) {
       case '/':
       case '/dashboard':

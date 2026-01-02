@@ -658,7 +658,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         form={form}
         onSubmit={onSubmit}
         actionButtons={actionButtons}
-        headerFields={headerFields}
+        infoFields={headerFields}
         changeTracking={{
           enabled: true,
           onChangesDetected: handleChangesDetected

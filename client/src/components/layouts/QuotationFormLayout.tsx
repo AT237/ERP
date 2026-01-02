@@ -1643,17 +1643,9 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           applySorting={itemTableState.applySorting}
           compact={true}
           onRowDoubleClick={(item: QuotationItem) => {
-            setEditingItem(item);
-            itemForm.reset({
-              quotationId: item.quotationId,
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice || "0.00",
-              lineTotal: item.lineTotal || "0.00",
-              itemId: item.itemId,
-              lineType: item.lineType || "standard",
-            });
-            setActiveTab("line-items");
+            if (quotationId) {
+              navigate(`/quotations/${quotationId}/items/${item.id}`);
+            }
           }}
           headerActions={[
             {
