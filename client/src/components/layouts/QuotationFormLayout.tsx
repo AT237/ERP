@@ -105,6 +105,15 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   // Data table state for quotation items
   const itemTableState = useDataTable({ 
     defaultColumns: [
+      { 
+        key: 'positionNo', 
+        label: 'Pos.', 
+        visible: true, 
+        width: 70, 
+        filterable: false, 
+        sortable: true,
+        renderCell: (value: string) => value || "-"
+      },
       createIdColumn('id', 'Line ID'),
       { 
         key: 'description', 
@@ -633,6 +642,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
   // Item management functions
   const handleSaveItem = (data: QuotationItemFormData) => {
+    // Calculate next position number for new items
+    const nextPositionNo = editingItem?.positionNo || 
+      String((quotationItems.length + 1) * 10).padStart(3, '0');
+    
     const newItem: QuotationItem = {
       id: editingItem?.id || Math.random().toString(36).substr(2, 9),
       quotationId: quotationId || '',
@@ -643,6 +656,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       itemId: data.itemId || null,
       lineType: data.lineType || 'standard',
       position: null,
+      positionNo: nextPositionNo,
       sourceSnippetId: null,
       sourceSnippetVersion: null,
     };
