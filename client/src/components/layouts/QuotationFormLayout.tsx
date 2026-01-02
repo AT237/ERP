@@ -99,6 +99,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>("");
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
+  const [showEditItemDialog, setShowEditItemDialog] = useState(false);
   const [projectPopoverOpen, setProjectPopoverOpen] = useState(false);
   const { toast } = useToast();
 
@@ -638,7 +639,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       setQuotationItems(prev => [...prev, newItem]);
     }
 
-    // Item saved, dialog removed - now uses tab navigation
+    // Close dialog and reset form
+    setShowEditItemDialog(false);
+    setEditingItem(null);
+    setItemType(null);
     itemForm.reset({
       quotationId: quotationId || "",
       description: "",
@@ -1644,6 +1648,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           compact={true}
           onRowDoubleClick={(item: QuotationItem) => {
             setEditingItem(item);
+            setItemType('onetime'); // Set item type to show edit form
             itemForm.reset({
               quotationId: item.quotationId,
               description: item.description,
@@ -1653,7 +1658,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               itemId: item.itemId,
               lineType: item.lineType || "standard",
             });
-            setActiveTab("line-items");
+            setShowEditItemDialog(true);
           }}
           headerActions={[
             {
@@ -1661,10 +1666,18 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               label: 'ADD LINE',
               icon: <Plus className="h-4 w-4" />,
               onClick: () => {
-                // Navigate to the line item form page instead of showing dialog
-                if (quotationId) {
-                  navigate(`/quotations/${quotationId}/items/new`);
-                }
+                setEditingItem(null);
+                setItemType('onetime');
+                itemForm.reset({
+                  quotationId: quotationId || "",
+                  description: "",
+                  quantity: 1,
+                  unitPrice: "0.00",
+                  lineTotal: "0.00",
+                  lineType: "standard",
+                  itemId: null,
+                });
+                setShowEditItemDialog(true);
               },
               variant: 'default' as const
             }
@@ -1676,6 +1689,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               icon: <FileText className="h-4 w-4" />,
               onClick: () => {
                 setEditingItem(item);
+                setItemType('onetime');
                 itemForm.reset({
                   quotationId: item.quotationId,
                   description: item.description,
@@ -1685,7 +1699,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                   itemId: item.itemId,
                   lineType: item.lineType || "standard",
                 });
-                // Edit functionality will be implemented via edit routes later
+                setShowEditItemDialog(true);
               },
               variant: 'outline'
             },
@@ -1738,6 +1752,31 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Item Dialog */}
+      <Dialog open={showEditItemDialog} onOpenChange={(open) => {
+        setShowEditItemDialog(open);
+        if (!open) {
+          setEditingItem(null);
+          setItemType(null);
+          itemForm.reset({
+            quotationId: quotationId || "",
+            description: "",
+            quantity: 1,
+            unitPrice: "0.00",
+            lineTotal: "0.00",
+            lineType: "standard",
+            itemId: null,
+          });
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingItem ? 'Edit Item' : 'Add Item'}</DialogTitle>
+          </DialogHeader>
+          {renderItemDialog()}
         </DialogContent>
       </Dialog>
       
