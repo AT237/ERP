@@ -112,7 +112,9 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         width: 70, 
         filterable: false, 
         sortable: true,
-        renderCell: (value: string) => value || "-"
+        renderCell: (value: string) => (
+          <span className="font-mono text-xs">{value || "-"}</span>
+        )
       },
       createIdColumn('id', 'Line ID'),
       { 
