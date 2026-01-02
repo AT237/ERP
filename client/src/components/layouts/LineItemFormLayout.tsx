@@ -30,6 +30,7 @@ const lineItemFormSchema = insertQuotationItemSchema.extend({
   lineTotal: z.string().min(1, "Regel totaal is verplicht"),
   quantity: z.number().min(0, "Aantal kan niet negatief zijn"),
   position: z.number().min(1, "Positie is verplicht").optional(),
+  positionNo: z.string().optional(),
   descriptionInternal: z.string().optional(),
   descriptionExternal: z.string().optional(),
   sourceSnippetId: z.string().optional(),
@@ -48,6 +49,7 @@ const lineItemFormSchema = insertQuotationItemSchema.extend({
 // Add virtual fields for internal tracking
 type LineItemFormData = z.infer<typeof lineItemFormSchema> & {
   position?: number;
+  positionNo?: string;
   descriptionInternal?: string;
   descriptionExternal?: string;
   sourceSnippetId?: string;
@@ -89,6 +91,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       lineType: "standard",
       itemId: undefined,
       position: 1,
+      positionNo: "",
       descriptionInternal: "",
       descriptionExternal: "",
       sourceSnippetId: undefined,
@@ -139,6 +142,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         lineType: lineItem.lineType || "standard",
         itemId: lineItem.itemId || undefined,
         position: 1, // Will be calculated based on quotation items
+        positionNo: lineItem.positionNo || "",
         descriptionInternal: lineItem.description || "",
         descriptionExternal: lineItem.description || "",
         sourceSnippetId: lineItem.sourceSnippetId || undefined,
@@ -410,14 +414,15 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       testId: 'select-line-type'
     },
     {
-      key: 'position',
-      label: 'Positie',
-      type: 'number',
-      register: form.register('position', { valueAsNumber: true }),
+      key: 'positionNo',
+      label: 'Pos. Nr.',
+      type: 'text',
+      register: form.register('positionNo'),
+      placeholder: 'bijv. 010',
       validation: {
-        error: form.formState.errors.position?.message
+        error: form.formState.errors.positionNo?.message
       },
-      testId: 'input-position'
+      testId: 'input-position-no'
     },
     {
       key: 'quantity',
@@ -518,7 +523,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       label: 'Algemeen',
       rows: [
         createFieldRow(formFields[0]), // lineType
-        createFieldRow(formFields[1]), // position
+        createFieldRow(formFields[1]), // positionNo
         createFieldRow(formFields[2]), // quantity
         createFieldRow(formFields[3]), // unitPrice
         createFieldRow(formFields[4]), // lineTotal
