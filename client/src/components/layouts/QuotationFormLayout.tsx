@@ -99,6 +99,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>("");
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
+  const [showEditItemDialog, setShowEditItemDialog] = useState(false);
   const [projectPopoverOpen, setProjectPopoverOpen] = useState(false);
   const { toast } = useToast();
 
@@ -638,9 +639,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       setQuotationItems(prev => [...prev, newItem]);
     }
 
-    const wasEditing = !!editingItem;
-    
-    // Reset form and navigate back to general tab
+    // Close dialog and reset form
+    setShowEditItemDialog(false);
     setEditingItem(null);
     setItemType(null);
     itemForm.reset({
@@ -652,11 +652,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       lineType: "standard",
       itemId: null,
     });
-    setActiveTab("general");
     
     toast({
       title: "Success",
-      description: wasEditing ? "Item updated" : "Item added",
+      description: editingItem ? "Item updated" : "Item added",
     });
   };
 
@@ -1140,6 +1139,96 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   };
 
+
+  const renderItemDialog = () => {
+    if (!itemType) return null;
+
+    // Common form for all item types
+    return (
+      <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="item-description">Description *</Label>
+          <Textarea
+            id="item-description"
+            {...itemForm.register('description')}
+            placeholder="Item description"
+            data-testid="input-item-description"
+          />
+        </div>
+        
+        {itemType !== 'text' && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="item-quantity">Quantity</Label>
+                <Input
+                  id="item-quantity"
+                  type="number"
+                  min="1"
+                  step="1"
+                  {...itemForm.register('quantity', { valueAsNumber: true })}
+                  data-testid="input-item-quantity"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="item-unitPrice">Unit Price (€)</Label>
+                <Input
+                  id="item-unitPrice"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...itemForm.register('unitPrice')}
+                  data-testid="input-item-unitPrice"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="item-lineTotal">Line Total (€)</Label>
+              <Input
+                id="item-lineTotal"
+                type="number"
+                step="0.01"
+                min="0"
+                {...itemForm.register('lineTotal')}
+                className="bg-gray-50 dark:bg-gray-800"
+                readOnly
+                data-testid="input-item-lineTotal"
+              />
+            </div>
+          </>
+        )}
+        
+        <div className="flex gap-2 justify-end pt-4 border-t">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              // Cancel functionality removed - now uses tab navigation
+              itemForm.reset({
+                quotationId: quotationId || "",
+                description: "",
+                quantity: 1,
+                unitPrice: "0.00",
+                lineTotal: "0.00",
+                lineType: "standard",
+                itemId: null,
+              });
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="bg-orange-600 hover:bg-orange-700"
+          >
+            {editingItem ? 'Update Item' : 'ADD LINE'}
+          </Button>
+        </div>
+      </form>
+    );
+  };
+
   // Create form sections for LayoutForm2
   const createQuotationFormSections = (): FormSection2<QuotationFormData>[] => {
     return [
@@ -1418,109 +1507,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         ]
       },
       {
-        id: "line-item",
-        label: editingItem ? "Adjust Line" : "Add Line",
-        rows: [
-          createCustomRow(
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-orange-600">
-                {editingItem ? `Regel Aanpassen - Pos. ${editingItem.positionNo}` : 'Nieuwe Regel Toevoegen'}
-              </h3>
-              <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
-                <div className="grid grid-cols-[130px_1fr] items-start gap-3">
-                  <Label htmlFor="item-description" className="text-sm font-medium text-right pt-2">
-                    Description *
-                  </Label>
-                  <Textarea
-                    id="item-description"
-                    {...itemForm.register('description')}
-                    placeholder="Item description"
-                    className="min-h-[100px]"
-                    data-testid="input-item-description"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                    <Label htmlFor="item-quantity" className="text-sm font-medium text-right">
-                      Quantity
-                    </Label>
-                    <Input
-                      id="item-quantity"
-                      type="number"
-                      min="1"
-                      step="1"
-                      {...itemForm.register('quantity', { valueAsNumber: true })}
-                      data-testid="input-item-quantity"
-                    />
-                  </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                    <Label htmlFor="item-unitPrice" className="text-sm font-medium text-right">
-                      Unit Price (€)
-                    </Label>
-                    <Input
-                      id="item-unitPrice"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      {...itemForm.register('unitPrice')}
-                      data-testid="input-item-unitPrice"
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                  <Label htmlFor="item-lineTotal" className="text-sm font-medium text-right">
-                    Line Total (€)
-                  </Label>
-                  <Input
-                    id="item-lineTotal"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    {...itemForm.register('lineTotal')}
-                    className="bg-gray-50 dark:bg-gray-800 max-w-[200px]"
-                    readOnly
-                    data-testid="input-item-lineTotal"
-                  />
-                </div>
-                
-                <div className="flex gap-2 justify-end pt-4 border-t">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setEditingItem(null);
-                      setItemType(null);
-                      itemForm.reset({
-                        quotationId: quotationId || "",
-                        description: "",
-                        quantity: 1,
-                        unitPrice: "0.00",
-                        lineTotal: "0.00",
-                        lineType: "standard",
-                        itemId: null,
-                      });
-                      setActiveTab("general");
-                    }}
-                    data-testid="button-cancel-item"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="bg-orange-600 hover:bg-orange-700"
-                    data-testid="button-save-item"
-                  >
-                    {editingItem ? 'UPDATE LINE' : 'ADD LINE'}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          )
-        ]
-      },
-      {
         id: "financial",
         label: "Financial",
         rows: [
@@ -1662,7 +1648,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           compact={true}
           onRowDoubleClick={(item: QuotationItem) => {
             setEditingItem(item);
-            setItemType('onetime');
+            setItemType('onetime'); // Set item type to show edit form
             itemForm.reset({
               quotationId: item.quotationId,
               description: item.description,
@@ -1672,7 +1658,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               itemId: item.itemId,
               lineType: item.lineType || "standard",
             });
-            setActiveTab("line-item");
+            setShowEditItemDialog(true);
           }}
           headerActions={[
             {
@@ -1691,7 +1677,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                   lineType: "standard",
                   itemId: null,
                 });
-                setActiveTab("line-item");
+                setShowEditItemDialog(true);
               },
               variant: 'default' as const
             }
@@ -1713,7 +1699,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                   itemId: item.itemId,
                   lineType: item.lineType || "standard",
                 });
-                setActiveTab("line-item");
+                setShowEditItemDialog(true);
               },
               variant: 'outline'
             },
@@ -1766,6 +1752,31 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Item Dialog */}
+      <Dialog open={showEditItemDialog} onOpenChange={(open) => {
+        setShowEditItemDialog(open);
+        if (!open) {
+          setEditingItem(null);
+          setItemType(null);
+          itemForm.reset({
+            quotationId: quotationId || "",
+            description: "",
+            quantity: 1,
+            unitPrice: "0.00",
+            lineTotal: "0.00",
+            lineType: "standard",
+            itemId: null,
+          });
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingItem ? 'Edit Item' : 'Add Item'}</DialogTitle>
+          </DialogHeader>
+          {renderItemDialog()}
         </DialogContent>
       </Dialog>
       
