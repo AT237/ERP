@@ -88,7 +88,16 @@ export type ColumnConfig = {
   renderCell?: (value: any, row: any) => ReactNode;
 };
 
-// Helper function for consistent ID column styling - moved to avoid Fast Refresh issues
+// ============================================================================
+// TABLE COLUMN HELPERS - Use these for consistent styling across all tables
+// ============================================================================
+// - All ID/code columns use monospace font (font-mono text-xs)
+// - Position columns are 70px wide, IDs are 120px wide
+// - Numeric columns should be right-aligned
+// - Column order: checkbox, position, ID, description, numeric values, actions
+// ============================================================================
+
+// Helper function for consistent ID column styling
 const createIdColumn = (key: string, label: string, width = 120): ColumnConfig => ({
   key,
   label,
@@ -101,8 +110,47 @@ const createIdColumn = (key: string, label: string, width = 120): ColumnConfig =
   )
 });
 
-// Export it separately to fix Fast Refresh compatibility
-export { createIdColumn };
+// Helper function for position/line number columns (010, 020, etc.)
+const createPositionColumn = (key = 'positionNo', label = 'Pos.', width = 70): ColumnConfig => ({
+  key,
+  label,
+  visible: true,
+  width,
+  filterable: false,
+  sortable: true,
+  renderCell: (value: string) => (
+    <span className="font-mono text-xs">{value || "-"}</span>
+  )
+});
+
+// Helper function for currency columns (right-aligned with € symbol)
+const createCurrencyColumn = (key: string, label: string, width = 120): ColumnConfig => ({
+  key,
+  label,
+  visible: true,
+  width,
+  filterable: true,
+  sortable: true,
+  renderCell: (value: string) => (
+    <span className="text-right w-full block">{`€${value || "0.00"}`}</span>
+  )
+});
+
+// Helper function for numeric columns (right-aligned)
+const createNumericColumn = (key: string, label: string, width = 100): ColumnConfig => ({
+  key,
+  label,
+  visible: true,
+  width,
+  filterable: true,
+  sortable: true,
+  renderCell: (value: number) => (
+    <span className="text-right w-full block">{value?.toString() || "0"}</span>
+  )
+});
+
+// Export helpers separately to fix Fast Refresh compatibility
+export { createIdColumn, createPositionColumn, createCurrencyColumn, createNumericColumn };
 
 export type SortConfig = {
   column: string;

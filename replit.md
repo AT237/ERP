@@ -20,6 +20,31 @@ The frontend is built with **React 18** and **TypeScript**, following a componen
 - **DataTableLayout Standardization**: All data tables (`customers`, `suppliers`, `quotations`, `inventory`, `text-snippets`, `sales-orders`) adhere to a standard, clean layout without problematic border wrappers.
 - **Custom Card+Table System**: Specialized layouts for `projects`, `packing-lists`, `invoices`, `purchase-orders`, and `work-orders` which include header images and custom card components.
 
+### Table Styling Standards
+Use the helper functions from `DataTableLayout.tsx` for consistent column styling:
+
+| Column Type | Helper Function | Styling | Default Width |
+|-------------|-----------------|---------|---------------|
+| Position/Line No. | `createPositionColumn()` | `font-mono text-xs` | 70px |
+| ID/Code | `createIdColumn()` | `font-mono text-xs` | 120px |
+| Currency | `createCurrencyColumn()` | Right-aligned, € prefix | 120px |
+| Numeric | `createNumericColumn()` | Right-aligned | 100px |
+
+**Column Order Convention**: checkbox → position → ID → description → numeric values → actions
+
+**Usage Example**:
+```typescript
+import { createPositionColumn, createIdColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
+
+const columns = [
+  createPositionColumn(),           // Pos. column (010, 020, etc.)
+  createIdColumn('id', 'Line ID'),  // ID column
+  { key: 'description', label: 'Description', ... },
+  createCurrencyColumn('unitPrice', 'Unit Price'),
+  createCurrencyColumn('lineTotal', 'Line Total'),
+];
+```
+
 ### Technical Implementations
 - **LayoutForm2**: A central, configurable React component that provides visual consistency, change tracking, tab-based section management, type safety, and seamless validation integration for all business forms.
 - **Standardized Routing**: Over 22+ form routes with consistent `create/edit` patterns and lazy loading using React Suspense. Generic master data routing for scalability.

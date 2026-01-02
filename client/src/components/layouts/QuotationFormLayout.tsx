@@ -28,7 +28,7 @@ import { queryClient } from "@/lib/queryClient";
 import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, Printer, Search, ChevronsUpDown } from "lucide-react";
 import { CustomerSelect } from "@/components/ui/customer-select";
 import { useToast } from "@/hooks/use-toast";
-import { DataTableLayout, createIdColumn } from '@/components/layouts/DataTableLayout';
+import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, createNumericColumn } from '@/components/layouts/DataTableLayout';
 import { QuotationPrintDialog } from "@/components/print/QuotationPrintDialog";
 import { useDataTable } from '@/hooks/useDataTable';
 import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem, Project } from "@shared/schema";
@@ -103,19 +103,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const { toast } = useToast();
 
   // Data table state for quotation items
+  // Uses standardized helper functions for consistent column styling (see replit.md)
   const itemTableState = useDataTable({ 
     defaultColumns: [
-      { 
-        key: 'positionNo', 
-        label: 'Pos.', 
-        visible: true, 
-        width: 70, 
-        filterable: false, 
-        sortable: true,
-        renderCell: (value: string) => (
-          <span className="font-mono text-xs">{value || "-"}</span>
-        )
-      },
+      createPositionColumn(),
       createIdColumn('id', 'Line ID'),
       { 
         key: 'description', 
@@ -125,33 +116,9 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         filterable: true, 
         sortable: true
       },
-      { 
-        key: 'quantity', 
-        label: 'Quantity', 
-        visible: true, 
-        width: 100, 
-        filterable: true, 
-        sortable: true,
-        renderCell: (value: number) => value?.toString() || "0"
-      },
-      { 
-        key: 'unitPrice', 
-        label: 'Unit Price', 
-        visible: true, 
-        width: 120, 
-        filterable: true, 
-        sortable: true,
-        renderCell: (value: string) => `€${value || "0.00"}`
-      },
-      { 
-        key: 'lineTotal', 
-        label: 'Line Total', 
-        visible: true, 
-        width: 120, 
-        filterable: true, 
-        sortable: true,
-        renderCell: (value: string) => `€${value || "0.00"}`
-      },
+      createNumericColumn('quantity', 'Quantity'),
+      createCurrencyColumn('unitPrice', 'Unit Price'),
+      createCurrencyColumn('lineTotal', 'Line Total'),
     ],
     tableKey: 'quotation-form-items'
   });
