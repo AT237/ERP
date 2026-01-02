@@ -110,6 +110,30 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     enabled: !!lineItemId,
   });
 
+  // Load existing quotation items to calculate next positionNo for new items
+  const { data: quotationDetails } = useQuery<{ quotation: any; items: QuotationItem[]; customer: any }>({
+    queryKey: ["/api/quotations", quotationId, "details"],
+    enabled: !!quotationId && !isEditing,
+  });
+
+  // Calculate next position number for new items
+  useEffect(() => {
+    if (!isEditing && quotationDetails?.items) {
+      let maxNumber = 0;
+      for (const item of quotationDetails.items) {
+        if (item.positionNo) {
+          const num = parseInt(item.positionNo, 10);
+          if (!isNaN(num) && num > maxNumber) {
+            maxNumber = num;
+          }
+        }
+      }
+      const nextNumber = maxNumber + 10;
+      const nextPositionNo = nextNumber.toString().padStart(3, '0');
+      form.setValue('positionNo', nextPositionNo);
+    }
+  }, [isEditing, quotationDetails, form]);
+
   // Load text snippets for snippet library
   const { data: textSnippets = [], isLoading: isLoadingSnippets } = useQuery<TextSnippet[]>({
     queryKey: ["/api/text-snippets"],
