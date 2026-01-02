@@ -805,13 +805,61 @@ export class DatabaseStorage implements IStorage {
   }
 
   async addQuotationItem(item: InsertQuotationItem): Promise<QuotationItem> {
+    // Auto-generate positionNo if empty
+    if (!item.positionNo || item.positionNo.trim() === "") {
+      const nextPositionNo = await this.getNextPositionNo(item.quotationId);
+      item = { ...item, positionNo: nextPositionNo };
+    } else {
+      // Validate uniqueness
+      const isDuplicate = await this.isPositionNoDuplicate(item.quotationId, item.positionNo);
+      if (isDuplicate) {
+        throw new Error(`Positienummer ${item.positionNo} bestaat al in deze offerte`);
+      }
+    }
+    
     const [newItem] = await db.insert(quotationItems).values(item).returning();
     return newItem;
   }
 
   async updateQuotationItem(id: string, item: Partial<InsertQuotationItem>): Promise<QuotationItem> {
+    // If positionNo is being updated, validate uniqueness
+    if (item.positionNo !== undefined) {
+      const existingItem = await this.getQuotationItem(id);
+      if (existingItem && existingItem.quotationId && item.positionNo !== existingItem.positionNo) {
+        const isDuplicate = await this.isPositionNoDuplicate(existingItem.quotationId, item.positionNo, id);
+        if (isDuplicate) {
+          throw new Error(`Positienummer ${item.positionNo} bestaat al in deze offerte`);
+        }
+      }
+    }
+    
     const [updatedItem] = await db.update(quotationItems).set(item).where(eq(quotationItems.id, id)).returning();
     return updatedItem;
+  }
+  
+  private async getNextPositionNo(quotationId: string): Promise<string> {
+    const items = await this.getQuotationItems(quotationId);
+    let maxNumber = 0;
+    
+    for (const item of items) {
+      if (item.positionNo) {
+        const num = parseInt(item.positionNo, 10);
+        if (!isNaN(num) && num > maxNumber) {
+          maxNumber = num;
+        }
+      }
+    }
+    
+    const nextNumber = maxNumber + 10;
+    return nextNumber.toString().padStart(3, '0');
+  }
+  
+  private async isPositionNoDuplicate(quotationId: string, positionNo: string, excludeId?: string): Promise<boolean> {
+    const items = await this.getQuotationItems(quotationId);
+    return items.some(item => 
+      item.positionNo === positionNo && 
+      (excludeId ? item.id !== excludeId : true)
+    );
   }
 
   async deleteQuotationItem(id: string): Promise<void> {

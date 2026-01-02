@@ -778,7 +778,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(item);
     } catch (error) {
       console.error("Error adding quotation item:", error);
-      res.status(400).json({ message: "Failed to add quotation item" });
+      if (error instanceof Error && error.message.includes("Positienummer")) {
+        res.status(409).json({ message: error.message });
+      } else {
+        res.status(400).json({ message: "Failed to add quotation item" });
+      }
     }
   });
 
@@ -813,7 +817,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(item);
     } catch (error) {
       console.error("Error updating quotation item:", error);
-      res.status(400).json({ message: "Failed to update quotation item" });
+      if (error instanceof Error && error.message.includes("Positienummer")) {
+        res.status(409).json({ message: error.message });
+      } else {
+        res.status(400).json({ message: "Failed to update quotation item" });
+      }
     }
   });
 
