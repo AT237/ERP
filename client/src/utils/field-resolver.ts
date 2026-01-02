@@ -13,6 +13,7 @@ export type PrintData = {
     unitPrice: string;
     lineTotal: string;
     lineType: string;
+    positionNo?: string; // Formatted position number (e.g., "010", "020")
   }>;
 };
 

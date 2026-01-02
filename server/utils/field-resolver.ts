@@ -170,6 +170,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
     unitPrice: item.unitPrice || "0.00",
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",
+    positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'), // e.g., "010", "020"
   }));
 
   return {
