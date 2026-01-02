@@ -187,9 +187,16 @@ export type ItemContext = {
 
 /**
  * Resolve a value from item context (for {{item.XXX}} placeholders)
+ * Special fields: position, lineNumber, regelNummer, pos -> returns 1-based line number
  */
 function resolveItemValue(fieldPath: string, itemContext: ItemContext): any {
   if (!fieldPath || !itemContext?.item) return null;
+  
+  // Handle special position/line number fields (1-based)
+  const positionAliases = ['position', 'linenumber', 'regelnummer', 'pos', 'lineno', 'nr'];
+  if (positionAliases.includes(fieldPath.toLowerCase())) {
+    return itemContext.index + 1;
+  }
   
   const parts = fieldPath.split('.');
   let value: any = itemContext.item;
