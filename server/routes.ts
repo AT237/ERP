@@ -793,6 +793,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/quotation-items/:id", async (req, res) => {
+    try {
+      const item = await storage.getQuotationItem(req.params.id);
+      if (!item) {
+        return res.status(404).json({ message: "Quotation item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      console.error("Error fetching quotation item:", error);
+      res.status(500).json({ message: "Failed to fetch quotation item" });
+    }
+  });
+
   app.put("/api/quotation-items/:id", async (req, res) => {
     try {
       const itemData = insertQuotationItemSchema.partial().parse(req.body);

@@ -115,6 +115,7 @@ export interface IStorage {
   updateQuotation(id: string, quotation: Partial<InsertQuotation>): Promise<Quotation>;
   deleteQuotation(id: string): Promise<void>;
   getQuotationItems(quotationId: string): Promise<QuotationItem[]>;
+  getQuotationItem(id: string): Promise<QuotationItem | undefined>;
   addQuotationItem(item: InsertQuotationItem): Promise<QuotationItem>;
   updateQuotationItem(id: string, item: Partial<InsertQuotationItem>): Promise<QuotationItem>;
   deleteQuotationItem(id: string): Promise<void>;
@@ -796,6 +797,11 @@ export class DatabaseStorage implements IStorage {
 
   async getQuotationItems(quotationId: string): Promise<QuotationItem[]> {
     return await db.select().from(quotationItems).where(eq(quotationItems.quotationId, quotationId));
+  }
+
+  async getQuotationItem(id: string): Promise<QuotationItem | undefined> {
+    const [item] = await db.select().from(quotationItems).where(eq(quotationItems.id, id));
+    return item;
   }
 
   async addQuotationItem(item: InsertQuotationItem): Promise<QuotationItem> {
