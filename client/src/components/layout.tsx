@@ -1162,23 +1162,23 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Top Logo Bar */}
-      <div className="bg-white border-b border-border px-6 py-4 flex items-center justify-between">
+      <div className="bg-white border-b border-border px-4 md:px-6 py-2 md:py-4 flex items-center justify-between">
         <img 
           src={logoImage} 
           alt="ATE Solutions B.V." 
-          className="h-20 w-auto object-contain"
+          className="h-10 md:h-20 w-auto object-contain"
           data-testid="top-logo-bar"
         />
         
         {/* User Info */}
         <div className="text-right">
-          <div className="text-lg font-semibold text-foreground" data-testid="user-name">
+          <div className="text-sm md:text-lg font-semibold text-foreground" data-testid="user-name">
             Admin Gebruiker
           </div>
-          <div className="text-sm text-muted-foreground" data-testid="current-date">
+          <div className="text-xs md:text-sm text-muted-foreground hidden md:block" data-testid="current-date">
             {formatDate(getCurrentTime())}
           </div>
-          <div className="text-sm font-mono text-muted-foreground" data-testid="current-time">
+          <div className="text-xs md:text-sm font-mono text-muted-foreground" data-testid="current-time">
             {formatTime(getCurrentTime())}
           </div>
         </div>
@@ -1218,7 +1218,7 @@ export default function Layout({ children }: LayoutProps) {
         {/* Right Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Tab Bar - Now at the very top of right area */}
-          <div className="bg-gray-50 px-4 border-b-0 h-[62px] flex items-end">
+          <div className="bg-gray-50 px-2 md:px-4 border-b-0 h-[44px] md:h-[62px] flex items-end">
             <div className="flex items-end space-x-1 overflow-x-auto">
               {tabs.map((tab) => (
                 <div
@@ -1253,7 +1253,7 @@ export default function Layout({ children }: LayoutProps) {
                   data-testid={`tab-${tab.id}`}
                   style={{ fontFamily: 'Arial, sans-serif' }}
                 >
-                  <span className="text-sm font-medium truncate max-w-56">{tab.name}</span>
+                  <span className="text-xs md:text-sm font-medium truncate max-w-32 md:max-w-56">{tab.name}</span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
