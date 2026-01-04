@@ -4,6 +4,8 @@ import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import Sidebar from "./sidebar";
+import MobileLayout from "./mobile-layout";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,6 +63,12 @@ interface Tab {
 export default function Layout({ children }: LayoutProps) {
   const [location, navigate] = useLocation();
   const userId = "admin"; // TODO: Get from auth context
+  const isMobile = useIsMobile();
+  
+  // Render mobile layout for mobile devices
+  if (isMobile) {
+    return <MobileLayout>{children}</MobileLayout>;
+  }
   
   // Get page name from route
   const getPageInfo = (path: string) => {
