@@ -65,11 +65,6 @@ export default function Layout({ children }: LayoutProps) {
   const userId = "admin"; // TODO: Get from auth context
   const isMobile = useIsMobile();
   
-  // Render mobile layout for mobile devices
-  if (isMobile) {
-    return <MobileLayout>{children}</MobileLayout>;
-  }
-  
   // Get page name from route
   const getPageInfo = (path: string) => {
     // Check for customer-form with ID pattern
@@ -1166,6 +1161,11 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Render mobile layout for mobile devices
+  if (isMobile) {
+    return <MobileLayout>{children}</MobileLayout>;
+  }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
