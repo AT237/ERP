@@ -45,8 +45,8 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
 
   return (
     <div className="flex flex-col h-screen w-full max-w-full overflow-hidden bg-gray-50">
-      {/* Header - fully responsive */}
-      <header className="bg-white border-b border-gray-200 px-3 py-2 shrink-0 w-full">
+      {/* Header - compact */}
+      <header className="bg-white border-b border-gray-200 px-2 py-1 shrink-0 w-full">
         <div className="flex items-center justify-between gap-2 w-full min-w-0">
           {/* Logo - fills available space */}
           <div className="flex-1 min-w-0 flex items-center">
@@ -64,10 +64,10 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <button 
-                className="shrink-0 h-12 w-12 flex items-center justify-center rounded-lg bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 transition-colors"
+                className="shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 transition-colors"
                 data-testid="mobile-menu-button"
               >
-                <Menu className="h-6 w-6" />
+                <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[85vw] max-w-[320px] p-0">

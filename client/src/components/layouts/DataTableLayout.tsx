@@ -652,10 +652,10 @@ export function DataTableLayout<T = any>({
     <>
       <div className="space-y-4">
         {/* Header with Controls */}
-        <div className={`${compact ? 'p-0 mx-0' : 'p-2'}`}>
+        <div className={`${compact ? 'p-0 mx-0' : isMobile ? 'px-2 py-1' : 'p-2'}`}>
           {/* Mobile Layout - Compact stacked */}
           {isMobile ? (
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               {/* Search - Full width */}
               <div className="relative">
                 <Input
