@@ -656,6 +656,8 @@ export function DataTableLayout<T = any>({
           {/* Mobile Layout - Compact stacked */}
           {isMobile ? (
             <div className="space-y-1">
+              {/* Table Name */}
+              <h2 className="text-lg font-semibold text-orange-600 px-1">{entityNamePlural}</h2>
               {/* Search - Full width */}
               <div className="relative">
                 <Input
