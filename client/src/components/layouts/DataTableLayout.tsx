@@ -652,7 +652,7 @@ export function DataTableLayout<T = any>({
     <>
       <div className={isMobile ? "space-y-1" : "space-y-4"}>
         {/* Header with Controls */}
-        <div className={`${compact ? 'p-0 mx-0' : isMobile ? 'px-2 pt-0 pb-1' : 'p-2'}`}>
+        <div className={`${compact ? 'p-0 mx-0' : isMobile ? 'px-1 pt-0 pb-0' : 'p-2'}`}>
           {/* Mobile Layout - Compact stacked */}
           {isMobile ? (
             <div className="space-y-1">

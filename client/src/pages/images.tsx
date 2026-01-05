@@ -163,7 +163,7 @@ export default function Images() {
   ];
 
   return (
-    <div className="p-1 md:p-6">
+    <div className="p-0 md:p-6">
       <DataTableLayout
         entityName="Image"
         entityNamePlural="Images"
