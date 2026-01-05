@@ -39,80 +39,88 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      {/* Compact Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
-        <img 
-          src={logoImage} 
-          alt="ATE Solutions" 
-          className="h-10 w-auto object-contain"
-          data-testid="mobile-logo"
-        />
-        
-        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-          <SheetTrigger asChild>
-            <button 
-              className="h-11 w-11 flex items-center justify-center rounded-lg bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 transition-colors"
-              data-testid="mobile-menu-button"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[300px] p-0">
-            <SheetHeader className="p-4 border-b bg-orange-500 text-white">
-              <SheetTitle className="text-white text-lg">Menu</SheetTitle>
-            </SheetHeader>
-            <div className="overflow-y-auto h-full pb-20">
-              {defaultNavigation.map((section) => (
-                <div key={section.id} className="border-b">
-                  <div className="px-4 py-3 bg-gray-100 text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                    {section.name}
+    <div className="flex flex-col h-screen w-full max-w-full overflow-hidden bg-gray-50">
+      {/* Header - fully responsive */}
+      <header className="bg-white border-b border-gray-200 px-3 py-2 shrink-0 w-full">
+        <div className="flex items-center justify-between gap-2 w-full min-w-0">
+          {/* Logo - shrinks if needed */}
+          <div className="flex-1 min-w-0 flex items-center">
+            <img 
+              src={logoImage} 
+              alt="ATE Solutions" 
+              className="h-10 max-w-[60%] object-contain object-left"
+              data-testid="mobile-logo"
+            />
+          </div>
+          
+          {/* Menu button - fixed size, always visible */}
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <button 
+                className="shrink-0 h-12 w-12 flex items-center justify-center rounded-lg bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 transition-colors"
+                data-testid="mobile-menu-button"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[85vw] max-w-[320px] p-0">
+              <SheetHeader className="p-4 border-b bg-orange-500 text-white">
+                <SheetTitle className="text-white text-lg">Menu</SheetTitle>
+              </SheetHeader>
+              <div className="overflow-y-auto h-full pb-20">
+                {defaultNavigation.map((section) => (
+                  <div key={section.id} className="border-b">
+                    <div className="px-4 py-3 bg-gray-100 text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      {section.name}
+                    </div>
+                    {section.items.map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleNavClick(item.href)}
+                          className={`w-full flex items-center gap-3 px-4 py-4 min-h-[52px] text-left transition-colors ${
+                            isActive(item.href) 
+                              ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-500' 
+                              : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+                          }`}
+                          data-testid={`menu-item-${item.id}`}
+                        >
+                          <IconComponent className="h-5 w-5 shrink-0" />
+                          <span className="flex-1 font-medium text-base truncate">{item.name}</span>
+                          <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
+                        </button>
+                      );
+                    })}
                   </div>
-                  {section.items.map((item) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => handleNavClick(item.href)}
-                        className={`w-full flex items-center gap-3 px-4 py-4 min-h-[52px] text-left transition-colors ${
-                          isActive(item.href) 
-                            ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-500' 
-                            : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
-                        }`}
-                        data-testid={`menu-item-${item.id}`}
-                      >
-                        <IconComponent className="h-5 w-5" />
-                        <span className="flex-1 font-medium text-base">{item.name}</span>
-                        <ChevronRight className="h-4 w-4 text-gray-400" />
-                      </button>
-                    );
-                  })}
+                ))}
+                
+                <div className="p-4">
+                  <button
+                    onClick={() => handleNavClick('/master-data/company-details')}
+                    className="w-full flex items-center gap-3 px-4 py-4 min-h-[52px] text-gray-600 hover:bg-gray-50 active:bg-gray-100 rounded-lg"
+                    data-testid="menu-item-settings"
+                  >
+                    <Settings className="h-5 w-5 shrink-0" />
+                    <span className="font-medium text-base">Instellingen</span>
+                  </button>
                 </div>
-              ))}
-              
-              <div className="p-4">
-                <button
-                  onClick={() => handleNavClick('/master-data/company-details')}
-                  className="w-full flex items-center gap-3 px-4 py-4 min-h-[52px] text-gray-600 hover:bg-gray-50 active:bg-gray-100 rounded-lg"
-                  data-testid="menu-item-settings"
-                >
-                  <Settings className="h-5 w-5" />
-                  <span className="font-medium text-base">Instellingen</span>
-                </button>
               </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+            </SheetContent>
+          </Sheet>
+        </div>
       </header>
 
-      {/* Main Content Area - fills available space */}
-      <main className="flex-1 overflow-auto">
-        {children}
+      {/* Main Content - fills available space, scrollable */}
+      <main className="flex-1 overflow-auto w-full min-w-0">
+        <div className="w-full min-w-0">
+          {children}
+        </div>
       </main>
 
-      {/* Bottom Navigation Bar */}
-      <nav className="bg-white border-t border-gray-200 px-2 py-2 shrink-0 safe-area-inset-bottom">
-        <div className="flex justify-around items-center">
+      {/* Bottom Navigation - responsive grid */}
+      <nav className="bg-white border-t border-gray-200 px-1 py-1 shrink-0 w-full safe-area-inset-bottom">
+        <div className="grid grid-cols-4 gap-1 w-full">
           {bottomNavItems.map((item) => {
             const active = isActive(item.href);
             const IconComponent = item.icon;
@@ -120,19 +128,19 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.href)}
-                className={`relative flex flex-col items-center justify-center py-3 px-4 rounded-lg min-w-[72px] min-h-[60px] transition-colors ${
+                className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors ${
                   active 
                     ? 'text-orange-500' 
                     : 'text-gray-500 hover:text-gray-700 active:bg-gray-100'
                 }`}
                 data-testid={`nav-${item.id}`}
               >
-                <IconComponent className={`h-6 w-6 ${active ? 'text-orange-500' : ''}`} />
-                <span className={`text-sm mt-1 font-medium ${active ? 'text-orange-500' : ''}`}>
+                <IconComponent className={`h-6 w-6 shrink-0 ${active ? 'text-orange-500' : ''}`} />
+                <span className={`text-xs mt-1 font-medium truncate max-w-full ${active ? 'text-orange-500' : ''}`}>
                   {item.name}
                 </span>
                 {active && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-1 bg-orange-500 rounded-t-full" />
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-orange-500 rounded-t-full" />
                 )}
               </button>
             );
