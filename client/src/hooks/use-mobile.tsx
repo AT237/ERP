@@ -1,30 +1,59 @@
 import * as React from "react"
 
-const MOBILE_BREAKPOINT = 1024
+export type ScreenSize = 'phone' | 'tablet-compact' | 'tablet-wide' | 'desktop';
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean>(() => {
+const BREAKPOINTS = {
+  phone: 640,
+  tabletCompact: 1024,
+  tabletWide: 1280,
+};
+
+function getScreenSize(width: number): ScreenSize {
+  if (width < BREAKPOINTS.phone) return 'phone';
+  if (width < BREAKPOINTS.tabletCompact) return 'tablet-compact';
+  if (width < BREAKPOINTS.tabletWide) return 'tablet-wide';
+  return 'desktop';
+}
+
+export function useScreenSize(): ScreenSize {
+  const [screenSize, setScreenSize] = React.useState<ScreenSize>(() => {
     if (typeof window !== 'undefined') {
-      return window.innerWidth < MOBILE_BREAKPOINT
+      return getScreenSize(window.innerWidth);
     }
-    return false
-  })
+    return 'desktop';
+  });
 
   React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
+    const checkSize = () => {
+      setScreenSize(getScreenSize(window.innerWidth));
+    };
     
-    checkMobile()
+    checkSize();
     
-    window.addEventListener("resize", checkMobile)
-    window.addEventListener("orientationchange", checkMobile)
+    window.addEventListener("resize", checkSize);
+    window.addEventListener("orientationchange", checkSize);
     
     return () => {
-      window.removeEventListener("resize", checkMobile)
-      window.removeEventListener("orientationchange", checkMobile)
-    }
-  }, [])
+      window.removeEventListener("resize", checkSize);
+      window.removeEventListener("orientationchange", checkSize);
+    };
+  }, []);
 
-  return isMobile
+  return screenSize;
+}
+
+export function useIsMobile(): boolean {
+  const screenSize = useScreenSize();
+  return screenSize === 'phone' || screenSize === 'tablet-compact';
+}
+
+export function useIsTouch(): boolean {
+  const [isTouch, setIsTouch] = React.useState(false);
+  
+  React.useEffect(() => {
+    const checkTouch = window.matchMedia('(pointer: coarse)').matches;
+    setIsTouch(checkTouch);
+  }, []);
+  
+  return isTouch;
 }
