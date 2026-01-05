@@ -171,7 +171,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               data-testid="action-add"
             >
               <Plus className="h-6 w-6 shrink-0" />
-              <span className="text-xs mt-1 font-medium">Toevoegen</span>
+              <span className="text-xs mt-1 font-medium">ADD</span>
             </button>
             <button
               onClick={handleDelete}

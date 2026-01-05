@@ -719,22 +719,7 @@ export function DataTableLayout<T = any>({
                 </DropdownMenu>
               </div>
 
-              {/* Mobile Action Buttons */}
-              <div className="flex gap-1.5 flex-wrap">
-                {headerActions.map((action) => (
-                  <Button
-                    key={action.key}
-                    variant={action.variant || 'default'}
-                    onClick={action.onClick}
-                    disabled={action.disabled}
-                    data-testid={`button-${action.key}-mobile`}
-                    className={action.variant === 'default' ? 'h-9 text-sm flex-1 min-w-[100px] bg-green-600 text-white hover:bg-green-700' : 'h-9 text-sm flex-1 min-w-[100px]'}
-                  >
-                    {action.icon && <span className="mr-1.5">{action.icon}</span>}
-                    {action.label}
-                  </Button>
-                ))}
-              </div>
+              {/* Mobile Action Buttons - hidden, actions are in bottom nav */}
             </div>
           ) : (
             /* Desktop Layout - Horizontal */
