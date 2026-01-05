@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 // InfoHeaderLayout removed per user request
 import { FormTabLayout, type FormTab } from './FormTabLayout';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface ActionButton {
   key: string;
@@ -39,10 +40,12 @@ export function BaseFormLayout({
   onTabChange,
   isLoading = false
 }: BaseFormLayoutProps) {
+  const isMobile = useIsMobile();
+  
   // Show skeleton instead of loading spinner to prevent flicker
   if (isLoading) {
     return (
-      <div className="p-6">
+      <div className={isMobile ? "p-2" : "p-6"}>
         <div className="space-y-4">
           {/* Header Skeleton - maintains exact layout structure */}
           <div className="relative p-2 h-16">
@@ -73,14 +76,14 @@ export function BaseFormLayout({
   }
 
   return (
-    <div className="p-6">
+    <div className={isMobile ? "p-2" : "p-6"}>
       <div className="space-y-2">
         {/* Header with Info Fields and Action Buttons */}
-        <div className="relative pt-2 pb-0 px-4">
+        <div className={`relative pt-2 pb-0 ${isMobile ? 'px-0' : 'px-4'}`}>
           {/* Info Header removed per user request */}
           
           {/* Action Buttons */}
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2">
+          <div className={`bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg ${isMobile ? 'px-2 py-2' : 'px-4 py-2'} flex items-center gap-2 ${isMobile ? 'flex-wrap' : ''}`}>
             {actionButtons.map((button) => (
               <Button
                 key={button.key}
@@ -88,7 +91,7 @@ export function BaseFormLayout({
                 size="sm"
                 onClick={button.onClick}
                 disabled={button.disabled || button.loading}
-                className={`h-8 text-xs ${button.className || ''} ${
+                className={`${isMobile ? 'h-9 text-sm flex-1 min-w-[80px]' : 'h-8 text-xs'} ${button.className || ''} ${
                   button.variant === 'default' ? 'bg-green-600 text-white hover:bg-green-700' : ''
                 }`}
                 data-testid={button.testId || `button-${button.key}`}

@@ -12,6 +12,7 @@ import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
 import type { FormTab } from './FormTabLayout';
 import { UseFormReturn, FieldValues, FieldPath } from 'react-hook-form';
 import { useFormPersistence } from "@/hooks/use-form-persistence";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -373,6 +374,11 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
 }: LayoutForm2Props<T>) {
 
   // ========================================================================
+  // MOBILE DETECTION
+  // ========================================================================
+  const isMobile = useIsMobile();
+
+  // ========================================================================
   // FORM PERSISTENCE - AUTO-SAVE TO LOCALSTORAGE
   // ========================================================================
   
@@ -471,6 +477,26 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       isModified: modifiedFields.has(field.key as string)
     };
 
+    // Mobile layout: label above field, full width
+    if (isMobile) {
+      return (
+        <div key={field.key as string} className="space-y-1">
+          <Label 
+            htmlFor={field.key as string} 
+            className="text-sm font-medium"
+          >
+            {field.label}
+            {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
+          </Label>
+          <div className={field.wrapperClassName || ''}>
+            {renderField(fieldWithModified, changeTracking)}
+            {renderFieldValidation(fieldWithModified)}
+          </div>
+        </div>
+      );
+    }
+
+    // Desktop layout: label beside field
     return (
       <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-3">
         <Label 
@@ -574,7 +600,17 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       return {
         id: section.id,
         label: section.label,
-        content: (
+        content: isMobile ? (
+          // Mobile layout: single column, all fields stacked
+          <div className="space-y-4 px-2 pt-2 pb-4">
+            {allFields.map((field, idx) => (
+              <div key={field.key as string || idx}>
+                {renderSimpleField(field)}
+              </div>
+            ))}
+          </div>
+        ) : (
+          // Desktop layout: 2-column grid
           <div className="grid grid-rows-6 gap-[20px] min-h-[280px] pt-[10px]">
             {/* Rij 1 */}
             <div className="grid grid-cols-2 gap-8">
@@ -610,7 +646,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         )
       };
     });
-  }, [sections]);
+  }, [sections, isMobile]);
 
   // ========================================================================
   // RENDER
