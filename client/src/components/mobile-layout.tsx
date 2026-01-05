@@ -24,18 +24,21 @@ const bottomNavItems = [
   { id: "inventory", name: "Voorraad", href: "/inventory", icon: defaultNavigation.find(s => s.id === "inventory")?.items.find(i => i.id === "stock")?.icon || BarChart3 },
 ];
 
-// Database/table pages where action buttons should show
-const databasePages = [
-  "/customers", "/suppliers", "/quotations", "/inventory", "/projects", 
-  "/invoices", "/purchase-orders", "/work-orders", "/packing-lists", 
-  "/sales-orders", "/images", "/text-snippets"
-];
-
-const actionItems = [
-  { id: "add", name: "Toevoegen", icon: Plus, action: "mobile-add" },
-  { id: "delete", name: "Verwijderen", icon: Trash2, action: "mobile-delete" },
-  { id: "duplicate", name: "Dupliceren", icon: Copy, action: "mobile-duplicate" },
-];
+// Database/table pages where action buttons should show, with form types
+const databasePages: Record<string, { formType: string; name: string }> = {
+  "/customers": { formType: "customer", name: "New Customer" },
+  "/suppliers": { formType: "supplier", name: "New Supplier" },
+  "/quotations": { formType: "quotation", name: "New Quotation" },
+  "/inventory": { formType: "inventory", name: "New Inventory Item" },
+  "/projects": { formType: "project", name: "New Project" },
+  "/invoices": { formType: "invoice", name: "New Invoice" },
+  "/purchase-orders": { formType: "purchase-order", name: "New Purchase Order" },
+  "/work-orders": { formType: "work-order", name: "New Work Order" },
+  "/packing-lists": { formType: "packing-list", name: "New Packing List" },
+  "/sales-orders": { formType: "sales-order", name: "New Sales Order" },
+  "/images": { formType: "image", name: "New Image" },
+  "/text-snippets": { formType: "text-snippet", name: "New Text Snippet" },
+};
 
 export default function MobileLayout({ children }: MobileLayoutProps) {
   const [location, navigate] = useLocation();
@@ -52,10 +55,29 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
   };
 
   // Check if we're on a database page
-  const isOnDatabasePage = databasePages.some(page => location.startsWith(page));
+  const currentDbPage = Object.keys(databasePages).find(page => location.startsWith(page));
+  const isOnDatabasePage = !!currentDbPage;
 
-  const handleAction = (action: string) => {
-    window.dispatchEvent(new CustomEvent(action, { detail: { location } }));
+  const handleAdd = () => {
+    if (currentDbPage) {
+      const pageConfig = databasePages[currentDbPage];
+      const event = new CustomEvent('open-form-tab', {
+        detail: {
+          id: `new-${pageConfig.formType}`,
+          name: pageConfig.name,
+          formType: pageConfig.formType
+        }
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
+  const handleDelete = () => {
+    window.dispatchEvent(new CustomEvent('mobile-delete', { detail: { location } }));
+  };
+
+  const handleDuplicate = () => {
+    window.dispatchEvent(new CustomEvent('mobile-duplicate', { detail: { location } }));
   };
 
   const handleNavClick = (href: string) => {
@@ -150,22 +172,30 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
         {isOnDatabasePage ? (
           /* Action buttons for database pages */
           <div className="grid grid-cols-3 gap-1 w-full">
-            {actionItems.map((item) => {
-              const IconComponent = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleAction(item.action)}
-                  className="relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors text-gray-600 hover:text-orange-500 active:bg-orange-50"
-                  data-testid={`action-${item.id}`}
-                >
-                  <IconComponent className="h-6 w-6 shrink-0" />
-                  <span className="text-xs mt-1 font-medium truncate max-w-full">
-                    {item.name}
-                  </span>
-                </button>
-              );
-            })}
+            <button
+              onClick={handleAdd}
+              className="relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors text-gray-600 hover:text-orange-500 active:bg-orange-50"
+              data-testid="action-add"
+            >
+              <Plus className="h-6 w-6 shrink-0" />
+              <span className="text-xs mt-1 font-medium">Toevoegen</span>
+            </button>
+            <button
+              onClick={handleDelete}
+              className="relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors text-gray-600 hover:text-orange-500 active:bg-orange-50"
+              data-testid="action-delete"
+            >
+              <Trash2 className="h-6 w-6 shrink-0" />
+              <span className="text-xs mt-1 font-medium">Verwijderen</span>
+            </button>
+            <button
+              onClick={handleDuplicate}
+              className="relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors text-gray-600 hover:text-orange-500 active:bg-orange-50"
+              data-testid="action-duplicate"
+            >
+              <Copy className="h-6 w-6 shrink-0" />
+              <span className="text-xs mt-1 font-medium">Dupliceren</span>
+            </button>
           </div>
         ) : (
           /* Standard navigation for other pages */
