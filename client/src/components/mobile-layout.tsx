@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Menu, Settings, ChevronRight, Home, BarChart3
 } from "lucide-react";
-import logoImage from "@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg";
 import {
   Sheet,
   SheetContent,
@@ -28,6 +28,11 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
   const [location, navigate] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Fetch company logo from database
+  const { data: companyLogo } = useQuery<{ imageData: string } | null>({
+    queryKey: ['/api/masterdata/images/company-logo'],
+  });
+
   const isActive = (href: string) => {
     if (href === "/dashboard" && (location === "/" || location === "/dashboard")) return true;
     return location.startsWith(href) && href !== "/dashboard";
@@ -45,12 +50,14 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
         <div className="flex items-center justify-between gap-2 w-full min-w-0">
           {/* Logo - fills available space */}
           <div className="flex-1 min-w-0 flex items-center">
-            <img 
-              src={logoImage} 
-              alt="ATE Solutions" 
-              className="h-12 max-h-12 flex-1 min-w-0 object-contain object-left"
-              data-testid="mobile-logo"
-            />
+            {companyLogo?.imageData && (
+              <img 
+                src={companyLogo.imageData} 
+                alt="ATE Solutions" 
+                className="h-12 max-h-12 flex-1 min-w-0 object-contain object-left"
+                data-testid="mobile-logo"
+              />
+            )}
           </div>
           
           {/* Menu button - fixed size, always visible */}

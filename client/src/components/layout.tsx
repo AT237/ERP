@@ -19,7 +19,6 @@ import {
 
 import SectionInfoPanel from "./section-info-panel";
 import { CustomerProvider } from "@/contexts/CustomerContext";
-import logoImageFallback from "@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg";
 
 // Lazy load components outside the render function to prevent re-importing
 const CustomerTable = lazy(() => import('./customers-table'));
@@ -1176,12 +1175,14 @@ export default function Layout({ children }: LayoutProps) {
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Top Logo Bar */}
       <div className="bg-white border-b border-border px-4 md:px-6 py-2 md:py-4 flex items-center justify-between">
-        <img 
-          src={companyLogo?.imageData || logoImageFallback} 
-          alt="ATE Solutions B.V." 
-          className="h-10 md:h-20 w-auto object-contain"
-          data-testid="top-logo-bar"
-        />
+        {companyLogo?.imageData && (
+          <img 
+            src={companyLogo.imageData} 
+            alt="ATE Solutions B.V." 
+            className="h-10 md:h-20 w-auto object-contain"
+            data-testid="top-logo-bar"
+          />
+        )}
         
         {/* User Info */}
         <div className="text-right">
