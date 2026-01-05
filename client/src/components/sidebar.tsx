@@ -35,7 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const defaultNavigation = [
+export const defaultNavigation = [
   {
     id: "overview",
     name: "Overview",
