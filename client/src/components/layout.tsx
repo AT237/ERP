@@ -66,7 +66,7 @@ export default function Layout({ children }: LayoutProps) {
   const isMobile = useIsMobile();
 
   // Fetch company logo from database (ID starting with "cad")
-  const { data: companyLogo } = useQuery<{ image_data: string } | null>({
+  const { data: companyLogo } = useQuery<{ imageData: string } | null>({
     queryKey: ['/api/masterdata/images/company-logo'],
   });
   
@@ -1177,7 +1177,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Top Logo Bar */}
       <div className="bg-white border-b border-border px-4 md:px-6 py-2 md:py-4 flex items-center justify-between">
         <img 
-          src={companyLogo?.image_data || logoImageFallback} 
+          src={companyLogo?.imageData || logoImageFallback} 
           alt="ATE Solutions B.V." 
           className="h-10 md:h-20 w-auto object-contain"
           data-testid="top-logo-bar"
