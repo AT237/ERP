@@ -54,7 +54,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               <img 
                 src={companyLogo.imageData} 
                 alt="ATE Solutions" 
-                className="h-12 max-h-12 flex-1 min-w-0 object-contain object-left"
+                className="h-10 max-h-10 flex-1 min-w-0 object-contain object-left"
                 data-testid="mobile-logo"
               />
             )}

@@ -1179,7 +1179,7 @@ export default function Layout({ children }: LayoutProps) {
           <img 
             src={companyLogo.imageData} 
             alt="ATE Solutions B.V." 
-            className="h-10 md:h-20 w-auto object-contain"
+            className="h-8 md:h-16 w-auto object-contain"
             data-testid="top-logo-bar"
           />
         )}
