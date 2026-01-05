@@ -234,7 +234,7 @@ export default function Projects() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-1 md:p-6">
       <DataTableLayout
         // Data
         data={enhancedProjects}

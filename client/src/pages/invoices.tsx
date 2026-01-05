@@ -220,7 +220,7 @@ export default function Invoices() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-1 md:p-6 space-y-6">
         <Card>
           <CardHeader>
             <Skeleton className="h-6 w-48" />
@@ -242,7 +242,7 @@ export default function Invoices() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-1 md:p-6 space-y-6">
       {/* Header Image */}
       <Card>
         <CardContent className="p-0">
