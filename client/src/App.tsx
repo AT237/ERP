@@ -51,6 +51,24 @@ function Router() {
         
         {/* Master Data Routes */}
         <Route path="/master-data/images" component={Images} />
+        <Route path="/image-form" component={() => {
+          const ImageForm = React.lazy(() => import('./pages/image-form'));
+          return (
+            <Suspense fallback={<div className="p-6">Loading...</div>}>
+              <ImageForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/image-form/:id">
+          {(params: { id: string }) => {
+            const ImageForm = React.lazy(() => import('./pages/image-form'));
+            return (
+              <Suspense fallback={<div className="p-6">Loading...</div>}>
+                <ImageForm imageId={params.id} onSave={() => window.history.back()} />
+              </Suspense>
+            );
+          }}
+        </Route>
         <Route path="/master-data/uom" component={() => (
           <div className="p-6">
             <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">

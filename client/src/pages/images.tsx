@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -6,9 +7,12 @@ import { Edit, Trash2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Images() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const isMobile = useIsMobile();
 
   // Fetch images
   const { data: images = [], isLoading } = useQuery<any[]>({
@@ -101,15 +105,18 @@ export default function Images() {
   });
 
   const handleNewImage = () => {
-    // Dispatch custom event to open new image form in new tab
-    const event = new CustomEvent('open-form-tab', {
-      detail: {
-        id: 'new-image',
-        name: 'Image',
-        formType: 'image'
-      }
-    });
-    window.dispatchEvent(event);
+    if (isMobile) {
+      navigate('/image-form');
+    } else {
+      const event = new CustomEvent('open-form-tab', {
+        detail: {
+          id: 'new-image',
+          name: 'Image',
+          formType: 'image'
+        }
+      });
+      window.dispatchEvent(event);
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -119,16 +126,19 @@ export default function Images() {
   };
 
   const handleEdit = (image: any) => {
-    // Dispatch custom event to open image edit form in new tab
-    const event = new CustomEvent('open-form-tab', {
-      detail: {
-        id: `edit-image-${image.id}`,
-        name: 'Image',
-        formType: 'image',
-        parentId: image.id
-      }
-    });
-    window.dispatchEvent(event);
+    if (isMobile) {
+      navigate(`/image-form/${image.id}`);
+    } else {
+      const event = new CustomEvent('open-form-tab', {
+        detail: {
+          id: `edit-image-${image.id}`,
+          name: 'Image',
+          formType: 'image',
+          parentId: image.id
+        }
+      });
+      window.dispatchEvent(event);
+    }
   };
 
   const handleRowDoubleClick = (image: any) => {
