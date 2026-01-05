@@ -19,7 +19,7 @@ import {
 
 import SectionInfoPanel from "./section-info-panel";
 import { CustomerProvider } from "@/contexts/CustomerContext";
-import logoImage from "@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg";
+import logoImageFallback from "@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg";
 
 // Lazy load components outside the render function to prevent re-importing
 const CustomerTable = lazy(() => import('./customers-table'));
@@ -64,6 +64,11 @@ export default function Layout({ children }: LayoutProps) {
   const [location, navigate] = useLocation();
   const userId = "admin"; // TODO: Get from auth context
   const isMobile = useIsMobile();
+
+  // Fetch company logo from database (ID starting with "cad")
+  const { data: companyLogo } = useQuery<{ image_data: string } | null>({
+    queryKey: ['/api/masterdata/images/company-logo'],
+  });
   
   // Get page name from route
   const getPageInfo = (path: string) => {
@@ -1172,7 +1177,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Top Logo Bar */}
       <div className="bg-white border-b border-border px-4 md:px-6 py-2 md:py-4 flex items-center justify-between">
         <img 
-          src={logoImage} 
+          src={companyLogo?.image_data || logoImageFallback} 
           alt="ATE Solutions B.V." 
           className="h-10 md:h-20 w-auto object-contain"
           data-testid="top-logo-bar"

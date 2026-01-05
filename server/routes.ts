@@ -1564,6 +1564,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Master Data routes - Images
+  // Company logo endpoint - returns first logo with ID starting with "cad"
+  app.get("/api/masterdata/images/company-logo", async (req, res) => {
+    try {
+      const { images } = await import("@shared/schema");
+      const { like, eq, and, asc } = await import("drizzle-orm");
+      const [logo] = await db.select()
+        .from(images)
+        .where(and(
+          like(images.id, 'cad%'),
+          eq(images.isActive, true)
+        ))
+        .orderBy(asc(images.id))
+        .limit(1);
+      res.json(logo || null);
+    } catch (error) {
+      console.error("Error fetching company logo:", error);
+      res.status(500).json({ message: "Failed to fetch company logo" });
+    }
+  });
+
   app.get("/api/masterdata/images", async (req, res) => {
     try {
       const { images } = await import("@shared/schema");
