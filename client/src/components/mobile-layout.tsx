@@ -43,12 +43,12 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
       {/* Header - fully responsive */}
       <header className="bg-white border-b border-gray-200 px-3 py-2 shrink-0 w-full">
         <div className="flex items-center justify-between gap-2 w-full min-w-0">
-          {/* Logo - shrinks if needed */}
+          {/* Logo - fills available space */}
           <div className="flex-1 min-w-0 flex items-center">
             <img 
               src={logoImage} 
               alt="ATE Solutions" 
-              className="h-10 max-w-[60%] object-contain object-left"
+              className="h-12 max-h-12 flex-1 min-w-0 object-contain object-left"
               data-testid="mobile-logo"
             />
           </div>
