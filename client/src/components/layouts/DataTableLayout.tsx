@@ -943,6 +943,11 @@ export function DataTableLayout<T = any>({
                         }`}
                         style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
                         onDoubleClick={() => onRowDoubleClick?.(row)}
+                        onTouchEnd={(e) => {
+                          const target = e.target as HTMLElement;
+                          if (target.closest('input[type="checkbox"]') || target.closest('button')) return;
+                          onRowDoubleClick?.(row);
+                        }}
                       >
                         <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ width: '48px', minWidth: '48px', maxWidth: '48px', height: '32px', lineHeight: '1.2' }}>
                           <div className="flex items-center justify-center h-4 w-4 mx-auto">
