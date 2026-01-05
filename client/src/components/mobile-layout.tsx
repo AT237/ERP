@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { 
-  Menu, Settings, ChevronRight, Home, BarChart3
+  Menu, Settings, ChevronRight, Home, BarChart3, Plus, Trash2, Copy
 } from "lucide-react";
 import {
   Sheet,
@@ -24,6 +24,19 @@ const bottomNavItems = [
   { id: "inventory", name: "Voorraad", href: "/inventory", icon: defaultNavigation.find(s => s.id === "inventory")?.items.find(i => i.id === "stock")?.icon || BarChart3 },
 ];
 
+// Database/table pages where action buttons should show
+const databasePages = [
+  "/customers", "/suppliers", "/quotations", "/inventory", "/projects", 
+  "/invoices", "/purchase-orders", "/work-orders", "/packing-lists", 
+  "/sales-orders", "/images", "/text-snippets"
+];
+
+const actionItems = [
+  { id: "add", name: "Toevoegen", icon: Plus, action: "mobile-add" },
+  { id: "delete", name: "Verwijderen", icon: Trash2, action: "mobile-delete" },
+  { id: "duplicate", name: "Dupliceren", icon: Copy, action: "mobile-duplicate" },
+];
+
 export default function MobileLayout({ children }: MobileLayoutProps) {
   const [location, navigate] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -36,6 +49,13 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
   const isActive = (href: string) => {
     if (href === "/dashboard" && (location === "/" || location === "/dashboard")) return true;
     return location.startsWith(href) && href !== "/dashboard";
+  };
+
+  // Check if we're on a database page
+  const isOnDatabasePage = databasePages.some(page => location.startsWith(page));
+
+  const handleAction = (action: string) => {
+    window.dispatchEvent(new CustomEvent(action, { detail: { location } }));
   };
 
   const handleNavClick = (href: string) => {
@@ -127,32 +147,55 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
 
       {/* Bottom Navigation - responsive grid */}
       <nav className="bg-white border-t border-gray-200 px-1 py-1 shrink-0 w-full safe-area-inset-bottom">
-        <div className="grid grid-cols-4 gap-1 w-full">
-          {bottomNavItems.map((item) => {
-            const active = isActive(item.href);
-            const IconComponent = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.href)}
-                className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors ${
-                  active 
-                    ? 'text-orange-500' 
-                    : 'text-gray-500 hover:text-gray-700 active:bg-gray-100'
-                }`}
-                data-testid={`nav-${item.id}`}
-              >
-                <IconComponent className={`h-6 w-6 shrink-0 ${active ? 'text-orange-500' : ''}`} />
-                <span className={`text-xs mt-1 font-medium truncate max-w-full ${active ? 'text-orange-500' : ''}`}>
-                  {item.name}
-                </span>
-                {active && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-orange-500 rounded-t-full" />
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {isOnDatabasePage ? (
+          /* Action buttons for database pages */
+          <div className="grid grid-cols-3 gap-1 w-full">
+            {actionItems.map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleAction(item.action)}
+                  className="relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors text-gray-600 hover:text-orange-500 active:bg-orange-50"
+                  data-testid={`action-${item.id}`}
+                >
+                  <IconComponent className="h-6 w-6 shrink-0" />
+                  <span className="text-xs mt-1 font-medium truncate max-w-full">
+                    {item.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          /* Standard navigation for other pages */
+          <div className="grid grid-cols-4 gap-1 w-full">
+            {bottomNavItems.map((item) => {
+              const active = isActive(item.href);
+              const IconComponent = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item.href)}
+                  className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors ${
+                    active 
+                      ? 'text-orange-500' 
+                      : 'text-gray-500 hover:text-gray-700 active:bg-gray-100'
+                  }`}
+                  data-testid={`nav-${item.id}`}
+                >
+                  <IconComponent className={`h-6 w-6 shrink-0 ${active ? 'text-orange-500' : ''}`} />
+                  <span className={`text-xs mt-1 font-medium truncate max-w-full ${active ? 'text-orange-500' : ''}`}>
+                    {item.name}
+                  </span>
+                  {active && (
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-orange-500 rounded-t-full" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </nav>
     </div>
   );
