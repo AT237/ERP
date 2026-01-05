@@ -26,18 +26,18 @@ const bottomNavItems = [
 
 // Database/table pages where action buttons should show, with form routes
 const databasePages: Record<string, { route: string }> = {
-  "/customers": { route: "/customers/create" },
-  "/suppliers": { route: "/suppliers/create" },
-  "/quotations": { route: "/quotations/create" },
-  "/inventory": { route: "/inventory/create" },
-  "/projects": { route: "/projects/create" },
-  "/invoices": { route: "/invoices/create" },
-  "/purchase-orders": { route: "/purchase-orders/create" },
-  "/work-orders": { route: "/work-orders/create" },
-  "/packing-lists": { route: "/packing-lists/create" },
-  "/sales-orders": { route: "/sales-orders/create" },
-  "/images": { route: "/master-data/images/create" },
-  "/text-snippets": { route: "/text-snippets/create" },
+  "/customers": { route: "/customer-form" },
+  "/suppliers": { route: "/supplier-form" },
+  "/quotations": { route: "/quotation-form" },
+  "/inventory": { route: "/inventory-form" },
+  "/projects": { route: "/project-form" },
+  "/invoices": { route: "/invoice-form" },
+  "/purchase-orders": { route: "/purchase-order-form" },
+  "/work-orders": { route: "/work-order-form" },
+  "/packing-lists": { route: "/packing-list-form" },
+  "/sales-orders": { route: "/sales-order-form" },
+  "/images": { route: "/image-form" },
+  "/text-snippets": { route: "/text-snippet-form" },
 };
 
 export default function MobileLayout({ children }: MobileLayoutProps) {
