@@ -119,8 +119,8 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
       </header>
 
       {/* Main Content - fills available space, scrollable */}
-      <main className="flex-1 overflow-auto w-full min-w-0">
-        <div className="w-full min-w-0">
+      <main className="flex-1 overflow-auto w-full min-w-0 pt-0">
+        <div className="w-full min-w-0 pt-0">
           {children}
         </div>
       </main>

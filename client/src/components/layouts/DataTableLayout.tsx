@@ -650,14 +650,14 @@ export function DataTableLayout<T = any>({
 
   return (
     <>
-      <div className={isMobile ? "space-y-1" : "space-y-4"}>
+      <div className={isMobile ? "space-y-0" : "space-y-4"}>
         {/* Header with Controls */}
         <div className={`${compact ? 'p-0 mx-0' : isMobile ? 'px-1 pt-0 pb-0' : 'p-2'}`}>
           {/* Mobile Layout - Compact stacked */}
           {isMobile ? (
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {/* Table Name */}
-              <h2 className="text-lg font-semibold text-orange-600 px-1">{entityNamePlural}</h2>
+              <h2 className="text-base font-semibold text-orange-600 px-1 py-0">{entityNamePlural}</h2>
               {/* Search - Full width */}
               <div className="relative">
                 <Input
