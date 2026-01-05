@@ -24,20 +24,20 @@ const bottomNavItems = [
   { id: "inventory", name: "Voorraad", href: "/inventory", icon: defaultNavigation.find(s => s.id === "inventory")?.items.find(i => i.id === "stock")?.icon || BarChart3 },
 ];
 
-// Database/table pages where action buttons should show, with form types
-const databasePages: Record<string, { formType: string; name: string }> = {
-  "/customers": { formType: "customer", name: "New Customer" },
-  "/suppliers": { formType: "supplier", name: "New Supplier" },
-  "/quotations": { formType: "quotation", name: "New Quotation" },
-  "/inventory": { formType: "inventory", name: "New Inventory Item" },
-  "/projects": { formType: "project", name: "New Project" },
-  "/invoices": { formType: "invoice", name: "New Invoice" },
-  "/purchase-orders": { formType: "purchase-order", name: "New Purchase Order" },
-  "/work-orders": { formType: "work-order", name: "New Work Order" },
-  "/packing-lists": { formType: "packing-list", name: "New Packing List" },
-  "/sales-orders": { formType: "sales-order", name: "New Sales Order" },
-  "/images": { formType: "image", name: "New Image" },
-  "/text-snippets": { formType: "text-snippet", name: "New Text Snippet" },
+// Database/table pages where action buttons should show, with form routes
+const databasePages: Record<string, { route: string }> = {
+  "/customers": { route: "/customers/create" },
+  "/suppliers": { route: "/suppliers/create" },
+  "/quotations": { route: "/quotations/create" },
+  "/inventory": { route: "/inventory/create" },
+  "/projects": { route: "/projects/create" },
+  "/invoices": { route: "/invoices/create" },
+  "/purchase-orders": { route: "/purchase-orders/create" },
+  "/work-orders": { route: "/work-orders/create" },
+  "/packing-lists": { route: "/packing-lists/create" },
+  "/sales-orders": { route: "/sales-orders/create" },
+  "/images": { route: "/master-data/images/create" },
+  "/text-snippets": { route: "/text-snippets/create" },
 };
 
 export default function MobileLayout({ children }: MobileLayoutProps) {
@@ -61,14 +61,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
   const handleAdd = () => {
     if (currentDbPage) {
       const pageConfig = databasePages[currentDbPage];
-      const event = new CustomEvent('open-form-tab', {
-        detail: {
-          id: `new-${pageConfig.formType}`,
-          name: pageConfig.name,
-          formType: pageConfig.formType
-        }
-      });
-      window.dispatchEvent(event);
+      navigate(pageConfig.route);
     }
   };
 
