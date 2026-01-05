@@ -114,7 +114,7 @@ export default function Inventory() {
 
 
   return (
-    <div className="p-0 md:p-6">
+    <div className="px-2 pt-2 md:p-6">
       <DataTableLayout
       entityName="Product"
       entityNamePlural="Products"
