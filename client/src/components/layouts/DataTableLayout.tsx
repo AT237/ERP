@@ -653,71 +653,72 @@ export function DataTableLayout<T = any>({
       <div className="space-y-4">
         {/* Header with Controls */}
         <div className={`${compact ? 'p-0 mx-0' : 'p-2'}`}>
-          {/* Mobile Layout - Stacked vertically */}
+          {/* Mobile Layout - Compact stacked */}
           {isMobile ? (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {/* Search - Full width */}
               <div className="relative">
                 <Input
                   placeholder={`Zoeken...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-12 text-base w-full"
+                  className="pl-9 h-9 text-sm w-full"
                   data-testid="input-search-mobile"
                 />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500" size={20} />
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-orange-500" size={16} />
               </div>
               
-              {/* Filter Button - Full width */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="h-12 text-base w-full justify-start">
-                    <Filter size={20} className="mr-2 text-orange-500" />
-                    Filter{filters.length > 0 ? ` (${filters.length})` : ''}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[calc(100vw-2rem)]">
-                  {columns.filter(col => col.filterable).map((column) => (
-                    <DropdownMenuItem
-                      key={column.key}
-                      onClick={() => onAddFilter(column.key)}
-                      className="text-base py-3"
-                    >
-                      {column.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              {/* Column Visibility Button - Full width */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="h-12 text-base w-full justify-start">
-                    <Settings size={20} className="mr-2 text-orange-500" />
-                    Kolommen
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  className="w-[calc(100vw-2rem)]" 
-                  onCloseAutoFocus={(e) => e.preventDefault()}
-                >
-                  <div className="text-sm font-medium p-3 border-b">Kolommen zichtbaarheid</div>
-                  {columns.map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.key}
-                      checked={column.visible}
-                      onCheckedChange={() => toggleColumnVisibility(column.key)}
-                      onSelect={(e) => e.preventDefault()}
-                      className="text-base py-3"
-                    >
-                      {column.label}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Filter & Column Buttons - Side by side */}
+              <div className="flex gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="h-9 text-sm flex-1 justify-start">
+                      <Filter size={16} className="mr-1.5 text-orange-500" />
+                      Filter{filters.length > 0 ? ` (${filters.length})` : ''}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-[calc(100vw-2rem)]">
+                    {columns.filter(col => col.filterable).map((column) => (
+                      <DropdownMenuItem
+                        key={column.key}
+                        onClick={() => onAddFilter(column.key)}
+                        className="text-sm py-2"
+                      >
+                        {column.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="h-9 text-sm flex-1 justify-start">
+                      <Settings size={16} className="mr-1.5 text-orange-500" />
+                      Kolommen
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    className="w-[calc(100vw-2rem)]" 
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                  >
+                    <div className="text-xs font-medium p-2 border-b">Kolommen zichtbaarheid</div>
+                    {columns.map((column) => (
+                      <DropdownMenuCheckboxItem
+                        key={column.key}
+                        checked={column.visible}
+                        onCheckedChange={() => toggleColumnVisibility(column.key)}
+                        onSelect={(e) => e.preventDefault()}
+                        className="text-sm py-2"
+                      >
+                        {column.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
 
               {/* Mobile Action Buttons */}
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-1.5 flex-wrap">
                 {headerActions.map((action) => (
                   <Button
                     key={action.key}
@@ -725,9 +726,9 @@ export function DataTableLayout<T = any>({
                     onClick={action.onClick}
                     disabled={action.disabled}
                     data-testid={`button-${action.key}-mobile`}
-                    className={action.variant === 'default' ? 'h-12 text-base flex-1 min-w-[120px] bg-green-600 text-white hover:bg-green-700' : 'h-12 text-base flex-1 min-w-[120px]'}
+                    className={action.variant === 'default' ? 'h-9 text-sm flex-1 min-w-[100px] bg-green-600 text-white hover:bg-green-700' : 'h-9 text-sm flex-1 min-w-[100px]'}
                   >
-                    {action.icon && <span className="mr-2">{action.icon}</span>}
+                    {action.icon && <span className="mr-1.5">{action.icon}</span>}
                     {action.label}
                   </Button>
                 ))}
