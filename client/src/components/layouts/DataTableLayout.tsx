@@ -784,8 +784,8 @@ export function DataTableLayout<T = any>({
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Header Actions - matching original customer layout */}
-              {headerActions.map((action) => (
+              {/* Header Actions - hidden on mobile, shown on desktop only */}
+              {!isMobile && headerActions.map((action) => (
                 <Button
                   key={action.key}
                   size="sm"
@@ -800,8 +800,8 @@ export function DataTableLayout<T = any>({
                 </Button>
               ))}
 
-              {/* Delete button */}
-              {deleteConfirmDialog && (
+              {/* Delete button - hidden on mobile */}
+              {!isMobile && deleteConfirmDialog && (
                 <Button
                   size="sm"
                   variant="destructive"
@@ -817,8 +817,8 @@ export function DataTableLayout<T = any>({
                 </Button>
               )}
 
-              {/* Duplicate button */}
-              {onDuplicate && (
+              {/* Duplicate button - hidden on mobile */}
+              {!isMobile && onDuplicate && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -839,8 +839,8 @@ export function DataTableLayout<T = any>({
                 </Button>
               )}
 
-              {/* Export button */}
-            {onExport && (
+              {/* Export button - hidden on mobile */}
+            {!isMobile && onExport && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
