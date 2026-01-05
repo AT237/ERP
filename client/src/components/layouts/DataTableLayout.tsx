@@ -1,4 +1,5 @@
 import React, { useState, useEffect, ReactNode, useMemo, useCallback, useRef } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -633,6 +634,9 @@ export function DataTableLayout<T = any>({
   const filteredData = applyFiltersAndSearch(data, searchTerm, filters);
   const sortedData = applySorting(filteredData, sortConfig);
 
+  // Mobile detection
+  const isMobile = useIsMobile();
+
   if (isLoading) {
     return (
       <div className="h-64 space-y-3 p-4">
@@ -647,126 +651,207 @@ export function DataTableLayout<T = any>({
   return (
     <>
       <div className="space-y-4">
-        {/* Header with Controls - left aligned without title section */}
+        {/* Header with Controls */}
         <div className={`${compact ? 'p-0 mx-0' : 'p-2'}`}>
-          {/* Actions Section - Left aligned */}
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2 w-fit">
-            {/* Search */}
-            <div className="relative">
-              <Input
-                placeholder={`Search ${entityNamePlural.toLowerCase()}...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 h-8 text-sm w-64"
-                data-testid="input-search"
-              />
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-orange-500" size={14} />
+          {/* Mobile Layout - Stacked vertically */}
+          {isMobile ? (
+            <div className="space-y-2">
+              {/* Search - Full width */}
+              <div className="relative">
+                <Input
+                  placeholder={`Zoeken...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-12 text-base w-full"
+                  data-testid="input-search-mobile"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500" size={20} />
+              </div>
+              
+              {/* Filter Button - Full width */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-12 text-base w-full justify-start">
+                    <Filter size={20} className="mr-2 text-orange-500" />
+                    Filter{filters.length > 0 ? ` (${filters.length})` : ''}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[calc(100vw-2rem)]">
+                  {columns.filter(col => col.filterable).map((column) => (
+                    <DropdownMenuItem
+                      key={column.key}
+                      onClick={() => onAddFilter(column.key)}
+                      className="text-base py-3"
+                    >
+                      {column.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Column Visibility Button - Full width */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-12 text-base w-full justify-start">
+                    <Settings size={20} className="mr-2 text-orange-500" />
+                    Kolommen
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  className="w-[calc(100vw-2rem)]" 
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                >
+                  <div className="text-sm font-medium p-3 border-b">Kolommen zichtbaarheid</div>
+                  {columns.map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.key}
+                      checked={column.visible}
+                      onCheckedChange={() => toggleColumnVisibility(column.key)}
+                      onSelect={(e) => e.preventDefault()}
+                      className="text-base py-3"
+                    >
+                      {column.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Mobile Action Buttons */}
+              <div className="flex gap-2 flex-wrap">
+                {headerActions.map((action) => (
+                  <Button
+                    key={action.key}
+                    variant={action.variant || 'default'}
+                    onClick={action.onClick}
+                    disabled={action.disabled}
+                    data-testid={`button-${action.key}-mobile`}
+                    className={action.variant === 'default' ? 'h-12 text-base flex-1 min-w-[120px] bg-green-600 text-white hover:bg-green-700' : 'h-12 text-base flex-1 min-w-[120px]'}
+                  >
+                    {action.icon && <span className="mr-2">{action.icon}</span>}
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
             </div>
-            
-            {/* Filter Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 text-xs w-20">
-                  <Filter size={14} className="mr-1 text-orange-500" />
-                  Filter{filters.length > 0 ? ` ${filters.length}` : ''}
+          ) : (
+            /* Desktop Layout - Horizontal */
+            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2 w-fit">
+              {/* Search */}
+              <div className="relative">
+                <Input
+                  placeholder={`Search ${entityNamePlural.toLowerCase()}...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 h-8 text-sm w-64"
+                  data-testid="input-search"
+                />
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-orange-500" size={14} />
+              </div>
+              
+              {/* Filter Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 text-xs w-20">
+                    <Filter size={14} className="mr-1 text-orange-500" />
+                    Filter{filters.length > 0 ? ` ${filters.length}` : ''}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {columns.filter(col => col.filterable).map((column) => (
+                    <DropdownMenuItem
+                      key={column.key}
+                      onClick={() => onAddFilter(column.key)}
+                      className="text-xs"
+                    >
+                      {column.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Column Visibility Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 text-xs">
+                    <Settings size={14} className="mr-1 text-orange-500" />
+                    Columns
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  className="w-48" 
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                >
+                  <div className="text-xs font-medium p-2 border-b">Column Visibility</div>
+                  {columns.map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.key}
+                      checked={column.visible}
+                      onCheckedChange={() => toggleColumnVisibility(column.key)}
+                      onSelect={(e) => e.preventDefault()}
+                      className="text-xs"
+                    >
+                      {column.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Header Actions - matching original customer layout */}
+              {headerActions.map((action) => (
+                <Button
+                  key={action.key}
+                  size="sm"
+                  variant={action.variant || 'default'}
+                  onClick={action.onClick}
+                  disabled={action.disabled}
+                  data-testid={`button-${action.key}`}
+                  className={action.variant === 'default' ? 'h-8 text-xs bg-green-600 text-white hover:bg-green-700' : 'h-8 text-xs'}
+                >
+                  {action.icon && <span className="mr-1">{action.icon}</span>}
+                  {action.label}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                {columns.filter(col => col.filterable).map((column) => (
-                  <DropdownMenuItem
-                    key={column.key}
-                    onClick={() => onAddFilter(column.key)}
-                    className="text-xs"
-                  >
-                    {column.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            {/* Column Visibility Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 text-xs">
-                  <Settings size={14} className="mr-1 text-orange-500" />
-                  Columns
+              ))}
+
+              {/* Delete button */}
+              {deleteConfirmDialog && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => deleteConfirmDialog.onOpenChange(true)}
+                  className={`h-8 text-xs w-28 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  disabled={selectedRows.length === 0}
+                  data-testid="button-delete-selected"
+                >
+                  <Trash2 size={14} className="mr-1" />
+                  <span className="min-w-[4rem] text-left">
+                    Delete{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
+                  </span>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                className="w-48" 
-                onCloseAutoFocus={(e) => e.preventDefault()}
-              >
-                <div className="text-xs font-medium p-2 border-b">Column Visibility</div>
-                {columns.map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.key}
-                    checked={column.visible}
-                    onCheckedChange={() => toggleColumnVisibility(column.key)}
-                    onSelect={(e) => e.preventDefault()}
-                    className="text-xs"
-                  >
-                    {column.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              )}
 
-            {/* Header Actions - matching original customer layout */}
-            {headerActions.map((action) => (
-              <Button
-                key={action.key}
-                size="sm"
-                variant={action.variant || 'default'}
-                onClick={action.onClick}
-                disabled={action.disabled}
-                data-testid={`button-${action.key}`}
-                className={action.variant === 'default' ? 'h-8 text-xs bg-green-600 text-white hover:bg-green-700' : 'h-8 text-xs'}
-              >
-                {action.icon && <span className="mr-1">{action.icon}</span>}
-                {action.label}
-              </Button>
-            ))}
-
-            {/* Delete button */}
-            {deleteConfirmDialog && (
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => deleteConfirmDialog.onOpenChange(true)}
-                className={`h-8 text-xs w-28 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
-                disabled={selectedRows.length === 0}
-                data-testid="button-delete-selected"
-              >
-                <Trash2 size={14} className="mr-1" />
-                <span className="min-w-[4rem] text-left">
-                  Delete{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
-                </span>
-              </Button>
-            )}
-
-            {/* Duplicate button */}
-            {onDuplicate && (
-              <Button
-                size="sm"
-                variant="outline"
-                className={`h-8 text-xs ${selectedRows.length !== 1 ? 'opacity-40 cursor-not-allowed' : ''}`}
-                disabled={selectedRows.length !== 1}
-                onClick={() => {
-                  if (selectedRows.length === 1) {
-                    const selectedItem = sortedData.find(item => getRowId(item) === selectedRows[0]);
-                    if (selectedItem) {
-                      onDuplicate(selectedItem);
+              {/* Duplicate button */}
+              {onDuplicate && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={`h-8 text-xs ${selectedRows.length !== 1 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  disabled={selectedRows.length !== 1}
+                  onClick={() => {
+                    if (selectedRows.length === 1) {
+                      const selectedItem = sortedData.find(item => getRowId(item) === selectedRows[0]);
+                      if (selectedItem) {
+                        onDuplicate(selectedItem);
+                      }
                     }
-                  }
-                }}
-                data-testid="button-duplicate"
-              >
-                <Copy size={14} className="mr-1" />
-                Duplicate
-              </Button>
-            )}
+                  }}
+                  data-testid="button-duplicate"
+                >
+                  <Copy size={14} className="mr-1" />
+                  Duplicate
+                </Button>
+              )}
 
-            {/* Export button */}
+              {/* Export button */}
             {onExport && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -796,12 +881,11 @@ export function DataTableLayout<T = any>({
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-          </div>
+            </div>
+          )}
         </div>
-      </div>
 
-      <div className={`space-y-4 ${compact ? 'ml-0 mx-0' : 'ml-2'}`}>
-        {/* Active Filters - Left aligned with title */}
+        {/* Active Filters */}
         <div className={`min-h-[2rem] flex items-start ${compact ? 'pl-0' : ''}`}>
           {filters.length > 0 && (
             <div className="flex flex-wrap gap-1">
@@ -830,13 +914,13 @@ export function DataTableLayout<T = any>({
           )}
         </div>
 
-        {/* Results count - Left aligned with title */}
+        {/* Results count */}
         <div className={`text-xs text-orange-500 py-1 ${compact ? 'pl-0' : ''}`}>
           {sortedData.length} of {data.length} {entityNamePlural.toLowerCase()}
           {selectedRows.length > 0 && ` • ${selectedRows.length} selected`}
         </div>
 
-        {/* Table - Left aligned with title */}
+        {/* Table */}
         <div className={`rounded-lg overflow-x-auto border-0 ${compact ? 'ml-0' : ''}`}>
           <DndContext
             sensors={sensors}
