@@ -440,8 +440,12 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
     return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(num);
   };
   
-  // Sort items by lineNo/position
-  const sortedItems = [...items].sort((a, b) => a.lineNo - b.lineNo);
+  // Sort items by positionNo (parsed as number) for correct ordering
+  const sortedItems = [...items].sort((a, b) => {
+    const posA = parseInt(a.positionNo || '0', 10) || a.lineNo;
+    const posB = parseInt(b.positionNo || '0', 10) || b.lineNo;
+    return posA - posB;
+  });
   
   if (sortedItems.length === 0) {
     return (
