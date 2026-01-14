@@ -471,7 +471,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   // FIELD PAIR HELPER - UNIFIED GRID APPROACH  
   // ========================================================================
   
-  const renderSimpleField = (field: FormField2<T>) => {
+  const renderSimpleField = useCallback((field: FormField2<T>) => {
     const fieldWithModified = {
       ...field,
       isModified: modifiedFields.has(field.key as string)
@@ -512,7 +512,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         </div>
       </div>
     );
-  };
+  }, [isMobile, modifiedFields, changeTracking, renderField, renderFieldValidation]);
 
   // ========================================================================
   // RENDER HELPERS
@@ -570,7 +570,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       default:
         return null;
     }
-  }, [modifiedFields, changeTracking, renderField, renderFieldValidation]);
+  }, [modifiedFields, changeTracking, renderField, renderFieldValidation, renderSimpleField]);
 
   // ========================================================================
   // CREATE TABS
@@ -646,7 +646,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         )
       };
     });
-  }, [sections, isMobile]);
+  }, [sections, isMobile, renderSimpleField]);
 
   // ========================================================================
   // RENDER
