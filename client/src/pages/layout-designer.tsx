@@ -567,17 +567,17 @@ function VisualDesignerView({ layout }: { layout: any }) {
   const availableTables = [
     // Document Types
     { name: 'quotation', label: 'Offerte', fields: ['quotationNumber', 'quotationDate', 'validUntil', 'validityDays', 'description', 'revisionNumber', 'status', 'isBudgetQuotation', 'subtotal', 'taxAmount', 'totalAmount', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
-    { name: 'quotationItems', label: 'Offerte Regels', fields: ['lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'taxRate', 'lineTotal', 'notes'] },
+    { name: 'quotationItems', label: 'Offerte Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'taxRate', 'lineTotal', 'notes', 'lineType'] },
     { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'status', 'dueDate', 'subtotal', 'taxAmount', 'totalAmount', 'paidAmount', 'notes'] },
-    { name: 'invoiceItems', label: 'Factuur Regels', fields: ['lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'taxRate', 'lineTotal'] },
+    { name: 'invoiceItems', label: 'Factuur Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'taxRate', 'lineTotal'] },
     { name: 'proformaInvoice', label: 'Proforma Factuur', fields: ['invoiceNumber', 'status', 'dueDate', 'subtotal', 'taxAmount', 'totalAmount'] },
     { name: 'purchaseOrder', label: 'Inkooporder', fields: ['orderNumber', 'orderDate', 'expectedDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
-    { name: 'purchaseOrderItems', label: 'Inkooporder Regels', fields: ['lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
+    { name: 'purchaseOrderItems', label: 'Inkooporder Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
     { name: 'salesOrder', label: 'Verkooporder', fields: ['orderNumber', 'orderDate', 'expectedDeliveryDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
-    { name: 'salesOrderItems', label: 'Verkooporder Regels', fields: ['lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
+    { name: 'salesOrderItems', label: 'Verkooporder Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
     { name: 'workOrder', label: 'Werkorder', fields: ['workOrderNumber', 'orderDate', 'dueDate', 'status', 'priority', 'description', 'assignedTo', 'notes'] },
     { name: 'packingList', label: 'Paklijst', fields: ['packingListNumber', 'packingDate', 'status', 'shippingMethod', 'trackingNumber', 'totalWeight', 'totalPackages', 'notes'] },
-    { name: 'packingListItems', label: 'Paklijst Regels', fields: ['lineNumber', 'description', 'quantity', 'weight', 'packageNumber'] },
+    { name: 'packingListItems', label: 'Paklijst Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'weight', 'packageNumber'] },
     { name: 'quotationRequest', label: 'Offerte Aanvraag', fields: ['requestNumber', 'requestDate', 'status', 'description', 'notes'] },
     
     // Relations

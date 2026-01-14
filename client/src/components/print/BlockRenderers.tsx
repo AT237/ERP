@@ -475,7 +475,7 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
             
             return (
               <tr key={index} className={rowClass}>
-                <td className="py-1 px-1 text-gray-500">{item.lineNo}</td>
+                <td className="py-1 px-1 text-gray-500">{item.positionNo || item.lineNo}</td>
                 <td className={`py-1 px-1 ${isTextLine ? 'font-medium' : ''}`}>{item.description}</td>
                 <td className="py-1 px-1 text-right">{isTextLine ? '' : item.quantity}</td>
                 <td className="py-1 px-1 text-right">{isTextLine ? '' : formatCurrency(item.unitPrice)}</td>
