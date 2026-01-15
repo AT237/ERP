@@ -1577,6 +1577,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="position">Positie (standaard)</SelectItem>
+                  <SelectItem value="position_low_high">Positie laag - hoog</SelectItem>
+                  <SelectItem value="position_high_low">Positie hoog - laag</SelectItem>
                   <SelectItem value="price_high_low">Prijs hoog - laag</SelectItem>
                   <SelectItem value="price_low_high">Prijs laag - hoog</SelectItem>
                   <SelectItem value="alpha_az">Alfabetisch A-Z</SelectItem>
@@ -1587,6 +1589,20 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               </Select>
             ),
             testId: "field-print-sort-order"
+          }),
+          createFieldRow({
+            key: "printProjectNo",
+            label: "Projectnummer afdrukken",
+            type: "custom",
+            customComponent: (
+              <Checkbox
+                id="printProjectNo"
+                checked={quotationForm.watch("printProjectNo") ?? true}
+                onCheckedChange={(checked) => quotationForm.setValue("printProjectNo", checked === true)}
+                data-testid="checkbox-print-project-no"
+              />
+            ),
+            testId: "field-print-project-no"
           }),
           createFieldRow({
             key: "printLanguageCode",
@@ -1623,46 +1639,20 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             ),
             testId: "field-print-language"
           }),
-          createFieldsRow([
-            {
-              key: "printProjectNo",
-              label: "Projectnummer afdrukken",
-              type: "custom",
-              customComponent: (
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="printProjectNo"
-                    checked={quotationForm.watch("printProjectNo") ?? true}
-                    onCheckedChange={(checked) => quotationForm.setValue("printProjectNo", checked === true)}
-                    data-testid="checkbox-print-project-no"
-                  />
-                  <Label htmlFor="printProjectNo" className="text-sm font-normal cursor-pointer">
-                    Toon projectnummer op afdruk
-                  </Label>
-                </div>
-              ),
-              testId: "field-print-project-no"
-            },
-            {
-              key: "printPaymentConditions",
-              label: "Betalingscondities afdrukken",
-              type: "custom",
-              customComponent: (
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="printPaymentConditions"
-                    checked={quotationForm.watch("printPaymentConditions") ?? true}
-                    onCheckedChange={(checked) => quotationForm.setValue("printPaymentConditions", checked === true)}
-                    data-testid="checkbox-print-payment-conditions"
-                  />
-                  <Label htmlFor="printPaymentConditions" className="text-sm font-normal cursor-pointer">
-                    Toon betalingscondities op afdruk
-                  </Label>
-                </div>
-              ),
-              testId: "field-print-payment-conditions"
-            }
-          ])
+          createFieldRow({
+            key: "printPaymentConditions",
+            label: "Betalingscondities afdrukken",
+            type: "custom",
+            customComponent: (
+              <Checkbox
+                id="printPaymentConditions"
+                checked={quotationForm.watch("printPaymentConditions") ?? true}
+                onCheckedChange={(checked) => quotationForm.setValue("printPaymentConditions", checked === true)}
+                data-testid="checkbox-print-payment-conditions"
+              />
+            ),
+            testId: "field-print-payment-conditions"
+          })
         ]
       }
     ];
