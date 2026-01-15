@@ -1593,16 +1593,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           createFieldRow({
             key: "printProjectNo",
             label: "Projectnummer afdrukken",
-            type: "custom",
-            customComponent: (
-              <Checkbox
-                id="printProjectNo"
-                checked={quotationForm.watch("printProjectNo") ?? true}
-                onCheckedChange={(checked) => quotationForm.setValue("printProjectNo", checked === true)}
-                data-testid="checkbox-print-project-no"
-              />
-            ),
-            testId: "field-print-project-no"
+            type: "checkbox",
+            watch: () => quotationForm.watch("printProjectNo") ?? true,
+            setValue: (checked) => quotationForm.setValue("printProjectNo", checked === true),
+            testId: "checkbox-print-project-no"
           }),
           createFieldRow({
             key: "printLanguageCode",
@@ -1642,16 +1636,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           createFieldRow({
             key: "printPaymentConditions",
             label: "Betalingscondities afdrukken",
-            type: "custom",
-            customComponent: (
-              <Checkbox
-                id="printPaymentConditions"
-                checked={quotationForm.watch("printPaymentConditions") ?? true}
-                onCheckedChange={(checked) => quotationForm.setValue("printPaymentConditions", checked === true)}
-                data-testid="checkbox-print-payment-conditions"
-              />
-            ),
-            testId: "field-print-payment-conditions"
+            type: "checkbox",
+            watch: () => quotationForm.watch("printPaymentConditions") ?? true,
+            setValue: (checked) => quotationForm.setValue("printPaymentConditions", checked === true),
+            testId: "checkbox-print-payment-conditions"
           })
         ]
       }

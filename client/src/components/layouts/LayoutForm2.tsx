@@ -7,6 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Checkbox } from "@/components/ui/checkbox";
 import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
 // InfoField import removed per user request
 import type { FormTab } from './FormTabLayout';
@@ -44,7 +45,7 @@ export interface FormField2<T extends FieldValues = FieldValues> {
   // Basic field properties
   key: FieldPath<T>;
   label: string;
-  type: 'text' | 'email' | 'tel' | 'number' | 'date' | 'select' | 'textarea' | 'custom' | 'display';
+  type: 'text' | 'email' | 'tel' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'custom' | 'display';
   
   // Layout and positioning
   layout?: FieldLayout;
@@ -314,6 +315,17 @@ function renderField<T extends FieldValues>(
         </div>
       );
     
+    case 'checkbox':
+      return (
+        <Checkbox
+          id={field.key as string}
+          checked={field.watch?.() ?? false}
+          onCheckedChange={(checked) => field.setValue?.(checked === true)}
+          disabled={field.disabled}
+          data-testid={field.testId || `checkbox-${field.key}`}
+        />
+      );
+    
     case 'custom':
       return field.customComponent;
     
@@ -476,6 +488,22 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       ...field,
       isModified: modifiedFields.has(field.key as string)
     };
+
+    // Checkbox layout: checkbox first, then label on same line
+    if (field.type === 'checkbox') {
+      return (
+        <div key={field.key as string} className="flex items-center gap-2 pt-2">
+          {renderField(fieldWithModified, changeTracking)}
+          <Label 
+            htmlFor={field.key as string} 
+            className="text-sm font-medium cursor-pointer"
+          >
+            {field.label}
+          </Label>
+          {renderFieldValidation(fieldWithModified)}
+        </div>
+      );
+    }
 
     // Mobile layout: label above field, full width
     if (isMobile) {
