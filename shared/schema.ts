@@ -204,6 +204,11 @@ export const quotations = pgTable("quotations", {
   incoTerms: text("inco_terms"),
   paymentConditions: text("payment_conditions"),
   deliveryConditions: text("delivery_conditions"),
+  // Print Settings
+  printSortOrder: text("print_sort_order").default("position"), // position, price_high_low, price_low_high, alpha_az, alpha_za, amount_high_low, amount_low_high
+  printProjectNo: boolean("print_project_no").default(true),
+  printPaymentConditions: boolean("print_payment_conditions").default(true),
+  printLanguageCode: text("print_language_code").references(() => languages.code).default("nl"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
