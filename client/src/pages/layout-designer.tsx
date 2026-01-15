@@ -1850,14 +1850,14 @@ function VisualDesignerView({ layout }: { layout: any }) {
 
           <div className="h-6 w-px bg-border" />
 
-          {/* Table Selection */}
+          {/* Design Applied To - Table Selection */}
           <Button 
             size="sm" 
             variant="outline" 
             onClick={() => setShowTableSelectorDialog(true)}
           >
             <Database className="h-4 w-4 mr-2" />
-            Databron ({allowedTables.length})
+            Design toepasbaar op ({allowedTables.length})
           </Button>
 
           {/* Info */}
@@ -1940,13 +1940,13 @@ function VisualDesignerView({ layout }: { layout: any }) {
         </DialogContent>
       </Dialog>
 
-      {/* Table Selector Dialog */}
+      {/* Design Applied To - Table Selector Dialog */}
       <Dialog open={showTableSelectorDialog} onOpenChange={setShowTableSelectorDialog}>
         <DialogContent className="max-w-3xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>Databronnen Selecteren</DialogTitle>
+            <DialogTitle>Design toepasbaar op</DialogTitle>
             <DialogDescription>
-              Selecteer welke tabellen beschikbaar zijn voor Data Fields in dit rapport
+              Selecteer op welke documenten dit design van toepassing is. Bij afdrukken worden de bijbehorende regels automatisch herhaald.
             </DialogDescription>
           </DialogHeader>
           
@@ -1968,8 +1968,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
                       className="h-4 w-4 rounded border-gray-300"
                     />
                   </th>
-                  <th className="text-left py-2 px-3 font-medium">Tabel</th>
-                  <th className="text-left py-2 px-3 font-medium">Naam</th>
+                  <th className="text-left py-2 px-3 font-medium">Document</th>
+                  <th className="text-left py-2 px-3 font-medium">Tabelnaam</th>
                   <th className="text-left py-2 px-3 font-medium text-right">Velden</th>
                 </tr>
               </thead>
@@ -2015,8 +2015,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
             <Button onClick={() => {
               setShowTableSelectorDialog(false);
               toast({
-                title: 'Databronnen bijgewerkt',
-                description: `${allowedTables.length} ${allowedTables.length === 1 ? 'tabel' : 'tabellen'} geselecteerd`,
+                title: 'Design toepasbaarheid bijgewerkt',
+                description: `${allowedTables.length} ${allowedTables.length === 1 ? 'document' : 'documenten'} geselecteerd`,
               });
             }}>
               Opslaan
@@ -3806,52 +3806,6 @@ function BlockProperties({
                 />
               </div>
 
-              {/* Repeat for Line Items */}
-              <div className="border-t pt-3">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id={`repeat-enabled-${block.id}`}
-                    checked={block.config?.repeat?.enabled || false}
-                    onChange={(e) => updateConfig('repeat', { 
-                      ...block.config?.repeat, 
-                      enabled: e.target.checked,
-                      path: 'items',
-                      spacing: block.config?.repeat?.spacing || 0
-                    })}
-                    className="h-4 w-4 accent-orange-500"
-                    data-testid="checkbox-repeat-enabled"
-                  />
-                  <Label htmlFor={`repeat-enabled-${block.id}`} className="text-xs font-semibold">
-                    Herhalen voor offerteregels
-                  </Label>
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Gebruik {"{{item.description}}"}, {"{{item.quantity}}"}, {"{{item.unitPrice}}"}, {"{{item.lineTotal}}"} als placeholders
-                </p>
-                
-                {block.config?.repeat?.enabled && (
-                  <div className="mt-2">
-                    <Label htmlFor={`repeat-spacing-${block.id}`} className="text-[10px] text-muted-foreground">
-                      Afstand tussen regels (mm)
-                    </Label>
-                    <Input
-                      id={`repeat-spacing-${block.id}`}
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      max="20"
-                      value={block.config?.repeat?.spacing || 0}
-                      onChange={(e) => updateConfig('repeat', { 
-                        ...block.config?.repeat, 
-                        spacing: parseFloat(e.target.value) || 0 
-                      })}
-                      className="h-7 w-20 text-xs mt-1"
-                      data-testid="input-repeat-spacing"
-                    />
-                  </div>
-                )}
-              </div>
             </div>
           )}
 
@@ -3860,7 +3814,7 @@ function BlockProperties({
             <div className="space-y-3 border-t pt-3">
               {allowedTables.length === 0 ? (
                 <div className="p-3 border border-orange-200 bg-orange-50 rounded text-xs text-orange-700">
-                  Geen databronnen geselecteerd. Klik op "Databron" in de werkbalk.
+                  Geen documenten geselecteerd. Klik op "Design toepasbaar op" in de werkbalk.
                 </div>
               ) : (
                 <>
@@ -4615,82 +4569,6 @@ function SectionProperties({
         </div>
       </div>
 
-      {/* Repeat for Line Items - Auto-detected */}
-      <div className="space-y-3 pt-2 border-t">
-        <div className="text-xs font-bold text-orange-600">Herhalen</div>
-        
-        {/* Auto-detection indicator */}
-        {(() => {
-          const blocks = section.config?.blocks || [];
-          const hasItemPlaceholders = blocks.some((block: any) => {
-            const content = block.config?.content || block.content || '';
-            if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) return true;
-            const dataField = block.config?.dataField || '';
-            if (typeof dataField === 'string' && dataField.startsWith('item.')) return true;
-            const childBlocks = block.config?.childBlocks || [];
-            return childBlocks.some((child: any) => {
-              const childContent = child.config?.content || child.content || '';
-              if (typeof childContent === 'string' && /\{\{item\.[^}]+\}\}/.test(childContent)) return true;
-              const childDataField = child.config?.dataField || '';
-              return typeof childDataField === 'string' && childDataField.startsWith('item.');
-            });
-          });
-          
-          return (
-            <div className={`p-2 rounded-md ${hasItemPlaceholders ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
-              <div className="flex items-center gap-2">
-                {hasItemPlaceholders ? (
-                  <>
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-xs font-medium text-green-700">Herhaalt automatisch</span>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-2 h-2 rounded-full bg-gray-400" />
-                    <span className="text-xs font-medium text-gray-600">Eenmalig (geen item-placeholders)</span>
-                  </>
-                )}
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                {hasItemPlaceholders 
-                  ? 'Deze sectie bevat {{item.*}} placeholders en herhaalt voor elke offerteregel.'
-                  : 'Voeg {{item.description}}, {{item.quantity}}, {{item.unitPrice}} of {{item.lineTotal}} toe om te herhalen.'}
-              </p>
-            </div>
-          );
-        })()}
-        
-        {/* Spacing setting - only show if section has item placeholders */}
-        {(() => {
-          const blocks = section.config?.blocks || [];
-          const hasItemPlaceholders = blocks.some((block: any) => {
-            const content = block.config?.content || block.content || '';
-            if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) return true;
-            const dataField = block.config?.dataField || '';
-            return typeof dataField === 'string' && dataField.startsWith('item.');
-          });
-          
-          if (!hasItemPlaceholders) return null;
-          
-          return (
-            <div>
-              <Label htmlFor="section-repeat-spacing" className="text-[10px] text-muted-foreground">
-                Afstand tussen herhalingen (mm)
-              </Label>
-              <Input
-                id="section-repeat-spacing"
-                type="number"
-                step="0.5"
-                min="0"
-                max="20"
-                value={section.config.repeat?.spacingMm || 0}
-                onChange={(e) => onUpdateProperty(section.id, 'config.repeat.spacingMm', parseFloat(e.target.value) || 0)}
-                className="h-7 w-20 text-xs mt-1"
-              />
-            </div>
-          );
-        })()}
-      </div>
 
       {/* Background Color */}
       <div>
