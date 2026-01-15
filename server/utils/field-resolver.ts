@@ -58,7 +58,7 @@ export interface QuotationPrintData {
     bankName: string | null;
   } | null;
   items: Array<{
-    lineNo: number;
+    positionNo: string; // Formatted position number (e.g., "010", "020")
     description: string;
     quantity: number;
     unitPrice: string;
@@ -164,13 +164,12 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
   });
 
   const itemsData = items.map((item, index) => ({
-    lineNo: index + 1,
+    positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'), // e.g., "010", "020"
     description: item.description,
     quantity: item.quantity || 0,
     unitPrice: item.unitPrice || "0.00",
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",
-    positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'), // e.g., "010", "020"
   }));
 
   return {

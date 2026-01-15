@@ -57,7 +57,7 @@ export const DATA_FIELD_EXAMPLES = [
 
 // Item field placeholders - for repeating blocks (line items)
 export const ITEM_FIELD_EXAMPLES = [
-  { code: '{{item.lineNo}}', label: 'Regelnummer' },
+  { code: '{{item.positionNo}}', label: 'Positienummer' },
   { code: '{{item.description}}', label: 'Omschrijving' },
   { code: '{{item.quantity}}', label: 'Aantal' },
   { code: '{{item.unitPrice}}', label: 'Eenheidsprijs (auto €)' },
@@ -442,8 +442,8 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
   
   // Sort items by positionNo (parsed as number) for correct ordering
   const sortedItems = [...items].sort((a, b) => {
-    const posA = parseInt(a.positionNo || '0', 10) || a.lineNo;
-    const posB = parseInt(b.positionNo || '0', 10) || b.lineNo;
+    const posA = parseInt(a.positionNo || '0', 10);
+    const posB = parseInt(b.positionNo || '0', 10);
     return posA - posB;
   });
   
@@ -479,7 +479,7 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
             
             return (
               <tr key={index} className={rowClass}>
-                <td className="py-1 px-1 text-gray-500">{item.positionNo || item.lineNo}</td>
+                <td className="py-1 px-1 text-gray-500">{item.positionNo}</td>
                 <td className={`py-1 px-1 ${isTextLine ? 'font-medium' : ''}`}>{item.description}</td>
                 <td className="py-1 px-1 text-right">{isTextLine ? '' : item.quantity}</td>
                 <td className="py-1 px-1 text-right">{isTextLine ? '' : formatCurrency(item.unitPrice)}</td>
@@ -685,7 +685,11 @@ export function ItemRepeaterRenderer({ block, printData, currentPage = 1, totalP
   const config = block.config || {};
   const itemSpacing = config.itemSpacing || 5;
   
-  const sortedItems = [...items].sort((a, b) => (a.lineNo || 0) - (b.lineNo || 0));
+  const sortedItems = [...items].sort((a, b) => {
+    const posA = parseInt(a.positionNo || '0', 10);
+    const posB = parseInt(b.positionNo || '0', 10);
+    return posA - posB;
+  });
   
   if (sortedItems.length === 0) {
     return (

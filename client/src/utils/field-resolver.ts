@@ -7,13 +7,12 @@ export type PrintData = {
   project: Record<string, any> | null;
   company: Record<string, any> | null;
   items?: Array<{
-    lineNo: number;
+    positionNo: string; // Formatted position number (e.g., "010", "020")
     description: string;
     quantity: number;
     unitPrice: string;
     lineTotal: string;
     lineType: string;
-    positionNo?: string; // Formatted position number (e.g., "010", "020")
   }>;
 };
 
