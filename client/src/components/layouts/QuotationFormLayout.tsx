@@ -62,6 +62,11 @@ const quotationFormSchema = insertQuotationSchema.omit({
   isBudgetQuotation: z.boolean().optional(),
   validityDays: z.number().optional(),
   projectId: z.string().optional(),
+  // Print Settings
+  printSortOrder: z.string().optional(),
+  printProjectNo: z.boolean().optional(),
+  printPaymentConditions: z.boolean().optional(),
+  printLanguageCode: z.string().optional(),
 });
 
 const quotationItemFormSchema = insertQuotationItemSchema.extend({
@@ -147,6 +152,15 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     queryKey: ["/api/projects"],
     enabled: shouldLoadProjects,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  // Lazy load languages for print settings
+  const [shouldLoadLanguages, setShouldLoadLanguages] = useState(false);
+  const { data: languages = [] } = useQuery<{ id: string; code: string; name: string }[]>({
+    queryKey: ["/api/languages"],
+    enabled: shouldLoadLanguages,
+    staleTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
   });
 
@@ -1540,6 +1554,113 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 </div>
               ),
               testId: "text-total"
+            }
+          ])
+        ]
+      },
+      {
+        id: "printSettings",
+        label: "Print Settings",
+        rows: [
+          createSectionHeaderRow("Afdrukinstellingen", "mb-6"),
+          createFieldRow({
+            key: "printSortOrder",
+            label: "Sorteervolgorde",
+            type: "custom",
+            customComponent: (
+              <Select
+                value={quotationForm.watch("printSortOrder") || "position"}
+                onValueChange={(value) => quotationForm.setValue("printSortOrder", value)}
+              >
+                <SelectTrigger className="w-full" data-testid="select-print-sort-order">
+                  <SelectValue placeholder="Selecteer sortering..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="position">Positie (standaard)</SelectItem>
+                  <SelectItem value="price_high_low">Prijs hoog - laag</SelectItem>
+                  <SelectItem value="price_low_high">Prijs laag - hoog</SelectItem>
+                  <SelectItem value="alpha_az">Alfabetisch A-Z</SelectItem>
+                  <SelectItem value="alpha_za">Alfabetisch Z-A</SelectItem>
+                  <SelectItem value="amount_high_low">Aantal hoog - laag</SelectItem>
+                  <SelectItem value="amount_low_high">Aantal laag - hoog</SelectItem>
+                </SelectContent>
+              </Select>
+            ),
+            testId: "field-print-sort-order"
+          }),
+          createFieldRow({
+            key: "printLanguageCode",
+            label: "Afdruktaal",
+            type: "custom",
+            customComponent: (
+              <Select
+                value={quotationForm.watch("printLanguageCode") || "nl"}
+                onValueChange={(value) => quotationForm.setValue("printLanguageCode", value)}
+                onOpenChange={(open) => {
+                  if (open) setShouldLoadLanguages(true);
+                }}
+              >
+                <SelectTrigger className="w-full" data-testid="select-print-language">
+                  <SelectValue placeholder="Selecteer taal..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {languages.length > 0 ? (
+                    languages.map((lang) => (
+                      <SelectItem key={lang.code} value={lang.code}>
+                        {lang.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <>
+                      <SelectItem value="nl">Nederlands</SelectItem>
+                      <SelectItem value="en">Engels</SelectItem>
+                      <SelectItem value="de">Duits</SelectItem>
+                      <SelectItem value="fr">Frans</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+            ),
+            testId: "field-print-language"
+          }),
+          createFieldsRow([
+            {
+              key: "printProjectNo",
+              label: "Projectnummer afdrukken",
+              type: "custom",
+              customComponent: (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="printProjectNo"
+                    checked={quotationForm.watch("printProjectNo") ?? true}
+                    onCheckedChange={(checked) => quotationForm.setValue("printProjectNo", checked === true)}
+                    data-testid="checkbox-print-project-no"
+                  />
+                  <Label htmlFor="printProjectNo" className="text-sm font-normal cursor-pointer">
+                    Toon projectnummer op afdruk
+                  </Label>
+                </div>
+              ),
+              testId: "field-print-project-no"
+            },
+            {
+              key: "printPaymentConditions",
+              label: "Betalingscondities afdrukken",
+              type: "custom",
+              customComponent: (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="printPaymentConditions"
+                    checked={quotationForm.watch("printPaymentConditions") ?? true}
+                    onCheckedChange={(checked) => quotationForm.setValue("printPaymentConditions", checked === true)}
+                    data-testid="checkbox-print-payment-conditions"
+                  />
+                  <Label htmlFor="printPaymentConditions" className="text-sm font-normal cursor-pointer">
+                    Toon betalingscondities op afdruk
+                  </Label>
+                </div>
+              ),
+              testId: "field-print-payment-conditions"
             }
           ])
         ]
