@@ -650,6 +650,13 @@ function VisualDesignerView({ layout }: { layout: any }) {
     localStorage.setItem('layout-designer-zoom', zoom.toString());
   }, [zoom]);
 
+  // Sync allowedTables with layout data when layout changes
+  useEffect(() => {
+    if (layout?.allowedTables) {
+      setAllowedTables(layout.allowedTables);
+    }
+  }, [layout?.allowedTables]);
+
   if (!layout) {
     return (
       <div className="flex items-center justify-center h-64">
