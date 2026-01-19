@@ -638,37 +638,38 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
             ))}
           </div>
         ) : (
-          // Desktop layout: 2-column grid
+          // Desktop layout: 2-column grid (column-first: left column fills first, then right)
           <div className="grid grid-rows-6 gap-[20px] min-h-[280px] pt-[10px]">
+            {/* Column-first layout: leftFields[i] in left column, rightFields[i] in right column */}
             {/* Rij 1 */}
             <div className="grid grid-cols-2 gap-8">
-              {allFields[0] && renderSimpleField(allFields[0])}
-              {allFields[1] && renderSimpleField(allFields[1])}
+              {leftFields[0] && renderSimpleField(leftFields[0])}
+              {rightFields[0] && renderSimpleField(rightFields[0])}
             </div>
             {/* Rij 2 */}
             <div className="grid grid-cols-2 gap-8">
-              {allFields[2] && renderSimpleField(allFields[2])}
-              {allFields[3] && renderSimpleField(allFields[3])}
+              {leftFields[1] && renderSimpleField(leftFields[1])}
+              {rightFields[1] && renderSimpleField(rightFields[1])}
             </div>
             {/* Rij 3 */}
             <div className="grid grid-cols-2 gap-8">
-              {allFields[4] && renderSimpleField(allFields[4])}
-              {allFields[5] && renderSimpleField(allFields[5])}
+              {leftFields[2] && renderSimpleField(leftFields[2])}
+              {rightFields[2] && renderSimpleField(rightFields[2])}
             </div>
             {/* Rij 4 */}
             <div className="grid grid-cols-2 gap-8">
-              {allFields[6] && renderSimpleField(allFields[6])}
-              {allFields[7] && renderSimpleField(allFields[7])}
+              {leftFields[3] && renderSimpleField(leftFields[3])}
+              {rightFields[3] && renderSimpleField(rightFields[3])}
             </div>
             {/* Rij 5 */}
             <div className="grid grid-cols-2 gap-8">
-              {allFields[8] && renderSimpleField(allFields[8])}
-              {allFields[9] && renderSimpleField(allFields[9])}
+              {leftFields[4] && renderSimpleField(leftFields[4])}
+              {rightFields[4] && renderSimpleField(rightFields[4])}
             </div>
             {/* Rij 6 */}
             <div className="grid grid-cols-2 gap-8">
-              {allFields[10] && renderSimpleField(allFields[10])}
-              {allFields[11] && renderSimpleField(allFields[11])}
+              {leftFields[5] && renderSimpleField(leftFields[5])}
+              {rightFields[5] && renderSimpleField(rightFields[5])}
             </div>
           </div>
         )
