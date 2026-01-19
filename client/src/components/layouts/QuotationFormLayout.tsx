@@ -1658,8 +1658,27 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   ];
 
-  // Create action buttons for LayoutForm2
+  // State for print dialog
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+
+  // Create action buttons for LayoutForm2 - Order: Save, Print, Cancel, Preview
   const actionButtons: ActionButton[] = [
+    {
+      key: 'save',
+      label: 'Save',
+      icon: <Save size={14} />,
+      onClick: quotationForm.handleSubmit(handleSaveQuotation),
+      variant: 'default',
+      testId: 'button-save'
+    },
+    ...(quotationId && existingQuotation ? [{
+      key: 'print',
+      label: 'Print',
+      icon: <Printer size={14} />,
+      onClick: () => setPrintDialogOpen(true),
+      variant: 'outline' as const,
+      testId: 'button-print'
+    }] : []),
     {
       key: 'cancel',
       label: 'Cancel',
@@ -1675,32 +1694,20 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       onClick: handlePreview,
       variant: 'outline',
       testId: 'button-preview'
-    },
-    {
-      key: 'save',
-      label: 'Save Quotation',
-      icon: <Save size={14} />,
-      onClick: quotationForm.handleSubmit(handleSaveQuotation),
-      variant: 'default',
-      testId: 'button-save'
     }
   ];
 
-  // Additional action: Print button (only for existing quotations)
-  const additionalHeaderActions = quotationId && existingQuotation ? (
-    <QuotationPrintDialog
-      quotationId={quotationId}
-      quotationNumber={existingQuotation.quotationNumber}
-    />
-  ) : null;
-
   return (
     <div className="h-full">
-      {/* Additional header actions */}
-      {additionalHeaderActions && (
-        <div className="px-6 py-3 bg-white border-b flex justify-end">
-          {additionalHeaderActions}
-        </div>
+      {/* Print Dialog */}
+      {quotationId && existingQuotation && (
+        <QuotationPrintDialog
+          quotationId={quotationId}
+          quotationNumber={existingQuotation.quotationNumber}
+          triggerButton={<span style={{ display: 'none' }} />}
+          isOpen={printDialogOpen}
+          onOpenChange={setPrintDialogOpen}
+        />
       )}
       
       <LayoutForm2

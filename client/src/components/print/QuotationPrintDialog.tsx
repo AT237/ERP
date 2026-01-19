@@ -17,14 +17,22 @@ interface QuotationPrintDialogProps {
   quotationId: string;
   quotationNumber: string;
   triggerButton?: React.ReactNode;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function QuotationPrintDialog({
   quotationId,
   quotationNumber,
   triggerButton,
+  isOpen: controlledIsOpen,
+  onOpenChange,
 }: QuotationPrintDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  
+  // Use controlled state if provided, otherwise use internal state
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const setIsOpen = onOpenChange || setInternalIsOpen;
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(true);
   const { toast } = useToast();
