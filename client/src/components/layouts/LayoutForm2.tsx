@@ -489,18 +489,37 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       isModified: modifiedFields.has(field.key as string)
     };
 
-    // Checkbox layout: checkbox first, then label on same line
+    // Checkbox layout: use same grid as other fields (130px label column + field column)
+    // Checkbox aligns with input fields, label appears after checkbox
     if (field.type === 'checkbox') {
+      if (isMobile) {
+        return (
+          <div key={field.key as string} className="flex items-center gap-2 pt-2">
+            {renderField(fieldWithModified, changeTracking)}
+            <Label 
+              htmlFor={field.key as string} 
+              className="text-sm font-medium cursor-pointer"
+            >
+              {field.label}
+            </Label>
+            {renderFieldValidation(fieldWithModified)}
+          </div>
+        );
+      }
+      // Desktop: use grid layout to align checkbox with other input fields
       return (
-        <div key={field.key as string} className="flex items-center gap-2 pt-2">
-          {renderField(fieldWithModified, changeTracking)}
-          <Label 
-            htmlFor={field.key as string} 
-            className="text-sm font-medium cursor-pointer"
-          >
-            {field.label}
-          </Label>
-          {renderFieldValidation(fieldWithModified)}
+        <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-3">
+          <div></div>
+          <div className="flex items-center gap-2 pt-2">
+            {renderField(fieldWithModified, changeTracking)}
+            <Label 
+              htmlFor={field.key as string} 
+              className="text-sm font-medium cursor-pointer"
+            >
+              {field.label}
+            </Label>
+            {renderFieldValidation(fieldWithModified)}
+          </div>
         </div>
       );
     }
