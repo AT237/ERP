@@ -1422,30 +1422,14 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             // Positie 7: Budget Quotation
             {
               key: "isBudgetQuotation",
-              label: "Budget Quotation",
-              type: "custom",
-              customComponent: (
-                <div className="flex items-center space-x-2 mt-2">
-                  <Checkbox
-                    id="isBudgetQuotation"
-                    checked={quotationForm.watch("isBudgetQuotation") || false}
-                    onCheckedChange={(checked) => {
-                      quotationForm.setValue("isBudgetQuotation", checked === true);
-                    }}
-                    data-testid="checkbox-budget-quotation"
-                  />
-                  <Label 
-                    htmlFor="isBudgetQuotation" 
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Mark as budget quotation
-                  </Label>
-                </div>
-              ),
+              label: "Budget offerte",
+              type: "checkbox",
+              watch: () => quotationForm.watch("isBudgetQuotation") || false,
+              setValue: (checked) => quotationForm.setValue("isBudgetQuotation", checked === true),
               validation: {
                 error: quotationForm.formState.errors.isBudgetQuotation?.message
               },
-              testId: "field-budget-quotation"
+              testId: "checkbox-budget-quotation"
             }
             // Positie 8-12: automatisch leeg
           ]),
