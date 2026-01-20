@@ -620,10 +620,10 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         }
       });
       
-      // Verdeel velden over twee kolommen
-      const midpoint = Math.ceil(allFields.length / 2);
-      const leftFields = allFields.slice(0, midpoint);
-      const rightFields = allFields.slice(midpoint);
+      // Verdeel velden over twee kolommen (kolom-eerst: linkerkolom eerst volledig vullen tot 6 rijen)
+      const maxRowsPerColumn = 6;
+      const leftFields = allFields.slice(0, maxRowsPerColumn);
+      const rightFields = allFields.slice(maxRowsPerColumn);
       
       return {
         id: section.id,
