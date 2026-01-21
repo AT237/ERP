@@ -1,201 +1,152 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
-import type { InfoField } from './InfoHeaderLayout';
-import type { FormTab } from './FormTabLayout';
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
+import { LayoutForm2, type FormSection2, createFieldsRow, createCustomRow } from './LayoutForm2';
 import { Textarea } from "@/components/ui/textarea";
-import { SelectWithAdd } from "@/components/ui/select-with-add";
-import { QuickAddCustomer } from "@/components/quick-add-forms";
+import { CustomerSelect } from "@/components/ui/customer-select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertInvoiceSchema } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { insertInvoiceSchema, insertInvoiceItemSchema } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Receipt } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { Plus, Save, X, FileText, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Invoice, InsertInvoice, Customer } from "@shared/schema";
+import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
+import { useDataTable } from '@/hooks/useDataTable';
+import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
 
-const formSchema = insertInvoiceSchema.extend({
+const invoiceFormSchema = insertInvoiceSchema.omit({
+  subtotal: true,
+  taxAmount: true,
+  totalAmount: true,
+}).extend({
   subtotal: z.string().min(1, "Subtotal is required"),
   taxAmount: z.string().optional(),
   totalAmount: z.string().min(1, "Total amount is required"),
   paidAmount: z.string().optional(),
   dueDate: z.string().optional(),
+  invoiceDate: z.string().optional(),
 });
 
-type FormData = z.infer<typeof formSchema>;
+const invoiceItemFormSchema = insertInvoiceItemSchema.extend({
+  unitPrice: z.string().min(1, "Unit price is required"),
+  lineTotal: z.string().min(1, "Line total is required"),
+});
 
-// Use a flexible type for form data to handle dynamic validation
-type FormFieldValues = {
-  [key: string]: any;
-};
+type InvoiceFormData = z.infer<typeof invoiceFormSchema>;
+type InvoiceItemFormData = z.infer<typeof invoiceItemFormSchema>;
 
 interface InvoiceFormLayoutProps {
   onSave: () => void;
   invoiceId?: string;
-  parentId?: string; // ID of the parent tab that opened this form
+  parentId?: string;
 }
 
 export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLayoutProps) {
   const [activeTab, setActiveTab] = useState("general");
-  
-  // Change tracking state
-  const [originalValues, setOriginalValues] = useState<FormFieldValues>({});
-  const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [suppressTracking, setSuppressTracking] = useState(true);
-  
+  const [, navigate] = useLocation();
+  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const { toast } = useToast();
   const isEditing = !!invoiceId;
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const invoiceForm = useForm<InvoiceFormData>({
+    resolver: zodResolver(invoiceFormSchema),
     mode: 'onBlur',
     defaultValues: {
       invoiceNumber: "",
       customerId: "",
       status: "pending",
-      dueDate: undefined,
-      subtotal: "",
-      taxAmount: "0",
-      totalAmount: "",
-      paidAmount: "0",
+      dueDate: "",
+      invoiceDate: format(new Date(), "yyyy-MM-dd"),
+      subtotal: "0.00",
+      taxAmount: "0.00",
+      totalAmount: "0.00",
+      paidAmount: "0.00",
       notes: "",
     },
   });
 
-  // Change tracking helpers
-  const compareValues = (original: any, current: any) => {
-    if (typeof original !== typeof current) return false;
-    if (original === null || current === null) return original === current;
-    return String(original).trim() === String(current).trim();
-  };
+  const itemForm = useForm<InvoiceItemFormData>({
+    resolver: zodResolver(invoiceItemFormSchema),
+    defaultValues: {
+      invoiceId: "",
+      description: "",
+      quantity: 1,
+      unitPrice: "0.00",
+      lineTotal: "0.00",
+    },
+  });
 
-  const checkForChanges = () => {
-    const currentValues = form.getValues();
-    const modifiedFieldsSet = new Set<string>();
-    let hasChanges = false;
-
-    // Compare each field with original values
-    Object.keys(originalValues).forEach(fieldName => {
-      const originalValue = originalValues[fieldName];
-      const currentValue = currentValues[fieldName as keyof typeof currentValues];
-      
-      if (!compareValues(originalValue, currentValue)) {
-        modifiedFieldsSet.add(fieldName);
-        hasChanges = true;
-      }
-    });
-
-    setModifiedFields(modifiedFieldsSet);
-    setHasUnsavedChanges(hasChanges);
-    
-    return hasChanges;
-  };
-
-  // Get CSS class for field based on whether it's modified
-  const getFieldClassName = (fieldName: string, baseClassName: string = "") => {
-    if (suppressTracking) return baseClassName;
-    
-    const isModified = modifiedFields.has(fieldName);
-    if (isModified) {
-      return `${baseClassName} ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950`.trim();
-    }
-    return baseClassName;
-  };
-
-  // Load invoice data if editing
-  const { data: invoice, isLoading: isLoadingInvoice } = useQuery<Invoice>({
+  const { data: invoice, isLoading: invoiceLoading } = useQuery<Invoice>({
     queryKey: ["/api/invoices", invoiceId],
     enabled: !!invoiceId,
   });
 
-  // Load customers for dropdown
-  const { data: customers } = useQuery<Customer[]>({
+  const { data: customers = [] } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
   });
 
-  // Update form when invoice data loads and store original values for change tracking
+  const { data: fetchedInvoiceItems = [] } = useQuery<InvoiceItem[]>({
+    queryKey: ["/api/invoices", invoiceId, "items"],
+    enabled: !!invoiceId,
+  });
+
   useEffect(() => {
-    setSuppressTracking(true);
-    
     if (invoice) {
-      const formData = {
+      invoiceForm.reset({
         invoiceNumber: invoice.invoiceNumber || "",
         customerId: invoice.customerId || "",
         status: invoice.status || "pending",
         dueDate: invoice.dueDate ? format(new Date(invoice.dueDate), "yyyy-MM-dd") : "",
-        subtotal: invoice.subtotal || "",
-        taxAmount: invoice.taxAmount || "0",
-        totalAmount: invoice.totalAmount || "",
-        paidAmount: invoice.paidAmount || "0",
+        invoiceDate: invoice.createdAt ? format(new Date(invoice.createdAt), "yyyy-MM-dd") : "",
+        subtotal: invoice.subtotal || "0.00",
+        taxAmount: invoice.taxAmount || "0.00",
+        totalAmount: invoice.totalAmount || "0.00",
+        paidAmount: invoice.paidAmount || "0.00",
         notes: invoice.notes || "",
-      };
-      
-      form.reset(formData);
-      
-      // Store original values for change tracking
-      setOriginalValues(formData);
-      setModifiedFields(new Set());
-      setHasUnsavedChanges(false);
-    } else {
-      // For new invoice, store default values as original
-      const defaultFormData = form.getValues();
-      setOriginalValues(defaultFormData);
-      setModifiedFields(new Set());
-      setHasUnsavedChanges(false);
+      });
     }
-    
-    // Re-enable tracking after form is stable
-    setTimeout(() => setSuppressTracking(false), 100);
-  }, [invoice, form]);
+  }, [invoice, invoiceForm]);
 
-  // Throttled change checking - only when tracking is enabled
-  const [checkScheduled, setCheckScheduled] = useState(false);
-  const scheduleChangeCheck = useCallback(() => {
-    if (suppressTracking || checkScheduled) return;
-    
-    setCheckScheduled(true);
-    setTimeout(() => {
-      if (!suppressTracking && Object.keys(originalValues).length > 0) {
-        checkForChanges();
-      }
-      setCheckScheduled(false);
-    }, 200);
-  }, [suppressTracking, checkScheduled, originalValues, checkForChanges]);
-
-  // Watch for changes in form values and update change tracking (throttled)
-  const invoiceNumberValue = form.watch("invoiceNumber");
-  const customerIdValue = form.watch("customerId");
-  const statusValue = form.watch("status");
-  const dueDateValue = form.watch("dueDate");
-  const subtotalValue = form.watch("subtotal");
-  const taxAmountValue = form.watch("taxAmount");
-  const totalAmountValue = form.watch("totalAmount");
-  const paidAmountValue = form.watch("paidAmount");
-  const notesValue = form.watch("notes");
-  
   useEffect(() => {
-    scheduleChangeCheck();
-  }, [invoiceNumberValue, customerIdValue, statusValue, dueDateValue, subtotalValue, taxAmountValue, totalAmountValue, paidAmountValue, notesValue, scheduleChangeCheck]);
+    if (fetchedInvoiceItems.length > 0) {
+      setInvoiceItems(fetchedInvoiceItems);
+    }
+  }, [fetchedInvoiceItems]);
 
-  // Communicate unsaved changes status to parent Layout
-  useEffect(() => {
-    const tabId = invoiceId ? `edit-invoice-${invoiceId}` : 'new-invoice';
-    window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
-      detail: { tabId, hasUnsavedChanges }
-    }));
-  }, [hasUnsavedChanges, invoiceId]);
+  const itemColumns = React.useMemo(() => [
+    createPositionColumn(),
+    createIdColumn('id', 'Line ID'),
+    { 
+      key: 'description', 
+      label: 'Description', 
+      visible: true, 
+      width: 300, 
+      filterable: true, 
+      sortable: true 
+    },
+    { 
+      key: 'quantity', 
+      label: 'Qty', 
+      visible: true, 
+      width: 80, 
+      filterable: false, 
+      sortable: true,
+      className: 'text-right'
+    },
+    createCurrencyColumn('unitPrice', 'Unit Price'),
+    createCurrencyColumn('lineTotal', 'Line Total'),
+  ], []);
 
-  // Mutations
+  const itemTableState = useDataTable({
+    defaultColumns: itemColumns,
+    tableKey: 'invoice-items'
+  });
+
   const createMutation = useMutation({
     mutationFn: async (data: InsertInvoice) => {
       const response = await apiRequest("POST", "/api/invoices", data);
@@ -209,7 +160,6 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         description: "Invoice created successfully",
       });
       
-      // Dispatch entity-created event
       window.dispatchEvent(new CustomEvent('entity-created', {
         detail: {
           entityType: 'invoice',
@@ -253,8 +203,27 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     },
   });
 
-  // Form handlers
-  const onSubmit = (data: FormData) => {
+  const deleteItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      await apiRequest("DELETE", `/api/invoice-items/${itemId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
+      toast({
+        title: "Success",
+        description: "Invoice item deleted",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete item",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSaveInvoice = (data: InvoiceFormData) => {
     const submitData: InsertInvoice = {
       ...data,
       subtotal: data.subtotal,
@@ -271,208 +240,305 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     }
   };
 
-  // Tab content
-  const tabs: FormTab[] = [
+  const handleDeleteItem = (item: InvoiceItem) => {
+    if (window.confirm(`Are you sure you want to delete this item?`)) {
+      deleteItemMutation.mutate(item.id);
+      setInvoiceItems(prev => prev.filter(i => i.id !== item.id));
+    }
+  };
+
+  const handleCancel = () => {
+    window.dispatchEvent(new CustomEvent('close-form-tab', {
+      detail: { tabId: invoiceId ? `edit-invoice-${invoiceId}` : 'new-invoice' }
+    }));
+  };
+
+  const actionButtons = React.useMemo(() => {
+    const buttons: Array<{
+      key: string;
+      label: string;
+      icon: React.ReactNode;
+      onClick: () => void;
+      variant: 'default' | 'outline' | 'destructive';
+      testId: string;
+    }> = [
+      {
+        key: 'save',
+        label: 'Save',
+        icon: <Save className="h-4 w-4" />,
+        onClick: () => invoiceForm.handleSubmit(handleSaveInvoice)(),
+        variant: 'default',
+        testId: 'button-save-invoice'
+      },
+    ];
+
+    if (isEditing) {
+      buttons.push({
+        key: 'print',
+        label: 'Print',
+        icon: <Printer className="h-4 w-4" />,
+        onClick: () => {
+          toast({
+            title: "Print",
+            description: "Print functionality coming soon",
+          });
+        },
+        variant: 'outline',
+        testId: 'button-print-invoice'
+      });
+    }
+
+    buttons.push({
+      key: 'cancel',
+      label: 'Cancel',
+      icon: <X className="h-4 w-4" />,
+      onClick: handleCancel,
+      variant: 'outline',
+      testId: 'button-cancel-invoice'
+    });
+
+    return buttons;
+  }, [isEditing, invoiceForm, handleSaveInvoice, handleCancel, toast]);
+
+  const formSections: any[] = [
     {
       id: "general",
-      label: "Invoice Details",
-      content: (
-        <div className="space-y-6">
-          <div className="grid grid-cols-[130px_1fr] items-start gap-x-6 gap-y-6">
-            <Label htmlFor="invoiceNumber" className="text-sm font-medium text-right pt-2">Invoice Number *</Label>
-            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
-              <div>
-                <Input
-                  id="invoiceNumber"
-                  {...form.register("invoiceNumber")}
-                  placeholder="INV-2024-0001"
-                  data-testid="input-invoice-number"
-                  className={getFieldClassName("invoiceNumber")}
-                />
-                {form.formState.errors.invoiceNumber && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.invoiceNumber.message}</p>
-                )}
-              </div>
-              <div className="text-sm font-medium text-right pt-2">
-                Status
-              </div>
-              <div>
-                <Select 
-                  onValueChange={(value) => form.setValue("status", value)}
-                  value={form.watch("status") || "pending"}
-                >
-                  <SelectTrigger data-testid="select-status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="overdue">Overdue</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Label htmlFor="customerId" className="text-sm font-medium text-right pt-2">Customer *</Label>
-            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
-              <div>
-                <SelectWithAdd
-                  value={form.watch("customerId")}
-                  onValueChange={(value) => form.setValue("customerId", value)}
-                  placeholder="Select customer"
-                  addFormTitle="Add New Customer"
-                  testId="select-customer"
-                  addFormContent={
-                    <QuickAddCustomer 
-                      onSuccess={(customerId) => {
-                        form.setValue("customerId", customerId);
-                      }}
-                    />
-                  }
-                >
-                  {customers?.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </SelectItem>
-                  ))}
-                </SelectWithAdd>
-                {form.formState.errors.customerId && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.customerId.message}</p>
-                )}
-              </div>
-              <div className="text-sm font-medium text-right pt-2">
-                Due Date
-              </div>
-              <div>
-                <Input
-                  id="dueDate"
-                  type="date"
-                  {...form.register("dueDate")}
-                  data-testid="input-due-date"
-                  className={getFieldClassName("dueDate")}
-                />
-              </div>
-            </div>
-
-            <Label htmlFor="subtotal" className="text-sm font-medium text-right pt-2">Subtotal *</Label>
-            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
-              <div>
-                <Input
-                  id="subtotal"
-                  {...form.register("subtotal")}
-                  placeholder="0.00"
-                  data-testid="input-subtotal"
-                  className={getFieldClassName("subtotal")}
-                />
-                {form.formState.errors.subtotal && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.subtotal.message}</p>
-                )}
-              </div>
-              <div className="text-sm font-medium text-right pt-2">
-                Tax Amount
-              </div>
-              <div>
-                <Input
-                  id="taxAmount"
-                  {...form.register("taxAmount")}
-                  placeholder="0.00"
-                  data-testid="input-tax-amount"
-                  className={getFieldClassName("taxAmount")}
-                />
-              </div>
-            </div>
-
-            <Label htmlFor="totalAmount" className="text-sm font-medium text-right pt-2">Total Amount *</Label>
-            <div className="grid grid-cols-[30%_130px_30%] gap-4 items-center">
-              <div>
-                <Input
-                  id="totalAmount"
-                  {...form.register("totalAmount")}
-                  placeholder="0.00"
-                  data-testid="input-total-amount"
-                  className={getFieldClassName("totalAmount")}
-                />
-                {form.formState.errors.totalAmount && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.totalAmount.message}</p>
-                )}
-              </div>
-              <div className="text-sm font-medium text-right pt-2">
-                Paid Amount
-              </div>
-              <div>
-                <Input
-                  id="paidAmount"
-                  {...form.register("paidAmount")}
-                  placeholder="0.00"
-                  data-testid="input-paid-amount"
-                  className={getFieldClassName("paidAmount")}
-                />
-              </div>
-            </div>
-
-            <Label htmlFor="notes" className="text-sm font-medium text-right pt-2">Notes</Label>
-            <div className="w-[60%]">
-              <Textarea
-                id="notes"
-                {...form.register("notes")}
-                placeholder="Additional notes..."
-                rows={3}
-                data-testid="textarea-notes"
-                className={getFieldClassName("notes")}
+      label: "General",
+      rows: [
+        createFieldsRow([
+          {
+            key: "invoiceNumber",
+            label: "Invoice #",
+            type: "text",
+            register: invoiceForm.register("invoiceNumber"),
+            validation: {
+              error: invoiceForm.formState.errors.invoiceNumber?.message,
+              isRequired: true
+            },
+            testId: "input-invoice-number"
+          },
+          {
+            key: "customerId",
+            label: "Customer",
+            type: "custom",
+            customComponent: (
+              <CustomerSelect
+                value={invoiceForm.watch("customerId") || ""}
+                onValueChange={(value) => invoiceForm.setValue("customerId", value)}
+                customers={customers as any}
+                testId="select-customer"
               />
+            ),
+            validation: {
+              error: invoiceForm.formState.errors.customerId?.message,
+              isRequired: true
+            },
+            testId: "field-customer"
+          },
+          {
+            key: "invoiceDate",
+            label: "Invoice Date",
+            type: "date",
+            placeholder: "dd-mm-yyyy",
+            setValue: (value) => invoiceForm.setValue("invoiceDate", value),
+            watch: () => invoiceForm.watch("invoiceDate"),
+            validation: {
+              error: invoiceForm.formState.errors.invoiceDate?.message
+            },
+            testId: "input-invoice-date"
+          },
+          {
+            key: "status",
+            label: "Status",
+            type: "select",
+            options: [
+              { value: "pending", label: "Pending" },
+              { value: "paid", label: "Paid" },
+              { value: "overdue", label: "Overdue" },
+              { value: "cancelled", label: "Cancelled" }
+            ],
+            setValue: (value) => invoiceForm.setValue("status", value),
+            watch: () => invoiceForm.watch("status"),
+            validation: {
+              error: invoiceForm.formState.errors.status?.message
+            },
+            testId: "select-status"
+          },
+          {
+            key: "dueDate",
+            label: "Due Date",
+            type: "date",
+            placeholder: "dd-mm-yyyy",
+            setValue: (value) => invoiceForm.setValue("dueDate", value),
+            watch: () => invoiceForm.watch("dueDate"),
+            validation: {
+              error: invoiceForm.formState.errors.dueDate?.message
+            },
+            testId: "input-due-date"
+          },
+        ]),
+        {
+          type: 'custom',
+          customContent: (
+            <div className="grid grid-cols-[130px_1fr] items-start gap-3 mt-4">
+              <Label 
+                htmlFor="notes" 
+                className="text-sm font-medium text-right pt-2"
+              >
+                Notes
+              </Label>
+              <div>
+                <Textarea
+                  id="notes"
+                  {...invoiceForm.register("notes")}
+                  placeholder="Invoice notes..."
+                  className="min-h-[80px]"
+                  data-testid="textarea-invoice-notes"
+                />
+                {invoiceForm.formState.errors.notes && (
+                  <span className="text-sm text-red-600 mt-1 block">
+                    {invoiceForm.formState.errors.notes.message}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
-      )
-    }
-  ];
-
-  // Action buttons
-  const actionButtons: ActionButton[] = [
-    {
-      key: "cancel",
-      label: "Cancel",
-      icon: <ArrowLeft size={14} />,
-      onClick: onSave,
-      variant: "outline",
-      testId: "button-cancel"
+          )
+        }
+      ]
     },
     {
-      key: "save",
-      label: isEditing ? "Update Invoice" : "Create Invoice",
-      icon: <Save size={14} />,
-      onClick: form.handleSubmit(onSubmit),
-      variant: "default",
-      testId: "button-save",
-      disabled: createMutation.isPending || updateMutation.isPending
-    }
+      id: "amounts",
+      label: "Amounts",
+      rows: [
+        createFieldsRow([
+          {
+            key: "subtotal",
+            label: "Subtotal",
+            type: "text",
+            register: invoiceForm.register("subtotal"),
+            validation: {
+              error: invoiceForm.formState.errors.subtotal?.message,
+              isRequired: true
+            },
+            testId: "input-subtotal"
+          },
+          {
+            key: "taxAmount",
+            label: "Tax Amount",
+            type: "text",
+            register: invoiceForm.register("taxAmount"),
+            validation: {
+              error: invoiceForm.formState.errors.taxAmount?.message
+            },
+            testId: "input-tax-amount"
+          },
+          {
+            key: "totalAmount",
+            label: "Total Amount",
+            type: "text",
+            register: invoiceForm.register("totalAmount"),
+            validation: {
+              error: invoiceForm.formState.errors.totalAmount?.message,
+              isRequired: true
+            },
+            testId: "input-total-amount"
+          },
+          {
+            key: "paidAmount",
+            label: "Paid Amount",
+            type: "text",
+            register: invoiceForm.register("paidAmount"),
+            validation: {
+              error: invoiceForm.formState.errors.paidAmount?.message
+            },
+            testId: "input-paid-amount"
+          },
+        ]),
+      ]
+    },
   ];
-
-  // Info fields for header
-  const headerFields: InfoField[] = [
-    {
-      label: "Invoice",
-      value: form.watch("invoiceNumber") || "New Invoice"
-    }
-  ];
-
-  if (isLoadingInvoice) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-muted-foreground">Loading invoice...</div>
-      </div>
-    );
-  }
 
   return (
-    <BaseFormLayout
-      headerFields={headerFields}
-      tabs={tabs}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      actionButtons={actionButtons}
-      isLoading={isLoadingInvoice}
-    />
+    <div>
+      <LayoutForm2
+        sections={formSections}
+        activeSection={activeTab}
+        onSectionChange={setActiveTab}
+        form={invoiceForm}
+        onSubmit={handleSaveInvoice}
+        actionButtons={actionButtons as any}
+        isLoading={invoiceLoading}
+      />
+      {isEditing && (
+        <div className="px-6 py-4 bg-white ml-[15px] mr-[15px]">
+          <DataTableLayout
+            data={invoiceItems}
+            isLoading={false}
+            columns={itemTableState.columns}
+            setColumns={itemTableState.setColumns}
+            searchTerm={itemTableState.searchTerm}
+            setSearchTerm={itemTableState.setSearchTerm}
+            filters={itemTableState.filters}
+            setFilters={itemTableState.setFilters}
+            onAddFilter={itemTableState.addFilter}
+            onUpdateFilter={itemTableState.updateFilter}
+            onRemoveFilter={itemTableState.removeFilter}
+            sortConfig={itemTableState.sortConfig}
+            onSort={itemTableState.handleSort}
+            selectedRows={itemTableState.selectedRows}
+            setSelectedRows={itemTableState.setSelectedRows}
+            onToggleRowSelection={itemTableState.toggleRowSelection}
+            onToggleAllRows={() => {
+              const allIds = invoiceItems.map(item => item.id);
+              itemTableState.toggleAllRows(allIds);
+            }}
+            getRowId={(item: InvoiceItem) => item.id}
+            entityName="Invoice Item"
+            entityNamePlural="Invoice Items"
+            applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
+            applySorting={itemTableState.applySorting}
+            compact={true}
+            onRowDoubleClick={(item: InvoiceItem) => {
+              if (invoiceId) {
+                navigate(`/invoices/${invoiceId}/items/${item.id}`);
+              }
+            }}
+            headerActions={[
+              {
+                key: 'add-item',
+                label: 'ADD LINE',
+                icon: <Plus className="h-4 w-4" />,
+                onClick: () => {
+                  if (invoiceId) {
+                    navigate(`/invoices/${invoiceId}/items/new`);
+                  }
+                },
+                variant: 'default' as const
+              }
+            ]}
+            rowActions={(item: InvoiceItem) => [
+              {
+                key: 'edit',
+                label: 'Edit',
+                icon: <FileText className="h-4 w-4" />,
+                onClick: () => {
+                  if (invoiceId) {
+                    navigate(`/invoices/${invoiceId}/items/${item.id}`);
+                  }
+                },
+                variant: 'outline'
+              },
+              {
+                key: 'delete',
+                label: 'Delete',
+                icon: <X className="h-4 w-4" />,
+                onClick: () => handleDeleteItem(item),
+                variant: 'destructive'
+              }
+            ]}
+          />
+        </div>
+      )}
+    </div>
   );
 }
