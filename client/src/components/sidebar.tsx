@@ -96,17 +96,7 @@ export const defaultNavigation = [
       { id: "sales-packing", name: "Packing Lists", href: "/packing-lists", icon: Box }
     ]
   },
-  {
-    id: "operations",
-    name: "Operations",
-    collapsible: true,
-    items: [
-      { id: "projects", name: "Projects", href: "/projects", icon: FolderOpen },
-      { id: "work-orders", name: "Work Orders", href: "/work-orders", icon: ClipboardList },
-      { id: "packing-lists", name: "Packing Lists", href: "/packing-lists", icon: Box }
-    ]
-  },
-  {
+    {
     id: "reports",
     name: "Reports",
     collapsible: true,
