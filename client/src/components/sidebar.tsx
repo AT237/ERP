@@ -310,11 +310,60 @@ export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
     },
   });
 
+  // Merge saved navigation with default navigation to include new items
+  const mergeNavigationWithDefaults = (savedNav: typeof defaultNavigation): typeof defaultNavigation => {
+    const mergedSections: typeof defaultNavigation = [];
+    
+    // For each section in default navigation
+    for (const defaultSection of defaultNavigation) {
+      const savedSection = savedNav.find((s: any) => s.id === defaultSection.id);
+      
+      if (savedSection) {
+        // Merge items: keep saved order but add new items from defaults
+        const mergedItems: typeof defaultSection.items = [];
+        const savedItemIds = new Set(savedSection.items?.map((i: any) => i.id) || []);
+        const defaultItemIds = new Set(defaultSection.items?.map(i => i.id) || []);
+        
+        // First add items from saved order (if they still exist in defaults)
+        if (savedSection.items) {
+          for (const savedItem of savedSection.items) {
+            const defaultItem = defaultSection.items?.find(i => i.id === savedItem.id);
+            if (defaultItem) {
+              // Use default item data (updated name/icon) but keep position from saved
+              mergedItems.push(defaultItem);
+            }
+          }
+        }
+        
+        // Then add new items from defaults that weren't in saved
+        if (defaultSection.items) {
+          for (const defaultItem of defaultSection.items) {
+            if (!savedItemIds.has(defaultItem.id)) {
+              mergedItems.push(defaultItem);
+            }
+          }
+        }
+        
+        mergedSections.push({
+          ...defaultSection,
+          items: mergedItems
+        });
+      } else {
+        // Section is new, add it entirely
+        mergedSections.push(defaultSection);
+      }
+    }
+    
+    return mergedSections;
+  };
+
   // Initialize navigation and collapsed sections from preferences
   useEffect(() => {
     if (preferences && typeof preferences === 'object') {
       if ((preferences as any).navigationOrder && Array.isArray((preferences as any).navigationOrder)) {
-        setNavigation((preferences as any).navigationOrder);
+        // Merge saved navigation with defaults to include new items
+        const mergedNav = mergeNavigationWithDefaults((preferences as any).navigationOrder);
+        setNavigation(mergedNav);
       }
       if ((preferences as any).collapsedSections && typeof (preferences as any).collapsedSections === 'object') {
         setCollapsedSections((preferences as any).collapsedSections);
