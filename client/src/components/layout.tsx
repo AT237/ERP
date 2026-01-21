@@ -1040,11 +1040,12 @@ export default function Layout({ children }: LayoutProps) {
       }
       */
       
-      /* Commented out - invoice-form file doesn't exist
       if (activeTab.formType === 'invoice') {
         const InvoiceForm = lazy(() => import('@/pages/invoice-form'));
         const invoiceId = activeTab.id.startsWith('edit-invoice-') 
-          ? activeTab.id.replace('edit-invoice-', '') 
+          ? activeTab.parentId
+          : activeTab.id.startsWith('view-invoice-')
+          ? activeTab.parentId
           : undefined;
         
         return (
@@ -1063,7 +1064,6 @@ export default function Layout({ children }: LayoutProps) {
           </Suspense>
         );
       }
-      */
       
       /* Commented out - text-snippet-form file doesn't exist
       if (activeTab.formType === 'text-snippet') {
