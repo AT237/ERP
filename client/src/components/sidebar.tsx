@@ -89,14 +89,21 @@ export const defaultNavigation = [
       { id: "quotations", name: "Quotations", href: "/quotations", icon: FileText },
       { id: "proforma", name: "Proforma Invoices", href: "/proforma-invoices", icon: FileCheck },
       { id: "invoices", name: "Invoices", href: "/invoices", icon: Receipt },
-      { id: "orders", name: "Orders", href: "/sales-orders", icon: ShoppingCart },
-      { id: "confirmations", name: "Order Confirmations", href: "/order-confirmations", icon: CheckSquare },
-      { id: "sales-projects", name: "Projects", href: "/projects", icon: FolderOpen },
-      { id: "sales-work", name: "Work Orders", href: "/work-orders", icon: ClipboardList },
-      { id: "sales-packing", name: "Packing Lists", href: "/packing-lists", icon: Box }
+      { id: "orders", name: "Orders", href: "/sales-orders", icon: ShoppingCart }
     ]
   },
-    {
+  {
+    id: "operations",
+    name: "Operations",
+    collapsible: true,
+    items: [
+      { id: "confirmations", name: "Order Confirmations", href: "/order-confirmations", icon: CheckSquare },
+      { id: "work-orders", name: "Work Orders", href: "/work-orders", icon: ClipboardList },
+      { id: "projects", name: "Projects", href: "/projects", icon: FolderOpen },
+      { id: "packing-lists", name: "Packing Lists", href: "/packing-lists", icon: Box }
+    ]
+  },
+  {
     id: "reports",
     name: "Reports",
     collapsible: true,
