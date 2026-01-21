@@ -88,6 +88,7 @@ export const defaultNavigation = [
     items: [
       { id: "quotations", name: "Quotations", href: "/quotations", icon: FileText },
       { id: "proforma", name: "Proforma Invoices", href: "/proforma-invoices", icon: FileCheck },
+      { id: "invoices", name: "Invoices", href: "/invoices", icon: Receipt },
       { id: "orders", name: "Orders", href: "/sales-orders", icon: ShoppingCart },
       { id: "confirmations", name: "Order Confirmations", href: "/order-confirmations", icon: CheckSquare },
       { id: "sales-projects", name: "Projects", href: "/projects", icon: FolderOpen },
