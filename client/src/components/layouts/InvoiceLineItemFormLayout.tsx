@@ -509,10 +509,11 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       id: 'general',
       label: 'General',
       rows: [
-        createSectionHeaderRow("Line Details", "mb-4"),
-        createFieldsRow([formFields[0], formFields[1]]), // lineType, positionNo
-        createFieldsRow([formFields[2], formFields[3], formFields[4]]), // quantity, unitPrice, lineTotal
-        createSectionHeaderRow("Descriptions", "mt-6 mb-4"),
+        createFieldRow(formFields[0]), // lineType
+        createFieldRow(formFields[1]), // positionNo
+        createFieldRow(formFields[2]), // quantity
+        createFieldRow(formFields[3]), // unitPrice
+        createFieldRow(formFields[4]), // lineTotal
         createFieldRow(formFields[5]), // descriptionInternal
         createFieldRow(createDescriptionExternalField()) // descriptionExternal
       ]
