@@ -477,15 +477,13 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       id: 'general',
       label: 'General',
       rows: [
-        createFieldsRow([
-          formFields[0], // lineType
-          formFields[1], // positionNo
-          formFields[2], // quantity
-          formFields[3], // unitPrice
-          formFields[4], // lineTotal
-          formFields[5], // descriptionInternal
-          createDescriptionExternalField() // descriptionExternal
-        ] as FormField2<LineItemFormData>[])
+        createFieldRow(formFields[0]), // lineType
+        createFieldRow(formFields[1]), // positionNo
+        createFieldRow(formFields[2]), // quantity
+        createFieldRow(formFields[3]), // unitPrice
+        createFieldRow(formFields[4]), // lineTotal
+        createFieldRow(formFields[5]), // descriptionInternal
+        createFieldRow(createDescriptionExternalField()) // descriptionExternal
       ]
     }
   ];
