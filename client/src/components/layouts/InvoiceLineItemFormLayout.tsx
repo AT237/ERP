@@ -458,51 +458,20 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         error: form.formState.errors.descriptionInternal?.message
       },
       testId: 'textarea-description-internal'
+    },
+    {
+      key: 'descriptionExternal',
+      label: 'External Description',
+      type: 'textarea',
+      placeholder: 'External description (visible on invoice)',
+      rows: 3,
+      register: form.register('descriptionExternal'),
+      validation: {
+        error: form.formState.errors.descriptionExternal?.message
+      },
+      testId: 'textarea-description-external'
     }
   ];
-
-  const createDescriptionExternalField = (): FormField2<LineItemFormData> => ({
-    key: 'descriptionExternal',
-    label: 'External Description',
-    type: 'custom',
-    validation: {
-      error: form.formState.errors.descriptionExternal?.message
-    },
-    customComponent: (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="descriptionExternal">External Description</Label>
-          {form.watch("lineType") === "text" && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleOpenSnippetLibrary}
-              className="text-xs h-8"
-              data-testid="button-from-library"
-            >
-              <Library className="h-3 w-3 mr-1" />
-              From Library
-            </Button>
-          )}
-        </div>
-        <Textarea
-          id="descriptionExternal"
-          {...form.register("descriptionExternal")}
-          placeholder={form.watch("lineType") === "text" ? "Text (use \"From Library\" for reusable text blocks)" : "External description (visible on invoice)"}
-          rows={3}
-          data-testid="textarea-description-external"
-        />
-        {form.watch("sourceSnippetId") && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <FileText className="h-3 w-3" />
-            <span>Text copied from library (version {form.watch("sourceSnippetVersion")})</span>
-          </div>
-        )}
-      </div>
-    ),
-    testId: 'field-description-external'
-  });
 
   const formSections: FormSection2<LineItemFormData>[] = [
     {
@@ -515,7 +484,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         createFieldRow(formFields[3]), // unitPrice
         createFieldRow(formFields[4]), // lineTotal
         createFieldRow(formFields[5]), // descriptionInternal
-        createFieldRow(createDescriptionExternalField()) // descriptionExternal
+        createFieldRow(formFields[6]) // descriptionExternal
       ]
     }
   ];
