@@ -515,9 +515,9 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
           formFields[2], // quantity
           formFields[3], // unitPrice
           formFields[4], // lineTotal
-          formFields[5], // descriptionInternal
-          createDescriptionExternalField() // descriptionExternal
-        ] as FormField2<LineItemFormData>[])
+        ] as FormField2<LineItemFormData>[]),
+        createFieldRow(formFields[5]), // descriptionInternal - full width
+        createFieldRow(createDescriptionExternalField()) // descriptionExternal - full width
       ]
     }
   ];
