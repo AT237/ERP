@@ -102,7 +102,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/customers", async (req, res) => {
     try {
       const customerData = insertCustomerSchema.parse(req.body);
-      const customer = await storage.createCustomer(customerData);
+      // Convert empty strings to null for nullable foreign key fields
+      const cleanedData = {
+        ...customerData,
+        addressId: customerData.addressId === '' ? null : customerData.addressId,
+        paymentDaysId: customerData.paymentDaysId === '' ? null : customerData.paymentDaysId,
+        paymentScheduleId: customerData.paymentScheduleId === '' ? null : customerData.paymentScheduleId,
+        countryCode: customerData.countryCode === '' ? null : customerData.countryCode,
+        languageId: customerData.languageId === '' ? null : customerData.languageId,
+      };
+      const customer = await storage.createCustomer(cleanedData);
       res.status(201).json(customer);
     } catch (error) {
       console.error("Error creating customer:", error);
