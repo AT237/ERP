@@ -452,7 +452,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       label: 'Internal Description',
       type: 'textarea',
       placeholder: 'Internal description (not visible on invoice)',
-      rows: 3,
+      rows: 4,
       register: form.register('descriptionInternal'),
       validation: {
         error: form.formState.errors.descriptionInternal?.message
@@ -464,7 +464,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       label: 'External Description',
       type: 'textarea',
       placeholder: 'External description (visible on invoice)',
-      rows: 3,
+      rows: 4,
       register: form.register('descriptionExternal'),
       validation: {
         error: form.formState.errors.descriptionExternal?.message
@@ -478,13 +478,20 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       id: 'general',
       label: 'General',
       rows: [
-        createFieldRow(formFields[0]), // lineType
-        createFieldRow(formFields[1]), // positionNo
-        createFieldRow(formFields[2]), // quantity
-        createFieldRow(formFields[3]), // unitPrice
-        createFieldRow(formFields[4]), // lineTotal
-        createFieldRow(formFields[5]), // descriptionInternal
-        createFieldRow(formFields[6]) // descriptionExternal
+        {
+          type: 'two-column' as const,
+          leftColumn: [
+            formFields[0], // lineType
+            formFields[1], // positionNo
+            formFields[2], // quantity
+            formFields[3], // unitPrice
+            formFields[4]  // lineTotal
+          ],
+          rightColumn: [
+            formFields[5], // descriptionInternal (textarea)
+            formFields[6]  // descriptionExternal (textarea)
+          ]
+        }
       ]
     }
   ];

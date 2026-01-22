@@ -628,6 +628,40 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       // Verzamel alle velden uit alle rijen van deze sectie
       const allFields: FormField2<T>[] = [];
       
+      // Check if this section uses explicit two-column layout
+      const hasTwoColumnLayout = section.rows.some(row => row.type === 'two-column');
+      
+      if (hasTwoColumnLayout && !isMobile) {
+        // Use explicit two-column layout
+        const twoColRow = section.rows.find(row => row.type === 'two-column');
+        const leftFields = twoColRow?.leftColumn || [];
+        const rightFields = twoColRow?.rightColumn || [];
+        
+        return {
+          id: section.id,
+          label: section.label,
+          content: (
+            <div className="grid grid-cols-2 gap-8 pt-[10px]">
+              <div className="flex flex-col gap-[20px]">
+                {leftFields.map((field, idx) => (
+                  <div key={field.key as string || idx}>
+                    {renderSimpleField(field)}
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col gap-[20px]">
+                {rightFields.map((field, idx) => (
+                  <div key={field.key as string || idx}>
+                    {renderSimpleField(field)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        };
+      }
+      
+      // Collect all fields for automatic layout
       section.rows.forEach(row => {
         if (row.type === 'field' && row.field) {
           allFields.push(row.field);
