@@ -306,95 +306,83 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       id: "general",
       label: "General",
       rows: [
-        {
-          type: 'two-column' as const,
-          leftColumn: [
-            {
-              key: "invoiceNumber",
-              label: "Number",
-              type: "text",
-              register: invoiceForm.register("invoiceNumber"),
-              validation: {
-                error: invoiceForm.formState.errors.invoiceNumber?.message,
-                isRequired: true
-              },
-              testId: "input-invoice-number"
-            },
-            {
-              key: "customerId",
-              label: "Customer",
-              type: "custom",
-              customComponent: (
-                <CustomerSelect
-                  value={invoiceForm.watch("customerId") || ""}
-                  onValueChange={(value) => invoiceForm.setValue("customerId", value)}
-                  customers={customers as any}
-                  testId="select-customer"
-                />
-              ),
-              validation: {
-                error: invoiceForm.formState.errors.customerId?.message,
-                isRequired: true
-              },
-              testId: "field-customer"
-            },
-            {
-              key: "invoiceDate",
-              label: "Invoice Date",
-              type: "date",
-              placeholder: "dd-mm-yyyy",
-              setValue: (value: string) => invoiceForm.setValue("invoiceDate", value),
-              watch: () => invoiceForm.watch("invoiceDate"),
-              validation: {
-                error: invoiceForm.formState.errors.invoiceDate?.message
-              },
-              testId: "input-invoice-date"
-            },
-            {
-              key: "status",
-              label: "Status",
-              type: "select",
-              options: [
-                { value: "pending", label: "Pending" },
-                { value: "paid", label: "Paid" },
-                { value: "overdue", label: "Overdue" },
-                { value: "cancelled", label: "Cancelled" }
-              ],
-              setValue: (value: string) => invoiceForm.setValue("status", value),
-              watch: () => invoiceForm.watch("status"),
-              validation: {
-                error: invoiceForm.formState.errors.status?.message
-              },
-              testId: "select-status"
-            },
-            {
-              key: "dueDate",
-              label: "Due Date",
-              type: "date",
-              placeholder: "dd-mm-yyyy",
-              setValue: (value: string) => invoiceForm.setValue("dueDate", value),
-              watch: () => invoiceForm.watch("dueDate"),
-              validation: {
-                error: invoiceForm.formState.errors.dueDate?.message
-              },
-              testId: "input-due-date"
-            }
+        createFieldRow({
+          key: "invoiceNumber",
+          label: "Number",
+          type: "text",
+          register: invoiceForm.register("invoiceNumber"),
+          validation: {
+            error: invoiceForm.formState.errors.invoiceNumber?.message,
+            isRequired: true
+          },
+          testId: "input-invoice-number"
+        }),
+        createFieldRow({
+          key: "customerId",
+          label: "Customer",
+          type: "select",
+          options: customers.map(c => ({ value: c.id, label: c.name })),
+          setValue: (value) => invoiceForm.setValue("customerId", value),
+          watch: () => invoiceForm.watch("customerId"),
+          validation: {
+            error: invoiceForm.formState.errors.customerId?.message,
+            isRequired: true
+          },
+          testId: "select-customer"
+        }),
+        createFieldRow({
+          key: "invoiceDate",
+          label: "Invoice Date",
+          type: "date",
+          placeholder: "dd-mm-yyyy",
+          setValue: (value) => invoiceForm.setValue("invoiceDate", value),
+          watch: () => invoiceForm.watch("invoiceDate"),
+          validation: {
+            error: invoiceForm.formState.errors.invoiceDate?.message
+          },
+          testId: "input-invoice-date"
+        }),
+        createFieldRow({
+          key: "status",
+          label: "Status",
+          type: "select",
+          options: [
+            { value: "pending", label: "Pending" },
+            { value: "paid", label: "Paid" },
+            { value: "overdue", label: "Overdue" },
+            { value: "cancelled", label: "Cancelled" }
           ],
-          rightColumn: [
-            {
-              key: "notes",
-              label: "Notes",
-              type: "textarea",
-              placeholder: "Invoice notes...",
-              rows: 8,
-              register: invoiceForm.register("notes"),
-              validation: {
-                error: invoiceForm.formState.errors.notes?.message
-              },
-              testId: "textarea-invoice-notes"
-            }
-          ]
-        }
+          setValue: (value) => invoiceForm.setValue("status", value),
+          watch: () => invoiceForm.watch("status"),
+          validation: {
+            error: invoiceForm.formState.errors.status?.message
+          },
+          testId: "select-status"
+        }),
+        createFieldRow({
+          key: "dueDate",
+          label: "Due Date",
+          type: "date",
+          placeholder: "dd-mm-yyyy",
+          setValue: (value) => invoiceForm.setValue("dueDate", value),
+          watch: () => invoiceForm.watch("dueDate"),
+          validation: {
+            error: invoiceForm.formState.errors.dueDate?.message
+          },
+          testId: "input-due-date"
+        }),
+        createFieldRow({
+          key: "notes",
+          label: "Notes",
+          type: "textarea",
+          placeholder: "Invoice notes...",
+          rows: 8,
+          register: invoiceForm.register("notes"),
+          validation: {
+            error: invoiceForm.formState.errors.notes?.message
+          },
+          testId: "textarea-invoice-notes"
+        })
       ]
     },
     {

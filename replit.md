@@ -52,29 +52,45 @@ const columns = [
 - **Type Safety**: Extensive use of TypeScript with generic types for robust and maintainable code, especially with **Drizzle ORM** and **Zod** validation.
 
 ### Standard Form Layout Pattern
-**IMPORTANT**: All forms must follow this standard layout pattern for consistent spacing:
+**IMPORTANT**: LayoutForm2 automatically handles layout distribution:
+
+**Automatic Layout Rules**:
+1. **Large fields (textarea, custom) → Right column**: Automatically placed on the right side
+2. **Small fields (text, number, select, date, checkbox) → Left column**: Automatically placed on the left side
+3. **Consistent spacing**: All forms use `gap-[20px]` between rows and `gap-8` between columns
+4. **No manual configuration needed**: Just use `createFieldRow()` for each field
 
 ```typescript
-// Standard form sections pattern - use createFieldRow for each field
+// Standard form sections pattern - just list your fields
 const formSections: FormSection2<FormData>[] = [
   {
     id: 'general',
     label: 'General',
     rows: [
-      createFieldRow(formFields[0]), // Each field on its own row
-      createFieldRow(formFields[1]),
-      createFieldRow(formFields[2]),
+      createFieldRow(formFields[0]), // text field → goes left
+      createFieldRow(formFields[1]), // select field → goes left
+      createFieldRow(formFields[2]), // textarea → automatically goes right
       // ... etc
     ]
   }
 ];
 ```
 
+**Manual Two-Column Layout** (optional - for explicit control):
+```typescript
+rows: [
+  {
+    type: 'two-column' as const,
+    leftColumn: [field1, field2, field3],  // Explicit left column
+    rightColumn: [largeField1, largeField2] // Explicit right column
+  }
+]
+```
+
 **Key Rules**:
-1. Use `createFieldRow()` for each individual field - this gives proper spacing
-2. LayoutForm2 automatically arranges fields in a 2-column grid with `gap-[20px]` spacing
-3. Reference: `LineItemFormLayout.tsx` (quotation line items) is the standard template
-4. All invoice, quotation, and line item forms must follow this pattern
+1. Use `createFieldRow()` for each field - LayoutForm2 handles the rest
+2. Textareas automatically go to the right column
+3. Reference: `InvoiceLineItemFormLayout.tsx` and `InvoiceFormLayout.tsx` for examples
 
 ### Feature Specifications
 - **Comprehensive Form Coverage**: Supports 11 business forms (Customer, Supplier, Quotation, Inventory, Project, Work Order, Purchase Order, Packing List, Invoice, Sales Order, Text Snippet) and 6 master data forms (Units of Measure, Payment Terms, Incoterms, VAT Rates, Cities, Statuses).

@@ -673,10 +673,42 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         }
       });
       
-      // Calculate number of rows needed (ceiling of total fields / 2)
-      const numRows = Math.ceil(allFields.length / 2);
+      // STANDARD LAYOUT: Separate large fields (textarea, custom) to the right column
+      // Small fields (text, number, select, date, checkbox) go to the left column
+      const isLargeField = (field: FormField2<T>) => 
+        field.type === 'textarea' || field.type === 'custom';
       
-      // Distribute fields row-first: field 0 left, field 1 right, field 2 left, etc.
+      const leftFields = allFields.filter(f => !isLargeField(f));
+      const rightFields = allFields.filter(f => isLargeField(f));
+      
+      // If we have large fields, use two-column layout with large fields on right
+      if (rightFields.length > 0 && !isMobile) {
+        return {
+          id: section.id,
+          label: section.label,
+          content: (
+            <div className="grid grid-cols-2 gap-8 pt-[10px]">
+              <div className="flex flex-col gap-[20px]">
+                {leftFields.map((field, idx) => (
+                  <div key={field.key as string || idx}>
+                    {renderSimpleField(field)}
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col gap-[20px]">
+                {rightFields.map((field, idx) => (
+                  <div key={field.key as string || idx}>
+                    {renderSimpleField(field)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        };
+      }
+      
+      // No large fields - use row-first distribution
+      const numRows = Math.ceil(allFields.length / 2);
       const rows: Array<{left?: FormField2<T>, right?: FormField2<T>}> = [];
       for (let i = 0; i < numRows; i++) {
         rows.push({
