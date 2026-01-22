@@ -639,10 +639,17 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         }
       });
       
-      // Verdeel velden over twee kolommen (kolom-eerst: linkerkolom eerst volledig vullen tot 6 rijen)
-      const maxRowsPerColumn = 6;
-      const leftFields = allFields.slice(0, maxRowsPerColumn);
-      const rightFields = allFields.slice(maxRowsPerColumn);
+      // Calculate number of rows needed (ceiling of total fields / 2)
+      const numRows = Math.ceil(allFields.length / 2);
+      
+      // Distribute fields row-first: field 0 left, field 1 right, field 2 left, etc.
+      const rows: Array<{left?: FormField2<T>, right?: FormField2<T>}> = [];
+      for (let i = 0; i < numRows; i++) {
+        rows.push({
+          left: allFields[i * 2],
+          right: allFields[i * 2 + 1]
+        });
+      }
       
       return {
         id: section.id,
@@ -657,39 +664,14 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
             ))}
           </div>
         ) : (
-          // Desktop layout: 2-column grid (column-first: left column fills first, then right)
-          <div className="grid grid-rows-6 gap-[20px] min-h-[280px] pt-[10px]">
-            {/* Column-first layout: leftFields[i] in left column, rightFields[i] in right column */}
-            {/* Rij 1 */}
-            <div className="grid grid-cols-2 gap-8">
-              {leftFields[0] && renderSimpleField(leftFields[0])}
-              {rightFields[0] && renderSimpleField(rightFields[0])}
-            </div>
-            {/* Rij 2 */}
-            <div className="grid grid-cols-2 gap-8">
-              {leftFields[1] && renderSimpleField(leftFields[1])}
-              {rightFields[1] && renderSimpleField(rightFields[1])}
-            </div>
-            {/* Rij 3 */}
-            <div className="grid grid-cols-2 gap-8">
-              {leftFields[2] && renderSimpleField(leftFields[2])}
-              {rightFields[2] && renderSimpleField(rightFields[2])}
-            </div>
-            {/* Rij 4 */}
-            <div className="grid grid-cols-2 gap-8">
-              {leftFields[3] && renderSimpleField(leftFields[3])}
-              {rightFields[3] && renderSimpleField(rightFields[3])}
-            </div>
-            {/* Rij 5 */}
-            <div className="grid grid-cols-2 gap-8">
-              {leftFields[4] && renderSimpleField(leftFields[4])}
-              {rightFields[4] && renderSimpleField(rightFields[4])}
-            </div>
-            {/* Rij 6 */}
-            <div className="grid grid-cols-2 gap-8">
-              {leftFields[5] && renderSimpleField(leftFields[5])}
-              {rightFields[5] && renderSimpleField(rightFields[5])}
-            </div>
+          // Desktop layout: 2-column grid with dynamic rows, gap-[20px] spacing
+          <div className="flex flex-col gap-[20px] pt-[10px]">
+            {rows.map((row, idx) => (
+              <div key={idx} className="grid grid-cols-2 gap-8">
+                {row.left && renderSimpleField(row.left)}
+                {row.right && renderSimpleField(row.right)}
+              </div>
+            ))}
           </div>
         )
       };
