@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createCustomRow } from './LayoutForm2';
+import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createFieldsRow, createCustomRow, createSectionHeaderRow } from './LayoutForm2';
 import type { ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
 import { 
@@ -509,13 +509,12 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       id: 'general',
       label: 'Algemeen',
       rows: [
-        createFieldRow(formFields[0]),
-        createFieldRow(formFields[1]),
-        createFieldRow(formFields[2]),
-        createFieldRow(formFields[3]),
-        createFieldRow(formFields[4]),
-        createFieldRow(formFields[5]),
-        createFieldRow(createDescriptionExternalField())
+        createSectionHeaderRow("Regelgegevens", "mb-4"),
+        createFieldsRow([formFields[0], formFields[1]]), // lineType, positionNo
+        createFieldsRow([formFields[2], formFields[3], formFields[4]]), // quantity, unitPrice, lineTotal
+        createSectionHeaderRow("Beschrijvingen", "mt-6 mb-4"),
+        createFieldRow(formFields[5]), // descriptionInternal
+        createFieldRow(createDescriptionExternalField()) // descriptionExternal
       ]
     }
   ];

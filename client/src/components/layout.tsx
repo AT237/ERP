@@ -89,6 +89,17 @@ export default function Layout({ children }: LayoutProps) {
       return { id: `quotation-line-${quotationItemEditMatch[2]}`, name: 'Offerteregel' };
     }
     
+    // Check for invoice line item routes
+    const invoiceItemNewMatch = path.match(/^\/invoices\/([^/]+)\/items\/new$/);
+    if (invoiceItemNewMatch) {
+      return { id: `invoice-line-new-${invoiceItemNewMatch[1]}`, name: 'Factuurregel' };
+    }
+    
+    const invoiceItemEditMatch = path.match(/^\/invoices\/([^/]+)\/items\/([^/]+)$/);
+    if (invoiceItemEditMatch) {
+      return { id: `invoice-line-${invoiceItemEditMatch[2]}`, name: 'Factuurregel' };
+    }
+    
     switch (path) {
       case '/':
       case '/dashboard':
