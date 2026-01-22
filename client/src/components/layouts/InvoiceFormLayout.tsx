@@ -3,7 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { LayoutForm2, type FormSection2, createFieldsRow, createCustomRow } from './LayoutForm2';
+import { LayoutForm2, type FormSection2, createFieldsRow, createCustomRow, createFieldRow, createSectionHeaderRow } from './LayoutForm2';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CustomerSelect } from "@/components/ui/customer-select";
 import { useForm } from "react-hook-form";
@@ -308,7 +309,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         createFieldsRow([
           {
             key: "invoiceNumber",
-            label: "Invoice #",
+            label: "Number",
             type: "text",
             register: invoiceForm.register("invoiceNumber"),
             validation: {
@@ -454,6 +455,76 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
             testId: "input-paid-amount"
           },
         ]),
+      ]
+    },
+    {
+      id: "printSettings",
+      label: "Print Settings",
+      rows: [
+        createSectionHeaderRow("Afdrukinstellingen", "mb-6"),
+        createFieldRow({
+          key: "printSortOrder",
+          label: "Sorteervolgorde",
+          type: "custom",
+          customComponent: (
+            <Select
+              value={invoiceForm.watch("printSortOrder" as any) || "position"}
+              onValueChange={(value) => invoiceForm.setValue("printSortOrder" as any, value)}
+            >
+              <SelectTrigger className="w-full" data-testid="select-print-sort-order">
+                <SelectValue placeholder="Selecteer sortering..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="position">Positie (standaard)</SelectItem>
+                <SelectItem value="position_low_high">Positie laag - hoog</SelectItem>
+                <SelectItem value="position_high_low">Positie hoog - laag</SelectItem>
+                <SelectItem value="price_high_low">Prijs hoog - laag</SelectItem>
+                <SelectItem value="price_low_high">Prijs laag - hoog</SelectItem>
+                <SelectItem value="alpha_az">Alfabetisch A-Z</SelectItem>
+                <SelectItem value="alpha_za">Alfabetisch Z-A</SelectItem>
+              </SelectContent>
+            </Select>
+          ),
+          testId: "field-print-sort-order"
+        }),
+        createFieldRow({
+          key: "printLanguageCode",
+          label: "Taal",
+          type: "custom",
+          customComponent: (
+            <Select
+              value={invoiceForm.watch("printLanguageCode" as any) || "nl"}
+              onValueChange={(value) => invoiceForm.setValue("printLanguageCode" as any, value)}
+            >
+              <SelectTrigger className="w-full" data-testid="select-print-language">
+                <SelectValue placeholder="Selecteer taal..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nl">Nederlands</SelectItem>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="de">Deutsch</SelectItem>
+                <SelectItem value="fr">Français</SelectItem>
+              </SelectContent>
+            </Select>
+          ),
+          testId: "field-print-language"
+        }),
+        createFieldRow({
+          key: "printProjectNo",
+          label: "Projectnummer",
+          type: "checkbox",
+          watch: () => invoiceForm.watch("printProjectNo" as any) || false,
+          setValue: (checked) => invoiceForm.setValue("printProjectNo" as any, checked === true),
+          testId: "checkbox-print-project-no"
+        }),
+        createFieldRow({
+          key: "printPaymentConditions",
+          label: "Betalingscondities",
+          type: "checkbox",
+          watch: () => invoiceForm.watch("printPaymentConditions" as any) || false,
+          setValue: (checked) => invoiceForm.setValue("printPaymentConditions" as any, checked === true),
+          testId: "checkbox-print-payment-conditions"
+        }),
       ]
     },
   ];
