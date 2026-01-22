@@ -51,6 +51,31 @@ const columns = [
 - **Helper Functions**: Standardized helper functions (`createFieldRow`, `createFieldsRow`, `createSectionHeaderRow`) for consistent form section configuration.
 - **Type Safety**: Extensive use of TypeScript with generic types for robust and maintainable code, especially with **Drizzle ORM** and **Zod** validation.
 
+### Standard Form Layout Pattern
+**IMPORTANT**: All forms must follow this standard layout pattern for consistent spacing:
+
+```typescript
+// Standard form sections pattern - use createFieldRow for each field
+const formSections: FormSection2<FormData>[] = [
+  {
+    id: 'general',
+    label: 'General',
+    rows: [
+      createFieldRow(formFields[0]), // Each field on its own row
+      createFieldRow(formFields[1]),
+      createFieldRow(formFields[2]),
+      // ... etc
+    ]
+  }
+];
+```
+
+**Key Rules**:
+1. Use `createFieldRow()` for each individual field - this gives proper spacing
+2. LayoutForm2 automatically arranges fields in a 2-column grid with `gap-[20px]` spacing
+3. Reference: `LineItemFormLayout.tsx` (quotation line items) is the standard template
+4. All invoice, quotation, and line item forms must follow this pattern
+
 ### Feature Specifications
 - **Comprehensive Form Coverage**: Supports 11 business forms (Customer, Supplier, Quotation, Inventory, Project, Work Order, Purchase Order, Packing List, Invoice, Sales Order, Text Snippet) and 6 master data forms (Units of Measure, Payment Terms, Incoterms, VAT Rates, Cities, Statuses).
 - **Quick-Add Functionality**: "Quick Add" links on data table pages to open full tab-based forms for new entries.

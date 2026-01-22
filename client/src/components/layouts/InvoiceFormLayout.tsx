@@ -306,140 +306,136 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       id: "general",
       label: "General",
       rows: [
-        createFieldsRow([
-          {
-            key: "invoiceNumber",
-            label: "Number",
-            type: "text",
-            register: invoiceForm.register("invoiceNumber"),
-            validation: {
-              error: invoiceForm.formState.errors.invoiceNumber?.message,
-              isRequired: true
-            },
-            testId: "input-invoice-number"
+        createFieldRow({
+          key: "invoiceNumber",
+          label: "Number",
+          type: "text",
+          register: invoiceForm.register("invoiceNumber"),
+          validation: {
+            error: invoiceForm.formState.errors.invoiceNumber?.message,
+            isRequired: true
           },
-          {
-            key: "customerId",
-            label: "Customer",
-            type: "custom",
-            customComponent: (
-              <CustomerSelect
-                value={invoiceForm.watch("customerId") || ""}
-                onValueChange={(value) => invoiceForm.setValue("customerId", value)}
-                customers={customers as any}
-                testId="select-customer"
-              />
-            ),
-            validation: {
-              error: invoiceForm.formState.errors.customerId?.message,
-              isRequired: true
-            },
-            testId: "field-customer"
+          testId: "input-invoice-number"
+        }),
+        createFieldRow({
+          key: "customerId",
+          label: "Customer",
+          type: "custom",
+          customComponent: (
+            <CustomerSelect
+              value={invoiceForm.watch("customerId") || ""}
+              onValueChange={(value) => invoiceForm.setValue("customerId", value)}
+              customers={customers as any}
+              testId="select-customer"
+            />
+          ),
+          validation: {
+            error: invoiceForm.formState.errors.customerId?.message,
+            isRequired: true
           },
-          {
-            key: "invoiceDate",
-            label: "Invoice Date",
-            type: "date",
-            placeholder: "dd-mm-yyyy",
-            setValue: (value) => invoiceForm.setValue("invoiceDate", value),
-            watch: () => invoiceForm.watch("invoiceDate"),
-            validation: {
-              error: invoiceForm.formState.errors.invoiceDate?.message
-            },
-            testId: "input-invoice-date"
+          testId: "field-customer"
+        }),
+        createFieldRow({
+          key: "invoiceDate",
+          label: "Invoice Date",
+          type: "date",
+          placeholder: "dd-mm-yyyy",
+          setValue: (value) => invoiceForm.setValue("invoiceDate", value),
+          watch: () => invoiceForm.watch("invoiceDate"),
+          validation: {
+            error: invoiceForm.formState.errors.invoiceDate?.message
           },
-          {
-            key: "status",
-            label: "Status",
-            type: "select",
-            options: [
-              { value: "pending", label: "Pending" },
-              { value: "paid", label: "Paid" },
-              { value: "overdue", label: "Overdue" },
-              { value: "cancelled", label: "Cancelled" }
-            ],
-            setValue: (value) => invoiceForm.setValue("status", value),
-            watch: () => invoiceForm.watch("status"),
-            validation: {
-              error: invoiceForm.formState.errors.status?.message
-            },
-            testId: "select-status"
+          testId: "input-invoice-date"
+        }),
+        createFieldRow({
+          key: "status",
+          label: "Status",
+          type: "select",
+          options: [
+            { value: "pending", label: "Pending" },
+            { value: "paid", label: "Paid" },
+            { value: "overdue", label: "Overdue" },
+            { value: "cancelled", label: "Cancelled" }
+          ],
+          setValue: (value) => invoiceForm.setValue("status", value),
+          watch: () => invoiceForm.watch("status"),
+          validation: {
+            error: invoiceForm.formState.errors.status?.message
           },
-          {
-            key: "dueDate",
-            label: "Due Date",
-            type: "date",
-            placeholder: "dd-mm-yyyy",
-            setValue: (value) => invoiceForm.setValue("dueDate", value),
-            watch: () => invoiceForm.watch("dueDate"),
-            validation: {
-              error: invoiceForm.formState.errors.dueDate?.message
-            },
-            testId: "input-due-date"
+          testId: "select-status"
+        }),
+        createFieldRow({
+          key: "dueDate",
+          label: "Due Date",
+          type: "date",
+          placeholder: "dd-mm-yyyy",
+          setValue: (value) => invoiceForm.setValue("dueDate", value),
+          watch: () => invoiceForm.watch("dueDate"),
+          validation: {
+            error: invoiceForm.formState.errors.dueDate?.message
           },
-          {
-            key: "notes",
-            label: "Notes",
-            type: "textarea",
-            placeholder: "Invoice notes...",
-            rows: 3,
-            register: invoiceForm.register("notes"),
-            validation: {
-              error: invoiceForm.formState.errors.notes?.message
-            },
-            testId: "textarea-invoice-notes"
-          }
-        ])
+          testId: "input-due-date"
+        }),
+        createFieldRow({
+          key: "notes",
+          label: "Notes",
+          type: "textarea",
+          placeholder: "Invoice notes...",
+          rows: 3,
+          register: invoiceForm.register("notes"),
+          validation: {
+            error: invoiceForm.formState.errors.notes?.message
+          },
+          testId: "textarea-invoice-notes"
+        })
       ]
     },
     {
       id: "amounts",
       label: "Amounts",
       rows: [
-        createFieldsRow([
-          {
-            key: "subtotal",
-            label: "Subtotal",
-            type: "text",
-            register: invoiceForm.register("subtotal"),
-            validation: {
-              error: invoiceForm.formState.errors.subtotal?.message,
-              isRequired: true
-            },
-            testId: "input-subtotal"
+        createFieldRow({
+          key: "subtotal",
+          label: "Subtotal",
+          type: "text",
+          register: invoiceForm.register("subtotal"),
+          validation: {
+            error: invoiceForm.formState.errors.subtotal?.message,
+            isRequired: true
           },
-          {
-            key: "taxAmount",
-            label: "Tax Amount",
-            type: "text",
-            register: invoiceForm.register("taxAmount"),
-            validation: {
-              error: invoiceForm.formState.errors.taxAmount?.message
-            },
-            testId: "input-tax-amount"
+          testId: "input-subtotal"
+        }),
+        createFieldRow({
+          key: "taxAmount",
+          label: "Tax Amount",
+          type: "text",
+          register: invoiceForm.register("taxAmount"),
+          validation: {
+            error: invoiceForm.formState.errors.taxAmount?.message
           },
-          {
-            key: "totalAmount",
-            label: "Total Amount",
-            type: "text",
-            register: invoiceForm.register("totalAmount"),
-            validation: {
-              error: invoiceForm.formState.errors.totalAmount?.message,
-              isRequired: true
-            },
-            testId: "input-total-amount"
+          testId: "input-tax-amount"
+        }),
+        createFieldRow({
+          key: "totalAmount",
+          label: "Total Amount",
+          type: "text",
+          register: invoiceForm.register("totalAmount"),
+          validation: {
+            error: invoiceForm.formState.errors.totalAmount?.message,
+            isRequired: true
           },
-          {
-            key: "paidAmount",
-            label: "Paid Amount",
-            type: "text",
-            register: invoiceForm.register("paidAmount"),
-            validation: {
-              error: invoiceForm.formState.errors.paidAmount?.message
-            },
-            testId: "input-paid-amount"
-          }
-        ])
+          testId: "input-total-amount"
+        }),
+        createFieldRow({
+          key: "paidAmount",
+          label: "Paid Amount",
+          type: "text",
+          register: invoiceForm.register("paidAmount"),
+          validation: {
+            error: invoiceForm.formState.errors.paidAmount?.message
+          },
+          testId: "input-paid-amount"
+        })
       ]
     },
     {
