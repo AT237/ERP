@@ -232,7 +232,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       const response = await apiRequest("POST", `/api/invoices/${invoiceId}/items`, data);
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Kan regel niet toevoegen");
+        throw new Error(errorData.message || "Cannot add line");
       }
       return response.json();
     },
@@ -240,8 +240,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId] });
       toast({
-        title: "Succes",
-        description: "Regel toegevoegd",
+        title: "Success",
+        description: "Line added",
       });
       
       window.dispatchEvent(new CustomEvent('entity-created', {
@@ -256,8 +256,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     },
     onError: (error: Error) => {
       toast({
-        title: "Fout",
-        description: error.message || "Kan regel niet toevoegen",
+        title: "Error",
+        description: error.message || "Cannot add line",
         variant: "destructive",
       });
     },
@@ -268,7 +268,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       const response = await apiRequest("PUT", `/api/invoice-items/${lineItemId}`, data);
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Kan regel niet bijwerken");
+        throw new Error(errorData.message || "Cannot update line");
       }
       return response.json();
     },
@@ -277,15 +277,15 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       queryClient.invalidateQueries({ queryKey: ["/api/invoice-items", lineItemId] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
       toast({
-        title: "Succes",
-        description: "Regel bijgewerkt",
+        title: "Success",
+        description: "Line updated",
       });
       onSave();
     },
     onError: (error: Error) => {
       toast({
-        title: "Fout",
-        description: error.message || "Kan regel niet bijwerken",
+        title: "Error",
+        description: error.message || "Cannot update line",
         variant: "destructive",
       });
     },
@@ -317,8 +317,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     }
     
     toast({
-      title: "Snippet Toegevoegd",
-      description: `Tekst uit "${snippet.title}" is toegevoegd aan de regel.`,
+      title: "Snippet Added",
+      description: `Text from "${snippet.title}" has been added to the line.`,
     });
   };
 
@@ -363,7 +363,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const actionButtons: ActionButton[] = [
     {
       key: 'cancel',
-      label: 'Annuleren',
+      label: 'Cancel',
       icon: <ArrowLeft className="h-4 w-4" />,
       onClick: onSave,
       variant: 'outline',
@@ -371,7 +371,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     },
     {
       key: 'save',
-      label: isEditing ? 'Bijwerken' : 'Opslaan',
+      label: isEditing ? 'Update' : 'Save',
       icon: <Save className="h-4 w-4" />,
       onClick: form.handleSubmit(onSubmit),
       variant: 'default',
@@ -382,16 +382,16 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   ];
 
   const lineTypeOptions = [
-    { value: 'standard', label: 'Standaard artikel' },
-    { value: 'unique', label: 'Uniek artikel' },
-    { value: 'text', label: 'Tekst' },
-    { value: 'charges', label: 'Toeslag' },
+    { value: 'standard', label: 'Standard Item' },
+    { value: 'unique', label: 'Unique Item' },
+    { value: 'text', label: 'Text' },
+    { value: 'charges', label: 'Charges' },
   ];
 
   const formFields: FormField2<LineItemFormData>[] = [
     {
       key: 'lineType',
-      label: 'Regeltype',
+      label: 'Line Type',
       type: 'select',
       options: lineTypeOptions,
       setValue: (value: string) => form.setValue('lineType', value),
@@ -404,10 +404,10 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     },
     {
       key: 'positionNo',
-      label: 'Pos. Nr.',
+      label: 'Pos. No.',
       type: 'text',
       register: form.register('positionNo'),
-      placeholder: 'bijv. 010',
+      placeholder: 'e.g. 010',
       validation: {
         error: form.formState.errors.positionNo?.message
       },
@@ -415,7 +415,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     },
     {
       key: 'quantity',
-      label: 'Aantal',
+      label: 'Quantity',
       type: 'number',
       register: form.register('quantity', { valueAsNumber: true }),
       validation: {
@@ -426,7 +426,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     },
     {
       key: 'unitPrice',
-      label: 'Prijs per eenheid',
+      label: 'Unit Price',
       type: 'number',
       register: form.register('unitPrice'),
       validation: {
@@ -437,7 +437,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     },
     {
       key: 'lineTotal',
-      label: 'Regel totaal',
+      label: 'Line Total',
       type: 'text',
       register: form.register('lineTotal'),
       disabled: true,
@@ -449,9 +449,9 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     },
     {
       key: 'descriptionInternal',
-      label: 'Beschrijving intern',
+      label: 'Internal Description',
       type: 'textarea',
-      placeholder: 'Interne beschrijving (niet zichtbaar op factuur)',
+      placeholder: 'Internal description (not visible on invoice)',
       rows: 3,
       register: form.register('descriptionInternal'),
       validation: {
@@ -463,7 +463,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
 
   const createDescriptionExternalField = (): FormField2<LineItemFormData> => ({
     key: 'descriptionExternal',
-    label: 'Beschrijving extern',
+    label: 'External Description',
     type: 'custom',
     validation: {
       error: form.formState.errors.descriptionExternal?.message
@@ -471,7 +471,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     customComponent: (
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="descriptionExternal">Beschrijving extern</Label>
+          <Label htmlFor="descriptionExternal">External Description</Label>
           {form.watch("lineType") === "text" && (
             <Button
               type="button"
@@ -482,21 +482,21 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
               data-testid="button-from-library"
             >
               <Library className="h-3 w-3 mr-1" />
-              Uit bibliotheek
+              From Library
             </Button>
           )}
         </div>
         <Textarea
           id="descriptionExternal"
           {...form.register("descriptionExternal")}
-          placeholder={form.watch("lineType") === "text" ? "Tekst (gebruik \"Uit bibliotheek\" voor herbruikbare tekstblokken)" : "Externe beschrijving (zichtbaar op factuur)"}
+          placeholder={form.watch("lineType") === "text" ? "Text (use \"From Library\" for reusable text blocks)" : "External description (visible on invoice)"}
           rows={3}
           data-testid="textarea-description-external"
         />
         {form.watch("sourceSnippetId") && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <FileText className="h-3 w-3" />
-            <span>Tekst overgenomen uit bibliotheek (versie {form.watch("sourceSnippetVersion")})</span>
+            <span>Text copied from library (version {form.watch("sourceSnippetVersion")})</span>
           </div>
         )}
       </div>
@@ -507,12 +507,12 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const formSections: FormSection2<LineItemFormData>[] = [
     {
       id: 'general',
-      label: 'Algemeen',
+      label: 'General',
       rows: [
-        createSectionHeaderRow("Regelgegevens", "mb-4"),
+        createSectionHeaderRow("Line Details", "mb-4"),
         createFieldsRow([formFields[0], formFields[1]]), // lineType, positionNo
         createFieldsRow([formFields[2], formFields[3], formFields[4]]), // quantity, unitPrice, lineTotal
-        createSectionHeaderRow("Beschrijvingen", "mt-6 mb-4"),
+        createSectionHeaderRow("Descriptions", "mt-6 mb-4"),
         createFieldRow(formFields[5]), // descriptionInternal
         createFieldRow(createDescriptionExternalField()) // descriptionExternal
       ]
@@ -525,10 +525,10 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Library className="h-5 w-5" />
-            Selecteer tekst uit bibliotheek
+            Select text from library
           </DialogTitle>
           <DialogDescription>
-            Kies een tekstblok uit de bibliotheek om toe te voegen aan deze regel. De tekst wordt gekopieerd en is onafhankelijk van het origineel.
+            Choose a text block from the library to add to this line. The text will be copied and is independent from the original.
           </DialogDescription>
         </DialogHeader>
 
@@ -538,7 +538,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Zoek in tekstblokken..."
+                  placeholder="Search text blocks..."
                   value={snippetSearchTerm}
                   onChange={(e) => setSnippetSearchTerm(e.target.value)}
                   className="pl-10"
@@ -551,7 +551,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
               onValueChange={setSelectedSnippetCategory}
             >
               <SelectTrigger className="w-48" data-testid="select-snippet-category">
-                <SelectValue placeholder="Alle categorieën" />
+                <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
                 {SNIPPET_CATEGORIES.map((category) => (
@@ -576,9 +576,9 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
             ) : filteredSnippets.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Geen tekstblokken gevonden</p>
+                <p>No text blocks found</p>
                 {snippetSearchTerm && (
-                  <p className="text-sm mt-1">Probeer een andere zoekterm</p>
+                  <p className="text-sm mt-1">Try a different search term</p>
                 )}
               </div>
             ) : (
@@ -609,7 +609,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
                           </div>
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             <span>Code: {snippet.code}</span>
-                            <span>Versie: {snippet.version}</span>
+                            <span>Version: {snippet.version}</span>
                           </div>
                         </div>
                         <Check className="h-4 w-4 opacity-0 group-hover:opacity-100" />
@@ -629,7 +629,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
             onClick={() => setShowSnippetDialog(false)}
             data-testid="button-cancel-snippet"
           >
-            Annuleren
+            Cancel
           </Button>
         </div>
       </DialogContent>

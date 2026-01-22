@@ -92,12 +92,12 @@ export default function Layout({ children }: LayoutProps) {
     // Check for invoice line item routes
     const invoiceItemNewMatch = path.match(/^\/invoices\/([^/]+)\/items\/new$/);
     if (invoiceItemNewMatch) {
-      return { id: `invoice-line-new-${invoiceItemNewMatch[1]}`, name: 'Factuurregel' };
+      return { id: `invoice-line-new-${invoiceItemNewMatch[1]}`, name: 'Invoice Line' };
     }
     
     const invoiceItemEditMatch = path.match(/^\/invoices\/([^/]+)\/items\/([^/]+)$/);
     if (invoiceItemEditMatch) {
-      return { id: `invoice-line-${invoiceItemEditMatch[2]}`, name: 'Factuurregel' };
+      return { id: `invoice-line-${invoiceItemEditMatch[2]}`, name: 'Invoice Line' };
     }
     
     switch (path) {
