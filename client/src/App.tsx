@@ -182,6 +182,28 @@ function Router() {
             );
           }}
         </Route>
+
+        {/* Invoice Line Item Routes */}
+        <Route path="/invoices/:invoiceId/items/new">
+          {(params) => {
+            const InvoiceLineItemForm = React.lazy(() => import('./pages/invoice-line-item-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <InvoiceLineItemForm onSave={() => window.history.back()} invoiceId={params.invoiceId} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        <Route path="/invoices/:invoiceId/items/:itemId">
+          {(params) => {
+            const InvoiceLineItemForm = React.lazy(() => import('./pages/invoice-line-item-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <InvoiceLineItemForm onSave={() => window.history.back()} invoiceId={params.invoiceId} itemId={params.itemId} />
+              </Suspense>
+            );
+          }}
+        </Route>
         
         {/* Additional Form Routes for Tab System */}
         <Route path="/supplier-form" component={() => {

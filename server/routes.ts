@@ -947,6 +947,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Invoice Item routes
+  app.get("/api/invoice-items/:id", async (req, res) => {
+    try {
+      const item = await storage.getInvoiceItem(req.params.id);
+      if (!item) {
+        return res.status(404).json({ message: "Invoice item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      console.error("Error fetching invoice item:", error);
+      res.status(500).json({ message: "Failed to fetch invoice item" });
+    }
+  });
+
+  app.put("/api/invoice-items/:id", async (req, res) => {
+    try {
+      const itemData = insertInvoiceItemSchema.partial().parse(req.body);
+      const item = await storage.updateInvoiceItem(req.params.id, itemData);
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating invoice item:", error);
+      res.status(400).json({ message: "Failed to update invoice item" });
+    }
+  });
+
+  app.delete("/api/invoice-items/:id", async (req, res) => {
+    try {
+      await storage.deleteInvoiceItem(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting invoice item:", error);
+      res.status(500).json({ message: "Failed to delete invoice item" });
+    }
+  });
+
   // Purchase Order routes
   app.get("/api/purchase-orders", async (req, res) => {
     try {
