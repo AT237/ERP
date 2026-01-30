@@ -279,10 +279,13 @@ function renderField<T extends FieldValues>(
       );
     
     case 'textarea':
+      // Standard textarea height: 2 × field height (40px) + gap (20px) = 100px
+      const textareaClassName = `${className} min-h-[100px]`;
       return (
         <Textarea
           {...baseProps}
-          rows={field.rows || 3}
+          className={textareaClassName}
+          rows={field.rows}
           {...(field.register || {})}
         />
       );

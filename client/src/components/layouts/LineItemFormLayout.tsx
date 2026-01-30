@@ -534,7 +534,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
           id="descriptionExternal"
           {...form.register("descriptionExternal")}
           placeholder={form.watch("lineType") === "text" ? "Tekst (gebruik \"Uit bibliotheek\" voor herbruikbare tekstblokken)" : "Externe beschrijving (zichtbaar op offerte)"}
-          rows={3}
+          className="min-h-[100px]"
           data-testid="textarea-description-external"
         />
         {form.watch("sourceSnippetId") && (

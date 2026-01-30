@@ -60,6 +60,13 @@ const columns = [
 3. **Consistent spacing**: All forms use `gap-[20px]` between rows and `gap-8` between columns
 4. **No manual configuration needed**: Just use `createFieldRow()` for each field
 
+**Standard Field Dimensions**:
+- **Input/Select height**: `h-10` = 40px
+- **Textarea min-height**: `min-h-[100px]` = 100px (2 × field height + gap = 2 × 40px + 20px)
+- **Vertical gap**: `gap-[20px]` = 20px between rows
+- **Horizontal gap**: `gap-8` = 32px between columns
+- **Label width**: 130px
+
 ```typescript
 // Standard form sections pattern - just list your fields
 const formSections: FormSection2<FormData>[] = [
