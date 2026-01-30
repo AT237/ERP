@@ -429,10 +429,23 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   
   /**
    * Compare values for change detection
+   * Handles type conversions between string/number and null/undefined
    */
   const compareValues = useCallback((original: any, current: any): boolean => {
-    if (typeof original !== typeof current) return false;
-    if (original === null || current === null) return original === current;
+    // Both null/undefined are equal
+    if ((original === null || original === undefined) && (current === null || current === undefined)) {
+      return true;
+    }
+    // One is null/undefined but not the other
+    if (original === null || original === undefined || current === null || current === undefined) {
+      // Empty string equals null/undefined
+      if (original === '' || current === '') {
+        return (original === '' || original === null || original === undefined) && 
+               (current === '' || current === null || current === undefined);
+      }
+      return false;
+    }
+    // Convert both to strings and compare (handles number/string conversions)
     return String(original).trim() === String(current).trim();
   }, []);
 
