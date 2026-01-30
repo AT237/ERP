@@ -226,6 +226,11 @@ export const quotationItems = pgTable("quotation_items", {
   positionNo: text("position_no"), // Formatted position number (e.g., "010", "020")
   sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id), // Link to text snippet
   sourceSnippetVersion: integer("source_snippet_version"), // Version of snippet when used
+  // Delivery/sourcing fields
+  deliveryDate: timestamp("delivery_date"), // Expected delivery date
+  supplierId: varchar("supplier_id").references(() => suppliers.id), // Supplier for this item
+  hsCode: text("hs_code"), // Harmonized System code for customs
+  countryOfOrigin: text("country_of_origin"), // Country of origin for customs
 });
 
 // Quotation requests table
