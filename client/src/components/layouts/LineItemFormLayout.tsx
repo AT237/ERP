@@ -21,7 +21,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Save, ArrowLeft, Package, FileText, Search, Library, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { QuotationItem, InsertQuotationItem, TextSnippet } from "@shared/schema";
+import type { QuotationItem, InsertQuotationItem, TextSnippet, Supplier } from "@shared/schema";
 import { z } from "zod";
 
 // Form schema for line item data
@@ -35,6 +35,11 @@ const lineItemFormSchema = insertQuotationItemSchema.extend({
   descriptionExternal: z.string().optional(),
   sourceSnippetId: z.string().optional(),
   sourceSnippetVersion: z.number().optional(),
+  // Delivery fields
+  deliveryDate: z.string().optional(),
+  supplierId: z.string().optional(),
+  hsCode: z.string().optional(),
+  countryOfOrigin: z.string().optional(),
 }).refine((data) => {
   // For standard and unique line types, quantity must be at least 1
   if ((data.lineType === 'standard' || data.lineType === 'unique') && data.quantity < 1) {
@@ -54,6 +59,10 @@ type LineItemFormData = z.infer<typeof lineItemFormSchema> & {
   descriptionExternal?: string;
   sourceSnippetId?: string;
   sourceSnippetVersion?: number;
+  deliveryDate?: string;
+  supplierId?: string;
+  hsCode?: string;
+  countryOfOrigin?: string;
 };
 
 interface LineItemFormLayoutProps {
@@ -96,6 +105,10 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       descriptionExternal: "",
       sourceSnippetId: undefined,
       sourceSnippetVersion: undefined,
+      deliveryDate: undefined,
+      supplierId: undefined,
+      hsCode: "",
+      countryOfOrigin: "",
     },
   });
 
@@ -114,6 +127,11 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   const { data: quotationDetails } = useQuery<{ quotation: any; items: QuotationItem[]; customer: any }>({
     queryKey: ["/api/quotations", quotationId, "details"],
     enabled: !!quotationId && !isEditing,
+  });
+
+  // Load suppliers for dropdown
+  const { data: suppliers = [] } = useQuery<Supplier[]>({
+    queryKey: ["/api/suppliers"],
   });
 
   // Calculate next position number for new items
@@ -171,6 +189,11 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         descriptionExternal: lineItem.description || "",
         sourceSnippetId: lineItem.sourceSnippetId || undefined,
         sourceSnippetVersion: lineItem.sourceSnippetVersion || undefined,
+        // Delivery fields
+        deliveryDate: (lineItem as any).deliveryDate ? new Date((lineItem as any).deliveryDate).toISOString().split('T')[0] : undefined,
+        supplierId: (lineItem as any).supplierId || undefined,
+        hsCode: (lineItem as any).hsCode || "",
+        countryOfOrigin: (lineItem as any).countryOfOrigin || "",
       };
       
       form.reset(formData);
@@ -379,6 +402,11 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       description: data.descriptionExternal || data.descriptionInternal || data.description,
       sourceSnippetId: data.sourceSnippetId || undefined,
       sourceSnippetVersion: data.sourceSnippetVersion || undefined,
+      // Delivery fields
+      deliveryDate: data.deliveryDate ? new Date(data.deliveryDate).toISOString() : undefined,
+      supplierId: data.supplierId || undefined,
+      hsCode: data.hsCode || undefined,
+      countryOfOrigin: data.countryOfOrigin || undefined,
     };
     
     if (isEditing) {
@@ -545,6 +573,57 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     testId: 'field-description-external'
   });
 
+  // Delivery fields
+  const deliveryFields: FormField2<LineItemFormData>[] = [
+    {
+      key: 'deliveryDate',
+      label: 'Leverdatum',
+      type: 'date',
+      register: form.register('deliveryDate'),
+      validation: {
+        error: form.formState.errors.deliveryDate?.message
+      },
+      testId: 'input-delivery-date'
+    },
+    {
+      key: 'supplierId',
+      label: 'Leverancier',
+      type: 'select',
+      options: [
+        { value: '', label: 'Selecteer leverancier...' },
+        ...suppliers.map(s => ({ value: s.id, label: `${s.supplierNumber} - ${s.name}` }))
+      ],
+      setValue: (value: string) => form.setValue('supplierId', value || undefined),
+      watch: () => form.watch('supplierId') || '',
+      validation: {
+        error: form.formState.errors.supplierId?.message
+      },
+      testId: 'select-supplier'
+    },
+    {
+      key: 'hsCode',
+      label: 'HS Code',
+      type: 'text',
+      placeholder: 'Bijv. 8471.30.00',
+      register: form.register('hsCode'),
+      validation: {
+        error: form.formState.errors.hsCode?.message
+      },
+      testId: 'input-hs-code'
+    },
+    {
+      key: 'countryOfOrigin',
+      label: 'Land van oorsprong',
+      type: 'text',
+      placeholder: 'Bijv. Nederland, China',
+      register: form.register('countryOfOrigin'),
+      validation: {
+        error: form.formState.errors.countryOfOrigin?.message
+      },
+      testId: 'input-country-of-origin'
+    }
+  ];
+
   // Form sections
   const formSections: FormSection2<LineItemFormData>[] = [
     {
@@ -558,6 +637,16 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         createFieldRow(formFields[4]), // lineTotal
         createFieldRow(formFields[5]), // descriptionInternal
         createFieldRow(createDescriptionExternalField()) // descriptionExternal with snippet integration
+      ]
+    },
+    {
+      id: 'delivery',
+      label: 'Levering',
+      rows: [
+        createFieldRow(deliveryFields[0]), // deliveryDate
+        createFieldRow(deliveryFields[1]), // supplierId
+        createFieldRow(deliveryFields[2]), // hsCode
+        createFieldRow(deliveryFields[3]), // countryOfOrigin
       ]
     }
   ];
