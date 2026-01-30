@@ -509,27 +509,24 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     key: 'descriptionExternal',
     label: 'Beschrijving extern',
     type: 'custom',
+    labelExtra: form.watch("lineType") === "text" ? (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={handleOpenSnippetLibrary}
+        className="text-xs h-6 px-2"
+        data-testid="button-from-library"
+      >
+        <Library className="h-3 w-3 mr-1" />
+        Uit bibliotheek
+      </Button>
+    ) : undefined,
     validation: {
       error: form.formState.errors.descriptionExternal?.message
     },
     customComponent: (
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="descriptionExternal">Beschrijving extern</Label>
-          {form.watch("lineType") === "text" && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleOpenSnippetLibrary}
-              className="text-xs h-8"
-              data-testid="button-from-library"
-            >
-              <Library className="h-3 w-3 mr-1" />
-              Uit bibliotheek
-            </Button>
-          )}
-        </div>
         <Textarea
           id="descriptionExternal"
           {...form.register("descriptionExternal")}

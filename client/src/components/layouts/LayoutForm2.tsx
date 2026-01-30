@@ -83,6 +83,9 @@ export interface FormField2<T extends FieldValues = FieldValues> {
   // Additional styling
   className?: string;
   wrapperClassName?: string;
+  
+  // Extra content next to label (e.g., action buttons)
+  labelExtra?: ReactNode;
 }
 
 /**
@@ -570,6 +573,11 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
           {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
         </Label>
         <div className={field.wrapperClassName || ''}>
+          {field.labelExtra && (
+            <div className="flex justify-end mb-1">
+              {field.labelExtra}
+            </div>
+          )}
           {renderField(fieldWithModified, changeTracking)}
           {renderFieldValidation(fieldWithModified)}
         </div>
