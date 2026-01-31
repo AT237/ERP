@@ -376,7 +376,6 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           label: "Notes",
           type: "textarea",
           placeholder: "Invoice notes...",
-          rows: 8,
           register: invoiceForm.register("notes"),
           validation: {
             error: invoiceForm.formState.errors.notes?.message

@@ -94,8 +94,8 @@ export default function StyleGuidePage() {
                     </div>
                     <div className="flex flex-col gap-[20px]">
                       <div className="grid grid-cols-[130px_1fr] items-start gap-3">
-                        <Label className="text-right text-sm pt-2">Beschrijving</Label>
-                        <Textarea placeholder="Lange tekst..." className="min-h-[100px]" />
+                        <Label className="text-right text-sm pt-2">Textarea</Label>
+                        <Textarea placeholder="Multi-line text..." className="min-h-[100px]" />
                       </div>
                     </div>
                   </div>
