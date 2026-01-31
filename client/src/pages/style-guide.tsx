@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,10 @@ import { Plus, Copy, Check, ExternalLink } from "lucide-react";
 
 export default function StyleGuidePage() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.title = "Design System";
+  }, []);
 
   const copyToClipboard = (code: string, id: string) => {
     navigator.clipboard.writeText(code);
