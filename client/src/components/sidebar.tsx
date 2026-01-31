@@ -78,7 +78,8 @@ export const defaultNavigation = [
       { id: "incoterms", name: "Incoterms", href: "/master-data/incoterms", icon: Plane },
       { id: "vat", name: "VAT Rates", href: "/master-data/vat", icon: Percent },
       { id: "cities", name: "Cities", href: "/master-data/cities", icon: MapPin },
-      { id: "statuses", name: "Statuses", href: "/master-data/statuses", icon: Tag }
+      { id: "statuses", name: "Statuses", href: "/master-data/statuses", icon: Tag },
+      { id: "pictograms", name: "Pictograms", href: "/master-data/pictograms", icon: FileCheck }
     ]
   },
   {

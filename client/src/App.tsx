@@ -23,6 +23,7 @@ import PackingLists from "@/pages/packing-lists";
 import Reports from "@/pages/reports";
 import TextSnippets from "@/pages/text-snippets";
 import Images from "@/pages/images";
+import Pictograms from "@/pages/pictograms";
 import LayoutDesigner from "@/pages/layout-designer";
 import StyleGuide from "@/pages/style-guide";
 import Layout from "@/components/layout";
@@ -67,6 +68,25 @@ function Router() {
             return (
               <Suspense fallback={<div className="p-6">Loading...</div>}>
                 <ImageForm imageId={params.id} onSave={() => window.history.back()} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        <Route path="/master-data/pictograms" component={Pictograms} />
+        <Route path="/pictogram-form" component={() => {
+          const PictogramForm = React.lazy(() => import('./pages/pictogram-form'));
+          return (
+            <Suspense fallback={<div className="p-6">Loading...</div>}>
+              <PictogramForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/pictogram-form/:id">
+          {(params: { id: string }) => {
+            const PictogramForm = React.lazy(() => import('./pages/pictogram-form'));
+            return (
+              <Suspense fallback={<div className="p-6">Loading...</div>}>
+                <PictogramForm pictogramId={params.id} onSave={() => window.history.back()} />
               </Suspense>
             );
           }}

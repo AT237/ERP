@@ -1721,6 +1721,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Pictograms CRUD routes
+  app.get("/api/masterdata/pictograms", async (req, res) => {
+    try {
+      const { pictograms } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const result = await db.select().from(pictograms).where(eq(pictograms.isActive, true));
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching pictograms:", error);
+      res.status(500).json({ message: "Failed to fetch pictograms" });
+    }
+  });
+
+  app.get("/api/masterdata/pictograms/:id", async (req, res) => {
+    try {
+      const { pictograms } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const [result] = await db.select().from(pictograms).where(eq(pictograms.id, req.params.id));
+      if (!result) {
+        return res.status(404).json({ message: "Pictogram not found" });
+      }
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching pictogram:", error);
+      res.status(500).json({ message: "Failed to fetch pictogram" });
+    }
+  });
+
+  app.post("/api/masterdata/pictograms", async (req, res) => {
+    try {
+      const { pictograms, insertPictogramSchema } = await import("@shared/schema");
+      const data = insertPictogramSchema.parse(req.body);
+      const [result] = await db.insert(pictograms).values(data).returning();
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error creating pictogram:", error);
+      res.status(500).json({ message: "Failed to create pictogram" });
+    }
+  });
+
+  app.put("/api/masterdata/pictograms/:id", async (req, res) => {
+    try {
+      const { pictograms, insertPictogramSchema } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const data = insertPictogramSchema.partial().parse(req.body);
+      const [result] = await db.update(pictograms)
+        .set(data)
+        .where(eq(pictograms.id, req.params.id))
+        .returning();
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating pictogram:", error);
+      res.status(500).json({ message: "Failed to update pictogram" });
+    }
+  });
+
+  app.delete("/api/masterdata/pictograms/:id", async (req, res) => {
+    try {
+      const { pictograms } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      await db.update(pictograms)
+        .set({ isActive: false })
+        .where(eq(pictograms.id, req.params.id));
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting pictogram:", error);
+      res.status(500).json({ message: "Failed to delete pictogram" });
+    }
+  });
+
   // Units of Measure individual routes
   app.get("/api/masterdata/units-of-measure/:id", async (req, res) => {
     try {
