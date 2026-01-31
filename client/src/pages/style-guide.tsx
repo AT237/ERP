@@ -46,14 +46,15 @@ export default function StyleGuidePage() {
       </div>
 
       <div className="container mx-auto px-6 py-8">
-        <Tabs defaultValue="form-layout" className="space-y-8">
-          <TabsList className="bg-white dark:bg-gray-800 border p-1">
-            <TabsTrigger value="form-layout">Form Layout</TabsTrigger>
-            <TabsTrigger value="field-types">Field Types</TabsTrigger>
-            <TabsTrigger value="select-add">Select with Add</TabsTrigger>
-            <TabsTrigger value="tables">Table Styles</TabsTrigger>
-            <TabsTrigger value="spacing">Spacing & Sizing</TabsTrigger>
+        <Tabs defaultValue="form-layout" orientation="vertical" className="flex gap-8">
+          <TabsList className="flex flex-col h-fit w-48 bg-white dark:bg-gray-800 border p-2 rounded-lg shrink-0">
+            <TabsTrigger value="form-layout" className="w-full justify-start">Form Layout</TabsTrigger>
+            <TabsTrigger value="field-types" className="w-full justify-start">Field Types</TabsTrigger>
+            <TabsTrigger value="select-add" className="w-full justify-start">Select with Add</TabsTrigger>
+            <TabsTrigger value="tables" className="w-full justify-start">Table Styles</TabsTrigger>
+            <TabsTrigger value="spacing" className="w-full justify-start">Spacing & Sizing</TabsTrigger>
           </TabsList>
+          <div className="flex-1">
 
           <TabsContent value="form-layout" className="space-y-8">
             <Card>
@@ -543,6 +544,7 @@ export default function StyleGuidePage() {
               </CardContent>
             </Card>
           </TabsContent>
+          </div>
         </Tabs>
       </div>
     </div>
