@@ -24,6 +24,7 @@ import Reports from "@/pages/reports";
 import TextSnippets from "@/pages/text-snippets";
 import Images from "@/pages/images";
 import LayoutDesigner from "@/pages/layout-designer";
+import StyleGuide from "@/pages/style-guide";
 import Layout from "@/components/layout";
 
 function Router() {
@@ -48,6 +49,7 @@ function Router() {
         <Route path="/reports" component={Reports} />
         <Route path="/text-snippets" component={TextSnippets} />
         <Route path="/layout-designer" component={LayoutDesigner} />
+        <Route path="/style-guide" component={StyleGuide} />
         
         {/* Master Data Routes */}
         <Route path="/master-data/images" component={Images} />
