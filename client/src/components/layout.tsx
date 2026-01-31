@@ -148,6 +148,10 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'cities', name: 'Cities' };
       case '/master-data/statuses':
         return { id: 'statuses', name: 'Statuses' };
+      case '/master-data/pictograms':
+        return { id: 'pictograms', name: 'Pictograms' };
+      case '/style-guide':
+        return { id: 'design-system', name: 'Design System' };
       case '/welcome':
         return { id: 'welcome', name: 'Welcome' };
       default:
