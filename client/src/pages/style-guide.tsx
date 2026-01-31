@@ -30,7 +30,17 @@ export default function StyleGuidePage() {
           </div>
           <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Design System</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-3xl">
-            Documentation of standard components, layout patterns and design guidelines for consistent forms and interfaces.
+            Documentation of standard components, layout patterns and design guidelines for consistent forms and interfaces. 
+            Built with{" "}
+            <a 
+              href="https://ui.shadcn.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-orange-600 hover:underline inline-flex items-center gap-1"
+            >
+              shadcn/ui
+              <ExternalLink className="h-3 w-3" />
+            </a>
           </p>
         </div>
       </div>
