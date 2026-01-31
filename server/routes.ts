@@ -937,7 +937,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/invoices/:id", async (req, res) => {
     try {
-      const invoiceData = insertInvoiceSchema.partial().parse(req.body);
+      const body = { ...req.body };
+      if (body.invoiceDate && typeof body.invoiceDate === 'string') {
+        body.invoiceDate = new Date(body.invoiceDate);
+      }
+      if (body.dueDate && typeof body.dueDate === 'string') {
+        body.dueDate = new Date(body.dueDate);
+      }
+      const invoiceData = insertInvoiceSchema.partial().parse(body);
       const invoice = await storage.updateInvoice(req.params.id, invoiceData);
       res.json(invoice);
     } catch (error) {
