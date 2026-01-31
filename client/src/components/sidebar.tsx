@@ -118,7 +118,7 @@ export const defaultNavigation = [
     collapsible: true,
     items: [
       { id: "layout-designer", name: "Layout Designer", href: "/layout-designer", icon: Layout },
-      { id: "style-guide", name: "Stijlgids", href: "/style-guide", icon: FileText }
+      { id: "style-guide", name: "Design System", href: "/style-guide", icon: FileText }
     ]
   }
 ];

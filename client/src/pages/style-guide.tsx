@@ -26,11 +26,11 @@ export default function StyleGuidePage() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <span>Tools</span>
             <span>/</span>
-            <span className="text-foreground">Stijlgids</span>
+            <span className="text-foreground">Design System</span>
           </div>
-          <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Stijlgids</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Design System</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-3xl">
-            Documentatie van standaard componenten, layout patronen en ontwerprichtlijnen voor consistente formulieren en interfaces.
+            Documentation of standard components, layout patterns and design guidelines for consistent forms and interfaces.
           </p>
         </div>
       </div>
@@ -38,10 +38,10 @@ export default function StyleGuidePage() {
       <div className="container mx-auto px-6 py-8">
         <Tabs defaultValue="form-layout" className="space-y-8">
           <TabsList className="bg-white dark:bg-gray-800 border p-1">
-            <TabsTrigger value="form-layout">Formulier Layout</TabsTrigger>
-            <TabsTrigger value="field-types">Veld Types</TabsTrigger>
-            <TabsTrigger value="select-add">Select met Toevoegen</TabsTrigger>
-            <TabsTrigger value="tables">Tabel Stijlen</TabsTrigger>
+            <TabsTrigger value="form-layout">Form Layout</TabsTrigger>
+            <TabsTrigger value="field-types">Field Types</TabsTrigger>
+            <TabsTrigger value="select-add">Select with Add</TabsTrigger>
+            <TabsTrigger value="tables">Table Styles</TabsTrigger>
             <TabsTrigger value="spacing">Spacing & Sizing</TabsTrigger>
           </TabsList>
 
