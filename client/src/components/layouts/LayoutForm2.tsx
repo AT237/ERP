@@ -731,15 +731,11 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         };
       }
       
-      // No large fields - use row-first distribution
-      const numRows = Math.ceil(allFields.length / 2);
-      const rows: Array<{left?: FormField2<T>, right?: FormField2<T>}> = [];
-      for (let i = 0; i < numRows; i++) {
-        rows.push({
-          left: allFields[i * 2],
-          right: allFields[i * 2 + 1]
-        });
-      }
+      // COLUMN-FIRST LAYOUT: Fill left column (positions 1-6) before right column (7-12)
+      // Left column has space for 6 fields, only use right column when left is full
+      const MAX_LEFT_FIELDS = 6;
+      const leftColFields = allFields.slice(0, MAX_LEFT_FIELDS);
+      const rightColFields = allFields.slice(MAX_LEFT_FIELDS);
       
       return {
         id: section.id,
@@ -753,15 +749,34 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
               </div>
             ))}
           </div>
+        ) : rightColFields.length > 0 ? (
+          // Desktop layout with both columns (more than 6 fields)
+          <div className="grid grid-cols-2 gap-8 pt-[10px]">
+            <div className="flex flex-col gap-[20px]">
+              {leftColFields.map((field, idx) => (
+                <div key={field.key as string || idx}>
+                  {renderSimpleField(field)}
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col gap-[20px]">
+              {rightColFields.map((field, idx) => (
+                <div key={field.key as string || idx}>
+                  {renderSimpleField(field)}
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
-          // Desktop layout: 2-column grid with dynamic rows, gap-[20px] spacing
-          <div className="flex flex-col gap-[20px] pt-[10px]">
-            {rows.map((row, idx) => (
-              <div key={idx} className="grid grid-cols-2 gap-8">
-                {row.left && renderSimpleField(row.left)}
-                {row.right && renderSimpleField(row.right)}
-              </div>
-            ))}
+          // Desktop layout with only left column (6 or fewer fields)
+          <div className="pt-[10px]">
+            <div className="flex flex-col gap-[20px]">
+              {leftColFields.map((field, idx) => (
+                <div key={field.key as string || idx}>
+                  {renderSimpleField(field)}
+                </div>
+              ))}
+            </div>
           </div>
         )
       };
