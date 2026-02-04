@@ -1,6 +1,15 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
-import { X, Menu } from "lucide-react";
+import { X, Menu, Settings } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import Sidebar from "./sidebar";
@@ -1199,17 +1208,46 @@ export default function Layout({ children }: LayoutProps) {
           />
         )}
         
-        {/* User Info */}
-        <div className="text-right">
-          <div className="text-sm md:text-lg font-semibold text-foreground" data-testid="user-name">
-            Admin Gebruiker
+        {/* User Info and Settings */}
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className="text-sm md:text-lg font-semibold text-foreground" data-testid="user-name">
+              Admin Gebruiker
+            </div>
+            <div className="text-xs md:text-sm text-muted-foreground hidden md:block" data-testid="current-date">
+              {formatDate(getCurrentTime())}
+            </div>
+            <div className="text-xs md:text-sm font-mono text-muted-foreground" data-testid="current-time">
+              {formatTime(getCurrentTime())}
+            </div>
           </div>
-          <div className="text-xs md:text-sm text-muted-foreground hidden md:block" data-testid="current-date">
-            {formatDate(getCurrentTime())}
-          </div>
-          <div className="text-xs md:text-sm font-mono text-muted-foreground" data-testid="current-time">
-            {formatTime(getCurrentTime())}
-          </div>
+          
+          {/* Settings Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-10 w-10 hover:bg-orange-100">
+                <Settings className="h-5 w-5 text-orange-600" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Layout Settings</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/style-guide')}>
+                Design System
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Form Layout</DropdownMenuLabel>
+              <DropdownMenuItem disabled className="text-xs">
+                Column-first: positions 1-6 left, 7-12 right
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled className="text-xs">
+                Textarea fields → right column
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled className="text-xs">
+                Grid always shows 2 columns
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       {/* Main Content Area */}
