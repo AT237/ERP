@@ -94,23 +94,27 @@ rows: [
 ]
 ```
 
-**Column-First Layout Pattern** (for address-style forms):
-When fields should fill the left column first before the right column (vertical flow per column):
+**Column-First Layout Rule** (STANDARD):
+Fill the left column completely before using the right column. The left column has space for 6 fields (with standard 100px textarea or 40px input height). Only use the right column when:
+1. The left column is full (6+ fields), OR
+2. You have a textarea/large field that should go right
+
+Example: Address form with 5 fields → all 5 go in left column (not split across columns)
 ```typescript
 rows: [
-  {
-    type: 'two-column' as const,
-    leftColumn: [streetField, postalCodeField, countryField],  // Fill left column first (top to bottom)
-    rightColumn: [houseNumberField, cityField]                  // Then right column (top to bottom)
-  }
+  createFieldRow(field1),  // → left column
+  createFieldRow(field2),  // → left column
+  createFieldRow(field3),  // → left column
+  createFieldRow(field4),  // → left column
+  createFieldRow(field5),  // → left column (still room, don't use right)
 ]
 ```
 Reference: `AddressFormLayout.tsx` for column-first implementation.
 
 **Key Rules**:
 1. Use `createFieldRow()` for each field - LayoutForm2 handles the rest
-2. Textareas automatically go to the right column
-3. Use explicit `two-column` with `leftColumn`/`rightColumn` for column-first layouts
+2. Fill left column first - only use right column when left is full or for large fields
+3. Textareas automatically go to the right column
 4. Reference: `InvoiceLineItemFormLayout.tsx`, `InvoiceFormLayout.tsx`, and `AddressFormLayout.tsx` for examples
 
 ### Feature Specifications
