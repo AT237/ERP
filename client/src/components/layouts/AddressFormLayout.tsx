@@ -178,7 +178,7 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
     }
   ];
 
-  // Form sections
+  // Form sections - Column-first layout: fill left column first, then right column
   const sections: FormSection2<FormData>[] = [
     {
       id: "address",
@@ -186,79 +186,82 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
       icon: <Building className="h-4 w-4" />,
       rows: [
         createSectionHeaderRow("Basic Information"),
-        createFieldsRow([
-          {
-            key: "street",
-            label: "Street",
-            type: "text",
-            placeholder: "Enter street name",
-            register: form.register("street"),
-            validation: {
-              error: form.formState.errors.street?.message,
-              isRequired: true
+        {
+          type: 'two-column' as const,
+          leftColumn: [
+            {
+              key: "street",
+              label: "Street",
+              type: "text" as const,
+              placeholder: "Enter street name",
+              register: form.register("street"),
+              validation: {
+                error: form.formState.errors.street?.message,
+                isRequired: true
+              },
+              testId: "input-street",
+              className: form.formState.errors.street ? "border-red-500" : ""
             },
-            testId: "input-street",
-            className: form.formState.errors.street ? "border-red-500" : ""
-          },
-          {
-            key: "houseNumber",
-            label: "House Number", 
-            type: "text",
-            placeholder: "123A",
-            register: form.register("houseNumber"),
-            validation: {
-              error: form.formState.errors.houseNumber?.message,
-              isRequired: true
+            {
+              key: "postalCode",
+              label: "Postal Code",
+              type: "text" as const,
+              placeholder: "1234 AB",
+              register: form.register("postalCode"),
+              validation: {
+                error: form.formState.errors.postalCode?.message,
+                isRequired: true
+              },
+              testId: "input-postal-code",
+              className: form.formState.errors.postalCode ? "border-red-500" : ""
             },
-            testId: "input-house-number",
-            className: form.formState.errors.houseNumber ? "border-red-500" : ""
-          }
-        ]),
-        createFieldsRow([
-          {
-            key: "postalCode",
-            label: "Postal Code",
-            type: "text",
-            placeholder: "1234 AB",
-            register: form.register("postalCode"),
-            validation: {
-              error: form.formState.errors.postalCode?.message,
-              isRequired: true
-            },
-            testId: "input-postal-code",
-            className: form.formState.errors.postalCode ? "border-red-500" : ""
-          },
-          {
-            key: "city",
-            label: "City",
-            type: "text",
-            placeholder: "Enter city",
-            register: form.register("city"),
-            validation: {
-              error: form.formState.errors.city?.message,
-              isRequired: true
-            },
-            testId: "input-city",
-            className: form.formState.errors.city ? "border-red-500" : ""
-          },
-          {
-            key: "country",
-            label: "Country",
-            type: "custom",
-            customComponent: (
-              <CountrySelectWithAdd
-                value={form.watch("country") || ""}
-                onValueChange={(value) => form.setValue("country", value)}
-                placeholder="Selecteer land..."
-                testId="select-address-country"
-              />
-            ),
-            validation: {
-              error: form.formState.errors.country?.message,
-              isRequired: true
+            {
+              key: "country",
+              label: "Country",
+              type: "custom" as const,
+              customComponent: (
+                <CountrySelectWithAdd
+                  value={form.watch("country") || ""}
+                  onValueChange={(value) => form.setValue("country", value)}
+                  placeholder="Select country..."
+                  testId="select-address-country"
+                />
+              ),
+              validation: {
+                error: form.formState.errors.country?.message,
+                isRequired: true
+              }
             }
-          } as FormField2<FormData>
-        ])
+          ],
+          rightColumn: [
+            {
+              key: "houseNumber",
+              label: "House Number", 
+              type: "text" as const,
+              placeholder: "123A",
+              register: form.register("houseNumber"),
+              validation: {
+                error: form.formState.errors.houseNumber?.message,
+                isRequired: true
+              },
+              testId: "input-house-number",
+              className: form.formState.errors.houseNumber ? "border-red-500" : ""
+            },
+            {
+              key: "city",
+              label: "City",
+              type: "text" as const,
+              placeholder: "Enter city",
+              register: form.register("city"),
+              validation: {
+                error: form.formState.errors.city?.message,
+                isRequired: true
+              },
+              testId: "input-city",
+              className: form.formState.errors.city ? "border-red-500" : ""
+            }
+          ]
+        }
       ]
     }
   ];

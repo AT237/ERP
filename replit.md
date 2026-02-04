@@ -94,10 +94,24 @@ rows: [
 ]
 ```
 
+**Column-First Layout Pattern** (for address-style forms):
+When fields should fill the left column first before the right column (vertical flow per column):
+```typescript
+rows: [
+  {
+    type: 'two-column' as const,
+    leftColumn: [streetField, postalCodeField, countryField],  // Fill left column first (top to bottom)
+    rightColumn: [houseNumberField, cityField]                  // Then right column (top to bottom)
+  }
+]
+```
+Reference: `AddressFormLayout.tsx` for column-first implementation.
+
 **Key Rules**:
 1. Use `createFieldRow()` for each field - LayoutForm2 handles the rest
 2. Textareas automatically go to the right column
-3. Reference: `InvoiceLineItemFormLayout.tsx` and `InvoiceFormLayout.tsx` for examples
+3. Use explicit `two-column` with `leftColumn`/`rightColumn` for column-first layouts
+4. Reference: `InvoiceLineItemFormLayout.tsx`, `InvoiceFormLayout.tsx`, and `AddressFormLayout.tsx` for examples
 
 ### Feature Specifications
 - **Comprehensive Form Coverage**: Supports 11 business forms (Customer, Supplier, Quotation, Inventory, Project, Work Order, Purchase Order, Packing List, Invoice, Sales Order, Text Snippet) and 6 master data forms (Units of Measure, Payment Terms, Incoterms, VAT Rates, Cities, Statuses).
