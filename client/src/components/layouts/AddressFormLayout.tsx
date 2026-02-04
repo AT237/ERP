@@ -65,7 +65,7 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
     }
   });
 
-  // Load existing data into form
+  // Load existing data into form OR reset for new entry
   useEffect(() => {
     if (address && isEditing) {
       const formData = {
@@ -77,6 +77,16 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
       };
       
       form.reset(formData);
+      setHasUnsavedChanges(false);
+    } else if (!isEditing) {
+      // Reset to empty values for new entry
+      form.reset({
+        street: "",
+        houseNumber: "",
+        postalCode: "",
+        city: "",
+        country: ""
+      });
       setHasUnsavedChanges(false);
     }
   }, [address, form, isEditing]);
