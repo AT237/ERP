@@ -396,7 +396,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   // MOBILE DETECTION & EDITOR MODE
   // ========================================================================
   const isMobile = useIsMobile();
-  const { isEditorMode } = useLayoutEditor();
+  const { isEditorMode, toggleFieldRequired, getFieldOverride } = useLayoutEditor();
 
   // ========================================================================
   // FORM PERSISTENCE - AUTO-SAVE TO LOCALSTORAGE
@@ -512,10 +512,29 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
 
     // Editor mode: show blue border around fields to visualize grid positions
     const editorBorderClass = isEditorMode ? 'border-2 border-blue-400 border-dashed rounded-md p-2 relative' : '';
+    
+    // Check for field override (required toggle)
+    const fieldOverride = getFieldOverride(field.key as string);
+    const isFieldRequired = fieldOverride?.isRequired !== undefined 
+      ? fieldOverride.isRequired 
+      : (field.validation?.isRequired || field.validation?.dynamicallyRequired || false);
+    
+    const handleRequiredToggle = () => {
+      toggleFieldRequired(field.key as string, isFieldRequired);
+    };
+    
     const editorLabel = isEditorMode ? (
-      <div className="absolute -top-2 left-2 bg-blue-100 text-blue-700 text-xs px-1 rounded z-10">
-        {field.key as string}
-        {(field.validation?.isRequired || field.validation?.dynamicallyRequired) ? ' (required)' : ' (optional)'}
+      <div 
+        className="absolute -top-2 left-2 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded z-10 flex items-center gap-2 cursor-pointer hover:bg-blue-200 transition-colors"
+        onClick={handleRequiredToggle}
+        title="Click to toggle required/optional"
+      >
+        <span className="font-mono">{field.key as string}</span>
+        <span 
+          className={`px-1 rounded ${isFieldRequired ? 'bg-red-200 text-red-700' : 'bg-green-200 text-green-700'}`}
+        >
+          {isFieldRequired ? 'required' : 'optional'}
+        </span>
       </div>
     ) : null;
     
@@ -566,7 +585,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
             className="text-sm font-medium"
           >
             {field.label}
-            {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
+            {isFieldRequired && <span className="text-red-600 ml-1">*</span>}
           </Label>
           <div className={field.wrapperClassName || ''}>
             {renderField(fieldWithModified, changeTracking)}
@@ -585,7 +604,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
           className="text-sm font-medium text-right pt-2"
         >
           {field.label}
-          {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
+          {isFieldRequired && <span className="text-red-600 ml-1">*</span>}
         </Label>
         <div className={field.wrapperClassName || ''}>
           {field.labelExtra && (
