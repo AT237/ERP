@@ -523,18 +523,32 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       toggleFieldRequired(field.key as string, isFieldRequired);
     };
     
+    // Get field position from override or default
+    const fieldPosition = fieldOverride?.position;
+    
     const editorLabel = isEditorMode ? (
       <div 
-        className="absolute -top-2 left-2 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded z-10 flex items-center gap-2 cursor-pointer hover:bg-blue-200 transition-colors"
-        onClick={handleRequiredToggle}
-        title="Click to toggle required/optional"
+        className="absolute -top-2 left-2 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded z-10 flex items-center gap-2"
       >
-        <span className="font-mono">{field.key as string}</span>
         <span 
-          className={`px-1 rounded ${isFieldRequired ? 'bg-red-200 text-red-700' : 'bg-green-200 text-green-700'}`}
+          className="font-mono cursor-pointer hover:bg-blue-200 px-1 rounded"
+          title="Click to toggle required/optional"
+          onClick={handleRequiredToggle}
+        >
+          {field.key as string}
+        </span>
+        <span 
+          className={`px-1 rounded cursor-pointer ${isFieldRequired ? 'bg-red-200 text-red-700 hover:bg-red-300' : 'bg-green-200 text-green-700 hover:bg-green-300'}`}
+          onClick={handleRequiredToggle}
+          title="Click to toggle required/optional"
         >
           {isFieldRequired ? 'required' : 'optional'}
         </span>
+        {fieldPosition !== undefined && (
+          <span className="bg-purple-200 text-purple-700 px-1 rounded">
+            pos: {fieldPosition}
+          </span>
+        )}
       </div>
     ) : null;
     
