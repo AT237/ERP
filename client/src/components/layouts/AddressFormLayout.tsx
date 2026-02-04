@@ -19,11 +19,12 @@ import type { InfoField } from './InfoHeaderLayout';
 import { Input } from "@/components/ui/input";
 import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
 
-// Form schema with enhanced validation
+// Form schema with enhanced validation - only city and country are required
 const formSchema = insertAddressSchema.extend({
-  street: z.string().min(1, "Street is required"),
-  houseNumber: z.string().min(1, "House number is required"),
-  postalCode: z.string().min(1, "Postal code is required"),
+  street: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  houseNumber: z.string().optional().nullable(),
+  postalCode: z.string().optional().nullable(),
   city: z.string().min(1, "City is required"),
   country: z.string().min(1, "Country is required")
 });
@@ -58,6 +59,7 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
     resolver: zodResolver(formSchema),
     defaultValues: {
       street: "",
+      location: "",
       houseNumber: "",
       postalCode: "",
       city: "",
@@ -70,6 +72,7 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
     if (address && isEditing) {
       const formData = {
         street: address.street || "",
+        location: address.location || "",
         houseNumber: address.houseNumber || "",
         postalCode: address.postalCode || "",
         city: address.city || "",
@@ -82,6 +85,7 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
       // Reset to empty values for new entry
       form.reset({
         street: "",
+        location: "",
         houseNumber: "",
         postalCode: "",
         city: "",
@@ -204,10 +208,21 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
           register: form.register("street"),
           validation: {
             error: form.formState.errors.street?.message,
-            isRequired: true
+            isRequired: false
           },
-          testId: "input-street",
-          className: form.formState.errors.street ? "border-red-500" : ""
+          testId: "input-street"
+        }),
+        createFieldRow({
+          key: "location",
+          label: "Location",
+          type: "text",
+          placeholder: "Building, floor, etc.",
+          register: form.register("location"),
+          validation: {
+            error: form.formState.errors.location?.message,
+            isRequired: false
+          },
+          testId: "input-location"
         }),
         createFieldRow({
           key: "houseNumber",
@@ -217,10 +232,9 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
           register: form.register("houseNumber"),
           validation: {
             error: form.formState.errors.houseNumber?.message,
-            isRequired: true
+            isRequired: false
           },
-          testId: "input-house-number",
-          className: form.formState.errors.houseNumber ? "border-red-500" : ""
+          testId: "input-house-number"
         }),
         createFieldRow({
           key: "postalCode",
@@ -230,10 +244,9 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
           register: form.register("postalCode"),
           validation: {
             error: form.formState.errors.postalCode?.message,
-            isRequired: true
+            isRequired: false
           },
-          testId: "input-postal-code",
-          className: form.formState.errors.postalCode ? "border-red-500" : ""
+          testId: "input-postal-code"
         }),
         createFieldRow({
           key: "city",

@@ -46,9 +46,10 @@ export const languages = pgTable("languages", {
 // Addresses table for reusable addresses
 export const addresses = pgTable("addresses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  street: text("street").notNull(),
-  houseNumber: text("house_number").notNull(),
-  postalCode: text("postal_code").notNull(),
+  street: text("street"),
+  location: text("location"),
+  houseNumber: text("house_number"),
+  postalCode: text("postal_code"),
   city: text("city").notNull(),
   country: text("country").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
