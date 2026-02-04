@@ -511,7 +511,8 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
     };
 
     // Editor mode: show blue border around fields to visualize grid positions
-    const editorBorderClass = isEditorMode ? 'border-2 border-blue-400 border-dashed rounded-md p-2 relative' : '';
+    // Use thin border and no padding to avoid layout changes
+    const editorBorderClass = isEditorMode ? 'border border-blue-400 border-dashed rounded relative' : '';
     
     // Check for field override (required toggle)
     const fieldOverride = getFieldOverride(field.key as string);
@@ -528,27 +529,14 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
     
     const editorLabel = isEditorMode ? (
       <div 
-        className="absolute -top-2 left-2 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded z-10 flex items-center gap-2"
+        className="absolute -top-1.5 left-1 bg-blue-50 text-blue-600 text-[10px] px-1 rounded z-10 flex items-center gap-1 cursor-pointer hover:bg-blue-100"
+        onClick={handleRequiredToggle}
+        title="Click to toggle required/optional"
       >
-        <span 
-          className="font-mono cursor-pointer hover:bg-blue-200 px-1 rounded"
-          title="Click to toggle required/optional"
-          onClick={handleRequiredToggle}
-        >
-          {field.key as string}
+        <span className="font-mono">{field.key as string}</span>
+        <span className={`px-0.5 rounded ${isFieldRequired ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+          {isFieldRequired ? '*' : '○'}
         </span>
-        <span 
-          className={`px-1 rounded cursor-pointer ${isFieldRequired ? 'bg-red-200 text-red-700 hover:bg-red-300' : 'bg-green-200 text-green-700 hover:bg-green-300'}`}
-          onClick={handleRequiredToggle}
-          title="Click to toggle required/optional"
-        >
-          {isFieldRequired ? 'required' : 'optional'}
-        </span>
-        {fieldPosition !== undefined && (
-          <span className="bg-purple-200 text-purple-700 px-1 rounded">
-            pos: {fieldPosition}
-          </span>
-        )}
       </div>
     ) : null;
     
