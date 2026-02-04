@@ -28,6 +28,7 @@ import {
 
 import SectionInfoPanel from "./section-info-panel";
 import { CustomerProvider } from "@/contexts/CustomerContext";
+import { useLayoutEditor } from "@/contexts/LayoutEditorContext";
 
 // Lazy load components outside the render function to prevent re-importing
 const CustomerTable = lazy(() => import('./customers-table'));
@@ -72,6 +73,7 @@ export default function Layout({ children }: LayoutProps) {
   const [location, navigate] = useLocation();
   const userId = "admin"; // TODO: Get from auth context
   const isMobile = useIsMobile();
+  const { isEditorMode, toggleEditorMode } = useLayoutEditor();
 
   // Fetch company logo from database (ID starting with "cad")
   const { data: companyLogo } = useQuery<{ imageData: string } | null>({
@@ -1232,11 +1234,16 @@ export default function Layout({ children }: LayoutProps) {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Layout Settings</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={toggleEditorMode} className="cursor-pointer">
+                <span className={`mr-2 ${isEditorMode ? 'text-blue-600 font-medium' : ''}`}>
+                  {isEditorMode ? '✓' : '○'} Layout Editor Mode
+                </span>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/style-guide')}>
                 Design System
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-xs text-muted-foreground">Form Layout</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Form Layout Rules</DropdownMenuLabel>
               <DropdownMenuItem disabled className="text-xs">
                 Column-first: positions 1-6 left, 7-12 right
               </DropdownMenuItem>

@@ -14,6 +14,7 @@ import type { FormTab } from './FormTabLayout';
 import { UseFormReturn, FieldValues, FieldPath } from 'react-hook-form';
 import { useFormPersistence } from "@/hooks/use-form-persistence";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLayoutEditor } from "@/contexts/LayoutEditorContext";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -392,9 +393,10 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
 }: LayoutForm2Props<T>) {
 
   // ========================================================================
-  // MOBILE DETECTION
+  // MOBILE DETECTION & EDITOR MODE
   // ========================================================================
   const isMobile = useIsMobile();
+  const { isEditorMode } = useLayoutEditor();
 
   // ========================================================================
   // FORM PERSISTENCE - AUTO-SAVE TO LOCALSTORAGE
@@ -508,12 +510,22 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       isModified: modifiedFields.has(field.key as string)
     };
 
+    // Editor mode: show blue border around fields to visualize grid positions
+    const editorBorderClass = isEditorMode ? 'border-2 border-blue-400 border-dashed rounded-md p-2 relative' : '';
+    const editorLabel = isEditorMode ? (
+      <div className="absolute -top-2 left-2 bg-blue-100 text-blue-700 text-xs px-1 rounded z-10">
+        {field.key as string}
+        {(field.validation?.isRequired || field.validation?.dynamicallyRequired) ? ' (required)' : ' (optional)'}
+      </div>
+    ) : null;
+    
     // Checkbox layout: use same grid as other fields (130px label column + field column)
     // Checkbox aligns with input fields, label appears after checkbox
     if (field.type === 'checkbox') {
       if (isMobile) {
         return (
-          <div key={field.key as string} className="flex items-center gap-2 pt-2">
+          <div key={field.key as string} className={`flex items-center gap-2 pt-2 ${editorBorderClass}`}>
+            {editorLabel}
             {renderField(fieldWithModified, changeTracking)}
             <Label 
               htmlFor={field.key as string} 
@@ -527,7 +539,8 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       }
       // Desktop: use grid layout to align checkbox with other input fields
       return (
-        <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-3">
+        <div key={field.key as string} className={`grid grid-cols-[130px_1fr] items-start gap-3 ${editorBorderClass}`}>
+          {editorLabel}
           <div></div>
           <div className="flex items-center gap-2 pt-2">
             {renderField(fieldWithModified, changeTracking)}
@@ -546,7 +559,8 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
     // Mobile layout: label above field, full width
     if (isMobile) {
       return (
-        <div key={field.key as string} className="space-y-1">
+        <div key={field.key as string} className={`space-y-1 ${editorBorderClass}`}>
+          {editorLabel}
           <Label 
             htmlFor={field.key as string} 
             className="text-sm font-medium"
@@ -564,7 +578,8 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
 
     // Desktop layout: label beside field
     return (
-      <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-3">
+      <div key={field.key as string} className={`grid grid-cols-[130px_1fr] items-start gap-3 ${editorBorderClass}`}>
+        {editorLabel}
         <Label 
           htmlFor={field.key as string} 
           className="text-sm font-medium text-right pt-2"
@@ -583,7 +598,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         </div>
       </div>
     );
-  }, [isMobile, modifiedFields, changeTracking, renderField, renderFieldValidation]);
+  }, [isMobile, modifiedFields, changeTracking, renderField, renderFieldValidation, isEditorMode]);
 
   // ========================================================================
   // RENDER HELPERS
