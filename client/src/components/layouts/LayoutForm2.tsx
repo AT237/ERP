@@ -697,10 +697,10 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         }
       });
       
-      // STANDARD LAYOUT: Separate large fields (textarea, custom) to the right column
-      // Small fields (text, number, select, date, checkbox) go to the left column
+      // STANDARD LAYOUT: Only textarea fields are considered "large" and go to right column
+      // All other fields (text, number, select, date, checkbox, custom) go to left column first
       const isLargeField = (field: FormField2<T>) => 
-        field.type === 'textarea' || field.type === 'custom';
+        field.type === 'textarea';
       
       const leftFields = allFields.filter(f => !isLargeField(f));
       const rightFields = allFields.filter(f => isLargeField(f));
