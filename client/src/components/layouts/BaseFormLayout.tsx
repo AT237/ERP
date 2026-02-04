@@ -1,19 +1,9 @@
 import { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Settings } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 // InfoHeaderLayout removed per user request
 import { FormTabLayout, type FormTab } from './FormTabLayout';
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useLayoutEditor } from "@/contexts/LayoutEditorContext";
 
 export interface ActionButton {
   key: string;
@@ -50,7 +40,6 @@ export function BaseFormLayout({
   onTabChange,
   isLoading = false
 }: BaseFormLayoutProps) {
-  const { isEditorMode, toggleEditorMode } = useLayoutEditor();
   const isMobile = useIsMobile();
   
   // Show skeleton instead of loading spinner to prevent flicker
@@ -115,42 +104,6 @@ export function BaseFormLayout({
                 {button.label}
               </Button>
             ))}
-            
-            {/* Spacer to push settings to the right */}
-            <div className="flex-1" />
-            
-            {/* Layout Editor Settings */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`h-8 w-8 ${isEditorMode ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200'}`}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Layout Editor</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={toggleEditorMode} className="cursor-pointer">
-                  <span className={`mr-2 ${isEditorMode ? 'text-blue-600 font-medium' : ''}`}>
-                    {isEditorMode ? '✓' : '○'} Editor Mode
-                  </span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-xs text-muted-foreground">Layout Rules</DropdownMenuLabel>
-                <DropdownMenuItem disabled className="text-xs">
-                  Positions 1-6 → left column
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled className="text-xs">
-                  Positions 7-12 → right column
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled className="text-xs">
-                  Textarea fields → right column
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
 

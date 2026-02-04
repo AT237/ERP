@@ -1,15 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
-import { X, Menu, Settings } from "lucide-react";
+import { X, Menu } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import Sidebar from "./sidebar";
@@ -28,7 +19,6 @@ import {
 
 import SectionInfoPanel from "./section-info-panel";
 import { CustomerProvider } from "@/contexts/CustomerContext";
-import { useLayoutEditor } from "@/contexts/LayoutEditorContext";
 
 // Lazy load components outside the render function to prevent re-importing
 const CustomerTable = lazy(() => import('./customers-table'));
@@ -73,7 +63,6 @@ export default function Layout({ children }: LayoutProps) {
   const [location, navigate] = useLocation();
   const userId = "admin"; // TODO: Get from auth context
   const isMobile = useIsMobile();
-  const { isEditorMode, toggleEditorMode } = useLayoutEditor();
 
   // Fetch company logo from database (ID starting with "cad")
   const { data: companyLogo } = useQuery<{ imageData: string } | null>({
@@ -1210,51 +1199,17 @@ export default function Layout({ children }: LayoutProps) {
           />
         )}
         
-        {/* User Info and Settings */}
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <div className="text-sm md:text-lg font-semibold text-foreground" data-testid="user-name">
-              Admin Gebruiker
-            </div>
-            <div className="text-xs md:text-sm text-muted-foreground hidden md:block" data-testid="current-date">
-              {formatDate(getCurrentTime())}
-            </div>
-            <div className="text-xs md:text-sm font-mono text-muted-foreground" data-testid="current-time">
-              {formatTime(getCurrentTime())}
-            </div>
+        {/* User Info */}
+        <div className="text-right">
+          <div className="text-sm md:text-lg font-semibold text-foreground" data-testid="user-name">
+            Admin Gebruiker
           </div>
-          
-          {/* Settings Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 hover:bg-orange-100">
-                <Settings className="h-5 w-5 text-orange-600" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Layout Settings</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={toggleEditorMode} className="cursor-pointer">
-                <span className={`mr-2 ${isEditorMode ? 'text-blue-600 font-medium' : ''}`}>
-                  {isEditorMode ? '✓' : '○'} Layout Editor Mode
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/style-guide')}>
-                Design System
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-xs text-muted-foreground">Form Layout Rules</DropdownMenuLabel>
-              <DropdownMenuItem disabled className="text-xs">
-                Column-first: positions 1-6 left, 7-12 right
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled className="text-xs">
-                Textarea fields → right column
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled className="text-xs">
-                Grid always shows 2 columns
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="text-xs md:text-sm text-muted-foreground hidden md:block" data-testid="current-date">
+            {formatDate(getCurrentTime())}
+          </div>
+          <div className="text-xs md:text-sm font-mono text-muted-foreground" data-testid="current-time">
+            {formatTime(getCurrentTime())}
+          </div>
         </div>
       </div>
       {/* Main Content Area */}

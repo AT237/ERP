@@ -14,7 +14,6 @@ import type { FormTab } from './FormTabLayout';
 import { UseFormReturn, FieldValues, FieldPath } from 'react-hook-form';
 import { useFormPersistence } from "@/hooks/use-form-persistence";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useLayoutEditor } from "@/contexts/LayoutEditorContext";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -393,10 +392,9 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
 }: LayoutForm2Props<T>) {
 
   // ========================================================================
-  // MOBILE DETECTION & EDITOR MODE
+  // MOBILE DETECTION
   // ========================================================================
   const isMobile = useIsMobile();
-  const { isEditorMode, toggleFieldRequired, getFieldOverride } = useLayoutEditor();
 
   // ========================================================================
   // FORM PERSISTENCE - AUTO-SAVE TO LOCALSTORAGE
@@ -510,43 +508,12 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       isModified: modifiedFields.has(field.key as string)
     };
 
-    // Editor mode: show blue border around fields to visualize grid positions
-    // Use thin border and no padding to avoid layout changes
-    const editorBorderClass = isEditorMode ? 'border border-blue-400 border-dashed rounded relative' : '';
-    
-    // Check for field override (required toggle)
-    const fieldOverride = getFieldOverride(field.key as string);
-    const isFieldRequired = fieldOverride?.isRequired !== undefined 
-      ? fieldOverride.isRequired 
-      : (field.validation?.isRequired || field.validation?.dynamicallyRequired || false);
-    
-    const handleRequiredToggle = () => {
-      toggleFieldRequired(field.key as string, isFieldRequired);
-    };
-    
-    // Get field position from override or default
-    const fieldPosition = fieldOverride?.position;
-    
-    const editorLabel = isEditorMode ? (
-      <div 
-        className="absolute -top-1.5 left-1 bg-blue-50 text-blue-600 text-[10px] px-1 rounded z-10 flex items-center gap-1 cursor-pointer hover:bg-blue-100"
-        onClick={handleRequiredToggle}
-        title="Click to toggle required/optional"
-      >
-        <span className="font-mono">{field.key as string}</span>
-        <span className={`px-0.5 rounded ${isFieldRequired ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-          {isFieldRequired ? '*' : '○'}
-        </span>
-      </div>
-    ) : null;
-    
     // Checkbox layout: use same grid as other fields (130px label column + field column)
     // Checkbox aligns with input fields, label appears after checkbox
     if (field.type === 'checkbox') {
       if (isMobile) {
         return (
-          <div key={field.key as string} className={`flex items-center gap-2 pt-2 ${editorBorderClass}`}>
-            {editorLabel}
+          <div key={field.key as string} className="flex items-center gap-2 pt-2">
             {renderField(fieldWithModified, changeTracking)}
             <Label 
               htmlFor={field.key as string} 
@@ -560,8 +527,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       }
       // Desktop: use grid layout to align checkbox with other input fields
       return (
-        <div key={field.key as string} className={`grid grid-cols-[130px_1fr] items-start gap-3 ${editorBorderClass}`}>
-          {editorLabel}
+        <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-3">
           <div></div>
           <div className="flex items-center gap-2 pt-2">
             {renderField(fieldWithModified, changeTracking)}
@@ -580,14 +546,13 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
     // Mobile layout: label above field, full width
     if (isMobile) {
       return (
-        <div key={field.key as string} className={`space-y-1 ${editorBorderClass}`}>
-          {editorLabel}
+        <div key={field.key as string} className="space-y-1">
           <Label 
             htmlFor={field.key as string} 
             className="text-sm font-medium"
           >
             {field.label}
-            {isFieldRequired && <span className="text-red-600 ml-1">*</span>}
+            {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
           </Label>
           <div className={field.wrapperClassName || ''}>
             {renderField(fieldWithModified, changeTracking)}
@@ -599,14 +564,13 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
 
     // Desktop layout: label beside field
     return (
-      <div key={field.key as string} className={`grid grid-cols-[130px_1fr] items-start gap-3 ${editorBorderClass}`}>
-        {editorLabel}
+      <div key={field.key as string} className="grid grid-cols-[130px_1fr] items-start gap-3">
         <Label 
           htmlFor={field.key as string} 
           className="text-sm font-medium text-right pt-2"
         >
           {field.label}
-          {isFieldRequired && <span className="text-red-600 ml-1">*</span>}
+          {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
         </Label>
         <div className={field.wrapperClassName || ''}>
           {field.labelExtra && (
@@ -619,7 +583,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         </div>
       </div>
     );
-  }, [isMobile, modifiedFields, changeTracking, renderField, renderFieldValidation, isEditorMode]);
+  }, [isMobile, modifiedFields, changeTracking, renderField, renderFieldValidation]);
 
   // ========================================================================
   // RENDER HELPERS
