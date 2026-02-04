@@ -218,12 +218,12 @@ function getFieldClassName(
 ): string {
   let className = baseClassName;
   
-  // Add modified field styling if change tracking is enabled
-  if (changeTracking?.enabled && !changeTracking?.suppressTracking && field.isModified) {
-    const modifiedClass = changeTracking.modifiedFieldClassName || 
-      'ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950';
-    className = `${className} ${modifiedClass}`;
-  }
+  // Change tracking visual indication disabled
+  // if (changeTracking?.enabled && !changeTracking?.suppressTracking && field.isModified) {
+  //   const modifiedClass = changeTracking.modifiedFieldClassName || 
+  //     'ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950';
+  //   className = `${className} ${modifiedClass}`;
+  // }
   
   // Add validation styling
   if (field.validation?.dynamicallyRequired) {
