@@ -749,8 +749,8 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
               </div>
             ))}
           </div>
-        ) : rightColFields.length > 0 ? (
-          // Desktop layout with both columns (more than 6 fields)
+        ) : (
+          // Desktop layout: always 2-column grid, right column empty if fewer than 7 fields
           <div className="grid grid-cols-2 gap-8 pt-[10px]">
             <div className="flex flex-col gap-[20px]">
               {leftColFields.map((field, idx) => (
@@ -761,17 +761,6 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
             </div>
             <div className="flex flex-col gap-[20px]">
               {rightColFields.map((field, idx) => (
-                <div key={field.key as string || idx}>
-                  {renderSimpleField(field)}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          // Desktop layout with only left column (6 or fewer fields)
-          <div className="pt-[10px]">
-            <div className="flex flex-col gap-[20px]">
-              {leftColFields.map((field, idx) => (
                 <div key={field.key as string || idx}>
                   {renderSimpleField(field)}
                 </div>
