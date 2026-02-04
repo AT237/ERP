@@ -944,10 +944,10 @@ export function DataTableLayout<T = any>({
                         style={{ width: `${column.width}px`, minWidth: `${column.width}px`, maxWidth: `${column.width}px` }}
                         onDoubleClick={handleColumnDoubleClick}
                       >
-                        <div className="flex items-center w-full">
+                        <div className="flex items-center w-full gap-0.5">
                           {/* Label and sort area with consistent alignment */}
                           <div 
-                            className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded px-1 py-1 min-w-0"
+                            className="flex items-center gap-0.5 flex-1 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded px-0.5 py-0.5 min-w-0"
                             onClick={() => column.sortable && onSort(column.key)}
                           >
                             <span className="whitespace-nowrap uppercase font-bold text-xs text-orange-600 truncate">{column.label}</span>
@@ -966,13 +966,13 @@ export function DataTableLayout<T = any>({
                             )}
                           </div>
                           
-                          {/* Filter button with consistent positioning */}
+                          {/* Filter button with minimal spacing */}
                           {column.filterable && (
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => onAddFilter(column.key)}
-                              className="h-5 w-5 p-0.5 opacity-50 hover:opacity-100 flex-shrink-0 hover:bg-orange-100 dark:hover:bg-orange-800/30 ml-1"
+                              className="h-4 w-4 p-0 opacity-50 hover:opacity-100 flex-shrink-0 hover:bg-orange-100 dark:hover:bg-orange-800/30"
                             >
                               <Filter size={10} className="text-orange-500" />
                             </Button>
