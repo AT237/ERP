@@ -229,6 +229,58 @@ export default function StyleGuidePage() {
                     <Textarea placeholder="Lange tekst invoer..." className="min-h-[100px]" />
                     <Badge variant="outline" className="justify-center">min-h-[100px]</Badge>
                   </div>
+
+                  <div className="grid grid-cols-[200px_1fr_150px] items-center gap-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                    <div>
+                      <div className="font-medium">Email Input</div>
+                      <div className="text-sm text-muted-foreground">type: 'email'</div>
+                    </div>
+                    <Input type="email" placeholder="email@example.com" className="h-10" />
+                    <Badge variant="outline" className="justify-center">h-10 (40px)</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-[200px_1fr_150px] items-center gap-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                    <div>
+                      <div className="font-medium">Tel Input</div>
+                      <div className="text-sm text-muted-foreground">type: 'tel'</div>
+                    </div>
+                    <Input type="tel" placeholder="+31 6 12345678" className="h-10" />
+                    <Badge variant="outline" className="justify-center">h-10 (40px)</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-[200px_1fr_150px] items-center gap-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                    <div>
+                      <div className="font-medium">Checkbox</div>
+                      <div className="text-sm text-muted-foreground">type: 'checkbox'</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" id="demo-checkbox" className="h-4 w-4 rounded border-gray-300" />
+                      <label htmlFor="demo-checkbox" className="text-sm">Checkbox label</label>
+                    </div>
+                    <Badge variant="outline" className="justify-center">h-4 (16px)</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-[200px_1fr_150px] items-center gap-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                    <div>
+                      <div className="font-medium">Display (read-only)</div>
+                      <div className="text-sm text-muted-foreground">type: 'display'</div>
+                    </div>
+                    <div className="h-10 px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-md text-sm">
+                      Read-only value
+                    </div>
+                    <Badge variant="outline" className="justify-center">h-10 (40px)</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-[200px_1fr_150px] items-center gap-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                    <div>
+                      <div className="font-medium">Custom Component</div>
+                      <div className="text-sm text-muted-foreground">type: 'custom'</div>
+                    </div>
+                    <div className="h-10 px-3 py-2 border border-dashed border-orange-400 rounded-md text-sm text-orange-600 flex items-center">
+                      Any custom React component
+                    </div>
+                    <Badge variant="outline" className="justify-center">varies</Badge>
+                  </div>
                 </div>
 
                 <Separator />
