@@ -94,19 +94,21 @@ rows: [
 ]
 ```
 
-**Column-First Layout Rule** (STANDARD):
-Fill the left column completely before using the right column. The left column has space for 6 fields (with standard 100px textarea or 40px input height). Only use the right column when:
-1. The left column is full (6+ fields), OR
-2. You have a textarea/large field that should go right
+**Column-First Layout Rule** (STANDARD - applies to ALL forms via LayoutForm2):
+Fill the left column completely before using the right column. The grid always shows two columns (right column is empty if not needed).
+- **Positions 1-6**: Left column (filled first)
+- **Positions 7-12**: Right column (only used when left is full)
+- **Textarea fields**: Automatically placed in right column
+- **Grid always visible**: Right column stays empty but grid structure remains
 
-Example: Address form with 5 fields → all 5 go in left column (not split across columns)
+Example: Address form with 5 fields → all 5 go in left column, right column empty
 ```typescript
 rows: [
-  createFieldRow(field1),  // → left column
-  createFieldRow(field2),  // → left column
-  createFieldRow(field3),  // → left column
-  createFieldRow(field4),  // → left column
-  createFieldRow(field5),  // → left column (still room, don't use right)
+  createFieldRow(field1),  // → position 1 (left)
+  createFieldRow(field2),  // → position 2 (left)
+  createFieldRow(field3),  // → position 3 (left)
+  createFieldRow(field4),  // → position 4 (left)
+  createFieldRow(field5),  // → position 5 (left, right column stays empty)
 ]
 ```
 Reference: `AddressFormLayout.tsx` for column-first implementation.
