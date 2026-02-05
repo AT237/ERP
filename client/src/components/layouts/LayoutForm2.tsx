@@ -9,6 +9,7 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
+import { type FormToolbarProps } from './FormToolbar';
 // InfoField import removed per user request
 import type { FormTab } from './FormTabLayout';
 import { UseFormReturn, FieldValues, FieldPath } from 'react-hook-form';
@@ -160,11 +161,11 @@ export interface LayoutForm2Props<T extends FieldValues = FieldValues> {
   form: UseFormReturn<T>;
   onSubmit: (data: T) => void;
   
-  // Action buttons
-  actionButtons: ActionButton[];
+  // Action buttons (legacy - still supported)
+  actionButtons?: ActionButton[];
   
-  // Header fields removed per user request
-  // headerFields?: InfoField[];
+  // Standard toolbar (new - recommended)
+  toolbar?: FormToolbarProps;
   
   // Info fields for header
   infoFields?: Array<{ label: string; value: string | ReactNode }>;
@@ -380,7 +381,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   form,
   onSubmit,
   actionButtons,
-  // headerFields removed per user request
+  toolbar,
   infoFields,
   changeTracking,
   originalValues,
@@ -780,6 +781,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
     <div className={`layout-form2 ${className}`}>
       <BaseFormLayout
         actionButtons={actionButtons}
+        toolbar={toolbar}
         tabs={tabs}
         activeTab={activeSection}
         onTabChange={onSectionChange}

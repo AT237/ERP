@@ -1,8 +1,8 @@
 import { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-// InfoHeaderLayout removed per user request
 import { FormTabLayout, type FormTab } from './FormTabLayout';
+import { FormToolbar, type FormToolbarProps } from './FormToolbar';
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface ActionButton {
@@ -18,11 +18,11 @@ export interface ActionButton {
 }
 
 export interface BaseFormLayoutProps {
-  // Header info fields removed per user request
-  // headerFields: InfoField[];
+  // Legacy action buttons (for backwards compatibility)
+  actionButtons?: ActionButton[];
   
-  // Action buttons (Cancel, Save, etc)
-  actionButtons: ActionButton[];
+  // New standard toolbar props
+  toolbar?: FormToolbarProps;
   
   // Tab system
   tabs: FormTab[];
@@ -35,6 +35,7 @@ export interface BaseFormLayoutProps {
 
 export function BaseFormLayout({
   actionButtons,
+  toolbar,
   tabs,
   activeTab,
   onTabChange,
@@ -45,16 +46,10 @@ export function BaseFormLayout({
   // Show skeleton instead of loading spinner to prevent flicker
   if (isLoading) {
     return (
-      <div className={isMobile ? "p-2" : "p-6"}>
-        <div className="space-y-4">
-          {/* Header Skeleton - maintains exact layout structure */}
-          <div className="relative p-2 h-16">
-            {/* Header skeleton removed per user request */}
-            <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 h-10 w-80 animate-pulse"></div>
-          </div>
-
-          {/* Content Skeleton */}
-          <Card className="border-0 shadow-none ml-2">
+      <div className="w-full">
+        <div className="w-full bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-2 py-1 h-10 animate-pulse" />
+        <div className={isMobile ? "p-2" : "p-6"}>
+          <Card className="border-0 shadow-none">
             <CardContent className="p-0">
               <div className="bg-white px-4 border-b-0 h-[62px] flex items-end">
                 <div className="flex items-end space-x-1">
@@ -76,38 +71,35 @@ export function BaseFormLayout({
   }
 
   return (
-    <div className={isMobile ? "p-2" : "p-6"}>
-      <div className="space-y-2">
-        {/* Header with Info Fields and Action Buttons */}
-        <div className={`relative pt-2 pb-0 ${isMobile ? 'px-0' : 'px-4'}`}>
-          {/* Info Header removed per user request */}
-          
-          {/* Action Buttons */}
-          <div className={`bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg ${isMobile ? 'px-2 py-2' : 'px-4 py-2'} flex items-center gap-2 ${isMobile ? 'flex-wrap' : ''}`}>
-            {actionButtons.map((button) => (
-              <Button
-                key={button.key}
-                variant={button.variant || 'outline'}
-                size="sm"
-                onClick={button.onClick}
-                disabled={button.disabled || button.loading}
-                className={`${isMobile ? 'h-9 text-sm flex-1 min-w-[80px]' : 'h-8 text-xs'} ${button.className || ''} ${
-                  button.variant === 'default' ? 'bg-green-600 text-white hover:bg-green-700' : ''
-                }`}
-                data-testid={button.testId || `button-${button.key}`}
-              >
-                {button.loading ? (
-                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
-                ) : (
-                  button.icon && <span className="mr-1">{button.icon}</span>
-                )}
-                {button.label}
-              </Button>
-            ))}
-          </div>
+    <div className="w-full">
+      {/* Standard Toolbar - Full Width */}
+      {toolbar ? (
+        <FormToolbar {...toolbar} />
+      ) : actionButtons && actionButtons.length > 0 ? (
+        <div className="w-full bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-2 py-1 flex items-center gap-1">
+          {actionButtons.map((button) => (
+            <Button
+              key={button.key}
+              variant="ghost"
+              size="sm"
+              onClick={button.onClick}
+              disabled={button.disabled || button.loading}
+              className="h-8 px-2"
+              data-testid={button.testId || `button-${button.key}`}
+            >
+              {button.loading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+              ) : (
+                button.icon && <span>{button.icon}</span>
+              )}
+              {!button.icon && button.label}
+            </Button>
+          ))}
         </div>
+      ) : null}
 
-        {/* Main Content Area */}
+      {/* Main Content Area */}
+      <div className={isMobile ? "p-2" : "p-6"}>
         <Card className="border-0 shadow-none">
           <CardContent className="p-0">
             <FormTabLayout

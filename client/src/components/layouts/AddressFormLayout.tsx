@@ -289,16 +289,16 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
       onSectionChange={setActiveSection}
       form={form}
       onSubmit={onSubmit}
-      actionButtons={[
-        {
-          key: "submit",
-          label: isEditing ? "Update Address" : "Create Address",
-          onClick: () => form.handleSubmit(onSubmit)(),
-          variant: "default",
-          disabled: createMutation.isPending || updateMutation.isPending || hasValidationErrors,
-          loading: createMutation.isPending || updateMutation.isPending
-        }
-      ]}
+      toolbar={{
+        onSave: () => form.handleSubmit(onSubmit)(),
+        saveDisabled: createMutation.isPending || updateMutation.isPending || hasValidationErrors,
+        saveLoading: createMutation.isPending || updateMutation.isPending,
+        showAddNew: false,
+        showDelete: false,
+        showPrint: false,
+        showNavigation: false,
+        showExport: false
+      }}
       infoFields={infoFields}
       persistence={{
         formType: 'address',
