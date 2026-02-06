@@ -242,6 +242,9 @@ export function useFormToolbar({
     onSuccess: () => {
       if (config) {
         queryClient.invalidateQueries({ queryKey: [config.listQueryKey] });
+        if (config.listQueryKey !== `${config.apiPath}/extended`) {
+          queryClient.invalidateQueries({ queryKey: [`${config.apiPath}/extended`] });
+        }
       }
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({

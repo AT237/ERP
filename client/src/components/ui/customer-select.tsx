@@ -107,6 +107,7 @@ export function CustomerSelect({
         description: "Customer created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
       onValueChange?.(newCustomer.id);
       setShowAddDialog(false);
       customerForm.reset();
@@ -132,6 +133,7 @@ export function CustomerSelect({
         description: "Customer updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
       setShowEditDialog(false);
       setEditingCustomer(null);
       customerForm.reset();

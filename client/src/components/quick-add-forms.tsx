@@ -50,6 +50,7 @@ export function QuickAddCustomer({ onSuccess, onClose }: QuickAddCustomerProps) 
     },
     onSuccess: (newCustomer) => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
       toast({
         title: "Success",
         description: "Customer added successfully",
