@@ -65,7 +65,7 @@ export function FormToolbar({
   const iconClass = "h-4 w-4";
 
   return (
-    <div className="w-full bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-2 py-1 flex items-center gap-1">
+    <>
       {showSave && (
         <Button
           variant="ghost"
@@ -170,6 +170,6 @@ export function FormToolbar({
           </Button>
         </>
       )}
-    </div>
+    </>
   );
 }
