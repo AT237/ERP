@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
 import type { FormTab } from './FormTabLayout';
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { LayoutForm2, type FormSection2, type FormRow, type FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow, createCustomRow, type ChangeTrackingConfig } from './LayoutForm2';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -1645,41 +1646,14 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   // State for print dialog
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
 
-  // Create action buttons for LayoutForm2 - Order: Save, Print, Cancel, Preview
-  const actionButtons: ActionButton[] = [
-    {
-      key: 'save',
-      label: 'Save',
-      icon: <Save size={14} />,
-      onClick: quotationForm.handleSubmit(handleSaveQuotation),
-      variant: 'default',
-      testId: 'button-save'
-    },
-    ...(quotationId && existingQuotation ? [{
-      key: 'print',
-      label: 'Print',
-      icon: <Printer size={14} />,
-      onClick: () => setPrintDialogOpen(true),
-      variant: 'outline' as const,
-      testId: 'button-print'
-    }] : []),
-    {
-      key: 'cancel',
-      label: 'Cancel',
-      icon: <X size={14} />,
-      onClick: onSave,
-      variant: 'outline',
-      testId: 'button-cancel'
-    },
-    {
-      key: 'preview',
-      label: 'Preview',
-      icon: <Eye size={14} />,
-      onClick: handlePreview,
-      variant: 'outline',
-      testId: 'button-preview'
-    }
-  ];
+  const toolbar = useFormToolbar({
+    entityType: "quotation",
+    entityId: quotationId,
+    onSave: quotationForm.handleSubmit(handleSaveQuotation),
+    onClose: onSave,
+    saveDisabled: createQuotationMutation.isPending || updateQuotationMutation.isPending,
+    saveLoading: createQuotationMutation.isPending || updateQuotationMutation.isPending,
+  });
 
   return (
     <div className="h-full">
@@ -1700,7 +1674,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         onSectionChange={setActiveTab}
         form={quotationForm}
         onSubmit={handleSaveQuotation}
-        actionButtons={actionButtons}
+        toolbar={toolbar}
         documentType="quotation"
         entityId={quotationId}
         isLoading={quotationLoading}

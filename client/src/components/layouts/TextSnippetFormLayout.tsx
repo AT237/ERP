@@ -3,7 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
+import { BaseFormLayout } from './BaseFormLayout';
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { InfoField } from './InfoHeaderLayout';
 import type { FormTab } from './FormTabLayout';
 import { 
@@ -522,23 +523,6 @@ export function TextSnippetFormLayout({ onSave, textSnippetId, parentId }: TextS
     }
   ];
 
-  // Create action buttons
-  const createActionButtons = (): ActionButton[] => [
-    {
-      key: "cancel",
-      label: "Cancel",
-      variant: "outline",
-      onClick: onSave,
-      disabled: createMutation.isPending || updateMutation.isPending
-    },
-    {
-      key: "save",
-      label: `${isEditing ? 'Update' : 'Create'} Text Snippet`,
-      variant: "default",
-      onClick: () => form.handleSubmit(onSubmit)(),
-      disabled: createMutation.isPending || updateMutation.isPending
-    }
-  ];
 
   // Watch form changes for change tracking
   useEffect(() => {
@@ -720,26 +704,14 @@ export function TextSnippetFormLayout({ onSave, textSnippetId, parentId }: TextS
     ];
   }, [textSnippet, isEditing]);
 
-  // Action buttons
-  const actionButtons: ActionButton[] = [
-    {
-      key: 'cancel',
-      label: 'Cancel',
-      icon: <ArrowLeft size={14} />,
-      onClick: onSave,
-      variant: 'outline',
-      testId: 'button-cancel'
-    },
-    {
-      key: 'save',
-      label: isEditing ? 'Update Text Snippet' : 'Create Text Snippet',
-      icon: <Save size={14} />,
-      onClick: form.handleSubmit(onSubmit),
-      variant: 'default',
-      testId: 'button-save',
-      disabled: createMutation.isPending || updateMutation.isPending
-    }
-  ];
+  const toolbar = useFormToolbar({
+    entityType: "text_snippet",
+    entityId: textSnippetId,
+    onSave: form.handleSubmit(onSubmit),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
 
   const isLoading = isLoadingTextSnippet;
 
@@ -749,7 +721,7 @@ export function TextSnippetFormLayout({ onSave, textSnippetId, parentId }: TextS
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={setActiveTab}
-      actionButtons={actionButtons}
+      toolbar={toolbar}
       isLoading={isLoading}
     />
   );

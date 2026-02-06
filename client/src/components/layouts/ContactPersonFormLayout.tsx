@@ -6,6 +6,7 @@ import { Plus, Minus, User, Phone, Settings } from "lucide-react";
 import { insertCustomerContactSchema, type InsertCustomerContact, type CustomerContact } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { z } from "zod";
 import { 
   LayoutForm2, 
@@ -416,26 +417,14 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
     }
   ];
 
-  // Action buttons
-  const actionButtons = [
-    {
-      key: 'cancel',
-      label: 'Cancel',
-      onClick: onSave,
-      variant: 'outline' as const,
-      testId: 'button-cancel'
-    },
-    {
-      key: 'save',
-      label: isEditing 
-        ? (updateMutation.isPending ? "Updating..." : "Update Contact Person")
-        : (createMutation.isPending ? "Adding..." : "Add Contact Person"),
-      onClick: form.handleSubmit(onSubmit),
-      variant: 'default' as const,
-      loading: createMutation.isPending || updateMutation.isPending,
-      testId: 'button-save'
-    }
-  ];
+  const toolbar = useFormToolbar({
+    entityType: "contact_person",
+    entityId: contactPersonId,
+    onSave: form.handleSubmit(onSubmit),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
 
   return (
     <LayoutForm2
@@ -444,7 +433,7 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
       onSectionChange={setActiveSection}
       form={form}
       onSubmit={onSubmit}
-      actionButtons={actionButtons}
+      toolbar={toolbar}
       documentType="contact_person"
       entityId={contactPersonId}
       changeTracking={{

@@ -34,6 +34,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Save, ArrowLeft, Users, User, Building, CreditCard, FileText, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { Customer, InsertCustomer, Country } from "@shared/schema";
 import { z } from "zod";
 
@@ -513,31 +514,14 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
     setMemos(memos.filter(memo => memo.id !== id));
   };
 
-  // Old manual HTML form code removed - using LayoutForm2 unified system
-
-  // Header fields removed per user request
-
-  // Create action buttons for BaseFormLayout
-  const actionButtons: ActionButton[] = [
-    {
-      key: 'cancel',
-      label: 'Cancel',
-      icon: <ArrowLeft size={14} />,
-      onClick: onSave,
-      variant: 'outline',
-      testId: 'button-cancel'
-    },
-    {
-      key: 'save',
-      label: isEditing ? 'Update Customer' : 'Save Customer',
-      icon: <Save size={14} />,
-      onClick: form.handleSubmit(onSubmit, onInvalid),
-      variant: 'default',
-      disabled: createMutation.isPending || updateMutation.isPending,
-      loading: createMutation.isPending || updateMutation.isPending,
-      testId: 'button-save'
-    }
-  ];
+  const toolbar = useFormToolbar({
+    entityType: "customer",
+    entityId: customerId,
+    onSave: form.handleSubmit(onSubmit, onInvalid),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
 
   // Re-enable tracking when form key changes (remount)
   useEffect(() => {
@@ -835,7 +819,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         onSectionChange={setActiveSection}
         form={form}
         onSubmit={onSubmit}
-        actionButtons={actionButtons}
+        toolbar={toolbar}
         changeTracking={{
           enabled: !suppressTracking,
           onChangesDetected: (hasChanges) => setHasUnsavedChanges(hasChanges)

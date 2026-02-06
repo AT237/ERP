@@ -14,6 +14,7 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Save, X, FileText, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer } from "@shared/schema";
@@ -254,52 +255,14 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     }));
   };
 
-  const actionButtons = React.useMemo(() => {
-    const buttons: Array<{
-      key: string;
-      label: string;
-      icon: React.ReactNode;
-      onClick: () => void;
-      variant: 'default' | 'outline' | 'destructive';
-      testId: string;
-    }> = [
-      {
-        key: 'save',
-        label: 'Save',
-        icon: <Save className="h-4 w-4" />,
-        onClick: () => invoiceForm.handleSubmit(handleSaveInvoice)(),
-        variant: 'default',
-        testId: 'button-save-invoice'
-      },
-    ];
-
-    if (isEditing) {
-      buttons.push({
-        key: 'print',
-        label: 'Print',
-        icon: <Printer className="h-4 w-4" />,
-        onClick: () => {
-          toast({
-            title: "Print",
-            description: "Print functionality coming soon",
-          });
-        },
-        variant: 'outline',
-        testId: 'button-print-invoice'
-      });
-    }
-
-    buttons.push({
-      key: 'cancel',
-      label: 'Cancel',
-      icon: <X className="h-4 w-4" />,
-      onClick: handleCancel,
-      variant: 'outline',
-      testId: 'button-cancel-invoice'
-    });
-
-    return buttons;
-  }, [isEditing, invoiceForm, handleSaveInvoice, handleCancel, toast]);
+  const toolbar = useFormToolbar({
+    entityType: "invoice",
+    entityId: invoiceId,
+    onSave: invoiceForm.handleSubmit(handleSaveInvoice),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
 
   const formSections: any[] = [
     {
@@ -512,7 +475,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         onSectionChange={setActiveTab}
         form={invoiceForm}
         onSubmit={handleSaveInvoice}
-        actionButtons={actionButtons as any}
+        toolbar={toolbar}
         documentType="invoice"
         entityId={invoiceId}
         isLoading={invoiceLoading}

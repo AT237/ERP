@@ -5,8 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSupplierSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Building2 } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { Supplier, InsertSupplier } from "@shared/schema";
 import { z } from "zod";
 import { 
@@ -18,7 +19,6 @@ import {
   createSectionHeaderRow,
   type ChangeTrackingConfig 
 } from './LayoutForm2';
-import type { ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
 
 const supplierFormSchema = insertSupplierSchema.extend({
@@ -185,24 +185,14 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
     { key: 'status', label: 'Status', value: supplier.status || 'active' },
   ] : [];
 
-  // Action buttons
-  const actionButtons: ActionButton[] = [
-    {
-      key: 'cancel',
-      label: 'Cancel',
-      icon: <ArrowLeft className="h-4 w-4" />,
-      onClick: onSave,
-      variant: 'outline'
-    },
-    {
-      key: 'save',
-      label: isEditing ? 'Update Supplier' : 'Save Supplier',
-      icon: <Save className="h-4 w-4" />,
-      onClick: form.handleSubmit(onSubmit),
-      variant: 'default',
-      loading: createMutation.isPending || updateMutation.isPending
-    }
-  ];
+  const toolbar = useFormToolbar({
+    entityType: "supplier",
+    entityId: supplierId,
+    onSave: form.handleSubmit(onSubmit),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
 
   // Form sections
   const formSections: FormSection2<SupplierFormData>[] = [
@@ -386,7 +376,7 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
       onSectionChange={setActiveSection}
       form={form}
       onSubmit={onSubmit}
-      actionButtons={actionButtons}
+      toolbar={toolbar}
       infoFields={headerFields}
       changeTracking={changeTrackingConfig}
       originalValues={originalValues}

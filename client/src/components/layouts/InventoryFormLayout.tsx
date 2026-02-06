@@ -5,8 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInventoryItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Package, Image } from "lucide-react";
+import { Package, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { InventoryItem, InsertInventoryItem } from "@shared/schema";
 import { z } from "zod";
 import { 
@@ -19,7 +20,6 @@ import {
   createCustomRow,
   type ChangeTrackingConfig 
 } from './LayoutForm2';
-import type { ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
 
 const inventoryFormSchema = insertInventoryItemSchema.extend({
@@ -237,24 +237,14 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     { key: 'stock', label: 'Stock', value: inventoryItem.currentStock?.toString() || '0' },
   ] : [];
 
-  // Action buttons
-  const actionButtons: ActionButton[] = [
-    {
-      key: 'cancel',
-      label: 'Cancel',
-      icon: <ArrowLeft className="h-4 w-4" />,
-      onClick: onSave,
-      variant: 'outline'
-    },
-    {
-      key: 'save',
-      label: isEditing ? 'Update Item' : 'Save Item',
-      icon: <Save className="h-4 w-4" />,
-      onClick: form.handleSubmit(onSubmit),
-      variant: 'default',
-      loading: createMutation.isPending || updateMutation.isPending
-    }
-  ];
+  const toolbar = useFormToolbar({
+    entityType: "inventory",
+    entityId: inventoryId,
+    onSave: form.handleSubmit(onSubmit),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
 
   // Custom image upload component
   const imageUploadComponent = (
@@ -539,7 +529,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       onSectionChange={setActiveSection}
       form={form}
       onSubmit={onSubmit}
-      actionButtons={actionButtons}
+      toolbar={toolbar}
       headerFields={headerFields}
       documentType="inventory"
       entityId={inventoryId}

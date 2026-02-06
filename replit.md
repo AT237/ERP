@@ -47,9 +47,40 @@ const columns = [
 
 ### Technical Implementations
 - **LayoutForm2**: A central, configurable React component that provides visual consistency, change tracking, tab-based section management, type safety, and seamless validation integration for all business forms.
+- **FormToolbar + useFormToolbar**: Standardized toolbar with 6 icon buttons (Save, Add New, Delete, Print, Previous/Next, Export to Excel). The `useFormToolbar` hook auto-wires all functions based on entity type using a central config registry in `client/src/hooks/use-form-toolbar.ts`. All forms use this hook instead of manual actionButtons.
+- **PrintLayoutDialog**: When the Print toolbar button is clicked, a dialog shows available layouts filtered by documentType. User selects a layout and the PDF opens in a new tab.
 - **Standardized Routing**: Over 22+ form routes with consistent `create/edit` patterns and lazy loading using React Suspense. Generic master data routing for scalability.
 - **Helper Functions**: Standardized helper functions (`createFieldRow`, `createFieldsRow`, `createSectionHeaderRow`) for consistent form section configuration.
 - **Type Safety**: Extensive use of TypeScript with generic types for robust and maintainable code, especially with **Drizzle ORM** and **Zod** validation.
+
+### Form Toolbar Pattern
+**IMPORTANT**: All forms use `useFormToolbar` hook for the standard toolbar:
+
+```typescript
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
+
+const toolbar = useFormToolbar({
+  entityType: "customer",       // matches key in ENTITY_CONFIGS
+  entityId: customerId,         // current record ID (undefined for new)
+  onSave: form.handleSubmit(onSubmit),  // form save handler
+  onClose: onSave,              // close/navigate back handler
+  saveDisabled: mutation.isPending,
+  saveLoading: mutation.isPending,
+});
+
+// Pass to LayoutForm2:
+<LayoutForm2 toolbar={toolbar} ... />
+```
+
+**Entity Config Registry** (`use-form-toolbar.ts`): Defines API paths, form types, labels, and feature flags (supportsNavigation, supportsDelete, supportsAddNew) per entity type. Sub-entities like line items have these flags disabled.
+
+**Auto-wired toolbar functions**:
+- **Save**: Triggers form submission
+- **Add New**: Opens new form tab via `open-form-tab` event
+- **Delete**: DELETE API call with confirmation, closes tab on success
+- **Print**: Opens PrintLayoutDialog filtered by documentType
+- **Previous/Next**: Fetches entity list, navigates to adjacent records
+- **Export**: Placeholder (disabled)
 
 ### Standard Form Layout Pattern
 **IMPORTANT**: LayoutForm2 automatically handles layout distribution:

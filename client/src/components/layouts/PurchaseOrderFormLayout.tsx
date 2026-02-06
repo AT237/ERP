@@ -5,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertPurchaseOrderSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { LayoutForm2, createFieldRow, createSectionHeaderRow } from './LayoutForm2';
 import { SelectWithAdd } from "@/components/ui/select-with-add";
 import { SelectItem } from "@/components/ui/select";
@@ -172,6 +172,15 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
     }
   };
 
+  const toolbar = useFormToolbar({
+    entityType: "purchase_order",
+    entityId: purchaseOrderId,
+    onSave: form.handleSubmit(onSubmit),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
+
   if (isLoadingPurchaseOrder) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -313,24 +322,7 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
       onSectionChange={setActiveSection}
       form={form}
       onSubmit={onSubmit}
-      actionButtons={[
-        {
-          key: 'cancel',
-          label: 'Cancel',
-          icon: <ArrowLeft size={14} />,
-          onClick: onSave,
-          variant: 'outline',
-          testId: 'button-cancel'
-        },
-        {
-          key: 'save',
-          label: isEditing ? 'Update Purchase Order' : 'Create Purchase Order',
-          icon: <Save size={14} />,
-          onClick: form.handleSubmit(onSubmit),
-          variant: 'default',
-          testId: 'button-save'
-        }
-      ]}
+      toolbar={toolbar}
     />
   );
 }

@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow } from '@/components/layouts/LayoutForm2';
-import type { ActionButton } from '@/components/layouts/BaseFormLayout';
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { getMasterDataConfig, type MasterDataField } from "@/config/masterdata-config";
 
 interface MasterDataFormLayoutProps {
@@ -318,21 +318,14 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
     return sections;
   };
 
-  // Create action buttons
-  const createActionButtons = (): ActionButton[] => [
-    {
-      label: "Cancel",
-      variant: "outline",
-      onClick: () => onSave?.(),
-      disabled: createMutation.isPending
-    },
-    {
-      label: createMutation.isPending ? (isEditing ? "Updating..." : "Creating...") : (isEditing ? "Update" : "Create"),
-      variant: "default",
-      onClick: () => form.handleSubmit(handleSubmit)(),
-      disabled: createMutation.isPending
-    }
-  ];
+  const toolbar = useFormToolbar({
+    entityType: type || "master_data",
+    entityId: id,
+    onSave: form.handleSubmit(handleSubmit),
+    onClose: () => onSave?.(),
+    saveDisabled: createMutation.isPending,
+    saveLoading: createMutation.isPending,
+  });
 
   if (isLoadingData && isEditing) {
     return (
@@ -360,7 +353,7 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
           onSectionChange={setActiveSection}
           form={form}
           onSubmit={handleSubmit}
-          actionButtons={createActionButtons()}
+          toolbar={toolbar}
           documentType={type || "master_data"}
           entityId={id}
           isLoading={createMutation.isPending}

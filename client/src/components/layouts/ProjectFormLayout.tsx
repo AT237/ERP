@@ -17,8 +17,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProjectSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, FolderOpen, Calendar, DollarSign } from "lucide-react";
+import { FolderOpen, Calendar, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { Project, InsertProject, Customer } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -417,27 +418,14 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     }
   ];
 
-  // Create action buttons
-  const createActionButtons = (): ActionButton[] => [
-    {
-      key: "cancel",
-      label: "Cancel",
-      variant: "outline",
-      onClick: () => onSave(),
-      disabled: createMutation.isPending || updateMutation.isPending,
-      icon: <ArrowLeft className="h-4 w-4" />,
-      testId: "button-cancel-project"
-    },
-    {
-      key: "save",
-      label: createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Project",
-      variant: "default",
-      onClick: () => form.handleSubmit(onSubmit)(),
-      disabled: createMutation.isPending || updateMutation.isPending,
-      icon: <Save className="h-4 w-4" />,
-      testId: "button-save-project"
-    }
-  ];
+  const toolbar = useFormToolbar({
+    entityType: "project",
+    entityId: projectId,
+    onSave: form.handleSubmit(onSubmit),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
 
   // Header fields for info display (when editing)
   const createHeaderFields = (): InfoField[] => {
@@ -462,7 +450,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       onSectionChange={setActiveSection}
       form={form}
       onSubmit={onSubmit}
-      actionButtons={createActionButtons()}
+      toolbar={toolbar}
       headerFields={createHeaderFields()}
       documentType="project"
       entityId={projectId}

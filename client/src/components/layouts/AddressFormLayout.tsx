@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { MapPin, Building, Globe } from "lucide-react";
 import { insertAddressSchema, type InsertAddress, type Address } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { z } from "zod";
 import { 
@@ -181,6 +182,15 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
   // Check for validation errors
   const hasValidationErrors = Object.keys(form.formState.errors).length > 0;
 
+  const toolbar = useFormToolbar({
+    entityType: "address",
+    entityId: addressId,
+    onSave: form.handleSubmit(onSubmit),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending || hasValidationErrors,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
+
   // Get form data for display
   const watchedValues = form.watch();
 
@@ -289,13 +299,7 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
       onSectionChange={setActiveSection}
       form={form}
       onSubmit={onSubmit}
-      toolbar={{
-        onSave: () => form.handleSubmit(onSubmit)(),
-        saveDisabled: createMutation.isPending || updateMutation.isPending || hasValidationErrors,
-        saveLoading: createMutation.isPending || updateMutation.isPending,
-        documentType: "address",
-        entityId: addressId,
-      }}
+      toolbar={toolbar}
       infoFields={infoFields}
       persistence={{
         formType: 'address',

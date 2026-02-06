@@ -3,7 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
+import { BaseFormLayout } from './BaseFormLayout';
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { InfoField } from './InfoHeaderLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -497,23 +498,14 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     }
   ];
 
-  // Create action buttons
-  const createActionButtons = (): ActionButton[] => [
-    {
-      key: "cancel",
-      label: "Cancel",
-      variant: "outline",
-      onClick: onSave, // This will close the tab
-      disabled: createMutation.isPending || updateMutation.isPending
-    },
-    {
-      key: "save",
-      label: (createMutation.isPending || updateMutation.isPending) ? "Saving..." : "Save Packing List",
-      variant: "default",
-      onClick: () => form.handleSubmit(onSubmit)(),
-      disabled: createMutation.isPending || updateMutation.isPending
-    }
-  ];
+  const toolbar = useFormToolbar({
+    entityType: "packing_list",
+    entityId: packingListId,
+    onSave: form.handleSubmit(onSubmit),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
 
   // Convert LayoutForm2 sections to BaseFormLayout tabs
   const tabs = createFormSections().map(section => ({
@@ -590,7 +582,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
   return (
     <BaseFormLayout
       headerFields={headerFields}
-      actionButtons={createActionButtons()}
+      toolbar={toolbar}
       tabs={tabs}
       activeTab={activeSection}
       onTabChange={setActiveSection}

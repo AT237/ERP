@@ -17,8 +17,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertWorkOrderSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, ClipboardList, Calendar, User, AlertTriangle } from "lucide-react";
+import { ClipboardList, Calendar, User, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { WorkOrder, InsertWorkOrder, Project } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -486,27 +487,14 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     }
   ];
 
-  // Create action buttons
-  const createActionButtons = (): ActionButton[] => [
-    {
-      key: "cancel",
-      label: "Cancel",
-      variant: "outline",
-      onClick: () => onSave(),
-      disabled: createMutation.isPending || updateMutation.isPending,
-      icon: <ArrowLeft className="h-4 w-4" />,
-      testId: "button-cancel"
-    },
-    {
-      key: "save",
-      label: createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Work Order",
-      variant: "default",
-      onClick: () => form.handleSubmit(onSubmit)(),
-      disabled: createMutation.isPending || updateMutation.isPending,
-      icon: <Save className="h-4 w-4" />,
-      testId: "button-save"
-    }
-  ];
+  const toolbar = useFormToolbar({
+    entityType: "work_order",
+    entityId: workOrderId,
+    onSave: form.handleSubmit(onSubmit),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
 
   // Header fields for info display (when editing)
   const createHeaderFields = (): InfoField[] => {
@@ -531,7 +519,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
       onSectionChange={setActiveSection}
       form={form}
       onSubmit={onSubmit}
-      actionButtons={createActionButtons()}
+      toolbar={toolbar}
       headerFields={createHeaderFields()}
       documentType="work_order"
       entityId={workOrderId}

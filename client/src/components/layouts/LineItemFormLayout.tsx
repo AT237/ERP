@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createCustomRow } from './LayoutForm2';
-import type { ActionButton } from './BaseFormLayout';
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { InfoField } from './InfoHeaderLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -428,27 +428,14 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     },
   ];
 
-  // Action buttons
-  const actionButtons: ActionButton[] = [
-    {
-      key: 'cancel',
-      label: 'Annuleren',
-      icon: <ArrowLeft className="h-4 w-4" />,
-      onClick: onSave,
-      variant: 'outline',
-      testId: 'button-cancel'
-    },
-    {
-      key: 'save',
-      label: isEditing ? 'Bijwerken' : 'Opslaan',
-      icon: <Save className="h-4 w-4" />,
-      onClick: form.handleSubmit(onSubmit),
-      variant: 'default',
-      disabled: !hasUnsavedChanges,
-      loading: createMutation.isPending || updateMutation.isPending,
-      testId: 'button-save'
-    },
-  ];
+  const toolbar = useFormToolbar({
+    entityType: "line_item",
+    entityId: lineItemId,
+    onSave: form.handleSubmit(onSubmit),
+    onClose: onSave,
+    saveDisabled: !hasUnsavedChanges,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
 
   // Line type options
   const lineTypeOptions = [
@@ -780,7 +767,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         onSectionChange={setActiveSection}
         form={form}
         onSubmit={onSubmit}
-        actionButtons={actionButtons}
+        toolbar={toolbar}
         infoFields={headerFields}
         documentType="line_item"
         entityId={lineItemId}

@@ -3,7 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
+import { BaseFormLayout } from './BaseFormLayout';
+import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { InfoField } from './InfoHeaderLayout';
 import type { FormTab } from './FormTabLayout';
 import { 
@@ -473,26 +474,14 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
     }
   ] : [];
 
-  // Action buttons
-  const actionButtons: ActionButton[] = [
-    {
-      key: 'cancel',
-      label: 'Cancel',
-      icon: <ArrowLeft size={14} />,
-      onClick: onSave,
-      variant: 'outline',
-      testId: 'button-cancel'
-    },
-    {
-      key: 'save',
-      label: isEditing ? 'Update Sales Order' : 'Create Sales Order',
-      icon: <Save size={14} />,
-      onClick: form.handleSubmit(onSubmit),
-      variant: 'default',
-      testId: 'button-save',
-      disabled: createMutation.isPending || updateMutation.isPending
-    }
-  ];
+  const toolbar = useFormToolbar({
+    entityType: "sales_order",
+    entityId: salesOrderId,
+    onSave: form.handleSubmit(onSubmit),
+    onClose: onSave,
+    saveDisabled: createMutation.isPending || updateMutation.isPending,
+    saveLoading: createMutation.isPending || updateMutation.isPending,
+  });
 
   return (
     <BaseFormLayout
@@ -500,7 +489,7 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={setActiveTab}
-      actionButtons={actionButtons}
+      toolbar={toolbar}
       isLoading={isLoadingSalesOrder || customersLoading}
     />
   );
