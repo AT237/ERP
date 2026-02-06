@@ -293,11 +293,6 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
         onSave: () => form.handleSubmit(onSubmit)(),
         saveDisabled: createMutation.isPending || updateMutation.isPending || hasValidationErrors,
         saveLoading: createMutation.isPending || updateMutation.isPending,
-        showAddNew: false,
-        showDelete: false,
-        showPrint: false,
-        showNavigation: false,
-        showExport: false
       }}
       infoFields={infoFields}
       persistence={{
