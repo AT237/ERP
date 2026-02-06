@@ -840,6 +840,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           enabled: !suppressTracking,
           onChangesDetected: (hasChanges) => setHasUnsavedChanges(hasChanges)
         }}
+        documentType="customer"
+        entityId={customerId}
         persistence={{
           formType: 'customer',
           entityId: customerId

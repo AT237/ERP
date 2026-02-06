@@ -533,6 +533,8 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
       onSubmit={onSubmit}
       actionButtons={createActionButtons()}
       headerFields={createHeaderFields()}
+      documentType="work_order"
+      entityId={workOrderId}
       isLoading={isLoadingWorkOrder}
       changeTracking={{
         enabled: true,

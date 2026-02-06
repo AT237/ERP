@@ -445,6 +445,8 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
       form={form}
       onSubmit={onSubmit}
       actionButtons={actionButtons}
+      documentType="contact_person"
+      entityId={contactPersonId}
       changeTracking={{
         enabled: true,
         onChangesDetected: (hasChanges) => setHasUnsavedChanges(hasChanges)

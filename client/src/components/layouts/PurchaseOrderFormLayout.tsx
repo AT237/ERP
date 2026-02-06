@@ -182,6 +182,8 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
 
   return (
     <LayoutForm2
+      documentType="purchase_order"
+      entityId={purchaseOrderId}
       sections={[
         {
           id: 'general',

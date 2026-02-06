@@ -513,6 +513,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         form={invoiceForm}
         onSubmit={handleSaveInvoice}
         actionButtons={actionButtons as any}
+        documentType="invoice"
+        entityId={invoiceId}
         isLoading={invoiceLoading}
       />
       {isEditing && (

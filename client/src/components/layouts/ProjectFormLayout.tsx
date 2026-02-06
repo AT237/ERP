@@ -464,6 +464,8 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       onSubmit={onSubmit}
       actionButtons={createActionButtons()}
       headerFields={createHeaderFields()}
+      documentType="project"
+      entityId={projectId}
       isLoading={isLoadingProject}
       changeTracking={{
         enabled: true,

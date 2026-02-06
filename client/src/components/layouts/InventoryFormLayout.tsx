@@ -541,6 +541,8 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       onSubmit={onSubmit}
       actionButtons={actionButtons}
       headerFields={headerFields}
+      documentType="inventory"
+      entityId={inventoryId}
       changeTracking={changeTrackingConfig}
       originalValues={originalValues}
       isLoading={isLoadingInventory}

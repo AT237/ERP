@@ -390,6 +390,8 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
       infoFields={headerFields}
       changeTracking={changeTrackingConfig}
       originalValues={originalValues}
+      documentType="supplier"
+      entityId={supplierId}
       persistence={{
         formType: 'supplier',
         entityId: supplierId

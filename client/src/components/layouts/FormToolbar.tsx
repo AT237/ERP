@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -9,6 +10,7 @@ import {
   ChevronRight,
   FileSpreadsheet
 } from "lucide-react";
+import { PrintLayoutDialog } from "./PrintLayoutDialog";
 
 export interface FormToolbarProps {
   onSave?: () => void;
@@ -34,6 +36,9 @@ export interface FormToolbarProps {
   showPrint?: boolean;
   showNavigation?: boolean;
   showExport?: boolean;
+
+  documentType?: string;
+  entityId?: string;
 }
 
 export function FormToolbar({
@@ -60,9 +65,21 @@ export function FormToolbar({
   showPrint = true,
   showNavigation = true,
   showExport = true,
+
+  documentType,
+  entityId,
 }: FormToolbarProps) {
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const buttonClass = "h-8 w-8 p-0";
   const iconClass = "h-4 w-4";
+
+  const handlePrintClick = () => {
+    if (documentType) {
+      setPrintDialogOpen(true);
+    } else if (onPrint) {
+      onPrint();
+    }
+  };
 
   return (
     <>
@@ -117,9 +134,9 @@ export function FormToolbar({
           variant="ghost"
           size="sm"
           className={buttonClass}
-          onClick={onPrint}
+          onClick={handlePrintClick}
           disabled={printDisabled}
-          title="Print"
+          title="Print Report"
           data-testid="toolbar-print"
         >
           <Printer className={iconClass} />
@@ -169,6 +186,15 @@ export function FormToolbar({
             <FileSpreadsheet className={iconClass} />
           </Button>
         </>
+      )}
+
+      {documentType && (
+        <PrintLayoutDialog
+          open={printDialogOpen}
+          onOpenChange={setPrintDialogOpen}
+          documentType={documentType}
+          entityId={entityId}
+        />
       )}
     </>
   );

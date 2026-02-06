@@ -616,6 +616,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         onSubmit={onSubmit}
         actionButtons={actionButtons}
         infoFields={headerFields}
+        documentType="invoice_line_item"
+        entityId={lineItemId}
         changeTracking={{
           enabled: true,
           onChangesDetected: handleChangesDetected

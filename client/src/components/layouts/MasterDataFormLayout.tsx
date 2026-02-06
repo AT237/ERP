@@ -361,6 +361,8 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
           form={form}
           onSubmit={handleSubmit}
           actionButtons={createActionButtons()}
+          documentType={type || "master_data"}
+          entityId={id}
           isLoading={createMutation.isPending}
         />
       </Form>

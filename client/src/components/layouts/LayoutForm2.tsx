@@ -161,11 +161,17 @@ export interface LayoutForm2Props<T extends FieldValues = FieldValues> {
   form: UseFormReturn<T>;
   onSubmit: (data: T) => void;
   
-  // Action buttons (legacy - still supported)
+  // Action buttons (legacy - still supported, auto-converted to toolbar)
   actionButtons?: ActionButton[];
   
   // Standard toolbar (new - recommended)
   toolbar?: FormToolbarProps;
+  
+  // Document type for print layout dialog (e.g., 'quotation', 'invoice', 'customer')
+  documentType?: string;
+  
+  // Entity ID for print (current record ID)
+  entityId?: string;
   
   // Info fields for header
   infoFields?: Array<{ label: string; value: string | ReactNode }>;
@@ -382,6 +388,8 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   onSubmit,
   actionButtons,
   toolbar,
+  documentType,
+  entityId,
   infoFields,
   changeTracking,
   originalValues,
@@ -777,11 +785,25 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   // RENDER
   // ========================================================================
   
+  // Auto-generate toolbar from legacy actionButtons
+  const resolvedToolbar = useMemo((): FormToolbarProps | undefined => {
+    if (toolbar) return { ...toolbar, documentType: toolbar.documentType || documentType, entityId: toolbar.entityId || entityId };
+    if (!actionButtons || actionButtons.length === 0) return undefined;
+    
+    const saveButton = actionButtons.find(b => b.key === 'submit' || b.key === 'save' || b.variant === 'default');
+    return {
+      onSave: saveButton?.onClick,
+      saveDisabled: saveButton?.disabled,
+      saveLoading: saveButton?.loading,
+      documentType,
+      entityId,
+    };
+  }, [toolbar, actionButtons, documentType, entityId]);
+
   return (
     <div className={`layout-form2 ${className}`}>
       <BaseFormLayout
-        actionButtons={actionButtons}
-        toolbar={toolbar}
+        toolbar={resolvedToolbar}
         tabs={tabs}
         activeTab={activeSection}
         onTabChange={onSectionChange}

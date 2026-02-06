@@ -1701,6 +1701,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         form={quotationForm}
         onSubmit={handleSaveQuotation}
         actionButtons={actionButtons}
+        documentType="quotation"
+        entityId={quotationId}
         isLoading={quotationLoading}
       />
       {/* Quotation Items Table */}

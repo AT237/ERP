@@ -782,6 +782,8 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         onSubmit={onSubmit}
         actionButtons={actionButtons}
         infoFields={headerFields}
+        documentType="line_item"
+        entityId={lineItemId}
         changeTracking={{
           enabled: true,
           onChangesDetected: handleChangesDetected
