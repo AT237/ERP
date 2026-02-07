@@ -46,6 +46,22 @@ const ContactPersonForm = lazy(() => import('@/pages/contact-person-form'));
 const ImageForm = lazy(() => import('@/pages/image-form'));
 const MasterDataTable = lazy(() => import('./masterdata-table'));
 const MasterDataFormLayout = lazy(() => import('@/components/layouts/MasterDataFormLayout'));
+
+const DashboardPage = lazy(() => import('@/pages/dashboard'));
+const InventoryPage = lazy(() => import('@/pages/inventory'));
+const InvoicesPage = lazy(() => import('@/pages/invoices'));
+const ProjectsPage = lazy(() => import('@/pages/projects'));
+const WorkOrdersPage = lazy(() => import('@/pages/work-orders'));
+const PurchaseOrdersPage = lazy(() => import('@/pages/purchase-orders'));
+const SalesOrdersPage = lazy(() => import('@/pages/sales-orders'));
+const PackingListsPage = lazy(() => import('@/pages/packing-lists'));
+const ReportsPage = lazy(() => import('@/pages/reports'));
+const AddressesPage = lazy(() => import('@/pages/addresses'));
+const TextSnippetsPage = lazy(() => import('@/pages/text-snippets'));
+const LayoutDesignerPage = lazy(() => import('@/pages/layout-designer'));
+const ImagesPage = lazy(() => import('@/pages/images'));
+const PictogramsPage = lazy(() => import('@/pages/pictograms'));
+const StyleGuidePage = lazy(() => import('@/pages/style-guide'));
 import { getMasterDataConfig } from "@/config/masterdata-config";
 
 interface LayoutProps {
@@ -815,18 +831,19 @@ export default function Layout({ children }: LayoutProps) {
       );
     }
 
-    if (tab.id === 'payment-terms') {
-      const ptConfig = getMasterDataConfig('payment-terms');
-      if (ptConfig) {
+    const masterDataIds = ['payment-terms', 'uom', 'incoterms', 'vat', 'cities', 'statuses'];
+    if (masterDataIds.includes(tab.id)) {
+      const mdConfig = getMasterDataConfig(tab.id);
+      if (mdConfig) {
         return (
           <div className="p-6">
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div></div>}>
               <MasterDataTable
-                title={ptConfig.title}
-                endpoint={ptConfig.endpoint}
-                schema={ptConfig.schema}
-                fields={ptConfig.fields}
-                columns={ptConfig.columns}
+                title={mdConfig.title}
+                endpoint={mdConfig.endpoint}
+                schema={mdConfig.schema}
+                fields={mdConfig.fields}
+                columns={mdConfig.columns}
               />
             </Suspense>
           </div>
@@ -834,7 +851,15 @@ export default function Layout({ children }: LayoutProps) {
       }
     }
     
-    if (tab.type === 'menu') {
+    if (tab.type === 'menu' || tab.type === 'page') {
+      if (tab.id === 'dashboard') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <DashboardPage />
+          </Suspense>
+        );
+      }
+
       if (tab.id === 'customers') {
         return (
           <CustomerProvider>
@@ -872,72 +897,120 @@ export default function Layout({ children }: LayoutProps) {
           </Suspense>
         );
       }
-      
-      if (tab.id === 'uom') {
+
+      if (tab.id === 'inventory') {
         return (
-          <div className="p-6">
-            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
-              <p className="text-muted-foreground">Units of Measure management will be implemented here.</p>
-              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
-            </div>
-          </div>
+          <Suspense fallback={<div></div>}>
+            <InventoryPage />
+          </Suspense>
         );
       }
-      
-      if (tab.id === 'incoterms') {
+
+      if (tab.id === 'invoices') {
         return (
-          <div className="p-6">
-            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
-              <p className="text-muted-foreground">Incoterms management will be implemented here.</p>
-              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
-            </div>
-          </div>
+          <Suspense fallback={<div></div>}>
+            <InvoicesPage />
+          </Suspense>
         );
       }
-      
-      if (tab.id === 'vat') {
+
+      if (tab.id === 'projects') {
         return (
-          <div className="p-6">
-            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
-              <p className="text-muted-foreground">VAT Rates management will be implemented here.</p>
-              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
-            </div>
-          </div>
+          <Suspense fallback={<div></div>}>
+            <ProjectsPage />
+          </Suspense>
         );
       }
-      
-      if (tab.id === 'cities') {
+
+      if (tab.id === 'work-orders') {
         return (
-          <div className="p-6">
-            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
-              <p className="text-muted-foreground">Cities management will be implemented here.</p>
-              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
-            </div>
-          </div>
+          <Suspense fallback={<div></div>}>
+            <WorkOrdersPage />
+          </Suspense>
         );
       }
-      
-      if (tab.id === 'statuses') {
+
+      if (tab.id === 'purchase-orders') {
         return (
-          <div className="p-6">
-            <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
-              <p className="text-muted-foreground">Statuses management will be implemented here.</p>
-              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
-            </div>
-          </div>
+          <Suspense fallback={<div></div>}>
+            <PurchaseOrdersPage />
+          </Suspense>
         );
       }
-      
-      return (
-        <div className="p-6">
-          <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
-            <p className="text-muted-foreground">Content for {tab.name} will be implemented here.</p>
-            {tab.menuRoute && (
-              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
-            )}
-          </div>
-        </div>
-      );
+
+      if (tab.id === 'sales-orders') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <SalesOrdersPage />
+          </Suspense>
+        );
+      }
+
+      if (tab.id === 'packing-lists') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <PackingListsPage />
+          </Suspense>
+        );
+      }
+
+      if (tab.id === 'reports') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <ReportsPage />
+          </Suspense>
+        );
+      }
+
+      if (tab.id === 'addresses') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <AddressesPage />
+          </Suspense>
+        );
+      }
+
+      if (tab.id === 'text-snippets') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <TextSnippetsPage />
+          </Suspense>
+        );
+      }
+
+      if (tab.id === 'layout-designer') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <LayoutDesignerPage />
+          </Suspense>
+        );
+      }
+
+      if (tab.id === 'images') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <ImagesPage />
+          </Suspense>
+        );
+      }
+
+      if (tab.id === 'pictograms') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <PictogramsPage />
+          </Suspense>
+        );
+      }
+
+      if (tab.id === 'design-system') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <StyleGuidePage />
+          </Suspense>
+        );
+      }
+
+      return tab.content || children;
     }
     
     if (tab.type === 'form') {
