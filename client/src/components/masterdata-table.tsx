@@ -1,11 +1,10 @@
 import { Plus, Edit, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { getMasterDataConfig } from "@/config/masterdata-config";
+import { DataTableLayout, type ColumnConfig } from '@/components/layouts/DataTableLayout';
+import { useDataTable } from '@/hooks/useDataTable';
 
 interface MasterDataTableProps {
   title: string;
@@ -29,11 +28,24 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Get the config for proper singularization
   const config = getMasterDataConfig(endpoint);
   const singularTitle = config?.singularTitle || title.slice(0, -1);
 
-  // Fetch data
+  const defaultColumns: ColumnConfig[] = columns.map((col) => ({
+    key: col.key,
+    label: col.label,
+    visible: true,
+    width: 150,
+    filterable: true,
+    sortable: true,
+    renderCell: col.render ? (value: any) => col.render!(value) : undefined,
+  }));
+
+  const tableState = useDataTable({
+    defaultColumns,
+    tableKey: `masterdata-${endpoint}`,
+  });
+
   const { data: items = [], isLoading } = useQuery({
     queryKey: [`/api/masterdata/${endpoint}`],
     queryFn: async () => {
@@ -43,7 +55,6 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
     }
   });
 
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await fetch(`/api/masterdata/${endpoint}/${id}`, {
@@ -58,7 +69,7 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
         description: `${singularTitle} deleted successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({
         title: "Error",
         description: `Failed to delete ${singularTitle.toLowerCase()}`,
@@ -77,119 +88,81 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
     }));
   };
 
-  const handleEditItem = (id: string) => {
+  const handleEditItem = (row: any) => {
     window.dispatchEvent(new CustomEvent('open-form-tab', {
       detail: {
-        id: `${endpoint}-${id}`,
+        id: `${endpoint}-${row.id}`,
         name: `Edit ${singularTitle}`,
         formType: `masterdata-${endpoint}`,
-        entityId: id,
+        entityId: row.id,
       }
     }));
   };
 
   const handleDeleteItem = (id: string) => {
-    deleteMutation.mutate(id);
+    if (confirm(`Are you sure you want to delete this ${singularTitle.toLowerCase()}?`)) {
+      deleteMutation.mutate(id);
+    }
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{title}</h1>
-        <Button onClick={handleNewItem} data-testid={`button-add-${endpoint}`}>
-          <Plus className="mr-2" size={16} />
-          Add {singularTitle}
-        </Button>
-      </div>
+  const tableData = Array.isArray(items) ? items : [];
 
-      {isLoading ? (
-        <div className="h-64 space-y-3 p-4">
-          <div className="bg-gray-200 dark:bg-gray-800 h-8 w-3/4 rounded animate-pulse"></div>
-          <div className="bg-gray-200 dark:bg-gray-800 h-6 w-1/2 rounded animate-pulse"></div>
-          <div className="bg-gray-200 dark:bg-gray-800 h-6 w-2/3 rounded animate-pulse"></div>
-        </div>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>{title} ({Array.isArray(items) ? items.length : 0})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    {columns.map((column) => (
-                      <th key={column.key} className="text-left p-3 font-medium">
-                        {column.label}
-                      </th>
-                    ))}
-                    <th className="text-left p-3 font-medium w-24">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {!Array.isArray(items) || items.length === 0 ? (
-                    <tr>
-                      <td colSpan={columns.length + 1} className="text-center p-8 text-muted-foreground">
-                        No {title.toLowerCase()} found. Click "Add {singularTitle}" to create one.
-                      </td>
-                    </tr>
-                  ) : (
-                    items.map((item: any) => (
-                      <tr key={item.id} className="border-b hover:bg-muted/50">
-                        {columns.map((column) => (
-                          <td key={column.key} className="p-3">
-                            {column.render ? column.render(item[column.key]) : item[column.key]}
-                          </td>
-                        ))}
-                        <td className="p-3">
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditItem(item.id)}
-                              data-testid={`button-edit-${item.id}`}
-                            >
-                              <Edit size={16} />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  data-testid={`button-delete-${item.id}`}
-                                >
-                                  <Trash2 size={16} />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the {singularTitle.toLowerCase()}.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteItem(item.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+  return (
+    <div className="px-2 pt-2 md:p-6">
+      <DataTableLayout
+        entityName={singularTitle}
+        entityNamePlural={title}
+        data={tableData}
+        columns={tableState.columns}
+        setColumns={tableState.setColumns}
+        tableKey={`masterdata-${endpoint}`}
+        isLoading={isLoading}
+        searchTerm={tableState.searchTerm}
+        setSearchTerm={tableState.setSearchTerm}
+        filters={tableState.filters}
+        setFilters={tableState.setFilters}
+        onAddFilter={tableState.addFilter}
+        onUpdateFilter={tableState.updateFilter}
+        onRemoveFilter={tableState.removeFilter}
+        sortConfig={tableState.sortConfig}
+        onSort={tableState.handleSort}
+        selectedRows={tableState.selectedRows}
+        setSelectedRows={tableState.setSelectedRows}
+        onToggleRowSelection={tableState.toggleRowSelection}
+        onToggleAllRows={() => {
+          const allIds = tableData.map((item: any) => item.id);
+          tableState.toggleAllRows(allIds);
+        }}
+        onRowDoubleClick={handleEditItem}
+        getRowId={(row: any) => row.id}
+        applyFiltersAndSearch={tableState.applyFiltersAndSearch}
+        applySorting={tableState.applySorting}
+        headerActions={[
+          {
+            key: `add-${endpoint}`,
+            label: `Add ${singularTitle}`,
+            icon: <Plus className="h-4 w-4" />,
+            onClick: handleNewItem,
+            variant: 'default' as const
+          }
+        ]}
+        rowActions={(row: any) => [
+          {
+            key: 'edit',
+            label: 'Edit',
+            icon: <Edit className="h-4 w-4" />,
+            onClick: () => handleEditItem(row),
+            variant: 'outline' as const
+          },
+          {
+            key: 'delete',
+            label: 'Delete',
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: () => handleDeleteItem(row.id),
+            variant: 'destructive' as const
+          }
+        ]}
+      />
     </div>
   );
 }
