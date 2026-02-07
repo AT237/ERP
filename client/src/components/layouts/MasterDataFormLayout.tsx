@@ -1,15 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Database, Settings } from "lucide-react";
+import { Database } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow } from '@/components/layouts/LayoutForm2';
+import { LayoutForm2, type FormSection2, type FormField2, createFieldRow } from '@/components/layouts/LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { getMasterDataConfig, type MasterDataField } from "@/config/masterdata-config";
 
@@ -24,54 +23,40 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const config = getMasterDataConfig(type);
-  
-  if (!config) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-destructive">Invalid Master Data Type</h2>
-          <p className="text-muted-foreground">The master data type "{type}" is not recognized.</p>
-        </div>
-      </div>
-    );
-  }
+  const config = useMemo(() => getMasterDataConfig(type), [type]);
+  const isEditing = !!id;
 
   const form = useForm({
-    resolver: zodResolver(config.schema),
-    defaultValues: {
+    resolver: config ? zodResolver(config.schema) : undefined,
+    defaultValues: config ? {
       ...config.fields.reduce((acc, field) => {
         acc[field.name] = field.type === 'number' ? 0 : '';
         return acc;
       }, {} as any),
       ...(config.hiddenDefaults || {}),
-    }
+    } : {}
   });
 
-  const isEditing = !!id;
-
-  // Fetch existing data for editing
   const { data: existingData, isLoading: isLoadingData } = useQuery({
-    queryKey: [`/api/masterdata/${config.endpoint}`, id],
+    queryKey: [`/api/masterdata/${config?.endpoint}`, id],
     queryFn: async () => {
-      if (!id) return null;
+      if (!id || !config) return null;
       const response = await fetch(`/api/masterdata/${config.endpoint}/${id}`);
       if (!response.ok) throw new Error('Failed to fetch');
       return response.json();
     },
-    enabled: !!id
+    enabled: !!id && !!config
   });
 
-  // Update form when data loads
   useEffect(() => {
     if (existingData && isEditing) {
       form.reset(existingData);
     }
   }, [existingData, isEditing, form]);
 
-  // Create mutation
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
+      if (!config) throw new Error('No config');
       const url = isEditing 
         ? `/api/masterdata/${config.endpoint}/${id}`
         : `/api/masterdata/${config.endpoint}`;
@@ -86,17 +71,19 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/masterdata/${config.endpoint}`] });
+      if (config) {
+        queryClient.invalidateQueries({ queryKey: [`/api/masterdata/${config.endpoint}`] });
+      }
       toast({
         title: "Success",
-        description: `${config.singularTitle} ${isEditing ? 'updated' : 'created'} successfully`,
+        description: `${config?.singularTitle || 'Item'} ${isEditing ? 'updated' : 'created'} successfully`,
       });
       onSave?.();
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({
         title: "Error",
-        description: `Failed to ${isEditing ? 'update' : 'create'} ${config.singularTitle.toLowerCase()}`,
+        description: `Failed to ${isEditing ? 'update' : 'create'} ${(config?.singularTitle || 'item').toLowerCase()}`,
         variant: "destructive",
       });
     }
@@ -104,7 +91,7 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
 
   const handleSubmit = (data: any) => {
     const submitData = { ...data };
-    if (config.hiddenDefaults) {
+    if (config?.hiddenDefaults) {
       Object.entries(config.hiddenDefaults).forEach(([key, value]) => {
         if (submitData[key] === undefined || submitData[key] === null || submitData[key] === '') {
           submitData[key] = value;
@@ -114,7 +101,6 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
     createMutation.mutate(submitData);
   };
 
-  // Dynamic field component renderer
   const renderFieldComponent = (field: MasterDataField, formField: any) => {
     switch (field.type) {
       case 'select':
@@ -166,106 +152,11 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
     }
   };
 
-  // Create dynamic form sections based on fields
-  const createDynamicFormSections = (): FormSection2<any>[] => {
-    // Group fields by type for better organization
-    const basicFields = config.fields.filter(f => ['text', 'number'].includes(f.type));
-    const selectFields = config.fields.filter(f => f.type === 'select');
-    const textareaFields = config.fields.filter(f => f.type === 'textarea');
+  const formSections: FormSection2<any>[] = useMemo(() => {
+    if (!config) return [];
     
-    const sections: FormSection2<any>[] = [];
-    
-    // Main data section
-    const dataRows: any[] = [];
-    
-    // Add basic fields (text/number) in pairs if possible
-    for (let i = 0; i < basicFields.length; i += 2) {
-      const field1 = basicFields[i];
-      const field2 = basicFields[i + 1];
-      
-      if (field2) {
-        // Two fields side by side
-        dataRows.push(createFieldsRow([
-          {
-            key: field1.name,
-            label: field1.label,
-            type: "custom",
-            customComponent: (
-              <FormField
-                control={form.control}
-                name={field1.name}
-                render={({ field: formField }) => (
-                  <FormItem>
-                    <FormControl>
-                      {renderFieldComponent(field1, formField)}
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ),
-            validation: {
-              isRequired: field1.required
-            },
-            testId: `${field1.type}-${field1.name}`,
-            width: "50%"
-          } as FormField2<any>,
-          {
-            key: field2.name,
-            label: field2.label,
-            type: "custom",
-            customComponent: (
-              <FormField
-                control={form.control}
-                name={field2.name}
-                render={({ field: formField }) => (
-                  <FormItem>
-                    <FormControl>
-                      {renderFieldComponent(field2, formField)}
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ),
-            validation: {
-              isRequired: field2.required
-            },
-            testId: `${field2.type}-${field2.name}`,
-            width: "50%"
-          } as FormField2<any>
-        ]));
-      } else {
-        // Single field full width
-        dataRows.push(createFieldRow({
-          key: field1.name,
-          label: field1.label,
-          type: "custom",
-          customComponent: (
-            <FormField
-              control={form.control}
-              name={field1.name}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormControl>
-                    {renderFieldComponent(field1, formField)}
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ),
-          validation: {
-            isRequired: field1.required
-          },
-          testId: `${field1.type}-${field1.name}`
-        } as FormField2<any>));
-      }
-    }
-    
-    // Add select fields
-    selectFields.forEach(field => {
-      dataRows.push(createFieldRow({
+    const rows: any[] = config.fields.map(field => 
+      createFieldRow({
         key: field.name,
         label: field.label,
         type: "custom",
@@ -287,56 +178,36 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
           isRequired: field.required
         },
         testId: `${field.type}-${field.name}`
-      } as FormField2<any>));
-    });
-    
-    // Add textarea fields
-    textareaFields.forEach(field => {
-      dataRows.push(createFieldRow({
-        key: field.name,
-        label: field.label,
-        type: "custom",
-        customComponent: (
-          <FormField
-            control={form.control}
-            name={field.name}
-            render={({ field: formField }) => (
-              <FormItem>
-                <FormControl>
-                  {renderFieldComponent(field, formField)}
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        ),
-        validation: {
-          isRequired: field.required
-        },
-        testId: `${field.type}-${field.name}`
-      } as FormField2<any>));
-    });
-    
-    if (dataRows.length > 0) {
-      sections.push({
-        id: "data",
-        label: "Data",
-        icon: <Database className="h-4 w-4" />,
-        rows: dataRows
-      });
-    }
-    
-    return sections;
-  };
+      } as FormField2<any>)
+    );
+
+    return [{
+      id: "data",
+      label: config.singularTitle,
+      icon: <Database className="h-4 w-4" />,
+      rows
+    }];
+  }, [config, form.control]);
 
   const toolbar = useFormToolbar({
-    entityType: type || "master_data",
+    entityType: `masterdata-${type}`,
     entityId: id,
     onSave: form.handleSubmit(handleSubmit),
     onClose: () => onSave?.(),
     saveDisabled: createMutation.isPending,
     saveLoading: createMutation.isPending,
   });
+
+  if (!config) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-destructive">Invalid Master Data Type</h2>
+          <p className="text-muted-foreground">The master data type "{type}" is not recognized.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoadingData && isEditing) {
     return (
@@ -347,29 +218,18 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
   }
 
   return (
-    <div className="space-y-6">
-      <div className="border-b pb-4">
-        <h1 className="text-2xl font-bold">
-          {isEditing ? `Edit ${config.singularTitle}` : `Add New ${config.singularTitle}`}
-        </h1>
-        <p className="text-muted-foreground">
-          {isEditing ? `Update the ${config.singularTitle.toLowerCase()} details` : `Create a new ${config.singularTitle.toLowerCase()}`}
-        </p>
-      </div>
-
-      <Form {...form}>
-        <LayoutForm2
-          sections={createDynamicFormSections()}
-          activeSection={activeSection}
-          onSectionChange={setActiveSection}
-          form={form}
-          onSubmit={handleSubmit}
-          toolbar={toolbar}
-          documentType={type || "master_data"}
-          entityId={id}
-          isLoading={createMutation.isPending}
-        />
-      </Form>
-    </div>
+    <Form {...form}>
+      <LayoutForm2
+        sections={formSections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        form={form}
+        onSubmit={handleSubmit}
+        toolbar={toolbar}
+        documentType={`masterdata-${type}`}
+        entityId={id}
+        isLoading={createMutation.isPending}
+      />
+    </Form>
   );
 }

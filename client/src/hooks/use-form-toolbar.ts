@@ -182,6 +182,17 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsDelete: false,
     supportsAddNew: false,
   },
+  "masterdata-payment-terms": {
+    apiPath: "/api/masterdata/payment-terms",
+    formType: "masterdata-payment-terms",
+    label: "Payment Term",
+    labelPlural: "Payment Terms",
+    listQueryKey: "/api/masterdata/payment-terms",
+    documentType: "masterdata_payment_terms",
+    supportsNavigation: true,
+    supportsDelete: true,
+    supportsAddNew: true,
+  },
 };
 
 export interface UseFormToolbarOptions {
