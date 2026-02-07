@@ -186,7 +186,7 @@ export default function Invoices({}: InvoicesProps) {
   }, [deleteInvoiceMutation]);
 
   return (
-    <div className="px-2 pt-2 md:p-6">
+    <div className="p-6">
       <DataTableLayout
         data={invoices}
         isLoading={isLoading}

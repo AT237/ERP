@@ -140,7 +140,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   };
 
   return (
-    <div className="px-2 pt-2 md:p-6">
+    <div className="p-6">
       <DataTableLayout
         data={quotations}
         isLoading={isLoading}

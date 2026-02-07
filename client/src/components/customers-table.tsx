@@ -209,7 +209,7 @@ export default function CustomersTable() {
   };
 
   return (
-    <div className="px-2 pt-2 md:p-6">
+    <div className="p-6">
       <DataTableLayout
         entityName="Customer"
         entityNamePlural="Customers"

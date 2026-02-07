@@ -108,7 +108,7 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
   const tableData = Array.isArray(items) ? items : [];
 
   return (
-    <div className="px-2 pt-2 md:p-6">
+    <div className="p-6">
       <DataTableLayout
         entityName={singularTitle}
         entityNamePlural={title}

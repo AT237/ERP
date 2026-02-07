@@ -234,7 +234,7 @@ export default function Projects() {
   };
 
   return (
-    <div className="px-2 pt-2 md:p-6">
+    <div className="p-6">
       <DataTableLayout
         // Data
         data={enhancedProjects}
@@ -301,7 +301,6 @@ export default function Projects() {
         // Display options
         entityName="Project"
         entityNamePlural="Projects"
-        searchPlaceholder="Search projects..."
       />
     </div>
   );

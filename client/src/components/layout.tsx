@@ -863,22 +863,18 @@ export default function Layout({ children }: LayoutProps) {
       if (tab.id === 'customers') {
         return (
           <CustomerProvider>
-            <div className="p-6">
-              <Suspense fallback={<div></div>}>
-                <CustomerTable />
-              </Suspense>
-            </div>
+            <Suspense fallback={<div></div>}>
+              <CustomerTable />
+            </Suspense>
           </CustomerProvider>
         );
       }
 
       if (tab.id === 'suppliers') {
         return (
-          <div className="p-6">
-            <Suspense fallback={<div></div>}>
-              <SupplierTable />
-            </Suspense>
-          </div>
+          <Suspense fallback={<div></div>}>
+            <SupplierTable />
+          </Suspense>
         );
       }
 

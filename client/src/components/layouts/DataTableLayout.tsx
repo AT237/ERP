@@ -92,7 +92,7 @@ export type ColumnConfig = {
 // ============================================================================
 // TABLE COLUMN HELPERS - Use these for consistent styling across all tables
 // ============================================================================
-// - All ID/code columns use monospace font (font-mono text-xs)
+// - All columns use the same sans-serif font (font-sans text-sm)
 // - Position columns are 70px wide, IDs are 120px wide
 // - Numeric columns should be right-aligned
 // - Column order: checkbox, position, ID, description, numeric values, actions
@@ -106,9 +106,6 @@ const createIdColumn = (key: string, label: string, width = 120): ColumnConfig =
   width,
   filterable: true,
   sortable: true,
-  renderCell: (value: string) => (
-    <span className="font-mono text-xs">{value}</span>
-  )
 });
 
 // Helper function for position/line number columns (010, 020, etc.)
@@ -119,9 +116,6 @@ const createPositionColumn = (key = 'positionNo', label = 'Pos.', width = 70): C
   width,
   filterable: false,
   sortable: true,
-  renderCell: (value: string) => (
-    <span className="font-mono text-xs">{value || "-"}</span>
-  )
 });
 
 // Helper function for currency columns (right-aligned with € symbol)
@@ -1006,7 +1000,7 @@ export function DataTableLayout<T = any>({
                     return (
                       <TableRow 
                         key={rowId} 
-                        className={`hover:bg-orange-100 dark:hover:bg-orange-800/30/30 text-sm font-normal cursor-pointer ${
+                        className={`hover:bg-orange-100 dark:hover:bg-orange-800/30/30 text-sm font-normal font-sans cursor-pointer ${
                           isSelected 
                             ? 'bg-orange-50 dark:bg-orange-900/20' 
                             : isEven 
