@@ -696,6 +696,25 @@ export default function Layout({ children }: LayoutProps) {
         />
       );
     }
+
+    if (activeTab.id === 'payment-terms') {
+      const ptConfig = getMasterDataConfig('payment-terms');
+      if (ptConfig) {
+        return (
+          <div className="p-6">
+            <Suspense fallback={<div>Loading...</div>}>
+              <MasterDataTable
+                title={ptConfig.title}
+                endpoint={ptConfig.endpoint}
+                schema={ptConfig.schema}
+                fields={ptConfig.fields}
+                columns={ptConfig.columns}
+              />
+            </Suspense>
+          </div>
+        );
+      }
+    }
     
     if (activeTab.type === 'menu') {
       // Render specific menu components
@@ -748,25 +767,6 @@ export default function Layout({ children }: LayoutProps) {
             </div>
           </div>
         );
-      }
-      
-      if (activeTab.id === 'payment-terms') {
-        const ptConfig = getMasterDataConfig('payment-terms');
-        if (ptConfig) {
-          return (
-            <div className="p-6">
-              <Suspense fallback={<div>Loading...</div>}>
-                <MasterDataTable
-                  title={ptConfig.title}
-                  endpoint={ptConfig.endpoint}
-                  schema={ptConfig.schema}
-                  fields={ptConfig.fields}
-                  columns={ptConfig.columns}
-                />
-              </Suspense>
-            </div>
-          );
-        }
       }
       
       if (activeTab.id === 'incoterms') {
