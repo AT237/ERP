@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
-import { X, Menu } from "lucide-react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import { X, Menu, PanelRightClose } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -19,6 +19,7 @@ import {
 
 import SectionInfoPanel from "./section-info-panel";
 import { CustomerProvider } from "@/contexts/CustomerContext";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 // Lazy load components outside the render function to prevent re-importing
 const CustomerTable = lazy(() => import('./customers-table'));
@@ -169,6 +170,18 @@ export default function Layout({ children }: LayoutProps) {
   ]);
   const [activeTabId, setActiveTabId] = useState(currentPage.id);
   
+  // Split screen state - rightPanelTabIds tracks which tabs are in the right panel
+  // All tabs remain in the main `tabs` array as single source of truth
+  const [rightPanelTabIds, setRightPanelTabIds] = useState<Set<string>>(new Set());
+  const [rightPanelActiveTabId, setRightPanelActiveTabId] = useState<string>('');
+  const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
+  const [dragSource, setDragSource] = useState<'left' | 'right' | null>(null);
+  const [showDropZone, setShowDropZone] = useState(false);
+  const [showLeftDropZone, setShowLeftDropZone] = useState(false);
+  const leftPanelTabs = tabs.filter(t => !rightPanelTabIds.has(t.id));
+  const rightPanelTabs = tabs.filter(t => rightPanelTabIds.has(t.id));
+  const isSplitScreen = rightPanelTabs.length > 0;
+
   // Unsaved changes tracking
   const [tabsWithUnsavedChanges, setTabsWithUnsavedChanges] = useState<Set<string>>(new Set());
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
@@ -590,17 +603,48 @@ export default function Layout({ children }: LayoutProps) {
       return newTabs;
     });
     
-    // Clean up unsaved changes tracking
+    // Clean up unsaved changes tracking and right panel tracking
     setTabsWithUnsavedChanges(prev => {
       const newSet = new Set(prev);
       newSet.delete(tabId);
       return newSet;
     });
+    setRightPanelTabIds(prev => {
+      if (prev.has(tabId)) {
+        const next = new Set(prev);
+        next.delete(tabId);
+        return next;
+      }
+      return prev;
+    });
   };
 
   const handleConfirmCloseTab = () => {
     if (pendingCloseTabId) {
-      performCloseTab(pendingCloseTabId);
+      const isInRightPanel = rightPanelTabIds.has(pendingCloseTabId);
+      if (isInRightPanel) {
+        setRightPanelTabIds(prev => {
+          const next = new Set(prev);
+          next.delete(pendingCloseTabId!);
+          const remaining = tabs.filter(t => next.has(t.id));
+          if (rightPanelActiveTabId === pendingCloseTabId) {
+            if (remaining.length > 0) {
+              setRightPanelActiveTabId(remaining[0].id);
+            } else {
+              setRightPanelActiveTabId('');
+            }
+          }
+          return next;
+        });
+        setTabs(prev => prev.filter(t => t.id !== pendingCloseTabId));
+      } else {
+        performCloseTab(pendingCloseTabId);
+      }
+      setTabsWithUnsavedChanges(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(pendingCloseTabId!);
+        return newSet;
+      });
       setPendingCloseTabId(null);
     }
     setShowUnsavedChangesDialog(false);
@@ -610,6 +654,110 @@ export default function Layout({ children }: LayoutProps) {
     setPendingCloseTabId(null);
     setShowUnsavedChangesDialog(false);
   };
+
+  const handleTabDragStart = useCallback((e: React.DragEvent, tabId: string, source: 'left' | 'right') => {
+    e.dataTransfer.setData('text/plain', tabId);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedTabId(tabId);
+    setDragSource(source);
+    setShowDropZone(true);
+    setShowLeftDropZone(true);
+  }, []);
+
+  const handleTabDragEnd = useCallback(() => {
+    setDraggedTabId(null);
+    setDragSource(null);
+    setShowDropZone(false);
+    setShowLeftDropZone(false);
+  }, []);
+
+  const handleDropOnRightPanel = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setShowDropZone(false);
+    setShowLeftDropZone(false);
+    const tabId = e.dataTransfer.getData('text/plain');
+    if (!tabId) return;
+
+    if (dragSource === 'left') {
+      if (leftPanelTabs.length <= 1) return;
+
+      setRightPanelTabIds(prev => {
+        const next = new Set(prev);
+        next.add(tabId);
+        return next;
+      });
+      if (activeTabId === tabId) {
+        const remaining = leftPanelTabs.filter(t => t.id !== tabId);
+        if (remaining.length > 0) setActiveTabId(remaining[0].id);
+      }
+      setRightPanelActiveTabId(tabId);
+    }
+    setDraggedTabId(null);
+    setDragSource(null);
+  }, [leftPanelTabs, activeTabId, dragSource]);
+
+  const handleDropOnLeftPanel = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setShowDropZone(false);
+    setShowLeftDropZone(false);
+    const tabId = e.dataTransfer.getData('text/plain');
+    if (!tabId) return;
+
+    if (dragSource === 'right') {
+      setRightPanelTabIds(prev => {
+        const next = new Set(prev);
+        next.delete(tabId);
+        const remaining = tabs.filter(t => next.has(t.id));
+        if (remaining.length === 0) {
+          setRightPanelActiveTabId('');
+        } else if (rightPanelActiveTabId === tabId) {
+          setRightPanelActiveTabId(remaining[0].id);
+        }
+        return next;
+      });
+      setActiveTabId(tabId);
+    }
+    setDraggedTabId(null);
+    setDragSource(null);
+  }, [tabs, rightPanelActiveTabId, dragSource]);
+
+  const closeRightPanelTab = useCallback((tabId: string) => {
+    if (tabsWithUnsavedChanges.has(tabId)) {
+      setPendingCloseTabId(tabId);
+      setShowUnsavedChangesDialog(true);
+      return;
+    }
+    
+    setRightPanelTabIds(prev => {
+      const next = new Set(prev);
+      next.delete(tabId);
+      const remaining = tabs.filter(t => next.has(t.id));
+      if (rightPanelActiveTabId === tabId) {
+        if (remaining.length > 0) {
+          setRightPanelActiveTabId(remaining[0].id);
+        } else {
+          setRightPanelActiveTabId('');
+        }
+      }
+      return next;
+    });
+    
+    setTabs(prev => prev.filter(t => t.id !== tabId));
+    
+    setTabsWithUnsavedChanges(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(tabId);
+      return newSet;
+    });
+  }, [tabs, rightPanelActiveTabId, tabsWithUnsavedChanges]);
+
+  const closeRightPanel = useCallback(() => {
+    if (rightPanelTabs.length > 0 && !activeTabId) {
+      setActiveTabId(rightPanelTabs[0].id);
+    }
+    setRightPanelTabIds(new Set());
+    setRightPanelActiveTabId('');
+  }, [rightPanelTabs, activeTabId]);
 
   const motivationalMessages = [
     {
@@ -653,51 +801,21 @@ export default function Layout({ children }: LayoutProps) {
     }
   }, [tabs.length]); // Remove motivationalMessages.length from dependency
 
-  const renderActiveTabContent = () => {
-    const activeTab = tabs.find(tab => tab.id === activeTabId);
+  const renderTabContent = (tab: Tab, _panelTabs: Tab[], panelSetActiveTabId: (id: string) => void, panelCloseTab: (id: string) => void) => {
+    if (!tab) return null;
+    const allTabs = tabs;
     
-    // If no tabs exist, show motivational message
-    if (tabs.length === 0) {
-      const message = motivationalMessages[currentMessageIndex];
-      return (
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center max-w-md">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-foreground mb-4">{message.title}</h1>
-              <p className="text-lg text-muted-foreground mb-6">{message.message}</p>
-              <p className="text-sm text-orange-600 font-medium">{message.action}</p>
-            </div>
-            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-6">
-              <div className="text-6xl mb-4">⚡</div>
-              <p className="text-sm text-muted-foreground">Welcome to ATE Solutions - Where Power Meets Precision</p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    
-    if (!activeTab) {
-      // No active tab found - show empty state instead of dashboard
-      return (
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center">
-            <p className="text-muted-foreground">No tab selected</p>
-          </div>
-        </div>
-      );
-    }
-    
-    if (activeTab.type === 'section') {
+    if (tab.type === 'section') {
       return (
         <SectionInfoPanel 
-          sectionId={activeTab.id}
-          sectionName={activeTab.name}
-          onClose={() => closeTab(activeTab.id)}
+          sectionId={tab.id}
+          sectionName={tab.name}
+          onClose={() => panelCloseTab(tab.id)}
         />
       );
     }
 
-    if (activeTab.id === 'payment-terms') {
+    if (tab.id === 'payment-terms') {
       const ptConfig = getMasterDataConfig('payment-terms');
       if (ptConfig) {
         return (
@@ -716,9 +834,8 @@ export default function Layout({ children }: LayoutProps) {
       }
     }
     
-    if (activeTab.type === 'menu') {
-      // Render specific menu components
-      if (activeTab.id === 'customers') {
+    if (tab.type === 'menu') {
+      if (tab.id === 'customers') {
         return (
           <CustomerProvider>
             <div className="p-6">
@@ -730,7 +847,7 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
 
-      if (activeTab.id === 'suppliers') {
+      if (tab.id === 'suppliers') {
         return (
           <div className="p-6">
             <Suspense fallback={<div></div>}>
@@ -740,7 +857,7 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
 
-      if (activeTab.id === 'contact-persons') {
+      if (tab.id === 'contact-persons') {
         return (
           <Suspense fallback={<div></div>}>
             <ContactPersonsPage />
@@ -748,8 +865,7 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
 
-      if (activeTab.id === 'quotations') {
-        // Import and render Quotations component directly
+      if (tab.id === 'quotations') {
         return (
           <Suspense fallback={<div></div>}>
             <QuotationsPage onCreateNew={handleFormClick} />
@@ -757,93 +873,88 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      // Master Data components
-      if (activeTab.id === 'uom') {
+      if (tab.id === 'uom') {
         return (
           <div className="p-6">
             <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
               <p className="text-muted-foreground">Units of Measure management will be implemented here.</p>
-              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
             </div>
           </div>
         );
       }
       
-      if (activeTab.id === 'incoterms') {
+      if (tab.id === 'incoterms') {
         return (
           <div className="p-6">
             <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
               <p className="text-muted-foreground">Incoterms management will be implemented here.</p>
-              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
             </div>
           </div>
         );
       }
       
-      if (activeTab.id === 'vat') {
+      if (tab.id === 'vat') {
         return (
           <div className="p-6">
             <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
               <p className="text-muted-foreground">VAT Rates management will be implemented here.</p>
-              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
             </div>
           </div>
         );
       }
       
-      if (activeTab.id === 'cities') {
+      if (tab.id === 'cities') {
         return (
           <div className="p-6">
             <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
               <p className="text-muted-foreground">Cities management will be implemented here.</p>
-              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
             </div>
           </div>
         );
       }
       
-      if (activeTab.id === 'statuses') {
+      if (tab.id === 'statuses') {
         return (
           <div className="p-6">
             <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
               <p className="text-muted-foreground">Statuses management will be implemented here.</p>
-              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
             </div>
           </div>
         );
       }
       
-      // Default placeholder for other menu items
       return (
         <div className="p-6">
           <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
-            <p className="text-muted-foreground">Content for {activeTab.name} will be implemented here.</p>
-            {activeTab.menuRoute && (
-              <p className="text-sm text-muted-foreground mt-2">Route: {activeTab.menuRoute}</p>
+            <p className="text-muted-foreground">Content for {tab.name} will be implemented here.</p>
+            {tab.menuRoute && (
+              <p className="text-sm text-muted-foreground mt-2">Route: {tab.menuRoute}</p>
             )}
           </div>
         </div>
       );
     }
     
-    if (activeTab.type === 'form') {
-      // Handle form tabs
-      if (activeTab.formType === 'quotation') {
-        // Extract quotationId from tab.id if editing OR from parentId
-        const quotationId = activeTab.id.startsWith('edit-quotation-') 
-          ? activeTab.id.replace('edit-quotation-', '') 
-          : activeTab.parentId;
+    if (tab.type === 'form') {
+      if (tab.formType === 'quotation') {
+        const quotationId = tab.id.startsWith('edit-quotation-') 
+          ? tab.id.replace('edit-quotation-', '') 
+          : tab.parentId;
         
         return (
           <Suspense fallback={<div></div>}>
             <QuotationForm 
               quotationId={quotationId}
               onSave={() => {
-                // Return to quotations tab after save
-                const quotationsTab = tabs.find(tab => tab.id === 'quotations');
+                const quotationsTab = allTabs.find(t => t.id === 'quotations');
                 if (quotationsTab) {
-                  setActiveTabId('quotations');
-                  closeTab(activeTab.id);
+                  panelSetActiveTabId('quotations');
+                  panelCloseTab(tab.id);
                 }
               }} 
             />
@@ -851,11 +962,10 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      if (activeTab.formType === 'customer') {
-        // Use entityId from tab if available, otherwise try to extract from tab.id
-        const customerId = activeTab.entityId || (
-          activeTab.id.startsWith('edit-customer-') 
-            ? activeTab.id.replace('edit-customer-', '') 
+      if (tab.formType === 'customer') {
+        const customerId = tab.entityId || (
+          tab.id.startsWith('edit-customer-') 
+            ? tab.id.replace('edit-customer-', '') 
             : undefined
         );
         
@@ -863,13 +973,12 @@ export default function Layout({ children }: LayoutProps) {
           <Suspense fallback={<div></div>}>
             <CustomerForm 
               customerId={customerId}
-              parentId={activeTab.parentId}
+              parentId={tab.parentId}
               onSave={() => {
-                // Return to customers tab after save
-                const customersTab = tabs.find(tab => tab.id === 'customers');
+                const customersTab = allTabs.find(t => t.id === 'customers');
                 if (customersTab) {
-                  setActiveTabId('customers');
-                  closeTab(activeTab.id);
+                  panelSetActiveTabId('customers');
+                  panelCloseTab(tab.id);
                 }
               }} 
             />
@@ -877,27 +986,23 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      if (activeTab.formType === 'line-item' || activeTab.formType === 'quotation-item') {
-        // Extract lineItemId and quotationId from tab.id
-        // Format: 'edit-line-item-{lineItemId}' or 'quotation-item-{lineType}-{timestamp}'
-        const isEditing = activeTab.id.startsWith('edit-line-item-');
-        const lineItemId = isEditing ? activeTab.id.replace('edit-line-item-', '') : undefined;
-        // For new items, get quotationId from parentId or tab data
-        const quotationId = isEditing ? undefined : (activeTab.parentId || (activeTab as any).quotationId);
+      if (tab.formType === 'line-item' || tab.formType === 'quotation-item') {
+        const isEditing = tab.id.startsWith('edit-line-item-');
+        const lineItemId = isEditing ? tab.id.replace('edit-line-item-', '') : undefined;
+        const quotationId = isEditing ? undefined : (tab.parentId || (tab as any).quotationId);
         
         return (
           <Suspense fallback={<div></div>}>
             <LineItemFormLayoutComponent 
               lineItemId={lineItemId}
               quotationId={quotationId}
-              parentId={activeTab.parentId}
+              parentId={tab.parentId}
               onSave={() => {
-                // Return to parent tab after save (typically quotation form or quotations list)
-                if (activeTab.parentId) {
-                  const parentTab = tabs.find(tab => tab.id === activeTab.parentId);
+                if (tab.parentId) {
+                  const parentTab = allTabs.find(t => t.id === tab.parentId);
                   if (parentTab) {
-                    setActiveTabId(activeTab.parentId);
-                    closeTab(activeTab.id);
+                    panelSetActiveTabId(tab.parentId);
+                    panelCloseTab(tab.id);
                   }
                 }
               }} 
@@ -906,21 +1011,21 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      if (activeTab.formType === 'supplier') {
-        const supplierId = activeTab.id.startsWith('edit-supplier-') 
-          ? activeTab.id.replace('edit-supplier-', '') 
+      if (tab.formType === 'supplier') {
+        const supplierId = tab.id.startsWith('edit-supplier-') 
+          ? tab.id.replace('edit-supplier-', '') 
           : undefined;
         
         return (
           <Suspense fallback={<div></div>}>
             <SupplierForm 
               supplierId={supplierId}
-              parentId={activeTab.parentId}
+              parentId={tab.parentId}
               onSave={() => {
-                const suppliersTab = tabs.find(tab => tab.id === 'suppliers');
+                const suppliersTab = allTabs.find(t => t.id === 'suppliers');
                 if (suppliersTab) {
-                  setActiveTabId('suppliers');
-                  closeTab(activeTab.id);
+                  panelSetActiveTabId('suppliers');
+                  panelCloseTab(tab.id);
                 }
               }} 
             />
@@ -928,21 +1033,21 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      if (activeTab.formType === 'inventory' || activeTab.formType === 'inventory-item') {
-        const inventoryId = activeTab.id.startsWith('edit-inventory-') 
-          ? activeTab.id.replace('edit-inventory-', '') 
+      if (tab.formType === 'inventory' || tab.formType === 'inventory-item') {
+        const inventoryId = tab.id.startsWith('edit-inventory-') 
+          ? tab.id.replace('edit-inventory-', '') 
           : undefined;
         
         return (
           <Suspense fallback={<div></div>}>
             <InventoryForm 
               inventoryId={inventoryId}
-              parentId={activeTab.parentId}
+              parentId={tab.parentId}
               onSave={() => {
-                const inventoryTab = tabs.find(tab => tab.id === 'inventory');
+                const inventoryTab = allTabs.find(t => t.id === 'inventory');
                 if (inventoryTab) {
-                  setActiveTabId('inventory');
-                  closeTab(activeTab.id);
+                  panelSetActiveTabId('inventory');
+                  panelCloseTab(tab.id);
                 }
               }} 
             />
@@ -950,21 +1055,21 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      if (activeTab.formType === 'project') {
-        const projectId = activeTab.id.startsWith('edit-project-') 
-          ? activeTab.id.replace('edit-project-', '') 
+      if (tab.formType === 'project') {
+        const projectId = tab.id.startsWith('edit-project-') 
+          ? tab.id.replace('edit-project-', '') 
           : undefined;
         
         return (
           <Suspense fallback={<div></div>}>
             <ProjectForm 
               projectId={projectId}
-              parentId={activeTab.parentId}
+              parentId={tab.parentId}
               onSave={() => {
-                const projectsTab = tabs.find(tab => tab.id === 'projects');
+                const projectsTab = allTabs.find(t => t.id === 'projects');
                 if (projectsTab) {
-                  setActiveTabId('projects');
-                  closeTab(activeTab.id);
+                  panelSetActiveTabId('projects');
+                  panelCloseTab(tab.id);
                 }
               }} 
             />
@@ -972,21 +1077,21 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      if (activeTab.formType === 'work-order') {
-        const workOrderId = activeTab.id.startsWith('edit-work-order-') 
-          ? activeTab.id.replace('edit-work-order-', '') 
+      if (tab.formType === 'work-order') {
+        const workOrderId = tab.id.startsWith('edit-work-order-') 
+          ? tab.id.replace('edit-work-order-', '') 
           : undefined;
         
         return (
           <Suspense fallback={<div></div>}>
             <WorkOrderForm 
               workOrderId={workOrderId}
-              parentId={activeTab.parentId}
+              parentId={tab.parentId}
               onSave={() => {
-                const workOrdersTab = tabs.find(tab => tab.id === 'work-orders');
+                const workOrdersTab = allTabs.find(t => t.id === 'work-orders');
                 if (workOrdersTab) {
-                  setActiveTabId('work-orders');
-                  closeTab(activeTab.id);
+                  panelSetActiveTabId('work-orders');
+                  panelCloseTab(tab.id);
                 }
               }} 
             />
@@ -994,21 +1099,21 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      if (activeTab.formType === 'purchase-order') {
-        const purchaseOrderId = activeTab.id.startsWith('edit-purchase-order-') 
-          ? activeTab.id.replace('edit-purchase-order-', '') 
+      if (tab.formType === 'purchase-order') {
+        const purchaseOrderId = tab.id.startsWith('edit-purchase-order-') 
+          ? tab.id.replace('edit-purchase-order-', '') 
           : undefined;
         
         return (
           <Suspense fallback={<div></div>}>
             <PurchaseOrderForm 
               purchaseOrderId={purchaseOrderId}
-              parentId={activeTab.parentId}
+              parentId={tab.parentId}
               onSave={() => {
-                const purchaseOrdersTab = tabs.find(tab => tab.id === 'purchase-orders');
+                const purchaseOrdersTab = allTabs.find(t => t.id === 'purchase-orders');
                 if (purchaseOrdersTab) {
-                  setActiveTabId('purchase-orders');
-                  closeTab(activeTab.id);
+                  panelSetActiveTabId('purchase-orders');
+                  panelCloseTab(tab.id);
                 }
               }} 
             />
@@ -1016,74 +1121,23 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      /* Commented out - sales-order-form file doesn't exist
-      if (activeTab.formType === 'sales-order') {
-        const SalesOrderForm = lazy(() => import('@/pages/sales-order-form'));
-        const salesOrderId = activeTab.id.startsWith('edit-sales-order-') 
-          ? activeTab.id.replace('edit-sales-order-', '') 
-          : undefined;
-        
-        return (
-          <Suspense fallback={<div></div>}>
-            <SalesOrderForm 
-              salesOrderId={salesOrderId}
-              parentId={activeTab.parentId}
-              onSave={() => {
-                const salesOrdersTab = tabs.find(tab => tab.id === 'sales-orders');
-                if (salesOrdersTab) {
-                  setActiveTabId('sales-orders');
-                  closeTab(activeTab.id);
-                }
-              }} 
-            />
-          </Suspense>
-        );
-      }
-      */
-      
-      /* Commented out - packing-list-form file doesn't exist
-      if (activeTab.formType === 'packing-list') {
-        const PackingListForm = lazy(() => import('@/pages/packing-list-form'));
-        const packingListId = activeTab.id.startsWith('edit-packing-list-') 
-          ? activeTab.id.replace('edit-packing-list-', '') 
-          : undefined;
-        
-        return (
-          <Suspense fallback={<div></div>}>
-            <PackingListForm 
-              packingListId={packingListId}
-              parentId={activeTab.parentId}
-              onSave={() => {
-                const packingListsTab = tabs.find(tab => tab.id === 'packing-lists');
-                if (packingListsTab) {
-                  setActiveTabId('packing-lists');
-                  closeTab(activeTab.id);
-                }
-              }} 
-            />
-          </Suspense>
-        );
-      }
-      */
-      
-      if (activeTab.formType === 'invoice') {
-        const InvoiceForm = lazy(() => import('@/pages/invoice-form'));
-        const invoiceId = activeTab.id.startsWith('edit-invoice-') 
-          ? activeTab.parentId
-          : activeTab.id.startsWith('view-invoice-')
-          ? activeTab.parentId
+      if (tab.formType === 'invoice') {
+        const invoiceId = tab.id.startsWith('edit-invoice-') 
+          ? tab.parentId
+          : tab.id.startsWith('view-invoice-')
+          ? tab.parentId
           : undefined;
         
         return (
           <Suspense fallback={<div></div>}>
             <InvoiceForm 
               invoiceId={invoiceId}
-              parentId={activeTab.parentId}
+              parentId={tab.parentId}
               onSave={() => {
-                const invoicesTab = tabs.find(tab => tab.id === 'invoices');
+                const invoicesTab = allTabs.find(t => t.id === 'invoices');
                 if (invoicesTab) {
-                  setActiveTabId('invoices');
-                  closeTab(activeTab.id);
+                  panelSetActiveTabId('invoices');
+                  panelCloseTab(tab.id);
                 }
               }} 
             />
@@ -1091,35 +1145,9 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      /* Commented out - text-snippet-form file doesn't exist
-      if (activeTab.formType === 'text-snippet') {
-        const TextSnippetForm = lazy(() => import('@/pages/text-snippet-form'));
-        const textSnippetId = activeTab.id.startsWith('edit-text-snippet-') 
-          ? activeTab.id.replace('edit-text-snippet-', '') 
-          : undefined;
-        
-        return (
-          <Suspense fallback={<div></div>}>
-            <TextSnippetForm 
-              textSnippetId={textSnippetId}
-              parentId={activeTab.parentId}
-              onSave={() => {
-                const textSnippetsTab = tabs.find(tab => tab.id === 'text-snippets');
-                if (textSnippetsTab) {
-                  setActiveTabId('text-snippets');
-                  closeTab(activeTab.id);
-                }
-              }} 
-            />
-          </Suspense>
-        );
-      }
-      */
-      
-      if (activeTab.formType === 'contact-person') {
-        // Extract contactPersonId from tab.id if editing
-        const contactPersonId = activeTab.id.startsWith('edit-contact-person-') 
-          ? activeTab.id.replace('edit-contact-person-', '') 
+      if (tab.formType === 'contact-person') {
+        const contactPersonId = tab.id.startsWith('edit-contact-person-') 
+          ? tab.id.replace('edit-contact-person-', '') 
           : undefined;
         
         return (
@@ -1127,11 +1155,10 @@ export default function Layout({ children }: LayoutProps) {
             <ContactPersonForm 
               contactPersonId={contactPersonId}
               onSave={() => {
-                // Return to contact-persons tab after save
-                const contactPersonsTab = tabs.find(tab => tab.id === 'contact-persons');
+                const contactPersonsTab = allTabs.find(t => t.id === 'contact-persons');
                 if (contactPersonsTab) {
-                  setActiveTabId('contact-persons');
-                  closeTab(activeTab.id);
+                  panelSetActiveTabId('contact-persons');
+                  panelCloseTab(tab.id);
                 }
               }} 
             />
@@ -1139,9 +1166,9 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
-      if (activeTab.formType === 'address') {
-        const addressId = activeTab.id.startsWith('edit-address-') 
-          ? activeTab.id.replace('edit-address-', '') 
+      if (tab.formType === 'address') {
+        const addressId = tab.id.startsWith('edit-address-') 
+          ? tab.id.replace('edit-address-', '') 
           : undefined;
         
         return (
@@ -1149,18 +1176,17 @@ export default function Layout({ children }: LayoutProps) {
             <AddressFormLayout 
               addressId={addressId}
               onSave={() => {
-                // Navigate back to addresses page after saving
                 navigate('/addresses');
-                closeTab(activeTab.id);
+                panelCloseTab(tab.id);
               }} 
             />
           </Suspense>
         );
       }
       
-      if (activeTab.formType === 'image') {
-        const imageId = activeTab.id.startsWith('edit-image-') 
-          ? activeTab.id.replace('edit-image-', '') 
+      if (tab.formType === 'image') {
+        const imageId = tab.id.startsWith('edit-image-') 
+          ? tab.id.replace('edit-image-', '') 
           : undefined;
         
         return (
@@ -1168,31 +1194,30 @@ export default function Layout({ children }: LayoutProps) {
             <ImageForm 
               imageId={imageId}
               onSave={() => {
-                // Navigate back to images page after saving
                 navigate('/master-data/images');
-                closeTab(activeTab.id);
+                panelCloseTab(tab.id);
               }} 
             />
           </Suspense>
         );
       }
       
-      if (activeTab.formType?.startsWith('masterdata-')) {
-        const mdType = activeTab.formType.replace('masterdata-', '');
+      if (tab.formType?.startsWith('masterdata-')) {
+        const mdType = tab.formType.replace('masterdata-', '');
         const mdConfig = getMasterDataConfig(mdType);
         if (mdConfig) {
-          const entityId = activeTab.entityId || undefined;
+          const entityId = tab.entityId || undefined;
           return (
             <Suspense fallback={<div></div>}>
               <MasterDataFormLayout
                 type={mdType}
                 id={entityId}
                 onSave={() => {
-                  const parentTab = tabs.find(tab => tab.id === mdType);
+                  const parentTab = allTabs.find(t => t.id === mdType);
                   if (parentTab) {
-                    setActiveTabId(mdType);
+                    panelSetActiveTabId(mdType);
                   }
-                  closeTab(activeTab.id);
+                  panelCloseTab(tab.id);
                 }}
               />
             </Suspense>
@@ -1200,17 +1225,56 @@ export default function Layout({ children }: LayoutProps) {
         }
       }
 
-      // Default form placeholder
       return (
         <div className="p-6">
           <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
-            <p className="text-muted-foreground">Form for {activeTab.name} will be implemented here.</p>
+            <p className="text-muted-foreground">Form for {tab.name} will be implemented here.</p>
           </div>
         </div>
       );
     }
     
-    return activeTab.content || children; // page content
+    return tab.content || children;
+  };
+
+  const renderActiveTabContent = () => {
+    if (leftPanelTabs.length === 0 && !isSplitScreen) {
+      const message = motivationalMessages[currentMessageIndex];
+      return (
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center max-w-md">
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold text-foreground mb-4">{message.title}</h1>
+              <p className="text-lg text-muted-foreground mb-6">{message.message}</p>
+              <p className="text-sm text-orange-600 font-medium">{message.action}</p>
+            </div>
+            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-6">
+              <div className="text-6xl mb-4">⚡</div>
+              <p className="text-sm text-muted-foreground">Welcome to ATE Solutions - Where Power Meets Precision</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    const activeTab = leftPanelTabs.find(t => t.id === activeTabId);
+    if (!activeTab) {
+      return (
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center">
+            <p className="text-muted-foreground">No tab selected</p>
+          </div>
+        </div>
+      );
+    }
+    
+    return renderTabContent(activeTab, leftPanelTabs, setActiveTabId, closeTab);
+  };
+
+  const renderRightPanelContent = () => {
+    const activeTab = rightPanelTabs.find(t => t.id === rightPanelActiveTabId);
+    if (!activeTab) return null;
+    return renderTabContent(activeTab, rightPanelTabs, setRightPanelActiveTabId, closeRightPanelTab);
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -1280,69 +1344,190 @@ export default function Layout({ children }: LayoutProps) {
         
         {/* Right Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Tab Bar - Now at the very top of right area */}
-          <div className="bg-gray-50 px-2 md:px-4 border-b-0 h-[44px] md:h-[62px] flex items-end">
-            <div className="flex items-end space-x-1 overflow-x-auto">
-              {tabs.map((tab) => (
-                <div
-                  key={tab.id}
-                  className={`flex items-center gap-1 px-3 py-2 rounded-t-lg transition-colors cursor-pointer min-w-0 font-sans ${
-                    activeTabId === tab.id
-                      ? 'bg-orange-500 text-white relative z-10 border-2 border-orange-500 border-b-orange-500'
-                      : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200 mb-[2px]'
-                  }`}
-                  onClick={() => handleTabClick(tab)}
-                  onMouseDown={(e) => {
-                    // Middle mouse button (scroll wheel click) to close tab
-                    if (e.button === 1) {
-                      e.preventDefault();
-                      closeTab(tab.id);
-                    }
-                  }}
-                  onAuxClick={(e) => {
-                    // Alternative middle click handler for better browser compatibility
-                    if (e.button === 1) {
-                      e.preventDefault();
-                      closeTab(tab.id);
-                    }
-                  }}
-                  onTouchStart={(e) => {
-                    // Handle 3-finger tap for touchpad (when supported)
-                    if (e.touches.length === 3) {
-                      e.preventDefault();
-                      closeTab(tab.id);
-                    }
-                  }}
-                  data-testid={`tab-${tab.id}`}
-                  style={{ fontFamily: 'Arial, sans-serif' }}
+          {isSplitScreen ? (
+            <ResizablePanelGroup direction="horizontal" className="flex-1">
+              {/* Left Panel */}
+              <ResizablePanel defaultSize={50} minSize={25}>
+                <div className="flex flex-col h-full overflow-hidden"
+                  onDragOver={(e) => { if (dragSource === 'right') { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
+                  onDrop={handleDropOnLeftPanel}
                 >
-                  <span className="text-xs md:text-sm font-medium truncate max-w-32 md:max-w-56">{tab.name}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      closeTab(tab.id);
-                    }}
-                    className={`p-0.5 rounded-full transition-colors ${
-                      activeTabId === tab.id ? 'hover:bg-orange-600' : 'hover:bg-gray-300'
-                    }`}
-                    data-testid={`close-tab-${tab.id}`}
-                  >
-                    <X size={14} />
-                  </button>
+                  <div className="bg-gray-50 px-2 md:px-4 border-b-0 h-[44px] md:h-[62px] flex items-end relative">
+                    <div className="flex items-end space-x-1 overflow-x-auto flex-1">
+                      {leftPanelTabs.map((tab) => (
+                        <div
+                          key={tab.id}
+                          draggable
+                          onDragStart={(e) => handleTabDragStart(e, tab.id, 'left')}
+                          onDragEnd={handleTabDragEnd}
+                          className={`flex items-center gap-1 px-3 py-2 rounded-t-lg transition-colors cursor-pointer min-w-0 font-sans ${
+                            activeTabId === tab.id
+                              ? 'bg-orange-500 text-white relative z-10 border-2 border-orange-500 border-b-orange-500'
+                              : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200 mb-[2px]'
+                          }`}
+                          onClick={() => handleTabClick(tab)}
+                          onMouseDown={(e) => { if (e.button === 1) { e.preventDefault(); closeTab(tab.id); } }}
+                          onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); closeTab(tab.id); } }}
+                          data-testid={`tab-${tab.id}`}
+                          style={{ fontFamily: 'Arial, sans-serif' }}
+                        >
+                          <span className="text-xs md:text-sm font-medium truncate max-w-32 md:max-w-56">{tab.name}</span>
+                          <button onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }} className={`p-0.5 rounded-full transition-colors ${activeTabId === tab.id ? 'hover:bg-orange-600' : 'hover:bg-gray-300'}`}>
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {showLeftDropZone && dragSource === 'right' && (
+                      <div className="absolute inset-0 bg-orange-100 border-2 border-dashed border-orange-400 rounded-lg flex items-center justify-center z-20 pointer-events-auto">
+                        <span className="text-orange-600 font-medium text-sm">Drop here to move to left panel</span>
+                      </div>
+                    )}
+                  </div>
+                  <main className={`flex-1 flex flex-col overflow-hidden ${leftPanelTabs.length > 0 ? 'border-2 border-orange-500 bg-white rounded-lg' : 'bg-white'}`}>
+                    <div className="flex-1 overflow-auto">
+                      {renderActiveTabContent()}
+                    </div>
+                  </main>
                 </div>
-              ))}
-            </div>
-          </div>
+              </ResizablePanel>
 
-          {/* Main content area with orange border to connect with active tab */}
-          <main className={`flex-1 flex flex-col overflow-hidden ${
-            tabs.length > 0 ? 'border-2 border-orange-500 bg-white rounded-lg' : 'bg-white'
-          }`}>
-            {/* Tab Content */}
-            <div className="flex-1 overflow-auto">
-              {renderActiveTabContent()}
-            </div>
-          </main>
+              <ResizableHandle withHandle />
+
+              {/* Right Panel */}
+              <ResizablePanel defaultSize={50} minSize={25}>
+                <div className="flex flex-col h-full overflow-hidden">
+                  <div className="bg-gray-50 px-2 md:px-4 border-b-0 h-[44px] md:h-[62px] flex items-end">
+                    <div className="flex items-end space-x-1 overflow-x-auto flex-1">
+                      {rightPanelTabs.map((tab) => (
+                        <div
+                          key={tab.id}
+                          draggable
+                          onDragStart={(e) => handleTabDragStart(e, tab.id, 'right')}
+                          onDragEnd={handleTabDragEnd}
+                          className={`flex items-center gap-1 px-3 py-2 rounded-t-lg transition-colors cursor-pointer min-w-0 font-sans ${
+                            rightPanelActiveTabId === tab.id
+                              ? 'bg-orange-500 text-white relative z-10 border-2 border-orange-500 border-b-orange-500'
+                              : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200 mb-[2px]'
+                          }`}
+                          onClick={() => setRightPanelActiveTabId(tab.id)}
+                          onMouseDown={(e) => { if (e.button === 1) { e.preventDefault(); closeRightPanelTab(tab.id); } }}
+                          onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); closeRightPanelTab(tab.id); } }}
+                          data-testid={`tab-right-${tab.id}`}
+                          style={{ fontFamily: 'Arial, sans-serif' }}
+                        >
+                          <span className="text-xs md:text-sm font-medium truncate max-w-32 md:max-w-56">{tab.name}</span>
+                          <button onClick={(e) => { e.stopPropagation(); closeRightPanelTab(tab.id); }} className={`p-0.5 rounded-full transition-colors ${rightPanelActiveTabId === tab.id ? 'hover:bg-orange-600' : 'hover:bg-gray-300'}`}>
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={closeRightPanel}
+                      className="ml-2 mb-1 p-1.5 rounded hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-colors"
+                      title="Close right panel"
+                    >
+                      <PanelRightClose size={16} />
+                    </button>
+                  </div>
+                  <main className="flex-1 flex flex-col overflow-hidden border-2 border-orange-500 bg-white rounded-lg">
+                    <div className="flex-1 overflow-auto">
+                      {renderRightPanelContent()}
+                    </div>
+                  </main>
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ) : (
+            <>
+              {/* Tab Bar - single panel mode */}
+              <div className="bg-gray-50 px-2 md:px-4 border-b-0 h-[44px] md:h-[62px] flex items-end relative">
+                <div className="flex items-end space-x-1 overflow-x-auto flex-1">
+                  {tabs.map((tab) => (
+                    <div
+                      key={tab.id}
+                      draggable
+                      onDragStart={(e) => handleTabDragStart(e, tab.id, 'left')}
+                      onDragEnd={handleTabDragEnd}
+                      className={`flex items-center gap-1 px-3 py-2 rounded-t-lg transition-colors cursor-pointer min-w-0 font-sans ${
+                        activeTabId === tab.id
+                          ? 'bg-orange-500 text-white relative z-10 border-2 border-orange-500 border-b-orange-500'
+                          : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200 mb-[2px]'
+                      }`}
+                      onClick={() => handleTabClick(tab)}
+                      onMouseDown={(e) => {
+                        if (e.button === 1) {
+                          e.preventDefault();
+                          closeTab(tab.id);
+                        }
+                      }}
+                      onAuxClick={(e) => {
+                        if (e.button === 1) {
+                          e.preventDefault();
+                          closeTab(tab.id);
+                        }
+                      }}
+                      onTouchStart={(e) => {
+                        if (e.touches.length === 3) {
+                          e.preventDefault();
+                          closeTab(tab.id);
+                        }
+                      }}
+                      data-testid={`tab-${tab.id}`}
+                      style={{ fontFamily: 'Arial, sans-serif' }}
+                    >
+                      <span className="text-xs md:text-sm font-medium truncate max-w-32 md:max-w-56">{tab.name}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          closeTab(tab.id);
+                        }}
+                        className={`p-0.5 rounded-full transition-colors ${
+                          activeTabId === tab.id ? 'hover:bg-orange-600' : 'hover:bg-gray-300'
+                        }`}
+                        data-testid={`close-tab-${tab.id}`}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Drop zone overlay - appears on the right when dragging */}
+              {showDropZone && dragSource === 'left' && leftPanelTabs.length > 1 && (
+                <div className="flex flex-1 overflow-hidden relative">
+                  <main className={`flex-1 flex flex-col overflow-hidden ${leftPanelTabs.length > 0 ? 'border-2 border-orange-500 bg-white rounded-lg' : 'bg-white'}`}>
+                    <div className="flex-1 overflow-auto">
+                      {renderActiveTabContent()}
+                    </div>
+                  </main>
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-1/3 bg-orange-100/80 border-2 border-dashed border-orange-400 rounded-lg flex items-center justify-center z-30 transition-all"
+                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                    onDrop={handleDropOnRightPanel}
+                  >
+                    <div className="text-center">
+                      <PanelRightClose className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                      <span className="text-orange-600 font-medium text-sm">Drop here to open in split view</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Normal content (no drag) */}
+              {!showDropZone && (
+                <main className={`flex-1 flex flex-col overflow-hidden ${
+                  leftPanelTabs.length > 0 ? 'border-2 border-orange-500 bg-white rounded-lg' : 'bg-white'
+                }`}>
+                  <div className="flex-1 overflow-auto">
+                    {renderActiveTabContent()}
+                  </div>
+                </main>
+              )}
+            </>
+          )}
         </div>
       </div>
       
