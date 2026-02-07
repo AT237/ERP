@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { useLocation } from "wouter";
 import { getMasterDataConfig } from "@/config/masterdata-config";
 
 interface MasterDataTableProps {
@@ -30,7 +28,6 @@ interface MasterDataTableProps {
 export default function MasterDataTable({ title, endpoint, schema, fields, columns }: MasterDataTableProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, setLocation] = useLocation();
   
   // Get the config for proper singularization
   const config = getMasterDataConfig(endpoint);
@@ -71,11 +68,24 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
   });
 
   const handleNewItem = () => {
-    setLocation(`/masterdata-form/${endpoint}`);
+    window.dispatchEvent(new CustomEvent('open-form-tab', {
+      detail: {
+        id: `new-${endpoint}`,
+        name: `New ${singularTitle}`,
+        formType: `masterdata-${endpoint}`,
+      }
+    }));
   };
 
   const handleEditItem = (id: string) => {
-    setLocation(`/masterdata-form/${endpoint}/${id}`);
+    window.dispatchEvent(new CustomEvent('open-form-tab', {
+      detail: {
+        id: `${endpoint}-${id}`,
+        name: `Edit ${singularTitle}`,
+        formType: `masterdata-${endpoint}`,
+        entityId: id,
+      }
+    }));
   };
 
   const handleDeleteItem = (id: string) => {
