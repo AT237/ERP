@@ -43,6 +43,8 @@ const InvoiceForm = lazy(() => import('@/pages/invoice-form'));
 const TextSnippetForm = lazy(() => import('@/pages/text-snippet-form'));
 const ContactPersonForm = lazy(() => import('@/pages/contact-person-form'));
 const ImageForm = lazy(() => import('@/pages/image-form'));
+const MasterDataTable = lazy(() => import('./masterdata-table'));
+import { getMasterDataConfig } from "@/config/masterdata-config";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -140,6 +142,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'uom', name: 'Units of Measure' };
       case '/master-data/payment-terms':
         return { id: 'payment-terms', name: 'Payment Terms' };
+      case '/master-data/payment-schedules':
+        return { id: 'payment-schedules', name: 'Payment Schedules' };
       case '/master-data/incoterms':
         return { id: 'incoterms', name: 'Incoterms' };
       case '/master-data/vat':
@@ -517,6 +521,8 @@ export default function Layout({ children }: LayoutProps) {
         return '/master-data/uom';
       case 'payment-terms':
         return '/master-data/payment-terms';
+      case 'payment-schedules':
+        return '/master-data/payment-schedules';
       case 'incoterms':
         return '/master-data/incoterms';
       case 'vat':
@@ -756,6 +762,25 @@ export default function Layout({ children }: LayoutProps) {
             </div>
           </div>
         );
+      }
+
+      if (activeTab.id === 'payment-schedules') {
+        const psConfig = getMasterDataConfig('payment-schedules');
+        if (psConfig) {
+          return (
+            <div className="p-6">
+              <Suspense fallback={<div>Loading...</div>}>
+                <MasterDataTable
+                  title={psConfig.title}
+                  endpoint={psConfig.endpoint}
+                  schema={psConfig.schema}
+                  fields={psConfig.fields}
+                  columns={psConfig.columns}
+                />
+              </Suspense>
+            </div>
+          );
+        }
       }
       
       if (activeTab.id === 'incoterms') {

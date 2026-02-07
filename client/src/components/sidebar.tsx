@@ -75,6 +75,7 @@ export const defaultNavigation = [
       { id: "images", name: "Images", href: "/master-data/images", icon: Image },
       { id: "uom", name: "Units of Measure", href: "/master-data/uom", icon: Ruler },
       { id: "payment-terms", name: "Payment Terms", href: "/master-data/payment-terms", icon: Calendar },
+      { id: "payment-schedules", name: "Payment Schedules", href: "/master-data/payment-schedules", icon: CreditCard },
       { id: "incoterms", name: "Incoterms", href: "/master-data/incoterms", icon: Plane },
       { id: "vat", name: "VAT Rates", href: "/master-data/vat", icon: Percent },
       { id: "cities", name: "Cities", href: "/master-data/cities", icon: MapPin },

@@ -182,6 +182,17 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsDelete: false,
     supportsAddNew: false,
   },
+  "payment-schedules": {
+    apiPath: "/api/masterdata/payment-schedules",
+    formType: "payment-schedules",
+    label: "Payment Schedule",
+    labelPlural: "Payment Schedules",
+    listQueryKey: "/api/masterdata/payment-schedules",
+    documentType: "payment_schedule",
+    supportsNavigation: true,
+    supportsDelete: true,
+    supportsAddNew: true,
+  },
 };
 
 export interface UseFormToolbarOptions {

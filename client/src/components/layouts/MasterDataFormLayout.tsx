@@ -39,10 +39,13 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
 
   const form = useForm({
     resolver: zodResolver(config.schema),
-    defaultValues: config.fields.reduce((acc, field) => {
-      acc[field.name] = field.type === 'number' ? 0 : '';
-      return acc;
-    }, {} as any)
+    defaultValues: {
+      ...config.fields.reduce((acc, field) => {
+        acc[field.name] = field.type === 'number' ? 0 : '';
+        return acc;
+      }, {} as any),
+      ...(config.hiddenDefaults || {}),
+    }
   });
 
   const isEditing = !!id;
@@ -100,7 +103,15 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
   });
 
   const handleSubmit = (data: any) => {
-    createMutation.mutate(data);
+    const submitData = { ...data };
+    if (config.hiddenDefaults) {
+      Object.entries(config.hiddenDefaults).forEach(([key, value]) => {
+        if (submitData[key] === undefined || submitData[key] === null || submitData[key] === '') {
+          submitData[key] = value;
+        }
+      });
+    }
+    createMutation.mutate(submitData);
   };
 
   // Dynamic field component renderer

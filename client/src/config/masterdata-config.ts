@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   insertUnitOfMeasureSchema,
   insertPaymentTermSchema,
+  insertPaymentScheduleSchema,
   insertIncotermSchema,
   insertVatRateSchema,
   insertCitySchema,
@@ -30,6 +31,7 @@ export interface MasterDataConfig {
   schema: z.ZodSchema;
   fields: MasterDataField[];
   columns: MasterDataColumn[];
+  hiddenDefaults?: Record<string, any>;
 }
 
 export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
@@ -215,6 +217,28 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
       { key: "category", label: "Category" },
       { key: "color", label: "Color" }
     ]
+  },
+
+  'payment-schedules': {
+    title: "Payment Schedules",
+    singularTitle: "Payment Schedule",
+    endpoint: "payment-schedules",
+    schema: insertPaymentScheduleSchema,
+    fields: [
+      { name: "code", label: "Code", type: "text", required: true },
+      { name: "name_nl", label: "Name (NL)", type: "text", required: true },
+      { name: "name_en", label: "Name (EN)", type: "text", required: true },
+      { name: "sortOrder", label: "Sort Order", type: "number" },
+    ],
+    columns: [
+      { key: "code", label: "Code" },
+      { key: "name_nl", label: "Name (NL)" },
+      { key: "name_en", label: "Name (EN)" },
+      { key: "sortOrder", label: "Sort Order" },
+    ],
+    hiddenDefaults: {
+      scheduleItems: [{ percentage: 100, moment_nl: "bij facturatie", moment_en: "upon invoicing" }],
+    }
   },
 
   'images': {
