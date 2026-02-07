@@ -836,17 +836,15 @@ export default function Layout({ children }: LayoutProps) {
       const mdConfig = getMasterDataConfig(tab.id);
       if (mdConfig) {
         return (
-          <div className="p-6">
-            <Suspense fallback={<div></div>}>
-              <MasterDataTable
-                title={mdConfig.title}
-                endpoint={mdConfig.endpoint}
-                schema={mdConfig.schema}
-                fields={mdConfig.fields}
-                columns={mdConfig.columns}
-              />
-            </Suspense>
-          </div>
+          <Suspense fallback={<div></div>}>
+            <MasterDataTable
+              title={mdConfig.title}
+              endpoint={mdConfig.endpoint}
+              schema={mdConfig.schema}
+              fields={mdConfig.fields}
+              columns={mdConfig.columns}
+            />
+          </Suspense>
         );
       }
     }

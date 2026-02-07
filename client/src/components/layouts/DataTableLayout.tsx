@@ -49,8 +49,11 @@ import {
   Copy, 
   Download,
   ChevronUp, 
-  ChevronsUpDown 
+  ChevronsUpDown,
+  Columns3,
+  FileSpreadsheet,
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import {
   DndContext,
   closestCenter,
@@ -716,8 +719,8 @@ export function DataTableLayout<T = any>({
               {/* Mobile Action Buttons - hidden, actions are in bottom nav */}
             </div>
           ) : (
-            /* Desktop Layout - Horizontal */
-            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex items-center gap-2 w-fit">
+            /* Desktop Layout - FormToolbar style icon bar */
+            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 flex items-center gap-1 w-fit">
               {/* Search */}
               <div className="relative">
                 <Input
@@ -729,13 +732,25 @@ export function DataTableLayout<T = any>({
                 />
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-orange-500" size={14} />
               </div>
+
+              <Separator orientation="vertical" className="h-6 mx-1" />
               
-              {/* Filter Dropdown */}
+              {/* Filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 text-xs w-20">
-                    <Filter size={14} className="mr-1 text-orange-500" />
-                    Filter{filters.length > 0 ? ` ${filters.length}` : ''}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 relative"
+                    title="Filter"
+                    data-testid="toolbar-filter"
+                  >
+                    <Filter className="h-4 w-4" />
+                    {filters.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                        {filters.length}
+                      </span>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -751,12 +766,17 @@ export function DataTableLayout<T = any>({
                 </DropdownMenuContent>
               </DropdownMenu>
               
-              {/* Column Visibility Dropdown */}
+              {/* Column Visibility */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 text-xs">
-                    <Settings size={14} className="mr-1 text-orange-500" />
-                    Columns
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    title="Column Visibility"
+                    data-testid="toolbar-columns"
+                  >
+                    <Columns3 className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
@@ -778,45 +798,46 @@ export function DataTableLayout<T = any>({
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Header Actions - hidden on mobile, shown on desktop only */}
-              {!isMobile && headerActions.map((action) => (
+              {/* Header Actions as icon buttons */}
+              {headerActions.length > 0 && (
+                <Separator orientation="vertical" className="h-6 mx-1" />
+              )}
+              {headerActions.map((action) => (
                 <Button
                   key={action.key}
+                  variant="ghost"
                   size="sm"
-                  variant={action.variant || 'default'}
+                  className="h-8 w-8 p-0"
                   onClick={action.onClick}
                   disabled={action.disabled}
+                  title={action.label}
                   data-testid={`button-${action.key}`}
-                  className={action.variant === 'default' ? 'h-8 text-xs bg-green-600 text-white hover:bg-green-700' : 'h-8 text-xs'}
                 >
-                  {action.icon && <span className="mr-1">{action.icon}</span>}
-                  {action.label}
+                  {action.icon || <Plus className="h-4 w-4" />}
                 </Button>
               ))}
 
-              {/* Delete button - hidden on mobile */}
-              {!isMobile && deleteConfirmDialog && (
+              {/* Delete */}
+              {deleteConfirmDialog && (
                 <Button
+                  variant="ghost"
                   size="sm"
-                  variant="destructive"
+                  className={`h-8 w-8 p-0 ${selectedRows.length === 0 ? 'opacity-40' : ''}`}
                   onClick={() => deleteConfirmDialog.onOpenChange(true)}
-                  className={`h-8 text-xs w-28 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
                   disabled={selectedRows.length === 0}
+                  title={`Delete${selectedRows.length > 0 ? ` (${selectedRows.length})` : ''}`}
                   data-testid="button-delete-selected"
                 >
-                  <Trash2 size={14} className="mr-1" />
-                  <span className="min-w-[4rem] text-left">
-                    Delete{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
-                  </span>
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               )}
 
-              {/* Duplicate button - hidden on mobile */}
-              {!isMobile && onDuplicate && (
+              {/* Duplicate */}
+              {onDuplicate && (
                 <Button
+                  variant="ghost"
                   size="sm"
-                  variant="outline"
-                  className={`h-8 text-xs ${selectedRows.length !== 1 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  className={`h-8 w-8 p-0 ${selectedRows.length !== 1 ? 'opacity-40' : ''}`}
                   disabled={selectedRows.length !== 1}
                   onClick={() => {
                     if (selectedRows.length === 1) {
@@ -826,43 +847,43 @@ export function DataTableLayout<T = any>({
                       }
                     }
                   }}
+                  title="Duplicate"
                   data-testid="button-duplicate"
                 >
-                  <Copy size={14} className="mr-1" />
-                  Duplicate
+                  <Copy className="h-4 w-4" />
                 </Button>
               )}
 
-              {/* Export button - hidden on mobile */}
-            {!isMobile && onExport && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`h-8 text-xs w-28 ${selectedRows.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
-                    disabled={selectedRows.length === 0}
-                    data-testid="button-export"
-                  >
-                    <Download size={14} className="mr-1" />
-                    <span className="min-w-[4rem] text-left">
-                      Export{selectedRows.length > 0 ? ` ${selectedRows.length}` : ''}
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={onExport} className="text-xs">
-                    Export to Excel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onExport} className="text-xs">
-                    Export to PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onExport} className="text-xs">
-                    Export to Word
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+              {/* Export */}
+              {onExport && (
+                <>
+                  <Separator orientation="vertical" className="h-6 mx-1" />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        title="Export"
+                        data-testid="button-export"
+                      >
+                        <FileSpreadsheet className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={onExport} className="text-xs">
+                        Export to Excel
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={onExport} className="text-xs">
+                        Export to PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={onExport} className="text-xs">
+                        Export to Word
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              )}
             </div>
           )}
         </div>
