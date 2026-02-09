@@ -42,7 +42,7 @@ const baseCustomerFormSchema = insertCustomerSchema.extend({
   paymentTerms: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined), // Keep for backward compatibility
   paymentDaysId: z.string().optional(),
   kvkNummer: z.string().optional().refine((val) => !val || /^\d{8}$/.test(val), {
-    message: "KVK nummer moet 8 cijfers bevatten"
+    message: "C.o.C. number must contain 8 digits"
   }),
   countryCode: z.string().optional(),
   areaCode: z.string().optional(),
@@ -91,7 +91,7 @@ interface Memo {
 // Field label mapping for validation dialog
 const fieldLabelMap: Record<string, { label: string; section: string }> = {
   name: { label: "Company Name", section: "general" },
-  kvkNummer: { label: "KVK Number", section: "general" },
+  kvkNummer: { label: "C.o.C. Number", section: "general" },
   countryCode: { label: "Country", section: "general" },
   areaCode: { label: "Area Code", section: "general" },
   taxId: { label: "BTW Number", section: "general" },
@@ -591,7 +591,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           // Positie 5: KVK-nummer
           {
             key: "kvkNummer",
-            label: "KVK Number",
+            label: "C.o.C. Number",
             type: "text",
             register: form.register("kvkNummer"),
             validation: {
