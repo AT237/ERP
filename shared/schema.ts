@@ -92,7 +92,7 @@ export const customers = pgTable("customers", {
   languageCode: text("language_code").references(() => languages.code).default("nl"),
   paymentTerms: integer("payment_terms").default(30), // DEPRECATED: use paymentDaysId and paymentScheduleId instead
   paymentDaysId: varchar("payment_days_id").references(() => paymentDays.id),
-  paymentScheduleId: varchar("payment_schedule_id").references(() => paymentSchedules.id),
+  paymentScheduleId: varchar("payment_schedule_id").references(() => paymentTerms.id),
   status: text("status").default("active"),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow(),

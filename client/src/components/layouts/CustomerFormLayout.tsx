@@ -104,7 +104,7 @@ const fieldLabelMap: Record<string, { label: string; section: string }> = {
   languageCode: { label: "Language", section: "general" },
   paymentTerms: { label: "Payment Terms", section: "payment" },
   paymentDaysId: { label: "Payment Day", section: "payment" },
-  paymentScheduleId: { label: "Payment Schedule", section: "payment" },
+  paymentScheduleId: { label: "Payment Terms", section: "payment" },
   invoiceEmail: { label: "Invoice Email", section: "invoicing" },
   invoiceNotes: { label: "Invoice Notes", section: "invoicing" },
   bankAccount: { label: "Bank Account", section: "payment" },
@@ -739,18 +739,17 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               />
             )
           } as FormField2<CustomerFormData>,
-          // Positie 3: Payment Schedule
+          // Positie 3: Payment Terms
           {
             key: "paymentScheduleId",
-            label: "Payment Schedule",
+            label: "Payment Terms",
             type: "custom",
             customComponent: (
               <PaymentScheduleSelectWithAdd
                 value={form.watch("paymentScheduleId") || ""}
                 onValueChange={(value) => form.setValue("paymentScheduleId", value)}
-                language={form.watch("languageCode") || "nl"}
-                placeholder="Select payment schedule..."
-                testId="select-customer-payment-schedule"
+                placeholder="Select payment terms..."
+                testId="select-customer-payment-terms"
               />
             )
           } as FormField2<CustomerFormData>,
