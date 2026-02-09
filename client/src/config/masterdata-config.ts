@@ -23,12 +23,19 @@ export interface MasterDataColumn {
   render?: (value: any) => string;
 }
 
+export interface MasterDataSection {
+  id: string;
+  label: string;
+  fields: MasterDataField[];
+}
+
 export interface MasterDataConfig {
   title: string;
   singularTitle: string;
   endpoint: string;
   schema: z.ZodSchema;
   fields: MasterDataField[];
+  sections?: MasterDataSection[];
   columns: MasterDataColumn[];
   hiddenDefaults?: Record<string, any>;
 }
@@ -75,6 +82,27 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
       { name: "name", label: "Name", type: "text", required: true },
       { name: "days", label: "Days", type: "number", required: true },
       { name: "description", label: "Description", type: "textarea" }
+    ],
+    sections: [
+      {
+        id: "general",
+        label: "General",
+        fields: [
+          { name: "code", label: "Code", type: "text", required: true },
+          { name: "name", label: "Name", type: "text", required: true },
+          { name: "days", label: "Days", type: "number", required: true },
+          { name: "description", label: "Description", type: "textarea" }
+        ]
+      },
+      {
+        id: "installments",
+        label: "Installment Payments",
+        fields: [
+          { name: "paymentAtOrder", label: "Payment at Order (%)", type: "number" },
+          { name: "paymentAtDelivery", label: "Payment at Delivery (%)", type: "number" },
+          { name: "paymentAfterInstallation", label: "Payment after Installation (%)", type: "number" }
+        ]
+      }
     ],
     columns: [
       { key: "code", label: "Code" },

@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { LayoutForm2, type FormSection2, type FormField2, createFieldRow } from '@/components/layouts/LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
-import { getMasterDataConfig, type MasterDataField } from "@/config/masterdata-config";
+import { getMasterDataConfig, type MasterDataField, type MasterDataSection } from "@/config/masterdata-config";
 
 interface MasterDataFormLayoutProps {
   type: string;
@@ -19,17 +19,28 @@ interface MasterDataFormLayoutProps {
 }
 
 export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFormLayoutProps) {
-  const [activeSection, setActiveSection] = useState("data");
+  const [activeSection, setActiveSection] = useState(() => {
+    const cfg = getMasterDataConfig(type);
+    return cfg?.sections ? cfg.sections[0].id : "data";
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const config = useMemo(() => getMasterDataConfig(type), [type]);
   const isEditing = !!id;
 
+  const allFields = useMemo(() => {
+    if (!config) return [];
+    if (config.sections) {
+      return config.sections.flatMap(s => s.fields);
+    }
+    return config.fields;
+  }, [config]);
+
   const form = useForm({
     resolver: config ? zodResolver(config.schema) : undefined,
     defaultValues: config ? {
-      ...config.fields.reduce((acc, field) => {
+      ...allFields.reduce((acc, field) => {
         acc[field.name] = field.type === 'number' ? 0 : '';
         return acc;
       }, {} as any),
@@ -152,10 +163,8 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
     }
   };
 
-  const formSections: FormSection2<any>[] = useMemo(() => {
-    if (!config) return [];
-    
-    const rows: any[] = config.fields.map(field => 
+  const buildFieldRows = (fields: MasterDataField[]) => {
+    return fields.map(field => 
       createFieldRow({
         key: field.name,
         label: field.label,
@@ -180,12 +189,24 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
         testId: `${field.type}-${field.name}`
       } as FormField2<any>)
     );
+  };
+
+  const formSections: FormSection2<any>[] = useMemo(() => {
+    if (!config) return [];
+    
+    if (config.sections) {
+      return config.sections.map(section => ({
+        id: section.id,
+        label: section.label,
+        rows: buildFieldRows(section.fields)
+      }));
+    }
 
     return [{
       id: "data",
       label: config.singularTitle,
       icon: <Database className="h-4 w-4" />,
-      rows
+      rows: buildFieldRows(config.fields)
     }];
   }, [config, form.control]);
 

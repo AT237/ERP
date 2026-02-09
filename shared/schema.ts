@@ -442,6 +442,9 @@ export const paymentTerms = pgTable("payment_terms", {
   name: text("name").notNull(),
   days: integer("days").notNull(),
   description: text("description"),
+  paymentAtOrder: integer("payment_at_order").default(0),
+  paymentAtDelivery: integer("payment_at_delivery").default(0),
+  paymentAfterInstallation: integer("payment_after_installation").default(0),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
