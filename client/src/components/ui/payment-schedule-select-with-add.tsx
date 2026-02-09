@@ -79,9 +79,9 @@ export function PaymentScheduleSelectWithAdd({
                     setOpen(false);
                     window.dispatchEvent(new CustomEvent('open-form-tab', { 
                       detail: { 
-                        id: 'new-payment-terms', 
+                        id: 'new-masterdata-payment-terms', 
                         name: 'New Payment Terms', 
-                        formType: 'payment-terms'
+                        formType: 'masterdata-payment-terms'
                       } 
                     }));
                   }}
@@ -131,10 +131,10 @@ export function PaymentScheduleSelectWithAdd({
                           setOpen(false);
                           window.dispatchEvent(new CustomEvent('open-form-tab', { 
                             detail: { 
-                              id: `payment-terms-${term.id}`, 
+                              id: `masterdata-payment-terms-${term.id}`, 
                               name: itemName, 
-                              formType: 'payment-terms',
-                              recordId: term.id
+                              formType: 'masterdata-payment-terms',
+                              entityId: term.id
                             } 
                           }));
                         }}
