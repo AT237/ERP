@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   insertUnitOfMeasureSchema,
+  insertPaymentDaySchema,
   insertPaymentTermSchema,
   insertIncotermSchema,
   insertVatRateSchema,
@@ -41,6 +42,50 @@ export interface MasterDataConfig {
 }
 
 export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
+  'payment-days': {
+    title: "Payment Days",
+    singularTitle: "Payment Day",
+    endpoint: "payment-days",
+    schema: insertPaymentDaySchema,
+    fields: [
+      { name: "days", label: "Days", type: "number", required: true },
+      { name: "name_nl", label: "Name (NL)", type: "text", required: true },
+      { name: "name_en", label: "Name (EN)", type: "text", required: true },
+      { name: "description_nl", label: "Description (NL)", type: "textarea" },
+      { name: "description_en", label: "Description (EN)", type: "textarea" }
+    ],
+    sections: [
+      {
+        id: "general",
+        label: "General",
+        fields: [
+          { name: "days", label: "Days", type: "number", required: true },
+          { name: "name_nl", label: "Name (NL)", type: "text", required: true },
+          { name: "name_en", label: "Name (EN)", type: "text", required: true },
+          { name: "description_nl", label: "Description (NL)", type: "textarea" },
+          { name: "description_en", label: "Description (EN)", type: "textarea" },
+          { name: "sortOrder", label: "Sort Order", type: "number" }
+        ]
+      },
+      {
+        id: "reminders",
+        label: "Reminders",
+        fields: [
+          { name: "reminderEnabled", label: "Send Reminder", type: "select", options: [{ value: "true", label: "Yes" }, { value: "false", label: "No" }] },
+          { name: "reminderDays", label: "Reminder after (days)", type: "number" },
+          { name: "secondReminderEnabled", label: "Send 2nd Reminder", type: "select", options: [{ value: "true", label: "Yes" }, { value: "false", label: "No" }] },
+          { name: "secondReminderDays", label: "2nd Reminder after (days)", type: "number" }
+        ]
+      }
+    ],
+    columns: [
+      { key: "days", label: "Days" },
+      { key: "name_en", label: "Name (EN)" },
+      { key: "name_nl", label: "Name (NL)" },
+      { key: "description_en", label: "Description" }
+    ]
+  },
+
   'units-of-measure': {
     title: "Units of Measure",
     singularTitle: "Unit of Measure",

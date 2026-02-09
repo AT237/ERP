@@ -81,9 +81,9 @@ export function PaymentDaySelectWithAdd({
                     setOpen(false);
                     window.dispatchEvent(new CustomEvent('open-form-tab', { 
                       detail: { 
-                        id: 'new-payment-day', 
+                        id: 'new-masterdata-payment-days', 
                         name: 'New Payment Day', 
-                        formType: 'payment-day'
+                        formType: 'masterdata-payment-days'
                       } 
                     }));
                   }}
@@ -133,10 +133,10 @@ export function PaymentDaySelectWithAdd({
                           setOpen(false);
                           window.dispatchEvent(new CustomEvent('open-form-tab', { 
                             detail: { 
-                              id: `payment-day-${paymentDay.id}`, 
+                              id: `masterdata-payment-days-${paymentDay.id}`, 
                               name: itemName, 
-                              formType: 'payment-day',
-                              recordId: paymentDay.id
+                              formType: 'masterdata-payment-days',
+                              entityId: paymentDay.id
                             } 
                           }));
                         }}

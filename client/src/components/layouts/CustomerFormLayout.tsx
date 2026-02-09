@@ -26,7 +26,6 @@ import { ContactPersonSelectWithAdd } from "@/components/ui/contact-person-selec
 import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
 import { LanguageSelectWithAdd } from "@/components/ui/language-select-with-add";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
-import { PaymentScheduleSelectWithAdd } from "@/components/ui/payment-schedule-select-with-add";
 import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
@@ -42,7 +41,6 @@ import { z } from "zod";
 const baseCustomerFormSchema = insertCustomerSchema.extend({
   paymentTerms: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined), // Keep for backward compatibility
   paymentDaysId: z.string().optional(),
-  paymentScheduleId: z.string().optional(),
   kvkNummer: z.string().optional().refine((val) => !val || /^\d{8}$/.test(val), {
     message: "KVK nummer moet 8 cijfers bevatten"
   }),
@@ -104,7 +102,6 @@ const fieldLabelMap: Record<string, { label: string; section: string }> = {
   languageCode: { label: "Language", section: "general" },
   paymentTerms: { label: "Payment Terms", section: "payment" },
   paymentDaysId: { label: "Payment Day", section: "payment" },
-  paymentScheduleId: { label: "Payment Terms", section: "payment" },
   invoiceEmail: { label: "Invoice Email", section: "invoicing" },
   invoiceNotes: { label: "Invoice Notes", section: "invoicing" },
   bankAccount: { label: "Bank Account", section: "payment" },
@@ -169,7 +166,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       languageCode: "nl",
       paymentTerms: "30", // Keep for backward compatibility
       paymentDaysId: "",
-      paymentScheduleId: "",
       status: "active",
     },
   });
@@ -297,7 +293,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         languageCode: customer.languageCode || "nl",
         paymentTerms: customer.paymentTerms?.toString() || "30",
         paymentDaysId: customer.paymentDaysId || "",
-        paymentScheduleId: customer.paymentScheduleId || "",
         status: customer.status || "active",
       };
       
@@ -739,21 +734,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               />
             )
           } as FormField2<CustomerFormData>,
-          // Positie 3: Payment Terms
-          {
-            key: "paymentScheduleId",
-            label: "Payment Terms",
-            type: "custom",
-            customComponent: (
-              <PaymentScheduleSelectWithAdd
-                value={form.watch("paymentScheduleId") || ""}
-                onValueChange={(value) => form.setValue("paymentScheduleId", value)}
-                placeholder="Select payment terms..."
-                testId="select-customer-payment-terms"
-              />
-            )
-          } as FormField2<CustomerFormData>,
-          // Positie 4: Invoice Email
+          // Positie 3: Invoice Email
           {
             key: "invoiceEmail",
             label: "Invoice Email",

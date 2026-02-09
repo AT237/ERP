@@ -41,7 +41,13 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
     resolver: config ? zodResolver(config.schema) : undefined,
     defaultValues: config ? {
       ...allFields.reduce((acc, field) => {
-        acc[field.name] = field.type === 'number' ? 0 : '';
+        if (field.type === 'number') {
+          acc[field.name] = 0;
+        } else if (field.type === 'select' && field.options?.every(o => o.value === 'true' || o.value === 'false')) {
+          acc[field.name] = false;
+        } else {
+          acc[field.name] = '';
+        }
         return acc;
       }, {} as any),
       ...(config.hiddenDefaults || {}),
@@ -117,8 +123,12 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
       case 'select':
         return (
           <Select
-            onValueChange={formField.onChange}
-            value={formField.value}
+            onValueChange={(val) => {
+              if (val === "true") formField.onChange(true);
+              else if (val === "false") formField.onChange(false);
+              else formField.onChange(val);
+            }}
+            value={String(formField.value ?? "")}
             data-testid={`select-${field.name}`}
           >
             <SelectTrigger>

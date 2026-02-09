@@ -413,11 +413,15 @@ export const unitsOfMeasure = pgTable("units_of_measure", {
 // Payment Days - number of days for payment (0, 7, 30, 60, 90, etc.)
 export const paymentDays = pgTable("payment_days", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  days: integer("days").notNull().unique(), // 0, 7, 30, 60, 90
-  name_nl: text("name_nl").notNull(), // "Direct", "7 dagen", "30 dagen"
-  name_en: text("name_en").notNull(), // "Direct", "7 days", "30 days"
-  description_nl: text("description_nl"), // "Betaling direct", "Betaling binnen 30 dagen"
-  description_en: text("description_en"), // "Payment direct", "Payment within 30 days"
+  days: integer("days").notNull().unique(),
+  name_nl: text("name_nl").notNull(),
+  name_en: text("name_en").notNull(),
+  description_nl: text("description_nl"),
+  description_en: text("description_en"),
+  reminderEnabled: boolean("reminder_enabled").default(false),
+  reminderDays: integer("reminder_days").default(0),
+  secondReminderEnabled: boolean("second_reminder_enabled").default(false),
+  secondReminderDays: integer("second_reminder_days").default(0),
   isActive: boolean("is_active").default(true),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
