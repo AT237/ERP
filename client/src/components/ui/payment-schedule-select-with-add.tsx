@@ -116,7 +116,8 @@ export function PaymentScheduleSelectWithAdd({
                             value === term.id ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        <div className="flex flex-col flex-1">
+                        <span className="text-xs text-muted-foreground w-16 shrink-0">{term.code}</span>
+                        <div className="flex flex-col flex-1 ml-2">
                           <span className="font-medium">{itemName}</span>
                           <span className="text-xs text-muted-foreground">{description}</span>
                         </div>
