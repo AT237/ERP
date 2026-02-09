@@ -197,6 +197,11 @@ export default function Layout({ children }: LayoutProps) {
   const leftPanelTabs = tabs.filter(t => !rightPanelTabIds.has(t.id));
   const rightPanelTabs = tabs.filter(t => rightPanelTabIds.has(t.id));
   const isSplitScreen = rightPanelTabs.length > 0;
+  
+  // Track which panel the user is interacting with (for opening tabs in correct panel)
+  const activePanelRef = useRef<'left' | 'right'>('left');
+  const rightPanelTabIdsRef = useRef<Set<string>>(rightPanelTabIds);
+  useEffect(() => { rightPanelTabIdsRef.current = rightPanelTabIds; }, [rightPanelTabIds]);
 
   // Unsaved changes tracking
   const [tabsWithUnsavedChanges, setTabsWithUnsavedChanges] = useState<Set<string>>(new Set());
@@ -373,17 +378,15 @@ export default function Layout({ children }: LayoutProps) {
   useEffect(() => {
     const handleOpenFormTab = (e: CustomEvent) => {
       const formInfo = e.detail;
+      const targetPanel = formInfo.targetPanel || activePanelRef.current;
       
       // Use functional state updates to avoid stale closures
       setTabs(prevTabs => {
-        // Check if tab already exists
         const existingTab = prevTabs.find(tab => tab.id === formInfo.id);
         
         if (existingTab) {
-          // Tab exists, don't modify tabs
           return prevTabs;
         } else {
-          // Create new tab for form
           const newTab = {
             id: formInfo.id,
             name: formInfo.name,
@@ -397,8 +400,21 @@ export default function Layout({ children }: LayoutProps) {
         }
       });
       
-      // Always set as active (whether existing or new)
-      setActiveTabId(formInfo.id);
+      // Open in the correct panel based on where the action originated
+      if (targetPanel === 'right') {
+        setRightPanelTabIds(prev => {
+          const next = new Set(prev);
+          next.add(formInfo.id);
+          return next;
+        });
+        setRightPanelActiveTabId(formInfo.id);
+      } else {
+        if (rightPanelTabIdsRef.current.has(formInfo.id)) {
+          setRightPanelActiveTabId(formInfo.id);
+        } else {
+          setActiveTabId(formInfo.id);
+        }
+      }
     };
     
     window.addEventListener('open-form-tab', handleOpenFormTab as EventListener);
@@ -1416,6 +1432,7 @@ export default function Layout({ children }: LayoutProps) {
               {/* Left Panel */}
               <ResizablePanel defaultSize={50} minSize={25}>
                 <div className="flex flex-col h-full overflow-hidden"
+                  onPointerDown={() => { activePanelRef.current = 'left'; }}
                   onDragOver={(e) => { if (dragSource === 'right') { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
                   onDrop={handleDropOnLeftPanel}
                 >
@@ -1463,7 +1480,19 @@ export default function Layout({ children }: LayoutProps) {
 
               {/* Right Panel */}
               <ResizablePanel defaultSize={50} minSize={25}>
-                <div className="flex flex-col h-full overflow-hidden">
+                <div className="flex flex-col h-full overflow-hidden relative"
+                  onPointerDown={() => { activePanelRef.current = 'right'; }}
+                  onDragOver={(e) => { if (dragSource === 'left') { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
+                  onDrop={handleDropOnRightPanel}
+                >
+                  {showDropZone && dragSource === 'left' && leftPanelTabs.length > 1 && (
+                    <div className="absolute inset-0 bg-orange-100/80 border-2 border-dashed border-orange-400 rounded-lg flex items-center justify-center z-20 pointer-events-none">
+                      <div className="text-center">
+                        <PanelRightClose className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                        <span className="text-orange-600 font-medium text-sm">Drop here to move to right panel</span>
+                      </div>
+                    </div>
+                  )}
                   <div className="bg-gray-50 px-2 md:px-4 border-b-0 h-[44px] md:h-[62px] flex items-end">
                     <div className="flex items-end space-x-1 overflow-x-auto flex-1">
                       {rightPanelTabs.map((tab) => (
