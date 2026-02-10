@@ -71,7 +71,6 @@ export function ContactPersonsProvider({ children }: { children: ReactNode }) {
     { key: 'phone', label: 'Phone', visible: true, width: 140, filterable: true, sortable: true },
     { key: 'mobile', label: 'Mobile', visible: true, width: 140, filterable: true, sortable: true },
     { key: 'position', label: 'Position', visible: true, width: 150, filterable: true, sortable: true },
-    { key: 'isPrimary', label: 'Primary', visible: true, width: 100, filterable: true, sortable: true },
     { key: 'dateOfBirth', label: 'Date of Birth', visible: false, width: 120, filterable: true, sortable: true },
   ]);
 

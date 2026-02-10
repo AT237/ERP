@@ -174,7 +174,7 @@ const contactPersonFormSchema = insertCustomerContactSchema.extend({
   email: z.string().email("Valid email is required"),
   phone: z.string().optional(),
   position: z.string().optional(),
-}).omit({ customerId: true, mobile: true, dateOfBirth: true, isPrimary: true });
+}).omit({ customerId: true, mobile: true, dateOfBirth: true });
 
 type ContactPersonFormData = z.infer<typeof contactPersonFormSchema>;
 
@@ -220,7 +220,6 @@ export function QuickAddContactPerson({ onSuccess, onClose, customerId }: QuickA
     createMutation.mutate({
       ...data,
       customerId: customerId || "",
-      isPrimary: false,
       mobile: [],
       dateOfBirth: null,
     });

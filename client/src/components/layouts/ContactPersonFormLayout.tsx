@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Plus, Minus, User, Phone, Settings } from "lucide-react";
+import { Plus, Minus, User, Phone } from "lucide-react";
 import { insertCustomerContactSchema, type InsertCustomerContact, type CustomerContact } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -17,7 +17,6 @@ import {
 import type { InfoField } from './InfoHeaderLayout';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 
 // Form schema with enhanced validation
 const formSchema = insertCustomerContactSchema.extend({
@@ -92,7 +91,6 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
       mobile: [],
       position: "",
       dateOfBirth: "",
-      isPrimary: false,
     }
   });
 
@@ -113,7 +111,6 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
         mobile: mobilesArray,
         position: contactPerson.position || "",
         dateOfBirth: contactPerson.dateOfBirth ? formatDateString(contactPerson.dateOfBirth) : "",
-        isPrimary: contactPerson.isPrimary || false,
       };
       
       form.reset(formData);
@@ -385,36 +382,6 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
         }),
       ]
     },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: <Settings className="h-4 w-4" />,
-      rows: [
-        createSectionHeaderRow("Contact Settings"),
-        createFieldRow({
-          key: "isPrimary",
-          label: "Primary Contact",
-          type: "custom",
-          testId: "checkbox-is-primary",
-          customComponent: (
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isPrimary"
-                checked={form.watch("isPrimary") || false}
-                onCheckedChange={(checked) => form.setValue("isPrimary", checked === true)}
-                data-testid="checkbox-is-primary"
-              />
-              <label
-                htmlFor="isPrimary"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Set as primary contact
-              </label>
-            </div>
-          )
-        }),
-      ]
-    }
   ];
 
   const toolbar = useFormToolbar({
@@ -448,7 +415,6 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
         mobile: Array.isArray(contactPerson.mobile) ? contactPerson.mobile : [],
         position: contactPerson.position || "",
         dateOfBirth: contactPerson.dateOfBirth ? formatDateString(contactPerson.dateOfBirth) : "",
-        isPrimary: contactPerson.isPrimary || false,
       } : undefined}
       isLoading={isLoadingContact}
     />

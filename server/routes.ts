@@ -51,10 +51,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create lookup maps
       const addressMap = new Map(addresses.map(a => [a.id, a]));
       
-      // Group contacts by customer and find primary contact
+      // Group contacts by customer and find first contact
       const primaryContactMap = new Map<string, typeof contacts[0]>();
       for (const contact of contacts) {
-        if (contact.customerId && contact.isPrimary) {
+        if (contact.customerId && !primaryContactMap.has(contact.customerId)) {
           primaryContactMap.set(contact.customerId, contact);
         }
       }

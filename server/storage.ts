@@ -461,7 +461,7 @@ export class DatabaseStorage implements IStorage {
   async getCustomerContactsByCustomer(customerId: string): Promise<CustomerContact[]> {
     return await db.select().from(customerContacts)
       .where(eq(customerContacts.customerId, customerId))
-      .orderBy(desc(customerContacts.isPrimary), desc(customerContacts.createdAt));
+      .orderBy(desc(customerContacts.createdAt));
   }
 
   async createCustomerContact(contact: InsertCustomerContact): Promise<CustomerContact> {
@@ -488,7 +488,7 @@ export class DatabaseStorage implements IStorage {
 
     return await db.select().from(customerContacts)
       .where(whereCondition)
-      .orderBy(desc(customerContacts.isPrimary), desc(customerContacts.createdAt));
+      .orderBy(desc(customerContacts.createdAt));
   }
 
   async deleteCustomerContact(id: string): Promise<void> {

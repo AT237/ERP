@@ -135,9 +135,6 @@ export function ContactPersonSelectWithAdd({
                     />
                     <div className="flex-1">
                       <div className="font-medium">{formatContact(contact)}</div>
-                      {contact.isPrimary && (
-                        <div className="text-xs text-orange-600">Primary Contact</div>
-                      )}
                     </div>
                   </div>
                   <Button

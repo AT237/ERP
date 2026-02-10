@@ -66,7 +66,6 @@ export const customerContacts = pgTable("customer_contacts", {
   phone: text("phone"),
   mobile: jsonb("mobile").$type<string[]>().default(sql`'[]'::jsonb`),
   position: text("position"),
-  isPrimary: boolean("is_primary").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
