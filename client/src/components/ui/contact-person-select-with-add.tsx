@@ -116,6 +116,18 @@ export function ContactPersonSelectWithAdd({
           <CommandList>
             <CommandEmpty>No contact person found.</CommandEmpty>
             <CommandGroup>
+              {value && (
+                <CommandItem
+                  value="__clear__"
+                  onSelect={() => {
+                    onValueChange?.("");
+                    setOpen(false);
+                  }}
+                  className="text-muted-foreground italic"
+                >
+                  — Clear selection —
+                </CommandItem>
+              )}
               {contacts.map((contact) => (
                 <CommandItem
                   key={contact.id}
