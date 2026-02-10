@@ -158,6 +158,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       mobile: "",
       addressId: "",
       contactPersonEmail: "",
+      contactPerson2Email: "",
       taxId: "",
       bankAccount: "",
       invoiceEmail: "",
@@ -285,6 +286,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         mobile: customer.mobile || "",
         addressId: customer.addressId || "",
         contactPersonEmail: customer.contactPersonEmail || "",
+        contactPerson2Email: customer.contactPerson2Email || "",
         taxId: customer.taxId || "",
         bankAccount: customer.bankAccount || "",
         invoiceEmail: customer.invoiceEmail || "",
@@ -360,10 +362,11 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   const phoneValue = form.watch("phone");
   const mobileValue = form.watch("mobile");
   const contactPersonEmailValue = form.watch("contactPersonEmail");
+  const contactPerson2EmailValue = form.watch("contactPerson2Email");
   
   useEffect(() => {
     scheduleChangeCheck();
-  }, [nameValue, kvkNummerValue, taxIdValue, languageValue, areaCodeValue, addressIdValue, bankAccountValue, paymentTermsValue, statusValue, emailValue, phoneValue, mobileValue, contactPersonEmailValue, scheduleChangeCheck]);
+  }, [nameValue, kvkNummerValue, taxIdValue, languageValue, areaCodeValue, addressIdValue, bankAccountValue, paymentTermsValue, statusValue, emailValue, phoneValue, mobileValue, contactPersonEmailValue, contactPerson2EmailValue, scheduleChangeCheck]);
 
   // Communicate unsaved changes status to parent Layout
   useEffect(() => {
@@ -574,21 +577,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               />
             )
           } as FormField2<CustomerFormData>,
-          // Positie 4: Contact Person
-          {
-            key: "contactPersonEmail",
-            label: "Contact Person",
-            type: "custom",
-            customComponent: (
-              <ContactPersonSelectWithAdd
-                value={form.watch("contactPersonEmail") || ""}
-                onValueChange={(value) => form.setValue("contactPersonEmail", value)}
-                placeholder="Select contact person..."
-                testId="select-customer-contact-person"
-              />
-            )
-          } as FormField2<CustomerFormData>,
-          // Positie 5: KVK-nummer
+          // Positie 4: KVK-nummer
           {
             key: "kvkNummer",
             label: "C.o.C. Number",
@@ -697,8 +686,35 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               error: form.formState.errors.mobile?.message
             },
             testId: "input-customer-mobile"
+          } as FormField2<CustomerFormData>,
+          // Positie 4: Contact Person
+          {
+            key: "contactPersonEmail",
+            label: "Contact Person",
+            type: "custom",
+            customComponent: (
+              <ContactPersonSelectWithAdd
+                value={form.watch("contactPersonEmail") || ""}
+                onValueChange={(value) => form.setValue("contactPersonEmail", value)}
+                placeholder="Select contact person..."
+                testId="select-customer-contact-person"
+              />
+            )
+          } as FormField2<CustomerFormData>,
+          // Positie 5: Contact Person 2
+          {
+            key: "contactPerson2Email",
+            label: "Contact Person 2",
+            type: "custom",
+            customComponent: (
+              <ContactPersonSelectWithAdd
+                value={form.watch("contactPerson2Email") || ""}
+                onValueChange={(value) => form.setValue("contactPerson2Email", value)}
+                placeholder="Select contact person 2..."
+                testId="select-customer-contact-person-2"
+              />
+            )
           } as FormField2<CustomerFormData>
-          // Positie 4-12: automatisch leeg
         ])
       ]
     },

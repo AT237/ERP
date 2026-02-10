@@ -83,6 +83,7 @@ export const customers = pgTable("customers", {
   mobile: text("mobile"),
   addressId: varchar("address_id").references(() => addresses.id),
   contactPersonEmail: text("contact_person_email"),
+  contactPerson2Email: text("contact_person_2_email"),
   taxId: text("tax_id"),
   bankAccount: text("bank_account"),
   invoiceEmail: text("invoice_email"), // Email for invoices
