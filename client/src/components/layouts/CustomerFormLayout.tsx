@@ -173,6 +173,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
 
   // Change tracking helpers
   const compareValues = (original: any, current: any) => {
+    const isEmpty = (v: any) => v === null || v === undefined || v === "";
+    if (isEmpty(original) && isEmpty(current)) return true;
     if (typeof original !== typeof current) return false;
     if (original === null || current === null) return original === current;
     return String(original).trim() === String(current).trim();
