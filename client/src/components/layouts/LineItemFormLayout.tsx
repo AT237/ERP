@@ -287,6 +287,10 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     onSuccess: (newLineItem) => {
       queryClient.invalidateQueries({ queryKey: ["/api/quotation-items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/quotations", quotationId, "details"] });
+      setHasUnsavedChanges(false);
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-line-item', hasUnsavedChanges: false }
+      }));
       toast({
         title: "Succes",
         description: "Regel toegevoegd",
@@ -325,6 +329,11 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       queryClient.invalidateQueries({ queryKey: ["/api/quotation-items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/quotation-items", lineItemId] });
       queryClient.invalidateQueries({ queryKey: ["/api/quotations", quotationId, "details"] });
+      setHasUnsavedChanges(false);
+      const tabId = lineItemId ? `edit-line-item-${lineItemId}` : 'new-line-item';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       toast({
         title: "Succes",
         description: "Regel bijgewerkt",

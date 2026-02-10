@@ -79,6 +79,8 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
 
   // Change tracking helpers
   const compareValues = (original: any, current: any) => {
+    const isEmpty = (v: any) => v === null || v === undefined || v === "";
+    if (isEmpty(original) && isEmpty(current)) return true;
     if (typeof original !== typeof current) return false;
     if (original === null || current === null) return original === current;
     return String(original).trim() === String(current).trim();
@@ -211,6 +213,11 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     },
     onSuccess: (newWorkOrder) => {
       queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-work-order', hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Work order created successfully",
@@ -244,6 +251,12 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/work-orders", workOrderId] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      const tabId = workOrderId ? `edit-work-order-${workOrderId}` : 'new-work-order';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Work order updated successfully",

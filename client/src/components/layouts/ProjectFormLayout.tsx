@@ -74,6 +74,8 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
 
   // Change tracking helpers
   const compareValues = (original: any, current: any) => {
+    const isEmpty = (v: any) => v === null || v === undefined || v === "";
+    if (isEmpty(original) && isEmpty(current)) return true;
     if (typeof original !== typeof current) return false;
     if (original === null || current === null) return original === current;
     return String(original).trim() === String(current).trim();
@@ -195,6 +197,11 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     onSuccess: (newProject) => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-project', hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Project created successfully",
@@ -229,6 +236,12 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      const tabId = projectId ? `edit-project-${projectId}` : 'new-project';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Project updated successfully",

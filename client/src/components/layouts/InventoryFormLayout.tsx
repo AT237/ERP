@@ -157,6 +157,10 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     onSuccess: (newItem) => {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-inventory', hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Inventory item added successfully",
@@ -191,6 +195,11 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inventory", inventoryId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      const tabId = inventoryId ? `edit-inventory-${inventoryId}` : 'new-inventory';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Inventory item updated successfully",

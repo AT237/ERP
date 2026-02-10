@@ -93,6 +93,8 @@ export function TextSnippetFormLayout({ onSave, textSnippetId, parentId }: TextS
 
   // Change tracking helpers
   const compareValues = (original: any, current: any) => {
+    const isEmpty = (v: any) => v === null || v === undefined || v === "";
+    if (isEmpty(original) && isEmpty(current)) return true;
     if (typeof original !== typeof current) return false;
     if (original === null || current === null) return original === current;
     return String(original).trim() === String(current).trim();
@@ -145,6 +147,11 @@ export function TextSnippetFormLayout({ onSave, textSnippetId, parentId }: TextS
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/text-snippets"] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-text-snippet', hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Text snippet created successfully",
@@ -166,6 +173,12 @@ export function TextSnippetFormLayout({ onSave, textSnippetId, parentId }: TextS
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/text-snippets"] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      const tabId = textSnippetId ? `edit-text-snippet-${textSnippetId}` : 'new-text-snippet';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Text snippet updated successfully",

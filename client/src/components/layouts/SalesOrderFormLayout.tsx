@@ -74,6 +74,8 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
 
   // Change tracking helpers
   const compareValues = (original: any, current: any) => {
+    const isEmpty = (v: any) => v === null || v === undefined || v === "";
+    if (isEmpty(original) && isEmpty(current)) return true;
     if (typeof original !== typeof current) return false;
     if (original === null || current === null) return original === current;
     return String(original).trim() === String(current).trim();
@@ -215,6 +217,11 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
     onSuccess: (newSalesOrder) => {
       queryClient.invalidateQueries({ queryKey: ["/api/sales-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-sales-order', hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Sales order created successfully",
@@ -257,6 +264,12 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
       queryClient.invalidateQueries({ queryKey: ["/api/sales-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales-orders", salesOrderId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      const tabId = salesOrderId ? `edit-sales-order-${salesOrderId}` : 'new-sales-order';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Sales order updated successfully",

@@ -239,6 +239,10 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     onSuccess: (newLineItem) => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId] });
+      setHasUnsavedChanges(false);
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-invoice-line-item', hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Line added",
@@ -276,6 +280,11 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       queryClient.invalidateQueries({ queryKey: ["/api/invoice-items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoice-items", lineItemId] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
+      setHasUnsavedChanges(false);
+      const tabId = lineItemId ? `edit-invoice-line-item-${lineItemId}` : 'new-invoice-line-item';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Line updated",

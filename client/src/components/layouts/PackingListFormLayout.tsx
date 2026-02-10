@@ -72,6 +72,8 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
 
   // Change tracking helpers
   const compareValues = (original: any, current: any) => {
+    const isEmpty = (v: any) => v === null || v === undefined || v === "";
+    if (isEmpty(original) && isEmpty(current)) return true;
     if (typeof original !== typeof current) return false;
     if (original === null || current === null) return original === current;
     return String(original).trim() === String(current).trim();
@@ -213,6 +215,11 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     },
     onSuccess: (newPackingList) => {
       queryClient.invalidateQueries({ queryKey: ["/api/packing-lists"] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-packing-list', hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Packing list created successfully",
@@ -246,6 +253,12 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/packing-lists"] });
       queryClient.invalidateQueries({ queryKey: ["/api/packing-lists", packingListId] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      const tabId = packingListId ? `edit-packing-list-${packingListId}` : 'new-packing-list';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Packing list updated successfully",

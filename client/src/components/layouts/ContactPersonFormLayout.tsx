@@ -197,6 +197,9 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
         description: "Contact person created successfully",
       });
       setHasUnsavedChanges(false);
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-contact-person', hasUnsavedChanges: false }
+      }));
       onSave();
     },
     onError: () => {
@@ -227,6 +230,10 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
         description: "Contact person updated successfully",
       });
       setHasUnsavedChanges(false);
+      const tabId = contactPersonId ? `edit-contact-person-${contactPersonId}` : 'new-contact-person';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       onSave();
     },
     onError: () => {

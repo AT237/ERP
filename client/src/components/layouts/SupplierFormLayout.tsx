@@ -108,6 +108,10 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
     onSuccess: (newSupplier) => {
       queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-supplier', hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Supplier added successfully",
@@ -142,6 +146,11 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
       queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/suppliers", supplierId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      const tabId = supplierId ? `edit-supplier-${supplierId}` : 'new-supplier';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Supplier updated successfully",

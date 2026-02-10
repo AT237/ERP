@@ -106,6 +106,10 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
     onSuccess: (newPurchaseOrder) => {
       queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-purchase-order', hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Purchase order created successfully",
@@ -140,6 +144,11 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
       queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders", purchaseOrderId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      const tabId = purchaseOrderId ? `edit-purchase-order-${purchaseOrderId}` : 'new-purchase-order';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       toast({
         title: "Success",
         description: "Purchase order updated successfully",
