@@ -917,9 +917,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const invoiceData = insertInvoiceSchema.parse(req.body);
       const invoice = await storage.createInvoice(invoiceData);
       res.status(201).json(invoice);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating invoice:", error);
-      res.status(400).json({ message: "Failed to create invoice" });
+      if (error?.code === '23505' && error?.constraint?.includes('invoice_number')) {
+        res.status(409).json({ message: `Factuurnummer "${req.body.invoiceNumber}" is al in gebruik. Kies een ander nummer.` });
+      } else {
+        res.status(400).json({ message: "Failed to create invoice" });
+      }
     }
   });
 
@@ -949,9 +953,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const invoiceData = insertInvoiceSchema.partial().parse(body);
       const invoice = await storage.updateInvoice(req.params.id, invoiceData);
       res.json(invoice);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating invoice:", error);
-      res.status(400).json({ message: "Failed to update invoice" });
+      if (error?.code === '23505' && error?.constraint?.includes('invoice_number')) {
+        res.status(409).json({ message: `Factuurnummer "${req.body.invoiceNumber}" is al in gebruik. Kies een ander nummer.` });
+      } else {
+        res.status(400).json({ message: "Failed to update invoice" });
+      }
     }
   });
 

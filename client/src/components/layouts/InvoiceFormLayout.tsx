@@ -172,10 +172,16 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       
       onSave();
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let description = "Failed to create invoice";
+      try {
+        const jsonStr = error.message.replace(/^\d+:\s*/, '');
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.message) description = parsed.message;
+      } catch {}
       toast({
         title: "Error",
-        description: "Failed to create invoice",
+        description,
         variant: "destructive",
       });
     },
@@ -196,10 +202,16 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       });
       onSave();
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let description = "Failed to update invoice";
+      try {
+        const jsonStr = error.message.replace(/^\d+:\s*/, '');
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.message) description = parsed.message;
+      } catch {}
       toast({
         title: "Error",
-        description: "Failed to update invoice",
+        description,
         variant: "destructive",
       });
     },
