@@ -35,7 +35,7 @@ import { useDataTable } from '@/hooks/useDataTable';
 import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem, Project } from "@shared/schema";
 import { insertInventoryItemSchema } from "@shared/schema";
 import { z } from "zod";
-import { format } from "date-fns";
+import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import jsPDF from 'jspdf';
 import imageCompression from 'browser-image-compression';
 import companyLogo from '@assets/ATE solutions AFAS logo verticaal_1756322897372.jpg';
@@ -218,8 +218,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       description: "",
       revisionNumber: "V1.0",
       status: "draft",
-      quotationDate: format(new Date(), 'dd-MM-yyyy'),
-      validUntil: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'dd-MM-yyyy'), // 30 days from now
+      quotationDate: toDisplayDate(new Date()),
+      validUntil: toDisplayDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30 days from now
       validityDays: 30,
       isBudgetQuotation: false,
       subtotal: "0.00",
@@ -296,7 +296,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           // Only proceed if the calculated date is also valid
           if (!isNaN(validUntilDate.getTime())) {
             // Format as dd-mm-yyyy
-            const validUntilString = format(validUntilDate, 'dd-MM-yyyy');
+            const validUntilString = toDisplayDate(validUntilDate);
             
             // Only update if the calculated date is different from current value
             const currentValidUntil = quotationForm.getValues("validUntil");
@@ -407,8 +407,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         description: existingQuotation.description || "",
         revisionNumber: existingQuotation.revisionNumber || "V1.0",
         status: existingQuotation.status || "draft",
-        quotationDate: existingQuotation.quotationDate ? format(new Date(existingQuotation.quotationDate), 'dd-MM-yyyy') : format(new Date(), 'dd-MM-yyyy'),
-        validUntil: existingQuotation.validUntil ? format(new Date(existingQuotation.validUntil), 'dd-MM-yyyy') : "",
+        quotationDate: existingQuotation.quotationDate ? toDisplayDate(existingQuotation.quotationDate) : toDisplayDate(new Date()),
+        validUntil: existingQuotation.validUntil ? toDisplayDate(existingQuotation.validUntil) : "",
         validityDays: existingQuotation.validityDays || 30,
         isBudgetQuotation: existingQuotation.isBudgetQuotation || false,
         subtotal: existingQuotation.subtotal?.toString() || "0.00",
@@ -575,8 +575,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     mutationFn: async (data: QuotationFormData) => {
       const processedData = {
         ...data,
-        quotationDate: data.quotationDate ? new Date(data.quotationDate) : new Date(),
-        validUntil: data.validUntil ? new Date(data.validUntil) : undefined,
+        quotationDate: data.quotationDate ? toStorageDate(data.quotationDate) : new Date(),
+        validUntil: data.validUntil ? toStorageDate(data.validUntil) : undefined,
         // Keep as strings as expected by backend schema
         subtotal: data.subtotal,
         taxAmount: data.taxAmount || "0",
@@ -903,7 +903,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     yPos += 15;
     
     // Date (top right)
-    const quotationDate = quotationForm.watch("quotationDate") || format(new Date(), 'dd-MM-yyyy');
+    const quotationDate = quotationForm.watch("quotationDate") || toDisplayDate(new Date());
     doc.text(`Date: ${quotationDate}`, pageWidth - margin - 35, yPos);
     
     yPos += 10;

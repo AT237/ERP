@@ -19,7 +19,7 @@ import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyCo
 import { useDataTable } from '@/hooks/useDataTable';
 import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer } from "@shared/schema";
 import { z } from "zod";
-import { format } from "date-fns";
+import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 
 const invoiceFormSchema = insertInvoiceSchema.omit({
   subtotal: true,
@@ -63,7 +63,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       customerId: "",
       status: "pending",
       dueDate: "",
-      invoiceDate: format(new Date(), "yyyy-MM-dd"),
+      invoiceDate: toDisplayDate(new Date()),
       subtotal: "0.00",
       taxAmount: "0.00",
       totalAmount: "0.00",
@@ -103,8 +103,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         invoiceNumber: invoice.invoiceNumber || "",
         customerId: invoice.customerId || "",
         status: invoice.status || "pending",
-        dueDate: invoice.dueDate ? format(new Date(invoice.dueDate), "yyyy-MM-dd") : "",
-        invoiceDate: invoice.createdAt ? format(new Date(invoice.createdAt), "yyyy-MM-dd") : "",
+        dueDate: invoice.dueDate ? toDisplayDate(invoice.dueDate) : "",
+        invoiceDate: invoice.createdAt ? toDisplayDate(invoice.createdAt) : "",
         subtotal: invoice.subtotal || "0.00",
         taxAmount: invoice.taxAmount || "0.00",
         totalAmount: invoice.totalAmount || "0.00",
@@ -232,7 +232,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       taxAmount: data.taxAmount || "0",
       totalAmount: data.totalAmount,
       paidAmount: data.paidAmount || "0",
-      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+      dueDate: data.dueDate ? toStorageDate(data.dueDate) : undefined,
     };
 
     if (isEditing) {

@@ -13,7 +13,7 @@ import { SelectItem } from "@/components/ui/select";
 import { QuickAddSupplier } from "@/components/quick-add-forms";
 import type { PurchaseOrder, InsertPurchaseOrder, Supplier } from "@shared/schema";
 import { z } from "zod";
-import { format } from "date-fns";
+import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 
 const formSchema = insertPurchaseOrderSchema.extend({
   subtotal: z.string().min(1, "Subtotal is required"),
@@ -43,7 +43,7 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
       orderNumber: "",
       supplierId: "",
       status: "pending",
-      orderDate: new Date().toISOString().split('T')[0],
+      orderDate: toDisplayDate(new Date()),
       expectedDate: undefined,
       subtotal: "",
       taxAmount: "0",
@@ -69,8 +69,8 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
         orderNumber: purchaseOrder.orderNumber,
         supplierId: purchaseOrder.supplierId,
         status: purchaseOrder.status || "pending",
-        orderDate: purchaseOrder.orderDate ? format(new Date(purchaseOrder.orderDate), "yyyy-MM-dd") : new Date().toISOString().split('T')[0],
-        expectedDate: purchaseOrder.expectedDate ? format(new Date(purchaseOrder.expectedDate), "yyyy-MM-dd") : "",
+        orderDate: purchaseOrder.orderDate ? toDisplayDate(purchaseOrder.orderDate) : toDisplayDate(new Date()),
+        expectedDate: purchaseOrder.expectedDate ? toDisplayDate(purchaseOrder.expectedDate) : "",
         subtotal: purchaseOrder.subtotal,
         taxAmount: purchaseOrder.taxAmount || "0",
         totalAmount: purchaseOrder.totalAmount,
@@ -170,8 +170,8 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
       subtotal: data.subtotal,
       taxAmount: data.taxAmount || "0",
       totalAmount: data.totalAmount,
-      orderDate: data.orderDate ? new Date(data.orderDate) : new Date(),
-      expectedDate: data.expectedDate ? new Date(data.expectedDate) : undefined,
+      orderDate: data.orderDate ? toStorageDate(data.orderDate) : new Date(),
+      expectedDate: data.expectedDate ? toStorageDate(data.expectedDate) : undefined,
     };
 
     if (isEditing) {
@@ -268,17 +268,19 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
             createFieldRow<FormData>({
               key: 'orderDate',
               label: 'Order Date',
-              type: 'text',
-              placeholder: 'YYYY-MM-DD',
-              register: form.register('orderDate'),
+              type: 'date',
+              placeholder: 'dd-mm-yyyy',
+              setValue: (value) => form.setValue('orderDate', value),
+              watch: () => form.watch('orderDate'),
               testId: 'input-order-date'
             }),
             createFieldRow<FormData>({
               key: 'expectedDate',
               label: 'Expected Date',
-              type: 'text',
-              placeholder: 'YYYY-MM-DD',
-              register: form.register('expectedDate'),
+              type: 'date',
+              placeholder: 'dd-mm-yyyy',
+              setValue: (value) => form.setValue('expectedDate', value),
+              watch: () => form.watch('expectedDate'),
               testId: 'input-expected-date'
             }),
             

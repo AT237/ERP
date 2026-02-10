@@ -23,6 +23,7 @@ import { Save, ArrowLeft, Package, FileText, Search, Library, Check } from "luci
 import { useToast } from "@/hooks/use-toast";
 import type { QuotationItem, InsertQuotationItem, TextSnippet, Supplier } from "@shared/schema";
 import { z } from "zod";
+import { toDisplayDate, toStorageDateString } from "@/lib/date-utils";
 
 // Form schema for line item data
 const lineItemFormSchema = insertQuotationItemSchema.extend({
@@ -190,7 +191,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         sourceSnippetId: lineItem.sourceSnippetId || undefined,
         sourceSnippetVersion: lineItem.sourceSnippetVersion || undefined,
         // Delivery fields
-        deliveryDate: (lineItem as any).deliveryDate ? new Date((lineItem as any).deliveryDate).toISOString().split('T')[0] : undefined,
+        deliveryDate: (lineItem as any).deliveryDate ? toDisplayDate((lineItem as any).deliveryDate) : undefined,
         supplierId: (lineItem as any).supplierId || undefined,
         hsCode: (lineItem as any).hsCode || "",
         countryOfOrigin: (lineItem as any).countryOfOrigin || "",
@@ -412,7 +413,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       sourceSnippetId: data.sourceSnippetId || undefined,
       sourceSnippetVersion: data.sourceSnippetVersion || undefined,
       // Delivery fields
-      deliveryDate: data.deliveryDate ? new Date(data.deliveryDate).toISOString() : undefined,
+      deliveryDate: data.deliveryDate ? (toStorageDateString(data.deliveryDate) || undefined) : undefined,
       supplierId: data.supplierId || undefined,
       hsCode: data.hsCode || undefined,
       countryOfOrigin: data.countryOfOrigin || undefined,
@@ -575,7 +576,9 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       key: 'deliveryDate',
       label: 'Leverdatum',
       type: 'date',
-      register: form.register('deliveryDate'),
+      placeholder: 'dd-mm-yyyy',
+      setValue: (value) => form.setValue('deliveryDate', value),
+      watch: () => form.watch('deliveryDate'),
       validation: {
         error: form.formState.errors.deliveryDate?.message
       },

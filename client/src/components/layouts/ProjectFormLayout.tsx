@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
 import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
@@ -22,7 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { Project, InsertProject, Customer } from "@shared/schema";
 import { z } from "zod";
-import { format } from "date-fns";
+import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
+import { DatePicker } from "@/components/ui/date-picker";
 import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from './LayoutForm2';
 
 // Form schema for project data
@@ -131,8 +132,8 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
         description: project.description || "",
         customerId: project.customerId || "",
         status: project.status || "planning",
-        startDate: project.startDate ? format(new Date(project.startDate), "yyyy-MM-dd") : undefined,
-        endDate: project.endDate ? format(new Date(project.endDate), "yyyy-MM-dd") : undefined,
+        startDate: project.startDate ? toDisplayDate(project.startDate) : undefined,
+        endDate: project.endDate ? toDisplayDate(project.endDate) : undefined,
         totalValue: project.totalValue || "",
         progress: project.progress?.toString() || "0",
       };
@@ -263,8 +264,8 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       ...data,
       totalValue: data.totalValue || undefined,
       progress: data.progress ? parseInt(data.progress) : 0,
-      startDate: data.startDate ? new Date(data.startDate) : undefined,
-      endDate: data.endDate ? new Date(data.endDate) : undefined,
+      startDate: data.startDate ? toStorageDate(data.startDate) : undefined,
+      endDate: data.endDate ? toStorageDate(data.endDate) : undefined,
     };
     
     if (isEditing) {
@@ -366,35 +367,23 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
           {
             key: "startDate",
             label: "Start Date",
-            type: "custom",
+            type: "date",
             testId: "input-start-date",
             width: "50%",
-            customComponent: (
-              <Input
-                id="startDate"
-                type="date"
-                {...form.register("startDate")}
-                data-testid="input-start-date"
-                className={getFieldClassName("startDate")}
-              />
-            ),
+            placeholder: "dd-mm-yyyy",
+            setValue: (value) => form.setValue("startDate", value),
+            watch: () => form.watch("startDate"),
             isModified: modifiedFields.has("startDate")
           } as FormField2<FormData>,
           {
             key: "endDate",
             label: "End Date",
-            type: "custom",
+            type: "date",
             testId: "input-end-date",
             width: "50%",
-            customComponent: (
-              <Input
-                id="endDate"
-                type="date"
-                {...form.register("endDate")}
-                data-testid="input-end-date"
-                className={getFieldClassName("endDate")}
-              />
-            ),
+            placeholder: "dd-mm-yyyy",
+            setValue: (value) => form.setValue("endDate", value),
+            watch: () => form.watch("endDate"),
             isModified: modifiedFields.has("endDate")
           } as FormField2<FormData>
         ])

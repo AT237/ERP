@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
 import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
@@ -22,7 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { WorkOrder, InsertWorkOrder, Project } from "@shared/schema";
 import { z } from "zod";
-import { format } from "date-fns";
+import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
+import { DatePicker } from "@/components/ui/date-picker";
 import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from './LayoutForm2';
 
 // Form schema for work order data
@@ -139,9 +140,9 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         assignedTo: workOrder.assignedTo || "",
         status: workOrder.status || "pending",
         priority: workOrder.priority || "medium",
-        startDate: workOrder.startDate ? format(new Date(workOrder.startDate), "yyyy-MM-dd") : undefined,
-        dueDate: workOrder.dueDate ? format(new Date(workOrder.dueDate), "yyyy-MM-dd") : undefined,
-        completedDate: workOrder.completedDate ? format(new Date(workOrder.completedDate), "yyyy-MM-dd") : undefined,
+        startDate: workOrder.startDate ? toDisplayDate(workOrder.startDate) : undefined,
+        dueDate: workOrder.dueDate ? toDisplayDate(workOrder.dueDate) : undefined,
+        completedDate: workOrder.completedDate ? toDisplayDate(workOrder.completedDate) : undefined,
         estimatedHours: workOrder.estimatedHours?.toString() || "",
         actualHours: workOrder.actualHours?.toString() || "",
       };
@@ -278,9 +279,9 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
       ...data,
       estimatedHours: data.estimatedHours ? parseInt(data.estimatedHours) : undefined,
       actualHours: data.actualHours ? parseInt(data.actualHours) : undefined,
-      startDate: data.startDate ? new Date(data.startDate) : undefined,
-      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
-      completedDate: data.completedDate ? new Date(data.completedDate) : undefined,
+      startDate: data.startDate ? toStorageDate(data.startDate) : undefined,
+      dueDate: data.dueDate ? toStorageDate(data.dueDate) : undefined,
+      completedDate: data.completedDate ? toStorageDate(data.completedDate) : undefined,
     };
     
     if (isEditing) {
@@ -385,53 +386,34 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
           {
             key: "startDate",
             label: "Start Date",
-            type: "custom",
+            type: "date",
             testId: "input-start-date",
             width: "50%",
-            customComponent: (
-              <Input
-                id="startDate"
-                type="date"
-                {...form.register("startDate")}
-                data-testid="input-start-date"
-                className={getFieldClassName("startDate")}
-              />
-            ),
+            placeholder: "dd-mm-yyyy",
+            setValue: (value) => form.setValue("startDate", value),
+            watch: () => form.watch("startDate"),
             isModified: modifiedFields.has("startDate")
           } as FormField2<FormData>,
           {
             key: "dueDate",
             label: "Due Date",
-            type: "custom",
+            type: "date",
             testId: "input-due-date",
             width: "50%",
-            customComponent: (
-              <Input
-                id="dueDate"
-                type="date"
-                {...form.register("dueDate")}
-                data-testid="input-due-date"
-                className={getFieldClassName("dueDate")}
-              />
-            ),
+            placeholder: "dd-mm-yyyy",
+            setValue: (value) => form.setValue("dueDate", value),
+            watch: () => form.watch("dueDate"),
             isModified: modifiedFields.has("dueDate")
           } as FormField2<FormData>
         ]),
         createFieldRow({
           key: "completedDate",
           label: "Completed Date",
-          type: "custom",
+          type: "date",
           testId: "input-completed-date",
-          customComponent: (
-            <Input
-              id="completedDate"
-              type="date"
-              {...form.register("completedDate")}
-              data-testid="input-completed-date"
-              className={getFieldClassName("completedDate")}
-              style={{ width: "50%" }}
-            />
-          ),
+          placeholder: "dd-mm-yyyy",
+          setValue: (value) => form.setValue("completedDate", value),
+          watch: () => form.watch("completedDate"),
           isModified: modifiedFields.has("completedDate")
         } as FormField2<FormData>),
         createFieldsRow([

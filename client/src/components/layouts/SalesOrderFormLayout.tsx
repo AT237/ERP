@@ -20,7 +20,8 @@ import { Save, ArrowLeft, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { SalesOrder, InsertSalesOrder, Customer } from "@shared/schema";
 import { z } from "zod";
-import { format } from "date-fns";
+import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
+import { DatePicker } from "@/components/ui/date-picker";
 
 // Form schema
 const salesOrderFormSchema = insertSalesOrderSchema.extend({
@@ -63,7 +64,7 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
       orderNumber: "",
       customerId: "",
       status: "pending",
-      orderDate: format(new Date(), 'yyyy-MM-dd'),
+      orderDate: toDisplayDate(new Date()),
       expectedDeliveryDate: "",
       subtotal: "0.00",
       taxAmount: "0.00",
@@ -137,8 +138,8 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
         orderNumber: salesOrder.orderNumber || "",
         customerId: salesOrder.customerId || "",
         status: salesOrder.status || "pending",
-        orderDate: salesOrder.orderDate ? format(new Date(salesOrder.orderDate), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
-        expectedDeliveryDate: salesOrder.expectedDeliveryDate ? format(new Date(salesOrder.expectedDeliveryDate), "yyyy-MM-dd") : "",
+        orderDate: salesOrder.orderDate ? toDisplayDate(salesOrder.orderDate) : toDisplayDate(new Date()),
+        expectedDeliveryDate: salesOrder.expectedDeliveryDate ? toDisplayDate(salesOrder.expectedDeliveryDate) : "",
         subtotal: salesOrder.subtotal?.toString() || "0.00",
         taxAmount: salesOrder.taxAmount?.toString() || "0.00",
         totalAmount: salesOrder.totalAmount?.toString() || "0.00",
@@ -205,8 +206,8 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
     mutationFn: async (data: SalesOrderFormData) => {
       const processedData = {
         ...data,
-        orderDate: data.orderDate ? new Date(data.orderDate) : new Date(),
-        expectedDeliveryDate: data.expectedDeliveryDate ? new Date(data.expectedDeliveryDate) : undefined,
+        orderDate: data.orderDate ? toStorageDate(data.orderDate) : new Date(),
+        expectedDeliveryDate: data.expectedDeliveryDate ? toStorageDate(data.expectedDeliveryDate) : undefined,
         subtotal: parseFloat(data.subtotal),
         taxAmount: parseFloat(data.taxAmount || "0"),
         totalAmount: parseFloat(data.totalAmount),
@@ -251,8 +252,8 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
     mutationFn: async (data: SalesOrderFormData) => {
       const processedData = {
         ...data,
-        orderDate: data.orderDate ? new Date(data.orderDate) : new Date(),
-        expectedDeliveryDate: data.expectedDeliveryDate ? new Date(data.expectedDeliveryDate) : undefined,
+        orderDate: data.orderDate ? toStorageDate(data.orderDate) : new Date(),
+        expectedDeliveryDate: data.expectedDeliveryDate ? toStorageDate(data.expectedDeliveryDate) : undefined,
         subtotal: parseFloat(data.subtotal),
         taxAmount: parseFloat(data.taxAmount || "0"),
         totalAmount: parseFloat(data.totalAmount),
@@ -363,24 +364,24 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
                 Order Date
               </div>
               <div>
-                <Input
-                  id="orderDate"
-                  type="date"
-                  {...form.register("orderDate")}
-                  data-testid="input-order-date"
+                <DatePicker
+                  value={form.watch("orderDate") || ""}
+                  onChange={(value) => form.setValue("orderDate", value)}
+                  placeholder="dd-mm-yyyy"
                   className={getFieldClassName("orderDate")}
+                  testId="input-order-date"
                 />
               </div>
             </div>
 
             <Label htmlFor="expectedDeliveryDate" className="text-sm font-medium text-right pt-2">Expected Delivery</Label>
             <div className="w-[30%]">
-              <Input
-                id="expectedDeliveryDate"
-                type="date"
-                {...form.register("expectedDeliveryDate")}
-                data-testid="input-expected-delivery-date"
+              <DatePicker
+                value={form.watch("expectedDeliveryDate") || ""}
+                onChange={(value) => form.setValue("expectedDeliveryDate", value)}
+                placeholder="dd-mm-yyyy"
                 className={getFieldClassName("expectedDeliveryDate")}
+                testId="input-expected-delivery-date"
               />
             </div>
           </div>
