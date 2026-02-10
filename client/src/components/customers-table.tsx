@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import type { Customer } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import { useLocation } from 'wouter';
 
 interface ExtendedCustomer extends Customer {
   street?: string;
@@ -127,7 +126,6 @@ const defaultColumns: ColumnConfig[] = [
 
 export default function CustomersTable() {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
 
   // Data table state  
@@ -188,12 +186,17 @@ export default function CustomersTable() {
   });
 
   const handleEdit = (customer: Customer) => {
-    // Navigate directly to customer edit form route (no popup)
-    setLocation(`/customer-form/${customer.id}`);
+    window.dispatchEvent(new CustomEvent('open-form-tab', {
+      detail: {
+        id: `customer-${customer.id}`,
+        name: customer.customerNumber || 'Customer',
+        formType: 'customer',
+        entityId: customer.id,
+      }
+    }));
   };
 
   const handleRowDoubleClick = (customer: Customer) => {
-    // Open edit form on double click
     handleEdit(customer);
   };
 
@@ -204,8 +207,13 @@ export default function CustomersTable() {
   };
 
   const handleNewCustomer = () => {
-    // Navigate directly to customer form route (no popup)
-    setLocation('/customer-form');
+    window.dispatchEvent(new CustomEvent('open-form-tab', {
+      detail: {
+        id: `new-customer-${Date.now()}`,
+        name: 'New Customer',
+        formType: 'customer',
+      }
+    }));
   };
 
   // Render table data with proper formatting

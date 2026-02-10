@@ -1056,8 +1056,8 @@ export default function Layout({ children }: LayoutProps) {
       
       if (tab.formType === 'customer') {
         const customerId = tab.entityId || (
-          tab.id.startsWith('edit-customer-') 
-            ? tab.id.replace('edit-customer-', '') 
+          tab.id.startsWith('customer-') 
+            ? tab.id.replace('customer-', '') 
             : undefined
         );
         
