@@ -120,6 +120,14 @@ export const defaultNavigation = [
       { id: "layout-designer", name: "Layout Designer", href: "/layout-designer", icon: Layout },
       { id: "style-guide", name: "Design System", href: "/style-guide", icon: FileText }
     ]
+  },
+  {
+    id: "development",
+    name: "Software Development Futures",
+    collapsible: true,
+    items: [
+      { id: "dev-futures", name: "Feature Wishes", href: "/dev-futures", icon: FileCheck }
+    ]
   }
 ];
 

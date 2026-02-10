@@ -1057,6 +1057,22 @@ export const insertSectionTemplateSchema = createInsertSchema(sectionTemplates).
 
 // Types for Layout Management
 export type DocumentLayout = typeof documentLayouts.$inferSelect;
+// Development Futures / Feature Wishes
+export const devFutures = pgTable("dev_futures", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  category: text("category"),
+  priority: text("priority").default("medium"),
+  status: text("status").default("wish"),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDevFutureSchema = createInsertSchema(devFutures).omit({ id: true, createdAt: true });
+export type InsertDevFuture = z.infer<typeof insertDevFutureSchema>;
+export type DevFuture = typeof devFutures.$inferSelect;
+
 export type InsertDocumentLayout = z.infer<typeof insertDocumentLayoutSchema>;
 export type LayoutBlock = typeof layoutBlocks.$inferSelect;
 export type InsertLayoutBlock = z.infer<typeof insertLayoutBlockSchema>;

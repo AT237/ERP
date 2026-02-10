@@ -46,6 +46,7 @@ const ContactPersonForm = lazy(() => import('@/pages/contact-person-form'));
 const ImageForm = lazy(() => import('@/pages/image-form'));
 const MasterDataTable = lazy(() => import('./masterdata-table'));
 const MasterDataFormLayout = lazy(() => import('@/components/layouts/MasterDataFormLayout'));
+const DevFuturesPage = lazy(() => import('@/pages/dev-futures'));
 
 const DashboardPage = lazy(() => import('@/pages/dashboard'));
 const InventoryPage = lazy(() => import('@/pages/inventory'));
@@ -172,6 +173,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'pictograms', name: 'Pictograms' };
       case '/style-guide':
         return { id: 'design-system', name: 'Design System' };
+      case '/dev-futures':
+        return { id: 'dev-futures', name: 'Feature Wishes' };
       case '/welcome':
         return { id: 'welcome', name: 'Welcome' };
       default:
@@ -1016,6 +1019,14 @@ export default function Layout({ children }: LayoutProps) {
         return (
           <Suspense fallback={<div></div>}>
             <StyleGuidePage />
+          </Suspense>
+        );
+      }
+
+      if (tab.id === 'dev-futures') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <DevFuturesPage />
           </Suspense>
         );
       }

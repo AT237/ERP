@@ -13,9 +13,11 @@ import {
   insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertIncotermSchema,
   insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
-  insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema
+  insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
+  insertDevFutureSchema, devFutures
 } from "@shared/schema";
 import { Request, Response } from 'express';
+import { eq } from 'drizzle-orm';
 import { db, checkDatabaseStatus } from './db';
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -2551,7 +2553,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add more routes as needed
+  // Development Futures routes
+  app.get("/api/dev-futures", async (req, res) => {
+    try {
+      const futures = await db.select().from(devFutures).orderBy(devFutures.sortOrder, devFutures.createdAt);
+      res.json(futures);
+    } catch (error) {
+      console.error("Error fetching dev futures:", error);
+      res.status(500).json({ message: "Failed to fetch dev futures" });
+    }
+  });
+
+  app.post("/api/dev-futures", async (req, res) => {
+    try {
+      const data = insertDevFutureSchema.parse(req.body);
+      const [newFuture] = await db.insert(devFutures).values(data).returning();
+      res.status(201).json(newFuture);
+    } catch (error) {
+      console.error("Error creating dev future:", error);
+      res.status(400).json({ message: "Failed to create dev future" });
+    }
+  });
+
+  app.patch("/api/dev-futures/:id", async (req, res) => {
+    try {
+      const data = insertDevFutureSchema.partial().parse(req.body);
+      const [updated] = await db.update(devFutures).set(data).where(eq(devFutures.id, req.params.id)).returning();
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating dev future:", error);
+      res.status(400).json({ message: "Failed to update dev future" });
+    }
+  });
+
+  app.delete("/api/dev-futures/:id", async (req, res) => {
+    try {
+      await db.delete(devFutures).where(eq(devFutures.id, req.params.id));
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting dev future:", error);
+      res.status(500).json({ message: "Failed to delete dev future" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

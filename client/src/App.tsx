@@ -26,6 +26,7 @@ import Images from "@/pages/images";
 import Pictograms from "@/pages/pictograms";
 import LayoutDesigner from "@/pages/layout-designer";
 import StyleGuide from "@/pages/style-guide";
+import DevFutures from "@/pages/dev-futures";
 import Layout from "@/components/layout";
 
 function Router() {
@@ -51,6 +52,7 @@ function Router() {
         <Route path="/text-snippets" component={TextSnippets} />
         <Route path="/layout-designer" component={LayoutDesigner} />
         <Route path="/style-guide" component={StyleGuide} />
+        <Route path="/dev-futures" component={DevFutures} />
         
         {/* Master Data Routes */}
         <Route path="/master-data/images" component={Images} />
