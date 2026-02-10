@@ -388,18 +388,21 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId: 'new-customer', hasUnsavedChanges: false }
+      }));
       toast({
         title: "Succes",
         description: "Klant toegevoegd",
       });
       
-      // Dispatch scoped entity-created event for CustomerSelect to auto-select the new customer
-      // Include parentId to scope this event to the originating CustomerSelect component
       window.dispatchEvent(new CustomEvent('entity-created', {
         detail: {
           entityType: 'customer',
           entity: newCustomer,
-          parentId: parentId // Scope to originating component
+          parentId: parentId
         }
       }));
       
@@ -424,6 +427,12 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
       queryClient.invalidateQueries({ queryKey: ["/api/customers", customerId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setHasUnsavedChanges(false);
+      setModifiedFields(new Set());
+      const tabId = customerId ? `edit-customer-${customerId}` : 'new-customer';
+      window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
+        detail: { tabId, hasUnsavedChanges: false }
+      }));
       toast({
         title: "Succes",
         description: "Klant bijgewerkt",
