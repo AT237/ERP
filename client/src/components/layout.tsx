@@ -208,6 +208,7 @@ export default function Layout({ children }: LayoutProps) {
 
   // Unsaved changes tracking
   const [tabsWithUnsavedChanges, setTabsWithUnsavedChanges] = useState<Set<string>>(new Set());
+  const tabsWithUnsavedChangesRef = useRef<Set<string>>(new Set());
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
   const [pendingCloseTabId, setPendingCloseTabId] = useState<string | null>(null);
   
@@ -283,15 +284,12 @@ export default function Layout({ children }: LayoutProps) {
   useEffect(() => {
     const handleUnsavedChanges = (event: CustomEvent) => {
       const { tabId, hasUnsavedChanges } = event.detail;
-      setTabsWithUnsavedChanges(prev => {
-        const newSet = new Set(prev);
-        if (hasUnsavedChanges) {
-          newSet.add(tabId);
-        } else {
-          newSet.delete(tabId);
-        }
-        return newSet;
-      });
+      if (hasUnsavedChanges) {
+        tabsWithUnsavedChangesRef.current.add(tabId);
+      } else {
+        tabsWithUnsavedChangesRef.current.delete(tabId);
+      }
+      setTabsWithUnsavedChanges(new Set(tabsWithUnsavedChangesRef.current));
     };
 
     window.addEventListener('tab-unsaved-changes', handleUnsavedChanges as EventListener);
@@ -582,8 +580,8 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const closeTab = (tabId: string) => {
-    // Check if tab has unsaved changes
-    if (tabsWithUnsavedChanges.has(tabId)) {
+    // Check ref for most up-to-date unsaved changes status (avoids React state race condition)
+    if (tabsWithUnsavedChangesRef.current.has(tabId)) {
       setPendingCloseTabId(tabId);
       setShowUnsavedChangesDialog(true);
       return;
@@ -757,7 +755,7 @@ export default function Layout({ children }: LayoutProps) {
   }, [tabs, rightPanelActiveTabId, dragSource]);
 
   const closeRightPanelTab = useCallback((tabId: string) => {
-    if (tabsWithUnsavedChanges.has(tabId)) {
+    if (tabsWithUnsavedChangesRef.current.has(tabId)) {
       setPendingCloseTabId(tabId);
       setShowUnsavedChangesDialog(true);
       return;
