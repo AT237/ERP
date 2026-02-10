@@ -535,7 +535,7 @@ export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
     : collapsedSections;
 
   return (
-    <aside className="w-72 bg-card border-r border-border flex flex-col">
+    <aside className="w-72 h-full bg-card border-r border-border flex flex-col">
       {/* Search Bar and Settings */}
       <div className="px-4 border-b border-border h-[62px] flex items-center">
         <div className="flex items-center gap-2">

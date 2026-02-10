@@ -1432,7 +1432,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         )}
         
-        <div className="hidden md:block">
+        <div className="hidden md:flex h-full">
           <Sidebar onSectionClick={handleSectionClick} onMenuClick={handleMenuClick} />
         </div>
         
