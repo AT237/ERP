@@ -753,7 +753,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             options: [
               { value: "active", label: "Active" },
               { value: "inactive", label: "Inactive" },
-              { value: "prospect", label: "Prospect" }
+              { value: "prospect", label: "Prospect" },
+              { value: "blocked", label: "Blocked" }
             ],
             setValue: (value) => form.setValue("status", value),
             watch: () => form.watch("status") || "active",
