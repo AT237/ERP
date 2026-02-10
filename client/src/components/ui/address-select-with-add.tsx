@@ -118,6 +118,18 @@ export function AddressSelectWithAdd({
             <CommandList>
               <CommandEmpty>No address found.</CommandEmpty>
               <CommandGroup>
+                {value && (
+                  <CommandItem
+                    value="__clear__"
+                    onSelect={() => {
+                      onValueChange?.("");
+                      setOpen(false);
+                    }}
+                    className="text-muted-foreground italic"
+                  >
+                    — Clear selection —
+                  </CommandItem>
+                )}
                 {addresses.map((address) => (
                   <CommandItem
                     key={address.id}

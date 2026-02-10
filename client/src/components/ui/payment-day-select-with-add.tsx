@@ -96,6 +96,18 @@ export function PaymentDaySelectWithAdd({
             <CommandList>
               <CommandEmpty>No payment day found.</CommandEmpty>
               <CommandGroup>
+                {value && (
+                  <CommandItem
+                    value="__clear__"
+                    onSelect={() => {
+                      onValueChange?.("");
+                      setOpen(false);
+                    }}
+                    className="text-muted-foreground italic"
+                  >
+                    — Clear selection —
+                  </CommandItem>
+                )}
                 {paymentDays.map((paymentDay) => {
                   const itemName = language === "en" ? paymentDay.name_en : paymentDay.name_nl;
                   const itemDesc = language === "en" ? paymentDay.description_en : paymentDay.description_nl;

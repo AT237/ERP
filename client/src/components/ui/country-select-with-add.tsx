@@ -101,6 +101,18 @@ export function CountrySelectWithAdd({
             <CommandList>
               <CommandEmpty>No country found.</CommandEmpty>
               <CommandGroup>
+                {value && (
+                  <CommandItem
+                    value="__clear__"
+                    onSelect={() => {
+                      onValueChange?.("");
+                      setOpen(false);
+                    }}
+                    className="text-muted-foreground italic"
+                  >
+                    — Clear selection —
+                  </CommandItem>
+                )}
                 {countries.map((country) => (
                   <CommandItem
                     key={country.id}

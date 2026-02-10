@@ -94,6 +94,18 @@ export function PaymentScheduleSelectWithAdd({
             <CommandList>
               <CommandEmpty>No payment terms found.</CommandEmpty>
               <CommandGroup>
+                {value && (
+                  <CommandItem
+                    value="__clear__"
+                    onSelect={() => {
+                      onValueChange?.("");
+                      setOpen(false);
+                    }}
+                    className="text-muted-foreground italic"
+                  >
+                    — Clear selection —
+                  </CommandItem>
+                )}
                 {paymentTerms.map((term) => {
                   const itemName = term.name;
                   const description = term.description || `${term.days} days`;
