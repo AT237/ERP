@@ -59,8 +59,31 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<ColumnFilter[]>([]);
   
-  // Sorting - stable state with proper typing
-  const [sortConfig, setSortConfig] = useState<SortConfig | null>(defaultSort || null);
+  // Sorting - persist to localStorage
+  const [sortConfig, setSortConfigState] = useState<SortConfig | null>(() => {
+    if (!tableKey) return defaultSort || null;
+    try {
+      const stored = localStorage.getItem(`table-sort-${tableKey}`);
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return defaultSort || null;
+  });
+
+  const setSortConfig = useCallback((value: SortConfig | null | ((prev: SortConfig | null) => SortConfig | null)) => {
+    setSortConfigState(prev => {
+      const newValue = typeof value === 'function' ? value(prev) : value;
+      if (tableKey) {
+        try {
+          if (newValue) {
+            localStorage.setItem(`table-sort-${tableKey}`, JSON.stringify(newValue));
+          } else {
+            localStorage.removeItem(`table-sort-${tableKey}`);
+          }
+        } catch {}
+      }
+      return newValue;
+    });
+  }, [tableKey]);
   
   // Row selection - stable state
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -98,7 +121,7 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
       }
       return { column, direction: 'asc' };
     });
-  }, []);
+  }, [setSortConfig]);
 
   const toggleRowSelection = useCallback((id: string) => {
     setSelectedRows(prev => 
