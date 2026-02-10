@@ -596,7 +596,7 @@ export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
           )}
         </div>
       </div>
-      <nav className="flex-1 p-4 space-y-1.5">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-1.5">
         {searchQuery.trim() && (
           <div className="text-xs text-muted-foreground mb-2">
             {filteredNavigation.reduce((total, section) => total + section.items.length, 0)} results found
