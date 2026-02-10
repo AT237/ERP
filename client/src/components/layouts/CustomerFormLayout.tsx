@@ -304,10 +304,31 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       setOriginalValues(formData);
       setModifiedFields(new Set());
       setHasUnsavedChanges(false);
-    } else {
-      // For new customer, store default values as original
-      const defaultFormData = form.getValues();
-      setOriginalValues(defaultFormData);
+    } else if (!isEditing) {
+      const emptyFormData = {
+        name: "",
+        kvkNummer: "",
+        countryCode: "",
+        areaCode: "",
+        generalEmail: "",
+        email: "",
+        phone: "",
+        mobile: "",
+        addressId: "",
+        contactPersonEmail: "",
+        contactPerson2Email: "",
+        taxId: "",
+        bankAccount: "",
+        invoiceEmail: "",
+        invoiceNotes: "",
+        memo: "",
+        languageCode: "nl",
+        paymentTerms: "30",
+        paymentDaysId: "",
+        status: "active",
+      };
+      form.reset(emptyFormData);
+      setOriginalValues(emptyFormData);
       setModifiedFields(new Set());
       setHasUnsavedChanges(false);
     }

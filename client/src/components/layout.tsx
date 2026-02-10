@@ -1063,7 +1063,8 @@ export default function Layout({ children }: LayoutProps) {
         
         return (
           <Suspense fallback={<div></div>}>
-            <CustomerForm 
+            <CustomerForm
+              key={tab.id}
               customerId={customerId}
               parentId={tab.parentId}
               onSave={() => {
