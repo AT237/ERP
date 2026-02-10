@@ -55,9 +55,7 @@ const createCustomerFormSchema = (countryRequirements?: { requiresBtw?: boolean;
   // Start with base schema, but override specific fields based on requirements
   const schemaFields = {
     ...baseCustomerFormSchema.shape,
-    taxId: countryRequirements?.requiresBtw 
-      ? z.string().min(1, "BTW nummer is verplicht voor dit land")
-      : z.string().optional().nullable(),
+    taxId: z.string().optional().nullable(),
     areaCode: countryRequirements?.requiresAreaCode
       ? z.string().min(1, "Area code is verplicht voor dit land")
       : z.string().optional(),
