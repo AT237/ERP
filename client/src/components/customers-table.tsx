@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, Building, Mail, Phone } from "lucide-react";
@@ -128,6 +128,7 @@ const defaultColumns: ColumnConfig[] = [
 export default function CustomersTable() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
 
   // Data table state  
   const tableState = useDataTable({ 
@@ -157,6 +158,30 @@ export default function CustomersTable() {
       toast({
         title: "Error",
         description: "Failed to delete customer",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteCustomersMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map(id => apiRequest("DELETE", `/api/customers/${id}`)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      tableState.clearSelection();
+      setShowDeleteConfirmDialog(false);
+      toast({
+        title: "Success",
+        description: "Customers deleted",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete customers",
         variant: "destructive",
       });
     },
@@ -241,6 +266,12 @@ export default function CustomersTable() {
         // Filter and search functions
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        deleteConfirmDialog={{
+          isOpen: showDeleteConfirmDialog,
+          onOpenChange: setShowDeleteConfirmDialog,
+          onConfirm: () => deleteCustomersMutation.mutate(tableState.selectedRows),
+          itemCount: tableState.selectedRows.length
+        }}
         // Header actions
         headerActions={[
           {
