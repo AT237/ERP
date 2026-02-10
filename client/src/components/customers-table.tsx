@@ -131,7 +131,8 @@ export default function CustomersTable() {
 
   // Data table state  
   const tableState = useDataTable({ 
-    defaultColumns
+    defaultColumns,
+    tableKey: 'customers',
   });
 
   // Data fetching - use extended endpoint for related data

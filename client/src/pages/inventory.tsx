@@ -26,7 +26,8 @@ export default function Inventory() {
 
   // Data table state  
   const tableState = useDataTable({ 
-    defaultColumns
+    defaultColumns,
+    tableKey: 'inventory',
   });
 
   // Data fetching
