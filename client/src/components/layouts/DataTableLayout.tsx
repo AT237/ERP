@@ -348,6 +348,20 @@ export function DataTableLayout<T = any>({
   compact = false,
 }: DataTableLayoutProps<T>) {
   
+  const lastTapRef = useRef<{ time: number; rowId: string | null }>({ time: 0, rowId: null });
+
+  const handleTouchEnd = useCallback((row: T) => {
+    if (!onRowDoubleClick) return;
+    const rowId = getRowId(row);
+    const now = Date.now();
+    if (lastTapRef.current.rowId === rowId && now - lastTapRef.current.time < 400) {
+      onRowDoubleClick(row);
+      lastTapRef.current = { time: 0, rowId: null };
+    } else {
+      lastTapRef.current = { time: now, rowId };
+    }
+  }, [onRowDoubleClick, getRowId]);
+
   // Column persistence storage utilities
   const saveColumnSettings = useCallback(async (columnSettings: ColumnConfig[]) => {
     if (!tableKey) return;
@@ -1030,6 +1044,7 @@ export function DataTableLayout<T = any>({
                         }`}
                         style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
                         onDoubleClick={() => onRowDoubleClick?.(row)}
+                        onTouchEnd={() => handleTouchEnd(row)}
                       >
                         <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ width: '48px', minWidth: '48px', maxWidth: '48px', height: '32px', lineHeight: '1.2' }}>
                           <div className="flex items-center justify-center h-4 w-4 mx-auto">
