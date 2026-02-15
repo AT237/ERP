@@ -639,55 +639,31 @@ export function DataTableLayout<T = any>({
     if (!onRowDoubleClick || !tableContainerRef.current) return;
 
     const container = tableContainerRef.current;
-    let lastTap = { time: 0, rowId: '' };
-    let touchMoved = false;
+    let lastClick = { time: 0, rowId: '' };
 
-    const findRowId = (target: HTMLElement): string | null => {
-      if (target.closest('input[type="checkbox"]') || target.closest('button') || target.closest('[role="checkbox"]')) return null;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('input[type="checkbox"]') || target.closest('button') || target.closest('[role="checkbox"]')) return;
       const row = target.closest('tr[data-row-id]') as HTMLElement | null;
-      return row ? row.getAttribute('data-row-id') : null;
-    };
-
-    const handleTouchStart = () => {
-      touchMoved = false;
-    };
-
-    const handleTouchMove = () => {
-      touchMoved = true;
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (touchMoved) return;
-      const rowId = findRowId(e.target as HTMLElement);
-      if (!rowId) return;
+      if (!row) return;
+      const rowId = row.getAttribute('data-row-id') || '';
       const now = Date.now();
-      if (lastTap.rowId === rowId && now - lastTap.time < 800) {
+      const timeDiff = now - lastClick.time;
+      if (lastClick.rowId === rowId && timeDiff < 800) {
         e.preventDefault();
+        e.stopPropagation();
         const dataRow = sortedDataRef.current.find(r => getRowId(r) === rowId);
         if (dataRow) onRowDoubleClick(dataRow);
-        lastTap = { time: 0, rowId: '' };
+        lastClick = { time: 0, rowId: '' };
       } else {
-        lastTap = { time: now, rowId };
+        lastClick = { time: now, rowId };
       }
     };
 
-    const handleDblClick = (e: Event) => {
-      const rowId = findRowId(e.target as HTMLElement);
-      if (!rowId) return;
-      const dataRow = sortedDataRef.current.find(r => getRowId(r) === rowId);
-      if (dataRow) onRowDoubleClick(dataRow);
-    };
-
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
-    container.addEventListener('touchmove', handleTouchMove, { passive: true });
-    container.addEventListener('touchend', handleTouchEnd, { passive: false });
-    container.addEventListener('dblclick', handleDblClick);
+    container.addEventListener('click', handleClick);
 
     return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
-      container.removeEventListener('dblclick', handleDblClick);
+      container.removeEventListener('click', handleClick);
     };
   }, [onRowDoubleClick, getRowId]);
 
@@ -984,7 +960,7 @@ export function DataTableLayout<T = any>({
         </div>
 
         {/* Table */}
-        <div ref={tableContainerRef} className={`rounded-lg overflow-x-auto border-0 ${compact ? 'ml-0' : ''}`} style={{ touchAction: 'pan-x pan-y' }}>
+        <div ref={tableContainerRef} className={`rounded-lg overflow-x-auto border-0 ${compact ? 'ml-0' : ''}`}>
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -1089,7 +1065,7 @@ export function DataTableLayout<T = any>({
                               ? 'bg-white dark:bg-gray-950' 
                               : 'bg-white dark:bg-gray-900/50'
                         }`}
-                        style={{ height: '32px', minHeight: '32px', maxHeight: '32px', touchAction: 'manipulation' }}
+                        style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
                       >
                         <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ width: '48px', minWidth: '48px', maxWidth: '48px', height: '32px', lineHeight: '1.2' }}>
                           <div className="flex items-center justify-center h-4 w-4 mx-auto">
