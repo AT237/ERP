@@ -348,8 +348,62 @@ export function DataTableLayout<T = any>({
   compact = false,
 }: DataTableLayoutProps<T>) {
   
-  const tableContainerRef = useRef<HTMLDivElement>(null);
   const sortedDataRef = useRef<T[]>([]);
+  const tableContainerRef = useRef<HTMLDivElement | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
+  const onRowDoubleClickRef = useRef(onRowDoubleClick);
+  onRowDoubleClickRef.current = onRowDoubleClick;
+  const getRowIdRef = useRef(getRowId);
+  getRowIdRef.current = getRowId;
+
+  const attachClickListeners = useCallback((container: HTMLDivElement) => {
+    if (cleanupRef.current) cleanupRef.current();
+
+    let lastClick = { time: 0, rowId: '' };
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('input[type="checkbox"]') || target.closest('button') || target.closest('[role="checkbox"]')) return;
+      const row = target.closest('tr[data-row-id]') as HTMLElement | null;
+      if (!row) return;
+      const rowId = row.getAttribute('data-row-id') || '';
+      const now = Date.now();
+      const timeDiff = now - lastClick.time;
+      console.log('[DataTable] click on row:', rowId, 'timeDiff:', timeDiff);
+      if (lastClick.rowId === rowId && timeDiff < 800) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('[DataTable] DOUBLE-CLICK! Opening row:', rowId);
+        const dataRow = sortedDataRef.current.find(r => getRowIdRef.current(r) === rowId);
+        if (dataRow && onRowDoubleClickRef.current) onRowDoubleClickRef.current(dataRow);
+        lastClick = { time: 0, rowId: '' };
+      } else {
+        lastClick = { time: now, rowId };
+      }
+    };
+
+    container.addEventListener('click', handleClick);
+    cleanupRef.current = () => container.removeEventListener('click', handleClick);
+  }, []);
+
+  const tableContainerCallbackRef = useCallback((node: HTMLDivElement | null) => {
+    tableContainerRef.current = node;
+    if (node) {
+      attachClickListeners(node);
+    } else if (cleanupRef.current) {
+      cleanupRef.current();
+      cleanupRef.current = null;
+    }
+  }, [attachClickListeners]);
+
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
+    };
+  }, []);
 
   // Column persistence storage utilities
   const saveColumnSettings = useCallback(async (columnSettings: ColumnConfig[]) => {
@@ -634,38 +688,6 @@ export function DataTableLayout<T = any>({
   const filteredData = applyFiltersAndSearch(data, searchTerm, filters);
   const sortedData = applySorting(filteredData, sortConfig);
   sortedDataRef.current = sortedData;
-
-  useEffect(() => {
-    if (!onRowDoubleClick || !tableContainerRef.current) return;
-
-    const container = tableContainerRef.current;
-    let lastClick = { time: 0, rowId: '' };
-
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('input[type="checkbox"]') || target.closest('button') || target.closest('[role="checkbox"]')) return;
-      const row = target.closest('tr[data-row-id]') as HTMLElement | null;
-      if (!row) return;
-      const rowId = row.getAttribute('data-row-id') || '';
-      const now = Date.now();
-      const timeDiff = now - lastClick.time;
-      if (lastClick.rowId === rowId && timeDiff < 800) {
-        e.preventDefault();
-        e.stopPropagation();
-        const dataRow = sortedDataRef.current.find(r => getRowId(r) === rowId);
-        if (dataRow) onRowDoubleClick(dataRow);
-        lastClick = { time: 0, rowId: '' };
-      } else {
-        lastClick = { time: now, rowId };
-      }
-    };
-
-    container.addEventListener('click', handleClick);
-
-    return () => {
-      container.removeEventListener('click', handleClick);
-    };
-  }, [onRowDoubleClick, getRowId]);
 
   // Mobile detection
   const isMobile = useIsMobile();
@@ -960,7 +982,7 @@ export function DataTableLayout<T = any>({
         </div>
 
         {/* Table */}
-        <div ref={tableContainerRef} className={`rounded-lg overflow-x-auto border-0 ${compact ? 'ml-0' : ''}`}>
+        <div ref={tableContainerCallbackRef} className={`rounded-lg overflow-x-auto border-0 ${compact ? 'ml-0' : ''}`}>
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
