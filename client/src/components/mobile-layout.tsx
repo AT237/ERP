@@ -28,6 +28,8 @@ const bottomNavItems = [
 const databasePages: Record<string, { route: string }> = {
   "/customers": { route: "/customer-form" },
   "/suppliers": { route: "/supplier-form" },
+  "/prospects": { route: "/customer-form" },
+  "/contact-persons": { route: "/contact-person-form" },
   "/quotations": { route: "/quotation-form" },
   "/inventory": { route: "/inventory-form" },
   "/projects": { route: "/project-form" },
@@ -36,13 +38,18 @@ const databasePages: Record<string, { route: string }> = {
   "/work-orders": { route: "/work-order-form" },
   "/packing-lists": { route: "/packing-list-form" },
   "/sales-orders": { route: "/sales-order-form" },
+  "/master-data/images": { route: "/image-form" },
+  "/master-data/pictograms": { route: "/pictogram-form" },
   "/images": { route: "/image-form" },
   "/text-snippets": { route: "/text-snippet-form" },
+  "/addresses": { route: "/customer-form" },
 };
 
 const formTypeToRoute: Record<string, string> = {
   customer: '/customer-form',
   supplier: '/supplier-form',
+  prospect: '/customer-form',
+  'contact-person': '/contact-person-form',
   quotation: '/quotation-form',
   inventory: '/inventory-form',
   project: '/project-form',
@@ -52,7 +59,17 @@ const formTypeToRoute: Record<string, string> = {
   'packing-list': '/packing-list-form',
   'sales-order': '/sales-order-form',
   image: '/image-form',
+  pictogram: '/pictogram-form',
   'text-snippet': '/text-snippet-form',
+  address: '/customer-form',
+};
+
+const masterdataFormTypeToRoute = (formType: string): string | null => {
+  if (formType.startsWith('masterdata-')) {
+    const type = formType.replace('masterdata-', '');
+    return `/masterdata-form/${type}`;
+  }
+  return null;
 };
 
 export default function MobileLayout({ children }: MobileLayoutProps) {
@@ -62,7 +79,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
   useEffect(() => {
     const handleOpenFormTab = (e: CustomEvent) => {
       const { formType, entityId } = e.detail;
-      const baseRoute = formTypeToRoute[formType];
+      const baseRoute = formTypeToRoute[formType] || masterdataFormTypeToRoute(formType);
       if (baseRoute && entityId) {
         navigate(`${baseRoute}/${entityId}`);
       } else if (baseRoute) {
