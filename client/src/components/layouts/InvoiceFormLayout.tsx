@@ -352,15 +352,23 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         createFieldRow({
           key: "customerId",
           label: "Customer",
-          type: "select",
-          options: customers.map(c => ({ value: c.id, label: c.name })),
-          setValue: (value) => handleCustomerChange(value),
-          watch: () => invoiceForm.watch("customerId"),
-          validation: {
-            error: invoiceForm.formState.errors.customerId?.message,
-            isRequired: true
-          },
-          testId: "select-customer"
+          type: "custom",
+          customComponent: (
+            <CustomerSelect
+              value={invoiceForm.watch("customerId")}
+              onValueChange={(value) => handleCustomerChange(value)}
+              placeholder="Select customer..."
+              testId="select-invoice-customer"
+              customers={customers.map(c => ({
+                id: c.id,
+                customerNumber: (c as any).customerNumber || '',
+                name: c.name,
+                email: (c as any).generalEmail || (c as any).email || undefined,
+                phone: (c as any).phone || undefined,
+              }))}
+              parentId={invoiceId || 'new-invoice'}
+            />
+          ),
         }),
         createFieldRow({
           key: "invoiceDate",
