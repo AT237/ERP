@@ -147,7 +147,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
           }
         }
       }
-      const nextNumber = maxNumber + 10;
+      const nextNumber = Math.ceil((maxNumber + 1) / 10) * 10;
       const nextPositionNo = nextNumber.toString().padStart(3, '0');
       form.setValue('positionNo', nextPositionNo);
     }

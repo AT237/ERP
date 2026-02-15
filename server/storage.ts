@@ -851,7 +851,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    const nextNumber = maxNumber + 10;
+    const nextNumber = Math.ceil((maxNumber + 1) / 10) * 10;
     return nextNumber.toString().padStart(3, '0');
   }
   

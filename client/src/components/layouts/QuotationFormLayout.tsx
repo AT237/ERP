@@ -627,8 +627,17 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   // Item management functions
   const handleSaveItem = (data: QuotationItemFormData) => {
     // Calculate next position number for new items
-    const nextPositionNo = editingItem?.positionNo || 
-      String((quotationItems.length + 1) * 10).padStart(3, '0');
+    let nextPositionNo = editingItem?.positionNo;
+    if (!nextPositionNo) {
+      let maxNumber = 0;
+      for (const item of quotationItems) {
+        if (item.positionNo) {
+          const num = parseInt(item.positionNo, 10);
+          if (!isNaN(num) && num > maxNumber) maxNumber = num;
+        }
+      }
+      nextPositionNo = (Math.ceil((maxNumber + 1) / 10) * 10).toString().padStart(3, '0');
+    }
     
     const newItem: QuotationItem = {
       id: editingItem?.id || Math.random().toString(36).substr(2, 9),
