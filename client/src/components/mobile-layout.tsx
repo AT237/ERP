@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { 
-  Menu, Settings, ChevronRight, Home, BarChart3, Plus, Trash2, Copy
+  Menu, Settings, ChevronRight, Home, BarChart3, Plus, Trash2, Copy, Search, X
 } from "lucide-react";
 import {
   Sheet,
@@ -75,6 +75,7 @@ const masterdataFormTypeToRoute = (formType: string): string | null => {
 export default function MobileLayout({ children }: MobileLayoutProps) {
   const [location, navigate] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuSearch, setMenuSearch] = useState("");
 
   useEffect(() => {
     const handleOpenFormTab = (e: CustomEvent) => {
@@ -122,7 +123,23 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
   const handleNavClick = (href: string) => {
     navigate(href);
     setMenuOpen(false);
+    setMenuSearch("");
   };
+
+  const searchLower = menuSearch.toLowerCase();
+  const filteredNavigation = menuSearch
+    ? defaultNavigation
+        .map(section => ({
+          ...section,
+          items: section.items.filter(item =>
+            item.name.toLowerCase().includes(searchLower) ||
+            section.name.toLowerCase().includes(searchLower)
+          ),
+        }))
+        .filter(section => section.items.length > 0)
+    : defaultNavigation;
+
+  const showSettings = !menuSearch || "instellingen".includes(searchLower);
 
   return (
     <div className="flex flex-col h-screen w-full max-w-full overflow-hidden bg-gray-50">
@@ -155,8 +172,29 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               <SheetHeader className="p-4 border-b bg-orange-500 text-white">
                 <SheetTitle className="text-white text-lg">Menu</SheetTitle>
               </SheetHeader>
+              <div className="px-3 py-2 border-b bg-white">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={menuSearch}
+                    onChange={(e) => setMenuSearch(e.target.value)}
+                    placeholder="Zoeken..."
+                    className="w-full pl-9 pr-9 py-2.5 text-sm rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                    autoComplete="off"
+                  />
+                  {menuSearch && (
+                    <button
+                      onClick={() => setMenuSearch("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
               <div className="overflow-y-auto h-full pb-20">
-                {defaultNavigation.map((section) => (
+                {filteredNavigation.map((section) => (
                   <div key={section.id} className="border-b">
                     <div className="px-4 py-3 bg-gray-100 text-sm font-semibold text-gray-600 uppercase tracking-wider">
                       {section.name}
@@ -183,16 +221,24 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
                   </div>
                 ))}
                 
-                <div className="p-4">
-                  <button
-                    onClick={() => handleNavClick('/master-data/company-details')}
-                    className="w-full flex items-center gap-3 px-4 py-4 min-h-[52px] text-gray-600 hover:bg-gray-50 active:bg-gray-100 rounded-lg"
-                    data-testid="menu-item-settings"
-                  >
-                    <Settings className="h-5 w-5 shrink-0" />
-                    <span className="font-medium text-base">Instellingen</span>
-                  </button>
-                </div>
+                {showSettings && (
+                  <div className="p-4">
+                    <button
+                      onClick={() => handleNavClick('/master-data/company-details')}
+                      className="w-full flex items-center gap-3 px-4 py-4 min-h-[52px] text-gray-600 hover:bg-gray-50 active:bg-gray-100 rounded-lg"
+                      data-testid="menu-item-settings"
+                    >
+                      <Settings className="h-5 w-5 shrink-0" />
+                      <span className="font-medium text-base">Instellingen</span>
+                    </button>
+                  </div>
+                )}
+
+                {menuSearch && filteredNavigation.length === 0 && !showSettings && (
+                  <div className="px-4 py-8 text-center text-gray-400 text-sm">
+                    Geen resultaten voor "{menuSearch}"
+                  </div>
+                )}
               </div>
             </SheetContent>
           </Sheet>
