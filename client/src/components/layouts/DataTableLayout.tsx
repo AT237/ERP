@@ -355,9 +355,6 @@ export function DataTableLayout<T = any>({
   onRowDoubleClickRef.current = onRowDoubleClick;
   const getRowIdRef = useRef(getRowId);
   getRowIdRef.current = getRowId;
-  const [debugMsg, setDebugMsg] = useState('');
-  const debugMsgRef = useRef(setDebugMsg);
-  debugMsgRef.current = setDebugMsg;
 
   const attachClickListeners = useCallback((container: HTMLDivElement) => {
     if (cleanupRef.current) cleanupRef.current();
@@ -372,17 +369,15 @@ export function DataTableLayout<T = any>({
       return row ? (row.getAttribute('data-row-id') || null) : null;
     };
 
-    const tryDoubleTap = (rowId: string, source: string) => {
+    const tryDoubleTap = (rowId: string) => {
       const now = Date.now();
       const timeDiff = now - lastTap.time;
       if (lastTap.rowId === rowId && timeDiff < 800) {
-        debugMsgRef.current(`OPEN! ${source} row:${rowId.substring(0,8)} dt:${timeDiff}ms`);
         const dataRow = sortedDataRef.current.find(r => getRowIdRef.current(r) === rowId);
         if (dataRow && onRowDoubleClickRef.current) onRowDoubleClickRef.current(dataRow);
         lastTap = { time: 0, rowId: '' };
         return true;
       } else {
-        debugMsgRef.current(`tap1 ${source} row:${rowId.substring(0,8)}`);
         lastTap = { time: now, rowId };
         return false;
       }
@@ -391,21 +386,21 @@ export function DataTableLayout<T = any>({
     const onTouchStart = () => { touchMoved = false; };
     const onTouchMove = () => { touchMoved = true; };
     const onTouchEnd = (e: TouchEvent) => {
-      if (touchMoved) { debugMsgRef.current('touchend skipped (moved)'); return; }
+      if (touchMoved) return;
       const rowId = findRowId(e.target as HTMLElement);
-      if (!rowId) { debugMsgRef.current('touchend: no row found'); return; }
+      if (!rowId) return;
       touchHandled = true;
-      if (tryDoubleTap(rowId, 'touch')) {
+      if (tryDoubleTap(rowId)) {
         e.preventDefault();
       }
       setTimeout(() => { touchHandled = false; }, 300);
     };
 
     const onClick = (e: MouseEvent) => {
-      if (touchHandled) { debugMsgRef.current('click skipped (touch handled)'); return; }
+      if (touchHandled) return;
       const rowId = findRowId(e.target as HTMLElement);
       if (!rowId) return;
-      if (tryDoubleTap(rowId, 'click')) {
+      if (tryDoubleTap(rowId)) {
         e.preventDefault();
         e.stopPropagation();
       }
@@ -1018,13 +1013,6 @@ export function DataTableLayout<T = any>({
           {sortedData.length} of {data.length} {entityNamePlural.toLowerCase()}
           {selectedRows.length > 0 && ` • ${selectedRows.length} selected`}
         </div>
-
-        {/* Debug bar - temporary */}
-        {debugMsg && (
-          <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded border border-yellow-300 font-mono">
-            {debugMsg}
-          </div>
-        )}
 
         {/* Table */}
         <div ref={tableContainerCallbackRef} className={`rounded-lg overflow-x-auto border-0 ${compact ? 'ml-0' : ''}`}>
