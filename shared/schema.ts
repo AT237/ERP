@@ -282,6 +282,7 @@ export const invoiceItems = pgTable("invoice_items", {
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
   lineType: text("line_type").default("standard"), // 'standard', 'unique', 'text', 'charges'
   position: integer("position").default(0), // Order of items in document
+  positionNo: text("position_no"), // Formatted position number (e.g., "010", "020")
   sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id), // Link to text snippet
   sourceSnippetVersion: integer("source_snippet_version"), // Version of snippet when used
 });
