@@ -348,32 +348,23 @@ export function DataTableLayout<T = any>({
   compact = false,
 }: DataTableLayoutProps<T>) {
   
-  const lastClickRef = useRef<{ time: number; rowId: string | null }>({ time: 0, rowId: null });
-  const touchHandledRef = useRef(false);
+  const lastTapRef = useRef<{ time: number; rowId: string | null }>({ time: 0, rowId: null });
 
-  const detectDoubleTap = useCallback((row: T, target: HTMLElement) => {
+  const handlePointerUp = useCallback((row: T, e: React.PointerEvent) => {
     if (!onRowDoubleClick) return;
+    const target = e.target as HTMLElement;
     if (target.closest('input[type="checkbox"]') || target.closest('button') || target.closest('[role="checkbox"]')) return;
     const rowId = getRowId(row);
     const now = Date.now();
-    if (lastClickRef.current.rowId === rowId && now - lastClickRef.current.time < 600) {
+    if (lastTapRef.current.rowId === rowId && now - lastTapRef.current.time < 600) {
+      e.preventDefault();
+      e.stopPropagation();
       onRowDoubleClick(row);
-      lastClickRef.current = { time: 0, rowId: null };
+      lastTapRef.current = { time: 0, rowId: null };
     } else {
-      lastClickRef.current = { time: now, rowId };
+      lastTapRef.current = { time: now, rowId };
     }
   }, [onRowDoubleClick, getRowId]);
-
-  const handleRowTouchEnd = useCallback((row: T, e: React.TouchEvent) => {
-    touchHandledRef.current = true;
-    detectDoubleTap(row, e.target as HTMLElement);
-    setTimeout(() => { touchHandledRef.current = false; }, 50);
-  }, [detectDoubleTap]);
-
-  const handleRowClick = useCallback((row: T, e: React.MouseEvent) => {
-    if (touchHandledRef.current) return;
-    detectDoubleTap(row, e.target as HTMLElement);
-  }, [detectDoubleTap]);
 
   // Column persistence storage utilities
   const saveColumnSettings = useCallback(async (columnSettings: ColumnConfig[]) => {
@@ -1056,8 +1047,7 @@ export function DataTableLayout<T = any>({
                               : 'bg-white dark:bg-gray-900/50'
                         }`}
                         style={{ height: '32px', minHeight: '32px', maxHeight: '32px', touchAction: 'manipulation' }}
-                        onClick={(e) => handleRowClick(row, e)}
-                        onTouchEnd={(e) => handleRowTouchEnd(row, e)}
+                        onPointerUp={(e) => handlePointerUp(row, e)}
                       >
                         <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ width: '48px', minWidth: '48px', maxWidth: '48px', height: '32px', lineHeight: '1.2' }}>
                           <div className="flex items-center justify-center h-4 w-4 mx-auto">
