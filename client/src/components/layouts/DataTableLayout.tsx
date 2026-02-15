@@ -350,15 +350,13 @@ export function DataTableLayout<T = any>({
   
   const lastTapRef = useRef<{ time: number; rowId: string | null }>({ time: 0, rowId: null });
 
-  const handlePointerUp = useCallback((row: T, e: React.PointerEvent) => {
+  const tryOpenRow = useCallback((row: T, target: HTMLElement) => {
     if (!onRowDoubleClick) return;
-    const target = e.target as HTMLElement;
     if (target.closest('input[type="checkbox"]') || target.closest('button') || target.closest('[role="checkbox"]')) return;
     const rowId = getRowId(row);
     const now = Date.now();
-    if (lastTapRef.current.rowId === rowId && now - lastTapRef.current.time < 600) {
-      e.preventDefault();
-      e.stopPropagation();
+    if (lastTapRef.current.rowId === rowId && now - lastTapRef.current.time < 700) {
+      console.log('[DataTable] Double-tap detected on row:', rowId);
       onRowDoubleClick(row);
       lastTapRef.current = { time: 0, rowId: null };
     } else {
@@ -1047,7 +1045,10 @@ export function DataTableLayout<T = any>({
                               : 'bg-white dark:bg-gray-900/50'
                         }`}
                         style={{ height: '32px', minHeight: '32px', maxHeight: '32px', touchAction: 'manipulation' }}
-                        onPointerUp={(e) => handlePointerUp(row, e)}
+                        onDoubleClick={(e) => tryOpenRow(row, e.target as HTMLElement)}
+                        onTouchEnd={(e) => {
+                          tryOpenRow(row, e.target as HTMLElement);
+                        }}
                       >
                         <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ width: '48px', minWidth: '48px', maxWidth: '48px', height: '32px', lineHeight: '1.2' }}>
                           <div className="flex items-center justify-center h-4 w-4 mx-auto">
