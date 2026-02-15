@@ -79,10 +79,12 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
 
   useEffect(() => {
     const handleOpenFormTab = (e: CustomEvent) => {
-      const { formType, entityId } = e.detail;
+      const { formType, entityId, parentId, id } = e.detail;
       const baseRoute = formTypeToRoute[formType] || masterdataFormTypeToRoute(formType);
-      if (baseRoute && entityId) {
-        navigate(`${baseRoute}/${entityId}`);
+      const isUuid = (val: string) => /^[0-9a-f]{8}-/.test(val);
+      const recordId = entityId || (parentId && isUuid(parentId) ? parentId : undefined);
+      if (baseRoute && recordId) {
+        navigate(`${baseRoute}/${recordId}`);
       } else if (baseRoute) {
         navigate(baseRoute);
       }

@@ -112,7 +112,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         notes: invoice.notes || "",
       });
     }
-  }, [invoice, invoiceForm]);
+  }, [invoice]);
 
   useEffect(() => {
     if (fetchedInvoiceItems.length > 0) {
