@@ -348,21 +348,8 @@ export function DataTableLayout<T = any>({
   compact = false,
 }: DataTableLayoutProps<T>) {
   
-  const lastTapRef = useRef<{ time: number; rowId: string | null }>({ time: 0, rowId: null });
-
-  const tryOpenRow = useCallback((row: T, target: HTMLElement) => {
-    if (!onRowDoubleClick) return;
-    if (target.closest('input[type="checkbox"]') || target.closest('button') || target.closest('[role="checkbox"]')) return;
-    const rowId = getRowId(row);
-    const now = Date.now();
-    if (lastTapRef.current.rowId === rowId && now - lastTapRef.current.time < 700) {
-      console.log('[DataTable] Double-tap detected on row:', rowId);
-      onRowDoubleClick(row);
-      lastTapRef.current = { time: 0, rowId: null };
-    } else {
-      lastTapRef.current = { time: now, rowId };
-    }
-  }, [onRowDoubleClick, getRowId]);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const sortedDataRef = useRef<T[]>([]);
 
   // Column persistence storage utilities
   const saveColumnSettings = useCallback(async (columnSettings: ColumnConfig[]) => {
@@ -646,6 +633,63 @@ export function DataTableLayout<T = any>({
   // Apply filters and search
   const filteredData = applyFiltersAndSearch(data, searchTerm, filters);
   const sortedData = applySorting(filteredData, sortConfig);
+  sortedDataRef.current = sortedData;
+
+  useEffect(() => {
+    if (!onRowDoubleClick || !tableContainerRef.current) return;
+
+    const container = tableContainerRef.current;
+    let lastTap = { time: 0, rowId: '' };
+    let touchMoved = false;
+
+    const findRowId = (target: HTMLElement): string | null => {
+      if (target.closest('input[type="checkbox"]') || target.closest('button') || target.closest('[role="checkbox"]')) return null;
+      const row = target.closest('tr[data-row-id]') as HTMLElement | null;
+      return row ? row.getAttribute('data-row-id') : null;
+    };
+
+    const handleTouchStart = () => {
+      touchMoved = false;
+    };
+
+    const handleTouchMove = () => {
+      touchMoved = true;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (touchMoved) return;
+      const rowId = findRowId(e.target as HTMLElement);
+      if (!rowId) return;
+      const now = Date.now();
+      if (lastTap.rowId === rowId && now - lastTap.time < 800) {
+        e.preventDefault();
+        const dataRow = sortedDataRef.current.find(r => getRowId(r) === rowId);
+        if (dataRow) onRowDoubleClick(dataRow);
+        lastTap = { time: 0, rowId: '' };
+      } else {
+        lastTap = { time: now, rowId };
+      }
+    };
+
+    const handleDblClick = (e: Event) => {
+      const rowId = findRowId(e.target as HTMLElement);
+      if (!rowId) return;
+      const dataRow = sortedDataRef.current.find(r => getRowId(r) === rowId);
+      if (dataRow) onRowDoubleClick(dataRow);
+    };
+
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: true });
+    container.addEventListener('touchend', handleTouchEnd, { passive: false });
+    container.addEventListener('dblclick', handleDblClick);
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('dblclick', handleDblClick);
+    };
+  }, [onRowDoubleClick, getRowId]);
 
   // Mobile detection
   const isMobile = useIsMobile();
@@ -940,7 +984,7 @@ export function DataTableLayout<T = any>({
         </div>
 
         {/* Table */}
-        <div className={`rounded-lg overflow-x-auto border-0 ${compact ? 'ml-0' : ''}`}>
+        <div ref={tableContainerRef} className={`rounded-lg overflow-x-auto border-0 ${compact ? 'ml-0' : ''}`} style={{ touchAction: 'pan-x pan-y' }}>
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -1036,7 +1080,8 @@ export function DataTableLayout<T = any>({
                     
                     return (
                       <TableRow 
-                        key={rowId} 
+                        key={rowId}
+                        data-row-id={rowId}
                         className={`hover:bg-orange-100 dark:hover:bg-orange-800/30/30 text-sm font-normal font-sans cursor-pointer ${
                           isSelected 
                             ? 'bg-orange-50 dark:bg-orange-900/20' 
@@ -1045,10 +1090,6 @@ export function DataTableLayout<T = any>({
                               : 'bg-white dark:bg-gray-900/50'
                         }`}
                         style={{ height: '32px', minHeight: '32px', maxHeight: '32px', touchAction: 'manipulation' }}
-                        onDoubleClick={(e) => tryOpenRow(row, e.target as HTMLElement)}
-                        onTouchEnd={(e) => {
-                          tryOpenRow(row, e.target as HTMLElement);
-                        }}
                       >
                         <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ width: '48px', minWidth: '48px', maxWidth: '48px', height: '32px', lineHeight: '1.2' }}>
                           <div className="flex items-center justify-center h-4 w-4 mx-auto">
