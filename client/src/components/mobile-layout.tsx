@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -40,9 +40,38 @@ const databasePages: Record<string, { route: string }> = {
   "/text-snippets": { route: "/text-snippet-form" },
 };
 
+const formTypeToRoute: Record<string, string> = {
+  customer: '/customer-form',
+  supplier: '/supplier-form',
+  quotation: '/quotation-form',
+  inventory: '/inventory-form',
+  project: '/project-form',
+  invoice: '/invoice-form',
+  'purchase-order': '/purchase-order-form',
+  'work-order': '/work-order-form',
+  'packing-list': '/packing-list-form',
+  'sales-order': '/sales-order-form',
+  image: '/image-form',
+  'text-snippet': '/text-snippet-form',
+};
+
 export default function MobileLayout({ children }: MobileLayoutProps) {
   const [location, navigate] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenFormTab = (e: CustomEvent) => {
+      const { formType, entityId } = e.detail;
+      const baseRoute = formTypeToRoute[formType];
+      if (baseRoute && entityId) {
+        navigate(`${baseRoute}/${entityId}`);
+      } else if (baseRoute) {
+        navigate(baseRoute);
+      }
+    };
+    window.addEventListener('open-form-tab', handleOpenFormTab as EventListener);
+    return () => window.removeEventListener('open-form-tab', handleOpenFormTab as EventListener);
+  }, [navigate]);
 
   // Fetch company logo from database
   const { data: companyLogo } = useQuery<{ imageData: string } | null>({
