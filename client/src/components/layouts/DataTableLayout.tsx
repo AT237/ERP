@@ -355,35 +355,73 @@ export function DataTableLayout<T = any>({
   onRowDoubleClickRef.current = onRowDoubleClick;
   const getRowIdRef = useRef(getRowId);
   getRowIdRef.current = getRowId;
+  const [debugMsg, setDebugMsg] = useState('');
+  const debugMsgRef = useRef(setDebugMsg);
+  debugMsgRef.current = setDebugMsg;
 
   const attachClickListeners = useCallback((container: HTMLDivElement) => {
     if (cleanupRef.current) cleanupRef.current();
 
-    let lastClick = { time: 0, rowId: '' };
+    let lastTap = { time: 0, rowId: '' };
+    let touchMoved = false;
+    let touchHandled = false;
 
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('input[type="checkbox"]') || target.closest('button') || target.closest('[role="checkbox"]')) return;
+    const findRowId = (target: HTMLElement): string | null => {
+      if (target.closest('input[type="checkbox"]') || target.closest('button') || target.closest('[role="checkbox"]')) return null;
       const row = target.closest('tr[data-row-id]') as HTMLElement | null;
-      if (!row) return;
-      const rowId = row.getAttribute('data-row-id') || '';
+      return row ? (row.getAttribute('data-row-id') || null) : null;
+    };
+
+    const tryDoubleTap = (rowId: string, source: string) => {
       const now = Date.now();
-      const timeDiff = now - lastClick.time;
-      console.log('[DataTable] click on row:', rowId, 'timeDiff:', timeDiff);
-      if (lastClick.rowId === rowId && timeDiff < 800) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('[DataTable] DOUBLE-CLICK! Opening row:', rowId);
+      const timeDiff = now - lastTap.time;
+      if (lastTap.rowId === rowId && timeDiff < 800) {
+        debugMsgRef.current(`OPEN! ${source} row:${rowId.substring(0,8)} dt:${timeDiff}ms`);
         const dataRow = sortedDataRef.current.find(r => getRowIdRef.current(r) === rowId);
         if (dataRow && onRowDoubleClickRef.current) onRowDoubleClickRef.current(dataRow);
-        lastClick = { time: 0, rowId: '' };
+        lastTap = { time: 0, rowId: '' };
+        return true;
       } else {
-        lastClick = { time: now, rowId };
+        debugMsgRef.current(`tap1 ${source} row:${rowId.substring(0,8)}`);
+        lastTap = { time: now, rowId };
+        return false;
       }
     };
 
-    container.addEventListener('click', handleClick);
-    cleanupRef.current = () => container.removeEventListener('click', handleClick);
+    const onTouchStart = () => { touchMoved = false; };
+    const onTouchMove = () => { touchMoved = true; };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (touchMoved) { debugMsgRef.current('touchend skipped (moved)'); return; }
+      const rowId = findRowId(e.target as HTMLElement);
+      if (!rowId) { debugMsgRef.current('touchend: no row found'); return; }
+      touchHandled = true;
+      if (tryDoubleTap(rowId, 'touch')) {
+        e.preventDefault();
+      }
+      setTimeout(() => { touchHandled = false; }, 300);
+    };
+
+    const onClick = (e: MouseEvent) => {
+      if (touchHandled) { debugMsgRef.current('click skipped (touch handled)'); return; }
+      const rowId = findRowId(e.target as HTMLElement);
+      if (!rowId) return;
+      if (tryDoubleTap(rowId, 'click')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove', onTouchMove, { passive: true });
+    container.addEventListener('touchend', onTouchEnd, { passive: false });
+    container.addEventListener('click', onClick);
+
+    cleanupRef.current = () => {
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
+      container.removeEventListener('click', onClick);
+    };
   }, []);
 
   const tableContainerCallbackRef = useCallback((node: HTMLDivElement | null) => {
@@ -980,6 +1018,13 @@ export function DataTableLayout<T = any>({
           {sortedData.length} of {data.length} {entityNamePlural.toLowerCase()}
           {selectedRows.length > 0 && ` • ${selectedRows.length} selected`}
         </div>
+
+        {/* Debug bar - temporary */}
+        {debugMsg && (
+          <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded border border-yellow-300 font-mono">
+            {debugMsg}
+          </div>
+        )}
 
         {/* Table */}
         <div ref={tableContainerCallbackRef} className={`rounded-lg overflow-x-auto border-0 ${compact ? 'ml-0' : ''}`}>
