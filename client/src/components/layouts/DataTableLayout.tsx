@@ -618,12 +618,9 @@ export function DataTableLayout<T = any>({
   };
 
   // Column resizing handlers
-  const handleMouseDown = (e: React.MouseEvent, columnKey: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const startResize = (clientX: number, columnKey: string) => {
     const column = columns.find(col => col.key === columnKey);
     if (column) {
-      // Capture ALL current column widths to freeze them during resize
       const frozenWidths: { [key: string]: number } = {};
       columns.forEach(col => {
         frozenWidths[col.key] = col.width;
@@ -631,10 +628,24 @@ export function DataTableLayout<T = any>({
       
       setResizing({
         column: columnKey,
-        startX: e.clientX,
+        startX: clientX,
         startWidth: column.width,
         frozenWidths
       });
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent, columnKey: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    startResize(e.clientX, columnKey);
+  };
+
+  const handleTouchStartResize = (e: React.TouchEvent, columnKey: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.touches.length === 1) {
+      startResize(e.touches[0].clientX, columnKey);
     }
   };
 
@@ -677,21 +688,29 @@ export function DataTableLayout<T = any>({
     ));
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const applyResize = (clientX: number) => {
     if (resizing) {
-      const diff = e.clientX - resizing.startX;
-      // Universal minimum width of 1px for all columns - allow very narrow columns
+      const diff = clientX - resizing.startX;
       const newWidth = Math.max(1, resizing.startWidth + diff);
       
       setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => {
         if (col.key === resizing.column) {
-          // Only change the column being resized
           return { ...col, width: newWidth };
         } else {
-          // Keep all other columns at their frozen width
           return { ...col, width: resizing.frozenWidths[col.key] };
         }
       }));
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    applyResize(e.clientX);
+  };
+
+  const handleTouchMoveResize = (e: TouchEvent) => {
+    if (resizing && e.touches.length === 1) {
+      e.preventDefault();
+      applyResize(e.touches[0].clientX);
     }
   };
 
@@ -703,9 +722,15 @@ export function DataTableLayout<T = any>({
     if (resizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMoveResize, { passive: false });
+      document.addEventListener('touchend', handleMouseUp);
+      document.addEventListener('touchcancel', handleMouseUp);
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMoveResize);
+        document.removeEventListener('touchend', handleMouseUp);
+        document.removeEventListener('touchcancel', handleMouseUp);
       };
     }
   }, [resizing]);
@@ -1085,12 +1110,15 @@ export function DataTableLayout<T = any>({
                           )}
                         </div>
                         
-                        {/* Enhanced Resize Handle - more visible */}
+                        {/* Enhanced Resize Handle - touch-friendly */}
                         <div 
-                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-orange-400/30 active:bg-orange-500/40 transition-colors border-r-2 border-transparent hover:border-orange-400"
+                          className="absolute right-0 top-0 bottom-0 w-4 -mr-2 cursor-col-resize z-10 touch-none"
                           onMouseDown={(e) => handleMouseDown(e, column.key)}
+                          onTouchStart={(e) => handleTouchStartResize(e, column.key)}
                           title="Drag to resize column"
-                        />
+                        >
+                          <div className="absolute right-2 top-0 bottom-0 w-[2px] hover:bg-orange-400 active:bg-orange-500 transition-colors" />
+                        </div>
                       </DraggableColumnHeader>
                     ))}
                   </SortableContext>
