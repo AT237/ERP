@@ -17,9 +17,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer } from "@shared/schema";
+import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
+import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
+import { addDays } from "date-fns";
 
 const invoiceFormSchema = insertInvoiceSchema.omit({
   subtotal: true,
@@ -32,6 +34,7 @@ const invoiceFormSchema = insertInvoiceSchema.omit({
   paidAmount: z.string().optional(),
   dueDate: z.string().optional(),
   invoiceDate: z.string().optional(),
+  paymentDaysId: z.string().optional(),
 });
 
 const invoiceItemFormSchema = insertInvoiceItemSchema.extend({
@@ -61,6 +64,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     defaultValues: {
       invoiceNumber: "",
       customerId: "",
+      paymentDaysId: "",
       status: "pending",
       dueDate: "",
       invoiceDate: toDisplayDate(new Date()),
@@ -92,6 +96,11 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     queryKey: ["/api/customers"],
   });
 
+  const { data: paymentDaysList = [] } = useQuery<PaymentDay[]>({
+    queryKey: ["/api/masterdata/payment-days"],
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data: fetchedInvoiceItems = [] } = useQuery<InvoiceItem[]>({
     queryKey: ["/api/invoices", invoiceId, "items"],
     enabled: !!invoiceId,
@@ -102,9 +111,10 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       invoiceForm.reset({
         invoiceNumber: invoice.invoiceNumber || "",
         customerId: invoice.customerId || "",
+        paymentDaysId: (invoice as any).paymentDaysId || "",
         status: invoice.status || "pending",
         dueDate: invoice.dueDate ? toDisplayDate(invoice.dueDate) : "",
-        invoiceDate: invoice.createdAt ? toDisplayDate(invoice.createdAt) : "",
+        invoiceDate: (invoice as any).invoiceDate ? toDisplayDate((invoice as any).invoiceDate) : (invoice.createdAt ? toDisplayDate(invoice.createdAt) : ""),
         subtotal: invoice.subtotal || "0.00",
         taxAmount: invoice.taxAmount || "0.00",
         totalAmount: invoice.totalAmount || "0.00",
@@ -119,6 +129,51 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       setInvoiceItems(fetchedInvoiceItems);
     }
   }, [fetchedInvoiceItems]);
+
+  const calculateDueDate = (invoiceDateStr: string, pDaysId: string) => {
+    if (!invoiceDateStr || !pDaysId || paymentDaysList.length === 0) return;
+    const paymentDay = paymentDaysList.find(pd => pd.id === pDaysId);
+    if (!paymentDay) return;
+    const parts = invoiceDateStr.split("-");
+    if (parts.length !== 3) return;
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    const invoiceDateObj = new Date(year, month, day);
+    if (isNaN(invoiceDateObj.getTime())) return;
+    const dueDateObj = addDays(invoiceDateObj, paymentDay.days);
+    invoiceForm.setValue("dueDate", toDisplayDate(dueDateObj));
+  };
+
+  const watchedInvoiceDate = invoiceForm.watch("invoiceDate");
+  const watchedPaymentDaysId = invoiceForm.watch("paymentDaysId");
+
+  useEffect(() => {
+    if (watchedInvoiceDate && watchedPaymentDaysId && paymentDaysList.length > 0) {
+      calculateDueDate(watchedInvoiceDate, watchedPaymentDaysId);
+    }
+  }, [watchedInvoiceDate, watchedPaymentDaysId, paymentDaysList]);
+
+  const handleCustomerChange = (customerId: string) => {
+    invoiceForm.setValue("customerId", customerId);
+    if (!isEditing) {
+      const customer = customers.find(c => c.id === customerId);
+      if (customer?.paymentDaysId) {
+        invoiceForm.setValue("paymentDaysId", customer.paymentDaysId);
+      } else {
+        invoiceForm.setValue("paymentDaysId", "");
+        invoiceForm.setValue("dueDate", "");
+      }
+    }
+  };
+
+  const handlePaymentDaysChange = (pDaysId: string) => {
+    invoiceForm.setValue("paymentDaysId", pDaysId);
+  };
+
+  const handleInvoiceDateChange = (value: string) => {
+    invoiceForm.setValue("invoiceDate", value);
+  };
 
   const itemColumns = React.useMemo(() => [
     createPositionColumn(),
@@ -238,13 +293,15 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   });
 
   const handleSaveInvoice = (data: InvoiceFormData) => {
-    const submitData: InsertInvoice = {
+    const submitData: any = {
       ...data,
       subtotal: data.subtotal,
       taxAmount: data.taxAmount || "0",
       totalAmount: data.totalAmount,
       paidAmount: data.paidAmount || "0",
       dueDate: data.dueDate ? toStorageDate(data.dueDate) : undefined,
+      invoiceDate: data.invoiceDate ? toStorageDate(data.invoiceDate) : undefined,
+      paymentDaysId: data.paymentDaysId || null,
     };
 
     if (isEditing) {
@@ -297,7 +354,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           label: "Customer",
           type: "select",
           options: customers.map(c => ({ value: c.id, label: c.name })),
-          setValue: (value) => invoiceForm.setValue("customerId", value),
+          setValue: (value) => handleCustomerChange(value),
           watch: () => invoiceForm.watch("customerId"),
           validation: {
             error: invoiceForm.formState.errors.customerId?.message,
@@ -310,12 +367,38 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           label: "Invoice Date",
           type: "date",
           placeholder: "dd-mm-yyyy",
-          setValue: (value) => invoiceForm.setValue("invoiceDate", value),
+          setValue: (value) => handleInvoiceDateChange(value),
           watch: () => invoiceForm.watch("invoiceDate"),
           validation: {
             error: invoiceForm.formState.errors.invoiceDate?.message
           },
           testId: "input-invoice-date"
+        }),
+        createFieldRow({
+          key: "paymentDaysId",
+          label: "Payment Days",
+          type: "custom",
+          customComponent: (
+            <PaymentDaySelectWithAdd
+              value={invoiceForm.watch("paymentDaysId") || ""}
+              onValueChange={(value) => handlePaymentDaysChange(value)}
+              language="nl"
+              placeholder="Select payment days..."
+              testId="select-invoice-payment-days"
+            />
+          ),
+        }),
+        createFieldRow({
+          key: "dueDate",
+          label: "Due Date",
+          type: "date",
+          placeholder: "dd-mm-yyyy",
+          setValue: (value) => invoiceForm.setValue("dueDate", value),
+          watch: () => invoiceForm.watch("dueDate"),
+          validation: {
+            error: invoiceForm.formState.errors.dueDate?.message
+          },
+          testId: "input-due-date"
         }),
         createFieldRow({
           key: "status",
@@ -333,18 +416,6 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
             error: invoiceForm.formState.errors.status?.message
           },
           testId: "select-status"
-        }),
-        createFieldRow({
-          key: "dueDate",
-          label: "Due Date",
-          type: "date",
-          placeholder: "dd-mm-yyyy",
-          setValue: (value) => invoiceForm.setValue("dueDate", value),
-          watch: () => invoiceForm.watch("dueDate"),
-          validation: {
-            error: invoiceForm.formState.errors.dueDate?.message
-          },
-          testId: "input-due-date"
         }),
         createFieldRow({
           key: "notes",
