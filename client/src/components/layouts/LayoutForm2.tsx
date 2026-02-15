@@ -664,11 +664,27 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       // Check if this section uses explicit two-column layout
       const hasTwoColumnLayout = section.rows.some(row => row.type === 'two-column');
       
-      if (hasTwoColumnLayout && !isMobile) {
-        // Use explicit two-column layout
+      if (hasTwoColumnLayout) {
         const twoColRow = section.rows.find(row => row.type === 'two-column');
         const leftFields = twoColRow?.leftColumn || [];
         const rightFields = twoColRow?.rightColumn || [];
+        
+        if (isMobile) {
+          const allTwoColFields = [...leftFields, ...rightFields];
+          return {
+            id: section.id,
+            label: section.label,
+            content: (
+              <div className="space-y-4 px-2 pt-2 pb-4">
+                {allTwoColFields.map((field, idx) => (
+                  <div key={field.key as string || idx}>
+                    {renderSimpleField(field)}
+                  </div>
+                ))}
+              </div>
+            )
+          };
+        }
         
         return {
           id: section.id,
@@ -714,8 +730,23 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       const leftFields = allFields.filter(f => !isLargeField(f));
       const rightFields = allFields.filter(f => isLargeField(f));
       
-      // If we have large fields, use two-column layout with large fields on right
-      if (rightFields.length > 0 && !isMobile) {
+      // If we have large fields, use two-column layout with large fields on right (desktop only)
+      if (rightFields.length > 0) {
+        if (isMobile) {
+          return {
+            id: section.id,
+            label: section.label,
+            content: (
+              <div className="space-y-4 px-2 pt-2 pb-4">
+                {allFields.map((field, idx) => (
+                  <div key={field.key as string || idx}>
+                    {renderSimpleField(field)}
+                  </div>
+                ))}
+              </div>
+            )
+          };
+        }
         return {
           id: section.id,
           label: section.label,
