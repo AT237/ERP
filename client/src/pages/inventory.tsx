@@ -11,14 +11,15 @@ import { useDataTable } from '@/hooks/useDataTable';
 const defaultColumns: ColumnConfig[] = [
   createIdColumn('sku', 'SKU'),
   { key: 'name', label: 'Name', visible: true, width: 200, filterable: true, sortable: true },
+  { key: 'description', label: 'Description', visible: true, width: 250, filterable: true, sortable: true },
   { key: 'category', label: 'Category', visible: true, width: 120, filterable: true, sortable: true },
-  { key: 'unitPrice', label: 'Selling Price', visible: true, width: 120, filterable: false, sortable: true },
+  { key: 'unitPrice', label: 'Unit Price', visible: true, width: 120, filterable: false, sortable: true },
   { key: 'costPrice', label: 'Cost Price', visible: true, width: 120, filterable: false, sortable: true },
-  { key: 'margin', label: 'Margin %', visible: true, width: 100, filterable: false, sortable: true },
-  { key: 'currentStock', label: 'Stock', visible: true, width: 80, filterable: false, sortable: true },
-  { key: 'minimumStock', label: 'Min Stock', visible: true, width: 80, filterable: false, sortable: true },
+  { key: 'margin', label: 'Margin', visible: true, width: 100, filterable: false, sortable: true },
+  { key: 'currentStock', label: 'Current Stock', visible: true, width: 80, filterable: false, sortable: true },
+  { key: 'minimumStock', label: 'Minimum Stock', visible: true, width: 80, filterable: false, sortable: true },
   { key: 'status', label: 'Status', visible: true, width: 100, filterable: true, sortable: true },
-  { key: 'isComposite', label: 'Composite', visible: true, width: 100, filterable: false, sortable: true },
+  { key: 'isComposite', label: 'Is Composite', visible: true, width: 100, filterable: false, sortable: true },
 ];
 
 export default function Inventory() {

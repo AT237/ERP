@@ -12,7 +12,7 @@ import { format } from "date-fns";
 
 // Default column configuration for packing lists
 const defaultColumns: ColumnConfig[] = [
-  createIdColumn('packingNumber', 'Packing #'),
+  createIdColumn('packingNumber', 'Packing Number'),
   { 
     key: 'customerName', 
     label: 'Customer', 
@@ -26,7 +26,7 @@ const defaultColumns: ColumnConfig[] = [
   },
   { 
     key: 'invoiceNumber', 
-    label: 'Invoice #', 
+    label: 'Invoice Number', 
     visible: true, 
     width: 140, 
     filterable: true, 

@@ -13,10 +13,10 @@ import { format } from "date-fns";
 
 // Default column configuration for projects
 const defaultColumns: ColumnConfig[] = [
-  createIdColumn('projectNumber', 'Project #'),
+  createIdColumn('projectNumber', 'Project Number'),
   { 
     key: 'name', 
-    label: 'Project Name', 
+    label: 'Name', 
     visible: true, 
     width: 200, 
     filterable: true, 
@@ -24,6 +24,15 @@ const defaultColumns: ColumnConfig[] = [
     renderCell: (value: string, row: Project & { customerName?: string }) => (
       <span data-testid={`text-project-name-${row.id}`}>{value}</span>
     )
+  },
+  { 
+    key: 'description', 
+    label: 'Description', 
+    visible: true, 
+    width: 250, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => value || ''
   },
   { 
     key: 'customerName', 

@@ -27,7 +27,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
 
   // Simple column config - no dynamic functions
   const columns: ColumnConfig[] = React.useMemo(() => [
-    createIdColumn('quotationNumber', 'Quotation #'),
+    createIdColumn('quotationNumber', 'Quotation Number'),
     { 
       key: 'customerId', 
       label: 'Customer', 
@@ -41,8 +41,17 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
       }
     },
     { 
+      key: 'description', 
+      label: 'Description', 
+      visible: true, 
+      width: 250, 
+      filterable: true, 
+      sortable: true,
+      renderCell: (value: string) => value || ''
+    },
+    { 
       key: 'quotationDate', 
-      label: 'Quote Date', 
+      label: 'Quotation Date', 
       visible: true, 
       width: 120, 
       filterable: true, 
@@ -51,7 +60,7 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
     },
     { 
       key: 'totalAmount', 
-      label: 'Total', 
+      label: 'Total Amount', 
       visible: true, 
       width: 120, 
       filterable: true, 

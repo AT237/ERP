@@ -12,7 +12,7 @@ import { format } from "date-fns";
 
 // Default column configuration for purchase orders
 const defaultColumns: ColumnConfig[] = [
-  createIdColumn('orderNumber', 'Order #'),
+  createIdColumn('orderNumber', 'Order Number'),
   { 
     key: 'supplierName', 
     label: 'Supplier', 

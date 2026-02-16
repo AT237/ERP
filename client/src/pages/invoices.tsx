@@ -35,7 +35,7 @@ export default function Invoices({}: InvoicesProps) {
   }, [customers]);
 
   const baseColumns: ColumnConfig[] = React.useMemo(() => [
-    createIdColumn('invoiceNumber', 'Invoice #'),
+    createIdColumn('invoiceNumber', 'Invoice Number'),
     { 
       key: 'customerId', 
       label: 'Customer', 
@@ -46,8 +46,17 @@ export default function Invoices({}: InvoicesProps) {
       renderCell: getCustomerName
     },
     { 
-      key: 'createdAt', 
-      label: 'Date', 
+      key: 'description', 
+      label: 'Description', 
+      visible: true, 
+      width: 250, 
+      filterable: true, 
+      sortable: true,
+      renderCell: (value: string) => value || ''
+    },
+    { 
+      key: 'invoiceDate', 
+      label: 'Invoice Date', 
       visible: true, 
       width: 120, 
       filterable: true, 
@@ -63,8 +72,8 @@ export default function Invoices({}: InvoicesProps) {
       sortable: true,
       renderCell: (value: string) => value ? format(new Date(value), 'dd-MM-yyyy') : ''
     },
-    createCurrencyColumn('totalAmount', 'Total'),
-    createCurrencyColumn('paidAmount', 'Paid'),
+    createCurrencyColumn('totalAmount', 'Total Amount'),
+    createCurrencyColumn('paidAmount', 'Paid Amount'),
     { 
       key: 'status', 
       label: 'Status', 

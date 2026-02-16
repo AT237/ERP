@@ -67,7 +67,7 @@ const defaultColumns: ColumnConfig[] = [
   },
   { 
     key: 'expectedDeliveryDate', 
-    label: 'Expected Delivery', 
+    label: 'Expected Delivery Date', 
     visible: true, 
     width: 140, 
     filterable: true, 

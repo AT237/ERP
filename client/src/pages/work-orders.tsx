@@ -12,7 +12,7 @@ import { format } from "date-fns";
 
 // Default column configuration for work orders
 const defaultColumns: ColumnConfig[] = [
-  createIdColumn('orderNumber', 'Order #'),
+  createIdColumn('orderNumber', 'Order Number'),
   { 
     key: 'projectName', 
     label: 'Project', 
@@ -32,15 +32,17 @@ const defaultColumns: ColumnConfig[] = [
     filterable: true, 
     sortable: true,
     renderCell: (value: string, row: WorkOrder) => (
-      <div data-testid={`text-title-${row.id}`}>
-        <div className="font-medium">{value}</div>
-        {row.description && (
-          <div className="text-sm text-muted-foreground truncate max-w-xs">
-            {row.description}
-          </div>
-        )}
-      </div>
+      <span data-testid={`text-title-${row.id}`} className="font-medium">{value}</span>
     )
+  },
+  { 
+    key: 'description', 
+    label: 'Description', 
+    visible: true, 
+    width: 250, 
+    filterable: true, 
+    sortable: true,
+    renderCell: (value: string) => value || ''
   },
   { 
     key: 'assignedTo', 
