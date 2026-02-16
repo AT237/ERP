@@ -41,128 +41,151 @@ export function PaymentScheduleSelectWithAdd({
     : placeholder;
 
   return (
-    <>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn("w-full justify-between", className)}
-            data-testid={testId}
+    <div className="flex items-center gap-1">
+      <div className="flex-1 min-w-0">
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className={cn("w-full justify-between", className)}
+              data-testid={testId}
+            >
+              {displayName}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            className="p-0 max-h-[300px]" 
+            align="start" 
+            sideOffset={4}
+            style={{ width: 'var(--radix-popover-trigger-width)' }}
           >
-            {displayName}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent 
-          className="p-0 max-h-[300px]" 
-          align="start" 
-          sideOffset={4}
-          style={{ width: 'var(--radix-popover-trigger-width)' }}
-        >
-          <Command>
-            <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-              <CommandInput 
-                placeholder="Search payment terms..." 
-                className="flex-1 border-0 bg-transparent outline-none focus:ring-0 pr-2"
-                value={searchQuery}
-                onValueChange={setSearchQuery}
-              />
-              <div className="flex-shrink-0 ml-auto">
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="icon"
-                  className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                  onClick={() => {
-                    setOpen(false);
-                    window.dispatchEvent(new CustomEvent('open-form-tab', { 
-                      detail: { 
-                        id: 'new-masterdata-payment-terms', 
-                        name: 'New Payment Terms', 
-                        formType: 'masterdata-payment-terms'
-                      } 
-                    }));
-                  }}
-                  data-testid={`${testId}-add-button`}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <CommandList>
-              <CommandEmpty>No payment terms found.</CommandEmpty>
-              <CommandGroup>
-                {value && (
-                  <CommandItem
-                    value="__clear__"
-                    onSelect={() => {
-                      onValueChange?.("");
+            <Command>
+              <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+                <CommandInput 
+                  placeholder="Search payment terms..." 
+                  className="flex-1 border-0 bg-transparent outline-none focus:ring-0 pr-2"
+                  value={searchQuery}
+                  onValueChange={setSearchQuery}
+                />
+                <div className="flex-shrink-0 ml-auto">
+                  <Button 
+                    type="button"
+                    variant="ghost" 
+                    size="icon"
+                    className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                    onClick={() => {
                       setOpen(false);
+                      window.dispatchEvent(new CustomEvent('open-form-tab', { 
+                        detail: { 
+                          id: 'new-masterdata-payment-terms', 
+                          name: 'New Payment Terms', 
+                          formType: 'masterdata-payment-terms'
+                        } 
+                      }));
                     }}
-                    className="text-muted-foreground italic"
+                    data-testid={`${testId}-add-button`}
                   >
-                    — Clear selection —
-                  </CommandItem>
-                )}
-                {paymentTerms.map((term) => {
-                  const itemName = term.name;
-                  const description = term.description || `${term.days} days`;
-                  
-                  return (
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <CommandList>
+                <CommandEmpty>No payment terms found.</CommandEmpty>
+                <CommandGroup>
+                  {value && (
                     <CommandItem
-                      key={term.id}
-                      value={term.id}
-                      onSelect={(currentValue) => {
-                        onValueChange?.(currentValue === value ? "" : currentValue);
+                      value="__clear__"
+                      onSelect={() => {
+                        onValueChange?.("");
                         setOpen(false);
                       }}
-                      className="flex items-center justify-between group"
-                      data-testid={`option-payment-terms-${term.code}`}
+                      className="text-muted-foreground italic"
                     >
-                      <div className="flex items-center flex-1">
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4 shrink-0",
-                            value === term.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <span className="text-xs text-muted-foreground w-16 shrink-0">{term.code}</span>
-                        <div className="flex flex-col flex-1 ml-2">
-                          <span className="font-medium">{itemName}</span>
-                          <span className="text-xs text-muted-foreground">{description}</span>
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-orange-600 hover:bg-orange-50 shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpen(false);
-                          window.dispatchEvent(new CustomEvent('open-form-tab', { 
-                            detail: { 
-                              id: `masterdata-payment-terms-${term.id}`, 
-                              name: itemName, 
-                              formType: 'masterdata-payment-terms',
-                              entityId: term.id
-                            } 
-                          }));
-                        }}
-                        data-testid={`${testId}-view-${term.code}`}
-                      >
-                        <Search className="h-3.5 w-3.5" />
-                      </Button>
+                      — Clear selection —
                     </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    </>
+                  )}
+                  {paymentTerms.map((term) => {
+                    const itemName = term.name;
+                    const description = term.description || `${term.days} days`;
+                    
+                    return (
+                      <CommandItem
+                        key={term.id}
+                        value={term.id}
+                        onSelect={(currentValue) => {
+                          onValueChange?.(currentValue === value ? "" : currentValue);
+                          setOpen(false);
+                        }}
+                        className="flex items-center justify-between group"
+                        data-testid={`option-payment-terms-${term.code}`}
+                      >
+                        <div className="flex items-center flex-1">
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4 shrink-0",
+                              value === term.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <span className="text-xs text-muted-foreground w-16 shrink-0">{term.code}</span>
+                          <div className="flex flex-col flex-1 ml-2">
+                            <span className="font-medium">{itemName}</span>
+                            <span className="text-xs text-muted-foreground">{description}</span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-orange-600 hover:bg-orange-50 shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpen(false);
+                            window.dispatchEvent(new CustomEvent('open-form-tab', { 
+                              detail: { 
+                                id: `masterdata-payment-terms-${term.id}`, 
+                                name: itemName, 
+                                formType: 'masterdata-payment-terms',
+                                entityId: term.id
+                              } 
+                            }));
+                          }}
+                          data-testid={`${testId}-view-${term.code}`}
+                        >
+                          <Search className="h-3.5 w-3.5" />
+                        </Button>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+      {value && selectedTerm && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 shrink-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('open-form-tab', {
+              detail: {
+                id: `masterdata-payment-terms-${selectedTerm.id}`,
+                name: selectedTerm.name,
+                formType: 'masterdata-payment-terms',
+                entityId: selectedTerm.id
+              }
+            }));
+          }}
+          data-testid={`${testId}-lookup`}
+        >
+          <Search className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
   );
 }

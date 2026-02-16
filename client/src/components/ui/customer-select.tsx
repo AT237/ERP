@@ -206,132 +206,154 @@ export function CustomerSelect({
 
   return (
     <>
-      <Popover open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (isOpen && onOpen) {
-          onOpen(); // Trigger lazy loading when popover opens
-        }
-      }}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn("w-full justify-between", className)}
-            data-testid={testId}
-          >
-            {selectedCustomer ? selectedCustomer.name : placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent 
-          className="p-0 max-h-[300px]" 
-          align="start" 
-          sideOffset={4}
-          style={{ width: 'var(--radix-popover-trigger-width)' }}
-        >
-          <Command
-            filter={(value, search) => {
-              // Custom filter logic for "contains" search
-              const customer = customersTyped.find(c => c.name === value);
-              if (!customer) return 0;
-              
-              const searchLower = search.toLowerCase();
-              return (
-                customer.name?.toLowerCase().includes(searchLower) ||
-                customer.email?.toLowerCase().includes(searchLower) ||
-                customer.phone?.toLowerCase().includes(searchLower)
-              ) ? 1 : 0;
-            }}
-          >
-            <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-              <CommandInput 
-                placeholder="Search customers..." 
-                className="flex-1 border-0 bg-transparent outline-none focus:ring-0 pr-2"
-              />
-              <div className="flex-shrink-0 ml-auto">
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="icon"
-                  className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                  onClick={() => {
-                    // Generate unique tab ID using timestamp to prevent collisions
-                    const uniqueTabId = `customer-new-${Date.now()}`;
-                    
-                    // Dispatch event to open new customer form tab with parentId for scoping
-                    window.dispatchEvent(new CustomEvent('open-form-tab', {
-                      detail: {
-                        id: uniqueTabId,
-                        name: 'New Customer',
-                        formType: 'customer',
-                        parentId: parentId || testId // Use parentId if provided, otherwise fall back to testId
-                      }
-                    }));
-                    setOpen(false); // Close the dropdown
-                  }}
-                  data-testid={`button-add-customer-${parentId || testId}`}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <CommandList>
-              <CommandEmpty>No customer found.</CommandEmpty>
-              <CommandGroup>
-                {customersTyped.map((customer) => (
-                  <CommandItem
-                    key={customer.id}
-                    value={customer.name}
-                    onSelect={() => {
-                      onValueChange?.(customer.id);
-                      setOpen(false);
-                    }}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center">
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          value === customer.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <div>
-                        <div className="font-medium">{customer.name}</div>
-                      </div>
-                    </div>
-                    <Button
+      <div className="flex items-center gap-1">
+        <div className="flex-1 min-w-0">
+          <Popover open={open} onOpenChange={(isOpen) => {
+            setOpen(isOpen);
+            if (isOpen && onOpen) {
+              onOpen();
+            }
+          }}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className={cn("w-full justify-between", className)}
+                data-testid={testId}
+              >
+                {selectedCustomer ? selectedCustomer.name : placeholder}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="p-0 max-h-[300px]" 
+              align="start" 
+              sideOffset={4}
+              style={{ width: 'var(--radix-popover-trigger-width)' }}
+            >
+              <Command
+                filter={(value, search) => {
+                  const customer = customersTyped.find(c => c.name === value);
+                  if (!customer) return 0;
+                  
+                  const searchLower = search.toLowerCase();
+                  return (
+                    customer.name?.toLowerCase().includes(searchLower) ||
+                    customer.email?.toLowerCase().includes(searchLower) ||
+                    customer.phone?.toLowerCase().includes(searchLower)
+                  ) ? 1 : 0;
+                }}
+              >
+                <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+                  <CommandInput 
+                    placeholder="Search customers..." 
+                    className="flex-1 border-0 bg-transparent outline-none focus:ring-0 pr-2"
+                  />
+                  <div className="flex-shrink-0 ml-auto">
+                    <Button 
                       type="button"
-                      variant="ghost"
+                      variant="ghost" 
                       size="icon"
-                      className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        // Open customer in tab-based form (same as Add but with existing customer ID)
-                        const uniqueTabId = `customer-edit-${customer.id}-${Date.now()}`;
+                      className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                      onClick={() => {
+                        const uniqueTabId = `customer-new-${Date.now()}`;
                         window.dispatchEvent(new CustomEvent('open-form-tab', {
                           detail: {
                             id: uniqueTabId,
-                            name: customer.name || 'Edit Customer',
+                            name: 'New Customer',
                             formType: 'customer',
-                            entityId: customer.id,
                             parentId: parentId || testId
                           }
                         }));
-                        setOpen(false); // Close the dropdown
+                        setOpen(false);
                       }}
-                      data-testid={`${testId}-edit-${customer.id}`}
+                      data-testid={`button-add-customer-${parentId || testId}`}
                     >
-                      <Search className="h-3 w-3" />
+                      <Plus className="h-4 w-4" />
                     </Button>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+                  </div>
+                </div>
+                <CommandList>
+                  <CommandEmpty>No customer found.</CommandEmpty>
+                  <CommandGroup>
+                    {customersTyped.map((customer) => (
+                      <CommandItem
+                        key={customer.id}
+                        value={customer.name}
+                        onSelect={() => {
+                          onValueChange?.(customer.id);
+                          setOpen(false);
+                        }}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center">
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              value === customer.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <div>
+                            <div className="font-medium">{customer.name}</div>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const uniqueTabId = `customer-edit-${customer.id}-${Date.now()}`;
+                            window.dispatchEvent(new CustomEvent('open-form-tab', {
+                              detail: {
+                                id: uniqueTabId,
+                                name: customer.name || 'Edit Customer',
+                                formType: 'customer',
+                                entityId: customer.id,
+                                parentId: parentId || testId
+                              }
+                            }));
+                            setOpen(false);
+                          }}
+                          data-testid={`${testId}-edit-${customer.id}`}
+                        >
+                          <Search className="h-3 w-3" />
+                        </Button>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+        {value && selectedCustomer && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 shrink-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+            onClick={() => {
+              const uniqueTabId = `customer-edit-${selectedCustomer.id}-${Date.now()}`;
+              window.dispatchEvent(new CustomEvent('open-form-tab', {
+                detail: {
+                  id: uniqueTabId,
+                  name: selectedCustomer.name || 'Edit Customer',
+                  formType: 'customer',
+                  entityId: selectedCustomer.id,
+                  parentId: parentId || testId
+                }
+              }));
+            }}
+            data-testid={`${testId}-lookup`}
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
 
       {/* Add Customer Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
