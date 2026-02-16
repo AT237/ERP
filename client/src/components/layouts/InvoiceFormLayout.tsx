@@ -338,115 +338,122 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       id: "general",
       label: "General",
       rows: [
-        createFieldRow({
-          key: "invoiceNumber",
-          label: "Number",
-          type: "text",
-          register: invoiceForm.register("invoiceNumber"),
-          validation: {
-            error: invoiceForm.formState.errors.invoiceNumber?.message,
-            isRequired: true
-          },
-          testId: "input-invoice-number"
-        }),
-        createFieldRow({
-          key: "customerId",
-          label: "Customer",
-          type: "custom",
-          customComponent: (
-            <CustomerSelect
-              value={invoiceForm.watch("customerId")}
-              onValueChange={(value) => handleCustomerChange(value)}
-              placeholder="Select customer..."
-              testId="select-invoice-customer"
-              customers={customers.map(c => ({
-                id: c.id,
-                customerNumber: (c as any).customerNumber || '',
-                name: c.name,
-                email: (c as any).generalEmail || (c as any).email || undefined,
-                phone: (c as any).phone || undefined,
-              }))}
-              parentId={invoiceId || 'new-invoice'}
-            />
-          ),
-        }),
-        createFieldRow({
-          key: "description",
-          label: "Description",
-          type: "text",
-          placeholder: "Invoice description...",
-          register: invoiceForm.register("description"),
-          validation: {
-            error: invoiceForm.formState.errors.description?.message
-          },
-          testId: "input-invoice-description"
-        }),
-        createFieldRow({
-          key: "invoiceDate",
-          label: "Invoice Date",
-          type: "date",
-          placeholder: "dd-mm-yyyy",
-          setValue: (value) => handleInvoiceDateChange(value),
-          watch: () => invoiceForm.watch("invoiceDate"),
-          validation: {
-            error: invoiceForm.formState.errors.invoiceDate?.message
-          },
-          testId: "input-invoice-date"
-        }),
-        createFieldRow({
-          key: "paymentDaysId",
-          label: "Payment Days",
-          type: "custom",
-          customComponent: (
-            <PaymentDaySelectWithAdd
-              value={invoiceForm.watch("paymentDaysId") || ""}
-              onValueChange={(value) => handlePaymentDaysChange(value)}
-              language="nl"
-              placeholder="Select payment days..."
-              testId="select-invoice-payment-days"
-            />
-          ),
-        }),
-        createFieldRow({
-          key: "dueDate",
-          label: "Due Date",
-          type: "date",
-          placeholder: "dd-mm-yyyy",
-          setValue: (value) => invoiceForm.setValue("dueDate", value),
-          watch: () => invoiceForm.watch("dueDate"),
-          validation: {
-            error: invoiceForm.formState.errors.dueDate?.message
-          },
-          testId: "input-due-date"
-        }),
-        createFieldRow({
-          key: "status",
-          label: "Status",
-          type: "select",
-          options: [
-            { value: "pending", label: "Pending" },
-            { value: "paid", label: "Paid" },
-            { value: "overdue", label: "Overdue" },
-            { value: "cancelled", label: "Cancelled" }
+        {
+          type: 'two-column' as const,
+          leftColumn: [
+            {
+              key: "invoiceNumber",
+              label: "Number",
+              type: "text",
+              register: invoiceForm.register("invoiceNumber"),
+              validation: {
+                error: invoiceForm.formState.errors.invoiceNumber?.message,
+                isRequired: true
+              },
+              testId: "input-invoice-number"
+            },
+            {
+              key: "customerId",
+              label: "Customer",
+              type: "custom",
+              customComponent: (
+                <CustomerSelect
+                  value={invoiceForm.watch("customerId")}
+                  onValueChange={(value) => handleCustomerChange(value)}
+                  placeholder="Select customer..."
+                  testId="select-invoice-customer"
+                  customers={customers.map(c => ({
+                    id: c.id,
+                    customerNumber: (c as any).customerNumber || '',
+                    name: c.name,
+                    email: (c as any).generalEmail || (c as any).email || undefined,
+                    phone: (c as any).phone || undefined,
+                  }))}
+                  parentId={invoiceId || 'new-invoice'}
+                />
+              ),
+            },
+            {
+              key: "invoiceDate",
+              label: "Invoice Date",
+              type: "date",
+              placeholder: "dd-mm-yyyy",
+              setValue: (value: string) => handleInvoiceDateChange(value),
+              watch: () => invoiceForm.watch("invoiceDate"),
+              validation: {
+                error: invoiceForm.formState.errors.invoiceDate?.message
+              },
+              testId: "input-invoice-date"
+            },
+            {
+              key: "paymentDaysId",
+              label: "Payment Days",
+              type: "custom",
+              customComponent: (
+                <PaymentDaySelectWithAdd
+                  value={invoiceForm.watch("paymentDaysId") || ""}
+                  onValueChange={(value) => handlePaymentDaysChange(value)}
+                  language="nl"
+                  placeholder="Select payment days..."
+                  testId="select-invoice-payment-days"
+                />
+              ),
+            },
+            {
+              key: "dueDate",
+              label: "Due Date",
+              type: "date",
+              placeholder: "dd-mm-yyyy",
+              setValue: (value: string) => invoiceForm.setValue("dueDate", value),
+              watch: () => invoiceForm.watch("dueDate"),
+              validation: {
+                error: invoiceForm.formState.errors.dueDate?.message
+              },
+              testId: "input-due-date"
+            },
+            {
+              key: "status",
+              label: "Status",
+              type: "select",
+              options: [
+                { value: "pending", label: "Pending" },
+                { value: "paid", label: "Paid" },
+                { value: "overdue", label: "Overdue" },
+                { value: "cancelled", label: "Cancelled" }
+              ],
+              setValue: (value: string) => invoiceForm.setValue("status", value),
+              watch: () => invoiceForm.watch("status"),
+              validation: {
+                error: invoiceForm.formState.errors.status?.message
+              },
+              testId: "select-status"
+            },
           ],
-          setValue: (value) => invoiceForm.setValue("status", value),
-          watch: () => invoiceForm.watch("status"),
-          validation: {
-            error: invoiceForm.formState.errors.status?.message
-          },
-          testId: "select-status"
-        }),
-        createFieldRow({
-          key: "notes",
-          label: "Notes",
-          type: "textarea",
-          placeholder: "Invoice notes...",
-          register: invoiceForm.register("notes"),
-          validation: {
-            error: invoiceForm.formState.errors.notes?.message
-          },
-          testId: "textarea-invoice-notes"
-        })
+          rightColumn: [
+            {
+              key: "description",
+              label: "Description",
+              type: "textarea",
+              placeholder: "Invoice description...",
+              register: invoiceForm.register("description"),
+              validation: {
+                error: invoiceForm.formState.errors.description?.message
+              },
+              testId: "input-invoice-description"
+            },
+            {
+              key: "notes",
+              label: "Notes",
+              type: "textarea",
+              placeholder: "Invoice notes...",
+              register: invoiceForm.register("notes"),
+              validation: {
+                error: invoiceForm.formState.errors.notes?.message
+              },
+              testId: "textarea-invoice-notes"
+            },
+          ],
+        },
       ]
     },
     {
