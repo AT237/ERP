@@ -156,14 +156,12 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
 
   const handleCustomerChange = (customerId: string) => {
     invoiceForm.setValue("customerId", customerId);
-    if (!isEditing) {
-      const customer = customers.find(c => c.id === customerId);
-      if (customer?.paymentDaysId) {
-        invoiceForm.setValue("paymentDaysId", customer.paymentDaysId);
-      } else {
-        invoiceForm.setValue("paymentDaysId", "");
-        invoiceForm.setValue("dueDate", "");
-      }
+    const customer = customers.find(c => c.id === customerId);
+    if (customer?.paymentDaysId) {
+      invoiceForm.setValue("paymentDaysId", customer.paymentDaysId);
+    } else {
+      invoiceForm.setValue("paymentDaysId", "");
+      invoiceForm.setValue("dueDate", "");
     }
   };
 
