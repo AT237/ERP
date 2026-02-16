@@ -193,6 +193,17 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsDelete: true,
     supportsAddNew: true,
   },
+  "masterdata-rates-and-charges": {
+    apiPath: "/api/masterdata/rates-and-charges",
+    formType: "masterdata-rates-and-charges",
+    label: "Rate & Charge",
+    labelPlural: "Rates & Charges",
+    listQueryKey: "/api/masterdata/rates-and-charges",
+    documentType: "masterdata_rates_and_charges",
+    supportsNavigation: true,
+    supportsDelete: true,
+    supportsAddNew: true,
+  },
 };
 
 export interface UseFormToolbarOptions {

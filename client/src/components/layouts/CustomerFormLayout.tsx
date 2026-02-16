@@ -41,6 +41,8 @@ import { z } from "zod";
 const baseCustomerFormSchema = insertCustomerSchema.extend({
   paymentTerms: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined), // Keep for backward compatibility
   paymentDaysId: z.string().optional(),
+  rateId: z.string().optional().nullable(),
+  discountPercent: z.string().optional().nullable(),
   kvkNummer: z.string().optional().refine((val) => !val || /^\d{8}$/.test(val), {
     message: "C.o.C. number must contain 8 digits"
   }),
@@ -165,6 +167,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       languageCode: "nl",
       paymentTerms: "30", // Keep for backward compatibility
       paymentDaysId: "",
+      rateId: "",
+      discountPercent: "0",
       status: "active",
     },
   });
@@ -243,6 +247,15 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  const { data: ratesAndCharges } = useQuery<Array<{ id: string; code: string; name: string; rate: string }>>({
+    queryKey: ["/api/masterdata/rates-and-charges"],
+  });
+
+  const ratesAndChargesOptions = useMemo(() => [
+    { value: "", label: "No rate" },
+    ...(ratesAndCharges || []).map(r => ({ value: r.id, label: `${r.code} - ${r.name} (€${Number(r.rate).toFixed(2)})` }))
+  ], [ratesAndCharges]);
+
   // Update validation schema when country changes - no imperative triggers, rely on remount
   useEffect(() => {
     if (countryData) {
@@ -295,6 +308,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         languageCode: customer.languageCode || "nl",
         paymentTerms: customer.paymentTerms?.toString() || "30",
         paymentDaysId: customer.paymentDaysId || "",
+        rateId: (customer as any).rateId || "",
+        discountPercent: (customer as any).discountPercent?.toString() || "0",
         status: customer.status || "active",
       };
       
@@ -325,6 +340,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         languageCode: "nl",
         paymentTerms: "30",
         paymentDaysId: "",
+        rateId: "",
+        discountPercent: "0",
         status: "active",
       };
       form.reset(emptyFormData);
@@ -754,7 +771,28 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       icon: <CreditCard className="h-4 w-4" />,
       rows: [
         createFieldsRow([
-          // Positie 1: Bank Account
+          // Positie 1: Rate
+          {
+            key: "rateId",
+            label: "Rate",
+            type: "select",
+            options: ratesAndChargesOptions,
+            setValue: (value) => form.setValue("rateId" as any, value),
+            watch: () => form.watch("rateId" as any) || "",
+            testId: "select-customer-rate"
+          } as FormField2<CustomerFormData>,
+          // Positie 2: Discount %
+          {
+            key: "discountPercent",
+            label: "Discount %",
+            type: "number",
+            register: form.register("discountPercent" as any),
+            validation: {
+              error: (form.formState.errors as any).discountPercent?.message
+            },
+            testId: "input-customer-discount-percent"
+          } as FormField2<CustomerFormData>,
+          // Positie 3: Bank Account
           {
             key: "bankAccount",
             label: "Bank Account",
@@ -765,7 +803,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             },
             testId: "input-customer-bank-account"
           } as FormField2<CustomerFormData>,
-          // Positie 2: Payment Days
+          // Positie 4: Payment Days
           {
             key: "paymentDaysId",
             label: "Payment Days",
@@ -780,7 +818,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               />
             )
           } as FormField2<CustomerFormData>,
-          // Positie 3: Invoice Email
+          // Positie 5: Invoice Email
           {
             key: "invoiceEmail",
             label: "Invoice Email",
@@ -791,7 +829,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             },
             testId: "input-customer-invoice-email"
           } as FormField2<CustomerFormData>,
-          // Positie 5: Status
+          // Positie 6: Status
           {
             key: "status",
             label: "Status",
@@ -806,7 +844,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             watch: () => form.watch("status") || "active",
             testId: "select-customer-status"
           } as FormField2<CustomerFormData>
-          // Positie 6-12: automatisch leeg
         ]),
         // Speciale rij voor Invoice Notes veld dat over de gehele breedte loopt
         {

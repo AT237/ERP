@@ -2,7 +2,7 @@ import {
   users, customers, suppliers, prospects, inventoryItems, projects, quotations, quotationItems,
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
-  unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, incoterms, vatRates, cities, statuses, companyProfiles, textSnippets, textSnippetUsages,
+  unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, ratesAndCharges, incoterms, vatRates, cities, statuses, companyProfiles, textSnippets, textSnippetUsages,
   documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields, sectionTemplates,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type Prospect, type InsertProspect, type InventoryItem, type InsertInventoryItem,
@@ -16,6 +16,7 @@ import {
   type Address, type InsertAddress, type Country, type InsertCountry, type Language, type InsertLanguage, 
   type UnitOfMeasure, type InsertUnitOfMeasure, type PaymentDay, type InsertPaymentDay,
   type PaymentSchedule, type InsertPaymentSchedule, type PaymentTerm, type InsertPaymentTerm,
+  type RateAndCharge, type InsertRateAndCharge,
   type Incoterm, type InsertIncoterm, type VatRate, type InsertVatRate,
   type City, type InsertCity, type Status, type InsertStatus, type CompanyProfile, type InsertCompanyProfile,
   type TextSnippet, type InsertTextSnippet, type TextSnippetUsage, type InsertTextSnippetUsage,
@@ -206,6 +207,12 @@ export interface IStorage {
   createPaymentTerm(term: InsertPaymentTerm): Promise<PaymentTerm>;
   updatePaymentTerm(id: string, term: Partial<InsertPaymentTerm>): Promise<PaymentTerm>;
   deletePaymentTerm(id: string): Promise<void>;
+
+  getRatesAndCharges(): Promise<RateAndCharge[]>;
+  getRateAndCharge(id: string): Promise<RateAndCharge | undefined>;
+  createRateAndCharge(rate: InsertRateAndCharge): Promise<RateAndCharge>;
+  updateRateAndCharge(id: string, rate: Partial<InsertRateAndCharge>): Promise<RateAndCharge>;
+  deleteRateAndCharge(id: string): Promise<void>;
 
   getIncoterms(): Promise<Incoterm[]>;
   getIncoterm(id: string): Promise<Incoterm | undefined>;
@@ -1207,6 +1214,29 @@ export class DatabaseStorage implements IStorage {
 
   async deletePaymentTerm(id: string): Promise<void> {
     await db.update(paymentTerms).set({ isActive: false }).where(eq(paymentTerms.id, id));
+  }
+
+  async getRatesAndCharges(): Promise<RateAndCharge[]> {
+    return await db.select().from(ratesAndCharges).where(eq(ratesAndCharges.isActive, true)).orderBy(ratesAndCharges.sortOrder);
+  }
+
+  async getRateAndCharge(id: string): Promise<RateAndCharge | undefined> {
+    const [rate] = await db.select().from(ratesAndCharges).where(eq(ratesAndCharges.id, id));
+    return rate || undefined;
+  }
+
+  async createRateAndCharge(rate: InsertRateAndCharge): Promise<RateAndCharge> {
+    const [newRate] = await db.insert(ratesAndCharges).values(rate).returning();
+    return newRate;
+  }
+
+  async updateRateAndCharge(id: string, rate: Partial<InsertRateAndCharge>): Promise<RateAndCharge> {
+    const [updatedRate] = await db.update(ratesAndCharges).set(rate).where(eq(ratesAndCharges.id, id)).returning();
+    return updatedRate;
+  }
+
+  async deleteRateAndCharge(id: string): Promise<void> {
+    await db.update(ratesAndCharges).set({ isActive: false }).where(eq(ratesAndCharges.id, id));
   }
 
   async getIncoterms(): Promise<Incoterm[]> {

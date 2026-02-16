@@ -848,7 +848,7 @@ export default function Layout({ children }: LayoutProps) {
       );
     }
 
-    const masterDataIds = ['payment-terms', 'payment-days', 'uom', 'incoterms', 'vat', 'cities', 'statuses'];
+    const masterDataIds = ['payment-terms', 'payment-days', 'uom', 'rates-and-charges', 'incoterms', 'vat', 'cities', 'statuses'];
     if (masterDataIds.includes(tab.id)) {
       const mdConfig = getMasterDataConfig(tab.id);
       if (mdConfig) {

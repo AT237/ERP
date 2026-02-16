@@ -93,6 +93,8 @@ export const customers = pgTable("customers", {
   paymentTerms: integer("payment_terms").default(30), // DEPRECATED: use paymentDaysId and paymentScheduleId instead
   paymentDaysId: varchar("payment_days_id").references(() => paymentDays.id),
   paymentScheduleId: varchar("payment_schedule_id").references(() => paymentTerms.id),
+  rateId: varchar("rate_id"),
+  discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
   status: text("status").default("active"),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -457,6 +459,18 @@ export const paymentTerms = pgTable("payment_terms", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const ratesAndCharges = pgTable("rates_and_charges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
+  description: text("description"),
+  category: text("category"),
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const incoterms = pgTable("incoterms", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   code: text("code").notNull().unique(),
@@ -812,6 +826,7 @@ export const insertUnitOfMeasureSchema = createInsertSchema(unitsOfMeasure).omit
 export const insertPaymentDaySchema = createInsertSchema(paymentDays).omit({ id: true, createdAt: true });
 export const insertPaymentScheduleSchema = createInsertSchema(paymentSchedules).omit({ id: true, createdAt: true });
 export const insertPaymentTermSchema = createInsertSchema(paymentTerms).omit({ id: true, createdAt: true });
+export const insertRateAndChargeSchema = createInsertSchema(ratesAndCharges).omit({ id: true, createdAt: true });
 export const insertIncotermSchema = createInsertSchema(incoterms).omit({ id: true, createdAt: true });
 export const insertVatRateSchema = createInsertSchema(vatRates).omit({ id: true, createdAt: true });
 export const insertCitySchema = createInsertSchema(cities).omit({ id: true, createdAt: true });
@@ -883,6 +898,8 @@ export type PaymentSchedule = typeof paymentSchedules.$inferSelect;
 export type InsertPaymentSchedule = z.infer<typeof insertPaymentScheduleSchema>;
 export type PaymentTerm = typeof paymentTerms.$inferSelect;
 export type InsertPaymentTerm = z.infer<typeof insertPaymentTermSchema>;
+export type RateAndCharge = typeof ratesAndCharges.$inferSelect;
+export type InsertRateAndCharge = z.infer<typeof insertRateAndChargeSchema>;
 export type Incoterm = typeof incoterms.$inferSelect;
 export type InsertIncoterm = z.infer<typeof insertIncotermSchema>;
 export type VatRate = typeof vatRates.$inferSelect;

@@ -10,7 +10,7 @@ import {
   insertWorkOrderSchema, insertPackingListSchema,
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, 
-  insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertIncotermSchema,
+  insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertRateAndChargeSchema, insertIncotermSchema,
   insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
@@ -1558,6 +1558,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Master Data routes - Rates and Charges
+  app.get("/api/masterdata/rates-and-charges", async (req, res) => {
+    try {
+      const rates = await storage.getRatesAndCharges();
+      res.json(rates);
+    } catch (error) {
+      console.error("Error fetching rates and charges:", error);
+      res.status(500).json({ message: "Failed to fetch rates and charges" });
+    }
+  });
+
+  app.post("/api/masterdata/rates-and-charges", async (req, res) => {
+    try {
+      const rateData = insertRateAndChargeSchema.parse(req.body);
+      const rate = await storage.createRateAndCharge(rateData);
+      res.json(rate);
+    } catch (error) {
+      console.error("Error creating rate and charge:", error);
+      res.status(400).json({ message: "Failed to create rate and charge" });
+    }
+  });
+
   // Master Data routes - VAT Rates
   app.get("/api/masterdata/vat-rates", async (req, res) => {
     try {
@@ -1910,6 +1932,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting incoterm:", error);
       res.status(500).json({ message: "Failed to delete incoterm" });
+    }
+  });
+
+  // Rates and Charges individual routes
+  app.get("/api/masterdata/rates-and-charges/:id", async (req, res) => {
+    try {
+      const rate = await storage.getRateAndCharge(req.params.id);
+      if (!rate) {
+        return res.status(404).json({ message: "Rate and charge not found" });
+      }
+      res.json(rate);
+    } catch (error) {
+      console.error("Error fetching rate and charge:", error);
+      res.status(500).json({ message: "Failed to fetch rate and charge" });
+    }
+  });
+
+  app.put("/api/masterdata/rates-and-charges/:id", async (req, res) => {
+    try {
+      const rateData = insertRateAndChargeSchema.partial().parse(req.body);
+      const rate = await storage.updateRateAndCharge(req.params.id, rateData);
+      res.json(rate);
+    } catch (error) {
+      console.error("Error updating rate and charge:", error);
+      res.status(400).json({ message: "Failed to update rate and charge" });
+    }
+  });
+
+  app.delete("/api/masterdata/rates-and-charges/:id", async (req, res) => {
+    try {
+      await storage.deleteRateAndCharge(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting rate and charge:", error);
+      res.status(500).json({ message: "Failed to delete rate and charge" });
     }
   });
 

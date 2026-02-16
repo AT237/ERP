@@ -3,6 +3,7 @@ import {
   insertUnitOfMeasureSchema,
   insertPaymentDaySchema,
   insertPaymentTermSchema,
+  insertRateAndChargeSchema,
   insertIncotermSchema,
   insertVatRateSchema,
   insertCitySchema,
@@ -153,6 +154,40 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
       { key: "code", label: "Code" },
       { key: "name", label: "Name" },
       { key: "days", label: "Days", render: (value) => `${value} days` },
+      { key: "description", label: "Description" }
+    ]
+  },
+
+  'rates-and-charges': {
+    title: "Rates & Charges",
+    singularTitle: "Rate & Charge",
+    endpoint: "rates-and-charges",
+    schema: insertRateAndChargeSchema,
+    fields: [
+      { name: "code", label: "Code", type: "text", required: true },
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "rate", label: "Rate", type: "number", required: true },
+      { name: "description", label: "Description", type: "textarea" },
+      { 
+        name: "category", 
+        label: "Category", 
+        type: "select",
+        options: [
+          { value: "transport", label: "Transport" },
+          { value: "handling", label: "Handling" },
+          { value: "packaging", label: "Packaging" },
+          { value: "insurance", label: "Insurance" },
+          { value: "surcharge", label: "Surcharge" },
+          { value: "discount", label: "Discount" },
+          { value: "other", label: "Other" }
+        ]
+      }
+    ],
+    columns: [
+      { key: "code", label: "Code" },
+      { key: "name", label: "Name" },
+      { key: "rate", label: "Rate", render: (value) => `€ ${Number(value).toFixed(2)}` },
+      { key: "category", label: "Category" },
       { key: "description", label: "Description" }
     ]
   },
