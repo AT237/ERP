@@ -64,6 +64,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     defaultValues: {
       invoiceNumber: "",
       customerId: "",
+      description: "",
       paymentDaysId: "",
       status: "pending",
       dueDate: "",
@@ -111,6 +112,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       invoiceForm.reset({
         invoiceNumber: invoice.invoiceNumber || "",
         customerId: invoice.customerId || "",
+        description: (invoice as any).description || "",
         paymentDaysId: (invoice as any).paymentDaysId || "",
         status: invoice.status || "pending",
         dueDate: invoice.dueDate ? toDisplayDate(invoice.dueDate) : "",
@@ -367,6 +369,17 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
               parentId={invoiceId || 'new-invoice'}
             />
           ),
+        }),
+        createFieldRow({
+          key: "description",
+          label: "Description",
+          type: "text",
+          placeholder: "Invoice description...",
+          register: invoiceForm.register("description"),
+          validation: {
+            error: invoiceForm.formState.errors.description?.message
+          },
+          testId: "input-invoice-description"
         }),
         createFieldRow({
           key: "invoiceDate",
