@@ -10,8 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { SelectWithAdd } from "@/components/ui/select-with-add";
-import { QuickAddCustomer } from "@/components/quick-add-forms";
+import { CustomerSelect } from "@/components/ui/customer-select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProjectSchema } from "@shared/schema";
@@ -275,28 +274,21 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     }
   };
 
-  // Custom customer select component
   const renderCustomerSelect = () => (
-    <SelectWithAdd
+    <CustomerSelect
       value={form.watch("customerId") || ""}
       onValueChange={(value) => form.setValue("customerId", value)}
-      placeholder="Select customer"
-      addFormTitle="Add New Customer"
-      testId="select-customer"
-      addFormContent={
-        <QuickAddCustomer 
-          onSuccess={(customerId) => {
-            form.setValue("customerId", customerId);
-          }}
-        />
-      }
-    >
-      {customers?.map((customer) => (
-        <SelectItem key={customer.id} value={customer.id}>
-          {customer.name}
-        </SelectItem>
-      ))}
-    </SelectWithAdd>
+      placeholder="Select customer..."
+      testId="select-project-customer"
+      customers={customers?.map(c => ({
+        id: c.id,
+        customerNumber: (c as any).customerNumber || '',
+        name: c.name,
+        email: (c as any).generalEmail || (c as any).email || undefined,
+        phone: (c as any).phone || undefined,
+      }))}
+      parentId={projectId || 'new-project'}
+    />
   );
 
   // Create form sections
@@ -306,6 +298,13 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       label: "Basic Info",
       icon: <FolderOpen className="h-4 w-4" />,
       rows: [
+        createFieldRow({
+          key: "projectNumber" as any,
+          label: "Project Number",
+          type: "display",
+          displayValue: isEditing && project ? (project as any).projectNumber || '' : '(auto-generated)',
+          testId: "display-project-number",
+        } as any),
         createFieldRow({
           key: "name",
           label: "Project Name",
@@ -320,6 +319,29 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
           isModified: modifiedFields.has("name")
         } as FormField2<FormData>),
         createFieldRow({
+          key: "customerId",
+          label: "Customer",
+          type: "custom",
+          customComponent: renderCustomerSelect(),
+          testId: "select-customer",
+          isModified: modifiedFields.has("customerId")
+        } as FormField2<FormData>),
+        createFieldRow({
+          key: "status",
+          label: "Status",
+          type: "select",
+          options: [
+            { value: "planning", label: "Planning" },
+            { value: "in-progress", label: "In Progress" },
+            { value: "completed", label: "Completed" },
+            { value: "on-hold", label: "On Hold" }
+          ],
+          setValue: (value) => form.setValue("status", value),
+          watch: () => form.watch("status"),
+          testId: "select-status",
+          isModified: modifiedFields.has("status")
+        } as FormField2<FormData>),
+        createFieldRow({
           key: "description",
           label: "Description",
           type: "textarea",
@@ -329,33 +351,6 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
           rows: 3,
           isModified: modifiedFields.has("description")
         } as FormField2<FormData>),
-        createFieldsRow([
-          {
-            key: "customerId",
-            label: "Customer",
-            type: "custom",
-            customComponent: renderCustomerSelect(),
-            testId: "select-customer",
-            width: "50%",
-            isModified: modifiedFields.has("customerId")
-          } as FormField2<FormData>,
-          {
-            key: "status",
-            label: "Status",
-            type: "select",
-            options: [
-              { value: "planning", label: "Planning" },
-              { value: "in-progress", label: "In Progress" },
-              { value: "completed", label: "Completed" },
-              { value: "on-hold", label: "On Hold" }
-            ],
-            setValue: (value) => form.setValue("status", value),
-            watch: () => form.watch("status"),
-            testId: "select-status",
-            width: "50%",
-            isModified: modifiedFields.has("status")
-          } as FormField2<FormData>
-        ])
       ]
     },
     {
