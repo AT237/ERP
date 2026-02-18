@@ -31,19 +31,25 @@ export default function Invoices({}: InvoicesProps) {
 
   const getCustomerName = React.useCallback((customerId: string) => {
     const customer = customers?.find((c: Customer) => c.id === customerId);
-    return customer?.name || 'Unknown Customer';
+    return customer?.name || '';
   }, [customers]);
+
+  const enrichedInvoices = React.useMemo(() => {
+    return invoices.map(invoice => ({
+      ...invoice,
+      customerName: getCustomerName(invoice.customerId || ''),
+    }));
+  }, [invoices, getCustomerName]);
 
   const baseColumns: ColumnConfig[] = React.useMemo(() => [
     createIdColumn('invoiceNumber', 'Invoice Number'),
     { 
-      key: 'customerId', 
+      key: 'customerName', 
       label: 'Customer', 
       visible: true, 
       width: 200, 
       filterable: true, 
       sortable: true,
-      renderCell: getCustomerName
     },
     { 
       key: 'description', 
@@ -98,7 +104,7 @@ export default function Invoices({}: InvoicesProps) {
         );
       }
     },
-  ], [getCustomerName]);
+  ], []);
 
   const defaultColumns = baseColumns;
 
@@ -197,7 +203,7 @@ export default function Invoices({}: InvoicesProps) {
   return (
     <div className="p-6">
       <DataTableLayout
-        data={invoices}
+        data={enrichedInvoices}
         isLoading={isLoading}
         columns={tableState.columns}
         setColumns={tableState.setColumns}
@@ -214,9 +220,9 @@ export default function Invoices({}: InvoicesProps) {
         setSelectedRows={tableState.setSelectedRows}
         onToggleRowSelection={tableState.toggleRowSelection}
         onToggleAllRows={React.useCallback(() => {
-          const allIds = invoices.map(invoice => invoice.id);
+          const allIds = enrichedInvoices.map(invoice => invoice.id);
           tableState.toggleAllRows(allIds);
-        }, [invoices, tableState.toggleAllRows])}
+        }, [enrichedInvoices, tableState.toggleAllRows])}
         onRowDoubleClick={handleViewInvoice}
         getRowId={(invoice: Invoice) => invoice.id}
         entityName="Invoice"
