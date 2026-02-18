@@ -386,33 +386,6 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
               ),
             },
             {
-              key: "projectId",
-              label: "Project",
-              type: "custom",
-              customComponent: (
-                <SelectWithAdd
-                  value={invoiceForm.watch("projectId") || ""}
-                  onValueChange={(value) => invoiceForm.setValue("projectId", value || "")}
-                  placeholder="Select project..."
-                  addFormTitle="Add New Project"
-                  testId="select-invoice-project"
-                  addFormContent={
-                    <QuickAddProject
-                      onSuccess={(projectId) => {
-                        invoiceForm.setValue("projectId", projectId);
-                      }}
-                    />
-                  }
-                >
-                  {projects?.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {(project as any).projectNumber ? `${(project as any).projectNumber} - ${project.name}` : project.name}
-                    </SelectItem>
-                  ))}
-                </SelectWithAdd>
-              ),
-            },
-            {
               key: "invoiceDate",
               label: "Invoice Date",
               type: "date",
@@ -469,6 +442,33 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
             },
           ],
           rightColumn: [
+            {
+              key: "projectId",
+              label: "Project",
+              type: "custom",
+              customComponent: (
+                <SelectWithAdd
+                  value={invoiceForm.watch("projectId") || ""}
+                  onValueChange={(value) => invoiceForm.setValue("projectId", value || "")}
+                  placeholder="Select project..."
+                  addFormTitle="Add New Project"
+                  testId="select-invoice-project"
+                  addFormContent={
+                    <QuickAddProject
+                      onSuccess={(projectId) => {
+                        invoiceForm.setValue("projectId", projectId);
+                      }}
+                    />
+                  }
+                >
+                  {projects?.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {(project as any).projectNumber ? `${(project as any).projectNumber} - ${project.name}` : project.name}
+                    </SelectItem>
+                  ))}
+                </SelectWithAdd>
+              ),
+            },
             {
               key: "description",
               label: "Description",
