@@ -2,9 +2,9 @@ import React from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Edit, Trash2, FolderOpen, Calendar, DollarSign } from "lucide-react";
+import { Plus, Edit, Trash2, FolderOpen, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { DataTableLayout, type ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
+import { DataTableLayout, type ColumnConfig, createIdColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -114,20 +114,7 @@ const defaultColumns: ColumnConfig[] = [
       </div>
     )
   },
-  { 
-    key: 'totalValue', 
-    label: 'Total Value', 
-    visible: true, 
-    width: 120, 
-    filterable: false, 
-    sortable: true,
-    renderCell: (value: string, row: Project) => (
-      <div className="flex items-center space-x-2" data-testid={`text-total-value-${row.id}`}>
-        <DollarSign size={14} />
-        <span>{value || "—"}</span>
-      </div>
-    )
-  },
+  createCurrencyColumn('totalValue', 'Total Value'),
 ];
 
 export default function Projects() {
