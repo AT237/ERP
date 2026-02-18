@@ -17,10 +17,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay } from "@shared/schema";
+import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, Project } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
+import { SelectWithAdd } from "@/components/ui/select-with-add";
+import { QuickAddProject } from "@/components/quick-add-forms";
 import { addDays } from "date-fns";
 
 const invoiceFormSchema = insertInvoiceSchema.omit({
@@ -64,6 +66,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     defaultValues: {
       invoiceNumber: "",
       customerId: "",
+      projectId: "",
       description: "",
       paymentDaysId: "",
       status: "pending",
@@ -97,6 +100,10 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     queryKey: ["/api/customers"],
   });
 
+  const { data: projects = [] } = useQuery<Project[]>({
+    queryKey: ["/api/projects"],
+  });
+
   const { data: paymentDaysList = [] } = useQuery<PaymentDay[]>({
     queryKey: ["/api/masterdata/payment-days"],
     staleTime: 5 * 60 * 1000,
@@ -112,6 +119,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       invoiceForm.reset({
         invoiceNumber: invoice.invoiceNumber || "",
         customerId: invoice.customerId || "",
+        projectId: invoice.projectId || "",
         description: (invoice as any).description || "",
         paymentDaysId: (invoice as any).paymentDaysId || "",
         status: invoice.status || "pending",
@@ -302,6 +310,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       dueDate: data.dueDate ? toStorageDate(data.dueDate) : undefined,
       invoiceDate: data.invoiceDate ? toStorageDate(data.invoiceDate) : undefined,
       paymentDaysId: data.paymentDaysId || null,
+      projectId: data.projectId || null,
     };
 
     if (isEditing) {
@@ -371,6 +380,33 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                   }))}
                   parentId={invoiceId || 'new-invoice'}
                 />
+              ),
+            },
+            {
+              key: "projectId",
+              label: "Project",
+              type: "custom",
+              customComponent: (
+                <SelectWithAdd
+                  value={invoiceForm.watch("projectId") || ""}
+                  onValueChange={(value) => invoiceForm.setValue("projectId", value || "")}
+                  placeholder="Select project..."
+                  addFormTitle="Add New Project"
+                  testId="select-invoice-project"
+                  addFormContent={
+                    <QuickAddProject
+                      onSuccess={(projectId) => {
+                        invoiceForm.setValue("projectId", projectId);
+                      }}
+                    />
+                  }
+                >
+                  {projects?.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {(project as any).projectNumber ? `${(project as any).projectNumber} - ${project.name}` : project.name}
+                    </SelectItem>
+                  ))}
+                </SelectWithAdd>
               ),
             },
             {
