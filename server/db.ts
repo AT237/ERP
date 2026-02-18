@@ -1,6 +1,8 @@
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
 import * as schema from "@shared/schema";
+
+const { Pool } = pg;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -8,15 +10,12 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Use HTTP connection for better Replit compatibility
-const sql = neon(process.env.DATABASE_URL);
-export const db = drizzle({ client: sql, schema });
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle(pool, { schema });
 
-// Test database connection
 export async function checkDatabaseStatus() {
   try {
-    const result = await sql`SELECT 1 as test`;
-    console.log('Database connection successful');
+    const result = await pool.query('SELECT 1 as test');
     return true;
   } catch (error) {
     console.error('Database connection error:', error);
