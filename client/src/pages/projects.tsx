@@ -66,11 +66,9 @@ const defaultColumns: ColumnConfig[] = [
     filterable: false, 
     sortable: true,
     renderCell: (value: number, row: Project) => (
-      <div className="space-y-1" data-testid={`progress-${row.id}`}>
-        <div className="flex justify-between text-sm">
-          <span>{value || 0}%</span>
-        </div>
-        <Progress value={value || 0} className="h-2" />
+      <div className="flex items-center gap-2" data-testid={`progress-${row.id}`}>
+        <span className="text-sm whitespace-nowrap w-10">{value || 0}%</span>
+        <Progress value={value || 0} className="h-2 flex-1" />
       </div>
     )
   },
