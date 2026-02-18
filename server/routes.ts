@@ -914,7 +914,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/invoices", async (req, res) => {
     try {
-      const invoiceData = insertInvoiceSchema.parse(req.body);
+      const body = { ...req.body };
+      if (body.invoiceDate && typeof body.invoiceDate === 'string') {
+        const parsed = new Date(body.invoiceDate);
+        if (isNaN(parsed.getTime())) {
+          const parts = body.invoiceDate.split("-");
+          if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            body.invoiceDate = new Date(year, month, day);
+          }
+        } else {
+          body.invoiceDate = parsed;
+        }
+      }
+      if (body.dueDate && typeof body.dueDate === 'string') {
+        const parsed = new Date(body.dueDate);
+        if (isNaN(parsed.getTime())) {
+          const parts = body.dueDate.split("-");
+          if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            body.dueDate = new Date(year, month, day);
+          }
+        } else {
+          body.dueDate = parsed;
+        }
+      }
+      const invoiceData = insertInvoiceSchema.parse(body);
       const invoice = await storage.createInvoice(invoiceData);
       res.status(201).json(invoice);
     } catch (error: any) {
@@ -945,10 +974,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const body = { ...req.body };
       if (body.invoiceDate && typeof body.invoiceDate === 'string') {
-        body.invoiceDate = new Date(body.invoiceDate);
+        const parsed = new Date(body.invoiceDate);
+        if (isNaN(parsed.getTime())) {
+          const parts = body.invoiceDate.split("-");
+          if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            body.invoiceDate = new Date(year, month, day);
+          }
+        } else {
+          body.invoiceDate = parsed;
+        }
       }
       if (body.dueDate && typeof body.dueDate === 'string') {
-        body.dueDate = new Date(body.dueDate);
+        const parsed = new Date(body.dueDate);
+        if (isNaN(parsed.getTime())) {
+          const parts = body.dueDate.split("-");
+          if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            body.dueDate = new Date(year, month, day);
+          }
+        } else {
+          body.dueDate = parsed;
+        }
       }
       const invoiceData = insertInvoiceSchema.partial().parse(body);
       const invoice = await storage.updateInvoice(req.params.id, invoiceData);
