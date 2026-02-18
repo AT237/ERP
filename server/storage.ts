@@ -27,6 +27,16 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, or, ilike } from "drizzle-orm";
+import type { PgTable } from "drizzle-orm/pg-core";
+
+async function safeUpdate<T>(table: any, data: any, id: string): Promise<T> {
+  const result = await db.update(table).set(data).where(eq(table.id, id)).returning();
+  if (result && result.length > 0) {
+    return result[0] as T;
+  }
+  const [existing] = await db.select().from(table).where(eq(table.id, id));
+  return existing as T;
+}
 
 export interface IStorage {
   // User methods
@@ -333,7 +343,7 @@ export class DatabaseStorage implements IStorage {
     const [existing] = await db.select().from(userPreferences).where(eq(userPreferences.userId, preferences.userId!));
     
     if (existing) {
-      const [updated] = await db
+      const result = await db
         .update(userPreferences)
         .set({
           navigationOrder: preferences.navigationOrder,
@@ -342,7 +352,9 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(userPreferences.userId, preferences.userId!))
         .returning();
-      return updated;
+      if (result && result.length > 0) return result[0];
+      const [fallback] = await db.select().from(userPreferences).where(eq(userPreferences.userId, preferences.userId!));
+      return fallback;
     } else {
       const [created] = await db.insert(userPreferences).values(preferences).returning();
       return created;
@@ -370,8 +382,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCountry(id: string, country: Partial<InsertCountry>): Promise<Country> {
-    const [updatedCountry] = await db.update(countries).set(country).where(eq(countries.id, id)).returning();
-    return updatedCountry;
+    return await safeUpdate(countries, country, id);
   }
 
   async deleteCountry(id: string): Promise<void> {
@@ -408,8 +419,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateLanguage(id: string, language: Partial<InsertLanguage>): Promise<Language> {
-    const [updatedLanguage] = await db.update(languages).set(language).where(eq(languages.id, id)).returning();
-    return updatedLanguage;
+    return await safeUpdate(languages, language, id);
   }
 
   async deleteLanguage(id: string): Promise<void> {
@@ -444,8 +454,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCustomer(id: string, customer: Partial<InsertCustomer>): Promise<Customer> {
-    const [updatedCustomer] = await db.update(customers).set(customer).where(eq(customers.id, id)).returning();
-    return updatedCustomer;
+    return await safeUpdate(customers, customer, id);
   }
 
   async deleteCustomer(id: string): Promise<void> {
@@ -477,8 +486,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCustomerContact(id: string, contact: Partial<InsertCustomerContact>): Promise<CustomerContact> {
-    const [updatedContact] = await db.update(customerContacts).set(contact).where(eq(customerContacts.id, id)).returning();
-    return updatedContact;
+    return await safeUpdate(customerContacts, contact, id);
   }
 
   async searchCustomerContacts(query: string, customerId?: string): Promise<CustomerContact[]> {
@@ -530,8 +538,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateAddress(id: string, address: Partial<InsertAddress>): Promise<Address> {
-    const [updatedAddress] = await db.update(addresses).set(address).where(eq(addresses.id, id)).returning();
-    return updatedAddress;
+    return await safeUpdate(addresses, address, id);
   }
 
   async deleteAddress(id: string): Promise<void> {
@@ -557,8 +564,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSupplier(id: string, supplier: Partial<InsertSupplier>): Promise<Supplier> {
-    const [updatedSupplier] = await db.update(suppliers).set(supplier).where(eq(suppliers.id, id)).returning();
-    return updatedSupplier;
+    return await safeUpdate(suppliers, supplier, id);
   }
 
   async deleteSupplier(id: string): Promise<void> {
@@ -599,8 +605,7 @@ export class DatabaseStorage implements IStorage {
       lastContactDate: prospect.lastContactDate ? new Date(prospect.lastContactDate) : undefined,
       conversionDate: prospect.conversionDate ? new Date(prospect.conversionDate) : undefined,
     };
-    const [updatedProspect] = await db.update(prospects).set(values).where(eq(prospects.id, id)).returning();
-    return updatedProspect;
+    return await safeUpdate(prospects, values, id);
   }
 
   async deleteProspect(id: string): Promise<void> {
@@ -626,8 +631,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateInventoryItem(id: string, item: Partial<InsertInventoryItem>): Promise<InventoryItem> {
-    const [updatedItem] = await db.update(inventoryItems).set(item).where(eq(inventoryItems.id, id)).returning();
-    return updatedItem;
+    return await safeUpdate(inventoryItems, item, id);
   }
 
   async deleteInventoryItem(id: string): Promise<void> {
@@ -655,8 +659,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProject(id: string, project: Partial<InsertProject>): Promise<Project> {
-    const [updatedProject] = await db.update(projects).set(project).where(eq(projects.id, id)).returning();
-    return updatedProject;
+    return await safeUpdate(projects, project, id);
   }
 
   async deleteProject(id: string): Promise<void> {
@@ -716,8 +719,7 @@ export class DatabaseStorage implements IStorage {
     if (updateData.validUntil && typeof updateData.validUntil === 'string') {
       updateData.validUntil = new Date(updateData.validUntil);
     }
-    const [updatedQuotation] = await db.update(quotations).set(updateData).where(eq(quotations.id, id)).returning();
-    return updatedQuotation;
+    return await safeUpdate(quotations, updateData, id);
   }
 
   async deleteQuotation(id: string): Promise<void> {
@@ -841,8 +843,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    const [updatedItem] = await db.update(quotationItems).set(item).where(eq(quotationItems.id, id)).returning();
-    return updatedItem;
+    return await safeUpdate(quotationItems, item, id);
   }
   
   private async getNextPositionNo(quotationId: string): Promise<string> {
@@ -890,8 +891,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateInvoice(id: string, invoice: Partial<InsertInvoice>): Promise<Invoice> {
-    const [updatedInvoice] = await db.update(invoices).set(invoice).where(eq(invoices.id, id)).returning();
-    return updatedInvoice;
+    return await safeUpdate(invoices, invoice, id);
   }
 
   async deleteInvoice(id: string): Promise<void> {
@@ -913,8 +913,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateInvoiceItem(id: string, item: Partial<InsertInvoiceItem>): Promise<InvoiceItem> {
-    const [updatedItem] = await db.update(invoiceItems).set(item).where(eq(invoiceItems.id, id)).returning();
-    return updatedItem;
+    return await safeUpdate(invoiceItems, item, id);
   }
 
   async deleteInvoiceItem(id: string): Promise<void> {
@@ -937,8 +936,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePurchaseOrder(id: string, order: Partial<InsertPurchaseOrder>): Promise<PurchaseOrder> {
-    const [updatedOrder] = await db.update(purchaseOrders).set(order).where(eq(purchaseOrders.id, id)).returning();
-    return updatedOrder;
+    return await safeUpdate(purchaseOrders, order, id);
   }
 
   async deletePurchaseOrder(id: string): Promise<void> {
@@ -955,8 +953,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePurchaseOrderItem(id: string, item: Partial<InsertPurchaseOrderItem>): Promise<PurchaseOrderItem> {
-    const [updatedItem] = await db.update(purchaseOrderItems).set(item).where(eq(purchaseOrderItems.id, id)).returning();
-    return updatedItem;
+    return await safeUpdate(purchaseOrderItems, item, id);
   }
 
   async deletePurchaseOrderItem(id: string): Promise<void> {
@@ -979,8 +976,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSalesOrder(id: string, order: Partial<InsertSalesOrder>): Promise<SalesOrder> {
-    const [updatedOrder] = await db.update(salesOrders).set(order).where(eq(salesOrders.id, id)).returning();
-    return updatedOrder;
+    return await safeUpdate(salesOrders, order, id);
   }
 
   async deleteSalesOrder(id: string): Promise<void> {
@@ -997,8 +993,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSalesOrderItem(id: string, item: Partial<InsertSalesOrderItem>): Promise<SalesOrderItem> {
-    const [updatedItem] = await db.update(salesOrderItems).set(item).where(eq(salesOrderItems.id, id)).returning();
-    return updatedItem;
+    return await safeUpdate(salesOrderItems, item, id);
   }
 
   async deleteSalesOrderItem(id: string): Promise<void> {
@@ -1021,8 +1016,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateWorkOrder(id: string, order: Partial<InsertWorkOrder>): Promise<WorkOrder> {
-    const [updatedOrder] = await db.update(workOrders).set(order).where(eq(workOrders.id, id)).returning();
-    return updatedOrder;
+    return await safeUpdate(workOrders, order, id);
   }
 
   async deleteWorkOrder(id: string): Promise<void> {
@@ -1045,8 +1039,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePackingList(id: string, list: Partial<InsertPackingList>): Promise<PackingList> {
-    const [updatedList] = await db.update(packingLists).set(list).where(eq(packingLists.id, id)).returning();
-    return updatedList;
+    return await safeUpdate(packingLists, list, id);
   }
 
   async deletePackingList(id: string): Promise<void> {
@@ -1063,8 +1056,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePackingListItem(id: string, item: Partial<InsertPackingListItem>): Promise<PackingListItem> {
-    const [updatedItem] = await db.update(packingListItems).set(item).where(eq(packingListItems.id, id)).returning();
-    return updatedItem;
+    return await safeUpdate(packingListItems, item, id);
   }
 
   async deletePackingListItem(id: string): Promise<void> {
@@ -1139,8 +1131,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUnitOfMeasure(id: string, uom: Partial<InsertUnitOfMeasure>): Promise<UnitOfMeasure> {
-    const [updatedUom] = await db.update(unitsOfMeasure).set(uom).where(eq(unitsOfMeasure.id, id)).returning();
-    return updatedUom;
+    return await safeUpdate(unitsOfMeasure, uom, id);
   }
 
   async deleteUnitOfMeasure(id: string): Promise<void> {
@@ -1162,8 +1153,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePaymentDay(id: string, paymentDay: Partial<InsertPaymentDay>): Promise<PaymentDay> {
-    const [updatedPaymentDay] = await db.update(paymentDays).set(paymentDay).where(eq(paymentDays.id, id)).returning();
-    return updatedPaymentDay;
+    return await safeUpdate(paymentDays, paymentDay, id);
   }
 
   async deletePaymentDay(id: string): Promise<void> {
@@ -1185,8 +1175,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePaymentSchedule(id: string, schedule: Partial<InsertPaymentSchedule>): Promise<PaymentSchedule> {
-    const [updatedSchedule] = await db.update(paymentSchedules).set(schedule).where(eq(paymentSchedules.id, id)).returning();
-    return updatedSchedule;
+    return await safeUpdate(paymentSchedules, schedule, id);
   }
 
   async deletePaymentSchedule(id: string): Promise<void> {
@@ -1208,8 +1197,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePaymentTerm(id: string, term: Partial<InsertPaymentTerm>): Promise<PaymentTerm> {
-    const [updatedTerm] = await db.update(paymentTerms).set(term).where(eq(paymentTerms.id, id)).returning();
-    return updatedTerm;
+    return await safeUpdate(paymentTerms, term, id);
   }
 
   async deletePaymentTerm(id: string): Promise<void> {
@@ -1231,8 +1219,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateRateAndCharge(id: string, rate: Partial<InsertRateAndCharge>): Promise<RateAndCharge> {
-    const [updatedRate] = await db.update(ratesAndCharges).set(rate).where(eq(ratesAndCharges.id, id)).returning();
-    return updatedRate;
+    return await safeUpdate(ratesAndCharges, rate, id);
   }
 
   async deleteRateAndCharge(id: string): Promise<void> {
@@ -1254,8 +1241,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateIncoterm(id: string, incoterm: Partial<InsertIncoterm>): Promise<Incoterm> {
-    const [updatedIncoterm] = await db.update(incoterms).set(incoterm).where(eq(incoterms.id, id)).returning();
-    return updatedIncoterm;
+    return await safeUpdate(incoterms, incoterm, id);
   }
 
   async deleteIncoterm(id: string): Promise<void> {
@@ -1277,8 +1263,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateVatRate(id: string, rate: Partial<InsertVatRate>): Promise<VatRate> {
-    const [updatedRate] = await db.update(vatRates).set(rate).where(eq(vatRates.id, id)).returning();
-    return updatedRate;
+    return await safeUpdate(vatRates, rate, id);
   }
 
   async deleteVatRate(id: string): Promise<void> {
@@ -1300,8 +1285,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCity(id: string, city: Partial<InsertCity>): Promise<City> {
-    const [updatedCity] = await db.update(cities).set(city).where(eq(cities.id, id)).returning();
-    return updatedCity;
+    return await safeUpdate(cities, city, id);
   }
 
   async deleteCity(id: string): Promise<void> {
@@ -1323,8 +1307,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateStatus(id: string, status: Partial<InsertStatus>): Promise<Status> {
-    const [updatedStatus] = await db.update(statuses).set(status).where(eq(statuses.id, id)).returning();
-    return updatedStatus;
+    return await safeUpdate(statuses, status, id);
   }
 
   async deleteStatus(id: string): Promise<void> {
@@ -1374,7 +1357,7 @@ export class DatabaseStorage implements IStorage {
         .where(sql`${companyProfiles.id} != ${id}`);
     }
     
-    const [updatedProfile] = await db.update(companyProfiles)
+    const result = await db.update(companyProfiles)
       .set({ 
         ...profile, 
         isActive: isActivating,
@@ -1382,7 +1365,9 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(companyProfiles.id, id))
       .returning();
-    return updatedProfile;
+    if (result && result.length > 0) return result[0];
+    const [fallback] = await db.select().from(companyProfiles).where(eq(companyProfiles.id, id));
+    return fallback;
   }
 
   async deleteCompanyProfile(id: string): Promise<void> {
@@ -1437,8 +1422,7 @@ export class DatabaseStorage implements IStorage {
       ...snippet,
       updatedAt: sql`NOW()`
     };
-    const [updatedSnippet] = await db.update(textSnippets).set(updateData).where(eq(textSnippets.id, id)).returning();
-    return updatedSnippet;
+    return await safeUpdate(textSnippets, updateData, id);
   }
 
   async deleteTextSnippet(id: string): Promise<void> {
@@ -1591,11 +1575,13 @@ export class DatabaseStorage implements IStorage {
       allowedTables: layout.allowedTables ? [...layout.allowedTables] : undefined,
       updatedAt: new Date()
     };
-    const [updatedLayout] = await db.update(documentLayouts)
+    const result = await db.update(documentLayouts)
       .set(normalizedLayout as any)
       .where(eq(documentLayouts.id, id))
       .returning();
-    return updatedLayout;
+    if (result && result.length > 0) return result[0];
+    const [fallback] = await db.select().from(documentLayouts).where(eq(documentLayouts.id, id));
+    return fallback;
   }
 
   async deleteDocumentLayout(id: string): Promise<void> {
@@ -1623,11 +1609,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateLayoutBlock(id: string, block: Partial<InsertLayoutBlock>): Promise<LayoutBlock> {
-    const [updatedBlock] = await db.update(layoutBlocks)
+    const result = await db.update(layoutBlocks)
       .set(block as any)
       .where(eq(layoutBlocks.id, id))
       .returning();
-    return updatedBlock;
+    if (result && result.length > 0) return result[0];
+    const [fallback] = await db.select().from(layoutBlocks).where(eq(layoutBlocks.id, id));
+    return fallback;
   }
 
   async deleteLayoutBlock(id: string): Promise<void> {
@@ -1662,11 +1650,13 @@ export class DatabaseStorage implements IStorage {
       ...section,
       config: section.config ? JSON.parse(JSON.stringify(section.config)) : undefined
     };
-    const [updatedSection] = await db.update(layoutSections)
+    const result = await db.update(layoutSections)
       .set(normalizedSection as any)
       .where(eq(layoutSections.id, id))
       .returning();
-    return updatedSection;
+    if (result && result.length > 0) return result[0];
+    const [fallback] = await db.select().from(layoutSections).where(eq(layoutSections.id, id));
+    return fallback;
   }
 
   async deleteLayoutSection(id: string): Promise<void> {
@@ -1691,11 +1681,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateLayoutElement(id: string, element: Partial<InsertLayoutElement>): Promise<LayoutElement> {
-    const [updatedElement] = await db.update(layoutElements)
+    const result = await db.update(layoutElements)
       .set(element)
       .where(eq(layoutElements.id, id))
       .returning();
-    return updatedElement;
+    if (result && result.length > 0) return result[0];
+    const [fallback] = await db.select().from(layoutElements).where(eq(layoutElements.id, id));
+    return fallback;
   }
 
   async deleteLayoutElement(id: string): Promise<void> {
@@ -1720,11 +1712,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateDocumentLayoutField(id: string, field: Partial<InsertDocumentLayoutField>): Promise<DocumentLayoutField> {
-    const [updatedField] = await db.update(documentLayoutFields)
+    const result = await db.update(documentLayoutFields)
       .set(field)
       .where(eq(documentLayoutFields.id, id))
       .returning();
-    return updatedField;
+    if (result && result.length > 0) return result[0];
+    const [fallback] = await db.select().from(documentLayoutFields).where(eq(documentLayoutFields.id, id));
+    return fallback;
   }
 
   async deleteDocumentLayoutField(id: string): Promise<void> {
