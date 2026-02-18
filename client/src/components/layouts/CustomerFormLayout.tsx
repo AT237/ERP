@@ -26,6 +26,7 @@ import { ContactPersonSelectWithAdd } from "@/components/ui/contact-person-selec
 import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
 import { LanguageSelectWithAdd } from "@/components/ui/language-select-with-add";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
+import { VatRateSelectWithAdd } from "@/components/ui/vat-rate-select-with-add";
 import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
@@ -258,14 +259,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
     ...(ratesAndCharges || []).map(r => ({ value: r.id, label: `${r.code} - ${r.name} (€${Number(r.rate).toFixed(2)})` }))
   ], [ratesAndCharges]);
 
-  const { data: vatRates } = useQuery<Array<{ id: string; code: string; name: string; rate: string }>>({
-    queryKey: ["/api/masterdata/vat-rates"],
-  });
-
-  const vatRateOptions = useMemo(() => [
-    { value: "__none__", label: "No VAT rate" },
-    ...(vatRates || []).map(v => ({ value: v.id, label: `${v.code} - ${v.name} (${Number(v.rate).toFixed(0)}%)` }))
-  ], [vatRates]);
 
   // Update validation schema when country changes - no imperative triggers, rely on remount
   useEffect(() => {
@@ -846,10 +839,15 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           {
             key: "vatRateId",
             label: "VAT Rate",
-            type: "select",
-            options: vatRateOptions,
-            setValue: (value) => form.setValue("vatRateId" as any, value === "__none__" ? "" : value),
-            watch: () => form.watch("vatRateId" as any) || "__none__",
+            type: "custom",
+            customComponent: (
+              <VatRateSelectWithAdd
+                value={form.watch("vatRateId" as any) || ""}
+                onValueChange={(value) => form.setValue("vatRateId" as any, value)}
+                placeholder="Select VAT rate..."
+                testId="select-customer-vat-rate"
+              />
+            ),
             testId: "select-customer-vat-rate"
           } as FormField2<CustomerFormData>
         ]),

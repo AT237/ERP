@@ -137,7 +137,7 @@ export function VatRatesForm() {
         { key: "code", label: "Code" },
         { key: "name", label: "Name" },
         { key: "rate", label: "Rate", render: (value) => `${value}%` },
-        { key: "country", label: "Country" }
+        { key: "description", label: "Description" }
       ]}
     />
   );
