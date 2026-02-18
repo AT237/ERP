@@ -114,8 +114,11 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     enabled: !!invoiceId,
   });
 
+  const formInitializedForId = useRef<string | undefined>(undefined);
+
   useEffect(() => {
-    if (invoice) {
+    if (invoice && formInitializedForId.current !== invoice.id) {
+      formInitializedForId.current = invoice.id;
       invoiceForm.reset({
         invoiceNumber: invoice.invoiceNumber || "",
         customerId: invoice.customerId || "",
