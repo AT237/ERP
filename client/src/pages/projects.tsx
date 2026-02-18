@@ -196,7 +196,7 @@ export default function Projects() {
     window.dispatchEvent(new CustomEvent('open-form-tab', {
       detail: {
         id: `edit-project-${project.id}`,
-        name: `Edit ${project.name}`,
+        name: `Edit ${project.projectNumber}`,
         formType: 'project',
         projectId: project.id
       }
@@ -207,7 +207,7 @@ export default function Projects() {
     window.dispatchEvent(new CustomEvent('open-form-tab', {
       detail: {
         id: `edit-project-${project.id}`,
-        name: `Edit ${project.name}`,
+        name: `Edit ${project.projectNumber}`,
         formType: 'project',
         projectId: project.id
       }
