@@ -42,6 +42,7 @@ const baseCustomerFormSchema = insertCustomerSchema.extend({
   paymentTerms: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined), // Keep for backward compatibility
   paymentDaysId: z.string().optional(),
   rateId: z.string().optional().nullable(),
+  vatRateId: z.string().optional().nullable(),
   discountPercent: z.string().optional().nullable(),
   kvkNummer: z.string().optional().refine((val) => !val || /^\d{8}$/.test(val), {
     message: "C.o.C. number must contain 8 digits"
@@ -168,6 +169,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       paymentTerms: "30", // Keep for backward compatibility
       paymentDaysId: "",
       rateId: "",
+      vatRateId: "",
       discountPercent: "0",
       status: "active",
     },
@@ -252,9 +254,18 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   });
 
   const ratesAndChargesOptions = useMemo(() => [
-    { value: "", label: "No rate" },
+    { value: "__none__", label: "No rate" },
     ...(ratesAndCharges || []).map(r => ({ value: r.id, label: `${r.code} - ${r.name} (€${Number(r.rate).toFixed(2)})` }))
   ], [ratesAndCharges]);
+
+  const { data: vatRates } = useQuery<Array<{ id: string; code: string; name: string; rate: string }>>({
+    queryKey: ["/api/masterdata/vat-rates"],
+  });
+
+  const vatRateOptions = useMemo(() => [
+    { value: "__none__", label: "No VAT rate" },
+    ...(vatRates || []).map(v => ({ value: v.id, label: `${v.code} - ${v.name} (${Number(v.rate).toFixed(0)}%)` }))
+  ], [vatRates]);
 
   // Update validation schema when country changes - no imperative triggers, rely on remount
   useEffect(() => {
@@ -309,6 +320,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         paymentTerms: customer.paymentTerms?.toString() || "30",
         paymentDaysId: customer.paymentDaysId || "",
         rateId: (customer as any).rateId || "",
+        vatRateId: (customer as any).vatRateId || "",
         discountPercent: (customer as any).discountPercent?.toString() || "0",
         status: customer.status || "active",
       };
@@ -341,6 +353,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         paymentTerms: "30",
         paymentDaysId: "",
         rateId: "",
+        vatRateId: "",
         discountPercent: "0",
         status: "active",
       };
@@ -777,8 +790,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             label: "Rate",
             type: "select",
             options: ratesAndChargesOptions,
-            setValue: (value) => form.setValue("rateId" as any, value),
-            watch: () => form.watch("rateId" as any) || "",
+            setValue: (value) => form.setValue("rateId" as any, value === "__none__" ? "" : value),
+            watch: () => form.watch("rateId" as any) || "__none__",
             testId: "select-customer-rate"
           } as FormField2<CustomerFormData>,
           // Positie 2: Discount %
@@ -829,20 +842,15 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             },
             testId: "input-customer-invoice-email"
           } as FormField2<CustomerFormData>,
-          // Positie 6: Status
+          // Positie 6: VAT Rate
           {
-            key: "status",
-            label: "Status",
+            key: "vatRateId",
+            label: "VAT Rate",
             type: "select",
-            options: [
-              { value: "active", label: "Active" },
-              { value: "inactive", label: "Inactive" },
-              { value: "prospect", label: "Prospect" },
-              { value: "blocked", label: "Blocked" }
-            ],
-            setValue: (value) => form.setValue("status", value),
-            watch: () => form.watch("status") || "active",
-            testId: "select-customer-status"
+            options: vatRateOptions,
+            setValue: (value) => form.setValue("vatRateId" as any, value === "__none__" ? "" : value),
+            watch: () => form.watch("vatRateId" as any) || "__none__",
+            testId: "select-customer-vat-rate"
           } as FormField2<CustomerFormData>
         ]),
         // Speciale rij voor Invoice Notes veld dat over de gehele breedte loopt

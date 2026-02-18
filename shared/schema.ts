@@ -94,6 +94,7 @@ export const customers = pgTable("customers", {
   paymentDaysId: varchar("payment_days_id").references(() => paymentDays.id),
   paymentScheduleId: varchar("payment_schedule_id").references(() => paymentTerms.id),
   rateId: varchar("rate_id"),
+  vatRateId: varchar("vat_rate_id").references(() => vatRates.id),
   discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
   status: text("status").default("active"),
   deletedAt: timestamp("deleted_at"),

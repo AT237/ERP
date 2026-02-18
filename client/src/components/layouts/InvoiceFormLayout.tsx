@@ -142,6 +142,15 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     }
   }, [fetchedInvoiceItems]);
 
+  useEffect(() => {
+    const subtotal = invoiceItems.reduce((sum, item) => {
+      return sum + (parseFloat(item.lineTotal || "0") || 0);
+    }, 0);
+    const taxAmount = parseFloat(invoiceForm.getValues("taxAmount") || "0") || 0;
+    invoiceForm.setValue("subtotal", subtotal.toFixed(2));
+    invoiceForm.setValue("totalAmount", (subtotal + taxAmount).toFixed(2));
+  }, [invoiceItems]);
+
   const calculateDueDate = (invoiceDateStr: string, pDaysId: string) => {
     if (!invoiceDateStr || !pDaysId || paymentDaysList.length === 0) return;
     const paymentDay = paymentDaysList.find(pd => pd.id === pDaysId);
@@ -156,6 +165,14 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     const dueDateObj = addDays(invoiceDateObj, paymentDay.days);
     invoiceForm.setValue("dueDate", toDisplayDate(dueDateObj));
   };
+
+  const watchedTaxAmount = invoiceForm.watch("taxAmount");
+
+  useEffect(() => {
+    const subtotal = parseFloat(invoiceForm.getValues("subtotal") || "0") || 0;
+    const tax = parseFloat(watchedTaxAmount || "0") || 0;
+    invoiceForm.setValue("totalAmount", (subtotal + tax).toFixed(2));
+  }, [watchedTaxAmount]);
 
   const watchedInvoiceDate = invoiceForm.watch("invoiceDate");
   const watchedPaymentDaysId = invoiceForm.watch("paymentDaysId");
@@ -491,16 +508,12 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       label: "Amounts",
       rows: [
         createFieldRow({
-          key: "subtotal",
+          key: "subtotal" as any,
           label: "Subtotal",
-          type: "text",
-          register: invoiceForm.register("subtotal"),
-          validation: {
-            error: invoiceForm.formState.errors.subtotal?.message,
-            isRequired: true
-          },
-          testId: "input-subtotal"
-        }),
+          type: "display",
+          displayValue: `€ ${invoiceForm.watch("subtotal") || "0.00"}`,
+          testId: "display-subtotal"
+        } as any),
         createFieldRow({
           key: "taxAmount",
           label: "Tax Amount",
@@ -512,16 +525,12 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           testId: "input-tax-amount"
         }),
         createFieldRow({
-          key: "totalAmount",
+          key: "totalAmount" as any,
           label: "Total Amount",
-          type: "text",
-          register: invoiceForm.register("totalAmount"),
-          validation: {
-            error: invoiceForm.formState.errors.totalAmount?.message,
-            isRequired: true
-          },
-          testId: "input-total-amount"
-        }),
+          type: "display",
+          displayValue: `€ ${invoiceForm.watch("totalAmount") || "0.00"}`,
+          testId: "display-total-amount"
+        } as any),
         createFieldRow({
           key: "paidAmount",
           label: "Paid Amount",
