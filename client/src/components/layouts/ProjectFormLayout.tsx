@@ -123,6 +123,12 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     queryKey: ["/api/customers"],
   });
 
+  // Load invoiced total for this project
+  const { data: invoicedTotalData } = useQuery<{ total: string }>({
+    queryKey: ["/api/projects", projectId, "invoiced-total"],
+    enabled: !!projectId,
+  });
+
   // Update form when project data loads and store original values for change tracking
   useEffect(() => {
     if (project) {
@@ -410,7 +416,14 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
             width: "50%",
             isModified: modifiedFields.has("progress")
           } as FormField2<FormData>
-        ])
+        ]),
+        createFieldRow({
+          key: "invoicedTotal" as any,
+          label: "Invoiced Total",
+          type: "display",
+          displayValue: isEditing ? `€ ${invoicedTotalData?.total || "0.00"}` : "—",
+          testId: "display-invoiced-total",
+        } as any),
       ]
     }
   ];

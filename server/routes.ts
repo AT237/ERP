@@ -42,7 +42,7 @@ import {
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
-import { db, checkDatabaseStatus } from './db';
+import { db, pool, checkDatabaseStatus } from './db';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard routes
@@ -688,6 +688,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching project:", error);
       res.status(500).json({ message: "Failed to fetch project" });
+    }
+  });
+
+  app.get("/api/projects/:id/invoiced-total", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const result = await pool.query(
+        `SELECT COALESCE(SUM(CAST(total_amount AS NUMERIC)), 0) as total FROM invoices WHERE project_id = $1`,
+        [id]
+      );
+      const total = result.rows[0]?.total || "0.00";
+      res.json({ total: parseFloat(total).toFixed(2) });
+    } catch (error) {
+      console.error("Error fetching invoiced total:", error);
+      res.status(500).json({ message: "Failed to fetch invoiced total" });
     }
   });
 
