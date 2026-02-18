@@ -21,8 +21,7 @@ import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, 
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
-import { SelectWithAdd } from "@/components/ui/select-with-add";
-import { QuickAddProject } from "@/components/quick-add-forms";
+import { ProjectSelect } from "@/components/ui/project-select";
 import { addDays } from "date-fns";
 
 const invoiceFormSchema = insertInvoiceSchema.omit({
@@ -447,26 +446,18 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
               label: "Project",
               type: "custom",
               customComponent: (
-                <SelectWithAdd
+                <ProjectSelect
                   value={invoiceForm.watch("projectId") || ""}
                   onValueChange={(value) => invoiceForm.setValue("projectId", value || "")}
                   placeholder="Select project..."
-                  addFormTitle="Add New Project"
                   testId="select-invoice-project"
-                  addFormContent={
-                    <QuickAddProject
-                      onSuccess={(projectId) => {
-                        invoiceForm.setValue("projectId", projectId);
-                      }}
-                    />
-                  }
-                >
-                  {projects?.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {(project as any).projectNumber ? `${(project as any).projectNumber} - ${project.name}` : project.name}
-                    </SelectItem>
-                  ))}
-                </SelectWithAdd>
+                  projects={projects.map(p => ({
+                    id: p.id,
+                    projectNumber: (p as any).projectNumber || '',
+                    name: p.name,
+                  }))}
+                  parentId={invoiceId || 'new-invoice'}
+                />
               ),
             },
             {
