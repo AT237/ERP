@@ -1,6 +1,30 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+
+function parseDateFields(body: Record<string, any>, fields: string[]): Record<string, any> {
+  const result = { ...body };
+  for (const field of fields) {
+    if (result[field] && typeof result[field] === 'string') {
+      const parsed = new Date(result[field]);
+      if (!isNaN(parsed.getTime())) {
+        result[field] = parsed;
+      } else {
+        const parts = result[field].split("-");
+        if (parts.length === 3) {
+          const day = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1;
+          const year = parseInt(parts[2], 10);
+          const d = new Date(year, month, day);
+          if (!isNaN(d.getTime())) {
+            result[field] = d;
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
 import { loadQuotationPrintData } from "./utils/field-resolver";
 import {
   insertCustomerSchema, insertSupplierSchema, insertProspectSchema, insertInventoryItemSchema,
@@ -103,7 +127,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/customers", async (req, res) => {
     try {
-      const customerData = insertCustomerSchema.parse(req.body);
+      const body = parseDateFields(req.body, ['lastContactDate', 'conversionDate']);
+      const customerData = insertCustomerSchema.parse(body);
       // Convert empty strings to null for nullable foreign key fields
       const cleanedData = {
         ...customerData,
@@ -123,7 +148,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/customers/:id", async (req, res) => {
     try {
-      const customerData = insertCustomerSchema.partial().parse(req.body);
+      const body = parseDateFields(req.body, ['lastContactDate', 'conversionDate']);
+      const customerData = insertCustomerSchema.partial().parse(body);
       // Convert empty strings to null for nullable foreign key fields
       const cleanedData = {
         ...customerData,
@@ -667,7 +693,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects", async (req, res) => {
     try {
-      const projectData = insertProjectSchema.parse(req.body);
+      const body = parseDateFields(req.body, ['startDate', 'endDate']);
+      const projectData = insertProjectSchema.parse(body);
       const project = await storage.createProject(projectData);
       res.status(201).json(project);
     } catch (error) {
@@ -678,7 +705,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/projects/:id", async (req, res) => {
     try {
-      const projectData = insertProjectSchema.partial().parse(req.body);
+      const body = parseDateFields(req.body, ['startDate', 'endDate']);
+      const projectData = insertProjectSchema.partial().parse(body);
       const project = await storage.updateProject(req.params.id, projectData);
       res.json(project);
     } catch (error) {
@@ -761,8 +789,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/quotations", async (req, res) => {
     try {
-      console.log("Received quotation data:", JSON.stringify(req.body, null, 2));
-      const quotationData = insertQuotationSchema.parse(req.body);
+      const body = parseDateFields(req.body, ['quotationDate', 'deliveryDate']);
+      const quotationData = insertQuotationSchema.parse(body);
       const quotation = await storage.createQuotation(quotationData);
       res.status(201).json(quotation);
     } catch (error) {
@@ -799,7 +827,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/quotations/:id", async (req, res) => {
     try {
-      const quotationData = insertQuotationSchema.partial().parse(req.body);
+      const body = parseDateFields(req.body, ['quotationDate', 'deliveryDate']);
+      const quotationData = insertQuotationSchema.partial().parse(body);
       const quotation = await storage.updateQuotation(req.params.id, quotationData);
       res.json(quotation);
     } catch (error) {
@@ -914,35 +943,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/invoices", async (req, res) => {
     try {
-      const body = { ...req.body };
-      if (body.invoiceDate && typeof body.invoiceDate === 'string') {
-        const parsed = new Date(body.invoiceDate);
-        if (isNaN(parsed.getTime())) {
-          const parts = body.invoiceDate.split("-");
-          if (parts.length === 3) {
-            const day = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1;
-            const year = parseInt(parts[2], 10);
-            body.invoiceDate = new Date(year, month, day);
-          }
-        } else {
-          body.invoiceDate = parsed;
-        }
-      }
-      if (body.dueDate && typeof body.dueDate === 'string') {
-        const parsed = new Date(body.dueDate);
-        if (isNaN(parsed.getTime())) {
-          const parts = body.dueDate.split("-");
-          if (parts.length === 3) {
-            const day = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1;
-            const year = parseInt(parts[2], 10);
-            body.dueDate = new Date(year, month, day);
-          }
-        } else {
-          body.dueDate = parsed;
-        }
-      }
+      const body = parseDateFields(req.body, ['invoiceDate', 'dueDate']);
       const invoiceData = insertInvoiceSchema.parse(body);
       const invoice = await storage.createInvoice(invoiceData);
       res.status(201).json(invoice);
@@ -972,35 +973,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/invoices/:id", async (req, res) => {
     try {
-      const body = { ...req.body };
-      if (body.invoiceDate && typeof body.invoiceDate === 'string') {
-        const parsed = new Date(body.invoiceDate);
-        if (isNaN(parsed.getTime())) {
-          const parts = body.invoiceDate.split("-");
-          if (parts.length === 3) {
-            const day = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1;
-            const year = parseInt(parts[2], 10);
-            body.invoiceDate = new Date(year, month, day);
-          }
-        } else {
-          body.invoiceDate = parsed;
-        }
-      }
-      if (body.dueDate && typeof body.dueDate === 'string') {
-        const parsed = new Date(body.dueDate);
-        if (isNaN(parsed.getTime())) {
-          const parts = body.dueDate.split("-");
-          if (parts.length === 3) {
-            const day = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1;
-            const year = parseInt(parts[2], 10);
-            body.dueDate = new Date(year, month, day);
-          }
-        } else {
-          body.dueDate = parsed;
-        }
-      }
+      const body = parseDateFields(req.body, ['invoiceDate', 'dueDate']);
       const invoiceData = insertInvoiceSchema.partial().parse(body);
       const invoice = await storage.updateInvoice(req.params.id, invoiceData);
       res.json(invoice);
@@ -1095,7 +1068,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/purchase-orders", async (req, res) => {
     try {
-      const orderData = insertPurchaseOrderSchema.parse(req.body);
+      const body = parseDateFields(req.body, ['orderDate', 'expectedDate']);
+      const orderData = insertPurchaseOrderSchema.parse(body);
       const order = await storage.createPurchaseOrder(orderData);
       res.status(201).json(order);
     } catch (error) {
@@ -1120,7 +1094,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/purchase-orders/:id", async (req, res) => {
     try {
-      const orderData = insertPurchaseOrderSchema.partial().parse(req.body);
+      const body = parseDateFields(req.body, ['orderDate', 'expectedDate']);
+      const orderData = insertPurchaseOrderSchema.partial().parse(body);
       const order = await storage.updatePurchaseOrder(req.params.id, orderData);
       res.json(order);
     } catch (error) {
@@ -1175,7 +1150,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/sales-orders", async (req, res) => {
     try {
-      const orderData = insertSalesOrderSchema.parse(req.body);
+      const body = parseDateFields(req.body, ['orderDate', 'expectedDeliveryDate']);
+      const orderData = insertSalesOrderSchema.parse(body);
       const order = await storage.createSalesOrder(orderData);
       res.status(201).json(order);
     } catch (error) {
@@ -1200,7 +1176,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/sales-orders/:id", async (req, res) => {
     try {
-      const orderData = insertSalesOrderSchema.partial().parse(req.body);
+      const body = parseDateFields(req.body, ['orderDate', 'expectedDeliveryDate']);
+      const orderData = insertSalesOrderSchema.partial().parse(body);
       const order = await storage.updateSalesOrder(req.params.id, orderData);
       res.json(order);
     } catch (error) {
@@ -1211,7 +1188,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/sales-orders/:id", async (req, res) => {
     try {
-      const orderData = insertSalesOrderSchema.partial().parse(req.body);
+      const body = parseDateFields(req.body, ['orderDate', 'expectedDeliveryDate']);
+      const orderData = insertSalesOrderSchema.partial().parse(body);
       const order = await storage.updateSalesOrder(req.params.id, orderData);
       res.json(order);
     } catch (error) {
@@ -1299,7 +1277,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/work-orders", async (req, res) => {
     try {
-      const orderData = insertWorkOrderSchema.parse(req.body);
+      const body = parseDateFields(req.body, ['startDate', 'dueDate', 'completedDate']);
+      const orderData = insertWorkOrderSchema.parse(body);
       const order = await storage.createWorkOrder(orderData);
       res.status(201).json(order);
     } catch (error) {
@@ -1310,7 +1289,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/work-orders/:id", async (req, res) => {
     try {
-      const orderData = insertWorkOrderSchema.partial().parse(req.body);
+      const body = parseDateFields(req.body, ['startDate', 'dueDate', 'completedDate']);
+      const orderData = insertWorkOrderSchema.partial().parse(body);
       const order = await storage.updateWorkOrder(req.params.id, orderData);
       res.json(order);
     } catch (error) {
@@ -1365,7 +1345,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/packing-lists", async (req, res) => {
     try {
-      const listData = insertPackingListSchema.parse(req.body);
+      const body = parseDateFields(req.body, ['packingDate', 'shipDate']);
+      const listData = insertPackingListSchema.parse(body);
       const list = await storage.createPackingList(listData);
       res.status(201).json(list);
     } catch (error) {
@@ -1390,7 +1371,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/packing-lists/:id", async (req, res) => {
     try {
-      const listData = insertPackingListSchema.partial().parse(req.body);
+      const body = parseDateFields(req.body, ['packingDate', 'shipDate']);
+      const listData = insertPackingListSchema.partial().parse(body);
       const list = await storage.updatePackingList(req.params.id, listData);
       res.json(list);
     } catch (error) {
