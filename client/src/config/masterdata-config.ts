@@ -237,19 +237,6 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
       { name: "code", label: "Code", type: "text", required: true },
       { name: "name", label: "Name", type: "text", required: true },
       { name: "rate", label: "Rate (%)", type: "number", required: true },
-      { 
-        name: "country", 
-        label: "Country", 
-        type: "select",
-        options: [
-          { value: "NL", label: "Netherlands" },
-          { value: "DE", label: "Germany" },
-          { value: "BE", label: "Belgium" },
-          { value: "FR", label: "France" },
-          { value: "GB", label: "United Kingdom" },
-          { value: "US", label: "United States" }
-        ]
-      },
       { name: "description", label: "Description", type: "textarea" }
     ],
     columns: [

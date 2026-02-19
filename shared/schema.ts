@@ -829,7 +829,9 @@ export const insertPaymentScheduleSchema = createInsertSchema(paymentSchedules).
 export const insertPaymentTermSchema = createInsertSchema(paymentTerms).omit({ id: true, createdAt: true });
 export const insertRateAndChargeSchema = createInsertSchema(ratesAndCharges).omit({ id: true, createdAt: true });
 export const insertIncotermSchema = createInsertSchema(incoterms).omit({ id: true, createdAt: true });
-export const insertVatRateSchema = createInsertSchema(vatRates).omit({ id: true, createdAt: true });
+export const insertVatRateSchema = createInsertSchema(vatRates).omit({ id: true, createdAt: true }).extend({
+  rate: z.union([z.string(), z.number()]).transform(val => String(val)),
+});
 export const insertCitySchema = createInsertSchema(cities).omit({ id: true, createdAt: true });
 export const insertStatusSchema = createInsertSchema(statuses).omit({ id: true, createdAt: true });
 export const insertImageSchema = createInsertSchema(images).omit({ id: true, createdAt: true });
