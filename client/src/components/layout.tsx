@@ -848,9 +848,19 @@ export default function Layout({ children }: LayoutProps) {
       );
     }
 
-    const masterDataIds = ['payment-terms', 'payment-days', 'uom', 'rates-and-charges', 'incoterms', 'vat', 'cities', 'statuses'];
-    if (masterDataIds.includes(tab.id)) {
-      const mdConfig = getMasterDataConfig(tab.id);
+    const masterDataIdMap: Record<string, string> = {
+      'payment-terms': 'payment-terms',
+      'payment-days': 'payment-days',
+      'uom': 'units-of-measure',
+      'rates-and-charges': 'rates-and-charges',
+      'incoterms': 'incoterms',
+      'vat': 'vat-rates',
+      'cities': 'cities',
+      'statuses': 'statuses',
+    };
+    const masterDataConfigKey = masterDataIdMap[tab.id];
+    if (masterDataConfigKey) {
+      const mdConfig = getMasterDataConfig(masterDataConfigKey);
       if (mdConfig) {
         return (
           <Suspense fallback={<div></div>}>
