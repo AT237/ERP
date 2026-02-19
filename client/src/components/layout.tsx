@@ -1360,24 +1360,36 @@ export default function Layout({ children }: LayoutProps) {
       );
     }
     
-    const activeTab = leftPanelTabs.find(t => t.id === activeTabId);
-    if (!activeTab) {
-      return (
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center">
-            <p className="text-muted-foreground">No tab selected</p>
+    return (
+      <>
+        {leftPanelTabs.map(tab => (
+          <div
+            key={tab.id}
+            className="h-full flex flex-col"
+            style={{ display: tab.id === activeTabId ? 'flex' : 'none' }}
+          >
+            {renderTabContent(tab, leftPanelTabs, setActiveTabId, closeTab)}
           </div>
-        </div>
-      );
-    }
-    
-    return renderTabContent(activeTab, leftPanelTabs, setActiveTabId, closeTab);
+        ))}
+      </>
+    );
   };
 
   const renderRightPanelContent = () => {
-    const activeTab = rightPanelTabs.find(t => t.id === rightPanelActiveTabId);
-    if (!activeTab) return null;
-    return renderTabContent(activeTab, rightPanelTabs, setRightPanelActiveTabId, closeRightPanelTab);
+    if (rightPanelTabs.length === 0) return null;
+    return (
+      <>
+        {rightPanelTabs.map(tab => (
+          <div
+            key={tab.id}
+            className="h-full flex flex-col"
+            style={{ display: tab.id === rightPanelActiveTabId ? 'flex' : 'none' }}
+          >
+            {renderTabContent(tab, rightPanelTabs, setRightPanelActiveTabId, closeRightPanelTab)}
+          </div>
+        ))}
+      </>
+    );
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
