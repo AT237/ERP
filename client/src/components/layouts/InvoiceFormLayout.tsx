@@ -12,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInvoiceSchema, insertInvoiceItemSchema } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Save, X, FileText, Printer } from "lucide-react";
+import { Plus, Save, X, FileText, Printer, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
@@ -346,6 +346,27 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     }
   };
 
+  const handleDuplicateItem = async (item: InvoiceItem) => {
+    if (!invoiceId) return;
+    try {
+      const { id, createdAt, updatedAt, ...duplicateData } = item as any;
+      const nextPosition = invoiceItems.length > 0
+        ? String(Math.max(...invoiceItems.map(i => parseInt(String(i.position || '0'), 10))) + 10).padStart(3, '0')
+        : '010';
+      const response = await apiRequest("POST", `/api/invoices/${invoiceId}/items`, {
+        ...duplicateData,
+        position: nextPosition,
+        description: `${duplicateData.description || ''} (Copy)`,
+      });
+      const newItem = await response.json();
+      setInvoiceItems(prev => [...prev, newItem]);
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
+      toast({ title: "Success", description: "Line item duplicated" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to duplicate line item", variant: "destructive" });
+    }
+  };
+
   const handleCancel = () => {
     window.dispatchEvent(new CustomEvent('close-form-tab', {
       detail: { tabId: invoiceId ? `edit-invoice-${invoiceId}` : 'new-invoice' }
@@ -675,6 +696,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                 variant: 'default' as const
               }
             ]}
+            onDuplicate={handleDuplicateItem}
             rowActions={(item: InvoiceItem) => [
               {
                 key: 'edit',

@@ -25,8 +25,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
-import { queryClient } from "@/lib/queryClient";
-import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, Printer, Search, ChevronsUpDown } from "lucide-react";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, Printer, Search, ChevronsUpDown, CopyPlus } from "lucide-react";
 import { CustomerSelect } from "@/components/ui/customer-select";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, createNumericColumn } from '@/components/layouts/DataTableLayout';
@@ -685,6 +685,27 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       title: "Success",
       description: "Item deleted",
     });
+  };
+
+  const handleDuplicateItem = async (item: QuotationItem) => {
+    if (!quotationId) return;
+    try {
+      const { id, createdAt, updatedAt, ...duplicateData } = item as any;
+      const nextPosition = quotationItems.length > 0
+        ? String(Math.max(...quotationItems.map(i => parseInt(String(i.position || '0'), 10))) + 10).padStart(3, '0')
+        : '010';
+      const response = await apiRequest("POST", `/api/quotations/${quotationId}/items`, {
+        ...duplicateData,
+        position: nextPosition,
+        description: `${duplicateData.description || ''} (Copy)`,
+      });
+      const newItem = await response.json();
+      setQuotationItems(prev => [...prev, newItem]);
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations", quotationId, "items"] });
+      toast({ title: "Success", description: "Line item duplicated" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to duplicate line item", variant: "destructive" });
+    }
   };
 
   // Memo functionality
@@ -1736,6 +1757,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               variant: 'default' as const
             }
           ]}
+          onDuplicate={handleDuplicateItem}
           rowActions={(item: QuotationItem) => [
             {
               key: 'edit',
