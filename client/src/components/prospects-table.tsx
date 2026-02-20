@@ -210,12 +210,36 @@ export default function ProspectsTable() {
     });
   };
 
-  const handleDuplicate = (prospect: Prospect) => {
-    // Similar to supplier duplicate functionality  
-    toast({
-      title: "Duplicate functionality",
-      description: "Duplicate feature will be implemented here.",
-    });
+  const handleDuplicate = async (prospect: Prospect) => {
+    try {
+      const res = await fetch(`/api/prospects/${prospect.id}`);
+      if (!res.ok) throw new Error('Failed to fetch prospect');
+      const data = await res.json();
+      const { id, prospectNumber, createdAt, updatedAt, ...duplicateData } = data;
+      const response = await fetch('/api/prospects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...duplicateData,
+          companyName: `${duplicateData.companyName || ''} (Copy)`,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to create duplicate');
+      const newProspect = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/prospects"] });
+      toast({ title: "Success", description: "Prospect duplicated" });
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: `prospect-edit-${newProspect.id}`,
+          name: `Edit ${newProspect.companyName}`,
+          formType: 'prospect',
+          parentId: 'prospects',
+          data: newProspect,
+        }
+      }));
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to duplicate prospect", variant: "destructive" });
+    }
   };
 
   return (

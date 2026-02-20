@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, Building, Mail, Phone } from "lucide-react";
+import { Plus, Edit, Trash2, Building, Mail, Phone, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Customer } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
@@ -216,6 +216,33 @@ export default function CustomersTable() {
     }));
   };
 
+  const handleDuplicate = async (customer: Customer) => {
+    try {
+      const res = await fetch(`/api/customers/${customer.id}`);
+      if (!res.ok) throw new Error('Failed to fetch customer');
+      const data = await res.json();
+      const { id, customerNumber, createdAt, updatedAt, ...duplicateData } = data;
+      const response = await apiRequest("POST", "/api/customers", {
+        ...duplicateData,
+        name: `${duplicateData.name || ''} (Copy)`,
+      });
+      const newCustomer = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      toast({ title: "Success", description: "Customer duplicated" });
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: `customer-${newCustomer.id}`,
+          name: newCustomer.customerNumber || 'Customer',
+          formType: 'customer',
+          entityId: newCustomer.id,
+        }
+      }));
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to duplicate customer", variant: "destructive" });
+    }
+  };
+
   // Render table data with proper formatting
   const renderTableData = (customers: ExtendedCustomer[]) => {
     return customers.map((customer) => ({
@@ -290,6 +317,7 @@ export default function CustomersTable() {
             variant: 'default' as const
           }
         ]}
+        onDuplicate={handleDuplicate}
         rowActions={(row: Customer) => [
           {
             key: 'edit',

@@ -46,7 +46,7 @@ import {
   EyeOff, 
   GripVertical, 
   Trash2, 
-  Copy, 
+  CopyPlus, 
   Download,
   ChevronUp, 
   ChevronsUpDown,
@@ -966,7 +966,7 @@ export function DataTableLayout<T = any>({
                   title="Duplicate"
                   data-testid="button-duplicate"
                 >
-                  <Copy className="h-4 w-4" />
+                  <CopyPlus className="h-4 w-4" />
                 </Button>
               )}
 

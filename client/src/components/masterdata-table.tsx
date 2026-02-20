@@ -1,4 +1,4 @@
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -105,6 +105,36 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
     }
   };
 
+  const handleDuplicate = async (row: any) => {
+    try {
+      const res = await fetch(`/api/masterdata/${endpoint}/${row.id}`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      const { id, createdAt, updatedAt, ...duplicateData } = data;
+      if (duplicateData.code) duplicateData.code = `${duplicateData.code}-COPY`;
+      if (duplicateData.name) duplicateData.name = `${duplicateData.name} (Copy)`;
+      const response = await fetch(`/api/masterdata/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(duplicateData),
+      });
+      if (!response.ok) throw new Error('Failed to create duplicate');
+      const newItem = await response.json();
+      queryClient.invalidateQueries({ queryKey: [`/api/masterdata/${endpoint}`] });
+      toast({ title: "Success", description: `${singularTitle} duplicated` });
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: `${endpoint}-${newItem.id}`,
+          name: `Edit ${singularTitle}`,
+          formType: `masterdata-${endpoint}`,
+          entityId: newItem.id,
+        }
+      }));
+    } catch (error) {
+      toast({ title: "Error", description: `Failed to duplicate ${singularTitle.toLowerCase()}`, variant: "destructive" });
+    }
+  };
+
   const tableData = Array.isArray(items) ? items : [];
 
   return (
@@ -146,6 +176,7 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
             variant: 'default' as const
           }
         ]}
+        onDuplicate={handleDuplicate}
         rowActions={(row: any) => [
           {
             key: 'edit',

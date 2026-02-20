@@ -157,27 +157,37 @@ export default function SupplierTable() {
     });
   };
 
-  // Duplicate functionality  
-  const handleDuplicate = (supplier: Supplier) => {
-    // Dispatch custom event to open supplier form in new tab with pre-filled data for duplication
-    const event = new CustomEvent('open-form-tab', {
-      detail: {
-        id: `duplicate-supplier-${supplier.id}`,
-        name: `${supplier.name} (Copy)`,
-        formType: 'supplier',
-        duplicateData: {
-          name: `${supplier.name} (Copy)`,
-          email: supplier.email || "",
-          phone: supplier.phone || "",
-          address: supplier.address || "",
-          contactPerson: supplier.contactPerson || "",
-          taxId: "", // Clear tax ID for duplicate
-          paymentTerms: supplier.paymentTerms || 30,
-          status: "active" // Reset to active
+  const handleDuplicate = async (supplier: Supplier) => {
+    try {
+      const res = await fetch(`/api/suppliers/${supplier.id}`);
+      if (!res.ok) throw new Error('Failed to fetch supplier');
+      const data = await res.json();
+      const { id, supplierNumber, createdAt, updatedAt, ...duplicateData } = data;
+      const response = await fetch('/api/suppliers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...duplicateData,
+          name: `${duplicateData.name || ''} (Copy)`,
+          taxId: '',
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to create duplicate');
+      const newSupplier = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
+      toast({ title: "Success", description: "Supplier duplicated" });
+      const event = new CustomEvent('open-form-tab', {
+        detail: {
+          id: `edit-supplier-${newSupplier.id}`,
+          name: newSupplier.supplierNumber || 'Supplier',
+          formType: 'supplier',
+          parentId: newSupplier.id,
         }
-      }
-    });
-    window.dispatchEvent(event);
+      });
+      window.dispatchEvent(event);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to duplicate supplier", variant: "destructive" });
+    }
   };
 
   return (

@@ -159,12 +159,36 @@ export default function ContactPersonsTable() {
     });
   };
 
-  const handleDuplicate = (contact: CustomerContact) => {
-    // Similar to supplier duplicate functionality  
-    toast({
-      title: "Duplicate functionality",
-      description: "Duplicate feature will be implemented here.",
-    });
+  const handleDuplicate = async (contact: CustomerContact) => {
+    try {
+      const res = await fetch(`/api/customer-contacts/${contact.id}`);
+      if (!res.ok) throw new Error('Failed to fetch contact');
+      const data = await res.json();
+      const { id, createdAt, updatedAt, ...duplicateData } = data;
+      const response = await fetch('/api/customer-contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...duplicateData,
+          firstName: `${duplicateData.firstName || ''} (Copy)`,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to create duplicate');
+      const newContact = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/customer-contacts"] });
+      toast({ title: "Success", description: "Contact person duplicated" });
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: `contact-person-edit-${newContact.id}`,
+          name: `Edit ${newContact.firstName} ${newContact.lastName}`,
+          formType: 'contact-person',
+          parentId: 'contact-persons',
+          data: newContact,
+        }
+      }));
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to duplicate contact", variant: "destructive" });
+    }
   };
 
   return (
