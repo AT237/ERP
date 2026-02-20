@@ -1082,6 +1082,66 @@ export const insertSectionTemplateSchema = createInsertSchema(sectionTemplates).
 
 // Types for Layout Management
 export type DocumentLayout = typeof documentLayouts.$inferSelect;
+// Rate Cards System
+export const rateCards = pgTable("rate_cards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  region: text("region").default("NL"),
+  validFrom: text("valid_from"),
+  validTo: text("valid_to"),
+  status: text("status").default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const rateCardLines = pgTable("rate_card_lines", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  rateCardId: varchar("rate_card_id").notNull().references(() => rateCards.id, { onDelete: "cascade" }),
+  position: text("position"),
+  rateType: text("rate_type").notNull(),
+  description: text("description"),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").default("EUR"),
+  unit: text("unit").default("day"),
+  traineePercentage: decimal("trainee_percentage", { precision: 5, scale: 2 }),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const customerRateAgreements = pgTable("customer_rate_agreements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  agreementNumber: text("agreement_number").unique(),
+  customerId: varchar("customer_id").references(() => customers.id),
+  rateCardId: varchar("rate_card_id").references(() => rateCards.id),
+  region: text("region").default("NL"),
+  validFrom: text("valid_from"),
+  validTo: text("valid_to"),
+  status: text("status").default("draft"),
+  travelDaysPercentage: decimal("travel_days_percentage", { precision: 5, scale: 2 }),
+  miscCostsPerWeek: decimal("misc_costs_per_week", { precision: 10, scale: 2 }),
+  carRental: text("car_rental"),
+  accommodationCosts: text("accommodation_costs"),
+  materialDiscountOwn: decimal("material_discount_own", { precision: 5, scale: 2 }),
+  materialDiscountThirdParty: decimal("material_discount_third_party", { precision: 5, scale: 2 }),
+  includesTravelCosts: boolean("includes_travel_costs").default(true),
+  serviceContractDiscount: decimal("service_contract_discount", { precision: 5, scale: 2 }),
+  serviceContractYears: integer("service_contract_years"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertRateCardSchema = createInsertSchema(rateCards).omit({ id: true, createdAt: true });
+export const insertRateCardLineSchema = createInsertSchema(rateCardLines).omit({ id: true, createdAt: true });
+export const insertCustomerRateAgreementSchema = createInsertSchema(customerRateAgreements).omit({ id: true, createdAt: true });
+
+export type RateCard = typeof rateCards.$inferSelect;
+export type InsertRateCard = z.infer<typeof insertRateCardSchema>;
+export type RateCardLine = typeof rateCardLines.$inferSelect;
+export type InsertRateCardLine = z.infer<typeof insertRateCardLineSchema>;
+export type CustomerRateAgreement = typeof customerRateAgreements.$inferSelect;
+export type InsertCustomerRateAgreement = z.infer<typeof insertCustomerRateAgreementSchema>;
+
 // Development Futures / Feature Wishes
 export const devFutures = pgTable("dev_futures", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
