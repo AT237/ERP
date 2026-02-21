@@ -27,6 +27,7 @@ import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
 import { LanguageSelectWithAdd } from "@/components/ui/language-select-with-add";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
 import { VatRateSelectWithAdd } from "@/components/ui/vat-rate-select-with-add";
+import { RateSelectWithAdd } from "@/components/ui/rate-select-with-add";
 import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
@@ -782,10 +783,15 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             {
               key: "rateId",
               label: "Rate",
-              type: "select",
-              options: ratesAndChargesOptions,
-              setValue: (value) => form.setValue("rateId" as any, value === "__none__" ? "" : value),
-              watch: () => form.watch("rateId" as any) || "__none__",
+              type: "custom",
+              customComponent: (
+                <RateSelectWithAdd
+                  value={form.watch("rateId" as any) || ""}
+                  onValueChange={(value) => form.setValue("rateId" as any, value)}
+                  placeholder="Select rate..."
+                  testId="select-customer-rate"
+                />
+              ),
               testId: "select-customer-rate"
             } as FormField2<CustomerFormData>
           ],
