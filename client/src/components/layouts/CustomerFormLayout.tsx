@@ -772,33 +772,44 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       ]
     },
     {
-      id: "financial",
-      label: "Financial",
+      id: "rates",
+      label: "Rates",
       icon: <CreditCard className="h-4 w-4" />,
       rows: [
+        {
+          type: 'two-column' as const,
+          leftColumn: [
+            {
+              key: "rateId",
+              label: "Rate",
+              type: "select",
+              options: ratesAndChargesOptions,
+              setValue: (value) => form.setValue("rateId" as any, value === "__none__" ? "" : value),
+              watch: () => form.watch("rateId" as any) || "__none__",
+              testId: "select-customer-rate"
+            } as FormField2<CustomerFormData>
+          ],
+          rightColumn: [
+            {
+              key: "discountPercent",
+              label: "Discount %",
+              type: "number",
+              register: form.register("discountPercent" as any),
+              validation: {
+                error: (form.formState.errors as any).discountPercent?.message
+              },
+              testId: "input-customer-discount-percent"
+            } as FormField2<CustomerFormData>
+          ]
+        }
+      ]
+    },
+    {
+      id: "financial",
+      label: "Financial",
+      icon: <FileText className="h-4 w-4" />,
+      rows: [
         createFieldsRow([
-          // Positie 1: Rate
-          {
-            key: "rateId",
-            label: "Rate",
-            type: "select",
-            options: ratesAndChargesOptions,
-            setValue: (value) => form.setValue("rateId" as any, value === "__none__" ? "" : value),
-            watch: () => form.watch("rateId" as any) || "__none__",
-            testId: "select-customer-rate"
-          } as FormField2<CustomerFormData>,
-          // Positie 2: Discount %
-          {
-            key: "discountPercent",
-            label: "Discount %",
-            type: "number",
-            register: form.register("discountPercent" as any),
-            validation: {
-              error: (form.formState.errors as any).discountPercent?.message
-            },
-            testId: "input-customer-discount-percent"
-          } as FormField2<CustomerFormData>,
-          // Positie 3: Bank Account
           {
             key: "bankAccount",
             label: "Bank Account",
@@ -809,7 +820,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             },
             testId: "input-customer-bank-account"
           } as FormField2<CustomerFormData>,
-          // Positie 4: Payment Days
           {
             key: "paymentDaysId",
             label: "Payment Days",
@@ -824,7 +834,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
               />
             )
           } as FormField2<CustomerFormData>,
-          // Positie 5: Invoice Email
           {
             key: "invoiceEmail",
             label: "Invoice Email",
@@ -835,7 +844,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             },
             testId: "input-customer-invoice-email"
           } as FormField2<CustomerFormData>,
-          // Positie 6: VAT Rate
           {
             key: "vatRateId",
             label: "VAT Rate",
@@ -851,7 +859,6 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             testId: "select-customer-vat-rate"
           } as FormField2<CustomerFormData>
         ]),
-        // Speciale rij voor Invoice Notes veld dat over de gehele breedte loopt
         {
           type: 'custom',
           customContent: (
