@@ -166,8 +166,9 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
     fields: [
       { name: "code", label: "Code", type: "text", required: true },
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "rate", label: "Rate", type: "number", required: true },
-      { name: "description", label: "Description", type: "textarea" },
+      { name: "description", label: "Description", type: "text" },
+      { name: "unit", label: "Unit", type: "text" },
+      { name: "rate", label: "Cost Price", type: "number", required: true },
       { 
         name: "category", 
         label: "Category", 
@@ -186,9 +187,9 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
     columns: [
       { key: "code", label: "Code" },
       { key: "name", label: "Name" },
-      { key: "rate", label: "Rate", render: (value) => `€ ${Number(value).toFixed(2)}` },
-      { key: "category", label: "Category" },
-      { key: "description", label: "Description" }
+      { key: "description", label: "Description" },
+      { key: "unit", label: "Unit" },
+      { key: "rate", label: "Cost Price", render: (value) => `€ ${Number(value).toFixed(2)}` }
     ]
   },
 

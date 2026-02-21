@@ -38,9 +38,7 @@ import {
   insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
-  insertDevFutureSchema, devFutures,
-  rateCards, insertRateCardSchema, rateCardLines, insertRateCardLineSchema,
-  customerRateAgreements, insertCustomerRateAgreementSchema
+  insertDevFutureSchema, devFutures
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
@@ -1609,6 +1607,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Master Data routes - Rates and Charges
+  app.get("/api/masterdata/rates-and-charges/next-code", async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT code FROM rates_and_charges WHERE code LIKE 'RC-%' ORDER BY code DESC LIMIT 1`
+      );
+      let nextNum = 1;
+      if (result.rows.length > 0) {
+        const lastCode = result.rows[0].code;
+        const num = parseInt(lastCode.replace('RC-', ''), 10);
+        if (!isNaN(num)) nextNum = num + 1;
+      }
+      const nextCode = `RC-${String(nextNum).padStart(4, '0')}`;
+      res.json({ code: nextCode });
+    } catch (error) {
+      console.error("Error generating next code:", error);
+      res.status(500).json({ message: "Failed to generate next code" });
+    }
+  });
+
   app.get("/api/masterdata/rates-and-charges", async (req, res) => {
     try {
       const rates = await storage.getRatesAndCharges();
@@ -2708,174 +2725,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting dev future:", error);
       res.status(500).json({ message: "Failed to delete dev future" });
-    }
-  });
-
-  // Rate Cards CRUD
-  app.get("/api/rate-cards", async (req, res) => {
-    try {
-      const result = await db.select().from(rateCards);
-      res.json(result);
-    } catch (error) {
-      console.error("Error fetching rate cards:", error);
-      res.status(500).json({ message: "Failed to fetch rate cards" });
-    }
-  });
-
-  app.get("/api/rate-cards/:id", async (req, res) => {
-    try {
-      const [result] = await db.select().from(rateCards).where(eq(rateCards.id, req.params.id));
-      if (!result) return res.status(404).json({ message: "Rate card not found" });
-      res.json(result);
-    } catch (error) {
-      console.error("Error fetching rate card:", error);
-      res.status(500).json({ message: "Failed to fetch rate card" });
-    }
-  });
-
-  app.post("/api/rate-cards", async (req, res) => {
-    try {
-      const data = insertRateCardSchema.parse(req.body);
-      const [result] = await db.insert(rateCards).values(data).returning();
-      res.json(result);
-    } catch (error) {
-      console.error("Error creating rate card:", error);
-      res.status(400).json({ message: "Failed to create rate card" });
-    }
-  });
-
-  app.put("/api/rate-cards/:id", async (req, res) => {
-    try {
-      const data = insertRateCardSchema.partial().parse(req.body);
-      const [result] = await db.update(rateCards).set(data).where(eq(rateCards.id, req.params.id)).returning();
-      res.json(result);
-    } catch (error) {
-      console.error("Error updating rate card:", error);
-      res.status(400).json({ message: "Failed to update rate card" });
-    }
-  });
-
-  app.delete("/api/rate-cards/:id", async (req, res) => {
-    try {
-      await db.delete(rateCards).where(eq(rateCards.id, req.params.id));
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting rate card:", error);
-      res.status(500).json({ message: "Failed to delete rate card" });
-    }
-  });
-
-  // Rate Card Lines CRUD
-  app.get("/api/rate-card-lines", async (req, res) => {
-    try {
-      const rateCardId = req.query.rateCardId as string | undefined;
-      let result;
-      if (rateCardId) {
-        result = await db.select().from(rateCardLines).where(eq(rateCardLines.rateCardId, rateCardId));
-      } else {
-        result = await db.select().from(rateCardLines);
-      }
-      res.json(result);
-    } catch (error) {
-      console.error("Error fetching rate card lines:", error);
-      res.status(500).json({ message: "Failed to fetch rate card lines" });
-    }
-  });
-
-  app.get("/api/rate-card-lines/:id", async (req, res) => {
-    try {
-      const [result] = await db.select().from(rateCardLines).where(eq(rateCardLines.id, req.params.id));
-      if (!result) return res.status(404).json({ message: "Rate card line not found" });
-      res.json(result);
-    } catch (error) {
-      console.error("Error fetching rate card line:", error);
-      res.status(500).json({ message: "Failed to fetch rate card line" });
-    }
-  });
-
-  app.post("/api/rate-card-lines", async (req, res) => {
-    try {
-      const data = insertRateCardLineSchema.parse(req.body);
-      const [result] = await db.insert(rateCardLines).values(data).returning();
-      res.json(result);
-    } catch (error) {
-      console.error("Error creating rate card line:", error);
-      res.status(400).json({ message: "Failed to create rate card line" });
-    }
-  });
-
-  app.put("/api/rate-card-lines/:id", async (req, res) => {
-    try {
-      const data = insertRateCardLineSchema.partial().parse(req.body);
-      const [result] = await db.update(rateCardLines).set(data).where(eq(rateCardLines.id, req.params.id)).returning();
-      res.json(result);
-    } catch (error) {
-      console.error("Error updating rate card line:", error);
-      res.status(400).json({ message: "Failed to update rate card line" });
-    }
-  });
-
-  app.delete("/api/rate-card-lines/:id", async (req, res) => {
-    try {
-      await db.delete(rateCardLines).where(eq(rateCardLines.id, req.params.id));
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting rate card line:", error);
-      res.status(500).json({ message: "Failed to delete rate card line" });
-    }
-  });
-
-  // Customer Rate Agreements CRUD
-  app.get("/api/customer-rate-agreements", async (req, res) => {
-    try {
-      const result = await db.select().from(customerRateAgreements);
-      res.json(result);
-    } catch (error) {
-      console.error("Error fetching customer rate agreements:", error);
-      res.status(500).json({ message: "Failed to fetch customer rate agreements" });
-    }
-  });
-
-  app.get("/api/customer-rate-agreements/:id", async (req, res) => {
-    try {
-      const [result] = await db.select().from(customerRateAgreements).where(eq(customerRateAgreements.id, req.params.id));
-      if (!result) return res.status(404).json({ message: "Customer rate agreement not found" });
-      res.json(result);
-    } catch (error) {
-      console.error("Error fetching customer rate agreement:", error);
-      res.status(500).json({ message: "Failed to fetch customer rate agreement" });
-    }
-  });
-
-  app.post("/api/customer-rate-agreements", async (req, res) => {
-    try {
-      const data = insertCustomerRateAgreementSchema.parse(req.body);
-      const [result] = await db.insert(customerRateAgreements).values(data).returning();
-      res.json(result);
-    } catch (error) {
-      console.error("Error creating customer rate agreement:", error);
-      res.status(400).json({ message: "Failed to create customer rate agreement" });
-    }
-  });
-
-  app.put("/api/customer-rate-agreements/:id", async (req, res) => {
-    try {
-      const data = insertCustomerRateAgreementSchema.partial().parse(req.body);
-      const [result] = await db.update(customerRateAgreements).set(data).where(eq(customerRateAgreements.id, req.params.id)).returning();
-      res.json(result);
-    } catch (error) {
-      console.error("Error updating customer rate agreement:", error);
-      res.status(400).json({ message: "Failed to update customer rate agreement" });
-    }
-  });
-
-  app.delete("/api/customer-rate-agreements/:id", async (req, res) => {
-    try {
-      await db.delete(customerRateAgreements).where(eq(customerRateAgreements.id, req.params.id));
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting customer rate agreement:", error);
-      res.status(500).json({ message: "Failed to delete customer rate agreement" });
     }
   });
 
