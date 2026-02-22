@@ -251,14 +251,9 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: ratesAndCharges } = useQuery<Array<{ id: string; code: string; name: string; rate: string }>>({
+  const { data: ratesAndCharges } = useQuery<Array<{ id: string; code: string; name: string; rate: string; unit: string | null; description: string | null }>>({
     queryKey: ["/api/masterdata/rates-and-charges"],
   });
-
-  const ratesAndChargesOptions = useMemo(() => [
-    { value: "__none__", label: "No rate" },
-    ...(ratesAndCharges || []).map(r => ({ value: r.id, label: `${r.code} - ${r.name} (€${Number(r.rate).toFixed(2)})` }))
-  ], [ratesAndCharges]);
 
 
   // Update validation schema when country changes - no imperative triggers, rely on remount
@@ -778,35 +773,56 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       icon: <CreditCard className="h-4 w-4" />,
       rows: [
         {
-          type: 'two-column' as const,
-          leftColumn: [
-            {
-              key: "rateId",
-              label: "Rate",
-              type: "custom",
-              customComponent: (
-                <RateSelectWithAdd
-                  value={form.watch("rateId" as any) || ""}
-                  onValueChange={(value) => form.setValue("rateId" as any, value)}
-                  placeholder="Select rate..."
-                  testId="select-customer-rate"
-                />
-              ),
-              testId: "select-customer-rate"
-            } as FormField2<CustomerFormData>
-          ],
-          rightColumn: [
-            {
-              key: "discountPercent",
-              label: "Discount %",
-              type: "number",
-              register: form.register("discountPercent" as any),
-              validation: {
-                error: (form.formState.errors as any).discountPercent?.message
-              },
-              testId: "input-customer-discount-percent"
-            } as FormField2<CustomerFormData>
-          ]
+          type: 'custom',
+          customContent: (() => {
+            const selectedRateId = form.watch("rateId" as any);
+            const discountStr = form.watch("discountPercent" as any) || "0";
+            const selectedRate = ratesAndCharges?.find(r => r.id === selectedRateId);
+            const rateAmount = selectedRate ? Number(selectedRate.rate) : 0;
+            const discount = Number(discountStr) || 0;
+            const calculatedAmount = rateAmount * (1 - discount / 100);
+            const unitLabel = selectedRate?.unit || "";
+
+            return (
+              <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-[20px]">
+                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
+                    <Label className="text-sm font-medium text-right">Rate</Label>
+                    <RateSelectWithAdd
+                      value={selectedRateId || ""}
+                      onValueChange={(value) => form.setValue("rateId" as any, value)}
+                      placeholder="Select rate..."
+                      testId="select-customer-rate"
+                    />
+                  </div>
+                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
+                    <Label className="text-sm font-medium text-right">Discount %</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...form.register("discountPercent" as any)}
+                      className="h-10"
+                      data-testid="input-customer-discount-percent"
+                    />
+                  </div>
+                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
+                    <Label className="text-sm font-medium text-right">Amount</Label>
+                    <div className="flex items-center gap-2 h-10 px-3 rounded-md border bg-muted/50">
+                      <span className="font-medium text-sm">
+                        € {calculatedAmount.toFixed(2)}
+                      </span>
+                      {unitLabel && (
+                        <span className="text-sm text-muted-foreground">
+                          / {unitLabel}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div />
+              </div>
+            );
+          })()
         }
       ]
     },
