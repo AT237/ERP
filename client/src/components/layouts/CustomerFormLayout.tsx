@@ -784,10 +784,10 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             const unitLabel = selectedRate?.unit || "";
 
             return (
-              <div className="grid grid-cols-2 gap-8">
-                <div className="space-y-[20px]">
-                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                    <Label className="text-sm font-medium text-right">Rate</Label>
+              <div className="grid grid-cols-[130px_1fr] items-center gap-3">
+                <Label className="text-sm font-medium text-right">Rate</Label>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
                     <RateSelectWithAdd
                       value={selectedRateId || ""}
                       onValueChange={(value) => form.setValue("rateId" as any, value)}
@@ -795,31 +795,27 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                       testId="select-customer-rate"
                     />
                   </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                    <Label className="text-sm font-medium text-right">Discount %</Label>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Label className="text-sm text-muted-foreground whitespace-nowrap">Discount %</Label>
                     <Input
                       type="number"
                       step="0.01"
                       {...form.register("discountPercent" as any)}
-                      className="h-10"
+                      className="h-10 w-20"
                       data-testid="input-customer-discount-percent"
                     />
                   </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                    <Label className="text-sm font-medium text-right">Amount</Label>
-                    <div className="flex items-center gap-2 h-10 px-3 rounded-md border bg-muted/50">
-                      <span className="font-medium text-sm">
-                        € {calculatedAmount.toFixed(2)}
+                  <div className="flex items-center gap-1.5 h-10 px-3 rounded-md border bg-muted/50 shrink-0">
+                    <span className="font-medium text-sm whitespace-nowrap">
+                      € {calculatedAmount.toFixed(2)}
+                    </span>
+                    {unitLabel && (
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">
+                        / {unitLabel}
                       </span>
-                      {unitLabel && (
-                        <span className="text-sm text-muted-foreground">
-                          / {unitLabel}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
-                <div />
               </div>
             );
           })()

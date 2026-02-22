@@ -661,19 +661,6 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       // Verzamel alle velden uit alle rijen van deze sectie
       const allFields: FormField2<T>[] = [];
       
-      const hasCustomRows = section.rows.some(row => row.type === 'custom');
-      if (hasCustomRows) {
-        return {
-          id: section.id,
-          label: section.label,
-          content: (
-            <div className="space-y-[20px] pt-[10px]">
-              {section.rows.map((row, idx) => renderRow(row, idx))}
-            </div>
-          )
-        };
-      }
-
       // Check if this section uses explicit two-column layout
       const hasTwoColumnLayout = section.rows.some(row => row.type === 'two-column');
       
@@ -723,8 +710,9 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         };
       }
       
-      // Collect all fields for automatic layout
-      section.rows.forEach(row => {
+      // Collect all fields and custom rows for automatic layout
+      const customRows: { row: FormRow<T>; index: number }[] = [];
+      section.rows.forEach((row, idx) => {
         if (row.type === 'field' && row.field) {
           allFields.push(row.field);
         } else if (row.type === 'fields' && row.fields) {
@@ -732,8 +720,22 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         } else if (row.type === 'two-column') {
           if (row.leftColumn) allFields.push(...row.leftColumn);
           if (row.rightColumn) allFields.push(...row.rightColumn);
+        } else if (row.type === 'custom') {
+          customRows.push({ row, index: idx });
         }
       });
+
+      if (allFields.length === 0 && customRows.length > 0) {
+        return {
+          id: section.id,
+          label: section.label,
+          content: (
+            <div className="space-y-[20px] pt-[10px]">
+              {customRows.map(({ row, index }) => renderRow(row, index))}
+            </div>
+          )
+        };
+      }
       
       // STANDARD LAYOUT: Only textarea fields are considered "large" and go to right column
       // All other fields (text, number, select, date, checkbox, custom) go to left column first
@@ -743,6 +745,12 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       const leftFields = allFields.filter(f => !isLargeField(f));
       const rightFields = allFields.filter(f => isLargeField(f));
       
+      const customRowsContent = customRows.length > 0 ? (
+        <div className="space-y-[20px]">
+          {customRows.map(({ row, index }) => renderRow(row, index))}
+        </div>
+      ) : null;
+
       // If we have large fields, use two-column layout with large fields on right (desktop only)
       if (rightFields.length > 0) {
         if (isMobile) {
@@ -756,6 +764,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
                     {renderSimpleField(field)}
                   </div>
                 ))}
+                {customRowsContent}
               </div>
             )
           };
@@ -764,21 +773,24 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
           id: section.id,
           label: section.label,
           content: (
-            <div className="grid grid-cols-2 gap-8 pt-[10px]">
-              <div className="flex flex-col gap-[20px]">
-                {leftFields.map((field, idx) => (
-                  <div key={field.key as string || idx}>
-                    {renderSimpleField(field)}
-                  </div>
-                ))}
+            <div className="pt-[10px] space-y-[20px]">
+              <div className="grid grid-cols-2 gap-8">
+                <div className="flex flex-col gap-[20px]">
+                  {leftFields.map((field, idx) => (
+                    <div key={field.key as string || idx}>
+                      {renderSimpleField(field)}
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-col gap-[20px]">
+                  {rightFields.map((field, idx) => (
+                    <div key={field.key as string || idx}>
+                      {renderSimpleField(field)}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-col gap-[20px]">
-                {rightFields.map((field, idx) => (
-                  <div key={field.key as string || idx}>
-                    {renderSimpleField(field)}
-                  </div>
-                ))}
-              </div>
+              {customRowsContent}
             </div>
           )
         };
@@ -801,24 +813,28 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
                 {renderSimpleField(field)}
               </div>
             ))}
+            {customRowsContent}
           </div>
         ) : (
           // Desktop layout: always 2-column grid, right column empty if fewer than 7 fields
-          <div className="grid grid-cols-2 gap-8 pt-[10px]">
-            <div className="flex flex-col gap-[20px]">
-              {leftColFields.map((field, idx) => (
-                <div key={field.key as string || idx}>
-                  {renderSimpleField(field)}
-                </div>
-              ))}
+          <div className="pt-[10px] space-y-[20px]">
+            <div className="grid grid-cols-2 gap-8">
+              <div className="flex flex-col gap-[20px]">
+                {leftColFields.map((field, idx) => (
+                  <div key={field.key as string || idx}>
+                    {renderSimpleField(field)}
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col gap-[20px]">
+                {rightColFields.map((field, idx) => (
+                  <div key={field.key as string || idx}>
+                    {renderSimpleField(field)}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-col gap-[20px]">
-              {rightColFields.map((field, idx) => (
-                <div key={field.key as string || idx}>
-                  {renderSimpleField(field)}
-                </div>
-              ))}
-            </div>
+            {customRowsContent}
           </div>
         )
       };
