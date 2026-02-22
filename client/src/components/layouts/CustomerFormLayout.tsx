@@ -784,33 +784,34 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             const unitLabel = selectedRate?.unit || "";
 
             return (
-              <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                <Label className="text-sm font-medium text-right">Rate</Label>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <RateSelectWithAdd
-                      value={selectedRateId || ""}
-                      onValueChange={(value) => form.setValue("rateId" as any, value)}
-                      placeholder="Select rate..."
-                      testId="select-customer-rate"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Label className="text-sm text-muted-foreground whitespace-nowrap">Discount %</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      {...form.register("discountPercent" as any)}
-                      className="h-10 w-20"
-                      data-testid="input-customer-discount-percent"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1.5 h-10 px-3 rounded-md border bg-muted/50 shrink-0">
-                    <span className="font-medium text-sm whitespace-nowrap">
+              <div className="grid grid-cols-3 gap-6">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">Rate</Label>
+                  <RateSelectWithAdd
+                    value={selectedRateId || ""}
+                    onValueChange={(value) => form.setValue("rateId" as any, value)}
+                    placeholder="Select rate..."
+                    testId="select-customer-rate"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">Discount %</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    {...form.register("discountPercent" as any)}
+                    className="h-10"
+                    data-testid="input-customer-discount-percent"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">Amount</Label>
+                  <div className="flex items-center h-10 px-3 rounded-md border bg-muted/50">
+                    <span className="font-medium text-sm">
                       € {calculatedAmount.toFixed(2)}
                     </span>
                     {unitLabel && (
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      <span className="text-sm text-muted-foreground ml-1">
                         / {unitLabel}
                       </span>
                     )}
