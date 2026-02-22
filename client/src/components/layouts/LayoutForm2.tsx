@@ -661,6 +661,19 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       // Verzamel alle velden uit alle rijen van deze sectie
       const allFields: FormField2<T>[] = [];
       
+      const hasCustomRows = section.rows.some(row => row.type === 'custom');
+      if (hasCustomRows) {
+        return {
+          id: section.id,
+          label: section.label,
+          content: (
+            <div className="space-y-[20px] pt-[10px]">
+              {section.rows.map((row, idx) => renderRow(row, idx))}
+            </div>
+          )
+        };
+      }
+
       // Check if this section uses explicit two-column layout
       const hasTwoColumnLayout = section.rows.some(row => row.type === 'two-column');
       
