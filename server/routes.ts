@@ -38,7 +38,7 @@ import {
   insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
-  insertDevFutureSchema, devFutures
+  insertDevFutureSchema, devFutures, insertCustomerRateSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
@@ -274,6 +274,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error searching customer contacts:", error);
       res.status(500).json({ message: "Failed to search customer contacts" });
+    }
+  });
+
+  // Customer rates routes
+  app.get("/api/customer-rates/:customerId", async (req, res) => {
+    try {
+      const rates = await storage.getCustomerRates(req.params.customerId);
+      res.json(rates);
+    } catch (error) {
+      console.error("Error fetching customer rates:", error);
+      res.status(500).json({ message: "Failed to fetch customer rates" });
+    }
+  });
+
+  app.post("/api/customer-rates", async (req, res) => {
+    try {
+      const rateData = insertCustomerRateSchema.parse(req.body);
+      const rate = await storage.createCustomerRate(rateData);
+      res.status(201).json(rate);
+    } catch (error) {
+      console.error("Error creating customer rate:", error);
+      res.status(400).json({ message: "Failed to create customer rate" });
+    }
+  });
+
+  app.patch("/api/customer-rates/:id", async (req, res) => {
+    try {
+      const rateData = insertCustomerRateSchema.partial().parse(req.body);
+      const rate = await storage.updateCustomerRate(req.params.id, rateData);
+      res.json(rate);
+    } catch (error) {
+      console.error("Error updating customer rate:", error);
+      res.status(400).json({ message: "Failed to update customer rate" });
+    }
+  });
+
+  app.delete("/api/customer-rates/:id", async (req, res) => {
+    try {
+      await storage.deleteCustomerRate(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting customer rate:", error);
+      res.status(500).json({ message: "Failed to delete customer rate" });
     }
   });
 

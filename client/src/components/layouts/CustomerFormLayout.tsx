@@ -33,7 +33,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Users, User, Building, CreditCard, FileText, AlertTriangle } from "lucide-react";
+import { Save, ArrowLeft, Users, User, Building, CreditCard, FileText, AlertTriangle, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { Customer, InsertCustomer, Country } from "@shared/schema";
@@ -255,6 +255,84 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
     queryKey: ["/api/masterdata/rates-and-charges"],
   });
 
+  interface CustomerRateEntry {
+    id?: string;
+    rateId: string;
+    discountPercent: string;
+  }
+  const [customerRateEntries, setCustomerRateEntries] = useState<CustomerRateEntry[]>([]);
+  const [customerRatesLoadedFor, setCustomerRatesLoadedFor] = useState<string | null>(null);
+
+  const { data: savedCustomerRates } = useQuery<Array<{ id: string; customerId: string; rateId: string; discountPercent: string | null; sortOrder: number | null }>>({
+    queryKey: ["/api/customer-rates", customerId],
+    queryFn: async () => {
+      if (!customerId) return [];
+      const response = await fetch(`/api/customer-rates/${customerId}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!customerId,
+  });
+
+  useEffect(() => {
+    if (savedCustomerRates && customerRatesLoadedFor !== customerId) {
+      setCustomerRateEntries(savedCustomerRates.map(r => ({
+        id: r.id,
+        rateId: r.rateId,
+        discountPercent: r.discountPercent || "0",
+      })));
+      setCustomerRatesLoadedFor(customerId || null);
+    }
+    if (!customerId && customerRatesLoadedFor !== null) {
+      setCustomerRateEntries([]);
+      setCustomerRatesLoadedFor(null);
+    }
+  }, [savedCustomerRates, customerId, customerRatesLoadedFor]);
+
+  const handleAddRateEntry = () => {
+    setCustomerRateEntries(prev => [...prev, { rateId: "", discountPercent: "0" }]);
+  };
+
+  const handleRemoveRateEntry = async (index: number) => {
+    const entry = customerRateEntries[index];
+    if (entry.id) {
+      try {
+        await apiRequest("DELETE", `/api/customer-rates/${entry.id}`);
+        queryClient.invalidateQueries({ queryKey: ["/api/customer-rates", customerId] });
+      } catch (error) {
+        toast({ title: "Fout", description: "Kan rate niet verwijderen", variant: "destructive" });
+        return;
+      }
+    }
+    setCustomerRateEntries(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRateEntryChange = (index: number, field: keyof CustomerRateEntry, value: string) => {
+    setCustomerRateEntries(prev => prev.map((entry, i) => i === index ? { ...entry, [field]: value } : entry));
+  };
+
+  const saveCustomerRatesFor = async (targetCustomerId: string) => {
+    for (let i = 0; i < customerRateEntries.length; i++) {
+      const entry = customerRateEntries[i];
+      if (!entry.rateId) continue;
+      if (entry.id) {
+        await apiRequest("PATCH", `/api/customer-rates/${entry.id}`, {
+          rateId: entry.rateId,
+          discountPercent: entry.discountPercent,
+          sortOrder: i * 10,
+        });
+      } else {
+        await apiRequest("POST", "/api/customer-rates", {
+          customerId: targetCustomerId,
+          rateId: entry.rateId,
+          discountPercent: entry.discountPercent,
+          sortOrder: i * 10,
+        });
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ["/api/customer-rates", targetCustomerId] });
+  };
+
 
   // Update validation schema when country changes - no imperative triggers, rely on remount
   useEffect(() => {
@@ -422,7 +500,12 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       const response = await apiRequest("POST", "/api/customers", data);
       return response.json();
     },
-    onSuccess: (newCustomer) => {
+    onSuccess: async (newCustomer) => {
+      try {
+        await saveCustomerRatesFor(newCustomer.id);
+      } catch (error) {
+        console.error("Error saving customer rates:", error);
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
@@ -460,10 +543,18 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       const response = await apiRequest("PUT", `/api/customers/${customerId}`, data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      if (customerId) {
+        try {
+          await saveCustomerRatesFor(customerId);
+        } catch (error) {
+          console.error("Error saving customer rates:", error);
+        }
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
       queryClient.invalidateQueries({ queryKey: ["/api/customers", customerId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customer-rates", customerId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setHasUnsavedChanges(false);
       setModifiedFields(new Set());
@@ -774,58 +865,82 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       rows: [
         {
           type: 'custom',
-          customContent: (() => {
-            const selectedRateId = form.watch("rateId" as any);
-            const discountStr = form.watch("discountPercent" as any) || "0";
-            const selectedRate = ratesAndCharges?.find(r => r.id === selectedRateId);
-            const rateAmount = selectedRate ? Number(selectedRate.rate) : 0;
-            const discount = Number(discountStr) || 0;
-            const calculatedAmount = rateAmount * (1 - discount / 100);
-            const unitLabel = selectedRate?.unit || "";
+          customContent: (
+            <div className="space-y-3">
+              {customerRateEntries.map((entry, index) => {
+                const rateInfo = ratesAndCharges?.find(r => r.id === entry.rateId);
+                const rateAmount = rateInfo ? Number(rateInfo.rate) : 0;
+                const discount = Number(entry.discountPercent) || 0;
+                const calculatedAmount = rateAmount * (1 - discount / 100);
+                const unitLabel = rateInfo?.unit || "";
 
-            return (
-              <div className="grid grid-cols-2 gap-8">
-                <div className="flex flex-col gap-[20px]">
-                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                    <Label className="text-sm font-medium text-right">Rate</Label>
-                    <RateSelectWithAdd
-                      value={selectedRateId || ""}
-                      onValueChange={(value) => form.setValue("rateId" as any, value)}
-                      placeholder="Select rate..."
-                      testId="select-customer-rate"
-                    />
-                  </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                    <Label className="text-sm font-medium text-right">Discount</Label>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0"
-                          {...form.register("discountPercent" as any)}
-                          className="h-10 text-right w-20"
-                          data-testid="input-customer-discount-percent"
-                        />
-                        <span className="text-sm font-medium shrink-0">%</span>
+                return (
+                  <div key={entry.id || `new-${index}`} className="rounded-lg border p-4 relative">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-red-600"
+                      onClick={() => handleRemoveRateEntry(index)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <div className="grid grid-cols-2 gap-8 pr-8">
+                      <div className="flex flex-col gap-[20px]">
+                        <div className="grid grid-cols-[130px_1fr] items-center gap-3">
+                          <Label className="text-sm font-medium text-right">Rate</Label>
+                          <RateSelectWithAdd
+                            value={entry.rateId}
+                            onValueChange={(value) => handleRateEntryChange(index, 'rateId', value)}
+                            placeholder="Select rate..."
+                            testId={`select-customer-rate-${index}`}
+                          />
+                        </div>
+                        <div className="grid grid-cols-[130px_1fr] items-center gap-3">
+                          <Label className="text-sm font-medium text-right">Discount</Label>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="0"
+                                value={entry.discountPercent}
+                                onChange={(e) => handleRateEntryChange(index, 'discountPercent', e.target.value)}
+                                className="h-10 text-right w-20"
+                                data-testid={`input-customer-discount-${index}`}
+                              />
+                              <span className="text-sm font-medium shrink-0">%</span>
+                            </div>
+                            <div className="flex items-center justify-end h-10 px-3 rounded-md border bg-muted/50">
+                              <span className="font-medium text-sm">
+                                € {calculatedAmount.toFixed(2)}
+                              </span>
+                              {unitLabel && (
+                                <span className="text-sm text-muted-foreground ml-1">
+                                  {unitLabel}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-end h-10 px-3 rounded-md border bg-muted/50">
-                        <span className="font-medium text-sm">
-                          € {calculatedAmount.toFixed(2)}
-                        </span>
-                        {unitLabel && (
-                          <span className="text-sm text-muted-foreground ml-1">
-                            {unitLabel}
-                          </span>
-                        )}
-                      </div>
+                      <div />
                     </div>
                   </div>
-                </div>
-                <div />
-              </div>
-            );
-          })()
+                );
+              })}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={handleAddRateEntry}
+              >
+                <Plus className="h-4 w-4" />
+                Add Rate
+              </Button>
+            </div>
+          )
         }
       ]
     },

@@ -3,7 +3,7 @@ import {
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
   unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, ratesAndCharges, incoterms, vatRates, cities, statuses, companyProfiles, textSnippets, textSnippetUsages,
-  documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields, sectionTemplates,
+  documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields, sectionTemplates, customerRates,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type Prospect, type InsertProspect, type InventoryItem, type InsertInventoryItem,
   type Project, type InsertProject, type Quotation, type InsertQuotation,
@@ -23,7 +23,8 @@ import {
   type DocumentLayout, type InsertDocumentLayout, type LayoutBlock, type InsertLayoutBlock,
   type LayoutSection, type InsertLayoutSection, type LayoutElement, type InsertLayoutElement,
   type DocumentLayoutField, type InsertDocumentLayoutField,
-  type SectionTemplate, type InsertSectionTemplate
+  type SectionTemplate, type InsertSectionTemplate,
+  type CustomerRate, type InsertCustomerRate
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, or, ilike } from "drizzle-orm";
@@ -89,6 +90,12 @@ export interface IStorage {
   createCustomerContact(contact: InsertCustomerContact): Promise<CustomerContact>;
   updateCustomerContact(id: string, contact: Partial<InsertCustomerContact>): Promise<CustomerContact>;
   deleteCustomerContact(id: string): Promise<void>;
+
+  // Customer Rate methods
+  getCustomerRates(customerId: string): Promise<CustomerRate[]>;
+  createCustomerRate(rate: InsertCustomerRate): Promise<CustomerRate>;
+  updateCustomerRate(id: string, rate: Partial<InsertCustomerRate>): Promise<CustomerRate>;
+  deleteCustomerRate(id: string): Promise<void>;
 
   // Supplier methods
   getSuppliers(): Promise<Supplier[]>;
@@ -508,6 +515,26 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCustomerContact(id: string): Promise<void> {
     await db.delete(customerContacts).where(eq(customerContacts.id, id));
+  }
+
+  // Customer Rate methods
+  async getCustomerRates(customerId: string): Promise<CustomerRate[]> {
+    return await db.select().from(customerRates)
+      .where(eq(customerRates.customerId, customerId))
+      .orderBy(customerRates.sortOrder);
+  }
+
+  async createCustomerRate(rate: InsertCustomerRate): Promise<CustomerRate> {
+    const [newRate] = await db.insert(customerRates).values(rate).returning();
+    return newRate;
+  }
+
+  async updateCustomerRate(id: string, rate: Partial<InsertCustomerRate>): Promise<CustomerRate> {
+    return await safeUpdate(customerRates, rate, id);
+  }
+
+  async deleteCustomerRate(id: string): Promise<void> {
+    await db.delete(customerRates).where(eq(customerRates.id, id));
   }
 
   // Address methods

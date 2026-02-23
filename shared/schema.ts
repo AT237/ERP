@@ -460,6 +460,15 @@ export const paymentTerms = pgTable("payment_terms", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const customerRates = pgTable("customer_rates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull().references(() => customers.id, { onDelete: 'cascade' }),
+  rateId: varchar("rate_id").notNull(),
+  discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const ratesAndCharges = pgTable("rates_and_charges", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   code: text("code").notNull().unique(),
@@ -789,6 +798,7 @@ export const insertCustomerContactSchema = createInsertSchema(customerContacts).
   ).default([])
 });
 export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, customerNumber: true, createdAt: true, deletedAt: true });
+export const insertCustomerRateSchema = createInsertSchema(customerRates).omit({ id: true, createdAt: true });
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, supplierNumber: true, createdAt: true, deletedAt: true });
 export const insertProspectSchema = createInsertSchema(prospects).omit({ id: true, prospectNumber: true, createdAt: true, deletedAt: true }).extend({
   nextFollowUp: z.string().optional(),
@@ -859,6 +869,8 @@ export type InsertAddress = z.infer<typeof insertAddressSchema>;
 export type CustomerContact = typeof customerContacts.$inferSelect;
 export type InsertCustomerContact = z.infer<typeof insertCustomerContactSchema>;
 export type Customer = typeof customers.$inferSelect;
+export type CustomerRate = typeof customerRates.$inferSelect;
+export type InsertCustomerRate = z.infer<typeof insertCustomerRateSchema>;
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Supplier = typeof suppliers.$inferSelect;
 export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
