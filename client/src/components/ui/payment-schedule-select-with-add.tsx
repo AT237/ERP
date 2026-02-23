@@ -52,8 +52,25 @@ export function PaymentScheduleSelectWithAdd({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              {displayName}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              <span className="truncate">{displayName}</span>
+              {value && selectedTerm && (
+                <Search 
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent('open-form-tab', {
+                      detail: {
+                        id: `masterdata-payment-terms-${selectedTerm.id}`,
+                        name: selectedTerm.name,
+                        formType: 'masterdata-payment-terms',
+                        entityId: selectedTerm.id
+                      }
+                    }));
+                  }}
+                />
+              )}
+              <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent 
@@ -165,27 +182,6 @@ export function PaymentScheduleSelectWithAdd({
           </PopoverContent>
         </Popover>
       </div>
-      {value && selectedTerm && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 shrink-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('open-form-tab', {
-              detail: {
-                id: `masterdata-payment-terms-${selectedTerm.id}`,
-                name: selectedTerm.name,
-                formType: 'masterdata-payment-terms',
-                entityId: selectedTerm.id
-              }
-            }));
-          }}
-          data-testid={`${testId}-lookup`}
-        >
-          <Search className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   );
 }

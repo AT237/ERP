@@ -76,8 +76,25 @@ export function AddressSelectWithAdd({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              {selectedAddress ? formatAddress(selectedAddress) : placeholder}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              <span className="truncate">{selectedAddress ? formatAddress(selectedAddress) : placeholder}</span>
+              {value && selectedAddress && (
+                <Search 
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent('open-form-tab', {
+                      detail: {
+                        id: `address-${selectedAddress.id}`,
+                        name: 'Edit Address',
+                        formType: 'address',
+                        recordId: selectedAddress.id
+                      }
+                    }));
+                  }}
+                />
+              )}
+              <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent 
@@ -181,27 +198,6 @@ export function AddressSelectWithAdd({
           </PopoverContent>
         </Popover>
       </div>
-      {value && selectedAddress && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 shrink-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('open-form-tab', {
-              detail: {
-                id: `address-${selectedAddress.id}`,
-                name: 'Edit Address',
-                formType: 'address',
-                recordId: selectedAddress.id
-              }
-            }));
-          }}
-          data-testid={`${testId}-lookup`}
-        >
-          <Search className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   );
 }

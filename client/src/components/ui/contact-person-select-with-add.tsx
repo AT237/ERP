@@ -75,8 +75,25 @@ export function ContactPersonSelectWithAdd({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              {selectedContact ? formatContact(selectedContact) : placeholder}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              <span className="truncate">{selectedContact ? formatContact(selectedContact) : placeholder}</span>
+              {value && selectedContact && (
+                <Search 
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent('open-form-tab', {
+                      detail: {
+                        id: `contact-person-${selectedContact.id}`,
+                        name: `${selectedContact.firstName} ${selectedContact.lastName}`,
+                        formType: 'contact-person',
+                        entityId: selectedContact.id
+                      }
+                    }));
+                  }}
+                />
+              )}
+              <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent 
@@ -180,27 +197,6 @@ export function ContactPersonSelectWithAdd({
           </PopoverContent>
         </Popover>
       </div>
-      {value && selectedContact && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 shrink-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('open-form-tab', {
-              detail: {
-                id: `contact-person-${selectedContact.id}`,
-                name: `${selectedContact.firstName} ${selectedContact.lastName}`,
-                formType: 'contact-person',
-                entityId: selectedContact.id
-              }
-            }));
-          }}
-          data-testid={`${testId}-lookup`}
-        >
-          <Search className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   );
 }
