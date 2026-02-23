@@ -784,39 +784,42 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
             const unitLabel = selectedRate?.unit || "";
 
             return (
-              <div className="grid grid-cols-3 gap-6">
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">Rate</Label>
-                  <RateSelectWithAdd
-                    value={selectedRateId || ""}
-                    onValueChange={(value) => form.setValue("rateId" as any, value)}
-                    placeholder="Select rate..."
-                    testId="select-customer-rate"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">Discount %</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    {...form.register("discountPercent" as any)}
-                    className="h-10"
-                    data-testid="input-customer-discount-percent"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">Amount</Label>
-                  <div className="flex items-center h-10 px-3 rounded-md border bg-muted/50">
-                    <span className="font-medium text-sm">
-                      € {calculatedAmount.toFixed(2)}
-                    </span>
-                    {unitLabel && (
-                      <span className="text-sm text-muted-foreground ml-1">
-                        / {unitLabel}
-                      </span>
-                    )}
+              <div className="grid grid-cols-2 gap-8">
+                <div className="flex flex-col gap-[20px]">
+                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
+                    <Label className="text-sm font-medium text-right">Rate</Label>
+                    <RateSelectWithAdd
+                      value={selectedRateId || ""}
+                      onValueChange={(value) => form.setValue("rateId" as any, value)}
+                      placeholder="Select rate..."
+                      testId="select-customer-rate"
+                    />
+                  </div>
+                  <div className="grid grid-cols-[130px_1fr] items-center gap-3">
+                    <Label className="text-sm font-medium text-right">Discount / Amount</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0 %"
+                        {...form.register("discountPercent" as any)}
+                        className="h-10"
+                        data-testid="input-customer-discount-percent"
+                      />
+                      <div className="flex items-center h-10 px-3 rounded-md border bg-muted/50">
+                        <span className="font-medium text-sm">
+                          € {calculatedAmount.toFixed(2)}
+                        </span>
+                        {unitLabel && (
+                          <span className="text-sm text-muted-foreground ml-1">
+                            / {unitLabel}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
+                <div />
               </div>
             );
           })()
