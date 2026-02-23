@@ -809,14 +809,12 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                         />
                         <span className="text-sm font-medium shrink-0">%</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex items-center justify-end h-10 px-3 rounded-md border bg-muted/50">
-                          <span className="font-medium text-sm">
-                            € {calculatedAmount.toFixed(2)}
-                          </span>
-                        </div>
+                      <div className="flex items-center justify-end h-10 px-3 rounded-md border bg-muted/50">
+                        <span className="font-medium text-sm">
+                          € {calculatedAmount.toFixed(2)}
+                        </span>
                         {unitLabel && (
-                          <span className="text-sm text-muted-foreground shrink-0">
+                          <span className="text-sm text-muted-foreground ml-1">
                             {unitLabel}
                           </span>
                         )}
