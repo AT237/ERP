@@ -497,6 +497,11 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     saveLoading: createMutation.isPending || updateMutation.isPending,
   });
 
+  const selectedTechNames = selectedTechnicianIds.map(id => {
+    const tech = allTechnicians.find(t => t.id === id);
+    return tech?.name || "";
+  }).filter(Boolean);
+
   const lineTypeOptions = [
     { value: 'standard', label: 'Standard Item' },
     { value: 'unique', label: 'Unique Item' },
@@ -564,6 +569,124 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       testId: 'input-line-total'
     },
     {
+      key: 'workDate',
+      label: 'Work Date',
+      type: 'custom',
+      customComponent: (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal h-10",
+                !selectedDate && "text-muted-foreground"
+              )}
+              data-testid="input-work-date"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {selectedDate ? format(selectedDate, "dd-MM-yy") : "Select date..."}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleDateChange}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      ),
+      testId: 'input-work-date'
+    },
+    {
+      key: 'technicianNames',
+      label: 'Technicians',
+      type: 'custom',
+      customComponent: (
+        <Popover open={techPopoverOpen} onOpenChange={setTechPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              className="w-full justify-between h-auto min-h-[40px] py-1.5"
+              data-testid="select-technicians"
+            >
+              <div className="flex flex-wrap gap-1 flex-1">
+                {selectedTechNames.length > 0 ? (
+                  selectedTechNames.map((name, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs gap-1">
+                      {name}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const techId = selectedTechnicianIds[i];
+                          handleToggleTechnician(techId);
+                        }}
+                      />
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-muted-foreground text-sm">Select technicians...</span>
+                )}
+              </div>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+            <Command>
+              <CommandInput placeholder="Search technicians..." />
+              <CommandList>
+                <CommandEmpty>No technicians found.</CommandEmpty>
+                <CommandGroup>
+                  {allTechnicians.map(tech => (
+                    <CommandItem
+                      key={tech.id}
+                      value={tech.name}
+                      onSelect={() => handleToggleTechnician(tech.id)}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedTechnicianIds.includes(tech.id) ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {tech.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      ),
+      testId: 'select-technicians'
+    },
+    {
+      key: 'customerRateId',
+      label: 'Rate',
+      type: 'custom',
+      customComponent: (
+        <Select
+          value={customerRateIdValue || ""}
+          onValueChange={handleCustomerRateChange}
+        >
+          <SelectTrigger className="h-10" data-testid="select-customer-rate">
+            <SelectValue placeholder={customerRateOptions.length > 0 ? "Select rate..." : "No customer rates available"} />
+          </SelectTrigger>
+          <SelectContent>
+            {customerRateOptions.map(opt => (
+              <SelectItem key={opt.customerRateId} value={opt.customerRateId}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
+      testId: 'select-customer-rate'
+    },
+    {
       key: 'descriptionInternal',
       label: 'Internal Description',
       type: 'textarea',
@@ -589,11 +712,6 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     }
   ];
 
-  const selectedTechNames = selectedTechnicianIds.map(id => {
-    const tech = allTechnicians.find(t => t.id === id);
-    return tech?.name || "";
-  }).filter(Boolean);
-
   const formSections: FormSection2<LineItemFormData>[] = [
     {
       id: 'general',
@@ -601,124 +719,14 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       rows: [
         createFieldRow(formFields[0]),
         createFieldRow(formFields[1]),
-        {
-          type: 'custom' as const,
-          customContent: (
-            <div className="grid grid-cols-2 gap-8">
-              <div className="flex flex-col gap-[20px]">
-                <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                  <Label className="text-sm font-medium text-right">Work Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal h-10",
-                          !selectedDate && "text-muted-foreground"
-                        )}
-                        data-testid="input-work-date"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, "dd-MM-yy") : "Select date..."}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={handleDateChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                  <Label className="text-sm font-medium text-right">Technicians</Label>
-                  <Popover open={techPopoverOpen} onOpenChange={setTechPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="w-full justify-between h-auto min-h-[40px] py-1.5"
-                        data-testid="select-technicians"
-                      >
-                        <div className="flex flex-wrap gap-1 flex-1">
-                          {selectedTechNames.length > 0 ? (
-                            selectedTechNames.map((name, i) => (
-                              <Badge key={i} variant="secondary" className="text-xs gap-1">
-                                {name}
-                                <X
-                                  className="h-3 w-3 cursor-pointer"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const techId = selectedTechnicianIds[i];
-                                    handleToggleTechnician(techId);
-                                  }}
-                                />
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-muted-foreground text-sm">Select technicians...</span>
-                          )}
-                        </div>
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
-                      <Command>
-                        <CommandInput placeholder="Search technicians..." />
-                        <CommandList>
-                          <CommandEmpty>No technicians found.</CommandEmpty>
-                          <CommandGroup>
-                            {allTechnicians.map(tech => (
-                              <CommandItem
-                                key={tech.id}
-                                value={tech.name}
-                                onSelect={() => handleToggleTechnician(tech.id)}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedTechnicianIds.includes(tech.id) ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {tech.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                  <Label className="text-sm font-medium text-right">Rate</Label>
-                  <Select
-                    value={customerRateIdValue || ""}
-                    onValueChange={handleCustomerRateChange}
-                  >
-                    <SelectTrigger className="h-10" data-testid="select-customer-rate">
-                      <SelectValue placeholder={customerRateOptions.length > 0 ? "Select rate..." : "No customer rates available"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customerRateOptions.map(opt => (
-                        <SelectItem key={opt.customerRateId} value={opt.customerRateId}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div />
-            </div>
-          )
-        },
+        createFieldRow(formFields[5]),
+        createFieldRow(formFields[6]),
+        createFieldRow(formFields[7]),
         createFieldRow(formFields[2]),
         createFieldRow(formFields[3]),
         createFieldRow(formFields[4]),
-        createFieldRow(formFields[5]),
-        createFieldRow(formFields[6])
+        createFieldRow(formFields[8]),
+        createFieldRow(formFields[9]),
       ]
     }
   ];
