@@ -17,6 +17,7 @@ interface RateSelectWithAddProps {
   placeholder?: string;
   testId?: string;
   className?: string;
+  excludeIds?: string[];
 }
 
 export function RateSelectWithAdd({
@@ -25,6 +26,7 @@ export function RateSelectWithAdd({
   placeholder = "Select rate...",
   testId = "select-rate",
   className,
+  excludeIds = [],
 }: RateSelectWithAddProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -123,7 +125,7 @@ export function RateSelectWithAdd({
                       — Clear selection —
                     </CommandItem>
                   )}
-                  {rates.map((rate) => (
+                  {rates.filter(rate => !excludeIds.includes(rate.id) || rate.id === value).map((rate) => (
                     <CommandItem
                       key={rate.id}
                       value={rate.id}

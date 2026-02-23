@@ -865,28 +865,29 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       rows: [
         {
           type: 'custom',
-          customContent: (
-            <div className="space-y-3">
-              {customerRateEntries.map((entry, index) => {
-                const rateInfo = ratesAndCharges?.find(r => r.id === entry.rateId);
-                const rateAmount = rateInfo ? Number(rateInfo.rate) : 0;
-                const discount = Number(entry.discountPercent) || 0;
-                const calculatedAmount = rateAmount * (1 - discount / 100);
-                const unitLabel = rateInfo?.unit || "";
+          customContent: (() => {
+            const usedRateIds = customerRateEntries.map(e => e.rateId).filter(Boolean);
+            return (
+              <div className="w-1/2 space-y-3">
+                {customerRateEntries.map((entry, index) => {
+                  const rateInfo = ratesAndCharges?.find(r => r.id === entry.rateId);
+                  const rateAmount = rateInfo ? Number(rateInfo.rate) : 0;
+                  const discount = Number(entry.discountPercent) || 0;
+                  const calculatedAmount = rateAmount * (1 - discount / 100);
+                  const unitLabel = rateInfo?.unit || "";
 
-                return (
-                  <div key={entry.id || `new-${index}`} className="rounded-lg border p-4 relative">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-red-600"
-                      onClick={() => handleRemoveRateEntry(index)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                    <div className="grid grid-cols-2 gap-8 pr-8">
-                      <div className="flex flex-col gap-[20px]">
+                  return (
+                    <div key={entry.id || `new-${index}`} className="rounded-lg border p-4 relative">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-red-600"
+                        onClick={() => handleRemoveRateEntry(index)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <div className="flex flex-col gap-[20px] pr-8">
                         <div className="grid grid-cols-[130px_1fr] items-center gap-3">
                           <Label className="text-sm font-medium text-right">Rate</Label>
                           <RateSelectWithAdd
@@ -894,6 +895,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                             onValueChange={(value) => handleRateEntryChange(index, 'rateId', value)}
                             placeholder="Select rate..."
                             testId={`select-customer-rate-${index}`}
+                            excludeIds={usedRateIds}
                           />
                         </div>
                         <div className="grid grid-cols-[130px_1fr] items-center gap-3">
@@ -924,23 +926,22 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                           </div>
                         </div>
                       </div>
-                      <div />
                     </div>
-                  </div>
-                );
-              })}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-1.5"
-                onClick={handleAddRateEntry}
-              >
-                <Plus className="h-4 w-4" />
-                Add Rate
-              </Button>
-            </div>
-          )
+                  );
+                })}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={handleAddRateEntry}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Rate
+                </Button>
+              </div>
+            );
+          })()
         }
       ]
     },
