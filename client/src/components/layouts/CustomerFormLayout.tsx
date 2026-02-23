@@ -796,23 +796,28 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                     />
                   </div>
                   <div className="grid grid-cols-[130px_1fr] items-center gap-3">
-                    <Label className="text-sm font-medium text-right">Discount / Amount</Label>
+                    <Label className="text-sm font-medium text-right">Discount</Label>
                     <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="0 %"
-                        {...form.register("discountPercent" as any)}
-                        className="h-10"
-                        data-testid="input-customer-discount-percent"
-                      />
-                      <div className="flex items-center h-10 px-3 rounded-md border bg-muted/50">
-                        <span className="font-medium text-sm">
-                          € {calculatedAmount.toFixed(2)}
-                        </span>
+                      <div className="flex items-center gap-1.5">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0"
+                          {...form.register("discountPercent" as any)}
+                          className="h-10 text-right w-1/2"
+                          data-testid="input-customer-discount-percent"
+                        />
+                        <span className="text-sm font-medium shrink-0">%</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex items-center justify-end h-10 px-3 rounded-md border bg-muted/50 w-1/2">
+                          <span className="font-medium text-sm text-right">
+                            € {calculatedAmount.toFixed(2)}
+                          </span>
+                        </div>
                         {unitLabel && (
-                          <span className="text-sm text-muted-foreground ml-1">
-                            / {unitLabel}
+                          <span className="text-sm text-muted-foreground shrink-0">
+                            {unitLabel}
                           </span>
                         )}
                       </div>
