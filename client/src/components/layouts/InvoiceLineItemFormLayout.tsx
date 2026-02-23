@@ -14,15 +14,19 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInvoiceItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Package, FileText, Search, Library, Check } from "lucide-react";
+import { Save, ArrowLeft, Package, FileText, Search, Library, Check, CalendarIcon, ChevronsUpDown, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { InvoiceItem, InsertInvoiceItem, TextSnippet } from "@shared/schema";
+import type { InvoiceItem, InsertInvoiceItem, TextSnippet, Invoice, CustomerRate, RateAndCharge, Technician } from "@shared/schema";
 import { z } from "zod";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const lineItemFormSchema = insertInvoiceItemSchema.extend({
   unitPrice: z.string().min(1, "Prijs per eenheid is verplicht"),
@@ -34,6 +38,10 @@ const lineItemFormSchema = insertInvoiceItemSchema.extend({
   descriptionExternal: z.string().optional(),
   sourceSnippetId: z.string().optional(),
   sourceSnippetVersion: z.number().optional(),
+  workDate: z.any().optional(),
+  customerRateId: z.string().optional(),
+  technicianNames: z.string().optional(),
+  technicianIds: z.string().optional(),
 }).refine((data) => {
   if ((data.lineType === 'standard' || data.lineType === 'unique') && data.quantity < 1) {
     return false;
@@ -51,6 +59,10 @@ type LineItemFormData = z.infer<typeof lineItemFormSchema> & {
   descriptionExternal?: string;
   sourceSnippetId?: string;
   sourceSnippetVersion?: number;
+  workDate?: any;
+  customerRateId?: string;
+  technicianNames?: string;
+  technicianIds?: string;
 };
 
 interface InvoiceLineItemFormLayoutProps {
@@ -67,6 +79,9 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const [showSnippetDialog, setShowSnippetDialog] = useState(false);
   const [snippetSearchTerm, setSnippetSearchTerm] = useState("");
   const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("all");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTechnicianIds, setSelectedTechnicianIds] = useState<string[]>([]);
+  const [techPopoverOpen, setTechPopoverOpen] = useState(false);
   
   const { toast } = useToast();
   const isEditing = !!lineItemId;
@@ -88,6 +103,9 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       descriptionExternal: "",
       sourceSnippetId: undefined,
       sourceSnippetVersion: undefined,
+      workDate: undefined,
+      customerRateId: "",
+      technicianNames: "",
     },
   });
 
@@ -100,10 +118,55 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     enabled: !!lineItemId,
   });
 
+  const { data: invoiceData } = useQuery<Invoice>({
+    queryKey: ["/api/invoices", invoiceId],
+    enabled: !!invoiceId,
+  });
+
+  const customerId = invoiceData?.customerId;
+
   const { data: invoiceDetails } = useQuery<{ invoice: any; items: InvoiceItem[]; customer: any }>({
     queryKey: ["/api/invoices", invoiceId, "details"],
     enabled: !!invoiceId && !isEditing,
   });
+
+  const { data: customerRates = [] } = useQuery<CustomerRate[]>({
+    queryKey: [`/api/customer-rates/${customerId}`],
+    enabled: !!customerId,
+  });
+
+  const { data: allRates = [] } = useQuery<RateAndCharge[]>({
+    queryKey: ["/api/masterdata/rates-and-charges"],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: allTechnicians = [] } = useQuery<Technician[]>({
+    queryKey: ["/api/masterdata/technicians"],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const customerRateOptions = useMemo(() => {
+    return customerRates.map(cr => {
+      const rateInfo = allRates.find(r => r.id === cr.rateId);
+      if (!rateInfo) return null;
+      const discount = Number(cr.discountPercent) || 0;
+      const discountedPrice = Number(rateInfo.rate) * (1 - discount / 100);
+      return {
+        customerRateId: cr.id,
+        rateId: cr.rateId,
+        code: rateInfo.code,
+        name: rateInfo.name,
+        unit: rateInfo.unit || "",
+        baseRate: Number(rateInfo.rate),
+        discount,
+        discountedPrice,
+        label: `${rateInfo.code} - ${rateInfo.name} (€${discountedPrice.toFixed(2)}${discount > 0 ? ` / ${discount}% disc.` : ''})`,
+      };
+    }).filter(Boolean) as Array<{
+      customerRateId: string; rateId: string; code: string; name: string; unit: string;
+      baseRate: number; discount: number; discountedPrice: number; label: string;
+    }>;
+  }, [customerRates, allRates]);
 
   useEffect(() => {
     if (!isEditing && invoiceDetails?.items) {
@@ -156,7 +219,19 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         descriptionExternal: lineItem.description || "",
         sourceSnippetId: lineItem.sourceSnippetId || undefined,
         sourceSnippetVersion: lineItem.sourceSnippetVersion || undefined,
+        workDate: (lineItem as any).workDate || undefined,
+        customerRateId: (lineItem as any).customerRateId || "",
+        technicianNames: (lineItem as any).technicianNames || "",
+        technicianIds: (lineItem as any).technicianIds || "",
       };
+      
+      if ((lineItem as any).workDate) {
+        setSelectedDate(new Date((lineItem as any).workDate));
+      }
+      if ((lineItem as any).technicianIds) {
+        const ids = ((lineItem as any).technicianIds as string).split(",").map((id: string) => id.trim()).filter(Boolean);
+        setSelectedTechnicianIds(ids);
+      }
       
       form.reset(formData);
       setOriginalValues(formData);
@@ -172,6 +247,12 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const quantityValue = form.watch("quantity");
   const unitPriceValue = form.watch("unitPrice");
   const lineTotalValue = form.watch("lineTotal");
+  const customerRateIdValue = form.watch("customerRateId");
+
+  const selectedRateOption = useMemo(() => {
+    if (!customerRateIdValue) return null;
+    return customerRateOptions.find(opt => opt.customerRateId === customerRateIdValue) || null;
+  }, [customerRateIdValue, customerRateOptions]);
 
   const SNIPPET_CATEGORIES = [
     { value: "all", label: "All Categories" },
@@ -212,6 +293,35 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       detail: { tabId, hasUnsavedChanges }
     }));
   }, [hasUnsavedChanges, lineItemId]);
+
+  const handleCustomerRateChange = (customerRateId: string) => {
+    form.setValue("customerRateId", customerRateId);
+    const rateOpt = customerRateOptions.find(opt => opt.customerRateId === customerRateId);
+    if (rateOpt) {
+      form.setValue("unitPrice", rateOpt.discountedPrice.toFixed(2));
+    }
+    setHasUnsavedChanges(true);
+  };
+
+  const handleDateChange = (date: Date | undefined) => {
+    setSelectedDate(date);
+    form.setValue("workDate", date ? date.toISOString() : undefined);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleToggleTechnician = (techId: string) => {
+    setSelectedTechnicianIds(prev => {
+      const newIds = prev.includes(techId) ? prev.filter(id => id !== techId) : [...prev, techId];
+      const techNames = newIds.map(id => {
+        const tech = allTechnicians.find(t => t.id === id);
+        return tech?.name || "";
+      }).filter(Boolean).join(", ");
+      form.setValue("technicianNames", techNames);
+      form.setValue("technicianIds", newIds.join(", "));
+      setHasUnsavedChanges(true);
+      return newIds;
+    });
+  };
 
   const recordSnippetUsageMutation = useMutation({
     mutationFn: async (data: { snippetId: string; invoiceId: string; usageType: string }) => {
@@ -343,12 +453,21 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   };
 
   const onSubmit = (data: LineItemFormData) => {
+    const techNames = selectedTechnicianIds.map(id => {
+      const tech = allTechnicians.find(t => t.id === id);
+      return tech?.name || "";
+    }).filter(Boolean).join(", ");
+
     const transformedData = {
       ...data,
       quantity: Number(data.quantity),
       description: data.descriptionExternal || data.descriptionInternal || data.description,
       sourceSnippetId: data.sourceSnippetId || undefined,
       sourceSnippetVersion: data.sourceSnippetVersion || undefined,
+      workDate: selectedDate ? selectedDate.toISOString() : undefined,
+      customerRateId: data.customerRateId || undefined,
+      technicianNames: techNames || undefined,
+      technicianIds: selectedTechnicianIds.length > 0 ? selectedTechnicianIds.join(", ") : undefined,
     };
     
     if (isEditing) {
@@ -470,18 +589,136 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     }
   ];
 
+  const selectedTechNames = selectedTechnicianIds.map(id => {
+    const tech = allTechnicians.find(t => t.id === id);
+    return tech?.name || "";
+  }).filter(Boolean);
+
   const formSections: FormSection2<LineItemFormData>[] = [
     {
       id: 'general',
       label: 'General',
       rows: [
-        createFieldRow(formFields[0]), // lineType → left (select)
-        createFieldRow(formFields[1]), // positionNo → left (text)
-        createFieldRow(formFields[2]), // quantity → left (number)
-        createFieldRow(formFields[3]), // unitPrice → left (number)
-        createFieldRow(formFields[4]), // lineTotal → left (text)
-        createFieldRow(formFields[5]), // descriptionInternal → right (textarea)
-        createFieldRow(formFields[6])  // descriptionExternal → right (textarea)
+        createFieldRow(formFields[0]),
+        createFieldRow(formFields[1]),
+        {
+          type: 'custom' as const,
+          customContent: (
+            <div className="grid grid-cols-2 gap-8">
+              <div className="flex flex-col gap-[20px]">
+                <div className="grid grid-cols-[130px_1fr] items-center gap-3">
+                  <Label className="text-sm font-medium text-right">Work Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal h-10",
+                          !selectedDate && "text-muted-foreground"
+                        )}
+                        data-testid="input-work-date"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDate ? format(selectedDate, "dd-MM-yy") : "Select date..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={handleDateChange}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="grid grid-cols-[130px_1fr] items-center gap-3">
+                  <Label className="text-sm font-medium text-right">Technicians</Label>
+                  <Popover open={techPopoverOpen} onOpenChange={setTechPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between h-auto min-h-[40px] py-1.5"
+                        data-testid="select-technicians"
+                      >
+                        <div className="flex flex-wrap gap-1 flex-1">
+                          {selectedTechNames.length > 0 ? (
+                            selectedTechNames.map((name, i) => (
+                              <Badge key={i} variant="secondary" className="text-xs gap-1">
+                                {name}
+                                <X
+                                  className="h-3 w-3 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const techId = selectedTechnicianIds[i];
+                                    handleToggleTechnician(techId);
+                                  }}
+                                />
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Select technicians...</span>
+                          )}
+                        </div>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+                      <Command>
+                        <CommandInput placeholder="Search technicians..." />
+                        <CommandList>
+                          <CommandEmpty>No technicians found.</CommandEmpty>
+                          <CommandGroup>
+                            {allTechnicians.map(tech => (
+                              <CommandItem
+                                key={tech.id}
+                                value={tech.name}
+                                onSelect={() => handleToggleTechnician(tech.id)}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedTechnicianIds.includes(tech.id) ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {tech.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="grid grid-cols-[130px_1fr] items-center gap-3">
+                  <Label className="text-sm font-medium text-right">Rate</Label>
+                  <Select
+                    value={customerRateIdValue || ""}
+                    onValueChange={handleCustomerRateChange}
+                  >
+                    <SelectTrigger className="h-10" data-testid="select-customer-rate">
+                      <SelectValue placeholder={customerRateOptions.length > 0 ? "Select rate..." : "No customer rates available"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customerRateOptions.map(opt => (
+                        <SelectItem key={opt.customerRateId} value={opt.customerRateId}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div />
+            </div>
+          )
+        },
+        createFieldRow(formFields[2]),
+        createFieldRow(formFields[3]),
+        createFieldRow(formFields[4]),
+        createFieldRow(formFields[5]),
+        createFieldRow(formFields[6])
       ]
     }
   ];

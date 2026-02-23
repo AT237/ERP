@@ -3,7 +3,7 @@ import {
   invoices, invoiceItems, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
   unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, ratesAndCharges, incoterms, vatRates, cities, statuses, companyProfiles, textSnippets, textSnippetUsages,
-  documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields, sectionTemplates, customerRates,
+  documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields, sectionTemplates, customerRates, technicians,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type Prospect, type InsertProspect, type InventoryItem, type InsertInventoryItem,
   type Project, type InsertProject, type Quotation, type InsertQuotation,
@@ -24,7 +24,8 @@ import {
   type LayoutSection, type InsertLayoutSection, type LayoutElement, type InsertLayoutElement,
   type DocumentLayoutField, type InsertDocumentLayoutField,
   type SectionTemplate, type InsertSectionTemplate,
-  type CustomerRate, type InsertCustomerRate
+  type CustomerRate, type InsertCustomerRate,
+  type Technician, type InsertTechnician
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, or, ilike } from "drizzle-orm";
@@ -230,6 +231,12 @@ export interface IStorage {
   createRateAndCharge(rate: InsertRateAndCharge): Promise<RateAndCharge>;
   updateRateAndCharge(id: string, rate: Partial<InsertRateAndCharge>): Promise<RateAndCharge>;
   deleteRateAndCharge(id: string): Promise<void>;
+
+  getTechnicians(): Promise<Technician[]>;
+  getTechnician(id: string): Promise<Technician | undefined>;
+  createTechnician(technician: InsertTechnician): Promise<Technician>;
+  updateTechnician(id: string, technician: Partial<InsertTechnician>): Promise<Technician>;
+  deleteTechnician(id: string): Promise<void>;
 
   getIncoterms(): Promise<Incoterm[]>;
   getIncoterm(id: string): Promise<Incoterm | undefined>;
@@ -1251,6 +1258,28 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRateAndCharge(id: string): Promise<void> {
     await db.update(ratesAndCharges).set({ isActive: false }).where(eq(ratesAndCharges.id, id));
+  }
+
+  async getTechnicians(): Promise<Technician[]> {
+    return await db.select().from(technicians).where(eq(technicians.isActive, true)).orderBy(technicians.sortOrder);
+  }
+
+  async getTechnician(id: string): Promise<Technician | undefined> {
+    const [tech] = await db.select().from(technicians).where(eq(technicians.id, id));
+    return tech || undefined;
+  }
+
+  async createTechnician(technician: InsertTechnician): Promise<Technician> {
+    const [newTech] = await db.insert(technicians).values(technician).returning();
+    return newTech;
+  }
+
+  async updateTechnician(id: string, technician: Partial<InsertTechnician>): Promise<Technician> {
+    return await safeUpdate(technicians, technician, id);
+  }
+
+  async deleteTechnician(id: string): Promise<void> {
+    await db.update(technicians).set({ isActive: false }).where(eq(technicians.id, id));
   }
 
   async getIncoterms(): Promise<Incoterm[]> {

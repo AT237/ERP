@@ -204,14 +204,34 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
 
   const itemColumns = React.useMemo(() => [
     createPositionColumn(),
-    createIdColumn('id', 'Line ID'),
-    { 
-      key: 'description', 
-      label: 'Description', 
-      visible: true, 
-      width: 300, 
-      filterable: true, 
-      sortable: true 
+    {
+      key: 'workDate',
+      label: 'Date',
+      visible: true,
+      width: 90,
+      filterable: false,
+      sortable: true,
+      renderCell: (value: any) => {
+        if (!value) return '';
+        const d = new Date(value);
+        return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getFullYear()).slice(-2)}`;
+      }
+    },
+    {
+      key: 'technicianNames',
+      label: 'Technicians',
+      visible: true,
+      width: 150,
+      filterable: true,
+      sortable: true
+    },
+    {
+      key: 'description',
+      label: 'Description',
+      visible: true,
+      width: 200,
+      filterable: true,
+      sortable: true
     },
     { 
       key: 'quantity', 

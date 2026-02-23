@@ -279,16 +279,20 @@ export const invoices = pgTable("invoices", {
 export const invoiceItems = pgTable("invoice_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   invoiceId: varchar("invoice_id").references(() => invoices.id).notNull(),
-  itemId: varchar("item_id").references(() => inventoryItems.id), // Nullable for text lines
+  itemId: varchar("item_id").references(() => inventoryItems.id),
   description: text("description").notNull(),
-  quantity: integer("quantity").default(0), // 0 for text lines
+  quantity: integer("quantity").default(0),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
-  lineType: text("line_type").default("standard"), // 'standard', 'unique', 'text', 'charges'
-  position: integer("position").default(0), // Order of items in document
-  positionNo: text("position_no"), // Formatted position number (e.g., "010", "020")
-  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id), // Link to text snippet
-  sourceSnippetVersion: integer("source_snippet_version"), // Version of snippet when used
+  lineType: text("line_type").default("standard"),
+  position: integer("position").default(0),
+  positionNo: text("position_no"),
+  workDate: timestamp("work_date"),
+  customerRateId: varchar("customer_rate_id"),
+  technicianNames: text("technician_names"),
+  technicianIds: text("technician_ids"),
+  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id),
+  sourceSnippetVersion: integer("source_snippet_version"),
 });
 
 // Proforma invoices table
@@ -465,6 +469,15 @@ export const customerRates = pgTable("customer_rates", {
   customerId: varchar("customer_id").notNull().references(() => customers.id, { onDelete: 'cascade' }),
   rateId: varchar("rate_id").notNull(),
   discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const technicians = pgTable("technicians", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  code: text("code"),
+  isActive: boolean("is_active").default(true),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -799,6 +812,7 @@ export const insertCustomerContactSchema = createInsertSchema(customerContacts).
 });
 export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, customerNumber: true, createdAt: true, deletedAt: true });
 export const insertCustomerRateSchema = createInsertSchema(customerRates).omit({ id: true, createdAt: true });
+export const insertTechnicianSchema = createInsertSchema(technicians).omit({ id: true, createdAt: true });
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, supplierNumber: true, createdAt: true, deletedAt: true });
 export const insertProspectSchema = createInsertSchema(prospects).omit({ id: true, prospectNumber: true, createdAt: true, deletedAt: true }).extend({
   nextFollowUp: z.string().optional(),
@@ -871,6 +885,8 @@ export type InsertCustomerContact = z.infer<typeof insertCustomerContactSchema>;
 export type Customer = typeof customers.$inferSelect;
 export type CustomerRate = typeof customerRates.$inferSelect;
 export type InsertCustomerRate = z.infer<typeof insertCustomerRateSchema>;
+export type Technician = typeof technicians.$inferSelect;
+export type InsertTechnician = z.infer<typeof insertTechnicianSchema>;
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Supplier = typeof suppliers.$inferSelect;
 export type InsertSupplier = z.infer<typeof insertSupplierSchema>;

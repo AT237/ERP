@@ -38,7 +38,7 @@ import {
   insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
-  insertDevFutureSchema, devFutures, insertCustomerRateSchema
+  insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
@@ -1017,8 +1017,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/invoices/:id/items", async (req, res) => {
     try {
+      const body = parseDateFields(req.body, ['workDate']);
       const itemData = insertInvoiceItemSchema.parse({
-        ...req.body,
+        ...body,
         invoiceId: req.params.id
       });
       const item = await storage.addInvoiceItem(itemData);
@@ -1071,7 +1072,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/invoice-items/:id", async (req, res) => {
     try {
-      const itemData = insertInvoiceItemSchema.partial().parse(req.body);
+      const body = parseDateFields(req.body, ['workDate']);
+      const itemData = insertInvoiceItemSchema.partial().parse(body);
       const item = await storage.updateInvoiceItem(req.params.id, itemData);
       res.json(item);
     } catch (error) {
@@ -1687,6 +1689,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating rate and charge:", error);
       res.status(400).json({ message: "Failed to create rate and charge" });
+    }
+  });
+
+  // Master Data routes - Technicians
+  app.get("/api/masterdata/technicians", async (req, res) => {
+    try {
+      const techs = await storage.getTechnicians();
+      res.json(techs);
+    } catch (error) {
+      console.error("Error fetching technicians:", error);
+      res.status(500).json({ message: "Failed to fetch technicians" });
+    }
+  });
+
+  app.post("/api/masterdata/technicians", async (req, res) => {
+    try {
+      const techData = insertTechnicianSchema.parse(req.body);
+      const tech = await storage.createTechnician(techData);
+      res.json(tech);
+    } catch (error) {
+      console.error("Error creating technician:", error);
+      res.status(400).json({ message: "Failed to create technician" });
+    }
+  });
+
+  app.get("/api/masterdata/technicians/:id", async (req, res) => {
+    try {
+      const tech = await storage.getTechnician(req.params.id);
+      if (!tech) return res.status(404).json({ message: "Technician not found" });
+      res.json(tech);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch technician" });
+    }
+  });
+
+  app.put("/api/masterdata/technicians/:id", async (req, res) => {
+    try {
+      const techData = insertTechnicianSchema.partial().parse(req.body);
+      const tech = await storage.updateTechnician(req.params.id, techData);
+      res.json(tech);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update technician" });
+    }
+  });
+
+  app.delete("/api/masterdata/technicians/:id", async (req, res) => {
+    try {
+      await storage.deleteTechnician(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete technician" });
     }
   });
 
