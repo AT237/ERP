@@ -58,6 +58,7 @@ export const addresses = pgTable("addresses", {
 // Employees table for personal information
 export const employees = pgTable("employees", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeNumber: text("employee_number").notNull().unique().default(sql`CONCAT('EM-', LPAD(nextval('employee_number_seq')::text, 4, '0'))`),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   dateOfBirth: timestamp("date_of_birth"),
@@ -816,7 +817,7 @@ export const insertUserPreferencesSchema = createInsertSchema(userPreferences).o
 export const insertCountrySchema = createInsertSchema(countries).omit({ id: true, createdAt: true });
 export const insertLanguageSchema = createInsertSchema(languages).omit({ id: true, createdAt: true });
 export const insertAddressSchema = createInsertSchema(addresses).omit({ id: true, createdAt: true });
-export const insertEmployeeSchema = createInsertSchema(employees).omit({ id: true, createdAt: true }).extend({
+export const insertEmployeeSchema = createInsertSchema(employees).omit({ id: true, employeeNumber: true, createdAt: true }).extend({
   mobile: z.array(
     z.string()
       .min(1, "Mobile number is required")

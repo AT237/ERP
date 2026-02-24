@@ -8,7 +8,7 @@ import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layo
 import { useDataTable } from '@/hooks/useDataTable';
 
 const defaultColumns: ColumnConfig[] = [
-  createIdColumn('id', 'Employee ID'),
+  createIdColumn('employeeNumber', 'Employee ID'),
   { key: 'firstName', label: 'First Name', visible: true, width: 150, filterable: true, sortable: true },
   { key: 'lastName', label: 'Last Name', visible: true, width: 150, filterable: true, sortable: true },
   { key: 'title', label: 'Title', visible: true, width: 140, filterable: true, sortable: true },
