@@ -131,6 +131,18 @@ export function ProjectSelect({
               <CommandList>
                 <CommandEmpty>No project found.</CommandEmpty>
                 <CommandGroup>
+                  {value && (
+                    <CommandItem
+                      value="__clear__"
+                      onSelect={() => {
+                        onValueChange?.("");
+                        setOpen(false);
+                      }}
+                      className="text-muted-foreground"
+                    >
+                      <span className="italic">Clear selection</span>
+                    </CommandItem>
+                  )}
                   {projects.map((project) => (
                     <CommandItem
                       key={project.id}
