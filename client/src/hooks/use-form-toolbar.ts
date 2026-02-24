@@ -149,6 +149,17 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsDelete: true,
     supportsAddNew: true,
   },
+  employee: {
+    apiPath: "/api/employees",
+    formType: "employee",
+    label: "Employee",
+    labelPlural: "Employees",
+    listQueryKey: "/api/employees",
+    documentType: "employee",
+    supportsNavigation: true,
+    supportsDelete: true,
+    supportsAddNew: true,
+  },
   address: {
     apiPath: "/api/addresses",
     formType: "address",

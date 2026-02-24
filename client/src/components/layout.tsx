@@ -43,6 +43,8 @@ const PackingListForm = lazy(() => import('@/pages/packing-list-form'));
 const InvoiceForm = lazy(() => import('@/pages/invoice-form'));
 const TextSnippetForm = lazy(() => import('@/pages/text-snippet-form'));
 const ContactPersonForm = lazy(() => import('@/pages/contact-person-form'));
+const EmployeesPage = lazy(() => import('@/pages/employees'));
+const EmployeeForm = lazy(() => import('@/pages/employee-form'));
 const ImageForm = lazy(() => import('@/pages/image-form'));
 const MasterDataTable = lazy(() => import('./masterdata-table'));
 const MasterDataFormLayout = lazy(() => import('@/components/layouts/MasterDataFormLayout'));
@@ -133,6 +135,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'suppliers', name: 'Suppliers' };
       case '/contact-persons':
         return { id: 'contact-persons', name: 'Contact Persons' };
+      case '/employees':
+        return { id: 'employees', name: 'Employees' };
       case '/quotations':
         return { id: 'quotations', name: 'Quotations' };
       case '/invoices':
@@ -540,6 +544,8 @@ export default function Layout({ children }: LayoutProps) {
         return '/suppliers';
       case 'contact-persons':
         return '/contact-persons';
+      case 'employees':
+        return '/employees';
       case 'quotations':
         return '/quotations';
       case 'invoices':
@@ -911,6 +917,14 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
 
+      if (tab.id === 'employees') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <EmployeesPage />
+          </Suspense>
+        );
+      }
+
       if (tab.id === 'quotations') {
         return (
           <Suspense fallback={<div></div>}>
@@ -1261,6 +1275,27 @@ export default function Layout({ children }: LayoutProps) {
                 const contactPersonsTab = allTabs.find(t => t.id === 'contact-persons');
                 if (contactPersonsTab) {
                   panelSetActiveTabId('contact-persons');
+                  panelCloseTab(tab.id);
+                }
+              }} 
+            />
+          </Suspense>
+        );
+      }
+
+      if (tab.formType === 'employee') {
+        const employeeId = tab.id.startsWith('employee-edit-') 
+          ? tab.id.replace('employee-edit-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div></div>}>
+            <EmployeeForm 
+              employeeId={employeeId}
+              onSave={() => {
+                const employeesTab = allTabs.find(t => t.id === 'employees');
+                if (employeesTab) {
+                  panelSetActiveTabId('employees');
                   panelCloseTab(tab.id);
                 }
               }} 

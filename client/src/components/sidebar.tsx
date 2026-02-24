@@ -21,7 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { 
   BarChart3, Building, Users, Truck, Package, FileText, 
-  Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact,
+  Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact, UserCheck,
   ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search, ChevronsDown, ChevronsUp,
   Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen, Layout, Image
 } from "lucide-react";
@@ -52,6 +52,7 @@ export const defaultNavigation = [
       { id: "customers", name: "Customers", href: "/customers", icon: Users },
       { id: "suppliers", name: "Suppliers", href: "/suppliers", icon: Truck },
       { id: "contact-persons", name: "Contact Persons", href: "/contact-persons", icon: Contact },
+      { id: "employees", name: "Employees", href: "/employees", icon: UserCheck },
       { id: "addresses", name: "Addresses", href: "/addresses", icon: MapPin },
       { id: "prospects", name: "Prospects", href: "/prospects", icon: UserPlus }
     ]

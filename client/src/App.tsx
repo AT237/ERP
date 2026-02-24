@@ -11,6 +11,7 @@ import Customers from "@/pages/customers";
 import Inventory from "@/pages/inventory";
 import Suppliers from "@/pages/suppliers";
 import ContactPersons from "@/pages/contact-persons";
+import Employees from "@/pages/employees";
 import Addresses from "@/pages/addresses";
 import Prospects from "@/pages/prospects";
 import Quotations from "@/pages/quotations";
@@ -39,6 +40,7 @@ function Router() {
         <Route path="/inventory" component={Inventory} />
         <Route path="/suppliers" component={Suppliers} />
         <Route path="/contact-persons" component={ContactPersons} />
+        <Route path="/employees" component={Employees} />
         <Route path="/addresses" component={Addresses} />
         <Route path="/prospects" component={Prospects} />
         <Route path="/quotations" component={() => <Quotations />} />
@@ -271,6 +273,25 @@ function Router() {
             return (
               <Suspense fallback={<div></div>}>
                 <ContactPersonForm onSave={() => window.history.back()} contactPersonId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+
+        <Route path="/employee-form" component={() => {
+          const EmployeeForm = React.lazy(() => import('./pages/employee-form'));
+          return (
+            <Suspense fallback={<div></div>}>
+              <EmployeeForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/employee-form/:id">
+          {(params) => {
+            const EmployeeForm = React.lazy(() => import('./pages/employee-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <EmployeeForm onSave={() => window.history.back()} employeeId={params.id} />
               </Suspense>
             );
           }}
