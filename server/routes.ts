@@ -38,7 +38,7 @@ import {
   insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
-  insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema
+  insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema, insertEmployeeSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
@@ -1740,6 +1740,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete technician" });
+    }
+  });
+
+  // Employee routes
+  app.get("/api/employees", async (req, res) => {
+    try {
+      const emps = await storage.getEmployees();
+      res.json(emps);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      res.status(500).json({ message: "Failed to fetch employees" });
+    }
+  });
+
+  app.post("/api/employees", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ['dateOfBirth']);
+      const empData = insertEmployeeSchema.parse(body);
+      const emp = await storage.createEmployee(empData);
+      res.json(emp);
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      res.status(400).json({ message: "Failed to create employee" });
+    }
+  });
+
+  app.get("/api/employees/:id", async (req, res) => {
+    try {
+      const emp = await storage.getEmployee(req.params.id);
+      if (!emp) return res.status(404).json({ message: "Employee not found" });
+      res.json(emp);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch employee" });
+    }
+  });
+
+  app.patch("/api/employees/:id", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ['dateOfBirth']);
+      const empData = insertEmployeeSchema.partial().parse(body);
+      const emp = await storage.updateEmployee(req.params.id, empData);
+      res.json(emp);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update employee" });
+    }
+  });
+
+  app.delete("/api/employees/:id", async (req, res) => {
+    try {
+      await storage.deleteEmployee(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete employee" });
     }
   });
 

@@ -55,6 +55,19 @@ export const addresses = pgTable("addresses", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Employees table for personal information
+export const employees = pgTable("employees", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  dateOfBirth: timestamp("date_of_birth"),
+  email: text("email"),
+  phone: text("phone"),
+  mobile: jsonb("mobile").$type<string[]>().default(sql`'[]'::jsonb`),
+  title: text("title"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Customer contacts table for multiple contact persons per customer
 export const customerContacts = pgTable("customer_contacts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -803,6 +816,13 @@ export const insertUserPreferencesSchema = createInsertSchema(userPreferences).o
 export const insertCountrySchema = createInsertSchema(countries).omit({ id: true, createdAt: true });
 export const insertLanguageSchema = createInsertSchema(languages).omit({ id: true, createdAt: true });
 export const insertAddressSchema = createInsertSchema(addresses).omit({ id: true, createdAt: true });
+export const insertEmployeeSchema = createInsertSchema(employees).omit({ id: true, createdAt: true }).extend({
+  mobile: z.array(
+    z.string()
+      .min(1, "Mobile number is required")
+      .regex(/^\+\d{4}\d{6,12}$/, "Mobile number must start with country code (+0031) followed by 6-12 digits")
+  ).default([])
+});
 export const insertCustomerContactSchema = createInsertSchema(customerContacts).omit({ id: true, createdAt: true }).extend({
   mobile: z.array(
     z.string()
@@ -880,6 +900,8 @@ export type Language = typeof languages.$inferSelect;
 export type InsertLanguage = z.infer<typeof insertLanguageSchema>;
 export type Address = typeof addresses.$inferSelect;
 export type InsertAddress = z.infer<typeof insertAddressSchema>;
+export type Employee = typeof employees.$inferSelect;
+export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
 export type CustomerContact = typeof customerContacts.$inferSelect;
 export type InsertCustomerContact = z.infer<typeof insertCustomerContactSchema>;
 export type Customer = typeof customers.$inferSelect;

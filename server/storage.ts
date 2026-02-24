@@ -25,7 +25,8 @@ import {
   type DocumentLayoutField, type InsertDocumentLayoutField,
   type SectionTemplate, type InsertSectionTemplate,
   type CustomerRate, type InsertCustomerRate,
-  type Technician, type InsertTechnician
+  type Technician, type InsertTechnician,
+  employees, type Employee, type InsertEmployee
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, or, ilike } from "drizzle-orm";
@@ -231,6 +232,12 @@ export interface IStorage {
   createRateAndCharge(rate: InsertRateAndCharge): Promise<RateAndCharge>;
   updateRateAndCharge(id: string, rate: Partial<InsertRateAndCharge>): Promise<RateAndCharge>;
   deleteRateAndCharge(id: string): Promise<void>;
+
+  getEmployees(): Promise<Employee[]>;
+  getEmployee(id: string): Promise<Employee | undefined>;
+  createEmployee(employee: InsertEmployee): Promise<Employee>;
+  updateEmployee(id: string, employee: Partial<InsertEmployee>): Promise<Employee>;
+  deleteEmployee(id: string): Promise<void>;
 
   getTechnicians(): Promise<Technician[]>;
   getTechnician(id: string): Promise<Technician | undefined>;
@@ -1280,6 +1287,28 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTechnician(id: string): Promise<void> {
     await db.update(technicians).set({ isActive: false }).where(eq(technicians.id, id));
+  }
+
+  async getEmployees(): Promise<Employee[]> {
+    return await db.select().from(employees).orderBy(employees.lastName);
+  }
+
+  async getEmployee(id: string): Promise<Employee | undefined> {
+    const [employee] = await db.select().from(employees).where(eq(employees.id, id));
+    return employee || undefined;
+  }
+
+  async createEmployee(employee: InsertEmployee): Promise<Employee> {
+    const [newEmployee] = await db.insert(employees).values(employee).returning();
+    return newEmployee;
+  }
+
+  async updateEmployee(id: string, employee: Partial<InsertEmployee>): Promise<Employee> {
+    return await safeUpdate(employees, employee, id);
+  }
+
+  async deleteEmployee(id: string): Promise<void> {
+    await db.delete(employees).where(eq(employees.id, id));
   }
 
   async getIncoterms(): Promise<Incoterm[]> {
