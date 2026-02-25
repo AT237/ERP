@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createFieldsRow, createCustomRow, createSectionHeaderRow } from './LayoutForm2';
+import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createFieldsRow, createCustomRow, createSectionHeaderRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { InfoField } from './InfoHeaderLayout';
 import { 
@@ -725,16 +725,22 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       id: 'general',
       label: 'General',
       rows: [
-        createFieldRow(formFields[0]),
-        createFieldRow(formFields[1]),
-        createFieldRow(formFields[5]),
-        createFieldRow(formFields[6]),
-        createFieldRow(formFields[7]),
-        createFieldRow(formFields[2]),
-        createFieldRow(formFields[3]),
-        createFieldRow(formFields[4]),
-        createFieldRow(formFields[8]),
-        createFieldRow(formFields[9]),
+        createTwoColumnRow(
+          [
+            formFields[0],  // Position No
+            formFields[1],  // Line Type
+            formFields[5],  // Work Date
+            formFields[6],  // Technician
+            formFields[7],  // Rate
+            formFields[2],  // Quantity
+          ],
+          [
+            formFields[3],  // Unit Price
+            formFields[4],  // Line Total
+            formFields[8],  // Internal Description (textarea)
+            formFields[9],  // External Description (textarea)
+          ]
+        )
       ]
     }
   ];
