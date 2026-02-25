@@ -1,6 +1,48 @@
 import express, { type Request, Response, NextFunction } from "express";
+import { exec } from "child_process";
+import { promisify } from "util";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+
+const execAsync = promisify(exec);
+
+async function runGithubBackup() {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    log("GitHub backup skipped: GITHUB_TOKEN not set");
+    return;
+  }
+  const repoUrl = `https://${token}@github.com/AT237/ERP.git`;
+  const now = new Date().toISOString().slice(0, 10);
+  try {
+    await execAsync('git config user.email "auto-backup@replit.com"');
+    await execAsync('git config user.name "Auto Backup"');
+    await execAsync(`git remote set-url origin ${repoUrl}`);
+    await execAsync("git add -A");
+    try {
+      await execAsync(`git commit -m "Auto backup ${now}"`);
+    } catch {
+      // Nothing to commit is fine
+    }
+    await execAsync("git push origin main");
+    log(`GitHub backup success: pushed on ${now}`);
+  } catch (error: any) {
+    log(`GitHub backup failed: ${error.message}`);
+  }
+}
+
+function scheduleDailyBackup() {
+  const now = new Date();
+  const next = new Date();
+  next.setHours(2, 0, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  const msUntilNext = next.getTime() - now.getTime();
+  log(`GitHub backup scheduled: first run in ${Math.round(msUntilNext / 60000)} minutes`);
+  setTimeout(() => {
+    runGithubBackup();
+    setInterval(runGithubBackup, 24 * 60 * 60 * 1000);
+  }, msUntilNext);
+}
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -47,19 +89,12 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
   server.listen({
     port,
@@ -67,5 +102,6 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    scheduleDailyBackup();
   });
 })();
