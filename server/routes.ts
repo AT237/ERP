@@ -2892,6 +2892,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const now = new Date().toISOString().slice(0, 10);
 
     try {
+      // Export database to SQL file first
+      const dbUrl = process.env.DATABASE_URL;
+      if (dbUrl) {
+        try {
+          await execAsync(`pg_dump "${dbUrl}" --no-password -f database_backup.sql`);
+        } catch {
+          // Continue even if db export fails
+        }
+      }
+
       await execAsync('git config user.email "auto-backup@replit.com"');
       await execAsync('git config user.name "Auto Backup"');
       await execAsync(`git remote set-url origin ${repoUrl}`);

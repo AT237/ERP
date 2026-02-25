@@ -15,6 +15,17 @@ async function runGithubBackup() {
   const repoUrl = `https://${token}@github.com/AT237/ERP.git`;
   const now = new Date().toISOString().slice(0, 10);
   try {
+    // Export database to SQL file
+    const dbUrl = process.env.DATABASE_URL;
+    if (dbUrl) {
+      try {
+        await execAsync(`pg_dump "${dbUrl}" --no-password -f database_backup.sql`);
+        log("Database exported to database_backup.sql");
+      } catch (dbError: any) {
+        log(`Database export warning: ${dbError.message}`);
+      }
+    }
+
     await execAsync('git config user.email "auto-backup@replit.com"');
     await execAsync('git config user.name "Auto Backup"');
     await execAsync(`git remote set-url origin ${repoUrl}`);
