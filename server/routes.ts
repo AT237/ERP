@@ -2877,6 +2877,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GitHub auto-backup endpoint
+  app.post("/api/github-backup", async (req, res) => {
+    const { exec } = await import("child_process");
+    const { promisify } = await import("util");
+    const execAsync = promisify(exec);
+
+    const token = process.env.GITHUB_TOKEN;
+    if (!token) {
+      return res.status(500).json({ message: "GITHUB_TOKEN not configured" });
+    }
+
+    const repoUrl = `https://${token}@github.com/AT237/ERP.git`;
+    const now = new Date().toISOString().slice(0, 10);
+
+    try {
+      await execAsync('git config user.email "auto-backup@replit.com"');
+      await execAsync('git config user.name "Auto Backup"');
+      await execAsync(`git remote set-url origin ${repoUrl}`);
+      await execAsync("git add -A");
+      try {
+        await execAsync(`git commit -m "Auto backup ${now}"`);
+      } catch {
+        // Nothing to commit is fine
+      }
+      await execAsync("git push origin main");
+      res.json({ success: true, message: `Backup pushed to GitHub on ${now}` });
+    } catch (error: any) {
+      console.error("GitHub backup error:", error);
+      res.status(500).json({ message: "Backup failed", error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
