@@ -21,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInvoiceItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Package, FileText, Search, Library, Check, CalendarIcon, ChevronsUpDown, X } from "lucide-react";
+import { Save, ArrowLeft, Package, FileText, Search, Library, Check, CalendarIcon, ChevronsUpDown, X, Plus, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { InvoiceItem, InsertInvoiceItem, TextSnippet, Invoice, CustomerRate, RateAndCharge, Employee } from "@shared/schema";
 import { z } from "zod";
@@ -81,6 +81,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
+  const [techPopoverOpen, setTechPopoverOpen] = useState(false);
   
   const { toast } = useToast();
   const isEditing = !!lineItemId;
@@ -590,18 +591,86 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       label: 'Technician',
       type: 'custom',
       customComponent: (
-        <Select value={selectedEmployeeId || ""} onValueChange={handleEmployeeChange}>
-          <SelectTrigger className="h-10" data-testid="select-technician">
-            <SelectValue placeholder="Select technician..." />
-          </SelectTrigger>
-          <SelectContent>
-            {allEmployees.map(emp => (
-              <SelectItem key={emp.id} value={emp.id}>
-                {emp.firstName} {emp.lastName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={techPopoverOpen} onOpenChange={setTechPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={techPopoverOpen}
+              className="w-full justify-between h-10"
+              data-testid="select-technician"
+            >
+              <span className={!selectedEmployeeId ? "text-muted-foreground" : ""}>
+                {selectedEmployeeId
+                  ? (() => { const emp = allEmployees.find(e => e.id === selectedEmployeeId); return emp ? `${emp.firstName} ${emp.lastName}` : "Select technician..."; })()
+                  : "Select technician..."}
+              </span>
+              <div className="flex items-center gap-1 ml-2 shrink-0">
+                {selectedEmployeeId && (
+                  <X
+                    className="h-3.5 w-3.5 opacity-60 hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedEmployeeId("");
+                      form.setValue("technicianNames", "");
+                      form.setValue("technicianIds", "");
+                      setHasUnsavedChanges(true);
+                    }}
+                  />
+                )}
+                <ChevronsUpDown className="h-4 w-4 opacity-50" />
+              </div>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="p-0"
+            align="start"
+            sideOffset={4}
+            style={{ width: 'var(--radix-popover-trigger-width)' }}
+          >
+            <Command>
+              <div className="flex items-center border-b px-3">
+                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                <CommandInput placeholder="Search employee..." className="border-0 focus:ring-0" />
+              </div>
+              <CommandList>
+                <CommandEmpty>No employees found.</CommandEmpty>
+                <CommandGroup>
+                  {allEmployees.map(emp => (
+                    <CommandItem
+                      key={emp.id}
+                      value={`${emp.firstName} ${emp.lastName}`}
+                      onSelect={() => {
+                        handleEmployeeChange(emp.id);
+                        setTechPopoverOpen(false);
+                      }}
+                    >
+                      <Check className={cn("mr-2 h-4 w-4", selectedEmployeeId === emp.id ? "opacity-100" : "opacity-0")} />
+                      <UserCheck className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {emp.firstName} {emp.lastName}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+              <div className="border-t p-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                  onClick={() => {
+                    setTechPopoverOpen(false);
+                    window.dispatchEvent(new CustomEvent('open-form-tab', {
+                      detail: { type: 'employee', id: 'new' }
+                    }));
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  New employee
+                </Button>
+              </div>
+            </Command>
+          </PopoverContent>
+        </Popover>
       ),
       testId: 'select-technician'
     },
