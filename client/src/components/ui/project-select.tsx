@@ -74,12 +74,27 @@ export function ProjectSelect({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              {selectedProject 
-                ? (selectedProject.projectNumber 
-                    ? `${selectedProject.projectNumber} - ${selectedProject.name}` 
-                    : selectedProject.name)
-                : placeholder}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              <span className="truncate">
+                {selectedProject
+                  ? (selectedProject.projectNumber
+                      ? `${selectedProject.projectNumber} - ${selectedProject.name}`
+                      : selectedProject.name)
+                  : placeholder}
+              </span>
+              {value && selectedProject && (
+                <Search
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const uniqueTabId = `project-edit-${selectedProject.id}-${Date.now()}`;
+                    window.dispatchEvent(new CustomEvent('open-form-tab', {
+                      detail: { id: uniqueTabId, name: selectedProject.name, formType: 'project', entityId: selectedProject.id, parentId: parentId || testId }
+                    }));
+                  }}
+                />
+              )}
+              <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent 
@@ -138,9 +153,9 @@ export function ProjectSelect({
                         onValueChange?.("");
                         setOpen(false);
                       }}
-                      className="text-muted-foreground"
+                      className="text-muted-foreground italic"
                     >
-                      <span className="italic">Clear selection</span>
+                      — Clear selection —
                     </CommandItem>
                   )}
                   {projects.map((project) => (
@@ -198,29 +213,6 @@ export function ProjectSelect({
           </PopoverContent>
         </Popover>
       </div>
-      {value && selectedProject && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 shrink-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-          onClick={() => {
-            const uniqueTabId = `project-edit-${selectedProject.id}-${Date.now()}`;
-            window.dispatchEvent(new CustomEvent('open-form-tab', {
-              detail: {
-                id: uniqueTabId,
-                name: selectedProject.name || 'Edit Project',
-                formType: 'project',
-                entityId: selectedProject.id,
-                parentId: parentId || testId
-              }
-            }));
-          }}
-          data-testid={`${testId}-lookup`}
-        >
-          <Search className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   );
 }

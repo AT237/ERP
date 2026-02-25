@@ -222,8 +222,21 @@ export function CustomerSelect({
                 className={cn("w-full justify-between", className)}
                 data-testid={testId}
               >
-                {selectedCustomer ? selectedCustomer.name : placeholder}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <span className="truncate">{selectedCustomer ? selectedCustomer.name : placeholder}</span>
+                {value && selectedCustomer && (
+                  <Search
+                    className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      const uniqueTabId = `customer-edit-${selectedCustomer.id}-${Date.now()}`;
+                      window.dispatchEvent(new CustomEvent('open-form-tab', {
+                        detail: { id: uniqueTabId, name: selectedCustomer.name, formType: 'customer', entityId: selectedCustomer.id, parentId: parentId || testId }
+                      }));
+                    }}
+                  />
+                )}
+                <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent 
@@ -277,6 +290,15 @@ export function CustomerSelect({
                 <CommandList>
                   <CommandEmpty>No customer found.</CommandEmpty>
                   <CommandGroup>
+                    {value && (
+                      <CommandItem
+                        value="__clear__"
+                        onSelect={() => { onValueChange?.(""); setOpen(false); }}
+                        className="text-muted-foreground italic"
+                      >
+                        — Clear selection —
+                      </CommandItem>
+                    )}
                     {customersTyped.map((customer) => (
                       <CommandItem
                         key={customer.id}
@@ -330,29 +352,6 @@ export function CustomerSelect({
             </PopoverContent>
           </Popover>
         </div>
-        {value && selectedCustomer && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 shrink-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-            onClick={() => {
-              const uniqueTabId = `customer-edit-${selectedCustomer.id}-${Date.now()}`;
-              window.dispatchEvent(new CustomEvent('open-form-tab', {
-                detail: {
-                  id: uniqueTabId,
-                  name: selectedCustomer.name || 'Edit Customer',
-                  formType: 'customer',
-                  entityId: selectedCustomer.id,
-                  parentId: parentId || testId
-                }
-              }));
-            }}
-            data-testid={`${testId}-lookup`}
-          >
-            <Search className="h-4 w-4" />
-          </Button>
-        )}
       </div>
 
       {/* Add Customer Dialog */}
