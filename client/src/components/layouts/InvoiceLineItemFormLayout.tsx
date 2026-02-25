@@ -23,7 +23,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Save, ArrowLeft, Package, FileText, Search, Library, Check, CalendarIcon, ChevronsUpDown, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { InvoiceItem, InsertInvoiceItem, TextSnippet, Invoice, CustomerRate, RateAndCharge, Technician } from "@shared/schema";
+import type { InvoiceItem, InsertInvoiceItem, TextSnippet, Invoice, CustomerRate, RateAndCharge, Employee } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -80,8 +80,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const [snippetSearchTerm, setSnippetSearchTerm] = useState("");
   const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedTechnicianIds, setSelectedTechnicianIds] = useState<string[]>([]);
-  const [techPopoverOpen, setTechPopoverOpen] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   
   const { toast } = useToast();
   const isEditing = !!lineItemId;
@@ -140,8 +139,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: allTechnicians = [] } = useQuery<Technician[]>({
-    queryKey: ["/api/masterdata/technicians"],
+  const { data: allEmployees = [] } = useQuery<Employee[]>({
+    queryKey: ["/api/employees"],
     staleTime: 5 * 60 * 1000,
   });
 
@@ -229,8 +228,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         setSelectedDate(new Date((lineItem as any).workDate));
       }
       if ((lineItem as any).technicianIds) {
-        const ids = ((lineItem as any).technicianIds as string).split(",").map((id: string) => id.trim()).filter(Boolean);
-        setSelectedTechnicianIds(ids);
+        setSelectedEmployeeId(((lineItem as any).technicianIds as string).trim());
       }
       
       form.reset(formData);
@@ -309,18 +307,13 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     setHasUnsavedChanges(true);
   };
 
-  const handleToggleTechnician = (techId: string) => {
-    setSelectedTechnicianIds(prev => {
-      const newIds = prev.includes(techId) ? prev.filter(id => id !== techId) : [...prev, techId];
-      const techNames = newIds.map(id => {
-        const tech = allTechnicians.find(t => t.id === id);
-        return tech?.name || "";
-      }).filter(Boolean).join(", ");
-      form.setValue("technicianNames", techNames);
-      form.setValue("technicianIds", newIds.join(", "));
-      setHasUnsavedChanges(true);
-      return newIds;
-    });
+  const handleEmployeeChange = (employeeId: string) => {
+    setSelectedEmployeeId(employeeId);
+    const emp = allEmployees.find(e => e.id === employeeId);
+    const fullName = emp ? `${emp.firstName} ${emp.lastName}` : "";
+    form.setValue("technicianNames", fullName);
+    form.setValue("technicianIds", employeeId);
+    setHasUnsavedChanges(true);
   };
 
   const recordSnippetUsageMutation = useMutation({
@@ -453,10 +446,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   };
 
   const onSubmit = (data: LineItemFormData) => {
-    const techNames = selectedTechnicianIds.map(id => {
-      const tech = allTechnicians.find(t => t.id === id);
-      return tech?.name || "";
-    }).filter(Boolean).join(", ");
+    const emp = allEmployees.find(e => e.id === selectedEmployeeId);
+    const techName = emp ? `${emp.firstName} ${emp.lastName}` : undefined;
 
     const transformedData = {
       ...data,
@@ -466,8 +457,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       sourceSnippetVersion: data.sourceSnippetVersion || undefined,
       workDate: selectedDate ? selectedDate.toISOString() : undefined,
       customerRateId: data.customerRateId || undefined,
-      technicianNames: techNames || undefined,
-      technicianIds: selectedTechnicianIds.length > 0 ? selectedTechnicianIds.join(", ") : undefined,
+      technicianNames: techName || undefined,
+      technicianIds: selectedEmployeeId || undefined,
     };
     
     if (isEditing) {
@@ -496,11 +487,6 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     saveDisabled: !hasUnsavedChanges,
     saveLoading: createMutation.isPending || updateMutation.isPending,
   });
-
-  const selectedTechNames = selectedTechnicianIds.map(id => {
-    const tech = allTechnicians.find(t => t.id === id);
-    return tech?.name || "";
-  }).filter(Boolean);
 
   const lineTypeOptions = [
     { value: 'standard', label: 'Standard Item' },
@@ -601,67 +587,23 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     },
     {
       key: 'technicianNames',
-      label: 'Technicians',
+      label: 'Technician',
       type: 'custom',
       customComponent: (
-        <Popover open={techPopoverOpen} onOpenChange={setTechPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              className="w-full justify-between h-auto min-h-[40px] py-1.5"
-              data-testid="select-technicians"
-            >
-              <div className="flex flex-wrap gap-1 flex-1">
-                {selectedTechNames.length > 0 ? (
-                  selectedTechNames.map((name, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs gap-1">
-                      {name}
-                      <X
-                        className="h-3 w-3 cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const techId = selectedTechnicianIds[i];
-                          handleToggleTechnician(techId);
-                        }}
-                      />
-                    </Badge>
-                  ))
-                ) : (
-                  <span className="text-muted-foreground text-sm">Select technicians...</span>
-                )}
-              </div>
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
-            <Command>
-              <CommandInput placeholder="Search technicians..." />
-              <CommandList>
-                <CommandEmpty>No technicians found.</CommandEmpty>
-                <CommandGroup>
-                  {allTechnicians.map(tech => (
-                    <CommandItem
-                      key={tech.id}
-                      value={tech.name}
-                      onSelect={() => handleToggleTechnician(tech.id)}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedTechnicianIds.includes(tech.id) ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {tech.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <Select value={selectedEmployeeId || ""} onValueChange={handleEmployeeChange}>
+          <SelectTrigger className="h-10" data-testid="select-technician">
+            <SelectValue placeholder="Select technician..." />
+          </SelectTrigger>
+          <SelectContent>
+            {allEmployees.map(emp => (
+              <SelectItem key={emp.id} value={emp.id}>
+                {emp.firstName} {emp.lastName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       ),
-      testId: 'select-technicians'
+      testId: 'select-technician'
     },
     {
       key: 'customerRateId',
