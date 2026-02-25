@@ -146,6 +146,18 @@ export default function LayoutDesigner() {
     layout.documentType === documentType
   );
 
+  // Auto-select first layout when document type changes or layouts load
+  useEffect(() => {
+    if (filteredLayouts.length > 0) {
+      const currentSelected = filteredLayouts.find((l: any) => l.id === selectedLayoutId);
+      if (!currentSelected) {
+        setSelectedLayoutId(filteredLayouts[0].id);
+      }
+    } else {
+      setSelectedLayoutId(null);
+    }
+  }, [documentType, filteredLayouts.length]);
+
   const selectedLayout = (layouts as any[]).find((layout: any) => layout.id === selectedLayoutId);
 
   const documentTypeIcons = {

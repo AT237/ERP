@@ -981,8 +981,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Invoice routes
   app.get("/api/invoices", async (req, res) => {
     try {
-      const invoices = await storage.getInvoices();
-      res.json(invoices);
+      const invoiceList = await storage.getInvoices();
+      const customerList = await storage.getCustomers();
+      const customerMap = new Map(customerList.map(c => [c.id, c.name]));
+      const result = invoiceList.map(inv => ({
+        ...inv,
+        customerName: customerMap.get(inv.customerId) || null,
+      }));
+      res.json(result);
     } catch (error) {
       console.error("Error fetching invoices:", error);
       res.status(500).json({ message: "Failed to fetch invoices" });
