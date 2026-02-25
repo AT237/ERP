@@ -148,26 +148,26 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   });
 
   const customerRateOptions = useMemo(() => {
-    return customerRates.map(cr => {
-      const rateInfo = allRates.find(r => r.id === cr.rateId);
-      if (!rateInfo) return null;
-      const discount = Number(cr.discountPercent) || 0;
-      const discountedPrice = Number(rateInfo.rate) * (1 - discount / 100);
-      return {
-        customerRateId: cr.id,
-        rateId: cr.rateId,
-        code: rateInfo.code,
-        name: rateInfo.name,
-        unit: rateInfo.unit || "",
-        baseRate: Number(rateInfo.rate),
-        discount,
-        discountedPrice,
-        label: `${rateInfo.code} - ${rateInfo.name} (€${discountedPrice.toFixed(2)}${discount > 0 ? ` / ${discount}% disc.` : ''})`,
-      };
-    }).filter(Boolean) as Array<{
-      customerRateId: string; rateId: string; code: string; name: string; unit: string;
-      baseRate: number; discount: number; discountedPrice: number; label: string;
-    }>;
+    const customerRateMap = new Map<string, CustomerRate>();
+    customerRates.forEach(cr => customerRateMap.set(cr.rateId, cr));
+    return allRates
+      .filter(r => (r as any).isActive !== false)
+      .map(r => {
+        const customerRate = customerRateMap.get(r.id);
+        const discount = customerRate ? Number(customerRate.discountPercent) || 0 : 0;
+        const baseRate = Number(r.rate);
+        const discountedPrice = baseRate * (1 - discount / 100);
+        return {
+          rateId: r.id,
+          code: r.code,
+          name: r.name,
+          unit: r.unit || "",
+          baseRate,
+          discount,
+          discountedPrice,
+          label: `${r.code} - ${r.name} (€${discountedPrice.toFixed(2)}${discount > 0 ? ` / ${discount}% disc.` : ''})`,
+        };
+      });
   }, [customerRates, allRates]);
 
   const filteredRateOptions = useMemo(() => {
@@ -262,7 +262,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
 
   const selectedRateOption = useMemo(() => {
     if (!customerRateIdValue) return null;
-    return customerRateOptions.find(opt => opt.customerRateId === customerRateIdValue) || null;
+    return customerRateOptions.find(opt => opt.rateId === customerRateIdValue) || null;
   }, [customerRateIdValue, customerRateOptions]);
 
   const SNIPPET_CATEGORIES = [
@@ -305,11 +305,14 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     }));
   }, [hasUnsavedChanges, lineItemId]);
 
-  const handleCustomerRateChange = (customerRateId: string) => {
-    form.setValue("customerRateId", customerRateId);
-    const rateOpt = customerRateOptions.find(opt => opt.customerRateId === customerRateId);
+  const handleCustomerRateChange = (rateId: string) => {
+    form.setValue("customerRateId", rateId);
+    const rateOpt = customerRateOptions.find(opt => opt.rateId === rateId);
     if (rateOpt) {
       form.setValue("unitPrice", rateOpt.discountedPrice.toFixed(2));
+      if (rateOpt.unit) {
+        form.setValue("unit" as any, rateOpt.unit);
+      }
     }
     setHasUnsavedChanges(true);
   };
@@ -627,8 +630,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
             >
               <span className="truncate">
                 {customerRateIdValue
-                  ? (customerRateOptions.find(o => o.customerRateId === customerRateIdValue)?.label || "Select rate...")
-                  : (customerRateOptions.length > 0 ? "Select rate..." : "No customer rates available")}
+                  ? (customerRateOptions.find(o => o.rateId === customerRateIdValue)?.label || "Select rate...")
+                  : "Select rate..."}
               </span>
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
@@ -666,10 +669,10 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
                   )}
                   {filteredRateOptions.map(opt => (
                     <CommandItem
-                      key={opt.customerRateId}
-                      value={opt.customerRateId}
+                      key={opt.rateId}
+                      value={opt.rateId}
                       onSelect={() => {
-                        handleCustomerRateChange(opt.customerRateId);
+                        handleCustomerRateChange(opt.rateId);
                         setRateOpen(false);
                         setRateSearchQuery("");
                       }}
@@ -677,7 +680,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
                       <Check
                         className={cn(
                           "mr-2 h-4 w-4 shrink-0",
-                          customerRateIdValue === opt.customerRateId ? "opacity-100" : "opacity-0"
+                          customerRateIdValue === opt.rateId ? "opacity-100" : "opacity-0"
                         )}
                       />
                       {opt.label}
