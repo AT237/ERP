@@ -25,7 +25,7 @@ function parseDateFields(body: Record<string, any>, fields: string[]): Record<st
   }
   return result;
 }
-import { loadQuotationPrintData } from "./utils/field-resolver";
+import { loadQuotationPrintData, loadInvoicePrintData } from "./utils/field-resolver";
 import {
   insertCustomerSchema, insertSupplierSchema, insertProspectSchema, insertInventoryItemSchema,
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
@@ -842,6 +842,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching quotation print data:", error);
       res.status(500).json({ message: "Failed to fetch quotation print data" });
+    }
+  });
+
+  app.get("/api/invoices/:id/print-data", async (req, res) => {
+    try {
+      const printData = await loadInvoicePrintData(req.params.id);
+      if (!printData) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      res.json(printData);
+    } catch (error) {
+      console.error("Error fetching invoice print data:", error);
+      res.status(500).json({ message: "Failed to fetch invoice print data" });
     }
   });
 

@@ -2,17 +2,20 @@
 // Mirrors server/utils/field-resolver.ts but works with printData
 
 export type PrintData = {
-  quotation: Record<string, any>;
+  quotation?: Record<string, any>;
+  invoice?: Record<string, any>;
   customer: Record<string, any> | null;
   project: Record<string, any> | null;
   company: Record<string, any> | null;
   items?: Array<{
-    positionNo: string; // Formatted position number (e.g., "010", "020")
+    positionNo: string;
     description: string;
     quantity: number;
     unitPrice: string;
     lineTotal: string;
     lineType: string;
+    workDate?: Date | null;
+    technicianNames?: string | null;
   }>;
 };
 
@@ -50,6 +53,7 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
     'customers': 'customer',
     'projects': 'project',
     'companies': 'company',
+    'invoices': 'invoice',
   };
   if (tableAliases[tableName]) {
     tableName = tableAliases[tableName];
@@ -60,6 +64,9 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
   switch (tableName) {
     case 'quotation':
       data = printData.quotation;
+      break;
+    case 'invoice':
+      data = printData.invoice;
       break;
     case 'customer':
       data = printData.customer;
@@ -80,6 +87,8 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
   const fieldAliases: Record<string, string> = {
     'quotationDate': 'date',
     'quotationNumber': 'number',
+    'invoiceDate': 'date',
+    'invoiceNumber': 'number',
   };
 
   // Navigate through the path

@@ -568,8 +568,8 @@ function VisualDesignerView({ layout }: { layout: any }) {
     // Document Types
     { name: 'quotation', label: 'Offerte', fields: ['quotationNumber', 'quotationDate', 'validUntil', 'validityDays', 'description', 'revisionNumber', 'status', 'isBudgetQuotation', 'subtotal', 'taxAmount', 'totalAmount', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
     { name: 'quotationItems', label: 'Offerte Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'taxRate', 'lineTotal', 'notes', 'lineType'] },
-    { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'status', 'dueDate', 'subtotal', 'taxAmount', 'totalAmount', 'paidAmount', 'notes'] },
-    { name: 'invoiceItems', label: 'Factuur Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'taxRate', 'lineTotal'] },
+    { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'invoiceDate', 'dueDate', 'description', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'paidAmount', 'notes'] },
+    { name: 'invoiceItems', label: 'Factuur Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'taxRate', 'lineTotal', 'workDate', 'technicianNames', 'lineType', 'notes'] },
     { name: 'proformaInvoice', label: 'Proforma Factuur', fields: ['invoiceNumber', 'status', 'dueDate', 'subtotal', 'taxAmount', 'totalAmount'] },
     { name: 'purchaseOrder', label: 'Inkooporder', fields: ['orderNumber', 'orderDate', 'expectedDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
     { name: 'purchaseOrderItems', label: 'Inkooporder Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
@@ -2727,8 +2727,10 @@ function getDefaultConfig(blockType: string) {
 
 // Preview Component
 function PreviewView({ layout }: { layout: any }) {
-  const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
-  const [showQuotationDialog, setShowQuotationDialog] = useState(false);
+  const isInvoiceLayout = layout?.documentType === 'invoice';
+
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [showDocumentDialog, setShowDocumentDialog] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -2771,26 +2773,43 @@ function PreviewView({ layout }: { layout: any }) {
     }, 250);
   };
 
-  // Fetch all quotations
   const { data: quotations = [] } = useQuery<any[]>({
     queryKey: ['/api/quotations'],
+    enabled: !isInvoiceLayout,
   });
 
-  // Fetch selected quotation print data
-  const { data: printData, isLoading: isPrintDataLoading } = useQuery({
-    queryKey: ['/api/quotations', selectedQuotationId, 'print-data'],
+  const { data: invoices = [] } = useQuery<any[]>({
+    queryKey: ['/api/invoices'],
+    enabled: isInvoiceLayout,
+  });
+
+  const documents = isInvoiceLayout ? invoices : quotations;
+
+  const { data: quotationPrintData, isLoading: isQuotationLoading } = useQuery({
+    queryKey: ['/api/quotations', selectedDocumentId, 'print-data'],
     queryFn: async () => {
-      if (!selectedQuotationId) return null;
-      const response = await fetch(`/api/quotations/${selectedQuotationId}/print-data`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch quotation print data');
-      }
+      if (!selectedDocumentId) return null;
+      const response = await fetch(`/api/quotations/${selectedDocumentId}/print-data`);
+      if (!response.ok) throw new Error('Failed to fetch quotation print data');
       return response.json();
     },
-    enabled: !!selectedQuotationId,
+    enabled: !!selectedDocumentId && !isInvoiceLayout,
   });
 
-  // Fetch layout sections
+  const { data: invoicePrintData, isLoading: isInvoiceLoading } = useQuery({
+    queryKey: ['/api/invoices', selectedDocumentId, 'print-data'],
+    queryFn: async () => {
+      if (!selectedDocumentId) return null;
+      const response = await fetch(`/api/invoices/${selectedDocumentId}/print-data`);
+      if (!response.ok) throw new Error('Failed to fetch invoice print data');
+      return response.json();
+    },
+    enabled: !!selectedDocumentId && isInvoiceLayout,
+  });
+
+  const printData = isInvoiceLayout ? invoicePrintData : quotationPrintData;
+  const isPrintDataLoading = isInvoiceLayout ? isInvoiceLoading : isQuotationLoading;
+
   const { data: sections = [] } = useQuery<any[]>({
     queryKey: [`/api/layout-sections?layoutId=${layout?.id}`],
     enabled: !!layout?.id,
@@ -2804,44 +2823,51 @@ function PreviewView({ layout }: { layout: any }) {
     );
   }
 
-  const handleSelectQuotation = () => {
-    if (quotations.length === 0) {
+  const handleSelectDocument = () => {
+    if (documents.length === 0) {
       toast({
-        title: 'No quotations found',
-        description: 'Create a quotation first to preview the layout',
+        title: isInvoiceLayout ? 'Geen facturen gevonden' : 'Geen offertes gevonden',
+        description: isInvoiceLayout
+          ? 'Maak eerst een factuur aan om de layout te bekijken'
+          : 'Maak eerst een offerte aan om de layout te bekijken',
         variant: 'destructive',
       });
       return;
     }
-    setShowQuotationDialog(true);
+    setShowDocumentDialog(true);
   };
 
-  const selectedQuotation = quotations.find((q: any) => q.id === selectedQuotationId);
+  const selectedDocument = documents.find((d: any) => d.id === selectedDocumentId);
+  const selectedDocumentLabel = isInvoiceLayout
+    ? selectedDocument?.invoiceNumber
+    : selectedDocument?.quotationNumber;
 
   return (
     <div className="flex flex-col items-center">
       <div className="mb-4 flex gap-2">
-        <Button 
-          size="sm" 
-          variant="outline" 
-          onClick={handleSelectQuotation}
-          data-testid="button-select-quotation"
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleSelectDocument}
+          data-testid="button-select-document"
         >
           <FileText className="h-4 w-4 mr-2" />
-          {selectedQuotation ? `Offerte: ${selectedQuotation.quotationNumber}` : 'Selecteer Offerte'}
+          {selectedDocument
+            ? `${isInvoiceLayout ? 'Factuur' : 'Offerte'}: ${selectedDocumentLabel}`
+            : isInvoiceLayout ? 'Selecteer Factuur' : 'Selecteer Offerte'}
         </Button>
-        {selectedQuotationId && (
+        {selectedDocumentId && (
           <>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="outline"
-              onClick={() => setSelectedQuotationId(null)}
+              onClick={() => setSelectedDocumentId(null)}
               data-testid="button-clear-selection"
             >
               Wis Selectie
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="default"
               onClick={handlePrint}
               data-testid="button-print-preview"
@@ -2854,14 +2880,20 @@ function PreviewView({ layout }: { layout: any }) {
         )}
       </div>
 
-      {!selectedQuotationId ? (
+      {!selectedDocumentId ? (
         <div className="w-full flex justify-center">
           <div className="bg-white mx-auto" style={{ width: '794px', height: '1123px' }}>
             <div className="h-full flex items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <div className="text-4xl mb-4">📄</div>
-                <div className="text-lg font-medium">Selecteer een offerte</div>
-                <div className="text-sm mt-2">Klik op "Selecteer Offerte" om een preview te zien</div>
+                <div className="text-lg font-medium">
+                  {isInvoiceLayout ? 'Selecteer een factuur' : 'Selecteer een offerte'}
+                </div>
+                <div className="text-sm mt-2">
+                  {isInvoiceLayout
+                    ? 'Klik op "Selecteer Factuur" om een preview te zien'
+                    : 'Klik op "Selecteer Offerte" om een preview te zien'}
+                </div>
               </div>
             </div>
           </div>
@@ -2880,7 +2912,7 @@ function PreviewView({ layout }: { layout: any }) {
       ) : (
         <div className="w-full flex justify-center">
           <div ref={printRef} className="bg-white mx-auto" style={{ width: '794px', minHeight: '1123px' }}>
-            <LayoutPreview 
+            <LayoutPreview
               layout={layout}
               sections={sections}
               printData={printData}
@@ -2889,41 +2921,46 @@ function PreviewView({ layout }: { layout: any }) {
         </div>
       )}
 
-      {/* Quotation Selection Dialog */}
-      <Dialog open={showQuotationDialog} onOpenChange={setShowQuotationDialog}>
-        <DialogContent data-testid="dialog-select-quotation">
+      <Dialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog}>
+        <DialogContent data-testid="dialog-select-document">
           <DialogHeader>
-            <DialogTitle>Selecteer Offerte voor Preview</DialogTitle>
+            <DialogTitle>
+              {isInvoiceLayout ? 'Selecteer Factuur voor Preview' : 'Selecteer Offerte voor Preview'}
+            </DialogTitle>
             <DialogDescription>
-              Kies een offerte om te zien hoe deze eruit ziet in de geselecteerde layout
+              {isInvoiceLayout
+                ? 'Kies een factuur om te zien hoe deze eruit ziet in de geselecteerde layout'
+                : 'Kies een offerte om te zien hoe deze eruit ziet in de geselecteerde layout'}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="max-h-96 overflow-y-auto space-y-2">
-              {quotations.map((quotation: any) => (
+              {documents.map((doc: any) => (
                 <div
-                  key={quotation.id}
+                  key={doc.id}
                   className={`p-3 border rounded cursor-pointer transition-colors ${
-                    selectedQuotationId === quotation.id
+                    selectedDocumentId === doc.id
                       ? 'border-orange-500 bg-orange-50'
                       : 'border-border hover:border-orange-300 hover:bg-orange-50/50'
                   }`}
                   onClick={() => {
-                    setSelectedQuotationId(quotation.id);
-                    setShowQuotationDialog(false);
+                    setSelectedDocumentId(doc.id);
+                    setShowDocumentDialog(false);
                   }}
-                  data-testid={`quotation-item-${quotation.id}`}
+                  data-testid={`document-item-${doc.id}`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-medium">{quotation.quotationNumber}</div>
+                      <div className="font-medium">
+                        {isInvoiceLayout ? doc.invoiceNumber : doc.quotationNumber}
+                      </div>
                       <div className="text-sm text-muted-foreground">
-                        {quotation.customerName || 'Geen klant'}
+                        {doc.customerName || 'Geen klant'}
                       </div>
                     </div>
-                    <Badge variant={quotation.status === 'sent' ? 'default' : 'secondary'}>
-                      {quotation.status || 'draft'}
+                    <Badge variant={doc.status === 'sent' || doc.status === 'paid' ? 'default' : 'secondary'}>
+                      {doc.status || 'draft'}
                     </Badge>
                   </div>
                 </div>
@@ -2935,7 +2972,6 @@ function PreviewView({ layout }: { layout: any }) {
     </div>
   );
 }
-
 // Helper function to calculate dynamic block positions
 // When a block is hidden (hideWhenEmpty), blocks below it shift up automatically
 function calculateDynamicPositions(
@@ -2990,21 +3026,22 @@ function calculateDynamicPositions(
 }
 
 // Helper function to detect if a section contains item-level placeholders
-// Supports both {{item.*}} and {{quotationItems.*}} formats
+// Supports both {{item.*}}, {{quotationItems.*}}, and {{invoiceItems.*}} formats
 function sectionContainsItemPlaceholders(section: any): boolean {
   const blocks = section.config?.blocks || [];
   
-  // Helper to check any string for item placeholders (both formats)
+  // Helper to check any string for item placeholders (all formats)
   const hasItemPattern = (str: any): boolean => {
     if (typeof str !== 'string') return false;
-    // Match {{item.*}} or {{quotationItems.*}} or {{quotationItem.*}}
-    return /\{\{(item|quotationItems?)\.[^}]+\}\}/.test(str);
+    // Match {{item.*}} or {{quotationItems.*}} or {{quotationItem.*}} or {{invoiceItems.*}} or {{invoiceItem.*}}
+    return /\{\{(item|quotationItems?|invoiceItems?)\.[^}]+\}\}/.test(str);
   };
   
-  // Helper to check if a data field starts with item. or quotationItems.
+  // Helper to check if a data field starts with item. or quotationItems. or invoiceItems.
   const isItemField = (str: any): boolean => {
     if (typeof str !== 'string') return false;
-    return str.startsWith('item.') || str.startsWith('quotationItems.') || str.startsWith('quotationItem.');
+    return str.startsWith('item.') || str.startsWith('quotationItems.') || str.startsWith('quotationItem.')
+      || str.startsWith('invoiceItems.') || str.startsWith('invoiceItem.');
   };
   
   for (const block of blocks) {
@@ -3049,6 +3086,7 @@ function LayoutPreview({ layout, sections, printData }: { layout: any; sections:
   // Convert printData to PrintData type
   const typedPrintData: PrintData = {
     quotation: printData.quotation || {},
+    invoice: printData.invoice || {},
     customer: printData.customer || null,
     project: printData.project || null,
     company: printData.company || null,
