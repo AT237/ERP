@@ -202,8 +202,8 @@ export default function LayoutDesigner() {
   } = useDataTable({
     tableKey: 'layouts',
     defaultColumns: [
-      { key: 'layoutNumber', label: 'ID', visible: true, sortable: true, width: 110, renderCell: (v: any) => <span className="font-mono text-xs">{v || '—'}</span> },
-      { key: 'name', label: 'Omschrijving', visible: true, sortable: true },
+      { key: 'layoutNumber', label: 'ID', visible: true, sortable: true, filterable: true, width: 110 },
+      { key: 'name', label: 'Omschrijving', visible: true, sortable: true, filterable: true },
       { key: 'documentType', label: 'Document Type', visible: true, sortable: true, renderCell: (v: any) => DOCUMENT_TYPE_LABELS[v] || v },
       { key: 'pageFormat', label: 'Page Size', visible: true, sortable: true, width: 110, renderCell: (v: any) => v?.toUpperCase() || '—' },
       { key: 'orientation', label: 'Oriëntatie', visible: true, sortable: true, width: 120, renderCell: (v: any) => <span className="capitalize">{v}</span> },
@@ -217,6 +217,7 @@ export default function LayoutDesigner() {
 
   return (
     <div className="h-full flex flex-col bg-background">
+      <div className="p-6">
       <DataTableLayout
         entityName="Layout"
         entityNamePlural="Layouts"
@@ -271,6 +272,7 @@ export default function LayoutDesigner() {
           },
         ]}
       />
+      </div>
 
       {/* New Layout Dialog */}
       <Dialog open={showNewLayoutDialog} onOpenChange={setShowNewLayoutDialog}>
