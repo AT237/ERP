@@ -62,6 +62,7 @@ const ReportsPage = lazy(() => import('@/pages/reports'));
 const AddressesPage = lazy(() => import('@/pages/addresses'));
 const TextSnippetsPage = lazy(() => import('@/pages/text-snippets'));
 const LayoutDesignerPage = lazy(() => import('@/pages/layout-designer'));
+const LayoutDesignerForm = lazy(() => import('@/pages/layout-designer-form'));
 const ImagesPage = lazy(() => import('@/pages/images'));
 const PictogramsPage = lazy(() => import('@/pages/pictograms'));
 const StyleGuidePage = lazy(() => import('@/pages/style-guide'));
@@ -1361,6 +1362,14 @@ export default function Layout({ children }: LayoutProps) {
             </Suspense>
           );
         }
+      }
+
+      if (tab.formType === 'layout-designer') {
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center h-64 text-muted-foreground">Laden...</div>}>
+            <LayoutDesignerForm layoutId={tab.entityId!} />
+          </Suspense>
+        );
       }
 
       return (

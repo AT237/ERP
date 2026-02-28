@@ -41,7 +41,7 @@ import {
   insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema, insertEmployeeSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db, pool, checkDatabaseStatus } from './db';
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -2546,7 +2546,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/layouts", async (req, res) => {
     try {
       const layoutData = insertDocumentLayoutSchema.parse(req.body);
-      const layout = await storage.createDocumentLayout(layoutData);
+      const [{ layoutNumber }] = await db.execute(sql`SELECT generate_layout_number() as "layoutNumber"`) as any;
+      const layout = await storage.createDocumentLayout({ ...layoutData, layoutNumber });
       res.status(201).json(layout);
     } catch (error) {
       console.error("Error creating layout:", error);

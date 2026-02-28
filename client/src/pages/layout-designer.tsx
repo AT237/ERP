@@ -27,14 +27,23 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { DataTableLayout, ColumnConfig } from '@/components/layouts/DataTableLayout';
+import { useDataTable } from '@/hooks/useDataTable';
+
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  quotation: 'Quotation',
+  invoice: 'Invoice',
+  packing_list: 'Packing List',
+  order_confirmation: 'Order Confirmation',
+  purchase_order: 'Purchase Order',
+  work_order: 'Work Order',
+};
 
 export default function LayoutDesigner() {
-  const [selectedLayoutId, setSelectedLayoutId] = useState<number | null>(null);
-  const [documentType, setDocumentType] = useState<'quotation' | 'invoice' | 'packing_list'>('quotation');
   const [showNewLayoutDialog, setShowNewLayoutDialog] = useState(false);
   const [newLayoutName, setNewLayoutName] = useState('');
+  const [newLayoutDocumentType, setNewLayoutDocumentType] = useState('quotation');
   const [newLayoutOrientation, setNewLayoutOrientation] = useState<'portrait' | 'landscape'>('portrait');
-  const [activeTab, setActiveTab] = useState('layouts');
   const { toast } = useToast();
   
   // Load existing layouts
@@ -77,11 +86,10 @@ export default function LayoutDesigner() {
 
     createLayoutMutation.mutate({
       name: newLayoutName,
-      documentType,
-      pageFormat: 'a4',
+      documentType: newLayoutDocumentType,
+      pageFormat: 'A4',
       orientation: newLayoutOrientation,
       isDefault: false,
-      isActive: true,
     });
   };
 
@@ -126,7 +134,14 @@ export default function LayoutDesigner() {
         title: 'Layout gedupliceerd',
         description: 'De layout is succesvol gekopieerd',
       });
-      setSelectedLayoutId(newLayout.id);
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: `layout-designer-${newLayout.id}`,
+          name: newLayout.layoutNumber ? `${newLayout.layoutNumber} - ${newLayout.name}` : newLayout.name,
+          formType: 'layout-designer',
+          entityId: newLayout.id,
+        }
+      }));
     },
     onError: (error: any) => {
       toast({
@@ -152,7 +167,6 @@ export default function LayoutDesigner() {
         title: 'Layout verwijderd',
         description: 'De layout is succesvol verwijderd',
       });
-      setSelectedLayoutId(null);
     },
     onError: (error: any) => {
       toast({
@@ -169,150 +183,110 @@ export default function LayoutDesigner() {
     }
   };
 
-  // Filter layouts by document type
-  const filteredLayouts = (layouts as any[]).filter((layout: any) => 
-    layout.documentType === documentType
-  );
-
-  // Auto-select first layout when document type changes or layouts load
-  useEffect(() => {
-    if (filteredLayouts.length > 0) {
-      const currentSelected = filteredLayouts.find((l: any) => l.id === selectedLayoutId);
-      if (!currentSelected) {
-        setSelectedLayoutId(filteredLayouts[0].id);
+  const handleOpenLayout = (layout: any) => {
+    window.dispatchEvent(new CustomEvent('open-form-tab', {
+      detail: {
+        id: `layout-designer-${layout.id}`,
+        name: layout.layoutNumber ? `${layout.layoutNumber} - ${layout.name}` : layout.name,
+        formType: 'layout-designer',
+        entityId: layout.id,
       }
-    } else {
-      setSelectedLayoutId(null);
-    }
-  }, [documentType, filteredLayouts.length]);
-
-  const selectedLayout = (layouts as any[]).find((layout: any) => layout.id === selectedLayoutId);
-
-  const documentTypeIcons = {
-    quotation: FileText,
-    invoice: Receipt,
-    packing_list: Package,
+    }));
   };
 
-  const documentTypeLabels = {
-    quotation: 'Quotation',
-    invoice: 'Invoice',
-    packing_list: 'Packing List',
-  };
+  const {
+    columns, setColumns, searchTerm, setSearchTerm, filters, setFilters,
+    addFilter, updateFilter, removeFilter, sortConfig, handleSort,
+    selectedRows, setSelectedRows, toggleRowSelection, toggleAllRows,
+    applyFiltersAndSearch, applySorting,
+  } = useDataTable({
+    tableKey: 'layouts',
+    defaultColumns: [
+      { key: 'layoutNumber', label: 'ID', visible: true, sortable: true, width: 110, render: (v: any) => <span className="font-mono text-xs">{v || '—'}</span> },
+      { key: 'name', label: 'Description', visible: true, sortable: true },
+      { key: 'documentType', label: 'Document Type', visible: true, sortable: true, render: (v: any) => DOCUMENT_TYPE_LABELS[v] || v },
+      { key: 'pageFormat', label: 'Page Size', visible: true, sortable: true, width: 110 },
+      { key: 'orientation', label: 'Orientation', visible: true, sortable: true, width: 120, render: (v: any) => <span className="capitalize">{v}</span> },
+      { key: 'isDefault', label: 'Status', visible: true, sortable: true, width: 110, render: (v: any) => (
+        <Badge variant={v ? 'default' : 'outline'} className="text-xs">
+          {v ? 'Default' : 'Active'}
+        </Badge>
+      )},
+    ] as ColumnConfig[],
+  });
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Header - only show on Layout Manager tab */}
-      {activeTab !== 'designer' && (
-        <div className="border-b border-border bg-white">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-2xl font-bold text-orange-600">Layout Designer</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Create and customize document templates for quotations, invoices, and packing lists
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowNewLayoutDialog(true)}
-                  data-testid="button-new-layout"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Layout
-                </Button>
-              </div>
-            </div>
-
-            {/* Document Type Selector */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-foreground">Document Type:</label>
-              <Select value={documentType} onValueChange={(value: any) => setDocumentType(value)}>
-                <SelectTrigger className="w-[200px]" data-testid="select-document-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(documentTypeLabels).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      <div className="flex items-center gap-2">
-                        {(() => {
-                          const Icon = documentTypeIcons[key as keyof typeof documentTypeIcons];
-                          return <Icon className="h-4 w-4" />;
-                        })()}
-                        {label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Badge variant="outline" className="ml-2">
-                {filteredLayouts.length} {filteredLayouts.length === 1 ? 'layout' : 'layouts'}
-              </Badge>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <div className="border-b border-border px-6 bg-white">
-            <TabsList className="bg-transparent h-12">
-              <TabsTrigger value="layouts" className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600">
-                Layout Manager
-              </TabsTrigger>
-              <TabsTrigger value="designer" className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600" disabled={!selectedLayoutId}>
-                Visual Designer
-              </TabsTrigger>
-              <TabsTrigger value="preview" className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600" disabled={!selectedLayoutId}>
-                Preview
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <div className={`flex-1 overflow-auto ${activeTab === 'designer' ? 'p-2' : 'p-6'}`}>
-            <TabsContent value="layouts" className="h-full m-0">
-              <LayoutManagerView
-                layouts={filteredLayouts}
-                documentType={documentType}
-                isLoading={isLoading}
-                onSelectLayout={setSelectedLayoutId}
-                selectedLayoutId={selectedLayoutId}
-                onCreateNew={() => setShowNewLayoutDialog(true)}
-                onDuplicate={handleDuplicateLayout}
-                onDelete={handleDeleteLayout}
-              />
-            </TabsContent>
-
-            <TabsContent value="designer" className="h-full m-0">
-              <VisualDesignerView layout={selectedLayout} />
-            </TabsContent>
-
-            <TabsContent value="preview" className="h-full m-0">
-              <PreviewView layout={selectedLayout} />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </div>
+      <DataTableLayout
+        entityName="Layout"
+        entityNamePlural="Layouts"
+        data={layouts as any[]}
+        columns={columns}
+        setColumns={setColumns}
+        tableKey="layouts"
+        isLoading={isLoading}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filters={filters}
+        setFilters={setFilters}
+        onAddFilter={addFilter}
+        onUpdateFilter={updateFilter}
+        onRemoveFilter={removeFilter}
+        sortConfig={sortConfig}
+        onSort={handleSort}
+        selectedRows={selectedRows}
+        setSelectedRows={setSelectedRows}
+        onToggleRowSelection={toggleRowSelection}
+        onToggleAllRows={() => toggleAllRows((layouts as any[]).map((l: any) => l.id))}
+        onRowDoubleClick={handleOpenLayout}
+        getRowId={(row: any) => row.id}
+        applyFiltersAndSearch={applyFiltersAndSearch}
+        applySorting={applySorting}
+        deleteConfirmDialog={{ isOpen: false, onOpenChange: () => {}, onConfirm: () => {}, itemCount: 0 }}
+        headerActions={[
+          {
+            key: 'new-layout',
+            label: 'New Layout',
+            icon: <Plus className="h-4 w-4" />,
+            onClick: () => setShowNewLayoutDialog(true),
+            variant: 'default' as const,
+          }
+        ]}
+        rowActions={(row: any) => [
+          {
+            key: 'edit',
+            label: 'Openen',
+            onClick: () => handleOpenLayout(row),
+          },
+          {
+            key: 'duplicate',
+            label: 'Dupliceren',
+            onClick: () => handleDuplicateLayout(row.id),
+          },
+          {
+            key: 'delete',
+            label: 'Verwijderen',
+            onClick: () => handleDeleteLayout(row.id, row.name),
+          },
+        ]}
+      />
 
       {/* New Layout Dialog */}
       <Dialog open={showNewLayoutDialog} onOpenChange={setShowNewLayoutDialog}>
         <DialogContent data-testid="dialog-new-layout">
           <DialogHeader>
-            <DialogTitle>Create New Layout</DialogTitle>
+            <DialogTitle>Nieuwe Layout Aanmaken</DialogTitle>
             <DialogDescription>
-              Create a new document layout for {documentTypeLabels[documentType]}
+              Maak een nieuw document template aan
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="layout-name">Layout Name</Label>
+              <Label htmlFor="layout-name">Naam</Label>
               <Input
                 id="layout-name"
-                placeholder="e.g., Standard Quotation Layout"
+                placeholder="bijv. Standaard Offerte Layout"
                 value={newLayoutName}
                 onChange={(e) => setNewLayoutName(e.target.value)}
                 data-testid="input-layout-name"
@@ -320,29 +294,30 @@ export default function LayoutDesigner() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="orientation">Orientation</Label>
+              <Label htmlFor="doc-type">Document Type</Label>
+              <Select value={newLayoutDocumentType} onValueChange={setNewLayoutDocumentType}>
+                <SelectTrigger id="doc-type" data-testid="select-document-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(DOCUMENT_TYPE_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="orientation">Oriëntatie</Label>
               <Select value={newLayoutOrientation} onValueChange={(value: any) => setNewLayoutOrientation(value)}>
                 <SelectTrigger id="orientation" data-testid="select-orientation">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="portrait">Portrait</SelectItem>
-                  <SelectItem value="landscape">Landscape</SelectItem>
+                  <SelectItem value="portrait">Staand (Portrait)</SelectItem>
+                  <SelectItem value="landscape">Liggend (Landscape)</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="rounded-lg border border-border p-3 bg-muted/50">
-              <div className="text-sm space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Document Type:</span>
-                  <span className="font-medium">{documentTypeLabels[documentType]}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Page Format:</span>
-                  <span className="font-medium">A4</span>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -352,14 +327,14 @@ export default function LayoutDesigner() {
               onClick={() => setShowNewLayoutDialog(false)}
               data-testid="button-cancel"
             >
-              Cancel
+              Annuleren
             </Button>
             <Button 
               onClick={handleCreateLayout}
               disabled={createLayoutMutation.isPending}
               data-testid="button-create"
             >
-              {createLayoutMutation.isPending ? 'Creating...' : 'Create Layout'}
+              {createLayoutMutation.isPending ? 'Aanmaken...' : 'Aanmaken'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -586,7 +561,7 @@ function DataFieldInsertMenu({
 }
 
 // Visual Designer Component
-function VisualDesignerView({ layout }: { layout: any }) {
+export function VisualDesignerView({ layout }: { layout: any }) {
   // Section-based state
   const [sections, setSections] = useState<any[]>([]);
   const [selectedSection, setSelectedSection] = useState<any>(null);
@@ -2781,7 +2756,7 @@ function getDefaultConfig(blockType: string) {
 }
 
 // Preview Component
-function PreviewView({ layout }: { layout: any }) {
+export function PreviewView({ layout }: { layout: any }) {
   const isInvoiceLayout = layout?.documentType === 'invoice';
 
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);

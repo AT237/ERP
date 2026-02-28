@@ -985,6 +985,7 @@ export type InsertTextSnippetUsage = z.infer<typeof insertTextSnippetUsageSchema
 // Document Layouts - Main layout configuration per document type
 export const documentLayouts = pgTable("document_layouts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  layoutNumber: text("layout_number"),
   documentType: text("document_type").notNull(), // 'quotation', 'invoice', 'packing_list', 'work_order', etc.
   name: text("name").notNull(), // e.g., "Standard Quotation Layout", "Invoice - Landscape"
   pageFormat: text("page_format").notNull().default("A4"), // 'A4', 'Letter', etc.
@@ -1092,6 +1093,7 @@ export const documentLayoutFields = pgTable("document_layout_fields", {
 // Insert schemas and types for Layout Management
 export const insertDocumentLayoutSchema = createInsertSchema(documentLayouts).omit({
   id: true,
+  layoutNumber: true,
   createdAt: true,
   updatedAt: true,
 });
