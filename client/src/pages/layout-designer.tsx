@@ -620,23 +620,27 @@ export function VisualDesignerView({ layout }: { layout: any }) {
         },
       });
 
-      // Delete existing sections first
+      // Delete existing sections in parallel
       if (existingSections && existingSections.length > 0) {
-        for (const section of existingSections) {
-          await apiRequest('DELETE', `/api/layout-sections/${section.id}`);
-        }
+        await Promise.all(
+          existingSections.map((section: any) =>
+            apiRequest('DELETE', `/api/layout-sections/${section.id}`)
+          )
+        );
       }
 
-      // Save all sections with their blocks
-      for (const section of sections) {
-        await apiRequest('POST', '/api/layout-sections', {
-          layoutId: layout.id,
-          name: section.name,
-          sectionType: section.sectionType,
-          position: section.position,
-          config: section.config,
-        });
-      }
+      // Save all sections in parallel
+      await Promise.all(
+        sections.map((section) =>
+          apiRequest('POST', '/api/layout-sections', {
+            layoutId: layout.id,
+            name: section.name,
+            sectionType: section.sectionType,
+            position: section.position,
+            config: section.config,
+          })
+        )
+      );
 
       return sections;
     },
