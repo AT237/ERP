@@ -62,7 +62,7 @@ export default function LayoutDesignerForm({ layoutId }: LayoutDesignerFormProps
       </div>
 
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
+        <DialogContent className="max-w-[1200px] w-[95vw] h-[90vh] flex flex-col p-0">
           <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Eye className="h-4 w-4" />
