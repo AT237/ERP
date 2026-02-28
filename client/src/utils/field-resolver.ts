@@ -240,10 +240,12 @@ export function replacePlaceholders(
   // Also supports {{item.fieldName}} or {{quotationItems.fieldName}} for repeating blocks
   // Formats: text (default), date, currency, number
   let result = text.replace(/\{\{([a-zA-Z_]+(?:\.[a-zA-Z_]+)*)(?::([a-zA-Z]+))?\}\}/g, (match, fieldPath, format) => {
-    // Check if this is an item placeholder (supports item.*, quotationItems.*, quotationItem.*)
+    // Check if this is an item placeholder (supports item.*, quotationItems.*, quotationItem.*, invoiceItems.*, invoiceItem.*)
     const isItemPlaceholder = fieldPath.startsWith('item.') || 
                                fieldPath.startsWith('quotationItems.') || 
-                               fieldPath.startsWith('quotationItem.');
+                               fieldPath.startsWith('quotationItem.') ||
+                               fieldPath.startsWith('invoiceItems.') ||
+                               fieldPath.startsWith('invoiceItem.');
     
     if (isItemPlaceholder && itemContext) {
       // Normalize the field path by removing the prefix
@@ -252,6 +254,10 @@ export function replacePlaceholders(
         itemFieldPath = fieldPath.substring(15); // Remove 'quotationItems.' prefix
       } else if (fieldPath.startsWith('quotationItem.')) {
         itemFieldPath = fieldPath.substring(14); // Remove 'quotationItem.' prefix
+      } else if (fieldPath.startsWith('invoiceItems.')) {
+        itemFieldPath = fieldPath.substring(13); // Remove 'invoiceItems.' prefix
+      } else if (fieldPath.startsWith('invoiceItem.')) {
+        itemFieldPath = fieldPath.substring(12); // Remove 'invoiceItem.' prefix
       } else {
         itemFieldPath = fieldPath.substring(5); // Remove 'item.' prefix
       }
@@ -343,10 +349,12 @@ export function hasContent(
       const fieldPath = match[1];
       
       // Handle item placeholders for repeating sections (supports nested paths)
-      // Supports {{item.*}}, {{quotationItems.*}}, {{quotationItem.*}}
+      // Supports {{item.*}}, {{quotationItems.*}}, {{quotationItem.*}}, {{invoiceItems.*}}, {{invoiceItem.*}}
       const isItemPlaceholder = fieldPath.startsWith('item.') || 
                                  fieldPath.startsWith('quotationItems.') || 
-                                 fieldPath.startsWith('quotationItem.');
+                                 fieldPath.startsWith('quotationItem.') ||
+                                 fieldPath.startsWith('invoiceItems.') ||
+                                 fieldPath.startsWith('invoiceItem.');
       
       if (isItemPlaceholder && itemContext?.item) {
         // Normalize the field path by removing the prefix
@@ -355,6 +363,10 @@ export function hasContent(
           itemFieldPath = fieldPath.substring(15);
         } else if (fieldPath.startsWith('quotationItem.')) {
           itemFieldPath = fieldPath.substring(14);
+        } else if (fieldPath.startsWith('invoiceItems.')) {
+          itemFieldPath = fieldPath.substring(13);
+        } else if (fieldPath.startsWith('invoiceItem.')) {
+          itemFieldPath = fieldPath.substring(12);
         } else {
           itemFieldPath = fieldPath.substring(5);
         }
