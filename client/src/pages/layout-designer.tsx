@@ -2631,7 +2631,6 @@ export function PreviewView({ layout }: { layout: any }) {
   const isInvoiceLayout = layout?.documentType === 'invoice';
 
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
-  const [showDocumentDialog, setShowDocumentDialog] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -2724,83 +2723,84 @@ export function PreviewView({ layout }: { layout: any }) {
     );
   }
 
-  const handleSelectDocument = () => {
-    if (documents.length === 0) {
-      toast({
-        title: isInvoiceLayout ? 'Geen facturen gevonden' : 'Geen offertes gevonden',
-        description: isInvoiceLayout
-          ? 'Maak eerst een factuur aan om de layout te bekijken'
-          : 'Maak eerst een offerte aan om de layout te bekijken',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setShowDocumentDialog(true);
-  };
-
-  const selectedDocument = documents.find((d: any) => d.id === selectedDocumentId);
-  const selectedDocumentLabel = isInvoiceLayout
-    ? selectedDocument?.invoiceNumber
-    : selectedDocument?.quotationNumber;
-
   return (
-    <div className="flex flex-col items-center">
-      <div className="mb-4 flex gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleSelectDocument}
-          data-testid="button-select-document"
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          {selectedDocument
-            ? `${isInvoiceLayout ? 'Factuur' : 'Offerte'}: ${selectedDocumentLabel}`
-            : isInvoiceLayout ? 'Selecteer Factuur' : 'Selecteer Offerte'}
-        </Button>
+    <div className="flex gap-4 h-full">
+      {/* Left sidebar: document list */}
+      <div className="w-64 flex-shrink-0 flex flex-col">
+        <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
+          {isInvoiceLayout ? 'Facturen' : 'Offertes'}
+        </div>
+        {documents.length === 0 ? (
+          <div className="text-sm text-muted-foreground p-3 border rounded bg-muted/30">
+            {isInvoiceLayout
+              ? 'Geen facturen gevonden. Maak eerst een factuur aan.'
+              : 'Geen offertes gevonden. Maak eerst een offerte aan.'}
+          </div>
+        ) : (
+          <div className="overflow-y-auto space-y-1 flex-1" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+            {documents.map((doc: any) => (
+              <div
+                key={doc.id}
+                className={`p-3 border rounded cursor-pointer transition-colors ${
+                  selectedDocumentId === doc.id
+                    ? 'border-orange-500 bg-orange-50'
+                    : 'border-border hover:border-orange-300 hover:bg-orange-50/50'
+                }`}
+                onClick={() => setSelectedDocumentId(doc.id)}
+                data-testid={`document-item-${doc.id}`}
+              >
+                <div className="font-medium text-sm">
+                  {isInvoiceLayout ? doc.invoiceNumber : doc.quotationNumber}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {doc.customerName || 'Geen klant'}
+                </div>
+                <Badge
+                  variant={doc.status === 'sent' || doc.status === 'paid' ? 'default' : 'secondary'}
+                  className="mt-1 text-xs"
+                >
+                  {doc.status || 'draft'}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        )}
         {selectedDocumentId && (
-          <>
+          <div className="mt-3 flex flex-col gap-2">
             <Button
               size="sm"
-              variant="outline"
-              onClick={() => setSelectedDocumentId(null)}
-              data-testid="button-clear-selection"
-            >
-              Wis Selectie
-            </Button>
-            <Button
-              size="sm"
-              variant="default"
               onClick={handlePrint}
-              data-testid="button-print-preview"
-              className="bg-orange-500 hover:bg-orange-600"
+              className="bg-orange-500 hover:bg-orange-600 w-full"
             >
               <Printer className="h-4 w-4 mr-2" />
               Afdrukken
             </Button>
-          </>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSelectedDocumentId(null)}
+              className="w-full"
+            >
+              Wis Selectie
+            </Button>
+          </div>
         )}
       </div>
 
-      {!selectedDocumentId ? (
-        <div className="w-full flex justify-center">
+      {/* Right: preview area */}
+      <div className="flex-1 flex flex-col items-center overflow-auto">
+        {!selectedDocumentId ? (
           <div className="bg-white mx-auto" style={{ width: '794px', height: '1123px' }}>
             <div className="h-full flex items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <div className="text-4xl mb-4">📄</div>
                 <div className="text-lg font-medium">
-                  {isInvoiceLayout ? 'Selecteer een factuur' : 'Selecteer een offerte'}
-                </div>
-                <div className="text-sm mt-2">
-                  {isInvoiceLayout
-                    ? 'Klik op "Selecteer Factuur" om een preview te zien'
-                    : 'Klik op "Selecteer Offerte" om een preview te zien'}
+                  {isInvoiceLayout ? 'Kies een factuur links' : 'Kies een offerte links'}
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      ) : isPrintDataLoading ? (
-        <div className="w-full flex justify-center">
+        ) : isPrintDataLoading ? (
           <div className="bg-white mx-auto" style={{ width: '794px', height: '1123px' }}>
             <div className="h-full flex items-center justify-center">
               <div className="text-center text-muted-foreground">
@@ -2809,9 +2809,7 @@ export function PreviewView({ layout }: { layout: any }) {
               </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="w-full flex justify-center">
+        ) : (
           <div ref={printRef} className="bg-white mx-auto" style={{ width: '794px', minHeight: '1123px' }}>
             <LayoutPreview
               layout={layout}
@@ -2819,57 +2817,8 @@ export function PreviewView({ layout }: { layout: any }) {
               printData={printData}
             />
           </div>
-        </div>
-      )}
-
-      <Dialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog}>
-        <DialogContent data-testid="dialog-select-document">
-          <DialogHeader>
-            <DialogTitle>
-              {isInvoiceLayout ? 'Selecteer Factuur voor Preview' : 'Selecteer Offerte voor Preview'}
-            </DialogTitle>
-            <DialogDescription>
-              {isInvoiceLayout
-                ? 'Kies een factuur om te zien hoe deze eruit ziet in de geselecteerde layout'
-                : 'Kies een offerte om te zien hoe deze eruit ziet in de geselecteerde layout'}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="max-h-96 overflow-y-auto space-y-2">
-              {documents.map((doc: any) => (
-                <div
-                  key={doc.id}
-                  className={`p-3 border rounded cursor-pointer transition-colors ${
-                    selectedDocumentId === doc.id
-                      ? 'border-orange-500 bg-orange-50'
-                      : 'border-border hover:border-orange-300 hover:bg-orange-50/50'
-                  }`}
-                  onClick={() => {
-                    setSelectedDocumentId(doc.id);
-                    setShowDocumentDialog(false);
-                  }}
-                  data-testid={`document-item-${doc.id}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">
-                        {isInvoiceLayout ? doc.invoiceNumber : doc.quotationNumber}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {doc.customerName || 'Geen klant'}
-                      </div>
-                    </div>
-                    <Badge variant={doc.status === 'sent' || doc.status === 'paid' ? 'default' : 'secondary'}>
-                      {doc.status || 'draft'}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        )}
+      </div>
     </div>
   );
 }
