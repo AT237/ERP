@@ -202,13 +202,13 @@ export default function LayoutDesigner() {
   } = useDataTable({
     tableKey: 'layouts',
     defaultColumns: [
-      { key: 'layoutNumber', label: 'ID', visible: true, sortable: true, width: 110, render: (v: any) => <span className="font-mono text-xs">{v || '—'}</span> },
-      { key: 'name', label: 'Description', visible: true, sortable: true },
-      { key: 'documentType', label: 'Document Type', visible: true, sortable: true, render: (v: any) => DOCUMENT_TYPE_LABELS[v] || v },
-      { key: 'pageFormat', label: 'Page Size', visible: true, sortable: true, width: 110 },
-      { key: 'orientation', label: 'Orientation', visible: true, sortable: true, width: 120, render: (v: any) => <span className="capitalize">{v}</span> },
-      { key: 'isDefault', label: 'Status', visible: true, sortable: true, width: 110, render: (v: any) => (
-        <Badge variant={v ? 'default' : 'outline'} className="text-xs">
+      { key: 'layoutNumber', label: 'ID', visible: true, sortable: true, width: 110, renderCell: (v: any) => <span className="font-mono text-xs">{v || '—'}</span> },
+      { key: 'name', label: 'Omschrijving', visible: true, sortable: true },
+      { key: 'documentType', label: 'Document Type', visible: true, sortable: true, renderCell: (v: any) => DOCUMENT_TYPE_LABELS[v] || v },
+      { key: 'pageFormat', label: 'Page Size', visible: true, sortable: true, width: 110, renderCell: (v: any) => v?.toUpperCase() || '—' },
+      { key: 'orientation', label: 'Oriëntatie', visible: true, sortable: true, width: 120, renderCell: (v: any) => <span className="capitalize">{v}</span> },
+      { key: 'isDefault', label: 'Status', visible: true, sortable: true, width: 120, renderCell: (v: any) => (
+        <Badge variant={v ? 'default' : 'outline'} className={`text-xs ${v ? 'bg-green-100 text-green-800 border-green-200' : ''}`}>
           {v ? 'Default' : 'Active'}
         </Badge>
       )},
@@ -239,6 +239,7 @@ export default function LayoutDesigner() {
         onToggleRowSelection={toggleRowSelection}
         onToggleAllRows={() => toggleAllRows((layouts as any[]).map((l: any) => l.id))}
         onRowDoubleClick={handleOpenLayout}
+        onDuplicate={(row: any) => handleDuplicateLayout(row.id)}
         getRowId={(row: any) => row.id}
         applyFiltersAndSearch={applyFiltersAndSearch}
         applySorting={applySorting}
