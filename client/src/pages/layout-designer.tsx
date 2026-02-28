@@ -141,6 +141,34 @@ export default function LayoutDesigner() {
     duplicateLayoutMutation.mutate(layoutId);
   };
 
+  const deleteLayoutMutation = useMutation({
+    mutationFn: async (layoutId: string) => {
+      const response = await apiRequest('DELETE', `/api/layouts/${layoutId}`);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/layouts'] });
+      toast({
+        title: 'Layout verwijderd',
+        description: 'De layout is succesvol verwijderd',
+      });
+      setSelectedLayoutId(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Fout',
+        description: error.message || 'Kon layout niet verwijderen',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleDeleteLayout = (layoutId: string, layoutName: string) => {
+    if (window.confirm(`Weet je zeker dat je "${layoutName}" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.`)) {
+      deleteLayoutMutation.mutate(layoutId);
+    }
+  };
+
   // Filter layouts by document type
   const filteredLayouts = (layouts as any[]).filter((layout: any) => 
     layout.documentType === documentType
@@ -254,6 +282,7 @@ export default function LayoutDesigner() {
                 selectedLayoutId={selectedLayoutId}
                 onCreateNew={() => setShowNewLayoutDialog(true)}
                 onDuplicate={handleDuplicateLayout}
+                onDelete={handleDeleteLayout}
               />
             </TabsContent>
 
@@ -348,6 +377,7 @@ function LayoutManagerView({
   selectedLayoutId,
   onCreateNew,
   onDuplicate,
+  onDelete,
 }: {
   layouts: any[];
   documentType: string;
@@ -356,6 +386,7 @@ function LayoutManagerView({
   selectedLayoutId: number | null;
   onCreateNew: () => void;
   onDuplicate: (layoutId: number) => void;
+  onDelete: (layoutId: string, layoutName: string) => void;
 }) {
   if (isLoading) {
     return (
@@ -449,6 +480,18 @@ function LayoutManagerView({
                 }}
               >
                 Duplicate
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300" 
+                data-testid={`button-delete-${layout.id}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(layout.id, layout.name);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </CardContent>
