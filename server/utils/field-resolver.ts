@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems } from "../../shared/schema";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays } from "../../shared/schema";
 import { eq, asc } from "drizzle-orm";
 
 /**
@@ -210,6 +210,7 @@ export interface InvoicePrintData {
     totalAmount: string;
     paidAmount: string | null;
     notes: string | null;
+    paymentTerms: string | null;
   };
   customer: {
     name: string;
@@ -266,6 +267,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
   const invoice = await db.query.invoices.findFirst({
     where: eq(invoices.id, invoiceId),
   });
+
 
   if (!invoice) {
     return null;
@@ -344,6 +346,17 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     };
   }
 
+  // Load payment days
+  let paymentTermsLabel: string | null = null;
+  if (invoice.paymentDaysId) {
+    const paymentDay = await db.query.paymentDays.findFirst({
+      where: eq(paymentDays.id, invoice.paymentDaysId),
+    });
+    if (paymentDay) {
+      paymentTermsLabel = paymentDay.name_en || paymentDay.name_nl;
+    }
+  }
+
   // Load invoice items
   const items = await db.query.invoiceItems.findMany({
     where: eq(invoiceItems.invoiceId, invoiceId),
@@ -373,6 +386,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       totalAmount: invoice.totalAmount,
       paidAmount: invoice.paidAmount,
       notes: invoice.notes,
+      paymentTerms: paymentTermsLabel,
     },
     customer: customerData,
     project: projectData,
