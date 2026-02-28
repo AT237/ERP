@@ -32,28 +32,16 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
     return defaultColumns;
   }, [defaultColumns, tableKey]);
 
-  // Column management - stable initial state
-  const [columns, setColumnsState] = useState<ColumnConfig[]>(() => getStoredColumns());
+  // Column management - always start with defaultColumns to preserve renderCell functions
+  const [columns, setColumnsState] = useState<ColumnConfig[]>(defaultColumns);
   
-  // Save columns to localStorage - debounced to prevent frequent writes
+  // DataTableLayout handles localStorage/API persistence via saveColumnSettings
   const setColumns = useCallback((newColumns: ColumnConfig[] | ((prev: ColumnConfig[]) => ColumnConfig[])) => {
     setColumnsState(prevColumns => {
       const updatedColumns = typeof newColumns === 'function' ? newColumns(prevColumns) : newColumns;
-      
-      // Async localStorage save to prevent blocking
-      if (tableKey) {
-        setTimeout(() => {
-          try {
-            localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(updatedColumns));
-          } catch (error) {
-            console.warn('Failed to save table columns to localStorage:', error);
-          }
-        }, 0);
-      }
-      
       return updatedColumns;
     });
-  }, [tableKey]);
+  }, []);
   
   // Search and filtering - stable state
   const [searchTerm, setSearchTerm] = useState('');
