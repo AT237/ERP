@@ -33,6 +33,7 @@ const lineItemFormSchema = insertInvoiceItemSchema.extend({
   unitPrice: z.string().min(1, "Prijs per eenheid is verplicht"),
   lineTotal: z.string().min(1, "Regel totaal is verplicht"),
   quantity: z.number().min(0, "Aantal kan niet negatief zijn"),
+  unit: z.string().optional(),
   position: z.number().min(1, "Positie is verplicht").optional(),
   positionNo: z.string().optional(),
   descriptionInternal: z.string().optional(),
@@ -95,6 +96,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       invoiceId: invoiceId || "",
       description: "",
       quantity: 1,
+      unit: "pcs",
       unitPrice: "0.00",
       lineTotal: "0.00",
       lineType: "standard",
@@ -221,6 +223,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         invoiceId: lineItem.invoiceId || invoiceId || "",
         description: lineItem.description || "",
         quantity: lineItem.quantity || 1,
+        unit: (lineItem as any).unit || "",
         unitPrice: lineItem.unitPrice?.toString() || "0.00",
         lineTotal: lineItem.lineTotal?.toString() || "0.00",
         lineType: lineItem.lineType || "standard",
@@ -259,6 +262,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const unitPriceValue = form.watch("unitPrice");
   const lineTotalValue = form.watch("lineTotal");
   const customerRateIdValue = form.watch("customerRateId");
+  const unitValue = form.watch("unit" as any);
 
   const selectedRateOption = useMemo(() => {
     if (!customerRateIdValue) return null;
@@ -298,6 +302,22 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     form.setValue("lineTotal", lineTotal);
   }, [quantityValue, unitPriceValue, form]);
 
+  // Auto-fill unit when lineType changes
+  useEffect(() => {
+    if (!lineTypeValue) return;
+    if (lineTypeValue === 'text') {
+      form.setValue("unit" as any, "");
+    } else if (lineTypeValue === 'charges') {
+      // Get unit from selected rate if available
+      const rateOpt = customerRateOptions.find(o => o.rateId === customerRateIdValue);
+      form.setValue("unit" as any, rateOpt?.unit || "hrs");
+    } else {
+      // 'standard' or 'unique' → default to pcs if unit is empty
+      const currentUnit = form.getValues("unit" as any);
+      if (!currentUnit) form.setValue("unit" as any, "pcs");
+    }
+  }, [lineTypeValue]);
+
   useEffect(() => {
     const tabId = lineItemId ? `edit-invoice-line-item-${lineItemId}` : 'new-invoice-line-item';
     window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
@@ -310,9 +330,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     const rateOpt = customerRateOptions.find(opt => opt.rateId === rateId);
     if (rateOpt) {
       form.setValue("unitPrice", rateOpt.discountedPrice.toFixed(2));
-      if (rateOpt.unit) {
-        form.setValue("unit" as any, rateOpt.unit);
-      }
+      form.setValue("unit" as any, rateOpt.unit || "hrs");
     }
     setHasUnsavedChanges(true);
   };
@@ -546,6 +564,14 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         error: form.formState.errors.quantity?.message
       },
       testId: 'input-quantity'
+    },
+    {
+      key: 'unit',
+      label: 'Unit',
+      type: 'text',
+      register: form.register('unit' as any),
+      placeholder: 'e.g. pcs, hrs, kg',
+      testId: 'input-unit'
     },
     {
       key: 'unitPrice',

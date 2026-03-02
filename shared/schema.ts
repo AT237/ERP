@@ -296,6 +296,7 @@ export const invoiceItems = pgTable("invoice_items", {
   itemId: varchar("item_id").references(() => inventoryItems.id),
   description: text("description").notNull(),
   quantity: integer("quantity").default(0),
+  unit: text("unit"),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
   lineType: text("line_type").default("standard"),
