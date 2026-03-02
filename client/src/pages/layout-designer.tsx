@@ -463,7 +463,25 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const [sectionChangedFlash, setSectionChangedFlash] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [alignmentGuides, setAlignmentGuides] = useState<{ type: 'h' | 'v'; position: number }[]>([]);
-  
+
+  // History for undo/redo (refs to avoid re-renders)
+  const historyRef = useRef<any[][]>([]);
+  const historyIndexRef = useRef<number>(-1);
+  // Clipboard for cut/copy/paste
+  const clipboardRef = useRef<any | null>(null);
+  // Track drag start to push history once per drag (not on every mousemove)
+  const dragStartSectionsRef = useRef<any[] | null>(null);
+
+  const pushHistory = (currentSections: any[]) => {
+    historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
+    historyRef.current.push(JSON.parse(JSON.stringify(currentSections)));
+    historyIndexRef.current = historyRef.current.length - 1;
+    if (historyRef.current.length > 50) {
+      historyRef.current.shift();
+      historyIndexRef.current--;
+    }
+  };
+
   // Available database tables for selection - all tables related to quotations and documents
   const availableTables = [
     // Document Types
@@ -558,6 +576,94 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     }
   }, [layout?.allowedTables]);
 
+  // Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Y (redo), Ctrl+C/X/V (copy/cut/paste)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      if (!e.ctrlKey && !e.metaKey) return;
+
+      switch (e.key.toLowerCase()) {
+        case 'z':
+          e.preventDefault();
+          if (e.shiftKey) {
+            // Ctrl+Shift+Z = redo
+            if (historyIndexRef.current < historyRef.current.length - 1) {
+              historyIndexRef.current++;
+              setSections(JSON.parse(JSON.stringify(historyRef.current[historyIndexRef.current])));
+              setSelectedBlock(null);
+              setSelectedSection(null);
+            }
+          } else {
+            // Ctrl+Z = undo
+            if (historyIndexRef.current > 0) {
+              historyIndexRef.current--;
+              setSections(JSON.parse(JSON.stringify(historyRef.current[historyIndexRef.current])));
+              setSelectedBlock(null);
+              setSelectedSection(null);
+            }
+          }
+          break;
+        case 'y':
+          e.preventDefault();
+          if (historyIndexRef.current < historyRef.current.length - 1) {
+            historyIndexRef.current++;
+            setSections(JSON.parse(JSON.stringify(historyRef.current[historyIndexRef.current])));
+            setSelectedBlock(null);
+            setSelectedSection(null);
+          }
+          break;
+        case 'c':
+          e.preventDefault();
+          if (selectedBlock) {
+            clipboardRef.current = JSON.parse(JSON.stringify(selectedBlock));
+          }
+          break;
+        case 'x':
+          e.preventDefault();
+          if (selectedBlock) {
+            clipboardRef.current = JSON.parse(JSON.stringify(selectedBlock));
+            const cutSection = sections.find((s: any) => s.config.blocks?.find((b: any) => b.id === selectedBlock.id));
+            if (cutSection) {
+              pushHistory(sections);
+              setSections(sections.map((s: any) =>
+                s.id === cutSection.id
+                  ? { ...s, config: { ...s.config, blocks: s.config.blocks.filter((b: any) => b.id !== selectedBlock.id) } }
+                  : s
+              ));
+              setSelectedBlock(null);
+            }
+          }
+          break;
+        case 'v':
+          e.preventDefault();
+          if (clipboardRef.current) {
+            const targetSection = selectedSection || sections[0];
+            if (!targetSection) break;
+            const newBlock = {
+              ...clipboardRef.current,
+              id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              position: {
+                x: (clipboardRef.current.position?.x || 0) + 5,
+                y: (clipboardRef.current.position?.y || 0) + 5,
+              },
+            };
+            pushHistory(sections);
+            setSections(sections.map((s: any) =>
+              s.id === targetSection.id
+                ? { ...s, config: { ...s.config, blocks: [...(s.config.blocks || []), newBlock] } }
+                : s
+            ));
+            setSelectedBlock(newBlock);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [sections, selectedBlock, selectedSection]);
+
   if (!layout) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -601,6 +707,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
       },
     };
 
+    pushHistory(sections);
     setSections([...sections, newSection]);
     setSelectedSection(newSection);
     setShowNewSectionDialog(false);
@@ -740,6 +847,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
         : s
     );
 
+    pushHistory(sections);
     setSections(updatedSections);
     setSelectedBlock(newBlock);
     setDraggedBlockType(null);
@@ -755,6 +863,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
         ? { ...s, config: { ...s.config, blocks: (s.config.blocks || []).filter((b: any) => b.id !== blockId) } }
         : s
     );
+    pushHistory(sections);
     setSections(updatedSections);
     
     if (selectedBlock?.id === blockId) {
@@ -778,6 +887,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
       return { ...s, config: { ...s.config, blocks } };
     });
     
+    pushHistory(sections);
     setSections(updatedSections);
   };
 
@@ -797,6 +907,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
       return { ...s, config: { ...s.config, blocks } };
     });
     
+    pushHistory(sections);
     setSections(updatedSections);
   };
 
@@ -980,6 +1091,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     setIsDraggingBlock(true);
     setSelectedBlock(block);
     setSelectedSection(null);
+    pushHistory(sections); // push before drag starts (not on every move)
   };
 
   const handleBlockDragMove = (e: React.MouseEvent, sectionElement: HTMLElement) => {
@@ -1150,6 +1262,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   };
 
   const updateSectionProperty = (sectionId: string, path: string, value: any) => {
+    pushHistory(sections);
     const updatedSections = sections.map(s => {
       if (s.id !== sectionId) return s;
       
@@ -1175,6 +1288,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   };
 
   const updateBlockProperty = (sectionId: string, blockId: string, property: string, value: any) => {
+    if (!isDraggingBlock) pushHistory(sections); // drag start already pushed history
     const updatedSections = sections.map(s => {
       if (s.id !== sectionId) return s;
       
@@ -1286,6 +1400,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   };
 
   const handleRemoveSection = (sectionId: string) => {
+    pushHistory(sections);
     setSections(sections.filter(s => s.id !== sectionId));
     if (selectedSection?.id === sectionId) {
       setSelectedSection(null);
