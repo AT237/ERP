@@ -1,11 +1,10 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { InventoryItem } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 
 
 const defaultColumns: ColumnConfig[] = [
@@ -36,24 +35,12 @@ export default function Inventory() {
     queryKey: ["/api/inventory"],
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/inventory/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      toast({
-        title: "Succes",
-        description: "Artikel verwijderd",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Fout",
-        description: "Kan artikel niet verwijderen",
-        variant: "destructive",
-      });
-    },
+  const del = useEntityDelete({
+    endpoint: '/api/inventory',
+    queryKeys: ['/api/inventory'],
+    entityLabel: 'Item',
+    checkUsages: true,
+    getName: (row) => row.name || row.sku
   });
 
   const handleEdit = (item: InventoryItem) => {
@@ -82,11 +69,6 @@ export default function Inventory() {
     window.dispatchEvent(event);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Weet je zeker dat je dit artikel wilt verwijderen?")) {
-      deleteMutation.mutate(id);
-    }
-  };
 
   const handleNewItem = () => {
     // Dispatch custom event to open inventory form in new tab
@@ -164,11 +146,12 @@ export default function Inventory() {
           key: 'delete',
           label: 'Delete',
           icon: <Trash2 className="h-4 w-4" />,
-          onClick: () => handleDelete(row.id),
+          onClick: () => del.handleDeleteRow(row),
           className: 'text-red-600 hover:text-red-700'
         }
       ]}
     />
+    {del.renderDeleteDialogs()}
     </div>
   );
 }

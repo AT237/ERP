@@ -1,12 +1,11 @@
 import React from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 import type { Quotation, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -118,27 +117,13 @@ export default function Quotations({}: QuotationsProps) {
     tableKey: 'quotations'
   });
 
-  // Mutations
-  const deleteQuotationMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/quotations/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
-      toast({
-        title: "Success",
-        description: "Quotation deleted successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete quotation",
-        variant: "destructive",
-      });
-    },
+  const del = useEntityDelete({
+    endpoint: '/api/quotations',
+    queryKeys: ['/api/quotations'],
+    entityLabel: 'Quotation',
+    checkUsages: false,
+    getName: (row) => row.quotationNumber || row.title
   });
-
 
   // Event handlers - memoized to prevent flicker
   const handleAddQuotation = React.useCallback(() => {
@@ -206,11 +191,6 @@ export default function Quotations({}: QuotationsProps) {
     }
   }, [toast]);
 
-  const handleDeleteQuotation = React.useCallback((quotation: Quotation) => {
-    if (window.confirm(`Are you sure you want to delete quotation ${quotation.quotationNumber}?`)) {
-      deleteQuotationMutation.mutate(quotation.id);
-    }
-  }, [deleteQuotationMutation]);
 
 
 
@@ -273,11 +253,12 @@ export default function Quotations({}: QuotationsProps) {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDeleteQuotation(quotation),
+            onClick: () => del.handleDeleteRow(quotation),
             variant: 'destructive' as const
           }
-        ], [handleViewQuotation, handleEditQuotation, handleDeleteQuotation])}
+        ], [handleViewQuotation, handleEditQuotation, del.handleDeleteRow])}
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

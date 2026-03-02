@@ -39,7 +39,9 @@ import {
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
   insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema, insertEmployeeSchema,
-  unitsOfMeasure, inventoryItems, invoiceItems, ratesAndCharges
+  unitsOfMeasure, inventoryItems, invoiceItems, ratesAndCharges,
+  quotations, invoices, projects, purchaseOrders, suppliers,
+  quotationItems, salesOrders, packingLists, quotationRequests, proformaInvoices
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { eq, sql } from 'drizzle-orm';
@@ -58,6 +60,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Customer routes
+  app.get("/api/customers/:id/check-usages", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const usages: { location: string; id: string; label: string }[] = [];
+
+      const [customerQuotations, customerInvoices, customerProjects] = await Promise.all([
+        db.select().from(quotations).where(eq(quotations.customerId, id)),
+        db.select().from(invoices).where(eq(invoices.customerId, id)),
+        db.select().from(projects).where(eq(projects.customerId, id))
+      ]);
+
+      customerQuotations.forEach(q => usages.push({ location: "Quotations", id: q.id, label: q.quotationNumber }));
+      customerInvoices.forEach(i => usages.push({ location: "Invoices", id: i.id, label: i.invoiceNumber }));
+      customerProjects.forEach(p => usages.push({ location: "Projects", id: p.id, label: p.projectNumber || p.name }));
+
+      res.json({ canDelete: usages.length === 0, usages });
+    } catch (error) {
+      console.error("Error checking customer usages:", error);
+      res.status(500).json({ message: "Failed to check customer usages" });
+    }
+  });
+
   app.get("/api/customers", async (req, res) => {
     try {
       const customers = await storage.getCustomers();
@@ -190,7 +214,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/customers/:id", async (req, res) => {
     try {
-      await storage.deleteCustomer(req.params.id);
+      const { id } = req.params;
+      const [customerQuotations, customerInvoices, customerProjects] = await Promise.all([
+        db.select().from(quotations).where(eq(quotations.customerId, id)).limit(1),
+        db.select().from(invoices).where(eq(invoices.customerId, id)).limit(1),
+        db.select().from(projects).where(eq(projects.customerId, id)).limit(1)
+      ]);
+
+      if (customerQuotations.length > 0 || customerInvoices.length > 0 || customerProjects.length > 0) {
+        return res.status(409).json({ message: "Customer is in use and cannot be deleted" });
+      }
+
+      await storage.deleteCustomer(id);
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting customer:", error);
@@ -534,6 +569,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Supplier routes
+  app.get("/api/suppliers/:id/check-usages", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const usages: { location: string; id: string; label: string }[] = [];
+
+      const supplierPurchaseOrders = await db.select().from(purchaseOrders).where(eq(purchaseOrders.supplierId, id));
+
+      supplierPurchaseOrders.forEach(po => usages.push({ location: "Purchase Orders", id: po.id, label: po.orderNumber }));
+
+      res.json({ canDelete: usages.length === 0, usages });
+    } catch (error) {
+      console.error("Error checking supplier usages:", error);
+      res.status(500).json({ message: "Failed to check supplier usages" });
+    }
+  });
+
   app.get("/api/suppliers", async (req, res) => {
     try {
       const suppliers = await storage.getSuppliers();
@@ -581,7 +632,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/suppliers/:id", async (req, res) => {
     try {
-      await storage.deleteSupplier(req.params.id);
+      const { id } = req.params;
+      const supplierPurchaseOrders = await db.select().from(purchaseOrders).where(eq(purchaseOrders.supplierId, id)).limit(1);
+
+      if (supplierPurchaseOrders.length > 0) {
+        return res.status(409).json({ message: "Supplier is in use and cannot be deleted" });
+      }
+
+      await storage.deleteSupplier(id);
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting supplier:", error);
@@ -646,6 +704,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Inventory routes
+  app.get("/api/inventory/:id/check-usages", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const usages: { location: string; id: string; label: string }[] = [];
+
+      const [itemQuotationItems, itemInvoiceItems] = await Promise.all([
+        db.select().from(quotationItems).where(eq(quotationItems.itemId, id)),
+        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id))
+      ]);
+
+      itemQuotationItems.forEach(qi => usages.push({ location: "Quotation Items", id: qi.id, label: qi.description }));
+      itemInvoiceItems.forEach(ii => usages.push({ location: "Invoice Items", id: ii.id, label: ii.description }));
+
+      res.json({ canDelete: usages.length === 0, usages });
+    } catch (error) {
+      console.error("Error checking inventory item usages:", error);
+      res.status(500).json({ message: "Failed to check inventory item usages" });
+    }
+  });
+
   app.get("/api/inventory", async (req, res) => {
     try {
       const items = await storage.getInventoryItems();
@@ -703,7 +781,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/inventory/:id", async (req, res) => {
     try {
-      await storage.deleteInventoryItem(req.params.id);
+      const { id } = req.params;
+      const [itemQuotationItems, itemInvoiceItems] = await Promise.all([
+        db.select().from(quotationItems).where(eq(quotationItems.itemId, id)).limit(1),
+        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id)).limit(1)
+      ]);
+
+      if (itemQuotationItems.length > 0 || itemInvoiceItems.length > 0) {
+        return res.status(409).json({ message: "Inventory item is in use and cannot be deleted" });
+      }
+
+      await storage.deleteInventoryItem(id);
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting inventory item:", error);

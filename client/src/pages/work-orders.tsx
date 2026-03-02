@@ -1,12 +1,11 @@
 import React from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, ClipboardList, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, type ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 import type { WorkOrder, Project } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -143,32 +142,35 @@ export default function WorkOrders() {
     tableKey: 'work-orders'
   });
 
-  const { data: workOrders, isLoading } = useQuery<WorkOrder[]>({
+  const { data: workOrders = [], isLoading } = useQuery<WorkOrder[]>({
     queryKey: ["/api/work-orders"],
   });
 
-  const { data: projects } = useQuery<Project[]>({
+  const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/work-orders/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
-      toast({
-        title: "Success",
-        description: "Work order deleted successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete work order",
-        variant: "destructive",
-      });
-    },
+  const { data: employees = [] } = useQuery({
+    queryKey: ["/api/employees"],
+  });
+
+  // Enhanced data with project names
+  const enhancedWorkOrders = React.useMemo(() => {
+    return workOrders.map(order => {
+      const project = projects.find(p => p.id === order.projectId);
+      return {
+        ...order,
+        projectName: project?.name || 'No Project'
+      };
+    });
+  }, [workOrders, projects]);
+
+  const del = useEntityDelete({
+    endpoint: '/api/work-orders',
+    queryKeys: ['/api/work-orders'],
+    entityLabel: 'Work Order',
+    checkUsages: false,
+    getName: (row) => row.orderNumber || row.woNumber
   });
 
   const handleEdit = (workOrder: WorkOrder) => {
@@ -211,18 +213,6 @@ export default function WorkOrders() {
     tableState.toggleAllRows(allRowIds);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this work order?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  const handleBulkDelete = (orderIds: string[]) => {
-    if (confirm(`Are you sure you want to delete ${orderIds.length} work orders?`)) {
-      orderIds.forEach(id => deleteMutation.mutate(id));
-      tableState.setSelectedRows([]);
-    }
-  };
 
   return (
     <div className="p-6">
@@ -231,7 +221,7 @@ export default function WorkOrders() {
         data={enhancedWorkOrders}
         isLoading={isLoading}
         tableKey="work-orders"
-        getRowId={(order) => order.id}
+        getRowId={(order: any) => order.id}
         
         // Table configuration
         columns={tableState.columns}
@@ -255,6 +245,12 @@ export default function WorkOrders() {
         setSelectedRows={tableState.setSelectedRows}
         onToggleRowSelection={tableState.toggleRowSelection}
         onToggleAllRows={handleToggleAllRows}
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, enhancedWorkOrders),
+          itemCount: tableState.selectedRows.length
+        }}
         
         // Actions
         headerActions={[
@@ -279,7 +275,7 @@ export default function WorkOrders() {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDelete(row.id),
+            onClick: () => del.handleDeleteRow(row),
             variant: 'destructive' as const
           }
         ]}
@@ -290,8 +286,8 @@ export default function WorkOrders() {
         // Display options
         entityName="Work Order"
         entityNamePlural="Work Orders"
-        searchPlaceholder="Search work orders..."
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

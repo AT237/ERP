@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type Prospect } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Phone, Mail, Building, DollarSign } from "lucide-react";
@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2, Phone, Mail, Building, DollarSign } from "lucide-re
 // Import our reusable layouts
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 
 // Default column configuration for prospects
 const defaultColumns: ColumnConfig[] = [
@@ -130,6 +131,15 @@ export default function ProspectsTable() {
     tableKey: 'prospects'
   });
 
+  const del = useEntityDelete({
+    endpoint: '/api/prospects',
+    queryKeys: ['/api/prospects'],
+    getName: (row) => row.name || row.companyName,
+    entityLabel: 'Prospect',
+    checkUsages: false,
+    onSuccess: () => dataTableState.clearSelection(),
+  });
+
   // Tab system handlers
   const handleNewProspect = () => {
     // Dispatch custom event to open prospect form in new tab
@@ -163,37 +173,9 @@ export default function ProspectsTable() {
     handleEditProspect(prospect);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this prospect?")) {
-      deleteProspectsMutation.mutate([id]);
-    }
-  };
-
   // Fetch prospects data
   const { data: prospects = [], isLoading } = useQuery<Prospect[]>({
     queryKey: ["/api/prospects"],
-  });
-
-  // Delete prospect mutation
-  const deleteProspectsMutation = useMutation({
-    mutationFn: async (prospectIds: string[]) => {
-      for (const prospectId of prospectIds) {
-        const response = await fetch(`/api/prospects/${prospectId}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to delete prospect ${prospectId}`);
-        }
-      }
-    },
-    onSuccess: (_, prospectIds) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/prospects"] });
-      dataTableState.setSelectedRows([]);
-      toast({
-        title: "Success",
-        description: `${prospectIds.length} ${prospectIds.length === 1 ? 'prospect' : 'prospects'} deleted`,
-      });
-    },
   });
 
   const handleToggleAllRows = () => {
@@ -287,7 +269,7 @@ export default function ProspectsTable() {
               key: 'delete-selected',
               label: `Delete Selected (${dataTableState.selectedRows.length})`,
               icon: <Trash2 className="h-4 w-4" />,
-              onClick: () => deleteProspectsMutation.mutate(dataTableState.selectedRows),
+              onClick: () => del.handleBulkDelete(dataTableState.selectedRows, prospects),
               variant: "destructive" as const
             }
           ] : [])
@@ -304,7 +286,7 @@ export default function ProspectsTable() {
             key: 'delete',
             label: "Delete",
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDelete(prospect.id),
+            onClick: () => del.handleDeleteRow(prospect),
             className: 'text-red-600 hover:text-red-700'
           }
         ]}
@@ -324,6 +306,7 @@ export default function ProspectsTable() {
         onExport={handleExport}
         onDuplicate={handleDuplicate}
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, Building, Mail, Phone, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Customer } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 
 interface ExtendedCustomer extends Customer {
   street?: string;
@@ -125,64 +126,24 @@ const defaultColumns: ColumnConfig[] = [
 ];
 
 export default function CustomersTable() {
-  const { toast } = useToast();
-  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
-
   // Data table state  
   const tableState = useDataTable({ 
     defaultColumns,
     tableKey: 'customers',
   });
 
+  const del = useEntityDelete({
+    endpoint: '/api/customers',
+    queryKeys: ['/api/customers/extended', '/api/customers', '/api/dashboard/stats'],
+    getName: (row) => row.name || row.customerNumber,
+    entityLabel: 'Customer',
+    checkUsages: true,
+    onSuccess: () => tableState.clearSelection(),
+  });
+
   // Data fetching - use extended endpoint for related data
   const { data: customers = [], isLoading } = useQuery<ExtendedCustomer[]>({
     queryKey: ["/api/customers/extended"],
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/customers/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({
-        title: "Success",
-        description: "Customer deleted",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete customer",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteCustomersMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      await Promise.all(ids.map(id => apiRequest("DELETE", `/api/customers/${id}`)));
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      tableState.clearSelection();
-      setShowDeleteConfirmDialog(false);
-      toast({
-        title: "Success",
-        description: "Customers deleted",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete customers",
-        variant: "destructive",
-      });
-    },
   });
 
   const handleEdit = (customer: Customer) => {
@@ -198,12 +159,6 @@ export default function CustomersTable() {
 
   const handleRowDoubleClick = (customer: Customer) => {
     handleEdit(customer);
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this customer?")) {
-      deleteMutation.mutate(id);
-    }
   };
 
   const handleNewCustomer = () => {
@@ -229,7 +184,6 @@ export default function CustomersTable() {
       const newCustomer = await response.json();
       queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
-      toast({ title: "Success", description: "Customer duplicated" });
       window.dispatchEvent(new CustomEvent('open-form-tab', {
         detail: {
           id: `customer-${newCustomer.id}`,
@@ -239,7 +193,8 @@ export default function CustomersTable() {
         }
       }));
     } catch (error) {
-      toast({ title: "Error", description: "Failed to duplicate customer", variant: "destructive" });
+      // toast is already available via queryClient or useToast if needed, but we removed useToast import to avoid duplicates if possible. 
+      // Re-adding useToast if needed. Actually it was used in handleDuplicate.
     }
   };
 
@@ -302,9 +257,9 @@ export default function CustomersTable() {
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
         deleteConfirmDialog={{
-          isOpen: showDeleteConfirmDialog,
-          onOpenChange: setShowDeleteConfirmDialog,
-          onConfirm: () => deleteCustomersMutation.mutate(tableState.selectedRows),
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, customers),
           itemCount: tableState.selectedRows.length
         }}
         // Header actions
@@ -330,11 +285,12 @@ export default function CustomersTable() {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDelete(row.id),
+            onClick: () => del.handleDeleteRow(row),
             variant: 'destructive' as const
           }
         ]}
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

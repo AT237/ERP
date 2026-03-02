@@ -1,13 +1,12 @@
 import React from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Edit, Trash2, FolderOpen, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, type ColumnConfig, createIdColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 import type { Project, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -155,27 +154,13 @@ export default function Projects() {
     tableKey: 'projects'
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/projects/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({
-        title: "Success",
-        description: "Project deleted successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete project",
-        variant: "destructive",
-      });
-    },
+  const del = useEntityDelete({
+    endpoint: '/api/projects',
+    queryKeys: ['/api/projects'],
+    entityLabel: 'Project',
+    checkUsages: false,
+    getName: (row) => row.projectNumber || row.name
   });
-
 
   const handleEdit = (project: Project) => {
     window.dispatchEvent(new CustomEvent('open-form-tab', {
@@ -214,18 +199,6 @@ export default function Projects() {
     tableState.toggleAllRows(allRowIds);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this project?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  const handleBulkDelete = (projectIds: string[]) => {
-    if (confirm(`Are you sure you want to delete ${projectIds.length} projects?`)) {
-      projectIds.forEach(id => deleteMutation.mutate(id));
-      tableState.setSelectedRows([]);
-    }
-  };
 
   return (
     <div className="p-6">
@@ -260,6 +233,12 @@ export default function Projects() {
         setSelectedRows={tableState.setSelectedRows}
         onToggleRowSelection={tableState.toggleRowSelection}
         onToggleAllRows={handleToggleAllRows}
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, enhancedProjects),
+          itemCount: tableState.selectedRows.length
+        }}
         
         // Actions
         headerActions={[
@@ -284,7 +263,7 @@ export default function Projects() {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDelete(row.id),
+            onClick: () => del.handleDeleteRow(row),
             variant: 'destructive' as const
           }
         ]}
@@ -296,6 +275,7 @@ export default function Projects() {
         entityName="Project"
         entityNamePlural="Projects"
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

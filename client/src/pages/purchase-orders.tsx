@@ -1,12 +1,11 @@
 import React from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, Calendar, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 import type { PurchaseOrder, Supplier } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -138,25 +137,12 @@ export default function PurchaseOrders() {
     }));
   }, [purchaseOrders, getSupplierName]);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/purchase-orders/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({
-        title: "Success",
-        description: "Purchase order deleted successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete purchase order",
-        variant: "destructive",
-      });
-    },
+  const del = useEntityDelete({
+    endpoint: '/api/purchase-orders',
+    queryKeys: ['/api/purchase-orders'],
+    entityLabel: 'Purchase Order',
+    checkUsages: false,
+    getName: (row) => row.orderNumber || row.poNumber
   });
 
   const handleEdit = (purchaseOrder: PurchaseOrder) => {
@@ -202,18 +188,6 @@ export default function PurchaseOrders() {
     tableState.toggleAllRows(allRowIds);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this purchase order?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  const handleBulkDelete = (orderIds: string[]) => {
-    if (confirm(`Are you sure you want to delete ${orderIds.length} purchase orders?`)) {
-      orderIds.forEach(id => deleteMutation.mutate(id));
-      tableState.setSelectedRows([]);
-    }
-  };
 
   return (
     <div className="p-6">
@@ -246,6 +220,12 @@ export default function PurchaseOrders() {
         setSelectedRows={tableState.setSelectedRows}
         onToggleRowSelection={tableState.toggleRowSelection}
         onToggleAllRows={handleToggleAllRows}
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, enhancedPurchaseOrders),
+          itemCount: tableState.selectedRows.length
+        }}
         
         // Actions
         headerActions={[
@@ -270,7 +250,7 @@ export default function PurchaseOrders() {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDelete(row.id),
+            onClick: () => del.handleDeleteRow(row),
             variant: 'destructive' as const
           }
         ]}
@@ -282,8 +262,8 @@ export default function PurchaseOrders() {
         // Display options
         entityName="Purchase Order"
         entityNamePlural="Purchase Orders"
-        searchPlaceholder="Search purchase orders..."
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

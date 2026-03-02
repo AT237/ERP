@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type CustomerContact } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Phone, Mail } from "lucide-react";
@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2, Phone, Mail } from "lucide-react";
 // Import our reusable layouts
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 
 // Default column configuration for contact persons
 const defaultColumns: ColumnConfig[] = [
@@ -79,6 +80,15 @@ export default function ContactPersonsTable() {
     tableKey: 'contact-persons'
   });
 
+  const del = useEntityDelete({
+    endpoint: '/api/customer-contacts',
+    queryKeys: ['/api/customer-contacts'],
+    getName: (row) => row.name || row.firstName,
+    entityLabel: 'Contact',
+    checkUsages: false,
+    onSuccess: () => dataTableState.clearSelection(),
+  });
+
   // Tab system handlers
   const handleNewContact = () => {
     // Dispatch custom event to open contact form in new tab
@@ -112,37 +122,9 @@ export default function ContactPersonsTable() {
     handleEditContact(contact);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this contact person?")) {
-      deleteContactsMutation.mutate([id]);
-    }
-  };
-
   // Fetch contact persons data
   const { data: contacts = [], isLoading } = useQuery<CustomerContact[]>({
     queryKey: ["/api/customer-contacts"],
-  });
-
-  // Delete contact mutation
-  const deleteContactsMutation = useMutation({
-    mutationFn: async (contactIds: string[]) => {
-      for (const contactId of contactIds) {
-        const response = await fetch(`/api/customer-contacts/${contactId}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to delete contact ${contactId}`);
-        }
-      }
-    },
-    onSuccess: (_, contactIds) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/customer-contacts"] });
-      dataTableState.setSelectedRows([]);
-      toast({
-        title: "Success",
-        description: `${contactIds.length} ${contactIds.length === 1 ? 'contact person' : 'contact persons'} deleted`,
-      });
-    },
   });
 
   const handleToggleAllRows = () => {
@@ -236,7 +218,7 @@ export default function ContactPersonsTable() {
               key: 'delete-selected',
               label: `Delete Selected (${dataTableState.selectedRows.length})`,
               icon: <Trash2 className="h-4 w-4" />,
-              onClick: () => deleteContactsMutation.mutate(dataTableState.selectedRows),
+              onClick: () => del.handleBulkDelete(dataTableState.selectedRows, contacts),
               variant: "destructive" as const
             }
           ] : [])
@@ -253,7 +235,7 @@ export default function ContactPersonsTable() {
             key: 'delete',
             label: "Delete",
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDelete(contact.id),
+            onClick: () => del.handleDeleteRow(contact),
             className: 'text-red-600 hover:text-red-700'
           }
         ]}
@@ -273,6 +255,7 @@ export default function ContactPersonsTable() {
         onExport={handleExport}
         onDuplicate={handleDuplicate}
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

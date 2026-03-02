@@ -10,6 +10,7 @@ import { Plus, Edit, Trash2, Copy, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 import type { TextSnippet } from "@shared/schema";
 
 // Available categories for text snippets
@@ -136,26 +137,16 @@ export default function TextSnippets() {
     tableKey: 'text-snippets'
   });
 
-  // Delete mutation for row actions
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/text-snippets/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/text-snippets"] });
-      toast({
-        title: "Success",
-        description: "Text snippet deleted successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete text snippet",
-        variant: "destructive",
-      });
-    },
+  const del = useEntityDelete({
+    endpoint: '/api/text-snippets',
+    queryKeys: ['/api/text-snippets'],
+    entityLabel: 'Text Snippet',
+    checkUsages: false,
+    getName: (row) => row.name || row.title
   });
+
+  // Delete mutation for row actions
+  // (Removed old deleteMutation)
 
   const duplicateMutation = useMutation({
     mutationFn: async (snippet: TextSnippet) => {
@@ -217,11 +208,6 @@ export default function TextSnippets() {
     handleEdit(snippet);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this text snippet?")) {
-      deleteMutation.mutate(id);
-    }
-  };
 
   const handleDuplicate = (snippet: TextSnippet) => {
     duplicateMutation.mutate(snippet);
@@ -295,11 +281,12 @@ export default function TextSnippets() {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDelete(row.id),
+            onClick: () => del.handleDeleteRow(row),
             className: 'text-red-600 hover:text-red-700'
           }
         ]}
       />
+      {del.renderDeleteDialogs()}
 
       {/* Category Filter */}
       <div className="mt-4 flex items-center gap-2">

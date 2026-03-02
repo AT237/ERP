@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type Employee } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Phone, Mail } from "lucide-react";
 
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 
 const defaultColumns: ColumnConfig[] = [
   createIdColumn('employeeNumber', 'Employee ID'),
@@ -71,6 +72,15 @@ export default function EmployeesTable() {
     tableKey: 'employees'
   });
 
+  const del = useEntityDelete({
+    endpoint: '/api/employees',
+    queryKeys: ['/api/employees'],
+    getName: (row) => row.name || row.firstName,
+    entityLabel: 'Employee',
+    checkUsages: false,
+    onSuccess: () => dataTableState.clearSelection(),
+  });
+
   const handleNewEmployee = () => {
     window.dispatchEvent(new CustomEvent('open-form-tab', {
       detail: {
@@ -98,35 +108,8 @@ export default function EmployeesTable() {
     handleEditEmployee(employee);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this employee?")) {
-      deleteEmployeesMutation.mutate([id]);
-    }
-  };
-
   const { data: employeesList = [], isLoading } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
-  });
-
-  const deleteEmployeesMutation = useMutation({
-    mutationFn: async (employeeIds: string[]) => {
-      for (const employeeId of employeeIds) {
-        const response = await fetch(`/api/employees/${employeeId}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to delete employee ${employeeId}`);
-        }
-      }
-    },
-    onSuccess: (_, employeeIds) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
-      dataTableState.setSelectedRows([]);
-      toast({
-        title: "Success",
-        description: `${employeeIds.length} ${employeeIds.length === 1 ? 'employee' : 'employees'} deleted`,
-      });
-    },
   });
 
   const handleToggleAllRows = () => {
@@ -212,7 +195,7 @@ export default function EmployeesTable() {
               key: 'delete-selected',
               label: `Delete Selected (${dataTableState.selectedRows.length})`,
               icon: <Trash2 className="h-4 w-4" />,
-              onClick: () => deleteEmployeesMutation.mutate(dataTableState.selectedRows),
+              onClick: () => del.handleBulkDelete(dataTableState.selectedRows, employeesList),
               variant: "destructive" as const
             }
           ] : [])
@@ -229,7 +212,7 @@ export default function EmployeesTable() {
             key: 'delete',
             label: "Delete",
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDelete(employee.id),
+            onClick: () => del.handleDeleteRow(employee),
             className: 'text-red-600 hover:text-red-700'
           }
         ]}
@@ -245,6 +228,7 @@ export default function EmployeesTable() {
         onExport={handleExport}
         onDuplicate={handleDuplicate}
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

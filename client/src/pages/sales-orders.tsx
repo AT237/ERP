@@ -1,12 +1,11 @@
 import React from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 import type { SalesOrder, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -127,27 +126,12 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
     };
   });
 
-
-  // Mutations
-
-  const deleteSalesOrderMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/sales-orders/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/sales-orders"] });
-      toast({
-        title: "Success",
-        description: "Sales order deleted successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete sales order",
-        variant: "destructive",
-      });
-    },
+  const del = useEntityDelete({
+    endpoint: '/api/sales-orders',
+    queryKeys: ['/api/sales-orders'],
+    entityLabel: 'Sales Order',
+    checkUsages: false,
+    getName: (row) => row.orderNumber || row.soNumber
   });
 
   const handleEdit = (salesOrder: SalesOrder) => {
@@ -171,11 +155,6 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
     handleEdit(salesOrder);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this sales order?")) {
-      deleteSalesOrderMutation.mutate(id);
-    }
-  };
 
   const handleNewSalesOrder = () => {
     const formInfo = {
@@ -226,6 +205,12 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
           const allIds = salesOrders.map(so => so.id);
           tableState.toggleAllRows(allIds);
         }}
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, enhancedSalesOrders),
+          itemCount: tableState.selectedRows.length
+        }}
         onRowDoubleClick={handleRowDoubleClick}
         getRowId={(row: SalesOrder & { customerName?: string }) => row.id}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
@@ -258,13 +243,13 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDelete(row.id),
+            onClick: () => del.handleDeleteRow(row),
             variant: 'outline' as const,
             className: 'text-red-600 hover:text-red-700'
           }
         ]}
       />
-
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

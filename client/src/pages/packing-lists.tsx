@@ -1,10 +1,11 @@
 import React from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Box, Truck, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, type ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 import type { PackingList, Customer, Invoice, Project } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -122,25 +123,12 @@ export default function PackingLists() {
     tableKey: 'packing-lists'
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/packing-lists/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/packing-lists"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({
-        title: "Success",
-        description: "Packing list deleted successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete packing list",
-        variant: "destructive",
-      });
-    },
+  const del = useEntityDelete({
+    endpoint: '/api/packing-lists',
+    queryKeys: ['/api/packing-lists'],
+    entityLabel: 'Packing List',
+    checkUsages: false,
+    getName: (row) => row.packingListNumber || row.title
   });
 
   const handleEdit = (packingList: PackingList) => {
@@ -180,18 +168,6 @@ export default function PackingLists() {
     tableState.toggleAllRows(allRowIds);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this packing list?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  const handleBulkDelete = (listIds: string[]) => {
-    if (confirm(`Are you sure you want to delete ${listIds.length} packing lists?`)) {
-      listIds.forEach(id => deleteMutation.mutate(id));
-      tableState.setSelectedRows([]);
-    }
-  };
 
   return (
     <div className="p-6">
@@ -224,6 +200,12 @@ export default function PackingLists() {
         setSelectedRows={tableState.setSelectedRows}
         onToggleRowSelection={tableState.toggleRowSelection}
         onToggleAllRows={handleToggleAllRows}
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, enhancedPackingLists),
+          itemCount: tableState.selectedRows.length
+        }}
         
         // Actions
         headerActions={[
@@ -248,7 +230,7 @@ export default function PackingLists() {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDelete(row.id),
+            onClick: () => del.handleDeleteRow(row),
             variant: 'destructive' as const
           }
         ]}
@@ -259,8 +241,8 @@ export default function PackingLists() {
         // Display options
         entityName="Packing List"
         entityNamePlural="Packing Lists"
-        searchPlaceholder="Search packing lists..."
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

@@ -1,12 +1,11 @@
 import React from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 import type { Invoice, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -113,25 +112,12 @@ export default function Invoices({}: InvoicesProps) {
     tableKey: 'invoices'
   });
 
-  const deleteInvoiceMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/invoices/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({
-        title: "Success",
-        description: "Invoice deleted successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete invoice",
-        variant: "destructive",
-      });
-    },
+  const del = useEntityDelete({
+    endpoint: '/api/invoices',
+    queryKeys: ['/api/invoices'],
+    entityLabel: 'Invoice',
+    checkUsages: false,
+    getName: (row) => row.invoiceNumber || row.title
   });
 
   const handleAddInvoice = React.useCallback(() => {
@@ -194,11 +180,6 @@ export default function Invoices({}: InvoicesProps) {
     }
   }, [toast]);
 
-  const handleDeleteInvoice = React.useCallback((invoice: Invoice) => {
-    if (window.confirm(`Are you sure you want to delete invoice ${invoice.invoiceNumber}?`)) {
-      deleteInvoiceMutation.mutate(invoice.id);
-    }
-  }, [deleteInvoiceMutation]);
 
   return (
     <div className="p-6">
@@ -255,11 +236,12 @@ export default function Invoices({}: InvoicesProps) {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDeleteInvoice(invoice),
+            onClick: () => del.handleDeleteRow(invoice),
             variant: 'destructive' as const
           }
-        ], [handleViewInvoice, handleEditInvoice, handleDeleteInvoice])}
+        ], [handleViewInvoice, handleEditInvoice, del.handleDeleteRow])}
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

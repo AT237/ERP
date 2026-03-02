@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type Supplier } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2 } from "lucide-react";
@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 // Import our reusable layouts
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 
 // Default column configuration for suppliers
 const defaultColumns: ColumnConfig[] = [
@@ -64,10 +65,18 @@ export default function SupplierTable() {
     defaultSort: { column: 'name', direction: 'asc' },
     tableKey: 'suppliers'
   });
+
+  const del = useEntityDelete({
+    endpoint: '/api/suppliers',
+    queryKeys: ['/api/suppliers'],
+    getName: (row) => row.name || row.supplierNumber,
+    entityLabel: 'Supplier',
+    checkUsages: true,
+    onSuccess: () => dataTableState.clearSelection(),
+  });
   
   // Dialog states (keeping some for non-form operations)
   const [showSupplierReport, setShowSupplierReport] = useState(false);
-  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [selectedSupplierForReport, setSelectedSupplierForReport] = useState<Supplier | null>(null);
 
   // Tab system handlers
@@ -103,39 +112,9 @@ export default function SupplierTable() {
     handleEdit(supplier);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this supplier?")) {
-      deleteSuppliersMutation.mutate([id]);
-    }
-  };
-
   // Data fetching
   const { data: suppliers = [], isLoading } = useQuery<Supplier[]>({
     queryKey: ['/api/suppliers'],
-  });
-
-  // Mutations
-
-  const deleteSuppliersMutation = useMutation({
-    mutationFn: async (supplierIds: string[]) => {
-      for (const supplierId of supplierIds) {
-        const response = await fetch(`/api/suppliers/${supplierId}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to delete supplier ${supplierId}`);
-        }
-      }
-    },
-    onSuccess: (_, supplierIds) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
-      dataTableState.setSelectedRows([]);
-      setShowDeleteConfirmDialog(false);
-      toast({
-        title: "Success",
-        description: `${supplierIds.length} ${supplierIds.length === 1 ? 'supplier' : 'suppliers'} deleted`,
-      });
-    },
   });
 
   const handleSupplierDoubleClick = (supplier: Supplier) => {
@@ -243,7 +222,7 @@ export default function SupplierTable() {
           key: 'delete',
           label: 'Delete', 
           icon: <Trash2 className="h-4 w-4" />,
-          onClick: () => handleDelete(row.id),
+          onClick: () => del.handleDeleteRow(row),
           className: 'text-red-600 hover:text-red-700'
         }
       ]}
@@ -346,9 +325,9 @@ export default function SupplierTable() {
       } : undefined}
       
       deleteConfirmDialog={{
-        isOpen: showDeleteConfirmDialog,
-        onOpenChange: setShowDeleteConfirmDialog,
-        onConfirm: () => deleteSuppliersMutation.mutate(dataTableState.selectedRows),
+        isOpen: del.isBulkDeleteOpen,
+        onOpenChange: del.setIsBulkDeleteOpen,
+        onConfirm: () => del.handleBulkDelete(dataTableState.selectedRows, suppliers),
         itemCount: dataTableState.selectedRows.length
       }}
       
@@ -367,6 +346,7 @@ export default function SupplierTable() {
       onExport={handleExport}
       onDuplicate={handleDuplicate}
     />
+    {del.renderDeleteDialogs()}
     </div>
   );
 }
