@@ -256,7 +256,7 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
       icon: <Database className="h-4 w-4" />,
       rows: buildFieldRows(config.fields)
     }];
-  }, [config, form.control]);
+  }, [config, form.control, dynamicOptionsMap]);
 
   const toolbar = useFormToolbar({
     entityType: `masterdata-${type}`,
