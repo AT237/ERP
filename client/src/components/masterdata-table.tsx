@@ -64,21 +64,35 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
       const response = await fetch(`/api/masterdata/${endpoint}/${id}`, {
         method: 'DELETE',
       });
-      if (!response.ok) throw new Error('Failed to delete');
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw Object.assign(new Error(body.message || 'Failed to delete'), { status: response.status, body });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/masterdata/${endpoint}`] });
+      setDeleteTarget(null);
       toast({
-        title: "Success",
+        title: "Deleted",
         description: `${singularTitle} deleted successfully`,
       });
     },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: `Failed to delete ${singularTitle.toLowerCase()}`,
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      if (error.status === 409) {
+        const usages: Array<{ location: string; count: number; examples: string[] }> = error.body?.usages || [];
+        const usageText = usages.map(u => `${u.location} (${u.count})`).join(", ");
+        toast({
+          title: "Cannot delete — in use",
+          description: usageText ? `Used in: ${usageText}` : error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: `Failed to delete ${singularTitle.toLowerCase()}`,
+          variant: "destructive",
+        });
+      }
     }
   });
 
@@ -111,19 +125,40 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
   const handleBulkDelete = async () => {
     const ids = [...tableState.selectedRows];
     let successCount = 0;
+    const blocked: string[] = [];
+
     for (const id of ids) {
       try {
         const response = await fetch(`/api/masterdata/${endpoint}/${id}`, { method: 'DELETE' });
-        if (response.ok) successCount++;
+        if (response.ok) {
+          successCount++;
+        } else if (response.status === 409) {
+          const body = await response.json().catch(() => ({}));
+          const usages: Array<{ location: string; count: number }> = body.usages || [];
+          const usageText = usages.map(u => u.location).join(", ");
+          const item = items.find((i: any) => i.id === id);
+          const name = item?.name || item?.code || id;
+          blocked.push(`${name}${usageText ? ` (in use: ${usageText})` : ""}`);
+        }
       } catch {}
     }
+
     queryClient.invalidateQueries({ queryKey: [`/api/masterdata/${endpoint}`] });
     tableState.setSelectedRows([]);
-    toast({
-      title: "Deleted",
-      description: `${successCount} ${successCount === 1 ? singularTitle.toLowerCase() : title.toLowerCase()} deleted`,
-    });
     setIsBulkDeleteOpen(false);
+
+    if (blocked.length > 0) {
+      toast({
+        title: blocked.length === ids.length ? "Nothing deleted — all in use" : `${successCount} deleted, ${blocked.length} blocked`,
+        description: `Cannot delete: ${blocked.slice(0, 3).join("; ")}${blocked.length > 3 ? `… and ${blocked.length - 3} more` : ""}`,
+        variant: "destructive",
+      });
+    } else if (successCount > 0) {
+      toast({
+        title: "Deleted",
+        description: `${successCount} ${successCount === 1 ? singularTitle.toLowerCase() : title.toLowerCase()} deleted`,
+      });
+    }
   };
 
   const handleDuplicate = async (row: any) => {

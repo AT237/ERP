@@ -336,7 +336,11 @@ export function useFormToolbar({
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       if (!config) throw new Error("No config for entity type");
-      await apiRequest("DELETE", `${config.apiPath}/${id}`);
+      const response = await fetch(`${config.apiPath}/${id}`, { method: "DELETE" });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw Object.assign(new Error(body.message || "Failed to delete"), { status: response.status, body });
+      }
     },
     onSuccess: () => {
       if (config) {
@@ -352,12 +356,22 @@ export function useFormToolbar({
       });
       if (onClose) onClose();
     },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: `Failed to delete ${(config?.label || "item").toLowerCase()}`,
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      if (error.status === 409) {
+        const usages: Array<{ location: string; count: number }> = error.body?.usages || [];
+        const usageText = usages.map(u => `${u.location} (${u.count})`).join(", ");
+        toast({
+          title: "Cannot delete — in use",
+          description: usageText ? `Used in: ${usageText}` : error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: `Failed to delete ${(config?.label || "item").toLowerCase()}`,
+          variant: "destructive",
+        });
+      }
     },
   });
 

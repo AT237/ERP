@@ -2118,6 +2118,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/masterdata/units-of-measure/:id", async (req, res) => {
     try {
+      const [uom] = await db.select().from(unitsOfMeasure).where(eq(unitsOfMeasure.id, req.params.id));
+      if (!uom) return res.status(404).json({ message: "Unit of measure not found" });
+
+      const code = uom.code;
+      const usages: Array<{ location: string; count: number; examples: string[] }> = [];
+
+      const invItems = await db.select({ name: inventoryItems.name }).from(inventoryItems).where(eq(inventoryItems.unit, code));
+      if (invItems.length > 0) {
+        usages.push({ location: "Inventory Items", count: invItems.length, examples: invItems.slice(0, 3).map(i => i.name) });
+      }
+      const invLineItems = await db.select({ description: invoiceItems.description }).from(invoiceItems).where(eq(invoiceItems.unit, code));
+      if (invLineItems.length > 0) {
+        usages.push({ location: "Invoice Line Items", count: invLineItems.length, examples: invLineItems.slice(0, 3).map(i => i.description) });
+      }
+      const rateItems = await db.select({ name: ratesAndCharges.name, code: ratesAndCharges.code }).from(ratesAndCharges).where(eq(ratesAndCharges.unit, code));
+      if (rateItems.length > 0) {
+        usages.push({ location: "Rates & Charges", count: rateItems.length, examples: rateItems.slice(0, 3).map(i => `${i.code} – ${i.name}`) });
+      }
+
+      if (usages.length > 0) {
+        return res.status(409).json({
+          message: `Cannot delete "${uom.name}": it is used in ${usages.map(u => u.location).join(", ")}`,
+          usages,
+        });
+      }
+
       await storage.deleteUnitOfMeasure(req.params.id);
       res.status(204).send();
     } catch (error) {
