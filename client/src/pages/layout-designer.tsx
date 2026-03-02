@@ -3381,21 +3381,23 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
     >
       {/* Line Block - visual representation */}
       {block.type === "Line" ? (
-        <div 
-          className="w-full h-full flex items-center justify-center pointer-events-none"
-          style={{
-            flexDirection: block.config?.orientation === 'vertical' ? 'row' : 'column',
-          }}
-        >
-          <div 
-            style={{
-              width: block.config?.orientation === 'vertical' ? `${block.config?.strokeWidth || 1}px` : '100%',
-              height: block.config?.orientation === 'vertical' ? '100%' : `${block.config?.strokeWidth || 1}px`,
-              backgroundColor: block.config?.strokeColor || '#000000',
-              borderStyle: block.config?.strokeStyle === 'dashed' ? 'dashed' : block.config?.strokeStyle === 'dotted' ? 'dotted' : 'solid',
-            }}
-          />
-        </div>
+        block.config?.orientation === 'vertical' ? (
+          <div className="w-full h-full flex justify-center items-center pointer-events-none">
+            <div style={{
+              width: 0,
+              height: '100%',
+              borderLeft: `${block.config?.strokeWidth || 1}px ${block.config?.strokeStyle === 'dashed' ? 'dashed' : block.config?.strokeStyle === 'dotted' ? 'dotted' : 'solid'} ${block.config?.strokeColor || '#000000'}`,
+            }} />
+          </div>
+        ) : (
+          <div className="w-full h-full flex items-center pointer-events-none">
+            <div style={{
+              width: '100%',
+              height: 0,
+              borderTop: `${block.config?.strokeWidth || 1}px ${block.config?.strokeStyle === 'dashed' ? 'dashed' : block.config?.strokeStyle === 'dotted' ? 'dotted' : 'solid'} ${block.config?.strokeColor || '#000000'}`,
+            }} />
+          </div>
+        )
       ) : block.type === "Rectangle" ? (
         /* Rectangle Block - visual representation */
         <div 

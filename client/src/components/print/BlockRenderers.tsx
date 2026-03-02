@@ -630,26 +630,29 @@ export function LineBlockRenderer({ block }: BlockRendererProps) {
   
   if (orientation === 'vertical') {
     return (
-      <div 
-        style={{
-          width: `${strokeWidth}px`,
-          height: '100%',
-          backgroundColor: strokeColor,
-          borderStyle: borderStyle,
-        }}
-      />
+      <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center' }}>
+        <div
+          style={{
+            width: 0,
+            height: '100%',
+            borderLeft: `${strokeWidth}px ${borderStyle} ${strokeColor}`,
+          }}
+        />
+      </div>
     );
   }
   
+  // Horizontal line: use border-top for crisp sub-pixel rendering at any Y position
   return (
-    <div 
-      style={{
-        width: '100%',
-        height: `${strokeWidth}px`,
-        backgroundColor: strokeColor,
-        borderStyle: borderStyle,
-      }}
-    />
+    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center' }}>
+      <div
+        style={{
+          width: '100%',
+          height: 0,
+          borderTop: `${strokeWidth}px ${borderStyle} ${strokeColor}`,
+        }}
+      />
+    </div>
   );
 }
 
