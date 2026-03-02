@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { EntitySelect } from "@/components/ui/entity-select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
@@ -149,17 +150,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: unitsOfMeasure = [] } = useQuery<{ id: string; code: string; name: string; isActive: boolean }[]>({
-    queryKey: ["/api/masterdata/units-of-measure"],
-    staleTime: 10 * 60 * 1000,
-  });
 
-  const unitOptions = useMemo(() =>
-    unitsOfMeasure
-      .filter(u => u.isActive !== false)
-      .map(u => ({ value: u.code, label: `${u.code} – ${u.name}` })),
-    [unitsOfMeasure]
-  );
 
   const customerRateOptions = useMemo(() => {
     const customerRateMap = new Map<string, CustomerRate>();
@@ -578,14 +569,22 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     {
       key: 'unit',
       label: 'Unit',
-      type: 'select',
-      options: unitOptions,
-      setValue: (value: string) => {
-        form.setValue("unit" as any, value);
-        setHasUnsavedChanges(true);
-      },
-      watch: () => form.watch("unit" as any),
-      testId: 'select-unit'
+      type: 'custom',
+      customComponent: (
+        <EntitySelect
+          endpoint="units-of-measure"
+          formType="masterdata-units-of-measure"
+          labelField="name"
+          secondaryField="code"
+          value={form.watch("unit" as any) || ""}
+          onValueChange={(val) => {
+            form.setValue("unit" as any, val);
+            setHasUnsavedChanges(true);
+          }}
+          placeholder="Select unit..."
+          testId="select-unit"
+        />
+      ),
     },
     {
       key: 'unitPrice',

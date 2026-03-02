@@ -11,6 +11,7 @@ import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/rea
 import { LayoutForm2, type FormSection2, type FormField2, createFieldRow } from '@/components/layouts/LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { getMasterDataConfig, type MasterDataField, type MasterDataSection } from "@/config/masterdata-config";
+import { EntitySelect } from "@/components/ui/entity-select";
 
 interface MasterDataFormLayoutProps {
   type: string;
@@ -159,6 +160,20 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
 
     switch (field.type) {
       case 'select':
+        if (field.fetchOptionsFrom) {
+          return (
+            <EntitySelect
+              endpoint={field.fetchOptionsFrom}
+              formType={`masterdata-${field.fetchOptionsFrom}`}
+              labelField={field.fetchOptionsMap?.label || "name"}
+              secondaryField={field.fetchOptionsMap?.value !== field.fetchOptionsMap?.label ? (field.fetchOptionsMap?.value || "code") : "code"}
+              value={String(formField.value ?? "")}
+              onValueChange={(val) => formField.onChange(val)}
+              placeholder={`Select ${field.label.toLowerCase()}...`}
+              testId={`select-${field.name}`}
+            />
+          );
+        }
         return (
           <Select
             onValueChange={(val) => {
