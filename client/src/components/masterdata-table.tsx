@@ -30,6 +30,7 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   
   const config = getMasterDataConfig(endpoint);
   const singularTitle = config?.singularTitle || title.slice(0, -1);
@@ -107,6 +108,24 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
     setDeleteTarget({ id: row.id, name });
   };
 
+  const handleBulkDelete = async () => {
+    const ids = [...tableState.selectedRows];
+    let successCount = 0;
+    for (const id of ids) {
+      try {
+        const response = await fetch(`/api/masterdata/${endpoint}/${id}`, { method: 'DELETE' });
+        if (response.ok) successCount++;
+      } catch {}
+    }
+    queryClient.invalidateQueries({ queryKey: [`/api/masterdata/${endpoint}`] });
+    tableState.setSelectedRows([]);
+    toast({
+      title: "Deleted",
+      description: `${successCount} ${successCount === 1 ? singularTitle.toLowerCase() : title.toLowerCase()} deleted`,
+    });
+    setIsBulkDeleteOpen(false);
+  };
+
   const handleDuplicate = async (row: any) => {
     try {
       const res = await fetch(`/api/masterdata/${endpoint}/${row.id}`);
@@ -179,6 +198,12 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
           }
         ]}
         onDuplicate={handleDuplicate}
+        deleteConfirmDialog={{
+          isOpen: isBulkDeleteOpen,
+          onOpenChange: setIsBulkDeleteOpen,
+          onConfirm: handleBulkDelete,
+          itemCount: tableState.selectedRows.length,
+        }}
         rowActions={(row: any) => [
           {
             key: 'edit',
