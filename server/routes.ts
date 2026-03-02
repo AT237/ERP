@@ -38,7 +38,8 @@ import {
   insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
-  insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema, insertEmployeeSchema
+  insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema, insertEmployeeSchema,
+  unitsOfMeasure, inventoryItems, invoiceItems, ratesAndCharges
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { eq, sql } from 'drizzle-orm';
@@ -2087,6 +2088,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating unit of measure:", error);
       res.status(400).json({ message: "Failed to update unit of measure" });
+    }
+  });
+
+  app.get("/api/masterdata/units-of-measure/:id/check-usages", async (req, res) => {
+    try {
+      const [uom] = await db.select().from(unitsOfMeasure).where(eq(unitsOfMeasure.id, req.params.id));
+      if (!uom) return res.status(404).json({ message: "Unit of measure not found" });
+      const code = uom.code;
+      const usages: Array<{ location: string; count: number; examples: string[] }> = [];
+      const invItems = await db.select({ name: inventoryItems.name }).from(inventoryItems).where(eq(inventoryItems.unit, code));
+      if (invItems.length > 0) {
+        usages.push({ location: "Inventory Items", count: invItems.length, examples: invItems.slice(0, 3).map(i => i.name) });
+      }
+      const invLineItems = await db.select({ description: invoiceItems.description }).from(invoiceItems).where(eq(invoiceItems.unit, code));
+      if (invLineItems.length > 0) {
+        usages.push({ location: "Invoice Line Items", count: invLineItems.length, examples: invLineItems.slice(0, 3).map(i => i.description) });
+      }
+      const rateItems = await db.select({ name: ratesAndCharges.name, code: ratesAndCharges.code }).from(ratesAndCharges).where(eq(ratesAndCharges.unit, code));
+      if (rateItems.length > 0) {
+        usages.push({ location: "Rates & Charges", count: rateItems.length, examples: rateItems.slice(0, 3).map(i => `${i.code} – ${i.name}`) });
+      }
+      res.json({ canDelete: usages.length === 0, usages });
+    } catch (error) {
+      console.error("Error checking unit of measure usages:", error);
+      res.status(500).json({ message: "Failed to check usages" });
     }
   });
 

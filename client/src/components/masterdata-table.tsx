@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Plus, Edit, Trash2, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -5,6 +6,7 @@ import { z } from "zod";
 import { getMasterDataConfig } from "@/config/masterdata-config";
 import { DataTableLayout, type ColumnConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 
 interface MasterDataTableProps {
   title: string;
@@ -27,6 +29,7 @@ interface MasterDataTableProps {
 export default function MasterDataTable({ title, endpoint, schema, fields, columns }: MasterDataTableProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   
   const config = getMasterDataConfig(endpoint);
   const singularTitle = config?.singularTitle || title.slice(0, -1);
@@ -99,10 +102,9 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
     }));
   };
 
-  const handleDeleteItem = (id: string) => {
-    if (confirm(`Are you sure you want to delete this ${singularTitle.toLowerCase()}?`)) {
-      deleteMutation.mutate(id);
-    }
+  const handleDeleteItem = (row: any) => {
+    const name = row.name || row.code || row.title || row.description || singularTitle;
+    setDeleteTarget({ id: row.id, name });
   };
 
   const handleDuplicate = async (row: any) => {
@@ -189,11 +191,22 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDeleteItem(row.id),
+            onClick: () => handleDeleteItem(row),
             variant: 'destructive' as const
           }
         ]}
       />
+      {deleteTarget && (
+        <SafeDeleteDialog
+          open={!!deleteTarget}
+          onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+          entityName={deleteTarget.name}
+          entityId={deleteTarget.id}
+          checkUsagesUrl={`/api/masterdata/${endpoint}/${deleteTarget.id}/check-usages`}
+          onConfirm={() => deleteMutation.mutate(deleteTarget.id)}
+          isPending={deleteMutation.isPending}
+        />
+      )}
     </div>
   );
 }
