@@ -137,7 +137,6 @@ export default function ProspectsTable() {
     getName: (row) => row.name || row.companyName,
     entityLabel: 'Prospect',
     checkUsages: false,
-    onSuccess: () => dataTableState.clearSelection(),
   });
 
   // Tab system handlers
@@ -269,7 +268,10 @@ export default function ProspectsTable() {
               key: 'delete-selected',
               label: `Delete Selected (${dataTableState.selectedRows.length})`,
               icon: <Trash2 className="h-4 w-4" />,
-              onClick: () => del.handleBulkDelete(dataTableState.selectedRows, prospects),
+              onClick: () => {
+                del.handleBulkDelete(dataTableState.selectedRows, prospects);
+                dataTableState.clearSelection();
+              },
               variant: "destructive" as const
             }
           ] : [])

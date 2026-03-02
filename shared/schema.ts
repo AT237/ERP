@@ -286,6 +286,10 @@ export const invoices = pgTable("invoices", {
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   paidAmount: decimal("paid_amount", { precision: 10, scale: 2 }).default("0"),
   notes: text("notes"),
+  printSortOrder: text("print_sort_order").default("position"),
+  printLanguageCode: text("print_language_code").default("nl"),
+  printProjectNo: boolean("print_project_no").default(true),
+  printPaymentConditions: boolean("print_payment_conditions").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

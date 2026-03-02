@@ -221,6 +221,12 @@ export default function Quotations({}: QuotationsProps) {
           const allIds = quotations.map(quotation => quotation.id);
           tableState.toggleAllRows(allIds);
         }, [quotations, tableState.toggleAllRows])}
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, quotations),
+          itemCount: tableState.selectedRows.length
+        }}
         onRowDoubleClick={handleViewQuotation}
         getRowId={(quotation: Quotation) => quotation.id}
         entityName="Quotation"

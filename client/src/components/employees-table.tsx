@@ -78,7 +78,6 @@ export default function EmployeesTable() {
     getName: (row) => row.name || row.firstName,
     entityLabel: 'Employee',
     checkUsages: false,
-    onSuccess: () => dataTableState.clearSelection(),
   });
 
   const handleNewEmployee = () => {
@@ -195,7 +194,10 @@ export default function EmployeesTable() {
               key: 'delete-selected',
               label: `Delete Selected (${dataTableState.selectedRows.length})`,
               icon: <Trash2 className="h-4 w-4" />,
-              onClick: () => del.handleBulkDelete(dataTableState.selectedRows, employeesList),
+              onClick: () => {
+                del.handleBulkDelete(dataTableState.selectedRows, employeesList);
+                dataTableState.clearSelection();
+              },
               variant: "destructive" as const
             }
           ] : [])

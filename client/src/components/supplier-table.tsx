@@ -72,7 +72,6 @@ export default function SupplierTable() {
     getName: (row) => row.name || row.supplierNumber,
     entityLabel: 'Supplier',
     checkUsages: true,
-    onSuccess: () => dataTableState.clearSelection(),
   });
   
   // Dialog states (keeping some for non-form operations)
@@ -327,7 +326,10 @@ export default function SupplierTable() {
       deleteConfirmDialog={{
         isOpen: del.isBulkDeleteOpen,
         onOpenChange: del.setIsBulkDeleteOpen,
-        onConfirm: () => del.handleBulkDelete(dataTableState.selectedRows, suppliers),
+        onConfirm: () => {
+          del.handleBulkDelete(dataTableState.selectedRows, suppliers);
+          dataTableState.clearSelection();
+        },
         itemCount: dataTableState.selectedRows.length
       }}
       

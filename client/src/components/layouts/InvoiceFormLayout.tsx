@@ -595,8 +595,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           type: "custom",
           customComponent: (
             <Select
-              value={invoiceForm.watch("printSortOrder" as any) || "position"}
-              onValueChange={(value) => invoiceForm.setValue("printSortOrder" as any, value)}
+              value={invoiceForm.watch("printSortOrder") || "position"}
+              onValueChange={(value) => invoiceForm.setValue("printSortOrder", value)}
             >
               <SelectTrigger className="w-full" data-testid="select-print-sort-order">
                 <SelectValue placeholder="Selecteer sortering..." />

@@ -251,6 +251,12 @@ export default function TextSnippets() {
           const allIds = filteredData.map(s => s.id);
           tableState.toggleAllRows(allIds);
         }}
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, filteredData),
+          itemCount: tableState.selectedRows.length
+        }}
         onRowDoubleClick={handleRowDoubleClick}
         getRowId={(row: TextSnippet) => row.id}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}

@@ -86,7 +86,6 @@ export default function ContactPersonsTable() {
     getName: (row) => row.name || row.firstName,
     entityLabel: 'Contact',
     checkUsages: false,
-    onSuccess: () => dataTableState.clearSelection(),
   });
 
   // Tab system handlers
@@ -218,7 +217,10 @@ export default function ContactPersonsTable() {
               key: 'delete-selected',
               label: `Delete Selected (${dataTableState.selectedRows.length})`,
               icon: <Trash2 className="h-4 w-4" />,
-              onClick: () => del.handleBulkDelete(dataTableState.selectedRows, contacts),
+              onClick: () => {
+                del.handleBulkDelete(dataTableState.selectedRows, contacts);
+                dataTableState.clearSelection();
+              },
               variant: "destructive" as const
             }
           ] : [])

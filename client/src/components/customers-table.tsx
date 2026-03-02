@@ -138,7 +138,6 @@ export default function CustomersTable() {
     getName: (row) => row.name || row.customerNumber,
     entityLabel: 'Customer',
     checkUsages: true,
-    onSuccess: () => tableState.clearSelection(),
   });
 
   // Data fetching - use extended endpoint for related data
@@ -259,7 +258,10 @@ export default function CustomersTable() {
         deleteConfirmDialog={{
           isOpen: del.isBulkDeleteOpen,
           onOpenChange: del.setIsBulkDeleteOpen,
-          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, customers),
+          onConfirm: () => {
+            del.handleBulkDelete(tableState.selectedRows, customers);
+            tableState.clearSelection();
+          },
           itemCount: tableState.selectedRows.length
         }}
         // Header actions

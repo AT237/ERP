@@ -122,6 +122,12 @@ export default function Inventory() {
         const allIds = items.map(item => item.id);
         tableState.toggleAllRows(allIds);
       }}
+      deleteConfirmDialog={{
+        isOpen: del.isBulkDeleteOpen,
+        onOpenChange: del.setIsBulkDeleteOpen,
+        onConfirm: () => del.handleBulkDelete(tableState.selectedRows, items),
+        itemCount: tableState.selectedRows.length
+      }}
       onRowDoubleClick={handleRowDoubleClick}
       getRowId={(row: InventoryItem) => row.id}
       applyFiltersAndSearch={tableState.applyFiltersAndSearch}

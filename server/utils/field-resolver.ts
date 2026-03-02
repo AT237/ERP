@@ -2,6 +2,31 @@ import { db } from "../db";
 import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays } from "../../shared/schema";
 import { eq, asc } from "drizzle-orm";
 
+function applyPrintSortOrder<T extends { position?: number | null; description?: string; unitPrice?: string; lineTotal?: string }>(
+  items: T[],
+  sortOrder: string | null | undefined
+): T[] {
+  const order = sortOrder || "position";
+  return [...items].sort((a, b) => {
+    switch (order) {
+      case "position_high_low":
+        return (b.position ?? 0) - (a.position ?? 0);
+      case "price_high_low":
+        return parseFloat(b.unitPrice || "0") - parseFloat(a.unitPrice || "0");
+      case "price_low_high":
+        return parseFloat(a.unitPrice || "0") - parseFloat(b.unitPrice || "0");
+      case "alpha_az":
+        return (a.description || "").localeCompare(b.description || "");
+      case "alpha_za":
+        return (b.description || "").localeCompare(a.description || "");
+      case "position":
+      case "position_low_high":
+      default:
+        return (a.position ?? 0) - (b.position ?? 0);
+    }
+  });
+}
+
 /**
  * Complete quotation data with all related entities for field binding
  */
@@ -158,10 +183,11 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
   }
 
   // Load quotation items
-  const items = await db.query.quotationItems.findMany({
+  const rawItems = await db.query.quotationItems.findMany({
     where: eq(quotationItems.quotationId, quotationId),
     orderBy: [asc(quotationItems.position)],
   });
+  const items = applyPrintSortOrder(rawItems, quotation.printSortOrder);
 
   const itemsData = items.map((item, index) => ({
     positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'), // e.g., "010", "020"
@@ -358,10 +384,11 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
   }
 
   // Load invoice items
-  const items = await db.query.invoiceItems.findMany({
+  const rawItems = await db.query.invoiceItems.findMany({
     where: eq(invoiceItems.invoiceId, invoiceId),
     orderBy: [asc(invoiceItems.position)],
   });
+  const items = applyPrintSortOrder(rawItems, invoice.printSortOrder);
 
   const itemsData = items.map((item, index) => ({
     positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'),

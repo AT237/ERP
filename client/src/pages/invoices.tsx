@@ -204,6 +204,12 @@ export default function Invoices({}: InvoicesProps) {
           const allIds = enrichedInvoices.map(invoice => invoice.id);
           tableState.toggleAllRows(allIds);
         }, [enrichedInvoices, tableState.toggleAllRows])}
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, enrichedInvoices),
+          itemCount: tableState.selectedRows.length
+        }}
         onRowDoubleClick={handleViewInvoice}
         getRowId={(invoice: Invoice) => invoice.id}
         entityName="Invoice"

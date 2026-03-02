@@ -25,7 +25,7 @@ interface SafeDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entityName: string;
-  entityId: string;
+  entityId: string | number;
   checkUsagesUrl?: string;
   onConfirm: () => void;
   isPending?: boolean;
@@ -45,7 +45,7 @@ export function SafeDeleteDialog({
   const [usages, setUsages] = useState<UsageLocation[]>([]);
 
   useEffect(() => {
-    if (!open || !entityId) return;
+    if (!open || entityId === undefined || entityId === null) return;
     if (!checkUsagesUrl) {
       setCanDelete(true);
       setIsChecking(false);
@@ -56,6 +56,7 @@ export function SafeDeleteDialog({
     setUsages([]);
     fetch(checkUsagesUrl)
       .then(r => {
+        if (r.status === 404) return { canDelete: true, usages: [] };
         if (!r.ok) return { canDelete: true, usages: [] };
         return r.json();
       })
