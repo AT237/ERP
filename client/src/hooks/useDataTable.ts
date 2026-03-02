@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { 
   ColumnFilter, 
   ColumnConfig, 
@@ -9,45 +9,73 @@ import {
 export interface UseDataTableProps {
   defaultColumns: ColumnConfig[];
   defaultSort?: SortConfig;
-  tableKey?: string; // Unique identifier for localStorage
+  tableKey?: string;
+}
+
+function loadColumnsFromStorage(tableKey: string, defaultColumns: ColumnConfig[]): ColumnConfig[] {
+  try {
+    const stored = localStorage.getItem(`table-columns-${tableKey}`);
+    if (!stored) return defaultColumns;
+    const parsed = JSON.parse(stored);
+    // Support both plain array format and legacy { columns: [...] } format
+    const savedCols: any[] = Array.isArray(parsed) ? parsed : (parsed?.columns ?? []);
+    if (!savedCols.length) return defaultColumns;
+    // Merge: keep renderCell from defaultColumns, restore width/visible from storage
+    const merged = defaultColumns.map(defaultCol => {
+      const saved = savedCols.find((c: any) => c.key === defaultCol.key);
+      if (!saved) return defaultCol;
+      return {
+        ...defaultCol,
+        width: saved.width ?? defaultCol.width,
+        visible: saved.visible ?? defaultCol.visible,
+      };
+    });
+    // Restore column order from saved state
+    const ordered = savedCols
+      .map((s: any) => merged.find(col => col.key === s.key))
+      .filter(Boolean) as ColumnConfig[];
+    const newCols = merged.filter(col => !savedCols.some((s: any) => s.key === col.key));
+    return [...ordered, ...newCols];
+  } catch {
+    return defaultColumns;
+  }
+}
+
+function saveColumnsToStorage(tableKey: string, columns: ColumnConfig[]) {
+  try {
+    const toSave = columns.map((col, i) => ({
+      key: col.key,
+      width: col.width,
+      visible: col.visible,
+      order: i,
+    }));
+    localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(toSave));
+  } catch {}
 }
 
 export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataTableProps) {
-  // Load columns from localStorage if available - memoized to prevent repeated parsing
-  const getStoredColumns = useCallback((): ColumnConfig[] => {
+  // Initialize columns synchronously from localStorage (preserves renderCell from defaultColumns)
+  const [columns, setColumnsState] = useState<ColumnConfig[]>(() => {
     if (!tableKey) return defaultColumns;
-    try {
-      const stored = localStorage.getItem(`table-columns-${tableKey}`);
-      if (stored) {
-        const parsedColumns = JSON.parse(stored);
-        // Merge stored columns with default to ensure new fields are included
-        return defaultColumns.map(defaultCol => {
-          const storedCol = parsedColumns.find((col: ColumnConfig) => col.key === defaultCol.key);
-          return storedCol ? { ...defaultCol, ...storedCol } : defaultCol;
-        });
-      }
-    } catch (error) {
-      console.warn('Failed to load table columns from localStorage:', error);
-    }
-    return defaultColumns;
-  }, [defaultColumns, tableKey]);
+    return loadColumnsFromStorage(tableKey, defaultColumns);
+  });
 
-  // Column management - always start with defaultColumns to preserve renderCell functions
-  const [columns, setColumnsState] = useState<ColumnConfig[]>(defaultColumns);
-  
-  // DataTableLayout handles localStorage/API persistence via saveColumnSettings
+  // setColumns saves to localStorage automatically
   const setColumns = useCallback((newColumns: ColumnConfig[] | ((prev: ColumnConfig[]) => ColumnConfig[])) => {
     setColumnsState(prevColumns => {
-      const updatedColumns = typeof newColumns === 'function' ? newColumns(prevColumns) : newColumns;
-      return updatedColumns;
+      const updated = typeof newColumns === 'function' ? newColumns(prevColumns) : newColumns;
+      if (tableKey) {
+        saveColumnsToStorage(tableKey, updated);
+      }
+      return updated;
     });
-  }, []);
-  
-  // Search and filtering - stable state
+  }, [tableKey]);
+
+  // Search and filtering
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<ColumnFilter[]>([]);
-  
-  // Sorting - persist to localStorage
+
+  // Sorting — persisted to localStorage
   const [sortConfig, setSortConfigState] = useState<SortConfig | null>(() => {
     if (!tableKey) return defaultSort || null;
     try {
@@ -72,23 +100,18 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
       return newValue;
     });
   }, [tableKey]);
-  
-  // Row selection - stable state
+
+  // Row selection
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
-  // Memoized helper functions to prevent re-renders
   const toggleColumnVisibility = useCallback((columnKey: string) => {
-    setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => 
+    setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) =>
       col.key === columnKey ? { ...col, visible: !col.visible } : col
     ));
   }, [setColumns]);
 
   const addFilter = useCallback((columnKey: string) => {
-    const newFilter: ColumnFilter = {
-      column: columnKey,
-      type: 'contains',
-      value: ''
-    };
+    const newFilter: ColumnFilter = { column: columnKey, type: 'contains', value: '' };
     setFilters(prev => [...prev, newFilter]);
   }, []);
 
@@ -103,36 +126,28 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
   const handleSort = useCallback((column: string) => {
     setSortConfig(prev => {
       if (prev?.column === column) {
-        return prev.direction === 'asc' 
-          ? { column, direction: 'desc' }
-          : null;
+        return prev.direction === 'asc' ? { column, direction: 'desc' } : null;
       }
       return { column, direction: 'asc' };
     });
   }, [setSortConfig]);
 
   const toggleRowSelection = useCallback((id: string) => {
-    setSelectedRows(prev => 
-      prev.includes(id) 
-        ? prev.filter(rowId => rowId !== id)
-        : [...prev, id]
+    setSelectedRows(prev =>
+      prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
     );
   }, []);
 
   const toggleAllRows = useCallback((allIds: string[]) => {
-    setSelectedRows(prev => 
-      prev.length === allIds.length ? [] : allIds
-    );
+    setSelectedRows(prev => prev.length === allIds.length ? [] : allIds);
   }, []);
 
   const clearSelection = useCallback(() => {
     setSelectedRows([]);
   }, []);
 
-  // Memoized filter/search functions to prevent unnecessary calculations
   const applyFiltersAndSearch = useCallback(<T extends Record<string, any>>(data: T[]): T[] => {
     return data.filter(item => {
-      // Apply search term
       if (searchTerm) {
         const searchLower = (searchTerm ?? '').toString().toLowerCase();
         const searchMatch = Object.values(item).some(value => {
@@ -141,32 +156,20 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
         });
         if (!searchMatch) return false;
       }
-
-      // Apply column filters
       return filters.every(filter => {
         const value = item[filter.column];
         const filterValue = (filter.value ?? '').toString().toLowerCase();
         const itemValue = (value ?? '').toString().toLowerCase();
-
         switch (filter.type) {
-          case 'contains':
-            return itemValue.includes(filterValue);
-          case 'not_contains':
-            return !itemValue.includes(filterValue);
-          case 'equals':
-            return itemValue === filterValue;
-          case 'not_equals':
-            return itemValue !== filterValue;
-          case 'starts_with':
-            return itemValue.startsWith(filterValue);
-          case 'ends_with':
-            return itemValue.endsWith(filterValue);
-          case 'greater_than':
-            return parseFloat(itemValue) > parseFloat(filterValue);
-          case 'less_than':
-            return parseFloat(itemValue) < parseFloat(filterValue);
-          default:
-            return true;
+          case 'contains': return itemValue.includes(filterValue);
+          case 'not_contains': return !itemValue.includes(filterValue);
+          case 'equals': return itemValue === filterValue;
+          case 'not_equals': return itemValue !== filterValue;
+          case 'starts_with': return itemValue.startsWith(filterValue);
+          case 'ends_with': return itemValue.endsWith(filterValue);
+          case 'greater_than': return parseFloat(itemValue) > parseFloat(filterValue);
+          case 'less_than': return parseFloat(itemValue) < parseFloat(filterValue);
+          default: return true;
         }
       });
     });
@@ -174,50 +177,37 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
 
   const applySorting = useCallback(<T extends Record<string, any>>(data: T[]): T[] => {
     if (!sortConfig) return data;
-
     return [...data].sort((a, b) => {
       const aValue = a[sortConfig.column];
       const bValue = b[sortConfig.column];
-
-      // Handle null/undefined values
       if (aValue === null || aValue === undefined) return 1;
       if (bValue === null || bValue === undefined) return -1;
-
-      // Convert to strings for comparison
       const aStr = String(aValue).toLowerCase();
       const bStr = String(bValue).toLowerCase();
-
       let comparison = 0;
       if (aStr < bStr) comparison = -1;
       if (aStr > bStr) comparison = 1;
-
       return sortConfig.direction === 'desc' ? comparison * -1 : comparison;
     });
   }, [sortConfig]);
 
-  // Memoized visible columns to prevent re-calculations
-  const visibleColumns = useMemo(() => 
-    columns.filter(col => col.visible), 
+  const visibleColumns = useMemo(() =>
+    columns.filter(col => col.visible),
     [columns]
   );
 
   return {
-    // State
     columns,
     searchTerm,
     filters,
     sortConfig,
     selectedRows,
     visibleColumns,
-    
-    // Setters
     setColumns,
     setSearchTerm,
     setFilters,
     setSortConfig,
     setSelectedRows,
-    
-    // Actions
     toggleColumnVisibility,
     addFilter,
     updateFilter,
@@ -226,8 +216,6 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataT
     toggleRowSelection,
     toggleAllRows,
     clearSelection,
-    
-    // Processing functions
     applyFiltersAndSearch,
     applySorting,
   };
