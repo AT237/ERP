@@ -644,15 +644,16 @@ export function VisualDesignerView({ layout }: { layout: any }) {
 
       return sections;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: 'Opgeslagen!',
         description: `Layout "${layout.name}" is succesvol opgeslagen`,
       });
-      // Invalidate both layouts and sections to refetch from database
+      // Invalidate layouts list
       queryClient.invalidateQueries({ queryKey: ['/api/layouts'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/layout-sections?layoutId=${layout.id}`] });
-      // Reset sections state so useEffect reloads from database
+      // Wait for sections refetch to complete before resetting local state
+      // so useEffect reloads with fresh IDs from the database
+      await queryClient.invalidateQueries({ queryKey: [`/api/layout-sections?layoutId=${layout.id}`] });
       setSections([]);
       setSelectedSection(null);
       setSelectedBlock(null);
@@ -2717,6 +2718,8 @@ export function PreviewView({ layout }: { layout: any }) {
   const { data: sections = [] } = useQuery<any[]>({
     queryKey: [`/api/layout-sections?layoutId=${layout?.id}`],
     enabled: !!layout?.id,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   if (!layout) {
