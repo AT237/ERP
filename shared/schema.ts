@@ -237,6 +237,7 @@ export const quotationItems = pgTable("quotation_items", {
   itemId: varchar("item_id").references(() => inventoryItems.id), // Nullable for text lines
   description: text("description").notNull(),
   quantity: integer("quantity").default(0), // 0 for text lines
+  unit: text("unit"),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
   lineType: text("line_type").default("standard"), // 'standard', 'unique', 'text', 'charges'

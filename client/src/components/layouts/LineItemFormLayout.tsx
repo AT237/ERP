@@ -30,6 +30,7 @@ const lineItemFormSchema = insertQuotationItemSchema.extend({
   unitPrice: z.string().min(1, "Prijs per eenheid is verplicht"),
   lineTotal: z.string().min(1, "Regel totaal is verplicht"),
   quantity: z.number().min(0, "Aantal kan niet negatief zijn"),
+  unit: z.string().optional(),
   position: z.number().min(1, "Positie is verplicht").optional(),
   positionNo: z.string().optional(),
   descriptionInternal: z.string().optional(),
@@ -96,6 +97,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       quotationId: quotationId || "",
       description: "",
       quantity: 1,
+      unit: "",
       unitPrice: "0.00",
       lineTotal: "0.00",
       lineType: "standard",
@@ -180,6 +182,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         quotationId: lineItem.quotationId || quotationId || "",
         description: lineItem.description || "",
         quantity: lineItem.quantity || 1,
+        unit: (lineItem as any).unit || "",
         unitPrice: lineItem.unitPrice?.toString() || "0.00",
         lineTotal: lineItem.lineTotal?.toString() || "0.00",
         lineType: lineItem.lineType || "standard",
@@ -491,6 +494,17 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         error: form.formState.errors.quantity?.message
       },
       testId: 'input-quantity'
+    },
+    {
+      key: 'unit',
+      label: 'Eenheid',
+      type: 'text',
+      register: form.register('unit'),
+      placeholder: 'bijv. pcs, kg, m²',
+      validation: {
+        error: form.formState.errors.unit?.message
+      },
+      testId: 'input-unit'
     },
     {
       key: 'unitPrice',

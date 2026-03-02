@@ -2747,11 +2747,13 @@ function getDefaultConfig(blockType: string) {
           position: "Pos",
           description: "Omschrijving",
           quantity: "Aantal",
+          unit: "Eenh.",
           unitPrice: "Prijs",
           total: "Totaal",
         },
         zebraStriping: false,
         showBorders: true,
+        showUnit: false,
       };
     case "Item Repeater":
       return {
@@ -4100,6 +4102,53 @@ function BlockProperties({
                     className="h-8 text-xs"
                   />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Line Items Table Block Properties */}
+          {block.type === "Line Items Table" && (
+            <div className="space-y-3 border-t pt-3">
+              <Label className="text-xs font-bold">Tabelopties</Label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="show-header"
+                  checked={block.config?.showHeader !== false}
+                  onChange={(e) => updateConfig('showHeader', e.target.checked)}
+                  className="h-4 w-4 accent-orange-500"
+                />
+                <Label htmlFor="show-header" className="text-xs font-normal">Toon kolomkoppen</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="show-borders"
+                  checked={block.config?.showBorders !== false}
+                  onChange={(e) => updateConfig('showBorders', e.target.checked)}
+                  className="h-4 w-4 accent-orange-500"
+                />
+                <Label htmlFor="show-borders" className="text-xs font-normal">Toon randen</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="zebra-striping"
+                  checked={block.config?.zebraStriping === true}
+                  onChange={(e) => updateConfig('zebraStriping', e.target.checked)}
+                  className="h-4 w-4 accent-orange-500"
+                />
+                <Label htmlFor="zebra-striping" className="text-xs font-normal">Wisselende rijkleuren</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="show-unit"
+                  checked={block.config?.showUnit === true}
+                  onChange={(e) => updateConfig('showUnit', e.target.checked)}
+                  className="h-4 w-4 accent-orange-500"
+                />
+                <Label htmlFor="show-unit" className="text-xs font-normal">Toon eenheid kolom</Label>
               </div>
             </div>
           )}

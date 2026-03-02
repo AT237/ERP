@@ -193,6 +193,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
     positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'), // e.g., "010", "020"
     description: item.description,
     quantity: item.quantity || 0,
+    unit: (item as any).unit || "",
     unitPrice: item.unitPrice || "0.00",
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",
@@ -394,6 +395,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'),
     description: item.description,
     quantity: item.quantity || 0,
+    unit: item.unit || "",
     unitPrice: item.unitPrice || "0.00",
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",

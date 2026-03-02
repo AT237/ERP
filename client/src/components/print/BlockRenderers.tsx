@@ -425,6 +425,7 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
     position: "Pos",
     description: "Omschrijving",
     quantity: "Aantal",
+    unit: "Eenh.",
     unitPrice: "Prijs",
     total: "Totaal",
   };
@@ -432,6 +433,7 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
   const showHeader = config.showHeader !== false;
   const showBorders = config.showBorders !== false;
   const zebraStriping = config.zebraStriping === true;
+  const showUnit = config.showUnit === true;
   
   // Format currency
   const formatCurrency = (value: string | number) => {
@@ -464,6 +466,7 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
               <th className="py-1 px-1 text-left w-8 font-semibold">{headerLabels.position}</th>
               <th className="py-1 px-1 text-left font-semibold">{headerLabels.description}</th>
               <th className="py-1 px-1 text-right w-14 font-semibold">{headerLabels.quantity}</th>
+              {showUnit && <th className="py-1 px-1 text-left w-12 font-semibold">{headerLabels.unit}</th>}
               <th className="py-1 px-1 text-right w-18 font-semibold">{headerLabels.unitPrice}</th>
               <th className="py-1 px-1 text-right w-18 font-semibold">{headerLabels.total}</th>
             </tr>
@@ -482,6 +485,7 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
                 <td className="py-1 px-1 text-gray-500">{item.positionNo}</td>
                 <td className={`py-1 px-1 ${isTextLine ? 'font-medium' : ''}`}>{item.description}</td>
                 <td className="py-1 px-1 text-right">{isTextLine ? '' : item.quantity}</td>
+                {showUnit && <td className="py-1 px-1 text-left text-gray-600">{isTextLine ? '' : (item.unit || '')}</td>}
                 <td className="py-1 px-1 text-right">{isTextLine ? '' : formatCurrency(item.unitPrice)}</td>
                 <td className="py-1 px-1 text-right">{isTextLine ? '' : formatCurrency(item.lineTotal)}</td>
               </tr>
