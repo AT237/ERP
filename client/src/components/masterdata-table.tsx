@@ -7,6 +7,8 @@ import { getMasterDataConfig } from "@/config/masterdata-config";
 import { DataTableLayout, type ColumnConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
+import { UsageConflictDialog } from "@/components/ui/usage-conflict-dialog";
+import type { UsageLocation } from "@/components/ui/safe-delete-dialog";
 
 interface MasterDataTableProps {
   title: string;
@@ -31,6 +33,7 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
   const queryClient = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [conflictDialog, setConflictDialog] = useState<{ name: string; usages: UsageLocation[] } | null>(null);
   
   const config = getMasterDataConfig(endpoint);
   const singularTitle = config?.singularTitle || title.slice(0, -1);
@@ -79,13 +82,9 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
     },
     onError: (error: any) => {
       if (error.status === 409) {
-        const usages: Array<{ location: string; count: number; examples: string[] }> = error.body?.usages || [];
-        const usageText = usages.map(u => `${u.location} (${u.count})`).join(", ");
-        toast({
-          title: "Cannot delete — in use",
-          description: usageText ? `Used in: ${usageText}` : error.message,
-          variant: "destructive",
-        });
+        const usages: UsageLocation[] = error.body?.usages || [];
+        const name = deleteTarget?.name || singularTitle;
+        setConflictDialog({ name, usages });
       } else {
         toast({
           title: "Error",
@@ -125,7 +124,8 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
   const handleBulkDelete = async () => {
     const ids = [...tableState.selectedRows];
     let successCount = 0;
-    const blocked: string[] = [];
+    const allBlockedUsages: UsageLocation[] = [];
+    const blockedNames: string[] = [];
 
     for (const id of ids) {
       try {
@@ -134,11 +134,19 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
           successCount++;
         } else if (response.status === 409) {
           const body = await response.json().catch(() => ({}));
-          const usages: Array<{ location: string; count: number }> = body.usages || [];
-          const usageText = usages.map(u => u.location).join(", ");
+          const usages: UsageLocation[] = body.usages || [];
           const item = items.find((i: any) => i.id === id);
           const name = item?.name || item?.code || id;
-          blocked.push(`${name}${usageText ? ` (in use: ${usageText})` : ""}`);
+          blockedNames.push(name);
+          usages.forEach(u => {
+            const existing = allBlockedUsages.find(e => e.location === `${name} → ${u.location}`);
+            if (existing) {
+              existing.count += u.count;
+              existing.examples.push(...u.examples);
+            } else {
+              allBlockedUsages.push({ location: `${name} → ${u.location}`, count: u.count, examples: u.examples });
+            }
+          });
         }
       } catch {}
     }
@@ -147,13 +155,12 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
     tableState.setSelectedRows([]);
     setIsBulkDeleteOpen(false);
 
-    if (blocked.length > 0) {
-      toast({
-        title: blocked.length === ids.length ? "Nothing deleted — all in use" : `${successCount} deleted, ${blocked.length} blocked`,
-        description: `Cannot delete: ${blocked.slice(0, 3).join("; ")}${blocked.length > 3 ? `… and ${blocked.length - 3} more` : ""}`,
-        variant: "destructive",
-      });
-    } else if (successCount > 0) {
+    if (allBlockedUsages.length > 0) {
+      const dialogName = blockedNames.length === 1 ? blockedNames[0] : `${blockedNames.length} items`;
+      setConflictDialog({ name: dialogName, usages: allBlockedUsages });
+    }
+
+    if (successCount > 0) {
       toast({
         title: "Deleted",
         description: `${successCount} ${successCount === 1 ? singularTitle.toLowerCase() : title.toLowerCase()} deleted`,
@@ -265,6 +272,14 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
           checkUsagesUrl={`/api/masterdata/${endpoint}/${deleteTarget.id}/check-usages`}
           onConfirm={() => deleteMutation.mutate(deleteTarget.id)}
           isPending={deleteMutation.isPending}
+        />
+      )}
+      {conflictDialog && (
+        <UsageConflictDialog
+          open={!!conflictDialog}
+          onOpenChange={(open) => { if (!open) setConflictDialog(null); }}
+          entityName={conflictDialog.name}
+          usages={conflictDialog.usages}
         />
       )}
     </div>

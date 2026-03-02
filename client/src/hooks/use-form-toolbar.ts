@@ -1,4 +1,5 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
+import type { UsageLocation } from "@/components/ui/safe-delete-dialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -309,9 +310,10 @@ export function useFormToolbar({
   showPrint = true,
   showNavigation,
   showExport = true,
-}: UseFormToolbarOptions): FormToolbarProps {
+}: UseFormToolbarOptions): FormToolbarProps & { deleteConflict: { name: string; usages: UsageLocation[] } | null; onClearDeleteConflict: () => void } {
   const { toast } = useToast();
   const config = ENTITY_CONFIGS[entityType];
+  const [deleteConflict, setDeleteConflict] = useState<{ name: string; usages: UsageLocation[] } | null>(null);
   const isEditing = !!entityId;
 
   const resolvedShowAddNew = showAddNew ?? (config?.supportsAddNew ?? false);
@@ -358,13 +360,8 @@ export function useFormToolbar({
     },
     onError: (error: any) => {
       if (error.status === 409) {
-        const usages: Array<{ location: string; count: number }> = error.body?.usages || [];
-        const usageText = usages.map(u => `${u.location} (${u.count})`).join(", ");
-        toast({
-          title: "Cannot delete — in use",
-          description: usageText ? `Used in: ${usageText}` : error.message,
-          variant: "destructive",
-        });
+        const usages: UsageLocation[] = error.body?.usages || [];
+        setDeleteConflict({ name: config?.label || "record", usages });
       } else {
         toast({
           title: "Error",
@@ -454,5 +451,7 @@ export function useFormToolbar({
     entityId,
     checkUsagesUrl: config && entityId ? `${config.apiPath}/${entityId}/check-usages` : undefined,
     entityName: config?.label,
+    deleteConflict,
+    onClearDeleteConflict: () => setDeleteConflict(null),
   };
 }

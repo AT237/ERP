@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { PrintLayoutDialog } from "./PrintLayoutDialog";
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
+import { UsageConflictDialog } from "@/components/ui/usage-conflict-dialog";
+import type { UsageLocation } from "@/components/ui/safe-delete-dialog";
 
 export interface FormToolbarProps {
   onSave?: () => void;
@@ -42,6 +44,8 @@ export interface FormToolbarProps {
   entityId?: string;
   checkUsagesUrl?: string;
   entityName?: string;
+  deleteConflict?: { name: string; usages: UsageLocation[] } | null;
+  onClearDeleteConflict?: () => void;
 }
 
 export function FormToolbar({
@@ -73,6 +77,8 @@ export function FormToolbar({
   entityId,
   checkUsagesUrl,
   entityName = "this record",
+  deleteConflict,
+  onClearDeleteConflict,
 }: FormToolbarProps) {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -217,6 +223,15 @@ export function FormToolbar({
           entityId={entityId}
           checkUsagesUrl={checkUsagesUrl}
           onConfirm={onDelete}
+        />
+      )}
+
+      {deleteConflict && onClearDeleteConflict && (
+        <UsageConflictDialog
+          open={!!deleteConflict}
+          onOpenChange={(open) => { if (!open) onClearDeleteConflict(); }}
+          entityName={deleteConflict.name}
+          usages={deleteConflict.usages}
         />
       )}
     </>
