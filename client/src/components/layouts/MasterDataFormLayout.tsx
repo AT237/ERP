@@ -7,48 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { LayoutForm2, type FormSection2, type FormField2, createFieldRow } from '@/components/layouts/LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { getMasterDataConfig, type MasterDataField, type MasterDataSection } from "@/config/masterdata-config";
-
-function DynamicSelectField({ field, formField }: { field: MasterDataField; formField: any }) {
-  const { data: rawOptions = [] } = useQuery<any[]>({
-    queryKey: [`/api/masterdata/${field.fetchOptionsFrom}`],
-    queryFn: async () => {
-      const res = await fetch(`/api/masterdata/${field.fetchOptionsFrom}`);
-      if (!res.ok) throw new Error('Failed to fetch options');
-      return res.json();
-    },
-    enabled: !!field.fetchOptionsFrom,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const valueKey = field.fetchOptionsMap?.value || 'code';
-  const labelKey = field.fetchOptionsMap?.label || 'name';
-  const options = rawOptions
-    .filter((item: any) => item.isActive !== false)
-    .map((item: any) => ({ value: item[valueKey], label: `${item[valueKey]} – ${item[labelKey]}` }));
-
-  return (
-    <Select
-      onValueChange={formField.onChange}
-      value={String(formField.value ?? "")}
-      data-testid={`select-${field.name}`}
-    >
-      <SelectTrigger>
-        <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
 
 interface MasterDataFormLayoutProps {
   type: string;
@@ -74,6 +36,40 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
     }
     return config.fields;
   }, [config]);
+
+  // Collect unique fetchOptionsFrom endpoints from all fields
+  const dynamicEndpoints = useMemo(() =>
+    [...new Set(allFields.filter(f => f.fetchOptionsFrom).map(f => f.fetchOptionsFrom!))],
+    [allFields]
+  );
+
+  // Fetch all dynamic option sources in parallel
+  const dynamicQueries = useQueries({
+    queries: dynamicEndpoints.map(endpoint => ({
+      queryKey: [`/api/masterdata/${endpoint}`],
+      queryFn: async () => {
+        const res = await fetch(`/api/masterdata/${endpoint}`);
+        if (!res.ok) throw new Error(`Failed to fetch ${endpoint}`);
+        return res.json();
+      },
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  // Build a map: endpoint → options array
+  const dynamicOptionsMap = useMemo(() => {
+    const map: Record<string, Array<{ value: string; label: string }>> = {};
+    dynamicEndpoints.forEach((endpoint, i) => {
+      const raw: any[] = dynamicQueries[i]?.data || [];
+      const field = allFields.find(f => f.fetchOptionsFrom === endpoint);
+      const valueKey = field?.fetchOptionsMap?.value || 'code';
+      const labelKey = field?.fetchOptionsMap?.label || 'name';
+      map[endpoint] = raw
+        .filter(item => item.isActive !== false)
+        .map(item => ({ value: item[valueKey], label: `${item[valueKey]} – ${item[labelKey]}` }));
+    });
+    return map;
+  }, [dynamicEndpoints, dynamicQueries, allFields]);
 
   const form = useForm({
     resolver: config ? zodResolver(config.schema) : undefined,
@@ -157,9 +153,10 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
   };
 
   const renderFieldComponent = (field: MasterDataField, formField: any) => {
-    if (field.fetchOptionsFrom) {
-      return <DynamicSelectField field={field} formField={formField} />;
-    }
+    const resolvedOptions = field.fetchOptionsFrom
+      ? (dynamicOptionsMap[field.fetchOptionsFrom] || [])
+      : (field.options || []);
+
     switch (field.type) {
       case 'select':
         return (
@@ -176,7 +173,7 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
               <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
             </SelectTrigger>
             <SelectContent>
-              {field.options?.map((option) => (
+              {resolvedOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
