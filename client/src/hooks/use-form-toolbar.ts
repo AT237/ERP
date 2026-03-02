@@ -377,9 +377,7 @@ export function useFormToolbar({
 
   const handleDelete = useCallback(() => {
     if (!entityId || !config) return;
-    if (window.confirm(`Are you sure you want to delete this ${config.label.toLowerCase()}?`)) {
-      deleteMutation.mutate(entityId);
-    }
+    deleteMutation.mutate(entityId);
   }, [entityId, config, deleteMutation]);
 
   const handlePrevious = useCallback(() => {
@@ -440,5 +438,7 @@ export function useFormToolbar({
 
     documentType: config?.documentType || entityType,
     entityId,
+    checkUsagesUrl: config && entityId ? `${config.apiPath}/${entityId}/check-usages` : undefined,
+    entityName: config?.label,
   };
 }

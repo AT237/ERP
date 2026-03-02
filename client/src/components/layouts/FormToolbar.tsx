@@ -11,6 +11,7 @@ import {
   FileSpreadsheet
 } from "lucide-react";
 import { PrintLayoutDialog } from "./PrintLayoutDialog";
+import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 
 export interface FormToolbarProps {
   onSave?: () => void;
@@ -39,6 +40,8 @@ export interface FormToolbarProps {
 
   documentType?: string;
   entityId?: string;
+  checkUsagesUrl?: string;
+  entityName?: string;
 }
 
 export function FormToolbar({
@@ -68,8 +71,11 @@ export function FormToolbar({
 
   documentType,
   entityId,
+  checkUsagesUrl,
+  entityName = "this record",
 }: FormToolbarProps) {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const buttonClass = "h-8 w-8 p-0";
   const iconClass = "h-4 w-4";
 
@@ -120,7 +126,13 @@ export function FormToolbar({
           variant="ghost"
           size="sm"
           className={buttonClass}
-          onClick={onDelete}
+          onClick={() => {
+            if (checkUsagesUrl && entityId) {
+              setDeleteDialogOpen(true);
+            } else if (onDelete) {
+              onDelete();
+            }
+          }}
           disabled={deleteDisabled}
           title="Delete"
           data-testid="toolbar-delete"
@@ -194,6 +206,17 @@ export function FormToolbar({
           onOpenChange={setPrintDialogOpen}
           documentType={documentType}
           entityId={entityId}
+        />
+      )}
+
+      {checkUsagesUrl && entityId && onDelete && (
+        <SafeDeleteDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          entityName={entityName}
+          entityId={entityId}
+          checkUsagesUrl={checkUsagesUrl}
+          onConfirm={onDelete}
         />
       )}
     </>
