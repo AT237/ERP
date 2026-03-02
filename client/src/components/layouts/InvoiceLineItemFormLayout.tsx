@@ -274,8 +274,6 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const unitPriceValue = form.watch("unitPrice");
   const lineTotalValue = form.watch("lineTotal");
   const customerRateIdValue = form.watch("customerRateId");
-  const unitValue = form.watch("unit" as any);
-
   const selectedRateOption = useMemo(() => {
     if (!customerRateIdValue) return null;
     return customerRateOptions.find(opt => opt.rateId === customerRateIdValue) || null;
@@ -580,27 +578,13 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     {
       key: 'unit',
       label: 'Unit',
-      type: 'custom',
-      customComponent: (
-        <Select
-          value={unitValue || ""}
-          onValueChange={(val) => {
-            form.setValue("unit" as any, val);
-            setHasUnsavedChanges(true);
-          }}
-        >
-          <SelectTrigger className="h-10" data-testid="select-unit">
-            <SelectValue placeholder="Select unit..." />
-          </SelectTrigger>
-          <SelectContent>
-            {unitOptions.map(opt => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ),
+      type: 'select',
+      options: unitOptions,
+      setValue: (value: string) => {
+        form.setValue("unit" as any, value);
+        setHasUnsavedChanges(true);
+      },
+      watch: () => form.watch("unit" as any),
       testId: 'select-unit'
     },
     {
