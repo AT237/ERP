@@ -242,6 +242,14 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       sortable: true,
       className: 'text-right'
     },
+    {
+      key: 'unit',
+      label: 'Unit',
+      visible: true,
+      width: 80,
+      filterable: false,
+      sortable: false
+    },
     createCurrencyColumn('unitPrice', 'Unit Price'),
     createCurrencyColumn('lineTotal', 'Line Total'),
   ], []);

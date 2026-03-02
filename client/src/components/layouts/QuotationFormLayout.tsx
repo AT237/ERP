@@ -123,6 +123,14 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         sortable: true
       },
       createNumericColumn('quantity', 'Quantity'),
+      {
+        key: 'unit',
+        label: 'Unit',
+        visible: true,
+        width: 80,
+        filterable: false,
+        sortable: false
+      },
       createCurrencyColumn('unitPrice', 'Unit Price'),
       createCurrencyColumn('lineTotal', 'Line Total'),
     ],
