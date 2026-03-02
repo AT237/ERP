@@ -1176,7 +1176,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUnitOfMeasure(id: string): Promise<void> {
-    await db.update(unitsOfMeasure).set({ isActive: false }).where(eq(unitsOfMeasure.id, id));
+    const [uom] = await db.select({ code: unitsOfMeasure.code }).from(unitsOfMeasure).where(eq(unitsOfMeasure.id, id));
+    const suffix = `-SD${id.slice(0, 6)}`;
+    const newCode = uom ? `${uom.code}${suffix}` : id;
+    await db.update(unitsOfMeasure).set({ isActive: false, code: newCode }).where(eq(unitsOfMeasure.id, id));
   }
 
   async getPaymentDays(): Promise<PaymentDay[]> {
