@@ -505,13 +505,24 @@ function Router() {
   );
 }
 
+const PrintPreviewPage = React.lazy(() => import('./pages/print-preview'));
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-      <DebugPanel />
-        <Router />
+        <DebugPanel />
+        <Switch>
+          <Route path="/print/:documentType/:entityId">
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Laden…</div>}>
+              <PrintPreviewPage />
+            </Suspense>
+          </Route>
+          <Route>
+            <Router />
+          </Route>
+        </Switch>
       </TooltipProvider>
     </QueryClientProvider>
   );

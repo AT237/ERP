@@ -46,7 +46,7 @@ export function PrintLayoutDialog({
   const handlePrint = () => {
     if (!selectedLayoutId) return;
     window.open(
-      `/api/print/${documentType}/${entityId}?layoutId=${selectedLayoutId}`,
+      `/print/${documentType}/${entityId}?layoutId=${selectedLayoutId}`,
       "_blank"
     );
     onOpenChange(false);

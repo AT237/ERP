@@ -3061,7 +3061,7 @@ function sectionContainsItemPlaceholders(section: any): boolean {
 }
 
 // Layout Preview Renderer Component
-function LayoutPreview({ layout, sections, printData }: { layout: any; sections: any[]; printData: any }) {
+export function LayoutPreview({ layout, sections, printData }: { layout: any; sections: any[]; printData: any }) {
   if (!printData) {
     return (
       <div className="border border-gray-200 h-full p-8 flex items-center justify-center">
