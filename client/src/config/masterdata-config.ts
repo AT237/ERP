@@ -17,6 +17,8 @@ export interface MasterDataField {
   type: 'text' | 'number' | 'textarea' | 'select';
   required?: boolean;
   options?: Array<{ value: string; label: string }>;
+  fetchOptionsFrom?: string; // API endpoint to fetch options from (e.g. 'units-of-measure')
+  fetchOptionsMap?: { value: string; label: string }; // field mapping: {value: 'code', label: 'name'}
 }
 
 export interface MasterDataColumn {
@@ -167,7 +169,13 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
       { name: "code", label: "Code", type: "text", required: true },
       { name: "name", label: "Name", type: "text", required: true },
       { name: "description", label: "Description", type: "text" },
-      { name: "unit", label: "Unit", type: "text" },
+      { 
+        name: "unit", 
+        label: "Unit", 
+        type: "select",
+        fetchOptionsFrom: "units-of-measure",
+        fetchOptionsMap: { value: "code", label: "name" }
+      },
       { name: "rate", label: "Cost Price", type: "number", required: true },
       { 
         name: "category", 

@@ -149,6 +149,18 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: unitsOfMeasure = [] } = useQuery<{ id: string; code: string; name: string; isActive: boolean }[]>({
+    queryKey: ["/api/masterdata/units-of-measure"],
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const unitOptions = useMemo(() =>
+    unitsOfMeasure
+      .filter(u => u.isActive !== false)
+      .map(u => ({ value: u.code, label: `${u.code} – ${u.name}` })),
+    [unitsOfMeasure]
+  );
+
   const customerRateOptions = useMemo(() => {
     const customerRateMap = new Map<string, CustomerRate>();
     customerRates.forEach(cr => customerRateMap.set(cr.rateId, cr));
@@ -568,10 +580,28 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     {
       key: 'unit',
       label: 'Unit',
-      type: 'text',
-      register: form.register('unit' as any),
-      placeholder: 'e.g. pcs, hrs, kg',
-      testId: 'input-unit'
+      type: 'custom',
+      customComponent: (
+        <Select
+          value={unitValue || ""}
+          onValueChange={(val) => {
+            form.setValue("unit" as any, val);
+            setHasUnsavedChanges(true);
+          }}
+        >
+          <SelectTrigger className="h-10" data-testid="select-unit">
+            <SelectValue placeholder="Select unit..." />
+          </SelectTrigger>
+          <SelectContent>
+            {unitOptions.map(opt => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
+      testId: 'select-unit'
     },
     {
       key: 'unitPrice',

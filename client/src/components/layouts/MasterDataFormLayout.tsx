@@ -12,6 +12,44 @@ import { LayoutForm2, type FormSection2, type FormField2, createFieldRow } from 
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { getMasterDataConfig, type MasterDataField, type MasterDataSection } from "@/config/masterdata-config";
 
+function DynamicSelectField({ field, formField }: { field: MasterDataField; formField: any }) {
+  const { data: rawOptions = [] } = useQuery<any[]>({
+    queryKey: [`/api/masterdata/${field.fetchOptionsFrom}`],
+    queryFn: async () => {
+      const res = await fetch(`/api/masterdata/${field.fetchOptionsFrom}`);
+      if (!res.ok) throw new Error('Failed to fetch options');
+      return res.json();
+    },
+    enabled: !!field.fetchOptionsFrom,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const valueKey = field.fetchOptionsMap?.value || 'code';
+  const labelKey = field.fetchOptionsMap?.label || 'name';
+  const options = rawOptions
+    .filter((item: any) => item.isActive !== false)
+    .map((item: any) => ({ value: item[valueKey], label: `${item[valueKey]} – ${item[labelKey]}` }));
+
+  return (
+    <Select
+      onValueChange={formField.onChange}
+      value={String(formField.value ?? "")}
+      data-testid={`select-${field.name}`}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 interface MasterDataFormLayoutProps {
   type: string;
   id?: string;
@@ -119,6 +157,9 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
   };
 
   const renderFieldComponent = (field: MasterDataField, formField: any) => {
+    if (field.fetchOptionsFrom) {
+      return <DynamicSelectField field={field} formField={formField} />;
+    }
     switch (field.type) {
       case 'select':
         return (
