@@ -3846,10 +3846,11 @@ function BlockProperties({
                   <Input
                     id="line-stroke-width"
                     type="number"
-                    min="1"
+                    min="0.1"
                     max="20"
+                    step="0.1"
                     value={block.config?.strokeWidth || 1}
-                    onChange={(e) => updateConfig('strokeWidth', parseInt(e.target.value) || 1)}
+                    onChange={(e) => updateConfig('strokeWidth', parseFloat(e.target.value) || 0.1)}
                     className="h-8 text-xs"
                   />
                 </div>
@@ -3894,8 +3895,9 @@ function BlockProperties({
                     type="number"
                     min="0"
                     max="20"
+                    step="0.1"
                     value={block.config?.strokeWidth || 1}
-                    onChange={(e) => updateConfig('strokeWidth', parseInt(e.target.value) || 1)}
+                    onChange={(e) => updateConfig('strokeWidth', parseFloat(e.target.value) || 0)}
                     className="h-8 text-xs"
                   />
                 </div>
