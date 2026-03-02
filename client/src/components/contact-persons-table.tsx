@@ -83,7 +83,7 @@ export default function ContactPersonsTable() {
   const del = useEntityDelete({
     endpoint: '/api/customer-contacts',
     queryKeys: ['/api/customer-contacts'],
-    getName: (row) => row.name || row.firstName,
+    getName: (row: any) => row.name || row.firstName,
     entityLabel: 'Contact',
     checkUsages: false,
   });
@@ -203,6 +203,16 @@ export default function ContactPersonsTable() {
         onToggleRowSelection={dataTableState.toggleRowSelection}
         onToggleAllRows={handleToggleAllRows}
         
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => {
+            del.handleBulkDelete(dataTableState.selectedRows, contacts);
+            dataTableState.clearSelection();
+          },
+          itemCount: dataTableState.selectedRows.length
+        }}
+        
         // Actions
         headerActions={[
           {
@@ -211,19 +221,7 @@ export default function ContactPersonsTable() {
             icon: <Plus className="h-4 w-4" />,
             onClick: handleNewContact,
             variant: "default" as const
-          },
-          ...(dataTableState.selectedRows.length > 0 ? [
-            {
-              key: 'delete-selected',
-              label: `Delete Selected (${dataTableState.selectedRows.length})`,
-              icon: <Trash2 className="h-4 w-4" />,
-              onClick: () => {
-                del.handleBulkDelete(dataTableState.selectedRows, contacts);
-                dataTableState.clearSelection();
-              },
-              variant: "destructive" as const
-            }
-          ] : [])
+          }
         ]}
         
         rowActions={(contact: CustomerContact) => [

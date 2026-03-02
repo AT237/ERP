@@ -254,6 +254,16 @@ export default function ProspectsTable() {
         onToggleRowSelection={dataTableState.toggleRowSelection}
         onToggleAllRows={handleToggleAllRows}
         
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => {
+            del.handleBulkDelete(dataTableState.selectedRows, prospects);
+            dataTableState.clearSelection();
+          },
+          itemCount: dataTableState.selectedRows.length
+        }}
+        
         // Actions
         headerActions={[
           {
@@ -262,19 +272,7 @@ export default function ProspectsTable() {
             icon: <Plus className="h-4 w-4" />,
             onClick: handleNewProspect,
             variant: "default" as const
-          },
-          ...(dataTableState.selectedRows.length > 0 ? [
-            {
-              key: 'delete-selected',
-              label: `Delete Selected (${dataTableState.selectedRows.length})`,
-              icon: <Trash2 className="h-4 w-4" />,
-              onClick: () => {
-                del.handleBulkDelete(dataTableState.selectedRows, prospects);
-                dataTableState.clearSelection();
-              },
-              variant: "destructive" as const
-            }
-          ] : [])
+          }
         ]}
         
         rowActions={(prospect: Prospect) => [

@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays } from "../../shared/schema";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, unitsOfMeasure } from "../../shared/schema";
 import { eq, asc } from "drizzle-orm";
 
 function applyPrintSortOrder<T extends { position?: number | null; description?: string; unitPrice?: string; lineTotal?: string }>(
@@ -384,6 +384,10 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     }
   }
 
+  // Load units of measure for code→name lookup
+  const uomList = await db.select({ code: unitsOfMeasure.code, name: unitsOfMeasure.name }).from(unitsOfMeasure);
+  const uomMap: Record<string, string> = Object.fromEntries(uomList.map(u => [u.code, u.name]));
+
   // Load invoice items
   const rawItems = await db.query.invoiceItems.findMany({
     where: eq(invoiceItems.invoiceId, invoiceId),
@@ -395,7 +399,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'),
     description: item.description,
     quantity: item.quantity || 0,
-    unit: item.unit || "",
+    unit: item.unit ? (uomMap[item.unit] || item.unit) : "",
     unitPrice: item.unitPrice || "0.00",
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",

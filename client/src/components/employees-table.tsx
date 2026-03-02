@@ -75,7 +75,7 @@ export default function EmployeesTable() {
   const del = useEntityDelete({
     endpoint: '/api/employees',
     queryKeys: ['/api/employees'],
-    getName: (row) => row.name || row.firstName,
+    getName: (row: any) => row.name || row.firstName,
     entityLabel: 'Employee',
     checkUsages: false,
   });
@@ -181,6 +181,16 @@ export default function EmployeesTable() {
         onToggleRowSelection={dataTableState.toggleRowSelection}
         onToggleAllRows={handleToggleAllRows}
         
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => {
+            del.handleBulkDelete(dataTableState.selectedRows, employeesList);
+            dataTableState.clearSelection();
+          },
+          itemCount: dataTableState.selectedRows.length
+        }}
+        
         headerActions={[
           {
             key: 'add-employee',
@@ -188,19 +198,7 @@ export default function EmployeesTable() {
             icon: <Plus className="h-4 w-4" />,
             onClick: handleNewEmployee,
             variant: "default" as const
-          },
-          ...(dataTableState.selectedRows.length > 0 ? [
-            {
-              key: 'delete-selected',
-              label: `Delete Selected (${dataTableState.selectedRows.length})`,
-              icon: <Trash2 className="h-4 w-4" />,
-              onClick: () => {
-                del.handleBulkDelete(dataTableState.selectedRows, employeesList);
-                dataTableState.clearSelection();
-              },
-              variant: "destructive" as const
-            }
-          ] : [])
+          }
         ]}
         
         rowActions={(employee: Employee) => [
