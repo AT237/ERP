@@ -620,12 +620,23 @@ export default function Layout({ children }: LayoutProps) {
           
           setActiveTabId(nextActiveTab.id);
           
-          // If the closed tab was a page tab and the new active tab is also a page tab,
-          // navigate to keep URL and sidebar highlighting synchronized
-          if (tabToClose?.type === 'page' && nextActiveTab.type === 'page') {
-            const route = nextActiveTab.menuRoute || getRouteForTab(nextActiveTab.id);
-            if (route !== location) {
-              navigate(route);
+          // If the closed tab was a page tab, navigate away from its URL
+          // so that future navigate() calls to the same URL work correctly
+          if (tabToClose?.type === 'page') {
+            const closedRoute = tabToClose.menuRoute;
+            if (closedRoute && closedRoute === location) {
+              if (nextActiveTab.type === 'page') {
+                // Navigate to the next page tab's route
+                const route = nextActiveTab.menuRoute || getRouteForTab(nextActiveTab.id);
+                if (route !== location) {
+                  navigate(route);
+                }
+              } else {
+                // Next tab is a form type — navigate to /welcome (neutral)
+                // so the URL no longer matches the closed tab, allowing
+                // it to be reopened later via navigate()
+                navigate('/welcome');
+              }
             }
           }
         } else {
