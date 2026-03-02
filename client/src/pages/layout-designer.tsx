@@ -649,12 +649,30 @@ export function VisualDesignerView({ layout }: { layout: any }) {
         title: 'Opgeslagen!',
         description: `Layout "${layout.name}" is succesvol opgeslagen`,
       });
-      // Invalidate layouts list
       queryClient.invalidateQueries({ queryKey: ['/api/layouts'] });
-      // Wait for sections refetch to complete before resetting local state
-      // so useEffect reloads with fresh IDs from the database
-      await queryClient.invalidateQueries({ queryKey: [`/api/layout-sections?layoutId=${layout.id}`] });
-      setSections([]);
+      // Fetch fresh sections directly and set state — avoids useEffect race condition
+      const freshSections = await queryClient.fetchQuery<any[]>({
+        queryKey: [`/api/layout-sections?layoutId=${layout.id}`],
+        staleTime: 0,
+      });
+      const loadedSections = (freshSections || []).map((section: any) => ({
+        id: section.id,
+        name: section.name,
+        sectionType: section.sectionType,
+        position: section.position,
+        config: {
+          ...section.config,
+          printRules: section.config?.printRules || { everyPage: true },
+          dimensions: section.config?.dimensions || { height: 200, unit: 'px' },
+          style: section.config?.style || {},
+          blocks: section.config?.blocks || [],
+          layoutGrid: section.config?.layoutGrid,
+          metadata: section.config?.metadata || {},
+          canGrow: section.config?.canGrow || false,
+          canShrink: section.config?.canShrink || false,
+        },
+      }));
+      setSections(loadedSections.sort((a: any, b: any) => a.position - b.position));
       setSelectedSection(null);
       setSelectedBlock(null);
     },
