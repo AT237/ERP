@@ -4659,41 +4659,66 @@ function SectionProperties({
         </p>
       </div>
 
+      {/* Repeat Section */}
+      {(() => {
+        const blocks = section.config?.blocks || [];
+        const hasItemPlaceholders = blocks.some((block: any) => {
+          const content = block.config?.content || block.content || '';
+          if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) return true;
+          const dataField = block.config?.dataField || '';
+          return typeof dataField === 'string' && dataField.startsWith('item.');
+        });
+        const manualRepeat = section.config?.repeat?.enabled === true;
+        const isRepeating = hasItemPlaceholders || manualRepeat;
+        return (
+          <div className="space-y-3 pt-2 border-t">
+            <div className="text-xs font-bold text-orange-600">Herhaling</div>
+            <div className={`rounded-md px-3 py-2 text-xs flex items-start gap-2 ${isRepeating ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-gray-50 border border-gray-200 text-gray-600'}`}>
+              <span className="mt-0.5 text-base leading-none">{isRepeating ? '🔁' : '—'}</span>
+              <div>
+                {isRepeating ? (
+                  <>
+                    <div className="font-semibold">Sectie herhaalt per regelitem</div>
+                    <div className="text-[10px] mt-0.5 text-green-700">
+                      {hasItemPlaceholders
+                        ? 'Automatisch gedetecteerd: een blok bevat een {{item.*}} veld'
+                        : 'Handmatig ingeschakeld via repeat.enabled'}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="font-semibold">Geen herhaling</div>
+                    <div className="text-[10px] mt-0.5">Voeg een {'{{item.*}}'} veld toe aan een blok om herhaling in te schakelen</div>
+                  </>
+                )}
+              </div>
+            </div>
+            {isRepeating && (
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Filter op regeltype</Label>
+                <select
+                  value={section.config?.lineTypeFilter || 'all'}
+                  onChange={(e) => onUpdateProperty(section.id, 'config.lineTypeFilter', e.target.value)}
+                  className="w-full h-8 text-xs border border-input rounded-md px-2 bg-background"
+                >
+                  <option value="all">Alle regels</option>
+                  <option value="standard">Standaard item</option>
+                  <option value="unique">Uniek item</option>
+                  <option value="text">Tekst</option>
+                  <option value="charges">Meerwerk (charges)</option>
+                </select>
+                <p className="text-[10px] text-muted-foreground">
+                  Sectie herhaalt alleen voor items van dit type
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Dynamic Section */}
       <div className="space-y-3 pt-2 border-t">
         <div className="text-xs font-bold text-orange-600">Dynamisch</div>
-        
-        {/* LineType Filter - only show for repeating sections */}
-        {(() => {
-          const blocks = section.config?.blocks || [];
-          const hasItemPlaceholders = blocks.some((block: any) => {
-            const content = block.config?.content || block.content || '';
-            if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) return true;
-            const dataField = block.config?.dataField || '';
-            return typeof dataField === 'string' && dataField.startsWith('item.');
-          });
-          const manualRepeat = section.config?.repeat?.enabled === true;
-          if (!hasItemPlaceholders && !manualRepeat) return null;
-          return (
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Herhalen voor regeltype</Label>
-              <select
-                value={section.config?.lineTypeFilter || 'all'}
-                onChange={(e) => onUpdateProperty(section.id, 'config.lineTypeFilter', e.target.value)}
-                className="w-full h-8 text-xs border border-input rounded-md px-2 bg-background"
-              >
-                <option value="all">Alle regels</option>
-                <option value="standard">Standaard item</option>
-                <option value="unique">Uniek item</option>
-                <option value="text">Tekst</option>
-                <option value="charges">Meerwerk (charges)</option>
-              </select>
-              <p className="text-[10px] text-muted-foreground">
-                Sectie herhaalt alleen voor items van dit type
-              </p>
-            </div>
-          );
-        })()}
 
         {/* Height behavior */}
         <div className="space-y-1">
