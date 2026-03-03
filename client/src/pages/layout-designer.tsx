@@ -3783,10 +3783,21 @@ function BlockProperties({
                 const selectedField = ITEM_FIELDS.find(f => f.value === conditionField);
 
                 const applyCondition = (field: string, value: string) => {
-                  updateConfig('conditionField', field || null);
-                  updateConfig('conditionValue', value || null);
-                  // Keep backward compat
-                  updateConfig('lineTypeCondition', field === 'lineType' && value ? value : null);
+                  onUpdateProperty(sectionId, block.id, 'config', {
+                    ...block.config,
+                    conditionField: field || null,
+                    conditionValue: value || null,
+                    lineTypeCondition: field === 'lineType' && value ? value : null,
+                  });
+                };
+
+                const clearCondition = () => {
+                  onUpdateProperty(sectionId, block.id, 'config', {
+                    ...block.config,
+                    conditionField: null,
+                    conditionValue: null,
+                    lineTypeCondition: null,
+                  });
                 };
 
                 return (
@@ -3798,9 +3809,7 @@ function BlockProperties({
                         checked={conditionEnabled}
                         onChange={(e) => {
                           if (!e.target.checked) {
-                            updateConfig('conditionField', null);
-                            updateConfig('conditionValue', null);
-                            updateConfig('lineTypeCondition', null);
+                            clearCondition();
                           } else {
                             applyCondition('lineType', '');
                           }
