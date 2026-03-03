@@ -443,12 +443,8 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
     return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(num);
   };
   
-  // Sort items by positionNo (parsed as number) for correct ordering
-  const sortedItems = [...items].sort((a, b) => {
-    const posA = parseInt(a.positionNo || '0', 10);
-    const posB = parseInt(b.positionNo || '0', 10);
-    return posA - posB;
-  });
+  // Items are already sorted server-side by printSortOrder — use as-is
+  const sortedItems = items;
   
   if (sortedItems.length === 0) {
     return (
