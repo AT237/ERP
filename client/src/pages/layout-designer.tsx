@@ -3207,6 +3207,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         className="relative overflow-hidden"
         style={{
           backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
+          outline: itemContext ? '1px dashed red' : 'none',
           height: `${sectionHeight}px`,
           minHeight: heightCanShrink ? 'auto' : `${sectionHeight}px`,
           maxHeight: heightCanGrow ? 'none' : `${sectionHeight}px`,
@@ -3297,6 +3298,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         const shouldRepeat = hasItemPlaceholders || manuallyEnabled;
         const lineTypeFilter = section.config?.lineTypeFilter;
 
+        // DEBUG: log section render decisions
+        console.log('[LayoutPreview] section:', section.name, '| shouldRepeat:', shouldRepeat, '| hasItemPlaceholders:', hasItemPlaceholders, '| manuallyEnabled:', manuallyEnabled, '| items:', typedPrintData.items?.length, '| lineTypeFilter:', lineTypeFilter);
+
         // --- ITEM-FIRST GROUP RENDERING ---
         // When consecutive repeating sections each have a lineTypeFilter,
         // render them together in item sort order (e.g. 010 std, 020 charges, 030 std)
@@ -3328,7 +3332,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           const items = allItems; // no filter — unfiltered repeating section shows all items
           
           if (items.length === 0) {
-            return []; // No items to render
+            return [<div key={`${section.id}-empty`} style={{background:'orange',padding:'4px',fontSize:'10px'}}>DEBUG: {section.name} - 0 items</div>];
           }
           
           // Render one copy of this section for each item
