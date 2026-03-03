@@ -2,15 +2,16 @@ import { db } from "../db";
 import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, unitsOfMeasure } from "../../shared/schema";
 import { eq, asc } from "drizzle-orm";
 
-function applyPrintSortOrder<T extends { position?: number | null; description?: string; unitPrice?: string; lineTotal?: string }>(
+function applyPrintSortOrder<T extends { position?: number | null; positionNo?: string | null; description?: string; unitPrice?: string; lineTotal?: string }>(
   items: T[],
   sortOrder: string | null | undefined
 ): T[] {
   const order = sortOrder || "position";
+  const posNum = (item: T) => parseInt(item.positionNo || "0", 10);
   return [...items].sort((a, b) => {
     switch (order) {
       case "position_high_low":
-        return (b.position ?? 0) - (a.position ?? 0);
+        return posNum(b) - posNum(a);
       case "price_high_low":
         return parseFloat(b.unitPrice || "0") - parseFloat(a.unitPrice || "0");
       case "price_low_high":
@@ -22,7 +23,7 @@ function applyPrintSortOrder<T extends { position?: number | null; description?:
       case "position":
       case "position_low_high":
       default:
-        return (a.position ?? 0) - (b.position ?? 0);
+        return posNum(a) - posNum(b);
     }
   });
 }
