@@ -63,17 +63,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/customers/:id/check-usages", async (req, res) => {
     try {
       const { id } = req.params;
-      const usages: { location: string; id: string; label: string }[] = [];
-
       const [customerQuotations, customerInvoices, customerProjects] = await Promise.all([
         db.select().from(quotations).where(eq(quotations.customerId, id)),
         db.select().from(invoices).where(eq(invoices.customerId, id)),
         db.select().from(projects).where(eq(projects.customerId, id))
       ]);
 
-      customerQuotations.forEach(q => usages.push({ location: "Quotations", id: q.id, label: q.quotationNumber }));
-      customerInvoices.forEach(i => usages.push({ location: "Invoices", id: i.id, label: i.invoiceNumber }));
-      customerProjects.forEach(p => usages.push({ location: "Projects", id: p.id, label: p.projectNumber || p.name }));
+      const usages: { location: string; count: number; examples: string[] }[] = [];
+      if (customerQuotations.length > 0) usages.push({ location: "Quotations", count: customerQuotations.length, examples: customerQuotations.slice(0, 3).map(q => q.quotationNumber) });
+      if (customerInvoices.length > 0) usages.push({ location: "Invoices", count: customerInvoices.length, examples: customerInvoices.slice(0, 3).map(i => i.invoiceNumber) });
+      if (customerProjects.length > 0) usages.push({ location: "Projects", count: customerProjects.length, examples: customerProjects.slice(0, 3).map(p => p.projectNumber || p.name) });
 
       res.json({ canDelete: usages.length === 0, usages });
     } catch (error) {
@@ -572,11 +571,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/suppliers/:id/check-usages", async (req, res) => {
     try {
       const { id } = req.params;
-      const usages: { location: string; id: string; label: string }[] = [];
-
       const supplierPurchaseOrders = await db.select().from(purchaseOrders).where(eq(purchaseOrders.supplierId, id));
 
-      supplierPurchaseOrders.forEach(po => usages.push({ location: "Purchase Orders", id: po.id, label: po.orderNumber }));
+      const usages: { location: string; count: number; examples: string[] }[] = [];
+      if (supplierPurchaseOrders.length > 0) usages.push({ location: "Purchase Orders", count: supplierPurchaseOrders.length, examples: supplierPurchaseOrders.slice(0, 3).map(po => po.orderNumber) });
 
       res.json({ canDelete: usages.length === 0, usages });
     } catch (error) {
@@ -704,26 +702,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Inventory routes
-  app.get("/api/inventory/:id/check-usages", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const usages: { location: string; id: string; label: string }[] = [];
-
-      const [itemQuotationItems, itemInvoiceItems] = await Promise.all([
-        db.select().from(quotationItems).where(eq(quotationItems.itemId, id)),
-        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id))
-      ]);
-
-      itemQuotationItems.forEach(qi => usages.push({ location: "Quotation Items", id: qi.id, label: qi.description }));
-      itemInvoiceItems.forEach(ii => usages.push({ location: "Invoice Items", id: ii.id, label: ii.description }));
-
-      res.json({ canDelete: usages.length === 0, usages });
-    } catch (error) {
-      console.error("Error checking inventory item usages:", error);
-      res.status(500).json({ message: "Failed to check inventory item usages" });
-    }
-  });
-
   app.get("/api/inventory", async (req, res) => {
     try {
       const items = await storage.getInventoryItems();
@@ -747,15 +725,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/inventory/:id/check-usages", async (req, res) => {
     try {
       const { id } = req.params;
-      const usages: { location: string; id: string; label: string }[] = [];
-
       const [itemQuotationItems, itemInvoiceItems] = await Promise.all([
         db.select().from(quotationItems).where(eq(quotationItems.itemId, id)),
         db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id))
       ]);
 
-      itemQuotationItems.forEach(q => usages.push({ location: "Quotation Items", id: q.id, label: q.description }));
-      itemInvoiceItems.forEach(i => usages.push({ location: "Invoice Items", id: i.id, label: i.description }));
+      const usages: { location: string; count: number; examples: string[] }[] = [];
+      if (itemQuotationItems.length > 0) usages.push({ location: "Quotation Items", count: itemQuotationItems.length, examples: itemQuotationItems.slice(0, 3).map(q => q.description || '') });
+      if (itemInvoiceItems.length > 0) usages.push({ location: "Invoice Items", count: itemInvoiceItems.length, examples: itemInvoiceItems.slice(0, 3).map(i => i.description || '') });
 
       res.json({ canDelete: usages.length === 0, usages });
     } catch (error) {

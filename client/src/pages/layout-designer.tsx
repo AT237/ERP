@@ -437,6 +437,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const [sections, setSections] = useState<any[]>([]);
   const [selectedSection, setSelectedSection] = useState<any>(null);
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
+  const [activeLineTypeTabMap, setActiveLineTypeTabMap] = useState<Record<string, string>>({});
   const [selectedBlockIds, setSelectedBlockIds] = useState<string[]>([]); // Multi-select support
   const [selectedChildBlock, setSelectedChildBlock] = useState<{ block: any; parentGroupId: string } | null>(null); // Child block within group
   const [draggedBlockType, setDraggedBlockType] = useState<string | null>(null);
@@ -625,12 +626,12 @@ export function VisualDesignerView({ layout }: { layout: any }) {
           e.preventDefault();
           if (selectedBlock) {
             clipboardRef.current = JSON.parse(JSON.stringify(selectedBlock));
-            const cutSection = sections.find((s: any) => s.config.blocks?.find((b: any) => b.id === selectedBlock.id));
+            const cutSection = sections.find((s: any) => getSectionBlocks(s).find((b: any) => b.id === selectedBlock.id));
             if (cutSection) {
               pushHistory(sections);
               setSections(sections.map((s: any) =>
                 s.id === cutSection.id
-                  ? { ...s, config: { ...s.config, blocks: s.config.blocks.filter((b: any) => b.id !== selectedBlock.id) } }
+                  ? applyBlocksToSection(s, getSectionBlocks(s).filter((b: any) => b.id !== selectedBlock.id))
                   : s
               ));
               setSelectedBlock(null);
@@ -653,7 +654,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
             pushHistory(sections);
             setSections(sections.map((s: any) =>
               s.id === targetSection.id
-                ? { ...s, config: { ...s.config, blocks: [...(s.config.blocks || []), newBlock] } }
+                ? applyBlocksToSection(s, [...getSectionBlocks(s), newBlock])
                 : s
             ));
             setSelectedBlock(newBlock);
@@ -863,12 +864,11 @@ export function VisualDesignerView({ layout }: { layout: any }) {
       config: getDefaultConfig(draggedBlockType),
     };
 
-    // Add block to section
-    const updatedSections = sections.map(s => 
-      s.id === sectionId 
-        ? { ...s, config: { ...s.config, blocks: [...(s.config.blocks || []), newBlock] } }
-        : s
-    );
+    // Add block to section (template-aware)
+    const updatedSections = sections.map(s => {
+      if (s.id !== sectionId) return s;
+      return applyBlocksToSection(s, [...getSectionBlocks(s), newBlock]);
+    });
 
     pushHistory(sections);
     setSections(updatedSections);
@@ -881,11 +881,10 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   };
 
   const handleRemoveBlock = (sectionId: string, blockId: string) => {
-    const updatedSections = sections.map(s => 
-      s.id === sectionId 
-        ? { ...s, config: { ...s.config, blocks: (s.config.blocks || []).filter((b: any) => b.id !== blockId) } }
-        : s
-    );
+    const updatedSections = sections.map(s => {
+      if (s.id !== sectionId) return s;
+      return applyBlocksToSection(s, getSectionBlocks(s).filter((b: any) => b.id !== blockId));
+    });
     pushHistory(sections);
     setSections(updatedSections);
     
@@ -898,18 +897,13 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const handleMoveBlockUp = (sectionId: string, blockId: string) => {
     const updatedSections = sections.map(s => {
       if (s.id !== sectionId) return s;
-      
-      const blocks = [...(s.config.blocks || [])];
+      const blocks = [...getSectionBlocks(s)];
       const index = blocks.findIndex((b: any) => b.id === blockId);
-      
       if (index >= 0 && index < blocks.length - 1) {
-        // Swap with next block (move to higher index = on top)
         [blocks[index], blocks[index + 1]] = [blocks[index + 1], blocks[index]];
       }
-      
-      return { ...s, config: { ...s.config, blocks } };
+      return applyBlocksToSection(s, blocks);
     });
-    
     pushHistory(sections);
     setSections(updatedSections);
   };
@@ -918,18 +912,13 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const handleMoveBlockDown = (sectionId: string, blockId: string) => {
     const updatedSections = sections.map(s => {
       if (s.id !== sectionId) return s;
-      
-      const blocks = [...(s.config.blocks || [])];
+      const blocks = [...getSectionBlocks(s)];
       const index = blocks.findIndex((b: any) => b.id === blockId);
-      
       if (index > 0) {
-        // Swap with previous block (move to lower index = behind)
         [blocks[index - 1], blocks[index]] = [blocks[index], blocks[index - 1]];
       }
-      
-      return { ...s, config: { ...s.config, blocks } };
+      return applyBlocksToSection(s, blocks);
     });
-    
     pushHistory(sections);
     setSections(updatedSections);
   };
@@ -1032,18 +1021,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     // Update the section: remove grouped blocks, add group block
     const updatedSections = sections.map(s => {
       if (s.id !== targetSection.id) return s;
-      
-      const remainingBlocks = (s.config.blocks || []).filter(
-        (b: any) => !selectedBlockIds.includes(b.id)
-      );
-      
-      return {
-        ...s,
-        config: {
-          ...s.config,
-          blocks: [...remainingBlocks, groupBlock],
-        },
-      };
+      const remainingBlocks = getSectionBlocks(s).filter((b: any) => !selectedBlockIds.includes(b.id));
+      return applyBlocksToSection(s, [...remainingBlocks, groupBlock]);
     });
     
     setSections(updatedSections);
@@ -1056,10 +1035,10 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const handleUngroupBlock = () => {
     if (!selectedBlock || selectedBlock.type !== 'Group') return;
     
-    // Find the section containing the group
+    // Find the section containing the group (template-aware)
     let targetSection: any = null;
     for (const section of sections) {
-      if (section.config.blocks?.some((b: any) => b.id === selectedBlock.id)) {
+      if (getSectionBlocks(section).some((b: any) => b.id === selectedBlock.id)) {
         targetSection = section;
         break;
       }
@@ -1067,7 +1046,6 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     
     if (!targetSection) return;
     
-    // Get child blocks and convert back to absolute positions
     const childBlocks = (selectedBlock.config?.childBlocks || []).map((block: any) => ({
       ...block,
       id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -1077,21 +1055,10 @@ export function VisualDesignerView({ layout }: { layout: any }) {
       }
     }));
     
-    // Update the section: remove group block, add child blocks
     const updatedSections = sections.map(s => {
       if (s.id !== targetSection.id) return s;
-      
-      const otherBlocks = (s.config.blocks || []).filter(
-        (b: any) => b.id !== selectedBlock.id
-      );
-      
-      return {
-        ...s,
-        config: {
-          ...s.config,
-          blocks: [...otherBlocks, ...childBlocks],
-        },
-      };
+      const otherBlocks = getSectionBlocks(s).filter((b: any) => b.id !== selectedBlock.id);
+      return applyBlocksToSection(s, [...otherBlocks, ...childBlocks]);
     });
     
     setSections(updatedSections);
@@ -1131,8 +1098,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     let newXMm = pxToMm(rawX);
     let newYMm = pxToMm(rawY);
     
-    // Get current block being dragged
-    const currentBlock = section.config.blocks?.find((b: any) => b.id === dragBlockId);
+    // Get current block being dragged (template-aware)
+    const currentBlock = getSectionBlocks(section).find((b: any) => b.id === dragBlockId);
     if (!currentBlock) return;
     
     const blockWidth = currentBlock.size?.width || 50;
@@ -1140,7 +1107,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     
     // Calculate alignment guides
     const guides: { type: 'h' | 'v'; position: number }[] = [];
-    const otherBlocks = (section.config.blocks || []).filter((b: any) => b.id !== dragBlockId);
+    const otherBlocks = getSectionBlocks(section).filter((b: any) => b.id !== dragBlockId);
     
     // Track if we snapped to prevent multiple snaps
     let snappedX = false;
@@ -1237,32 +1204,16 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const handleBlockDragEnd = () => {
     // Check if block should be moved to a different section
     if (isDraggingBlock && dragBlockId && dragSectionId && hoverSectionId && hoverSectionId !== dragSectionId) {
-      // Find the block in the source section
       const sourceSection = sections.find(s => s.id === dragSectionId);
-      const blockToMove = sourceSection?.config.blocks?.find((b: any) => b.id === dragBlockId);
+      const blockToMove = getSectionBlocks(sourceSection).find((b: any) => b.id === dragBlockId);
       
       if (blockToMove) {
-        // Move block to new section
         const updatedSections = sections.map(s => {
           if (s.id === dragSectionId) {
-            // Remove from source section
-            return {
-              ...s,
-              config: {
-                ...s.config,
-                blocks: (s.config.blocks || []).filter((b: any) => b.id !== dragBlockId),
-              },
-            };
+            return applyBlocksToSection(s, getSectionBlocks(s).filter((b: any) => b.id !== dragBlockId));
           }
           if (s.id === hoverSectionId) {
-            // Add to target section
-            return {
-              ...s,
-              config: {
-                ...s.config,
-                blocks: [...(s.config.blocks || []), blockToMove],
-              },
-            };
+            return applyBlocksToSection(s, [...getSectionBlocks(s), blockToMove]);
           }
           return s;
         });
@@ -1283,6 +1234,80 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     setHoverSectionId(null);
     setAlignmentGuides([]);
   };
+
+  // --- lineTypeTemplates helpers ---
+  const LINE_TYPE_TABS = [
+    { value: 'standard', label: 'Item', badge: 'ITM', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+    { value: 'unique',   label: 'Uniek Item', badge: 'UNI', color: 'bg-purple-100 text-purple-800 border-purple-200' },
+    { value: 'charges',  label: 'Meerwerk', badge: 'MWK', color: 'bg-orange-100 text-orange-800 border-orange-200' },
+    { value: 'text',     label: 'Tekst', badge: 'TXT', color: 'bg-gray-100 text-gray-700 border-gray-300' },
+  ];
+
+  const getActiveLineTypeTab = (sectionId: string) => activeLineTypeTabMap[sectionId] || 'standard';
+
+  const getSectionBlocks = (section: any): any[] => {
+    if (section.config?.lineTypeTemplates) {
+      const tab = getActiveLineTypeTab(section.id);
+      return section.config.lineTypeTemplates[tab] || [];
+    }
+    return section.config?.blocks || [];
+  };
+
+  const applyBlocksToSection = (section: any, newBlocks: any[]): any => {
+    if (section.config?.lineTypeTemplates) {
+      const tab = getActiveLineTypeTab(section.id);
+      return {
+        ...section,
+        config: {
+          ...section.config,
+          lineTypeTemplates: { ...section.config.lineTypeTemplates, [tab]: newBlocks },
+        },
+      };
+    }
+    return { ...section, config: { ...section.config, blocks: newBlocks } };
+  };
+
+  const switchLineTypeTab = (sectionId: string, newTab: string) => {
+    setActiveLineTypeTabMap(prev => ({ ...prev, [sectionId]: newTab }));
+    if (selectedSection?.id === sectionId) {
+      const updated = sections.find(s => s.id === sectionId);
+      if (updated) setSelectedSection(updated);
+    }
+    setSelectedBlock(null);
+  };
+
+  const enableLineTypeTemplates = (sectionId: string) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+    const currentBlocks = section.config?.blocks || [];
+    const updated = sections.map(s => s.id !== sectionId ? s : {
+      ...s,
+      config: {
+        ...s.config,
+        lineTypeTemplates: { standard: currentBlocks, unique: [], charges: [], text: [] },
+        lineTypeFilter: undefined,
+      },
+    });
+    setSections(updated);
+    setActiveLineTypeTabMap(prev => ({ ...prev, [sectionId]: 'standard' }));
+    const updatedSection = updated.find(s => s.id === sectionId);
+    if (updatedSection && selectedSection?.id === sectionId) setSelectedSection(updatedSection);
+  };
+
+  const disableLineTypeTemplates = (sectionId: string) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+    const currentTab = getActiveLineTypeTab(sectionId);
+    const currentBlocks = section.config?.lineTypeTemplates?.[currentTab] || [];
+    const updated = sections.map(s => s.id !== sectionId ? s : {
+      ...s,
+      config: { ...s.config, lineTypeTemplates: undefined, blocks: currentBlocks },
+    });
+    setSections(updated);
+    const updatedSection = updated.find(s => s.id === sectionId);
+    if (updatedSection && selectedSection?.id === sectionId) setSelectedSection(updatedSection);
+  };
+  // --- end lineTypeTemplates helpers ---
 
   const updateSectionProperty = (sectionId: string, path: string, value: any) => {
     pushHistory(sections);
@@ -1311,114 +1336,55 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   };
 
   const updateBlockProperty = (sectionId: string, blockId: string, property: string, value: any) => {
-    if (!isDraggingBlock) pushHistory(sections); // drag start already pushed history
+    if (!isDraggingBlock) pushHistory(sections);
     const updatedSections = sections.map(s => {
       if (s.id !== sectionId) return s;
-      
-      return {
-        ...s,
-        config: {
-          ...s.config,
-          blocks: (s.config.blocks || []).map((b: any) => 
-            b.id === blockId ? { ...b, [property]: value } : b
-          ),
-        },
-      };
+      const newBlocks = getSectionBlocks(s).map((b: any) => b.id === blockId ? { ...b, [property]: value } : b);
+      return applyBlocksToSection(s, newBlocks);
     });
-    
     setSections(updatedSections);
-    
-    // Update selectedBlock if it's the one being modified
     if (selectedBlock?.id === blockId) {
       const updatedSection = updatedSections.find(s => s.id === sectionId);
-      const updatedBlock = updatedSection?.config.blocks?.find((b: any) => b.id === blockId);
-      if (updatedBlock) {
-        setSelectedBlock(updatedBlock);
-      }
+      const updatedBlock = getSectionBlocks(updatedSection).find((b: any) => b.id === blockId);
+      if (updatedBlock) setSelectedBlock(updatedBlock);
     }
   };
 
   // Move block from one section to another
   const moveBlockToSection = (fromSectionId: string, toSectionId: string, blockId: string) => {
     if (fromSectionId === toSectionId) return;
-    
-    // Find the block to move
     const fromSection = sections.find(s => s.id === fromSectionId);
-    const blockToMove = fromSection?.config.blocks?.find((b: any) => b.id === blockId);
+    const blockToMove = getSectionBlocks(fromSection).find((b: any) => b.id === blockId);
     if (!blockToMove) return;
-    
     const updatedSections = sections.map(s => {
-      if (s.id === fromSectionId) {
-        // Remove block from source section
-        return {
-          ...s,
-          config: {
-            ...s.config,
-            blocks: (s.config.blocks || []).filter((b: any) => b.id !== blockId),
-          },
-        };
-      }
-      if (s.id === toSectionId) {
-        // Add block to target section
-        return {
-          ...s,
-          config: {
-            ...s.config,
-            blocks: [...(s.config.blocks || []), blockToMove],
-          },
-        };
-      }
+      if (s.id === fromSectionId) return applyBlocksToSection(s, getSectionBlocks(s).filter((b: any) => b.id !== blockId));
+      if (s.id === toSectionId) return applyBlocksToSection(s, [...getSectionBlocks(s), blockToMove]);
       return s;
     });
-    
     setSections(updatedSections);
-    
-    // Update selected section to the new section
     const newSection = updatedSections.find(s => s.id === toSectionId);
-    if (newSection) {
-      setSelectedSection(newSection);
-    }
+    if (newSection) setSelectedSection(newSection);
   };
 
   // Update property of a child block within a group
   const updateChildBlockProperty = (sectionId: string, parentGroupId: string, childBlockId: string, property: string, value: any) => {
     const updatedSections = sections.map(s => {
       if (s.id !== sectionId) return s;
-      
-      return {
-        ...s,
-        config: {
-          ...s.config,
-          blocks: (s.config.blocks || []).map((b: any) => {
-            if (b.id !== parentGroupId || b.type !== 'Group') return b;
-            
-            // Update the child block within the group
-            const updatedChildBlocks = (b.config?.childBlocks || []).map((child: any) =>
-              child.id === childBlockId ? { ...child, [property]: value } : child
-            );
-            
-            return {
-              ...b,
-              config: {
-                ...b.config,
-                childBlocks: updatedChildBlocks,
-              },
-            };
-          }),
-        },
-      };
+      const newBlocks = getSectionBlocks(s).map((b: any) => {
+        if (b.id !== parentGroupId || b.type !== 'Group') return b;
+        const updatedChildBlocks = (b.config?.childBlocks || []).map((child: any) =>
+          child.id === childBlockId ? { ...child, [property]: value } : child
+        );
+        return { ...b, config: { ...b.config, childBlocks: updatedChildBlocks } };
+      });
+      return applyBlocksToSection(s, newBlocks);
     });
-    
     setSections(updatedSections);
-    
-    // Update selectedChildBlock if it's the one being modified
     if (selectedChildBlock?.block.id === childBlockId) {
       const updatedSection = updatedSections.find(s => s.id === sectionId);
-      const updatedGroup = updatedSection?.config.blocks?.find((b: any) => b.id === parentGroupId);
+      const updatedGroup = getSectionBlocks(updatedSection).find((b: any) => b.id === parentGroupId);
       const updatedChild = updatedGroup?.config?.childBlocks?.find((c: any) => c.id === childBlockId);
-      if (updatedChild) {
-        setSelectedChildBlock({ block: updatedChild, parentGroupId });
-      }
+      if (updatedChild) setSelectedChildBlock({ block: updatedChild, parentGroupId });
     }
   };
 
@@ -1490,7 +1456,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                   disabled={!selectedBlock}
                   onClick={() => {
                     if (!selectedBlock) return;
-                    const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
+                    const sectionId = sections.find(s => getSectionBlocks(s).some((b: any) => b.id === selectedBlock.id))?.id;
                     if (!sectionId) return;
                     const section = sections.find(s => s.id === sectionId);
                     if (!section) return;
@@ -1499,8 +1465,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                       id: `block-${Date.now()}`,
                       position: { x: (selectedBlock.position?.x || 0) + 5, y: (selectedBlock.position?.y || 0) + 5 },
                     };
-                    const updatedBlocks = [...(section.config.blocks || []), copiedBlock];
-                    setSections(sections.map(s => s.id === sectionId ? { ...s, config: { ...s.config, blocks: updatedBlocks } } : s));
+                    setSections(sections.map(s => s.id === sectionId ? applyBlocksToSection(s, [...getSectionBlocks(s), copiedBlock]) : s));
                     setSelectedBlock(copiedBlock);
                     toast({ title: 'Blok gekopieerd', description: 'Het blok is gekopieerd' });
                   }}
@@ -2513,16 +2478,39 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                               });
                             })()}
 
-                            {(!section.config.blocks || section.config.blocks.length === 0) ? (
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            {/* lineTypeTemplates tab bar */}
+                            {section.config?.lineTypeTemplates && (
+                              <div className="absolute top-0 left-0 right-0 z-30 flex gap-0.5 p-1 bg-white/90 border-b border-orange-200 pointer-events-auto" onClick={e => e.stopPropagation()}>
+                                {LINE_TYPE_TABS.map(lt => {
+                                  const isActive = getActiveLineTypeTab(section.id) === lt.value;
+                                  const count = (section.config.lineTypeTemplates?.[lt.value] || []).length;
+                                  return (
+                                    <button
+                                      key={lt.value}
+                                      className={`text-[10px] px-2 py-0.5 rounded font-medium border transition-colors ${isActive ? 'bg-orange-500 text-white border-orange-600' : `${lt.color} hover:opacity-80 border`}`}
+                                      onClick={(e) => { e.stopPropagation(); switchLineTypeTab(section.id, lt.value); handleSectionClick(section); }}
+                                    >
+                                      {lt.badge} <span className="opacity-75">({count})</span>
+                                    </button>
+                                  );
+                                })}
+                                <span className="ml-auto text-[10px] text-orange-600 font-medium self-center pr-1">Actief: {LINE_TYPE_TABS.find(t => t.value === getActiveLineTypeTab(section.id))?.label}</span>
+                              </div>
+                            )}
+
+                            {(() => {
+                              const displayBlocks = getSectionBlocks(section);
+                              const topOffset = section.config?.lineTypeTemplates ? 24 : 0;
+                              return displayBlocks.length === 0 ? (
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top: `${topOffset}px` }}>
                                 <div className="text-center text-muted-foreground">
                                   <div className="text-2xl mb-2">📦</div>
-                                  <div className="text-sm">Sleep blokken hierheen</div>
+                                  <div className="text-sm">Sleep blokken hierheen{section.config?.lineTypeTemplates ? ` (${LINE_TYPE_TABS.find(t => t.value === getActiveLineTypeTab(section.id))?.label})` : ''}</div>
                                 </div>
                               </div>
                             ) : (
                               <>
-                                {section.config.blocks.map((block: any, blockIndex: number) => (
+                                {displayBlocks.map((block: any, blockIndex: number) => (
                                   <SectionBlock
                                     key={block.id}
                                     block={block}
@@ -2562,7 +2550,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                                   )
                                 ))}
                               </>
-                            )}
+                            );
+                            })()}
                           </div>
                         </div>
                       );
