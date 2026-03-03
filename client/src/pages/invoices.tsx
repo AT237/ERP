@@ -1,11 +1,12 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { PrintLayoutDialog } from "@/components/layouts/PrintLayoutDialog";
 import type { Invoice, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -13,6 +14,13 @@ interface InvoicesProps {}
 
 export default function Invoices({}: InvoicesProps) {
   const { toast } = useToast();
+  const [printDialogOpen, setPrintDialogOpen] = React.useState(false);
+  const [printInvoiceId, setPrintInvoiceId] = React.useState<string | undefined>();
+
+  const handlePrintInvoice = React.useCallback((invoice: Invoice) => {
+    setPrintInvoiceId(invoice.id);
+    setPrintDialogOpen(true);
+  }, []);
 
   const { data: invoices = [], isLoading: invoicesLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
@@ -216,13 +224,28 @@ export default function Invoices({}: InvoicesProps) {
         entityNamePlural="Invoices"
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
-        headerActions={React.useMemo(() => [{
-          key: 'add',
-          label: 'Add Invoice',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleAddInvoice,
-          variant: 'default'
-        }], [handleAddInvoice])}
+        headerActions={React.useMemo(() => {
+          const actions: any[] = [{
+            key: 'add',
+            label: 'Add Invoice',
+            icon: <Plus className="h-4 w-4" />,
+            onClick: handleAddInvoice,
+            variant: 'default'
+          }];
+          if (tableState.selectedRows.length === 1) {
+            const selectedInvoice = enrichedInvoices.find(inv => inv.id === tableState.selectedRows[0]);
+            if (selectedInvoice) {
+              actions.unshift({
+                key: 'print',
+                label: 'Afdrukken',
+                icon: <Printer className="h-4 w-4" />,
+                onClick: () => handlePrintInvoice(selectedInvoice),
+                variant: 'outline'
+              });
+            }
+          }
+          return actions;
+        }, [handleAddInvoice, tableState.selectedRows, enrichedInvoices, handlePrintInvoice])}
         rowActions={React.useCallback((invoice: Invoice) => [
           {
             key: 'view',
@@ -239,15 +262,28 @@ export default function Invoices({}: InvoicesProps) {
             variant: 'outline' as const
           },
           {
+            key: 'print',
+            label: 'Print',
+            icon: <Printer className="h-4 w-4" />,
+            onClick: () => handlePrintInvoice(invoice),
+            variant: 'outline' as const
+          },
+          {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
             onClick: () => del.handleDeleteRow(invoice),
             variant: 'destructive' as const
           }
-        ], [handleViewInvoice, handleEditInvoice, del.handleDeleteRow])}
+        ], [handleViewInvoice, handleEditInvoice, handlePrintInvoice, del.handleDeleteRow])}
       />
       {del.renderDeleteDialogs()}
+      <PrintLayoutDialog
+        open={printDialogOpen}
+        onOpenChange={setPrintDialogOpen}
+        documentType="invoice"
+        entityId={printInvoiceId}
+      />
     </div>
   );
 }
