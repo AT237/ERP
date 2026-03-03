@@ -3144,9 +3144,16 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
     for (const block of blocks) {
       const dynamicPos = dynamicPositions.get(block.id);
       if (dynamicPos?.visible !== false) {
-        // Skip groups that are filtered out by lineTypeCondition
-        if (block.type === 'Group' && block.config?.lineTypeCondition && itemContext) {
-          if (block.config.lineTypeCondition !== itemContext.item?.lineType) continue;
+        // Skip groups filtered out by conditionField/conditionValue (or legacy lineTypeCondition)
+        if (block.type === 'Group' && itemContext) {
+          const cf = block.config?.conditionField;
+          const cv = block.config?.conditionValue;
+          const ltc = block.config?.lineTypeCondition;
+          if (cf && cv) {
+            if (String(itemContext.item?.[cf] ?? '') !== String(cv)) continue;
+          } else if (ltc) {
+            if (itemContext.item?.lineType !== ltc) continue;
+          }
         }
         const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
         const blockHeight = block.size?.height || 25;
@@ -3208,10 +3215,15 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                 return null;
               }
 
-              // lineTypeCondition: if group has a condition and we have an item context, filter
-              if (block.type === 'Group' && block.config?.lineTypeCondition && itemContext) {
-                if (block.config.lineTypeCondition !== itemContext.item?.lineType) {
-                  return null;
+              // Conditie: als groep een conditionField/conditionValue heeft, filter op item veld waarde
+              if (block.type === 'Group' && itemContext) {
+                const cf = block.config?.conditionField;
+                const cv = block.config?.conditionValue;
+                const ltc = block.config?.lineTypeCondition;
+                if (cf && cv) {
+                  if (String(itemContext.item?.[cf] ?? '') !== String(cv)) return null;
+                } else if (ltc) {
+                  if (itemContext.item?.lineType !== ltc) return null;
                 }
               }
               
@@ -3518,7 +3530,8 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
       >
         {/* Group header label - clickable to select group */}
         {(() => {
-          const lineTypeCondition = block.config?.lineTypeCondition;
+          const cf = block.config?.conditionField;
+          const cv = block.config?.conditionValue || block.config?.lineTypeCondition;
           const conditionColors: Record<string, string> = {
             standard: 'bg-blue-500',
             unique: 'bg-purple-500',
@@ -3531,6 +3544,10 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
             text: 'TXT',
             charges: 'MWK',
           };
+          const hasCondition = !!(cf && cv) || !!block.config?.lineTypeCondition;
+          const badgeText = cv ? (conditionLabels[cv] || cv.substring(0, 4).toUpperCase()) : null;
+          const badgeColor = cv ? (conditionColors[cv] || 'bg-indigo-500') : 'bg-indigo-400';
+
           return (
             <div 
               data-group-label="true"
@@ -3543,9 +3560,9 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
               <div className="px-1.5 bg-orange-500 text-white text-[8px] font-medium rounded-t whitespace-nowrap hover:bg-orange-600 transition-colors">
                 {groupName} ({childBlocks.length})
               </div>
-              {lineTypeCondition && (
-                <div className={`px-1 ${conditionColors[lineTypeCondition] || 'bg-gray-500'} text-white text-[8px] font-bold rounded-t whitespace-nowrap`}>
-                  {conditionLabels[lineTypeCondition] || lineTypeCondition}
+              {hasCondition && badgeText && (
+                <div className={`px-1 ${badgeColor} text-white text-[8px] font-bold rounded-t whitespace-nowrap`} title={`${cf || 'lineType'} = ${cv}`}>
+                  {badgeText}
                 </div>
               )}
             </div>
@@ -3762,25 +3779,104 @@ function BlockProperties({
                 </Label>
               </div>
 
-              {/* lineTypeCondition - only show when section repeats */}
-              <div className="space-y-1 pt-2 border-t">
-                <Label className="text-xs font-medium text-orange-700">Regeltype conditie</Label>
-                <select
-                  value={block.config?.lineTypeCondition || 'all'}
-                  onChange={(e) => updateConfig('lineTypeCondition', e.target.value === 'all' ? null : e.target.value)}
-                  className="w-full h-8 text-xs border border-input rounded-md px-2 bg-background"
-                  data-testid="select-line-type-condition"
-                >
-                  <option value="all">Altijd tonen (alle typen)</option>
-                  <option value="standard">Alleen Standaard items</option>
-                  <option value="unique">Alleen Unieke items</option>
-                  <option value="text">Alleen Tekst-regels</option>
-                  <option value="charges">Alleen Meerwerk (charges)</option>
-                </select>
-                <p className="text-[10px] text-muted-foreground">
-                  Deze groep toont alleen als het regelitem van dit type is
-                </p>
-              </div>
+              {/* Conditie koppeling aan item-veld */}
+              {(() => {
+                const conditionEnabled = !!(block.config?.conditionField || block.config?.lineTypeCondition);
+                const conditionField = block.config?.conditionField || (block.config?.lineTypeCondition ? 'lineType' : '');
+                const conditionValue = block.config?.conditionValue || block.config?.lineTypeCondition || '';
+
+                const ITEM_FIELDS: { value: string; label: string; options: { value: string; label: string }[] }[] = [
+                  {
+                    value: 'lineType',
+                    label: 'Regeltype (lineType)',
+                    options: [
+                      { value: 'standard', label: 'Standaard (standard)' },
+                      { value: 'unique', label: 'Uniek (unique)' },
+                      { value: 'text', label: 'Tekst (text)' },
+                      { value: 'charges', label: 'Meerwerk (charges)' },
+                    ],
+                  },
+                ];
+
+                const selectedField = ITEM_FIELDS.find(f => f.value === conditionField);
+
+                const applyCondition = (field: string, value: string) => {
+                  updateConfig('conditionField', field || null);
+                  updateConfig('conditionValue', value || null);
+                  // Keep backward compat
+                  updateConfig('lineTypeCondition', field === 'lineType' && value ? value : null);
+                };
+
+                return (
+                  <div className="space-y-2 pt-2 border-t">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="condition-enabled"
+                        checked={conditionEnabled}
+                        onChange={(e) => {
+                          if (!e.target.checked) {
+                            updateConfig('conditionField', null);
+                            updateConfig('conditionValue', null);
+                            updateConfig('lineTypeCondition', null);
+                          } else {
+                            applyCondition('lineType', '');
+                          }
+                        }}
+                        className="h-4 w-4 accent-orange-500"
+                      />
+                      <Label htmlFor="condition-enabled" className="text-xs font-semibold text-orange-700 cursor-pointer">
+                        Conditioneel tonen
+                      </Label>
+                    </div>
+
+                    {conditionEnabled && (
+                      <div className="ml-6 space-y-2 p-2 bg-orange-50 border border-orange-200 rounded-md">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Item veld</Label>
+                          <select
+                            value={conditionField}
+                            onChange={(e) => applyCondition(e.target.value, '')}
+                            className="w-full h-8 text-xs border border-input rounded-md px-2 bg-background"
+                          >
+                            <option value="">— Kies een veld —</option>
+                            {ITEM_FIELDS.map(f => (
+                              <option key={f.value} value={f.value}>{f.label}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {conditionField && selectedField && (
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Is gelijk aan</Label>
+                            <select
+                              value={conditionValue}
+                              onChange={(e) => applyCondition(conditionField, e.target.value)}
+                              className="w-full h-8 text-xs border border-input rounded-md px-2 bg-background"
+                            >
+                              <option value="">— Kies een waarde —</option>
+                              {selectedField.options.map(o => (
+                                <option key={o.value} value={o.value}>{o.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        {conditionField && conditionValue && (
+                          <div className="text-[10px] text-orange-800 font-medium mt-1">
+                            ✓ Toon alleen wanneer <code className="bg-orange-100 px-1 rounded">{conditionField}</code> = <code className="bg-orange-100 px-1 rounded">{conditionValue}</code>
+                          </div>
+                        )}
+                        {conditionField && !conditionValue && (
+                          <div className="text-[10px] text-amber-700">
+                            ⚠ Kies een waarde om de conditie te activeren
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
