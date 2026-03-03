@@ -76,6 +76,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       totalAmount: "0.00",
       paidAmount: "0.00",
       notes: "",
+      printSortOrder: "position",
     },
   });
 
@@ -132,6 +133,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         totalAmount: invoice.totalAmount || "0.00",
         paidAmount: invoice.paidAmount || "0.00",
         notes: invoice.notes || "",
+        printSortOrder: (invoice as any).printSortOrder || "position",
       });
     }
   }, [invoice]);

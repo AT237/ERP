@@ -237,6 +237,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       incoTerms: "",
       paymentConditions: "",
       deliveryConditions: "",
+      printSortOrder: "position",
     },
   });
 
@@ -426,6 +427,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         incoTerms: existingQuotation.incoTerms || "",
         paymentConditions: existingQuotation.paymentConditions || "",
         deliveryConditions: existingQuotation.deliveryConditions || "",
+        printSortOrder: existingQuotation.printSortOrder || "position",
       });
       setQuotationItems(existingQuotationItems);
     }
