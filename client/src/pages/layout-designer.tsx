@@ -3252,19 +3252,54 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
 
   return (
     <div className="font-['Arial',sans-serif]">
-      {sections.flatMap((section: any) => {
+      {(() => {
+        // Pre-process: track which sections are absorbed into a lineType group
+        const groupAbsorbed = new Set<string>();
+        
+        const isLineTypeFilteredRepeat = (s: any) => {
+          const repeats = sectionContainsItemPlaceholders(s) || s.config?.repeat?.enabled === true;
+          const filter = s.config?.lineTypeFilter;
+          return repeats && filter && filter !== 'all';
+        };
+
+        return sections.flatMap((section: any, sectionIndex: number) => {
+        if (groupAbsorbed.has(section.id)) return [];
+
         // Auto-detect if this section should repeat for line items
-        // Section repeats if it contains {{item.*}} placeholders OR if manually enabled
         const hasItemPlaceholders = sectionContainsItemPlaceholders(section);
         const manuallyEnabled = section.config?.repeat?.enabled === true;
         const shouldRepeat = hasItemPlaceholders || manuallyEnabled;
-        
+        const lineTypeFilter = section.config?.lineTypeFilter;
+
+        // --- ITEM-FIRST GROUP RENDERING ---
+        // When consecutive repeating sections each have a lineTypeFilter,
+        // render them together in item sort order (e.g. 010 std, 020 charges, 030 std)
+        if (shouldRepeat && lineTypeFilter && lineTypeFilter !== 'all') {
+          // Collect this section + all following consecutive lineType-filtered repeating sections
+          const group: any[] = [section];
+          for (let j = sectionIndex + 1; j < sections.length; j++) {
+            if (isLineTypeFilteredRepeat(sections[j])) {
+              group.push(sections[j]);
+              groupAbsorbed.add(sections[j].id);
+            } else {
+              break;
+            }
+          }
+
+          const allItems = typedPrintData.items || [];
+          if (allItems.length === 0) return [];
+
+          // For each item (already in print sort order), find matching section template
+          return allItems.flatMap((item: any, itemIndex: number) => {
+            const matchingSection = group.find((gs: any) => gs.config?.lineTypeFilter === item.lineType);
+            if (!matchingSection) return [];
+            return [renderSectionInstance(matchingSection, `${matchingSection.id}-item-${itemIndex}`, { item, index: itemIndex })];
+          });
+        }
+
         if (shouldRepeat) {
           const allItems = typedPrintData.items || [];
-          const lineTypeFilter = section.config?.lineTypeFilter;
-          const items = lineTypeFilter && lineTypeFilter !== 'all'
-            ? allItems.filter((item: any) => item.lineType === lineTypeFilter)
-            : allItems;
+          const items = allItems; // no filter — unfiltered repeating section shows all items
           
           if (items.length === 0) {
             return []; // No items to render
@@ -3428,7 +3463,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           )}
         </div>
         );
-      })}
+        });
+      })()}
       
       {sections.length === 0 && (
         <div className="text-center text-gray-400 italic py-8">
