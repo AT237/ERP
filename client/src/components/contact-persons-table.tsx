@@ -83,7 +83,7 @@ export default function ContactPersonsTable() {
   const del = useEntityDelete<CustomerContact>({
     endpoint: '/api/customer-contacts',
     queryKeys: ['/api/customer-contacts'],
-    getName: (row) => `${row.firstName} ${row.lastName}`,
+    getName: (row) => (row as any).name || row.firstName,
     entityLabel: 'Contact',
     checkUsages: false,
   });
