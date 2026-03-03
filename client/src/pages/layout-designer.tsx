@@ -4897,15 +4897,6 @@ function SectionProperties({
               </Label>
             </div>
 
-            {hasItemPlaceholders && !manualRepeat && (
-              <div className="rounded-md px-3 py-2 text-xs flex items-start gap-2 bg-green-50 border border-green-200 text-green-800">
-                <span className="mt-0.5">🔁</span>
-                <div>
-                  <div className="font-semibold">Automatisch actief</div>
-                  <div className="text-[10px] mt-0.5 text-green-700">Een blok bevat een {'{{item.*}}'} veld</div>
-                </div>
-              </div>
-            )}
 
             {isRepeating && (
               <div className="space-y-1">
