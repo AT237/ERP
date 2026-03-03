@@ -1597,8 +1597,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const unitData = insertUnitOfMeasureSchema.parse(req.body);
       const unit = await storage.createUnitOfMeasure(unitData);
       res.json(unit);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating unit of measure:", error);
+      if (error?.code === "23505") {
+        return res.status(409).json({ message: "Deze code bestaat al. Kies een andere code." });
+      }
       res.status(400).json({ message: "Failed to create unit of measure" });
     }
   });
@@ -2173,8 +2176,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const unitData = insertUnitOfMeasureSchema.partial().parse(req.body);
       const unit = await storage.updateUnitOfMeasure(req.params.id, unitData);
       res.json(unit);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating unit of measure:", error);
+      if (error?.code === "23505") {
+        return res.status(409).json({ message: "Deze code bestaat al. Kies een andere code." });
+      }
       res.status(400).json({ message: "Failed to update unit of measure" });
     }
   });
