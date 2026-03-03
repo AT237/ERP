@@ -453,6 +453,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const [allowedTables, setAllowedTables] = useState<string[]>(layout?.allowedTables || []);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'block' | 'section'; id: string; sectionId?: string } | null>(null);
+  const [localLayoutName, setLocalLayoutName] = useState<string>(layout?.name || '');
+  const [localLayoutNumber, setLocalLayoutNumber] = useState<string>(layout?.layoutNumber || '');
   const { toast } = useToast();
   
   // Drag state for block positioning with alignment guides
@@ -791,6 +793,27 @@ export function VisualDesignerView({ layout }: { layout: any }) {
       });
     },
   });
+
+  const updateLayoutInfoMutation = useMutation({
+    mutationFn: async ({ name, layoutNumber }: { name: string; layoutNumber: string }) => {
+      await apiRequest('PUT', `/api/layouts/${layout.id}`, { name, layoutNumber });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/layouts'] });
+    },
+    onError: () => {
+      toast({ title: 'Fout bij opslaan', description: 'Kon naam/ID niet opslaan', variant: 'destructive' });
+    },
+  });
+
+  const handleLayoutInfoBlur = () => {
+    const name = localLayoutName.trim();
+    const layoutNumber = localLayoutNumber.trim();
+    if (!name) return;
+    if (name !== layout.name || layoutNumber !== layout.layoutNumber) {
+      updateLayoutInfoMutation.mutate({ name, layoutNumber });
+    }
+  };
 
   const handleDragStart = (blockType: string) => {
     setDraggedBlockType(blockType);
@@ -2660,8 +2683,31 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                 onMoveBlock={moveBlockToSection}
               />
             ) : (
-              <div className="text-sm text-muted-foreground text-center py-8">
-                Selecteer een sectie of blok
+              <div className="space-y-4">
+                <div className="text-xs font-semibold text-orange-600 uppercase tracking-wide pb-1 border-b">Layout</div>
+                <div>
+                  <Label htmlFor="layout-info-number" className="text-xs">ID (lay-outnummer)</Label>
+                  <Input
+                    id="layout-info-number"
+                    value={localLayoutNumber}
+                    onChange={(e) => setLocalLayoutNumber(e.target.value)}
+                    onBlur={handleLayoutInfoBlur}
+                    className="h-8 text-xs mt-1"
+                    placeholder="bijv. LY-0012"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="layout-info-name" className="text-xs">Naam</Label>
+                  <Input
+                    id="layout-info-name"
+                    value={localLayoutName}
+                    onChange={(e) => setLocalLayoutName(e.target.value)}
+                    onBlur={handleLayoutInfoBlur}
+                    className="h-8 text-xs mt-1"
+                    placeholder="bijv. Commercial invoice"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Wijzigingen worden opgeslagen zodra u het veld verlaat.</p>
               </div>
             )}
           </CardContent>
