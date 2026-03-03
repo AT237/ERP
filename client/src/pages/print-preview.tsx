@@ -1,9 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRoute, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Printer } from "lucide-react";
+import { Printer, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LayoutPreview } from "./layout-designer";
+
+const DOC_WIDTH = 794;
+const DOC_HEIGHT = 1123;
 
 export default function PrintPreviewPage() {
   const [, params] = useRoute("/print/:documentType/:entityId");
@@ -14,6 +17,37 @@ export default function PrintPreviewPage() {
   const entityId = params?.entityId ?? "";
   const searchParams = new URLSearchParams(search);
   const layoutId = searchParams.get("layoutId") ?? "";
+
+  const [fitScale, setFitScale] = useState(1);
+  const [userZoom, setUserZoom] = useState(1);
+
+  useEffect(() => {
+    const updateFitScale = () => {
+      const available = window.innerWidth - 32;
+      setFitScale(Math.min(1, available / DOC_WIDTH));
+    };
+    updateFitScale();
+    window.addEventListener("resize", updateFitScale);
+    return () => window.removeEventListener("resize", updateFitScale);
+  }, []);
+
+  useEffect(() => {
+    const metaViewport = document.querySelector('meta[name="viewport"]');
+    const original = metaViewport?.getAttribute("content") ?? "";
+    metaViewport?.setAttribute(
+      "content",
+      "width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"
+    );
+    return () => {
+      metaViewport?.setAttribute("content", original);
+    };
+  }, []);
+
+  const totalScale = fitScale * userZoom;
+
+  const zoomIn = useCallback(() => setUserZoom(z => Math.min(z + 0.25, 3)), []);
+  const zoomOut = useCallback(() => setUserZoom(z => Math.max(z - 0.25, 0.25)), []);
+  const zoomReset = useCallback(() => setUserZoom(1), []);
 
   const { data: layout, isLoading: layoutLoading } = useQuery<any>({
     queryKey: ["/api/layouts", layoutId],
@@ -57,14 +91,13 @@ export default function PrintPreviewPage() {
   const isLoading = layoutLoading || sectionsLoading || printDataLoading;
 
   useEffect(() => {
-    document.title = printData?.invoice?.invoiceNumber
-      || printData?.quotation?.quotationNumber
-      || "Print Preview";
+    document.title =
+      printData?.invoice?.invoiceNumber ||
+      printData?.quotation?.quotationNumber ||
+      "Print Preview";
   }, [printData]);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
   if (isLoading) {
     return (
@@ -88,6 +121,8 @@ export default function PrintPreviewPage() {
     );
   }
 
+  const scaledHeight = DOC_HEIGHT * totalScale;
+
   return (
     <>
       <style>{`
@@ -96,33 +131,71 @@ export default function PrintPreviewPage() {
           body { margin: 0; padding: 0; background: white; }
           @page { size: A4; margin: 0; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .print-scale-wrapper { transform: none !important; width: ${DOC_WIDTH}px !important; }
+          .print-outer { padding: 0 !important; overflow: visible !important; }
         }
         body { background: #f3f4f6; }
       `}</style>
 
-      <div className="print-toolbar flex items-center justify-between px-6 py-3 bg-white border-b shadow-sm">
-        <div className="text-sm font-medium text-gray-700">
-          {printData?.invoice?.invoiceNumber
-            || printData?.quotation?.quotationNumber
-            || "Print Preview"}
+      <div className="print-toolbar flex items-center justify-between px-4 py-2 bg-white border-b shadow-sm gap-2 flex-wrap">
+        <div className="text-sm font-medium text-gray-700 truncate">
+          {printData?.invoice?.invoiceNumber ||
+            printData?.quotation?.quotationNumber ||
+            "Print Preview"}
         </div>
-        <Button
-          onClick={handlePrint}
-          className="bg-orange-500 hover:bg-orange-600 text-white"
-          size="sm"
-        >
-          <Printer className="h-4 w-4 mr-2" />
-          Afdrukken
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="icon" onClick={zoomOut} className="h-8 w-8" title="Zoom uit">
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <button
+            onClick={zoomReset}
+            className="text-xs px-2 py-1 rounded border border-gray-200 bg-white hover:bg-gray-50 min-w-[48px] text-center"
+            title="Reset zoom"
+          >
+            {Math.round(totalScale * 100)}%
+          </button>
+          <Button variant="outline" size="icon" onClick={zoomIn} className="h-8 w-8" title="Zoom in">
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={handlePrint}
+            className="bg-orange-500 hover:bg-orange-600 text-white ml-1"
+            size="sm"
+          >
+            <Printer className="h-4 w-4 mr-1" />
+            Afdrukken
+          </Button>
+        </div>
       </div>
 
-      <div className="flex justify-center py-8 px-4">
-        <div ref={printRef} className="bg-white shadow-lg" style={{ width: "794px", minHeight: "1123px" }}>
-          <LayoutPreview
-            layout={layout}
-            sections={sections}
-            printData={printData}
-          />
+      <div
+        className="print-outer overflow-x-auto py-6"
+        style={{ minHeight: `${scaledHeight + 48}px` }}
+      >
+        <div
+          style={{
+            width: `${DOC_WIDTH * totalScale}px`,
+            height: `${scaledHeight}px`,
+            margin: "0 auto",
+            position: "relative",
+          }}
+        >
+          <div
+            ref={printRef}
+            className="print-scale-wrapper bg-white shadow-lg"
+            style={{
+              width: `${DOC_WIDTH}px`,
+              minHeight: `${DOC_HEIGHT}px`,
+              transform: `scale(${totalScale})`,
+              transformOrigin: "top left",
+            }}
+          >
+            <LayoutPreview
+              layout={layout}
+              sections={sections}
+              printData={printData}
+            />
+          </div>
         </div>
       </div>
     </>
