@@ -2351,18 +2351,14 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                                 <span className="font-medium text-sm text-gray-700 flex items-center gap-1" style={{ transform: 'rotate(180deg)' }}>
                                 {/* Show repeat icon if section contains item placeholders */}
                                 {(() => {
-                                  const blocks = section.config?.blocks || [];
-                                  const hasItemPlaceholders = blocks.some((block: any) => {
-                                    const content = block.config?.content || block.content || '';
-                                    if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) return true;
-                                    const dataField = block.config?.dataField || '';
-                                    return typeof dataField === 'string' && dataField.startsWith('item.');
-                                  });
+                                  const hasItemPlaceholders = sectionContainsItemPlaceholders(section);
+                                  const manualRepeat = section.config?.repeat?.enabled === true;
+                                  const isRepeating = hasItemPlaceholders || manualRepeat;
                                   const lineTypeFilter = section.config?.lineTypeFilter;
                                   const lineTypeLabels: Record<string, string> = { standard: 'STD', unique: 'UNI', text: 'TXT', charges: 'MWK' };
                                   return (
                                     <>
-                                      {hasItemPlaceholders && <Repeat className="h-3 w-3 text-green-600" />}
+                                      {isRepeating && <Repeat className="h-3 w-3 text-green-600" />}
                                       {lineTypeFilter && lineTypeFilter !== 'all' && (
                                         <span className="text-[9px] font-bold bg-orange-500 text-white px-0.5 rounded leading-none">
                                           {lineTypeLabels[lineTypeFilter] || lineTypeFilter}
@@ -4661,13 +4657,7 @@ function SectionProperties({
 
       {/* Repeat Section */}
       {(() => {
-        const blocks = section.config?.blocks || [];
-        const hasItemPlaceholders = blocks.some((block: any) => {
-          const content = block.config?.content || block.content || '';
-          if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) return true;
-          const dataField = block.config?.dataField || '';
-          return typeof dataField === 'string' && dataField.startsWith('item.');
-        });
+        const hasItemPlaceholders = sectionContainsItemPlaceholders(section);
         const manualRepeat = section.config?.repeat?.enabled === true;
         const isRepeating = hasItemPlaceholders || manualRepeat;
         return (
