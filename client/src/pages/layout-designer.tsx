@@ -3120,6 +3120,28 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
     
     // Calculate dynamic positions for blocks in this section (pass itemContext for repeating sections)
     const dynamicPositions = calculateDynamicPositions(blocks, typedPrintData, itemContext);
+
+    // When repeating with itemContext, find if section uses conditional groups (conditionField/conditionValue)
+    // If so, normalize the matching group to y=0 so it renders at the top of each section instance
+    // (Groups are placed at different y-positions in the designer canvas for visibility, but in print
+    //  only ONE group shows per item and it should always appear at the top)
+    const hasConditionalGroups = itemContext && blocks.some(
+      (b: any) => b.type === 'Group' && (b.config?.conditionField || b.config?.lineTypeCondition)
+    );
+    const matchingGroupId = hasConditionalGroups ? (() => {
+      for (const b of blocks) {
+        if (b.type !== 'Group') continue;
+        const cf = b.config?.conditionField;
+        const cv = b.config?.conditionValue;
+        const ltc = b.config?.lineTypeCondition;
+        if (cf && cv) {
+          if (String(itemContext!.item?.[cf] ?? '') === String(cv)) return b.id;
+        } else if (ltc) {
+          if (itemContext!.item?.lineType === ltc) return b.id;
+        }
+      }
+      return null;
+    })() : null;
     
     // Calculate actual content height (bottom of lowest visible block)
     let contentHeight = 0;
@@ -3137,7 +3159,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
             if (itemContext.item?.lineType !== ltc) continue;
           }
         }
-        const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
+        // Normalize matching conditional group to y=0 for content height calculation
+        const rawY = dynamicPos?.y ?? (block.position?.y || 0);
+        const adjustedY = (hasConditionalGroups && block.id === matchingGroupId) ? 0 : rawY;
         const blockHeight = block.size?.height || 25;
         const blockBottom = mmToPx(adjustedY + blockHeight);
         contentHeight = Math.max(contentHeight, blockBottom);
@@ -3169,6 +3193,12 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
     
     if (!heightCanShrink && bottomMarginPx > 0) {
       sectionHeight = configuredHeight + bottomMarginPx;
+    }
+
+    // Auto-shrink: when repeating with conditional groups, shrink to the visible group's content height
+    // (groups are placed at different y-positions for design clarity but print should be compact)
+    if (hasConditionalGroups && contentHeight > 0 && contentHeight < configuredHeight) {
+      sectionHeight = contentHeight;
     }
     
     return (
@@ -3210,7 +3240,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
               }
               
               const BlockRenderer = BlockRenderers[block.type];
-              const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
+              const rawY = dynamicPos?.y ?? (block.position?.y || 0);
+              // Normalize matching conditional group to y=0 so it renders at the top of the section instance
+              const adjustedY = (hasConditionalGroups && block.id === matchingGroupId) ? 0 : rawY;
               
               const blockStyle: React.CSSProperties = {
                 position: 'absolute',
