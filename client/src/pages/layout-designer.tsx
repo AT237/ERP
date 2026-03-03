@@ -4650,12 +4650,16 @@ function SectionProperties({
           id="section-height"
           type="number"
           step="1"
-          value={section.config.dimensions?.heightMm || Math.round(pxToMm(section.config.dimensions?.height || 200))}
+          value={section.config.dimensions?.heightMm ?? Math.round(pxToMm(section.config.dimensions?.height || 200))}
           onChange={(e) => {
             const mmValue = parseInt(e.target.value) || 50;
-            onUpdateProperty(section.id, 'config.dimensions.heightMm', mmValue);
-            onUpdateProperty(section.id, 'config.dimensions.height', mmToPx(mmValue));
+            onUpdateProperty(section.id, 'config.dimensions', {
+              ...(section.config.dimensions || { unit: 'px' }),
+              heightMm: mmValue,
+              height: mmToPx(mmValue),
+            });
           }}
+          onFocus={(e) => e.target.select()}
           className="h-8 text-xs"
         />
       </div>
