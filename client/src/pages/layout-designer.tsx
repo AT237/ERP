@@ -2358,7 +2358,18 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                                     const dataField = block.config?.dataField || '';
                                     return typeof dataField === 'string' && dataField.startsWith('item.');
                                   });
-                                  return hasItemPlaceholders ? <Repeat className="h-3 w-3 text-green-600" /> : null;
+                                  const lineTypeFilter = section.config?.lineTypeFilter;
+                                  const lineTypeLabels: Record<string, string> = { standard: 'STD', unique: 'UNI', text: 'TXT', charges: 'MWK' };
+                                  return (
+                                    <>
+                                      {hasItemPlaceholders && <Repeat className="h-3 w-3 text-green-600" />}
+                                      {lineTypeFilter && lineTypeFilter !== 'all' && (
+                                        <span className="text-[9px] font-bold bg-orange-500 text-white px-0.5 rounded leading-none">
+                                          {lineTypeLabels[lineTypeFilter] || lineTypeFilter}
+                                        </span>
+                                      )}
+                                    </>
+                                  );
                                 })()}
                                 {section.name}
                               </span>
@@ -3253,7 +3264,11 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         const shouldRepeat = hasItemPlaceholders || manuallyEnabled;
         
         if (shouldRepeat) {
-          const items = typedPrintData.items || [];
+          const allItems = typedPrintData.items || [];
+          const lineTypeFilter = section.config?.lineTypeFilter;
+          const items = lineTypeFilter && lineTypeFilter !== 'all'
+            ? allItems.filter((item: any) => item.lineType === lineTypeFilter)
+            : allItems;
           
           if (items.length === 0) {
             return []; // No items to render
@@ -4648,6 +4663,38 @@ function SectionProperties({
       <div className="space-y-3 pt-2 border-t">
         <div className="text-xs font-bold text-orange-600">Dynamisch</div>
         
+        {/* LineType Filter - only show for repeating sections */}
+        {(() => {
+          const blocks = section.config?.blocks || [];
+          const hasItemPlaceholders = blocks.some((block: any) => {
+            const content = block.config?.content || block.content || '';
+            if (typeof content === 'string' && /\{\{item\.[^}]+\}\}/.test(content)) return true;
+            const dataField = block.config?.dataField || '';
+            return typeof dataField === 'string' && dataField.startsWith('item.');
+          });
+          const manualRepeat = section.config?.repeat?.enabled === true;
+          if (!hasItemPlaceholders && !manualRepeat) return null;
+          return (
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Herhalen voor regeltype</Label>
+              <select
+                value={section.config?.lineTypeFilter || 'all'}
+                onChange={(e) => onUpdateProperty(section.id, 'config.lineTypeFilter', e.target.value)}
+                className="w-full h-8 text-xs border border-input rounded-md px-2 bg-background"
+              >
+                <option value="all">Alle regels</option>
+                <option value="standard">Standaard item</option>
+                <option value="unique">Uniek item</option>
+                <option value="text">Tekst</option>
+                <option value="charges">Meerwerk (charges)</option>
+              </select>
+              <p className="text-[10px] text-muted-foreground">
+                Sectie herhaalt alleen voor items van dit type
+              </p>
+            </div>
+          );
+        })()}
+
         {/* Height behavior */}
         <div className="space-y-1">
           <Label className="text-xs font-medium">Hoogte</Label>
