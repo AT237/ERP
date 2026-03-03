@@ -3144,6 +3144,10 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
     for (const block of blocks) {
       const dynamicPos = dynamicPositions.get(block.id);
       if (dynamicPos?.visible !== false) {
+        // Skip groups that are filtered out by lineTypeCondition
+        if (block.type === 'Group' && block.config?.lineTypeCondition && itemContext) {
+          if (block.config.lineTypeCondition !== itemContext.item?.lineType) continue;
+        }
         const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
         const blockHeight = block.size?.height || 25;
         const blockBottom = mmToPx(adjustedY + blockHeight);
@@ -3202,6 +3206,13 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
               
               if (dynamicPos && !dynamicPos.visible) {
                 return null;
+              }
+
+              // lineTypeCondition: if group has a condition and we have an item context, filter
+              if (block.type === 'Group' && block.config?.lineTypeCondition && itemContext) {
+                if (block.config.lineTypeCondition !== itemContext.item?.lineType) {
+                  return null;
+                }
               }
               
               const BlockRenderer = BlockRenderers[block.type];
@@ -3506,16 +3517,40 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
         }}
       >
         {/* Group header label - clickable to select group */}
-        <div 
-          data-group-label="true"
-          className="absolute -top-4 left-1 px-1.5 bg-orange-500 text-white text-[8px] font-medium rounded-t cursor-pointer whitespace-nowrap hover:bg-orange-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick(e);
-          }}
-        >
-          {groupName} ({childBlocks.length})
-        </div>
+        {(() => {
+          const lineTypeCondition = block.config?.lineTypeCondition;
+          const conditionColors: Record<string, string> = {
+            standard: 'bg-blue-500',
+            unique: 'bg-purple-500',
+            text: 'bg-gray-500',
+            charges: 'bg-amber-500',
+          };
+          const conditionLabels: Record<string, string> = {
+            standard: 'STD',
+            unique: 'UNI',
+            text: 'TXT',
+            charges: 'MWK',
+          };
+          return (
+            <div 
+              data-group-label="true"
+              className="absolute -top-4 left-1 flex items-center gap-0.5 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClick(e);
+              }}
+            >
+              <div className="px-1.5 bg-orange-500 text-white text-[8px] font-medium rounded-t whitespace-nowrap hover:bg-orange-600 transition-colors">
+                {groupName} ({childBlocks.length})
+              </div>
+              {lineTypeCondition && (
+                <div className={`px-1 ${conditionColors[lineTypeCondition] || 'bg-gray-500'} text-white text-[8px] font-bold rounded-t whitespace-nowrap`}>
+                  {conditionLabels[lineTypeCondition] || lineTypeCondition}
+                </div>
+              )}
+            </div>
+          );
+        })()}
         
         {/* Render child blocks inside the group - clickable */}
         <div className="relative w-full h-full overflow-visible">
@@ -3725,6 +3760,26 @@ function BlockProperties({
                 <Label htmlFor="collapse-empty" className="text-xs font-normal">
                   Opschuiven bij lege velden
                 </Label>
+              </div>
+
+              {/* lineTypeCondition - only show when section repeats */}
+              <div className="space-y-1 pt-2 border-t">
+                <Label className="text-xs font-medium text-orange-700">Regeltype conditie</Label>
+                <select
+                  value={block.config?.lineTypeCondition || 'all'}
+                  onChange={(e) => updateConfig('lineTypeCondition', e.target.value === 'all' ? null : e.target.value)}
+                  className="w-full h-8 text-xs border border-input rounded-md px-2 bg-background"
+                  data-testid="select-line-type-condition"
+                >
+                  <option value="all">Altijd tonen (alle typen)</option>
+                  <option value="standard">Alleen Standaard items</option>
+                  <option value="unique">Alleen Unieke items</option>
+                  <option value="text">Alleen Tekst-regels</option>
+                  <option value="charges">Alleen Meerwerk (charges)</option>
+                </select>
+                <p className="text-[10px] text-muted-foreground">
+                  Deze groep toont alleen als het regelitem van dit type is
+                </p>
               </div>
             </div>
           )}
@@ -4692,44 +4747,58 @@ function SectionProperties({
         return (
           <div className="space-y-3 pt-2 border-t">
             <div className="text-xs font-bold text-orange-600">Herhaling</div>
-            <div className={`rounded-md px-3 py-2 text-xs flex items-start gap-2 ${isRepeating ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-gray-50 border border-gray-200 text-gray-600'}`}>
-              <span className="mt-0.5 text-base leading-none">{isRepeating ? '🔁' : '—'}</span>
-              <div>
-                {isRepeating ? (
-                  <>
-                    <div className="font-semibold">Sectie herhaalt per regelitem</div>
-                    <div className="text-[10px] mt-0.5 text-green-700">
-                      {hasItemPlaceholders
-                        ? 'Automatisch gedetecteerd: een blok bevat een {{item.*}} veld'
-                        : 'Handmatig ingeschakeld via repeat.enabled'}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="font-semibold">Geen herhaling</div>
-                    <div className="text-[10px] mt-0.5">Voeg een {'{{item.*}}'} veld toe aan een blok om herhaling in te schakelen</div>
-                  </>
-                )}
-              </div>
+
+            {/* Manual repeat toggle */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="section-repeat-enabled"
+                checked={manualRepeat}
+                onChange={(e) => onUpdateProperty(section.id, 'config.repeat', {
+                  ...(section.config?.repeat || {}),
+                  enabled: e.target.checked,
+                })}
+                className="h-4 w-4 accent-orange-500"
+              />
+              <Label htmlFor="section-repeat-enabled" className="text-xs font-normal cursor-pointer">
+                Herhalen per regelitem
+              </Label>
             </div>
-            {isRepeating && (
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Filter op regeltype</Label>
-                <select
-                  value={section.config?.lineTypeFilter || 'all'}
-                  onChange={(e) => onUpdateProperty(section.id, 'config.lineTypeFilter', e.target.value)}
-                  className="w-full h-8 text-xs border border-input rounded-md px-2 bg-background"
-                >
-                  <option value="all">Alle regels</option>
-                  <option value="standard">Standaard item</option>
-                  <option value="unique">Uniek item</option>
-                  <option value="text">Tekst</option>
-                  <option value="charges">Meerwerk (charges)</option>
-                </select>
-                <p className="text-[10px] text-muted-foreground">
-                  Sectie herhaalt alleen voor items van dit type
-                </p>
+
+            {/* Status indicator */}
+            {hasItemPlaceholders && !manualRepeat && (
+              <div className="rounded-md px-3 py-2 text-xs flex items-start gap-2 bg-green-50 border border-green-200 text-green-800">
+                <span className="mt-0.5">🔁</span>
+                <div>
+                  <div className="font-semibold">Automatisch actief</div>
+                  <div className="text-[10px] mt-0.5 text-green-700">Een blok bevat een {'{{item.*}}'} veld</div>
+                </div>
               </div>
+            )}
+
+            {isRepeating && (
+              <>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Tussenruimte (mm)</Label>
+                  <Input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    value={section.config?.repeat?.spacingMm || 0}
+                    onChange={(e) => onUpdateProperty(section.id, 'config.repeat', {
+                      ...(section.config?.repeat || {}),
+                      spacingMm: parseFloat(e.target.value) || 0,
+                    })}
+                    className="h-8 text-xs"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Ruimte tussen herhalingen</p>
+                </div>
+
+                <div className="p-2 bg-blue-50 border border-blue-200 rounded text-[10px] text-blue-800">
+                  <div className="font-semibold mb-1">💡 Tip: regeltype per groep</div>
+                  Gebruik groepen in deze sectie en stel per groep een <strong>regeltype conditie</strong> in. Dan toont elke groep alleen voor het juiste regeltype.
+                </div>
+              </>
             )}
           </div>
         );
