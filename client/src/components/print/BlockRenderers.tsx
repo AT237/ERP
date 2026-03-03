@@ -538,7 +538,7 @@ export function FooterBlockRenderer({ block }: BlockRendererProps) {
 }
 
 // Group Block - container for multiple blocks with optional collapse-when-empty
-export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPages = 1 }: BlockRendererProps) {
+export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPages = 1, itemContext }: BlockRendererProps) {
   const childBlocks = block.config?.childBlocks || [];
   const collapseEmpty = block.config?.collapseEmpty || false;
   
@@ -557,8 +557,8 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
     
     visibleBlocks = [];
     for (const childBlock of sortedBlocks) {
-      // Check if block has content
-      const hasContent = blockHasContent(childBlock, printData);
+      // Check if block has content (pass itemContext so {{item.*}} fields are evaluated)
+      const hasContent = blockHasContent(childBlock, printData, itemContext);
       
       if (hasContent) {
         // Shift block up by accumulated offset from ALL previously hidden blocks
@@ -613,7 +613,7 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
         if (BlockRenderer) {
           return (
             <div key={childBlock.id || index} style={blockStyle}>
-              <BlockRenderer block={childBlock} printData={printData} currentPage={currentPage} totalPages={totalPages} />
+              <BlockRenderer block={childBlock} printData={printData} currentPage={currentPage} totalPages={totalPages} itemContext={itemContext} />
             </div>
           );
         }
