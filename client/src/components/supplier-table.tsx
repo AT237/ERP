@@ -66,7 +66,7 @@ export default function SupplierTable() {
     tableKey: 'suppliers'
   });
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<Supplier>({
     endpoint: '/api/suppliers',
     queryKeys: ['/api/suppliers'],
     getName: (row) => row.name || row.supplierNumber,

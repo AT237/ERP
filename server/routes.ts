@@ -744,6 +744,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/inventory/:id/check-usages", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const usages: { location: string; id: string; label: string }[] = [];
+
+      const [itemQuotationItems, itemInvoiceItems] = await Promise.all([
+        db.select().from(quotationItems).where(eq(quotationItems.itemId, id)),
+        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id))
+      ]);
+
+      itemQuotationItems.forEach(q => usages.push({ location: "Quotation Items", id: q.id, label: q.description }));
+      itemInvoiceItems.forEach(i => usages.push({ location: "Invoice Items", id: i.id, label: i.description }));
+
+      res.json({ canDelete: usages.length === 0, usages });
+    } catch (error) {
+      console.error("Error checking inventory usages:", error);
+      res.status(500).json({ message: "Failed to check inventory usages" });
+    }
+  });
+
   app.get("/api/inventory/:id", async (req, res) => {
     try {
       const item = await storage.getInventoryItem(req.params.id);

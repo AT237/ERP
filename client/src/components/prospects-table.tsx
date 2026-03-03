@@ -131,10 +131,10 @@ export default function ProspectsTable() {
     tableKey: 'prospects'
   });
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<Prospect>({
     endpoint: '/api/prospects',
     queryKeys: ['/api/prospects'],
-    getName: (row) => row.name || row.companyName,
+    getName: (row) => row.companyName,
     entityLabel: 'Prospect',
     checkUsages: false,
   });
