@@ -138,12 +138,11 @@ export function formatFieldValue(value: any, format: string = 'text'): string {
       if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
         return '';
       }
-      // Format as DD/MM/YYYY
-      return new Intl.DateTimeFormat('nl-NL', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      }).format(date);
+      // Format as DD.MM.YYYY
+      const dd = date.getDate().toString().padStart(2, '0');
+      const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+      const yyyy = date.getFullYear();
+      return `${dd}.${mm}.${yyyy}`;
 
     case 'text':
     default:
@@ -267,7 +266,9 @@ export function replacePlaceholders(
       let resolvedFormat = format || 'text';
       if (!format) {
         const fieldName = itemFieldPath.toLowerCase();
-        if (fieldName.includes('price') || fieldName.includes('total') || 
+        if (fieldName.includes('date') || fieldName.includes('datum')) {
+          resolvedFormat = 'date';
+        } else if (fieldName.includes('price') || fieldName.includes('total') || 
             fieldName.includes('amount') || fieldName === 'unitprice' || 
             fieldName === 'linetotal') {
           resolvedFormat = 'currency';
