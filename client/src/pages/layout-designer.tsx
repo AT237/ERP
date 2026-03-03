@@ -4817,16 +4817,70 @@ function SectionProperties({
         </p>
       </div>
 
-      {/* Repeat Section */}
+      {/* Dynamic Section */}
       {(() => {
         const hasItemPlaceholders = sectionContainsItemPlaceholders(section);
         const manualRepeat = section.config?.repeat?.enabled === true;
         const isRepeating = hasItemPlaceholders || manualRepeat;
         return (
           <div className="space-y-3 pt-2 border-t">
-            <div className="text-xs font-bold text-orange-600">Herhaling</div>
+            <div className="text-xs font-bold text-orange-600">Dynamisch</div>
 
-            {/* Manual repeat toggle */}
+            {/* Height behavior */}
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Hoogte</Label>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="checkbox"
+                    id="section-height-can-grow"
+                    checked={section.config.heightCanGrow || false}
+                    onChange={(e) => onUpdateProperty(section.id, 'config.heightCanGrow', e.target.checked)}
+                    className="h-3.5 w-3.5"
+                  />
+                  <Label htmlFor="section-height-can-grow" className="text-xs font-normal">Kan groeien</Label>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="checkbox"
+                    id="section-height-can-shrink"
+                    checked={section.config.heightCanShrink || false}
+                    onChange={(e) => onUpdateProperty(section.id, 'config.heightCanShrink', e.target.checked)}
+                    className="h-3.5 w-3.5"
+                  />
+                  <Label htmlFor="section-height-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
+                </div>
+              </div>
+            </div>
+
+            {/* Width behavior */}
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Breedte</Label>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="checkbox"
+                    id="section-width-can-grow"
+                    checked={section.config.widthCanGrow || false}
+                    onChange={(e) => onUpdateProperty(section.id, 'config.widthCanGrow', e.target.checked)}
+                    className="h-3.5 w-3.5"
+                  />
+                  <Label htmlFor="section-width-can-grow" className="text-xs font-normal">Kan groeien</Label>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="checkbox"
+                    id="section-width-can-shrink"
+                    checked={section.config.widthCanShrink || false}
+                    onChange={(e) => onUpdateProperty(section.id, 'config.widthCanShrink', e.target.checked)}
+                    className="h-3.5 w-3.5"
+                  />
+                  <Label htmlFor="section-width-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
+                </div>
+              </div>
+            </div>
+
+            {/* Herhalen per regelitem */}
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -4836,14 +4890,13 @@ function SectionProperties({
                   ...(section.config?.repeat || {}),
                   enabled: e.target.checked,
                 })}
-                className="h-4 w-4 accent-orange-500"
+                className="h-3.5 w-3.5"
               />
               <Label htmlFor="section-repeat-enabled" className="text-xs font-normal cursor-pointer">
                 Herhalen per regelitem
               </Label>
             </div>
 
-            {/* Status indicator */}
             {hasItemPlaceholders && !manualRepeat && (
               <div className="rounded-md px-3 py-2 text-xs flex items-start gap-2 bg-green-50 border border-green-200 text-green-800">
                 <span className="mt-0.5">🔁</span>
@@ -4855,91 +4908,25 @@ function SectionProperties({
             )}
 
             {isRepeating && (
-              <>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Tussenruimte (mm)</Label>
-                  <Input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={section.config?.repeat?.spacingMm || 0}
-                    onChange={(e) => onUpdateProperty(section.id, 'config.repeat', {
-                      ...(section.config?.repeat || {}),
-                      spacingMm: parseFloat(e.target.value) || 0,
-                    })}
-                    className="h-8 text-xs"
-                  />
-                  <p className="text-[10px] text-muted-foreground">Ruimte tussen herhalingen</p>
-                </div>
-
-                <div className="p-2 bg-blue-50 border border-blue-200 rounded text-[10px] text-blue-800">
-                  <div className="font-semibold mb-1">💡 Tip: regeltype per groep</div>
-                  Gebruik groepen in deze sectie en stel per groep een <strong>regeltype conditie</strong> in. Dan toont elke groep alleen voor het juiste regeltype.
-                </div>
-              </>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Tussenruimte (mm)</Label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  value={section.config?.repeat?.spacingMm || 0}
+                  onChange={(e) => onUpdateProperty(section.id, 'config.repeat', {
+                    ...(section.config?.repeat || {}),
+                    spacingMm: parseFloat(e.target.value) || 0,
+                  })}
+                  className="h-8 text-xs"
+                />
+                <p className="text-[10px] text-muted-foreground">Ruimte tussen herhalingen</p>
+              </div>
             )}
           </div>
         );
       })()}
-
-      {/* Dynamic Section */}
-      <div className="space-y-3 pt-2 border-t">
-        <div className="text-xs font-bold text-orange-600">Dynamisch</div>
-
-        {/* Height behavior */}
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">Hoogte</Label>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center space-x-1">
-              <input
-                type="checkbox"
-                id="section-height-can-grow"
-                checked={section.config.heightCanGrow || false}
-                onChange={(e) => onUpdateProperty(section.id, 'config.heightCanGrow', e.target.checked)}
-                className="h-3.5 w-3.5"
-              />
-              <Label htmlFor="section-height-can-grow" className="text-xs font-normal">Kan groeien</Label>
-            </div>
-            <div className="flex items-center space-x-1">
-              <input
-                type="checkbox"
-                id="section-height-can-shrink"
-                checked={section.config.heightCanShrink || false}
-                onChange={(e) => onUpdateProperty(section.id, 'config.heightCanShrink', e.target.checked)}
-                className="h-3.5 w-3.5"
-              />
-              <Label htmlFor="section-height-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
-            </div>
-          </div>
-        </div>
-        
-        {/* Width behavior */}
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">Breedte</Label>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center space-x-1">
-              <input
-                type="checkbox"
-                id="section-width-can-grow"
-                checked={section.config.widthCanGrow || false}
-                onChange={(e) => onUpdateProperty(section.id, 'config.widthCanGrow', e.target.checked)}
-                className="h-3.5 w-3.5"
-              />
-              <Label htmlFor="section-width-can-grow" className="text-xs font-normal">Kan groeien</Label>
-            </div>
-            <div className="flex items-center space-x-1">
-              <input
-                type="checkbox"
-                id="section-width-can-shrink"
-                checked={section.config.widthCanShrink || false}
-                onChange={(e) => onUpdateProperty(section.id, 'config.widthCanShrink', e.target.checked)}
-                className="h-3.5 w-3.5"
-              />
-              <Label htmlFor="section-width-can-shrink" className="text-xs font-normal">Kan krimpen</Label>
-            </div>
-          </div>
-        </div>
-      </div>
 
 
       {/* Background Color */}
