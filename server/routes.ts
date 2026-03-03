@@ -2712,7 +2712,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/layouts", async (req, res) => {
     try {
       const layoutData = insertDocumentLayoutSchema.parse(req.body);
-      const [{ layoutNumber }] = await db.execute(sql`SELECT generate_layout_number() as "layoutNumber"`) as any;
+      const executeResult = await db.execute(sql`SELECT generate_layout_number() as "layoutNumber"`);
+      const rows = (executeResult as any).rows ?? executeResult;
+      const layoutNumber = (rows[0] as any).layoutNumber;
       const layout = await storage.createDocumentLayout({ ...layoutData, layoutNumber });
       res.status(201).json(layout);
     } catch (error) {
