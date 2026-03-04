@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ogaNdOHetxUlLFaRvGzdy8pVxqaaf4eYdPwvXJr6gBSEdHdaKNiObBntZACS1iI
+\restrict WmaJ4X9l4Rcd93HEqYRCdSkwONrEAhGh2V8CANMevorgeXYByPya66quCaFaggv
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -659,7 +659,7 @@ CREATE TABLE public.invoice_items (
     invoice_id character varying NOT NULL,
     item_id character varying,
     description text NOT NULL,
-    quantity integer DEFAULT 0,
+    quantity numeric(10,3) DEFAULT 0,
     unit_price numeric(10,2) DEFAULT 0.00,
     line_total numeric(10,2) DEFAULT 0.00,
     line_type text DEFAULT 'standard'::text,
@@ -1075,7 +1075,7 @@ CREATE TABLE public.quotation_items (
     quotation_id character varying NOT NULL,
     item_id character varying,
     description text NOT NULL,
-    quantity integer DEFAULT 0,
+    quantity numeric(10,3) DEFAULT 0,
     unit_price numeric(10,2) DEFAULT 0.00,
     line_total numeric(10,2) DEFAULT 0.00,
     line_type text DEFAULT 'standard'::text,
@@ -1178,7 +1178,7 @@ CREATE TABLE public.sales_order_items (
     id character varying DEFAULT gen_random_uuid() NOT NULL,
     sales_order_id character varying NOT NULL,
     item_id character varying,
-    quantity integer DEFAULT 0,
+    quantity numeric(10,3) DEFAULT 0,
     unit_price numeric(10,2) DEFAULT 0.00,
     line_total numeric(10,2) DEFAULT 0.00,
     description text NOT NULL,
@@ -1667,14 +1667,14 @@ COPY public.inventory_items (id, name, sku, description, category, unit, unit_pr
 --
 
 COPY public.invoice_items (id, invoice_id, item_id, description, quantity, unit_price, line_total, line_type, "position", source_snippet_id, source_snippet_version, position_no, work_date, customer_rate_id, technician_names, technician_ids, unit, description_internal, discount_percent) FROM stdin;
-36582b0f-612f-4620-98a7-c667e017c4a2	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Standard Product Item	2	25.00	50.00	charges	1	\N	\N	030	\N	\N	\N	\N	hrs	\N	0.00
-f3700d21-d2d5-4237-a702-ac319eab4159	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Custom Engineered Component	1	150.00	150.00	charges	1	\N	\N	031	\N	\N	\N	\N	hrs	\N	0.00
-166bc0f6-ca34-4e0a-b045-4c9baad294fe	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Shipping and Handling Fee	1	15.00	15.00	unique	1	\N	\N	020	\N	\N	\N	\N	hrs	\N	0.00
-30760bb8-8555-4b9a-aed7-e361e0e69d6d	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1	715.05	715.05	charges	1	\N	\N	060	2026-03-10 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	Aart Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00
-1af98c25-b777-4591-af2c-c668a67271e1	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1	0.00	0.00	standard	1	\N	\N	75	\N	\N	\N	\N	pcs	\N	0.00
-06f41e5f-1f23-4ade-9a02-acd7bace6ace	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	asgadfbgadfbgafdbgadf	1	0.00	0.00	text	1	\N	\N	095	\N	\N	\N	\N		\N	0.00
-2f15b787-45db-40f2-b590-665c79da0373	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Cabinet fan 230V with inlet filter	4	131.85	527.40	unique	1	\N	\N		\N	\N	\N	\N	pcs	\N	0.00
-99ef9406-91e4-4942-a0eb-c987b078cada	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Aart Tomassen consult	1	715.05	715.05	charges	1	\N	\N	010	2026-01-19 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	Aart Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	hrs	\N	0.00
+36582b0f-612f-4620-98a7-c667e017c4a2	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Standard Product Item	2.000	25.00	50.00	charges	1	\N	\N	030	\N	\N	\N	\N	hrs	\N	0.00
+f3700d21-d2d5-4237-a702-ac319eab4159	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Custom Engineered Component	1.000	150.00	150.00	charges	1	\N	\N	031	\N	\N	\N	\N	hrs	\N	0.00
+166bc0f6-ca34-4e0a-b045-4c9baad294fe	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Shipping and Handling Fee	1.000	15.00	15.00	unique	1	\N	\N	020	\N	\N	\N	\N	hrs	\N	0.00
+30760bb8-8555-4b9a-aed7-e361e0e69d6d	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1.000	715.05	715.05	charges	1	\N	\N	060	2026-03-10 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	Aart Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00
+1af98c25-b777-4591-af2c-c668a67271e1	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1.000	0.00	0.00	standard	1	\N	\N	75	\N	\N	\N	\N	pcs	\N	0.00
+06f41e5f-1f23-4ade-9a02-acd7bace6ace	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	asgadfbgadfbgafdbgadf	1.000	0.00	0.00	text	1	\N	\N	095	\N	\N	\N	\N		\N	0.00
+2f15b787-45db-40f2-b590-665c79da0373	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Cabinet fan 230V with inlet filter	4.000	131.85	527.40	unique	1	\N	\N		\N	\N	\N	\N	pcs	\N	0.00
+99ef9406-91e4-4942-a0eb-c987b078cada	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Aart Tomassen consult	1.000	715.05	715.05	charges	1	\N	\N	010	2026-01-19 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	Aart Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	hrs	\N	0.00
 \.
 
 
@@ -1890,10 +1890,10 @@ COPY public.purchase_orders (id, order_number, supplier_id, status, order_date, 
 --
 
 COPY public.quotation_items (id, quotation_id, item_id, description, quantity, unit_price, line_total, line_type, "position", source_snippet_id, source_snippet_version, position_no, delivery_date, supplier_id, hs_code, country_of_origin, unit) FROM stdin;
-c7dfae2f-9fba-48d7-a731-9265289d2626	test-quotation-1	\N	--- Project Header Text ---	0	0.00	0.00	text	0	\N	\N	010	\N	\N	\N	\N	\N
-8516fea2-da18-4945-ad9f-be215f4fb9c7	test-quotation-1	\N	Shipping and Handling Fee	1	15.00	15.00	charges	0	\N	\N	010	\N	\N	\N	\N	\N
-4483c986-d46c-4ec8-9fc7-6c8d9a8073fd	test-quotation-1	\N	Standard Product Item	2	25.00	50.00	standard	1	\N	\N	090	\N	\N	\N	\N	\N
-719c11f0-e795-4bba-88f4-e5d5c0419a96	test-quotation-1	\N	Custom Engineered Component	1	150.00	150.00	unique	1	\N	\N	011	\N	\N	\N	\N	\N
+c7dfae2f-9fba-48d7-a731-9265289d2626	test-quotation-1	\N	--- Project Header Text ---	0.000	0.00	0.00	text	0	\N	\N	010	\N	\N	\N	\N	\N
+8516fea2-da18-4945-ad9f-be215f4fb9c7	test-quotation-1	\N	Shipping and Handling Fee	1.000	15.00	15.00	charges	0	\N	\N	010	\N	\N	\N	\N	\N
+4483c986-d46c-4ec8-9fc7-6c8d9a8073fd	test-quotation-1	\N	Standard Product Item	2.000	25.00	50.00	standard	1	\N	\N	090	\N	\N	\N	\N	\N
+719c11f0-e795-4bba-88f4-e5d5c0419a96	test-quotation-1	\N	Custom Engineered Component	1.000	150.00	150.00	unique	1	\N	\N	011	\N	\N	\N	\N	\N
 \.
 
 
@@ -1932,10 +1932,10 @@ f3711849-7d6e-4dab-b303-eb70151c2e16	RC-0002	Service hours charge	360.00			t	0	2
 --
 
 COPY public.sales_order_items (id, sales_order_id, item_id, quantity, unit_price, line_total, description, line_type, "position", source_snippet_id, source_snippet_version) FROM stdin;
-e36c6323-d865-49ed-850a-dc4a00ffde96	1448196f-3bbc-4bdf-a631-2bf914a8ed6d	\N	2	25.00	50.00	Standard Product Item	standard	0	\N	\N
-15ce014d-a5b1-469b-883e-7699bc0d1ad5	1448196f-3bbc-4bdf-a631-2bf914a8ed6d	\N	1	150.00	150.00	Custom Engineered Component	unique	0	\N	\N
-085b4555-4677-432a-ab11-aad9c2af2a00	1448196f-3bbc-4bdf-a631-2bf914a8ed6d	\N	0	0.00	0.00	--- Project Header Text ---	text	0	\N	\N
-a8cc013d-de1a-4f75-8dbf-04fde8ce9171	1448196f-3bbc-4bdf-a631-2bf914a8ed6d	\N	1	15.00	15.00	Shipping and Handling Fee	charges	0	\N	\N
+e36c6323-d865-49ed-850a-dc4a00ffde96	1448196f-3bbc-4bdf-a631-2bf914a8ed6d	\N	2.000	25.00	50.00	Standard Product Item	standard	0	\N	\N
+15ce014d-a5b1-469b-883e-7699bc0d1ad5	1448196f-3bbc-4bdf-a631-2bf914a8ed6d	\N	1.000	150.00	150.00	Custom Engineered Component	unique	0	\N	\N
+085b4555-4677-432a-ab11-aad9c2af2a00	1448196f-3bbc-4bdf-a631-2bf914a8ed6d	\N	0.000	0.00	0.00	--- Project Header Text ---	text	0	\N	\N
+a8cc013d-de1a-4f75-8dbf-04fde8ce9171	1448196f-3bbc-4bdf-a631-2bf914a8ed6d	\N	1.000	15.00	15.00	Shipping and Handling Fee	charges	0	\N	\N
 \.
 
 
@@ -4115,5 +4115,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ogaNdOHetxUlLFaRvGzdy8pVxqaaf4eYdPwvXJr6gBSEdHdaKNiObBntZACS1iI
+\unrestrict WmaJ4X9l4Rcd93HEqYRCdSkwONrEAhGh2V8CANMevorgeXYByPya66quCaFaggv
 

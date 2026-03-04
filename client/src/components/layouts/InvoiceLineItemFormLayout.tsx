@@ -46,12 +46,12 @@ const lineItemFormSchema = insertInvoiceItemSchema.extend({
   technicianNames: z.string().optional(),
   technicianIds: z.string().optional(),
 }).refine((data) => {
-  if ((data.lineType === 'standard' || data.lineType === 'unique') && data.quantity < 1) {
+  if ((data.lineType === 'standard' || data.lineType === 'unique') && data.quantity <= 0) {
     return false;
   }
   return true;
 }, {
-  message: "Aantal moet minimaal 1 zijn voor standaard en unieke artikelen",
+  message: "Aantal moet groter zijn dan 0 voor standaard en unieke artikelen",
   path: ["quantity"],
 });
 
