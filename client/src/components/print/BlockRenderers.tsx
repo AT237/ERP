@@ -268,7 +268,7 @@ export function DateBlockRenderer({ block, printData }: BlockRendererProps) {
         const d = dateValue.getDate().toString().padStart(2, '0');
         const mo = (dateValue.getMonth() + 1).toString().padStart(2, '0');
         const y = dateValue.getFullYear();
-        return `${d}.${mo}.${y}`;
+        return `${d}-${mo}-${y}`;
       })()
     : '';
 

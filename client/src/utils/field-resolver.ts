@@ -146,11 +146,10 @@ export function formatFieldValue(value: any, format: string = 'text'): string {
       if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
         return '';
       }
-      // Format as DD.MM.YYYY
       const dd = date.getDate().toString().padStart(2, '0');
       const mm = (date.getMonth() + 1).toString().padStart(2, '0');
       const yyyy = date.getFullYear();
-      return `${dd}.${mm}.${yyyy}`;
+      return `${dd}-${mm}-${yyyy}`;
 
     case 'text':
     default:
