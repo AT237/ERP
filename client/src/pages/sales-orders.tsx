@@ -126,12 +126,12 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
     };
   });
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<SalesOrder>({
     endpoint: '/api/sales-orders',
     queryKeys: ['/api/sales-orders'],
     entityLabel: 'Sales Order',
     checkUsages: false,
-    getName: (row) => row.orderNumber || row.soNumber
+    getName: (row) => row.orderNumber
   });
 
   const handleEdit = (salesOrder: SalesOrder) => {

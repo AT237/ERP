@@ -13,6 +13,7 @@ import { insertInvoiceSchema, insertInvoiceItemSchema } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Save, X, FileText, Printer, CopyPlus } from "lucide-react";
+import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
@@ -56,6 +57,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const [activeTab, setActiveTab] = useState("general");
   const [, navigate] = useLocation();
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
+  const [deleteItemTarget, setDeleteItemTarget] = useState<InvoiceItem | null>(null);
   const { toast } = useToast();
   const isEditing = !!invoiceId;
 
@@ -370,10 +372,14 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   };
 
   const handleDeleteItem = (item: InvoiceItem) => {
-    if (window.confirm(`Are you sure you want to delete this item?`)) {
-      deleteItemMutation.mutate(item.id);
-      setInvoiceItems(prev => prev.filter(i => i.id !== item.id));
-    }
+    setDeleteItemTarget(item);
+  };
+
+  const confirmDeleteItem = () => {
+    if (!deleteItemTarget) return;
+    deleteItemMutation.mutate(deleteItemTarget.id);
+    setInvoiceItems(prev => prev.filter(i => i.id !== deleteItemTarget.id));
+    setDeleteItemTarget(null);
   };
 
   const handleDuplicateItem = async (item: InvoiceItem) => {
@@ -750,6 +756,14 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           />
         </div>
       )}
+      <SafeDeleteDialog
+        open={!!deleteItemTarget}
+        onOpenChange={(open) => { if (!open) setDeleteItemTarget(null); }}
+        onConfirm={confirmDeleteItem}
+        entityName={deleteItemTarget?.description || 'dit regelitem'}
+        entityId={deleteItemTarget?.id || ''}
+        isPending={deleteItemMutation.isPending}
+      />
     </div>
   );
 }

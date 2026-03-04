@@ -165,12 +165,12 @@ export default function WorkOrders() {
     });
   }, [workOrders, projects]);
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<WorkOrder>({
     endpoint: '/api/work-orders',
     queryKeys: ['/api/work-orders'],
     entityLabel: 'Work Order',
     checkUsages: false,
-    getName: (row) => row.orderNumber || row.woNumber
+    getName: (row) => row.orderNumber || row.title
   });
 
   const handleEdit = (workOrder: WorkOrder) => {
@@ -251,6 +251,8 @@ export default function WorkOrders() {
           onConfirm: () => del.handleBulkDelete(tableState.selectedRows, enhancedWorkOrders),
           itemCount: tableState.selectedRows.length
         }}
+        applyFiltersAndSearch={tableState.applyFiltersAndSearch}
+        applySorting={tableState.applySorting}
         
         // Actions
         headerActions={[

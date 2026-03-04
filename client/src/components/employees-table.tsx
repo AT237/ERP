@@ -75,7 +75,7 @@ export default function EmployeesTable() {
   const del = useEntityDelete<Employee>({
     endpoint: '/api/employees',
     queryKeys: ['/api/employees'],
-    getName: (row) => (row as any).name || row.firstName,
+    getName: (row) => `${row.firstName} ${row.lastName}`.trim() || 'Employee',
     entityLabel: 'Employee',
     checkUsages: false,
   });

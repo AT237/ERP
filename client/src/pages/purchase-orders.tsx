@@ -137,12 +137,12 @@ export default function PurchaseOrders() {
     }));
   }, [purchaseOrders, getSupplierName]);
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<PurchaseOrder>({
     endpoint: '/api/purchase-orders',
     queryKeys: ['/api/purchase-orders'],
     entityLabel: 'Purchase Order',
     checkUsages: false,
-    getName: (row) => row.orderNumber || row.poNumber
+    getName: (row) => row.orderNumber
   });
 
   const handleEdit = (purchaseOrder: PurchaseOrder) => {
@@ -226,6 +226,8 @@ export default function PurchaseOrders() {
           onConfirm: () => del.handleBulkDelete(tableState.selectedRows, enhancedPurchaseOrders),
           itemCount: tableState.selectedRows.length
         }}
+        applyFiltersAndSearch={tableState.applyFiltersAndSearch}
+        applySorting={tableState.applySorting}
         
         // Actions
         headerActions={[

@@ -132,10 +132,10 @@ export default function CustomersTable() {
     tableKey: 'customers',
   });
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<ExtendedCustomer>({
     endpoint: '/api/customers',
     queryKeys: ['/api/customers/extended', '/api/customers', '/api/dashboard/stats'],
-    getName: (row: any) => row.name || row.customerNumber,
+    getName: (row) => row.name || row.customerNumber || '',
     entityLabel: 'Customer',
     checkUsages: true,
   });

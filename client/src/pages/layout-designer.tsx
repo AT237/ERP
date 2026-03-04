@@ -28,6 +28,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { DataTableLayout, ColumnConfig } from '@/components/layouts/DataTableLayout';
+import { SafeDeleteDialog } from '@/components/ui/safe-delete-dialog';
 import { useDataTable } from '@/hooks/useDataTable';
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
@@ -40,6 +41,7 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function LayoutDesigner() {
+  const [deleteLayoutTarget, setDeleteLayoutTarget] = useState<{id: string; name: string} | null>(null);
   const [showNewLayoutDialog, setShowNewLayoutDialog] = useState(false);
   const [newLayoutName, setNewLayoutName] = useState('');
   const [newLayoutDocumentType, setNewLayoutDocumentType] = useState('quotation');
@@ -178,9 +180,7 @@ export default function LayoutDesigner() {
   });
 
   const handleDeleteLayout = (layoutId: string, layoutName: string) => {
-    if (window.confirm(`Weet je zeker dat je "${layoutName}" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.`)) {
-      deleteLayoutMutation.mutate(layoutId);
-    }
+    setDeleteLayoutTarget({ id: layoutId, name: layoutName });
   };
 
   const handleOpenLayout = (layout: any) => {
@@ -342,6 +342,19 @@ export default function LayoutDesigner() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <SafeDeleteDialog
+        open={!!deleteLayoutTarget}
+        onOpenChange={(open) => { if (!open) setDeleteLayoutTarget(null); }}
+        onConfirm={() => {
+          if (deleteLayoutTarget) {
+            deleteLayoutMutation.mutate(deleteLayoutTarget.id);
+            setDeleteLayoutTarget(null);
+          }
+        }}
+        entityName={deleteLayoutTarget?.name || ''}
+        entityId={deleteLayoutTarget?.id || ''}
+        isPending={deleteLayoutMutation.isPending}
+      />
     </div>
   );
 }

@@ -117,12 +117,12 @@ export default function Quotations({}: QuotationsProps) {
     tableKey: 'quotations'
   });
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<Quotation>({
     endpoint: '/api/quotations',
     queryKeys: ['/api/quotations'],
     entityLabel: 'Quotation',
     checkUsages: false,
-    getName: (row) => row.quotationNumber || row.title
+    getName: (row) => row.quotationNumber || row.description || ''
   });
 
   // Event handlers - memoized to prevent flicker

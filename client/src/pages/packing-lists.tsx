@@ -123,12 +123,12 @@ export default function PackingLists() {
     tableKey: 'packing-lists'
   });
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<PackingList>({
     endpoint: '/api/packing-lists',
     queryKeys: ['/api/packing-lists'],
     entityLabel: 'Packing List',
     checkUsages: false,
-    getName: (row) => row.packingListNumber || row.title
+    getName: (row) => row.packingNumber
   });
 
   const handleEdit = (packingList: PackingList) => {
@@ -206,6 +206,8 @@ export default function PackingLists() {
           onConfirm: () => del.handleBulkDelete(tableState.selectedRows, enhancedPackingLists),
           itemCount: tableState.selectedRows.length
         }}
+        applyFiltersAndSearch={tableState.applyFiltersAndSearch}
+        applySorting={tableState.applySorting}
         
         // Actions
         headerActions={[

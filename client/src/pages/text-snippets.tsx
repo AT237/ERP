@@ -137,12 +137,12 @@ export default function TextSnippets() {
     tableKey: 'text-snippets'
   });
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<TextSnippet>({
     endpoint: '/api/text-snippets',
     queryKeys: ['/api/text-snippets'],
     entityLabel: 'Text Snippet',
     checkUsages: false,
-    getName: (row) => row.name || row.title
+    getName: (row) => row.code || row.title
   });
 
   // Delete mutation for row actions

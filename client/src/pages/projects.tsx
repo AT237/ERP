@@ -154,7 +154,7 @@ export default function Projects() {
     tableKey: 'projects'
   });
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<Project>({
     endpoint: '/api/projects',
     queryKeys: ['/api/projects'],
     entityLabel: 'Project',

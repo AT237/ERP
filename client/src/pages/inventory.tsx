@@ -35,7 +35,7 @@ export default function Inventory() {
     queryKey: ["/api/inventory"],
   });
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<InventoryItem>({
     endpoint: '/api/inventory',
     queryKeys: ['/api/inventory'],
     entityLabel: 'Item',

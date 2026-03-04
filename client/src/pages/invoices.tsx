@@ -120,12 +120,12 @@ export default function Invoices({}: InvoicesProps) {
     tableKey: 'invoices'
   });
 
-  const del = useEntityDelete({
+  const del = useEntityDelete<Invoice>({
     endpoint: '/api/invoices',
     queryKeys: ['/api/invoices'],
     entityLabel: 'Invoice',
     checkUsages: false,
-    getName: (row) => row.invoiceNumber || row.title
+    getName: (row) => row.invoiceNumber || row.description || ''
   });
 
   const handleAddInvoice = React.useCallback(() => {
