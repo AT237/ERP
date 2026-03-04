@@ -3142,6 +3142,21 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
       }
       return null;
     })() : null;
+
+    // When no group matches (fallback: top-level non-group blocks), calculate their min-Y
+    // so we can normalize them to y=0 (just like we do for matching groups)
+    // Note: dynamicPositions is computed above and reused here for efficiency
+    const fallbackYOffset = (hasConditionalGroups && matchingGroupId === null && itemContext)
+      ? (() => {
+          const fallbackBlocks = blocks.filter((b: any) => b.type !== 'Group');
+          if (fallbackBlocks.length === 0) return 0;
+          const minY = Math.min(...fallbackBlocks.map((b: any) => {
+            const dp = dynamicPositions.get(b.id);
+            return dp?.y ?? (b.position?.y || 0);
+          }));
+          return minY;
+        })()
+      : 0;
     
     // Calculate actual content height (bottom of lowest visible block)
     let contentHeight = 0;
@@ -3165,7 +3180,14 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         }
         // Normalize matching conditional group to y=0 for content height calculation
         const rawY = dynamicPos?.y ?? (block.position?.y || 0);
-        const adjustedY = (hasConditionalGroups && block.id === matchingGroupId) ? 0 : rawY;
+        let adjustedY: number;
+        if (hasConditionalGroups && block.id === matchingGroupId) {
+          adjustedY = 0; // matching group → top of section
+        } else if (hasConditionalGroups && block.type !== 'Group' && matchingGroupId === null && itemContext) {
+          adjustedY = rawY - fallbackYOffset; // fallback blocks → shift to y=0
+        } else {
+          adjustedY = rawY;
+        }
         const blockHeight = block.size?.height || 25;
         const blockBottom = mmToPx(adjustedY + blockHeight);
         contentHeight = Math.max(contentHeight, blockBottom);
@@ -3253,7 +3275,15 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
               const BlockRenderer = BlockRenderers[block.type];
               const rawY = dynamicPos?.y ?? (block.position?.y || 0);
               // Normalize matching conditional group to y=0 so it renders at the top of the section instance
-              const adjustedY = (hasConditionalGroups && block.id === matchingGroupId) ? 0 : rawY;
+              // For fallback blocks (no matching group), shift up by their min-Y offset so they start at y=0
+              let adjustedY: number;
+              if (hasConditionalGroups && block.id === matchingGroupId) {
+                adjustedY = 0;
+              } else if (hasConditionalGroups && block.type !== 'Group' && matchingGroupId === null && itemContext) {
+                adjustedY = rawY - fallbackYOffset;
+              } else {
+                adjustedY = rawY;
+              }
               
               const blockStyle: React.CSSProperties = {
                 position: 'absolute',
