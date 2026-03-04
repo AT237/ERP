@@ -6,14 +6,14 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const execAsync = promisify(exec);
 
-async function runGithubBackup() {
+async function runGithubBackup(reason: string = "scheduled") {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
     log("GitHub backup skipped: GITHUB_TOKEN not set");
     return;
   }
   const repoUrl = `https://${token}@github.com/AT237/ERP.git`;
-  const now = new Date().toISOString().slice(0, 10);
+  const now = new Date().toISOString().slice(0, 16).replace("T", " ");
   try {
     // Export database to SQL file
     const dbUrl = process.env.DATABASE_URL;
@@ -31,28 +31,37 @@ async function runGithubBackup() {
     await execAsync(`git remote set-url origin ${repoUrl}`);
     await execAsync("git add -A");
     try {
-      await execAsync(`git commit -m "Auto backup ${now}"`);
+      await execAsync(`git commit -m "Auto backup [${reason}] ${now}"`);
     } catch {
       // Nothing to commit is fine
     }
     await execAsync("git push origin main");
-    log(`GitHub backup success: pushed on ${now}`);
+    log(`GitHub backup success: pushed at ${now} (${reason})`);
   } catch (error: any) {
     log(`GitHub backup failed: ${error.message}`);
   }
 }
 
 function scheduleDailyBackup() {
-  const now = new Date();
-  const next = new Date();
-  next.setHours(2, 0, 0, 0);
-  if (next <= now) next.setDate(next.getDate() + 1);
-  const msUntilNext = next.getTime() - now.getTime();
-  log(`GitHub backup scheduled: first run in ${Math.round(msUntilNext / 60000)} minutes`);
+  // Run immediately on startup (after 60s delay for server to fully init)
   setTimeout(() => {
-    runGithubBackup();
-    setInterval(runGithubBackup, 24 * 60 * 60 * 1000);
-  }, msUntilNext);
+    runGithubBackup("startup");
+  }, 60 * 1000);
+
+  // Then schedule daily at 02:00
+  const scheduleNext = () => {
+    const now = new Date();
+    const next = new Date();
+    next.setHours(2, 0, 0, 0);
+    if (next <= now) next.setDate(next.getDate() + 1);
+    const msUntilNext = next.getTime() - now.getTime();
+    log(`GitHub backup scheduled: next run in ${Math.round(msUntilNext / 60000)} minutes`);
+    setTimeout(() => {
+      runGithubBackup("daily-02:00");
+      scheduleNext(); // reschedule for next day
+    }, msUntilNext);
+  };
+  scheduleNext();
 }
 
 const app = express();

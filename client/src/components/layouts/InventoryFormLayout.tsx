@@ -69,6 +69,8 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     },
   });
 
+  const categoryValue = form.watch("category");
+
   // Load inventory item data if editing
   const { data: inventoryItem, isLoading: isLoadingInventory } = useQuery<InventoryItem>({
     queryKey: ["/api/inventory", inventoryId],
@@ -319,7 +321,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
                 formType="masterdata-inventory-categories"
                 labelField="name"
                 secondaryField="code"
-                value={form.watch("category") || ""}
+                value={categoryValue || ""}
                 onValueChange={(val) => { form.setValue("category", val); setHasUnsavedChanges(true); }}
                 placeholder="Selecteer categorie..."
                 testId="select-inventory-category"
