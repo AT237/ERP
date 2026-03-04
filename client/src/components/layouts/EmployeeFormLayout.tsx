@@ -72,6 +72,7 @@ export default function EmployeeFormLayout({ onSave, employeeId }: EmployeeFormL
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: "",
+      firstInitial: "",
       lastName: "",
       email: "",
       phone: "",
@@ -91,6 +92,7 @@ export default function EmployeeFormLayout({ onSave, employeeId }: EmployeeFormL
       
       const formData = {
         firstName: employee.firstName || "",
+        firstInitial: (employee as any).firstInitial || "",
         lastName: employee.lastName || "",
         email: employee.email || "",
         phone: employee.phone || "",
@@ -244,6 +246,14 @@ export default function EmployeeFormLayout({ onSave, employeeId }: EmployeeFormL
             error: form.formState.errors.firstName?.message
           },
           testId: "input-first-name"
+        }),
+        createFieldRow({
+          key: "firstInitial",
+          label: "First Initial",
+          type: "text",
+          placeholder: "e.g. A.",
+          register: form.register("firstInitial"),
+          testId: "input-first-initial"
         }),
         createFieldRow({
           key: "lastName",

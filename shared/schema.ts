@@ -60,6 +60,7 @@ export const employees = pgTable("employees", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   employeeNumber: text("employee_number").notNull().unique().default(sql`CONCAT('EM-', LPAD(nextval('employee_number_seq')::text, 4, '0'))`),
   firstName: text("first_name").notNull(),
+  firstInitial: text("first_initial"),
   lastName: text("last_name").notNull(),
   dateOfBirth: timestamp("date_of_birth"),
   email: text("email"),
