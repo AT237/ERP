@@ -3159,6 +3159,10 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
             if (itemContext.item?.lineType !== ltc) continue;
           }
         }
+        // When item matches a group: skip top-level non-group blocks from height calculation
+        if (hasConditionalGroups && block.type !== 'Group' && matchingGroupId !== null && itemContext) {
+          continue;
+        }
         // Normalize matching conditional group to y=0 for content height calculation
         const rawY = dynamicPos?.y ?? (block.position?.y || 0);
         const adjustedY = (hasConditionalGroups && block.id === matchingGroupId) ? 0 : rawY;
@@ -3237,6 +3241,13 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                 } else if (ltc) {
                   if (itemContext.item?.lineType !== ltc) return null;
                 }
+              }
+              
+              // When conditional groups exist and item matches a group: suppress top-level non-group blocks
+              // (they serve as "fallback" row for items that don't match any group)
+              // When no group matches (matchingGroupId === null): show top-level blocks as fallback
+              if (hasConditionalGroups && block.type !== 'Group' && matchingGroupId !== null && itemContext) {
+                return null;
               }
               
               const BlockRenderer = BlockRenderers[block.type];
