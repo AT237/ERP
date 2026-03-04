@@ -35,7 +35,7 @@ import {
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, 
   insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertRateAndChargeSchema, insertIncotermSchema,
-  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema,
+  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema, insertInventoryCategorySchema, inventoryCategories,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
   insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema, insertEmployeeSchema,
@@ -1594,6 +1594,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error saving user preferences:", error);
       res.status(400).json({ message: "Failed to save user preferences" });
+    }
+  });
+
+  // Master Data routes - Inventory Categories
+  app.get("/api/masterdata/inventory-categories", async (req, res) => {
+    try {
+      const categories = await db.select().from(inventoryCategories).orderBy(inventoryCategories.sortOrder, inventoryCategories.name);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching inventory categories:", error);
+      res.status(500).json({ message: "Failed to fetch inventory categories" });
+    }
+  });
+
+  app.post("/api/masterdata/inventory-categories", async (req, res) => {
+    try {
+      const data = insertInventoryCategorySchema.parse(req.body);
+      const [category] = await db.insert(inventoryCategories).values(data).returning();
+      res.json(category);
+    } catch (error: any) {
+      console.error("Error creating inventory category:", error);
+      if (error?.code === "23505") {
+        return res.status(409).json({ message: "Deze code bestaat al. Kies een andere code." });
+      }
+      res.status(400).json({ message: "Failed to create inventory category" });
+    }
+  });
+
+  app.get("/api/masterdata/inventory-categories/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const [category] = await db.select().from(inventoryCategories).where(eq(inventoryCategories.id, id));
+      if (!category) return res.status(404).json({ message: "Category not found" });
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch inventory category" });
+    }
+  });
+
+  app.put("/api/masterdata/inventory-categories/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const data = insertInventoryCategorySchema.partial().parse(req.body);
+      const [category] = await db.update(inventoryCategories).set(data).where(eq(inventoryCategories.id, id)).returning();
+      if (!category) return res.status(404).json({ message: "Category not found" });
+      res.json(category);
+    } catch (error: any) {
+      if (error?.code === "23505") {
+        return res.status(409).json({ message: "Deze code bestaat al." });
+      }
+      res.status(500).json({ message: "Failed to update inventory category" });
+    }
+  });
+
+  app.delete("/api/masterdata/inventory-categories/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await db.delete(inventoryCategories).where(eq(inventoryCategories.id, id));
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete inventory category" });
     }
   });
 

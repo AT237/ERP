@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { EntitySelect } from "@/components/ui/entity-select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInventoryItemSchema } from "@shared/schema";
@@ -296,9 +297,9 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         createFieldsRow([
           {
             key: "sku",
-            label: "SKU *",
+            label: "Artikelcode (SKU) *",
             type: "text",
-            placeholder: "Enter SKU",
+            placeholder: "Voer artikelcode in",
             layout: "single",
             register: form.register("sku"),
             validation: {
@@ -309,21 +310,21 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
           } as FormField2<InventoryFormData>,
           {
             key: "category",
-            label: "Category",
-            type: "select",
-            options: [
-              { value: "electronics", label: "Electronics" },
-              { value: "tools", label: "Tools" },
-              { value: "materials", label: "Materials" },
-              { value: "components", label: "Components" },
-              { value: "other", label: "Other" }
-            ],
+            label: "Categorie",
+            type: "custom",
             layout: "single",
-            setValue: (value) => form.setValue("category", value),
-            watch: () => form.watch("category"),
-            validation: {
-              error: form.formState.errors.category?.message
-            },
+            customComponent: (
+              <EntitySelect
+                endpoint="inventory-categories"
+                formType="masterdata-inventory-categories"
+                labelField="name"
+                secondaryField="code"
+                value={form.watch("category") || ""}
+                onValueChange={(val) => { form.setValue("category", val); setHasUnsavedChanges(true); }}
+                placeholder="Selecteer categorie..."
+                testId="select-inventory-category"
+              />
+            ),
             testId: "select-inventory-category"
           } as FormField2<InventoryFormData>
         ]),

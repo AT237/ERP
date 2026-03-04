@@ -527,6 +527,21 @@ export const incoterms = pgTable("incoterms", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Inventory Categories - master data for product categories
+export const inventoryCategories = pgTable("inventory_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertInventoryCategorySchema = createInsertSchema(inventoryCategories).omit({ id: true, createdAt: true });
+export type InsertInventoryCategory = z.infer<typeof insertInventoryCategorySchema>;
+export type InventoryCategory = typeof inventoryCategories.$inferSelect;
+
 export const vatRates = pgTable("vat_rates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   code: text("code").notNull().unique(),
