@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -277,6 +277,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   }, [lineItem, form, invoiceId]);
 
   const lineTypeValue = form.watch("lineType");
+  const prevLineTypeRef = useRef<string>("");
   const quantityValue = form.watch("quantity");
   const unitPriceValue = form.watch("unitPrice");
   const lineTotalValue = form.watch("lineTotal");
@@ -319,15 +320,22 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     form.setValue("lineTotal", lineTotal);
   }, [quantityValue, unitPriceValue, form]);
 
-  // Auto-fill unit when lineType changes
+  // Auto-fill unit and clear description when lineType changes
   useEffect(() => {
     if (!lineTypeValue) return;
+    const prev = prevLineTypeRef.current;
+    prevLineTypeRef.current = lineTypeValue;
+
     if (lineTypeValue === 'text') {
       form.setValue("unit" as any, "");
     } else if (lineTypeValue === 'charges') {
       // Get unit from selected rate if available
       const rateOpt = customerRateOptions.find(o => o.rateId === customerRateIdValue);
       form.setValue("unit" as any, rateOpt?.unit || "hrs");
+      // Clear description when user actively switches to charges
+      if (prev && prev !== 'charges') {
+        form.setValue("description", "");
+      }
     } else {
       // 'standard' or 'unique' → default to pcs if unit is empty
       const currentUnit = form.getValues("unit" as any);
