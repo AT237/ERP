@@ -139,7 +139,7 @@ export function TextBlockRenderer({ block, printData, currentPage = 1, totalPage
 
   const getFontFamily = (font?: string): string => {
     const fontMap: Record<string, string> = {
-      'helvetica': 'Helvetica, Arial, sans-serif',
+      'helvetica': 'Arial, Helvetica, sans-serif',
       'arial': 'Arial, sans-serif',
       'calibri': 'Calibri, "Segoe UI", sans-serif',
       'times': '"Times New Roman", Times, serif',
@@ -147,7 +147,7 @@ export function TextBlockRenderer({ block, printData, currentPage = 1, totalPage
       'georgia': 'Georgia, serif',
       'verdana': 'Verdana, sans-serif',
     };
-    return fontMap[font || 'helvetica'] || font || 'Helvetica, Arial, sans-serif';
+    return fontMap[font || 'arial'] || font || 'Arial, Helvetica, sans-serif';
   };
   
   const containerStyle: React.CSSProperties = {
@@ -705,7 +705,7 @@ export function ItemRepeaterRenderer({ block, printData, currentPage = 1, totalP
 
   const getFontFamily = (font?: string): string => {
     const fontMap: Record<string, string> = {
-      'helvetica': 'Helvetica, Arial, sans-serif',
+      'helvetica': 'Arial, Helvetica, sans-serif',
       'arial': 'Arial, sans-serif',
       'calibri': 'Calibri, "Segoe UI", sans-serif',
       'times': '"Times New Roman", Times, serif',
@@ -713,7 +713,7 @@ export function ItemRepeaterRenderer({ block, printData, currentPage = 1, totalP
       'georgia': 'Georgia, serif',
       'verdana': 'Verdana, sans-serif',
     };
-    return fontMap[font || 'helvetica'] || font || 'Helvetica, Arial, sans-serif';
+    return fontMap[font || 'arial'] || font || 'Arial, Helvetica, sans-serif';
   };
 
   return (
