@@ -491,15 +491,17 @@ export function formatFieldValue(value: any, dataType: string): string {
   }
 
   switch (dataType) {
-    case 'date':
-      if (value instanceof Date) {
-        return value.toLocaleDateString('nl-NL', {
+    case 'date': {
+      const dateObj = value instanceof Date ? value : new Date(value);
+      if (!isNaN(dateObj.getTime())) {
+        return dateObj.toLocaleDateString('nl-NL', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
         }).replace(/\./g, '-');
       }
       return String(value);
+    }
 
     case 'currency':
       const numValue = typeof value === 'string' ? parseFloat(value) : value;
