@@ -311,6 +311,8 @@ export const invoiceItems = pgTable("invoice_items", {
   customerRateId: varchar("customer_rate_id"),
   technicianNames: text("technician_names"),
   technicianIds: text("technician_ids"),
+  descriptionInternal: text("description_internal"),
+  discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
   sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id),
   sourceSnippetVersion: integer("source_snippet_version"),
 });

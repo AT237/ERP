@@ -38,7 +38,7 @@ const lineItemFormSchema = insertInvoiceItemSchema.extend({
   position: z.number().min(1, "Positie is verplicht").optional(),
   positionNo: z.string().optional(),
   descriptionInternal: z.string().optional(),
-  descriptionExternal: z.string().optional(),
+  discountPercent: z.string().optional(),
   sourceSnippetId: z.string().optional(),
   sourceSnippetVersion: z.number().optional(),
   workDate: z.any().optional(),
@@ -59,7 +59,7 @@ type LineItemFormData = z.infer<typeof lineItemFormSchema> & {
   position?: number;
   positionNo?: string;
   descriptionInternal?: string;
-  descriptionExternal?: string;
+  discountPercent?: string;
   sourceSnippetId?: string;
   sourceSnippetVersion?: number;
   workDate?: any;
@@ -100,12 +100,12 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       unit: "pcs",
       unitPrice: "0.00",
       lineTotal: "0.00",
-      lineType: "standard",
+      lineType: "",
       itemId: undefined,
       position: 1,
       positionNo: "",
       descriptionInternal: "",
-      descriptionExternal: "",
+      discountPercent: "0",
       sourceSnippetId: undefined,
       sourceSnippetVersion: undefined,
       workDate: undefined,
@@ -150,7 +150,23 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     staleTime: 5 * 60 * 1000,
   });
 
+  const itemIdValue = form.watch("itemId");
 
+  const { data: selectedInventoryItem } = useQuery<any>({
+    queryKey: ["/api/inventory", itemIdValue],
+    enabled: !!itemIdValue && !isEditing,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (selectedInventoryItem && !isEditing) {
+      form.setValue("description", selectedInventoryItem.description || selectedInventoryItem.name || "");
+      const unit = selectedInventoryItem.unit;
+      if (unit) form.setValue("unit" as any, unit);
+      const price = selectedInventoryItem.sellingPrice || selectedInventoryItem.unitPrice;
+      if (price) form.setValue("unitPrice", Number(price).toFixed(2));
+    }
+  }, [selectedInventoryItem, isEditing, form]);
 
   const customerRateOptions = useMemo(() => {
     const customerRateMap = new Map<string, CustomerRate>();
@@ -233,8 +249,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         itemId: lineItem.itemId || undefined,
         position: 1,
         positionNo: (lineItem as any).positionNo || "",
-        descriptionInternal: lineItem.description || "",
-        descriptionExternal: lineItem.description || "",
+        descriptionInternal: (lineItem as any).descriptionInternal || "",
+        discountPercent: (lineItem as any).discountPercent?.toString() || "0",
         sourceSnippetId: lineItem.sourceSnippetId || undefined,
         sourceSnippetVersion: lineItem.sourceSnippetVersion || undefined,
         workDate: (lineItem as any).workDate || undefined,
@@ -440,7 +456,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   });
 
   const handleSelectSnippet = (snippet: TextSnippet) => {
-    form.setValue("descriptionExternal", snippet.body);
+    form.setValue("description", snippet.body);
     form.setValue("sourceSnippetId", snippet.id);
     form.setValue("sourceSnippetVersion", snippet.version || undefined);
     
@@ -485,10 +501,22 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     const emp = allEmployees.find(e => e.id === selectedEmployeeId);
     const techName = emp ? `${emp.firstName} ${emp.lastName}` : undefined;
 
+    let description = data.description || '';
+    if (!description.trim()) {
+      if (data.lineType === 'charges') {
+        const rateOpt = customerRateOptions.find(o => o.rateId === data.customerRateId);
+        description = [rateOpt?.name, techName].filter(Boolean).join(' - ') || 'Charges';
+      } else {
+        description = data.descriptionInternal || '-';
+      }
+    }
+
     const transformedData = {
       ...data,
+      description,
       quantity: Number(data.quantity),
-      description: data.descriptionExternal || data.descriptionInternal || data.description,
+      descriptionInternal: data.descriptionInternal || undefined,
+      discountPercent: data.discountPercent || "0",
       sourceSnippetId: data.sourceSnippetId || undefined,
       sourceSnippetVersion: data.sourceSnippetVersion || undefined,
       workDate: selectedDate ? selectedDate.toISOString() : undefined,
@@ -531,258 +559,276 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     { value: 'charges', label: 'Charges' },
   ];
 
-  const formFields: FormField2<LineItemFormData>[] = [
-    {
-      key: 'lineType',
-      label: 'Line Type',
-      type: 'select',
-      options: lineTypeOptions,
-      setValue: (value: string) => form.setValue('lineType', value),
-      watch: () => form.watch('lineType'),
-      validation: {
-        isRequired: true,
-        error: form.formState.errors.lineType?.message
-      },
-      testId: 'select-line-type'
-    },
-    {
-      key: 'positionNo',
-      label: 'Pos. No.',
-      type: 'text',
-      register: form.register('positionNo'),
-      placeholder: 'e.g. 010',
-      validation: {
-        error: form.formState.errors.positionNo?.message
-      },
-      testId: 'input-position-no'
-    },
-    {
-      key: 'quantity',
-      label: 'Quantity',
-      type: 'number',
-      register: form.register('quantity', { valueAsNumber: true }),
-      validation: {
-        isRequired: true,
-        error: form.formState.errors.quantity?.message
-      },
-      testId: 'input-quantity'
-    },
-    {
-      key: 'unit',
-      label: 'Unit',
-      type: 'custom',
-      customComponent: (
-        <EntitySelect
-          endpoint="units-of-measure"
-          formType="masterdata-units-of-measure"
-          labelField="name"
-          secondaryField="code"
-          value={form.watch("unit" as any) || ""}
-          onValueChange={(val) => {
-            form.setValue("unit" as any, val);
-            setHasUnsavedChanges(true);
-          }}
-          placeholder="Select unit..."
-          testId="select-unit"
-        />
-      ),
-    },
-    {
-      key: 'unitPrice',
-      label: 'Unit Price',
-      type: 'number',
-      register: form.register('unitPrice'),
-      validation: {
-        isRequired: true,
-        error: form.formState.errors.unitPrice?.message
-      },
-      testId: 'input-unit-price'
-    },
-    {
-      key: 'lineTotal',
-      label: 'Line Total',
-      type: 'text',
-      register: form.register('lineTotal'),
-      disabled: true,
-      className: 'bg-gray-50 dark:bg-gray-800',
-      validation: {
-        error: form.formState.errors.lineTotal?.message
-      },
-      testId: 'input-line-total'
-    },
-    {
-      key: 'workDate',
-      label: 'Work Date',
-      type: 'custom',
-      customComponent: (
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal h-10",
-                !selectedDate && "text-muted-foreground"
-              )}
-              data-testid="input-work-date"
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {selectedDate ? format(selectedDate, "dd-MM-yy") : "Select date..."}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={handleDateChange}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      ),
-      testId: 'input-work-date'
-    },
-    {
-      key: 'technicianNames',
-      label: 'Technician',
-      type: 'custom',
-      customComponent: (
-        <EmployeeSelectWithAdd
-          value={selectedEmployeeId}
-          onValueChange={handleEmployeeChange}
-          testId="select-technician"
-        />
-      ),
-      testId: 'select-technician'
-    },
-    {
-      key: 'customerRateId',
-      label: 'Rate',
-      type: 'custom',
-      customComponent: (
-        <Popover open={rateOpen} onOpenChange={setRateOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={rateOpen}
-              className="w-full h-10 justify-between font-normal"
-              data-testid="select-customer-rate"
-            >
-              <span className="truncate">
-                {customerRateIdValue
-                  ? (customerRateOptions.find(o => o.rateId === customerRateIdValue)?.label || "Select rate...")
-                  : "Select rate..."}
-              </span>
-              <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            className="p-0"
-            align="start"
-            sideOffset={4}
-            style={{ width: 'var(--radix-popover-trigger-width)' }}
+  // ─── Left column fields (always visible) ───────────────────────────────────
+
+  const fieldPosNo: FormField2<LineItemFormData> = {
+    key: 'positionNo',
+    label: 'Pos. No.',
+    type: 'text',
+    register: form.register('positionNo'),
+    placeholder: 'bijv. 010',
+    validation: { error: form.formState.errors.positionNo?.message },
+    testId: 'input-position-no',
+  };
+
+  const fieldLineType: FormField2<LineItemFormData> = {
+    key: 'lineType',
+    label: 'Line Type',
+    type: 'select',
+    options: lineTypeOptions,
+    setValue: (value: string) => form.setValue('lineType', value),
+    watch: () => form.watch('lineType'),
+    validation: { isRequired: true, error: form.formState.errors.lineType?.message },
+    testId: 'select-line-type',
+  };
+
+  const fieldDescriptionInternal: FormField2<LineItemFormData> = {
+    key: 'descriptionInternal',
+    label: 'Interne omschrijving',
+    type: 'textarea',
+    placeholder: 'Interne omschrijving (niet zichtbaar op factuur)',
+    rows: 3,
+    register: form.register('descriptionInternal'),
+    validation: { error: form.formState.errors.descriptionInternal?.message },
+    testId: 'textarea-description-internal',
+  };
+
+  const fieldLineTotal: FormField2<LineItemFormData> = {
+    key: 'lineTotal',
+    label: 'Regel totaal',
+    type: 'text',
+    register: form.register('lineTotal'),
+    disabled: true,
+    className: 'bg-gray-50 dark:bg-gray-800',
+    validation: { error: form.formState.errors.lineTotal?.message },
+    testId: 'input-line-total',
+  };
+
+  // ─── Right column fields (conditional per lineType) ──────────────────────────
+
+  const fieldTechnician: FormField2<LineItemFormData> = {
+    key: 'technicianNames',
+    label: 'Technician',
+    type: 'custom',
+    customComponent: (
+      <EmployeeSelectWithAdd
+        value={selectedEmployeeId}
+        onValueChange={handleEmployeeChange}
+        testId="select-technician"
+      />
+    ),
+    testId: 'select-technician',
+  };
+
+  const fieldWorkDate: FormField2<LineItemFormData> = {
+    key: 'workDate',
+    label: 'Work Date',
+    type: 'custom',
+    customComponent: (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn("w-full justify-start text-left font-normal h-10", !selectedDate && "text-muted-foreground")}
+            data-testid="input-work-date"
           >
-            <Command shouldFilter={false}>
-              <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-                <CommandInput
-                  placeholder="Search rates..."
-                  className="flex-1 border-0 bg-transparent outline-none focus:ring-0 pr-2"
-                  value={rateSearchQuery}
-                  onValueChange={setRateSearchQuery}
-                />
-              </div>
-              <CommandList>
-                <CommandEmpty>No rates found.</CommandEmpty>
-                <CommandGroup>
-                  {customerRateIdValue && (
-                    <CommandItem
-                      value="__clear__"
-                      onSelect={() => {
-                        handleCustomerRateChange("");
-                        setRateOpen(false);
-                        setRateSearchQuery("");
-                      }}
-                      className="text-muted-foreground italic"
-                    >
-                      — Clear selection —
-                    </CommandItem>
-                  )}
-                  {filteredRateOptions.map(opt => (
-                    <CommandItem
-                      key={opt.rateId}
-                      value={opt.rateId}
-                      onSelect={() => {
-                        handleCustomerRateChange(opt.rateId);
-                        setRateOpen(false);
-                        setRateSearchQuery("");
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4 shrink-0",
-                          customerRateIdValue === opt.rateId ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {opt.label}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      ),
-      testId: 'select-customer-rate'
-    },
-    {
-      key: 'descriptionInternal',
-      label: 'Internal Description',
-      type: 'textarea',
-      placeholder: 'Internal description (not visible on invoice)',
-      rows: 4,
-      register: form.register('descriptionInternal'),
-      validation: {
-        error: form.formState.errors.descriptionInternal?.message
-      },
-      testId: 'textarea-description-internal'
-    },
-    {
-      key: 'descriptionExternal',
-      label: 'External Description',
-      type: 'textarea',
-      placeholder: 'External description (visible on invoice)',
-      rows: 4,
-      register: form.register('descriptionExternal'),
-      validation: {
-        error: form.formState.errors.descriptionExternal?.message
-      },
-      testId: 'textarea-description-external'
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {selectedDate ? format(selectedDate, "dd-MM-yy") : "Selecteer datum..."}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar mode="single" selected={selectedDate} onSelect={handleDateChange} initialFocus />
+        </PopoverContent>
+      </Popover>
+    ),
+    testId: 'input-work-date',
+  };
+
+  const fieldRate: FormField2<LineItemFormData> = {
+    key: 'customerRateId',
+    label: 'Rate',
+    type: 'custom',
+    customComponent: (
+      <Popover open={rateOpen} onOpenChange={setRateOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={rateOpen}
+            className="w-full h-10 justify-between font-normal"
+            data-testid="select-customer-rate"
+          >
+            <span className="truncate">
+              {customerRateIdValue
+                ? (customerRateOptions.find(o => o.rateId === customerRateIdValue)?.label || "Selecteer tarief...")
+                : "Selecteer tarief..."}
+            </span>
+            <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0" align="start" sideOffset={4} style={{ width: 'var(--radix-popover-trigger-width)' }}>
+          <Command shouldFilter={false}>
+            <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+              <CommandInput
+                placeholder="Zoek tarieven..."
+                className="flex-1 border-0 bg-transparent outline-none focus:ring-0 pr-2"
+                value={rateSearchQuery}
+                onValueChange={setRateSearchQuery}
+              />
+            </div>
+            <CommandList>
+              <CommandEmpty>Geen tarieven gevonden.</CommandEmpty>
+              <CommandGroup>
+                {customerRateIdValue && (
+                  <CommandItem value="__clear__" onSelect={() => { handleCustomerRateChange(""); setRateOpen(false); setRateSearchQuery(""); }} className="text-muted-foreground italic">
+                    — Selectie wissen —
+                  </CommandItem>
+                )}
+                {filteredRateOptions.map(opt => (
+                  <CommandItem key={opt.rateId} value={opt.rateId} onSelect={() => { handleCustomerRateChange(opt.rateId); setRateOpen(false); setRateSearchQuery(""); }}>
+                    <Check className={cn("mr-2 h-4 w-4 shrink-0", customerRateIdValue === opt.rateId ? "opacity-100" : "opacity-0")} />
+                    {opt.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    ),
+    testId: 'select-customer-rate',
+  };
+
+  const fieldQuantity: FormField2<LineItemFormData> = {
+    key: 'quantity',
+    label: 'Aantal',
+    type: 'number',
+    register: form.register('quantity', { valueAsNumber: true }),
+    validation: { isRequired: true, error: form.formState.errors.quantity?.message },
+    testId: 'input-quantity',
+  };
+
+  const fieldUnitPrice: FormField2<LineItemFormData> = {
+    key: 'unitPrice',
+    label: 'Prijs per eenheid',
+    type: 'number',
+    register: form.register('unitPrice'),
+    validation: { isRequired: true, error: form.formState.errors.unitPrice?.message },
+    testId: 'input-unit-price',
+  };
+
+  const fieldUnit: FormField2<LineItemFormData> = {
+    key: 'unit',
+    label: 'Eenheid',
+    type: 'custom',
+    customComponent: (
+      <EntitySelect
+        endpoint="units-of-measure"
+        formType="masterdata-units-of-measure"
+        labelField="name"
+        secondaryField="code"
+        value={form.watch("unit" as any) || ""}
+        onValueChange={(val) => { form.setValue("unit" as any, val); setHasUnsavedChanges(true); }}
+        placeholder="Selecteer eenheid..."
+        testId="select-unit"
+      />
+    ),
+  };
+
+  const fieldDescription: FormField2<LineItemFormData> = {
+    key: 'description',
+    label: 'Omschrijving',
+    type: 'textarea',
+    placeholder: 'Omschrijving (zichtbaar op factuur)',
+    rows: 3,
+    register: form.register('description'),
+    validation: { error: form.formState.errors.description?.message },
+    testId: 'textarea-description',
+  };
+
+  const fieldInventoryItem: FormField2<LineItemFormData> = {
+    key: 'itemId',
+    label: 'Artikel uit database',
+    type: 'custom',
+    customComponent: (
+      <EntitySelect
+        endpoint="inventory"
+        formType="inventory"
+        labelField="name"
+        secondaryField="sku"
+        value={form.watch("itemId" as any) || ""}
+        onValueChange={(val) => { form.setValue("itemId" as any, val); setHasUnsavedChanges(true); }}
+        placeholder="Selecteer artikel..."
+        testId="select-inventory-item"
+      />
+    ),
+  };
+
+  const fieldDiscount: FormField2<LineItemFormData> = {
+    key: 'discountPercent',
+    label: 'Korting %',
+    type: 'number',
+    register: form.register('discountPercent'),
+    placeholder: '0',
+    validation: { error: form.formState.errors.discountPercent?.message },
+    testId: 'input-discount-percent',
+  };
+
+  const fieldTextContent: FormField2<LineItemFormData> = {
+    key: 'description',
+    label: 'Tekst',
+    type: 'custom',
+    customComponent: (
+      <div className="space-y-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleOpenSnippetLibrary}
+          className="flex items-center gap-2"
+          data-testid="button-open-snippet-library"
+        >
+          <Library className="h-4 w-4" />
+          Kies uit tekstbibliotheek
+        </Button>
+        <textarea
+          {...form.register('description')}
+          placeholder="Tekst inhoud (zichtbaar op factuur)..."
+          rows={6}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+          data-testid="textarea-text-content"
+        />
+      </div>
+    ),
+  };
+
+  // ─── Build right column based on lineType ────────────────────────────────────
+  const getRightColumnFields = (): FormField2<LineItemFormData>[] => {
+    switch (lineTypeValue) {
+      case 'charges':
+        return [fieldTechnician, fieldWorkDate, fieldRate, fieldQuantity, fieldUnitPrice, fieldUnit];
+      case 'unique':
+        return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice];
+      case 'standard':
+        return [fieldInventoryItem, fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount];
+      case 'text':
+        return [fieldTextContent];
+      default:
+        return [];
     }
-  ];
+  };
+
+  const leftFields = [fieldPosNo, fieldLineType, fieldDescriptionInternal, fieldLineTotal];
+  const rightFields = getRightColumnFields();
 
   const formSections: FormSection2<LineItemFormData>[] = [
     {
       id: 'general',
       label: 'General',
       rows: [
-        createTwoColumnRow(
-          [
-            formFields[0],  // Position No
-            formFields[1],  // Line Type
-            formFields[5],  // Work Date
-            formFields[6],  // Technician
-            formFields[7],  // Rate
-            formFields[2],  // Quantity
-          ],
-          [
-            formFields[3],  // Unit Price
-            formFields[4],  // Line Total
-            formFields[8],  // Internal Description (textarea)
-            formFields[9],  // External Description (textarea)
-          ]
-        )
-      ]
-    }
+        createTwoColumnRow(leftFields, rightFields),
+      ],
+    },
   ];
 
   const snippetSelectionDialog = (
