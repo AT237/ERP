@@ -89,42 +89,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/suppliers/:id/check-usages", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const supplierPurchaseOrders = await db.select().from(purchaseOrders).where(eq(purchaseOrders.supplierId, id));
-
-      const usages: { location: string; count: number; examples: string[] }[] = [];
-      if (supplierPurchaseOrders.length > 0) usages.push({ location: "Purchase Orders", count: supplierPurchaseOrders.length, examples: supplierPurchaseOrders.slice(0, 3).map(po => po.orderNumber) });
-
-      res.json({ canDelete: usages.length === 0, usages });
-    } catch (error) {
-      console.error("Error checking supplier usages:", error);
-      res.status(500).json({ message: "Failed to check supplier usages" });
-    }
-  });
-
-  app.get("/api/inventory/:id/check-usages", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const [itemQuotations, itemInvoices, itemPurchaseOrders] = await Promise.all([
-        db.select().from(quotationItems).where(eq(quotationItems.itemId, id)),
-        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id)),
-        db.select().from(purchaseOrderItems).where(eq(purchaseOrderItems.itemId, id))
-      ]);
-
-      const usages: { location: string; count: number; examples: string[] }[] = [];
-      if (itemQuotations.length > 0) usages.push({ location: "Quotations", count: itemQuotations.length, examples: [] });
-      if (itemInvoices.length > 0) usages.push({ location: "Invoices", count: itemInvoices.length, examples: [] });
-      if (itemPurchaseOrders.length > 0) usages.push({ location: "Purchase Orders", count: itemPurchaseOrders.length, examples: [] });
-
-      res.json({ canDelete: usages.length === 0, usages });
-    } catch (error) {
-      console.error("Error checking inventory usages:", error);
-      res.status(500).json({ message: "Failed to check inventory usages" });
-    }
-  });
-
   app.get("/api/customers", async (req, res) => {
     try {
       const customers = await storage.getCustomers();
