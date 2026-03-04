@@ -371,7 +371,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const handleEmployeeChange = (employeeId: string) => {
     setSelectedEmployeeId(employeeId);
     const emp = allEmployees.find(e => e.id === employeeId);
-    const fullName = emp ? `${emp.firstName} ${emp.lastName}` : "";
+    const prefix = emp ? ((emp as any).firstInitial || emp.firstName) : "";
+    const fullName = emp ? `${prefix} ${emp.lastName}` : "";
     form.setValue("technicianNames", fullName);
     form.setValue("technicianIds", employeeId);
     setHasUnsavedChanges(true);
@@ -514,7 +515,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
 
   const onSubmit = (data: LineItemFormData) => {
     const emp = allEmployees.find(e => e.id === selectedEmployeeId);
-    const techName = emp ? `${emp.firstName} ${emp.lastName}` : undefined;
+    const techPrefix = emp ? ((emp as any).firstInitial || emp.firstName) : "";
+    const techName = emp ? `${techPrefix} ${emp.lastName}` : undefined;
 
     let description = data.description || '';
     if (!description.trim()) {
