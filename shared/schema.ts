@@ -236,7 +236,7 @@ export const quotationItems = pgTable("quotation_items", {
   quotationId: varchar("quotation_id").references(() => quotations.id).notNull(),
   itemId: varchar("item_id").references(() => inventoryItems.id), // Nullable for text lines
   description: text("description").notNull(),
-  quantity: integer("quantity").default(0), // 0 for text lines
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"), // 0 for text lines; decimal for e.g. 0.75 hours
   unit: text("unit"),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
@@ -300,7 +300,7 @@ export const invoiceItems = pgTable("invoice_items", {
   invoiceId: varchar("invoice_id").references(() => invoices.id).notNull(),
   itemId: varchar("item_id").references(() => inventoryItems.id),
   description: text("description").notNull(),
-  quantity: integer("quantity").default(0),
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"), // decimal for e.g. 0.75 hours
   unit: text("unit"),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
@@ -379,7 +379,7 @@ export const salesOrderItems = pgTable("sales_order_items", {
   salesOrderId: varchar("sales_order_id").references(() => salesOrders.id).notNull(),
   itemId: varchar("item_id").references(() => inventoryItems.id), // Nullable for text lines
   description: text("description").notNull(),
-  quantity: integer("quantity").default(0), // 0 for text lines
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"), // decimal for e.g. 0.75 hours
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
   lineType: text("line_type").default("standard"), // 'standard', 'unique', 'text', 'charges'
