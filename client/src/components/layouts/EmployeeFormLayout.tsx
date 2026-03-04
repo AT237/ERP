@@ -396,6 +396,7 @@ export default function EmployeeFormLayout({ onSave, employeeId }: EmployeeFormL
       }}
       originalValues={employee ? {
         firstName: employee.firstName || "",
+        firstInitial: (employee as any).firstInitial || "",
         lastName: employee.lastName || "",
         email: employee.email || "",
         phone: employee.phone || "",
