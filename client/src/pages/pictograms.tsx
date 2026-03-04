@@ -1,21 +1,26 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
 import { Edit, Trash2, Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 
 export default function Pictograms() {
-  const { toast } = useToast();
   const [, navigate] = useLocation();
   const isMobile = useIsMobile();
 
   const { data: pictograms = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/masterdata/pictograms"],
+  });
+
+  const del = useEntityDelete<any>({
+    endpoint: '/api/masterdata/pictograms',
+    queryKeys: ['/api/masterdata/pictograms'],
+    entityLabel: 'Pictogram',
+    checkUsages: false,
+    getName: (row) => row.name || row.code || ''
   });
 
   const defaultColumns: ColumnConfig[] = [
@@ -91,47 +96,6 @@ export default function Pictograms() {
     tableKey: 'pictograms'
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest("DELETE", `/api/masterdata/pictograms/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/masterdata/pictograms"] });
-      toast({
-        title: "Pictogram deleted",
-        description: "Pictogram has been deleted successfully.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete pictogram",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleNewPictogram = () => {
-    if (isMobile) {
-      navigate('/pictogram-form');
-    } else {
-      const event = new CustomEvent('open-form-tab', {
-        detail: {
-          id: 'new-pictogram',
-          name: 'Pictogram',
-          formType: 'pictogram'
-        }
-      });
-      window.dispatchEvent(event);
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this pictogram?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
   const handleEdit = (pictogram: any) => {
     if (isMobile) {
       navigate(`/pictogram-form/${pictogram.id}`);
@@ -163,10 +127,25 @@ export default function Pictograms() {
       key: 'delete',
       label: 'Delete',
       icon: <Trash2 className="h-4 w-4" />,
-      onClick: () => handleDelete(row.id),
+      onClick: () => del.handleDeleteRow(row),
       variant: 'destructive' as const,
     },
   ];
+
+  const handleNewPictogram = () => {
+    if (isMobile) {
+      navigate('/pictogram-form');
+    } else {
+      const event = new CustomEvent('open-form-tab', {
+        detail: {
+          id: 'new-pictogram',
+          name: 'Pictogram',
+          formType: 'pictogram'
+        }
+      });
+      window.dispatchEvent(event);
+    }
+  };
 
   return (
     <div className="p-6">
@@ -193,6 +172,12 @@ export default function Pictograms() {
           const allIds = pictograms.map(p => p.id);
           tableState.toggleAllRows(allIds);
         }}
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, pictograms),
+          itemCount: tableState.selectedRows.length
+        }}
         onRowDoubleClick={handleRowDoubleClick}
         getRowId={(row: any) => row.id}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
@@ -208,6 +193,7 @@ export default function Pictograms() {
         ]}
         rowActions={rowActions}
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }

@@ -142,7 +142,7 @@ export default function TextSnippets() {
     queryKeys: ['/api/text-snippets'],
     entityLabel: 'Text Snippet',
     checkUsages: false,
-    getName: (row) => row.code || row.title
+    getName: (row) => row.title || row.code || ''
   });
 
   // Delete mutation for row actions

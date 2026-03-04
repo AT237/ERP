@@ -59,7 +59,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Customer routes
   app.get("/api/customers/:id/check-usages", async (req, res) => {
     try {
       const { id } = req.params;
@@ -705,14 +704,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/inventory/:id/check-usages", async (req, res) => {
     try {
       const { id } = req.params;
-      const [usageInvoiceItems, usageQuotationItems] = await Promise.all([
-        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id)),
-        db.select().from(quotationItems).where(eq(quotationItems.itemId, id))
+      const [itemQuotationItems, itemInvoiceItems] = await Promise.all([
+        db.select().from(quotationItems).where(eq(quotationItems.itemId, id)),
+        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id))
       ]);
 
       const usages: { location: string; count: number; examples: string[] }[] = [];
-      if (usageInvoiceItems.length > 0) usages.push({ location: "Invoices", count: usageInvoiceItems.length, examples: usageInvoiceItems.slice(0, 3).map(i => i.description) });
-      if (usageQuotationItems.length > 0) usages.push({ location: "Quotations", count: usageQuotationItems.length, examples: usageQuotationItems.slice(0, 3).map(q => q.description) });
+      if (itemQuotationItems.length > 0) usages.push({ location: "Quotation Items", count: itemQuotationItems.length, examples: itemQuotationItems.slice(0, 3).map(q => q.description || '') });
+      if (itemInvoiceItems.length > 0) usages.push({ location: "Invoice Items", count: itemInvoiceItems.length, examples: itemInvoiceItems.slice(0, 3).map(i => i.description || '') });
 
       res.json({ canDelete: usages.length === 0, usages });
     } catch (error) {
@@ -738,25 +737,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching low stock items:", error);
       res.status(500).json({ message: "Failed to fetch low stock items" });
-    }
-  });
-
-  app.get("/api/inventory/:id/check-usages", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const [itemQuotationItems, itemInvoiceItems] = await Promise.all([
-        db.select().from(quotationItems).where(eq(quotationItems.itemId, id)),
-        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id))
-      ]);
-
-      const usages: { location: string; count: number; examples: string[] }[] = [];
-      if (itemQuotationItems.length > 0) usages.push({ location: "Quotation Items", count: itemQuotationItems.length, examples: itemQuotationItems.slice(0, 3).map(q => q.description || '') });
-      if (itemInvoiceItems.length > 0) usages.push({ location: "Invoice Items", count: itemInvoiceItems.length, examples: itemInvoiceItems.slice(0, 3).map(i => i.description || '') });
-
-      res.json({ canDelete: usages.length === 0, usages });
-    } catch (error) {
-      console.error("Error checking inventory usages:", error);
-      res.status(500).json({ message: "Failed to check inventory usages" });
     }
   });
 
