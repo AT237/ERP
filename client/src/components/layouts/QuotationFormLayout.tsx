@@ -1778,7 +1778,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 itemForm.reset({
                   quotationId: item.quotationId,
                   description: item.description,
-                  quantity: item.quantity,
+                  quantity: parseFloat(String(item.quantity || 1)),
                   unitPrice: item.unitPrice || "0.00",
                   lineTotal: item.lineTotal || "0.00",
                   itemId: item.itemId,

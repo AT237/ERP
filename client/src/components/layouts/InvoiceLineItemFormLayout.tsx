@@ -243,7 +243,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       const formData: LineItemFormData = {
         invoiceId: lineItem.invoiceId || invoiceId || "",
         description: lineItem.description || "",
-        quantity: lineItem.quantity || 1,
+        quantity: parseFloat(String(lineItem.quantity || 1)),
         unit: (lineItem as any).unit || "",
         unitPrice: lineItem.unitPrice?.toString() || "0.00",
         lineTotal: lineItem.lineTotal?.toString() || "0.00",
