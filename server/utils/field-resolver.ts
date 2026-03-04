@@ -2,7 +2,7 @@ import { db } from "../db";
 import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, unitsOfMeasure } from "../../shared/schema";
 import { eq, asc } from "drizzle-orm";
 
-function applyPrintSortOrder<T extends { position?: number | null; positionNo?: string | null; description?: string; unitPrice?: string; lineTotal?: string }>(
+function applyPrintSortOrder<T extends { position?: number | null; positionNo?: string | null; description?: string | null; unitPrice?: string | null; lineTotal?: string | null; [key: string]: any }>(
   items: T[],
   sortOrder: string | null | undefined
 ): T[] {
@@ -53,11 +53,11 @@ export interface QuotationPrintData {
     email: string | null;
     phone: string | null;
     address: {
-      street: string;
-      houseNumber: string;
-      postalCode: string;
-      city: string;
-      country: string;
+      street: string | null;
+      houseNumber: string | null;
+      postalCode: string | null;
+      city: string | null;
+      country: string | null;
     } | null;
   } | null;
   project: {
@@ -84,7 +84,7 @@ export interface QuotationPrintData {
     bankName: string | null;
   } | null;
   items: Array<{
-    positionNo: string; // Formatted position number (e.g., "010", "020")
+    positionNo: string;
     description: string;
     quantity: number;
     unitPrice: string;
@@ -246,11 +246,11 @@ export interface InvoicePrintData {
     email: string | null;
     phone: string | null;
     address: {
-      street: string;
-      houseNumber: string;
-      postalCode: string;
-      city: string;
-      country: string;
+      street: string | null;
+      houseNumber: string | null;
+      postalCode: string | null;
+      city: string | null;
+      country: string | null;
     } | null;
   } | null;
   project: {
@@ -279,12 +279,20 @@ export interface InvoicePrintData {
   items: Array<{
     positionNo: string;
     description: string;
+    descriptionInternal: string | null;
     quantity: number;
+    unit: string;
     unitPrice: string;
     lineTotal: string;
     lineType: string;
+    discountPercent: string | null;
     workDate: Date | null;
     technicianNames: string | null;
+    technicianIds: string | null;
+    customerRateId: string | null;
+    itemId: string | null;
+    sourceSnippetId: string | null;
+    sourceSnippetVersion: number | null;
   }>;
 }
 
@@ -400,13 +408,20 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
   const itemsData = items.map((item, index) => ({
     positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'),
     description: item.description,
+    descriptionInternal: item.descriptionInternal || null,
     quantity: item.quantity || 0,
     unit: item.unit ? (uomMap[item.unit] || uomMapLower[item.unit.toLowerCase()] || item.unit) : "",
     unitPrice: item.unitPrice || "0.00",
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",
+    discountPercent: item.discountPercent || null,
     workDate: item.workDate,
     technicianNames: item.technicianNames,
+    technicianIds: item.technicianIds || null,
+    customerRateId: item.customerRateId || null,
+    itemId: item.itemId || null,
+    sourceSnippetId: item.sourceSnippetId || null,
+    sourceSnippetVersion: item.sourceSnippetVersion || null,
   }));
 
   return {

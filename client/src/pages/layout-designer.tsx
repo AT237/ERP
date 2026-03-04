@@ -368,6 +368,50 @@ const PX_TO_MM = 1 / MM_TO_PX;
 const pxToMm = (px: number): number => Math.round(px * PX_TO_MM * 10) / 10;
 const mmToPx = (mm: number): number => Math.round(mm * MM_TO_PX);
 
+// Dutch labels for field names used in layout designer field browser and properties panel
+const FIELD_LABELS: Record<string, string> = {
+  positionNo: 'Pos. Nr.', lineType: 'Regeltype', description: 'Omschrijving',
+  descriptionInternal: 'Interne omschrijving', quantity: 'Aantal', unit: 'Eenheid',
+  unitPrice: 'Prijs per eenheid', lineTotal: 'Regel totaal', discountPercent: 'Korting %',
+  workDate: 'Werkdatum', technicianNames: 'Techniciennamen', technicianIds: 'Techniciën IDs',
+  customerRateId: 'Tarief ID', itemId: 'Artikel ID', sourceSnippetId: 'Snippet ID',
+  sourceSnippetVersion: 'Snippet versie', deliveryDate: 'Leverdatum', hsCode: 'HS Code',
+  countryOfOrigin: 'Land van oorsprong', lineNumber: 'Regelnummer',
+  quotationNumber: 'Offerte nr.', quotationDate: 'Offerte datum', validUntil: 'Geldig tot',
+  validityDays: 'Geldig (dagen)', revisionNumber: 'Revisie nr.', status: 'Status',
+  isBudgetQuotation: 'Budgetofferte', subtotal: 'Subtotaal', taxAmount: 'BTW bedrag',
+  totalAmount: 'Totaal bedrag', incoTerms: 'Incoterms', paymentConditions: 'Betalingsconditie',
+  deliveryConditions: 'Leveringsconditie', notes: 'Notities', invoiceNumber: 'Factuur nr.',
+  invoiceDate: 'Factuurdatum', dueDate: 'Vervaldatum', paidAmount: 'Betaald bedrag',
+  orderNumber: 'Order nr.', orderDate: 'Orderdatum', expectedDate: 'Verwachte datum',
+  expectedDeliveryDate: 'Verwachte levering', priority: 'Prioriteit', assignedTo: 'Toegewezen aan',
+  packingListNumber: 'Paklijst nr.', packingDate: 'Pakdatum', shippingMethod: 'Verzendmethode',
+  trackingNumber: 'Track & Trace', totalWeight: 'Totaal gewicht', totalPackages: 'Totaal colli',
+  packageNumber: 'Collinummer', weight: 'Gewicht', workOrderNumber: 'Werkorder nr.',
+  requestNumber: 'Aanvraag nr.', requestDate: 'Aanvraagdatum', name: 'Naam',
+  customerNumber: 'Klantnummer', kvkNummer: 'KvK nummer', generalEmail: 'Algemeen e-mail',
+  email: 'E-mail', phone: 'Telefoon', mobile: 'Mobiel', contactPersonEmail: 'Contactpersoon e-mail',
+  taxId: 'BTW nummer', bankAccount: 'Bankrekening', invoiceEmail: 'Factuur e-mail',
+  invoiceNotes: 'Factuurnotities', memo: 'Memo', paymentTerms: 'Betaaltermijn',
+  supplierNumber: 'Leveranciersnummer', contactPerson: 'Contactpersoon',
+  prospectNumber: 'Prospectnummer', companyName: 'Bedrijfsnaam', contactName: 'Contactnaam',
+  source: 'Bron', projectNumber: 'Projectnummer', startDate: 'Startdatum', endDate: 'Einddatum',
+  totalValue: 'Totale waarde', progress: 'Voortgang', legalName: 'Juridische naam',
+  website: 'Website', btwNummer: 'BTW nr.', iban: 'IBAN', bankName: 'Banknaam',
+  'address.street': 'Adres - Straat', 'address.houseNumber': 'Adres - Huisnummer',
+  'address.postalCode': 'Adres - Postcode', 'address.city': 'Adres - Stad', 'address.country': 'Adres - Land',
+  street: 'Straat', houseNumber: 'Huisnummer', postalCode: 'Postcode', city: 'Stad',
+  country: 'Land', province: 'Provincie', type: 'Type', code: 'Code', region: 'Regio',
+  phoneCode: 'Telefooncode', category: 'Categorie', language: 'Taal', sku: 'Artikelcode',
+  costPrice: 'Inkoopprijs', margin: 'Marge', currentStock: 'Huidige voorraad',
+  minimumStock: 'Minimumvoorraad', symbol: 'Symbool', percentage: 'Percentage',
+  isDefault: 'Standaard', order: 'Volgorde', color: 'Kleur', title: 'Titel',
+  content: 'Inhoud', version: 'Versie', url: 'URL', width: 'Breedte', height: 'Hoogte',
+  function: 'Functie', logoUrl: 'Logo URL',
+};
+
+const getFieldLabel = (fieldName: string) => FIELD_LABELS[fieldName] || fieldName;
+
 // Data Field Insert Menu Component with collapsible categories
 function DataFieldInsertMenu({ 
   blockId, 
@@ -432,7 +476,7 @@ function DataFieldInsertMenu({
                   onClick={() => insertField(table.name, field)}
                 >
                   <span className="text-orange-600">+</span>
-                  <span>{field}</span>
+                  <span>{getFieldLabel(field)}</span>
                   <span className="text-[10px] text-muted-foreground ml-auto">{`{{${table.name}.${field}}}`}</span>
                 </button>
               ))}
@@ -502,9 +546,9 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const availableTables = [
     // Document Types
     { name: 'quotation', label: 'Offerte', fields: ['quotationNumber', 'quotationDate', 'validUntil', 'validityDays', 'description', 'revisionNumber', 'status', 'isBudgetQuotation', 'subtotal', 'taxAmount', 'totalAmount', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
-    { name: 'quotationItems', label: 'Offerte Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'taxRate', 'lineTotal', 'notes', 'lineType'] },
+    { name: 'quotationItems', label: 'Offerte Regels', fields: ['positionNo', 'lineType', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal', 'itemId', 'sourceSnippetId', 'deliveryDate', 'hsCode', 'countryOfOrigin'] },
     { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'invoiceDate', 'dueDate', 'description', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'paidAmount', 'notes'] },
-    { name: 'invoiceItems', label: 'Factuur Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'taxRate', 'lineTotal', 'workDate', 'technicianNames', 'lineType', 'notes'] },
+    { name: 'invoiceItems', label: 'Factuur Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'unit', 'unitPrice', 'lineTotal', 'discountPercent', 'workDate', 'technicianNames', 'technicianIds', 'customerRateId', 'itemId', 'sourceSnippetId', 'sourceSnippetVersion'] },
     { name: 'proformaInvoice', label: 'Proforma Factuur', fields: ['invoiceNumber', 'status', 'dueDate', 'subtotal', 'taxAmount', 'totalAmount'] },
     { name: 'purchaseOrder', label: 'Inkooporder', fields: ['orderNumber', 'orderDate', 'expectedDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
     { name: 'purchaseOrderItems', label: 'Inkooporder Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
@@ -4208,7 +4252,7 @@ function BlockProperties({
                         <SelectContent>
                           {selectedTable.fields.map((field: string) => (
                             <SelectItem key={field} value={field}>
-                              {field}
+                              {getFieldLabel(field)}
                             </SelectItem>
                           ))}
                         </SelectContent>

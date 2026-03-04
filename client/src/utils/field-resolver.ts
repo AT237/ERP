@@ -10,12 +10,20 @@ export type PrintData = {
   items?: Array<{
     positionNo: string;
     description: string;
+    descriptionInternal?: string | null;
     quantity: number;
+    unit?: string | null;
     unitPrice: string;
     lineTotal: string;
     lineType: string;
+    discountPercent?: string | null;
     workDate?: Date | null;
     technicianNames?: string | null;
+    technicianIds?: string | null;
+    customerRateId?: string | null;
+    itemId?: string | null;
+    sourceSnippetId?: string | null;
+    sourceSnippetVersion?: number | null;
   }>;
 };
 
