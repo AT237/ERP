@@ -703,7 +703,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         isLoading={invoiceLoading}
       />
       {isEditing && (
-        <div className="px-6 py-4 bg-white ml-[15px] mr-[15px]">
+        <div className="px-6 py-4 pb-10 bg-white ml-[15px] mr-[15px]">
           <DataTableLayout
             data={invoiceItems}
             isLoading={false}
