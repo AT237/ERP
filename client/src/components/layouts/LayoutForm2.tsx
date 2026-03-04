@@ -436,6 +436,20 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
     }
   }, [formPersistenceKey, clearSavedData, onFormPersistenceClear]);
 
+  // Auto-focus first input when opening a new form (entityId is undefined)
+  const formContainerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (entityId) return; // Only for new records
+    const timeout = setTimeout(() => {
+      if (!formContainerRef.current) return;
+      const first = formContainerRef.current.querySelector<HTMLElement>(
+        'input:not([type="hidden"]):not([disabled]):not([readonly]), textarea:not([disabled]):not([readonly])'
+      );
+      first?.focus();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ========================================================================
   // CHANGE TRACKING LOGIC
   // ========================================================================
@@ -861,7 +875,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   }, [toolbar, actionButtons, documentType, entityId]);
 
   return (
-    <div className={`layout-form2 ${className}`}>
+    <div ref={formContainerRef} className={`layout-form2 ${className}`}>
       <BaseFormLayout
         toolbar={resolvedToolbar}
         tabs={tabs}
