@@ -188,6 +188,7 @@ export default function PrintPreviewPage() {
               minHeight: `${DOC_HEIGHT}px`,
               transform: `scale(${totalScale})`,
               transformOrigin: "top left",
+              fontFamily: 'Arial, Helvetica, sans-serif',
             }}
           >
             <LayoutPreview
