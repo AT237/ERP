@@ -3207,7 +3207,6 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         className="relative overflow-hidden"
         style={{
           backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
-          outline: itemContext ? '1px dashed red' : 'none',
           height: `${sectionHeight}px`,
           minHeight: heightCanShrink ? 'auto' : `${sectionHeight}px`,
           maxHeight: heightCanGrow ? 'none' : `${sectionHeight}px`,
@@ -3298,13 +3297,16 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         const shouldRepeat = hasItemPlaceholders || manuallyEnabled;
         const lineTypeFilter = section.config?.lineTypeFilter;
 
-        // DEBUG: log section render decisions
-        console.log('[LayoutPreview] section:', section.name, '| shouldRepeat:', shouldRepeat, '| hasItemPlaceholders:', hasItemPlaceholders, '| manuallyEnabled:', manuallyEnabled, '| items:', typedPrintData.items?.length, '| lineTypeFilter:', lineTypeFilter);
+        // If the section contains conditional groups (conditionField/conditionValue per group),
+        // those groups handle per-lineType routing themselves → skip section-level lineTypeFilter routing
+        const sectionHasConditionalGroups = (section.config?.blocks || []).some(
+          (b: any) => b.type === 'Group' && (b.config?.conditionField || b.config?.lineTypeCondition)
+        );
 
         // --- ITEM-FIRST GROUP RENDERING ---
-        // When consecutive repeating sections each have a lineTypeFilter,
+        // When consecutive repeating sections each have a lineTypeFilter (and no conditional groups),
         // render them together in item sort order (e.g. 010 std, 020 charges, 030 std)
-        if (shouldRepeat && lineTypeFilter && lineTypeFilter !== 'all') {
+        if (shouldRepeat && lineTypeFilter && lineTypeFilter !== 'all' && !sectionHasConditionalGroups) {
           // Collect this section + all following consecutive lineType-filtered repeating sections
           const group: any[] = [section];
           for (let j = sectionIndex + 1; j < sections.length; j++) {
@@ -3332,7 +3334,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           const items = allItems; // no filter — unfiltered repeating section shows all items
           
           if (items.length === 0) {
-            return [<div key={`${section.id}-empty`} style={{background:'orange',padding:'4px',fontSize:'10px'}}>DEBUG: {section.name} - 0 items</div>];
+            return [];
           }
           
           // Render one copy of this section for each item
