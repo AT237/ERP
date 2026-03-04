@@ -191,7 +191,7 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     listQueryKey: "/api/invoice-items",
     documentType: "invoice_line_item",
     supportsNavigation: false,
-    supportsDelete: false,
+    supportsDelete: true,
     supportsAddNew: false,
   },
   "masterdata-payment-terms": {
@@ -296,6 +296,7 @@ export interface UseFormToolbarOptions {
   showPrint?: boolean;
   showNavigation?: boolean;
   showExport?: boolean;
+  extraQueryKeysToInvalidate?: string[][];
 }
 
 export function useFormToolbar({
@@ -310,6 +311,7 @@ export function useFormToolbar({
   showPrint = true,
   showNavigation,
   showExport = true,
+  extraQueryKeysToInvalidate = [],
 }: UseFormToolbarOptions): FormToolbarProps & { deleteConflict: { name: string; usages: UsageLocation[] } | null; onClearDeleteConflict: () => void } {
   const { toast } = useToast();
   const config = ENTITY_CONFIGS[entityType];
@@ -350,6 +352,9 @@ export function useFormToolbar({
         if (config.listQueryKey !== `${config.apiPath}/extended`) {
           queryClient.invalidateQueries({ queryKey: [`${config.apiPath}/extended`] });
         }
+      }
+      for (const key of extraQueryKeysToInvalidate) {
+        queryClient.invalidateQueries({ queryKey: key });
       }
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
