@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const [rateOpen, setRateOpen] = useState(false);
   const [rateSearchQuery, setRateSearchQuery] = useState("");
   
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const isEditing = !!lineItemId;
 
@@ -418,7 +420,12 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         }
       }));
       
-      onSave();
+      // Navigate to edit URL of the new item (avoids 404 from history.back to unknown route)
+      if (invoiceId && newLineItem?.id) {
+        navigate(`/invoices/${invoiceId}/items/${newLineItem.id}`);
+      } else {
+        onSave();
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -444,7 +451,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId] });
       setHasUnsavedChanges(false);
-      const tabId = lineItemId ? `edit-invoice-line-item-${lineItemId}` : 'new-invoice-line-item';
+      const tabId = lineItemId ? `invoice-line-${lineItemId}` : 'new-invoice-line-item';
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId, hasUnsavedChanges: false }
       }));
@@ -452,7 +459,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         title: "Success",
         description: "Line updated",
       });
-      onSave();
+      // Stay on the form after update — user closes tab manually with ×
     },
     onError: (error: Error) => {
       toast({
