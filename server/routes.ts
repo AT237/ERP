@@ -25,6 +25,15 @@ function parseDateFields(body: Record<string, any>, fields: string[]): Record<st
   }
   return result;
 }
+
+// Coerce numeric quantity to string so drizzle-zod decimal schema accepts it
+function coerceQuantity(body: Record<string, any>): Record<string, any> {
+  if (body.quantity !== undefined && typeof body.quantity === 'number') {
+    return { ...body, quantity: String(body.quantity) };
+  }
+  return body;
+}
+
 import { loadQuotationPrintData, loadInvoicePrintData } from "./utils/field-resolver";
 import {
   insertCustomerSchema, insertSupplierSchema, insertProspectSchema, insertInventoryItemSchema,
@@ -965,10 +974,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/quotations/:id/items", async (req, res) => {
     try {
-      const itemData = insertQuotationItemSchema.parse({
+      const itemData = insertQuotationItemSchema.parse(coerceQuantity({
         ...req.body,
         quotationId: req.params.id
-      });
+      }));
       const item = await storage.addQuotationItem(itemData);
       res.status(201).json(item);
     } catch (error) {
@@ -1008,7 +1017,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/quotation-items/:id", async (req, res) => {
     try {
-      const itemData = insertQuotationItemSchema.partial().parse(req.body);
+      const itemData = insertQuotationItemSchema.partial().parse(coerceQuantity(req.body));
       const item = await storage.updateQuotationItem(req.params.id, itemData);
       res.json(item);
     } catch (error) {
@@ -1122,10 +1131,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/invoices/:id/items", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['workDate']);
-      const itemData = insertInvoiceItemSchema.parse({
+      const itemData = insertInvoiceItemSchema.parse(coerceQuantity({
         ...body,
         invoiceId: req.params.id
-      });
+      }));
       const item = await storage.addInvoiceItem(itemData);
       res.status(201).json(item);
     } catch (error) {
@@ -1177,7 +1186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/invoice-items/:id", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['workDate']);
-      const itemData = insertInvoiceItemSchema.partial().parse(body);
+      const itemData = insertInvoiceItemSchema.partial().parse(coerceQuantity(body));
       const item = await storage.updateInvoiceItem(req.params.id, itemData);
       res.json(item);
     } catch (error) {
