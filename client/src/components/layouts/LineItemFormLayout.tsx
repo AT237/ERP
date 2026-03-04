@@ -291,6 +291,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     onSuccess: (newLineItem) => {
       queryClient.invalidateQueries({ queryKey: ["/api/quotation-items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/quotations", quotationId, "details"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations", quotationId] });
       setHasUnsavedChanges(false);
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId: 'new-line-item', hasUnsavedChanges: false }
@@ -333,6 +334,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       queryClient.invalidateQueries({ queryKey: ["/api/quotation-items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/quotation-items", lineItemId] });
       queryClient.invalidateQueries({ queryKey: ["/api/quotations", quotationId, "details"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations", quotationId] });
       setHasUnsavedChanges(false);
       const tabId = lineItemId ? `edit-line-item-${lineItemId}` : 'new-line-item';
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {

@@ -418,6 +418,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       queryClient.invalidateQueries({ queryKey: ["/api/invoice-items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoice-items", lineItemId] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId] });
       setHasUnsavedChanges(false);
       const tabId = lineItemId ? `edit-invoice-line-item-${lineItemId}` : 'new-invoice-line-item';
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
