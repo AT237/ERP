@@ -89,6 +89,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/suppliers/:id/check-usages", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const supplierPurchaseOrders = await db.select().from(purchaseOrders).where(eq(purchaseOrders.supplierId, id));
+
+      const usages: { location: string; count: number; examples: string[] }[] = [];
+      if (supplierPurchaseOrders.length > 0) usages.push({ location: "Purchase Orders", count: supplierPurchaseOrders.length, examples: supplierPurchaseOrders.slice(0, 3).map(po => po.orderNumber) });
+
+      res.json({ canDelete: usages.length === 0, usages });
+    } catch (error) {
+      console.error("Error checking supplier usages:", error);
+      res.status(500).json({ message: "Failed to check supplier usages" });
+    }
+  });
+
+  app.get("/api/inventory/:id/check-usages", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const [itemQuotations, itemInvoices, itemPurchaseOrders] = await Promise.all([
+        db.select().from(quotationItems).where(eq(quotationItems.itemId, id)),
+        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id)),
+        db.select().from(purchaseOrderItems).where(eq(purchaseOrderItems.itemId, id))
+      ]);
+
+      const usages: { location: string; count: number; examples: string[] }[] = [];
+      if (itemQuotations.length > 0) usages.push({ location: "Quotations", count: itemQuotations.length, examples: [] });
+      if (itemInvoices.length > 0) usages.push({ location: "Invoices", count: itemInvoices.length, examples: [] });
+      if (itemPurchaseOrders.length > 0) usages.push({ location: "Purchase Orders", count: itemPurchaseOrders.length, examples: [] });
+
+      res.json({ canDelete: usages.length === 0, usages });
+    } catch (error) {
+      console.error("Error checking inventory usages:", error);
+      res.status(500).json({ message: "Failed to check inventory usages" });
+    }
+  });
+
   app.get("/api/customers", async (req, res) => {
     try {
       const customers = await storage.getCustomers();
@@ -713,14 +749,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/inventory/:id/check-usages", async (req, res) => {
     try {
       const { id } = req.params;
-      const [itemQuotationItems, itemInvoiceItems] = await Promise.all([
+      const [itemQuotationItems, itemInvoiceItems, itemPurchaseOrderItems, itemPackingListItems] = await Promise.all([
         db.select().from(quotationItems).where(eq(quotationItems.itemId, id)),
-        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id))
+        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id)),
+        db.select().from(purchaseOrderItems).where(eq(purchaseOrderItems.itemId, id)),
+        db.select().from(packingListItems).where(eq(packingListItems.itemId, id))
       ]);
 
       const usages: { location: string; count: number; examples: string[] }[] = [];
       if (itemQuotationItems.length > 0) usages.push({ location: "Quotation Items", count: itemQuotationItems.length, examples: itemQuotationItems.slice(0, 3).map(q => q.description || '') });
       if (itemInvoiceItems.length > 0) usages.push({ location: "Invoice Items", count: itemInvoiceItems.length, examples: itemInvoiceItems.slice(0, 3).map(i => i.description || '') });
+      if (itemPurchaseOrderItems.length > 0) usages.push({ location: "Purchase Order Items", count: itemPurchaseOrderItems.length, examples: [] });
+      if (itemPackingListItems.length > 0) usages.push({ location: "Packing List Items", count: itemPackingListItems.length, examples: [] });
 
       res.json({ canDelete: usages.length === 0, usages });
     } catch (error) {
@@ -787,12 +827,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/inventory/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const [itemQuotationItems, itemInvoiceItems] = await Promise.all([
+      const [itemQuotationItems, itemInvoiceItems, itemPurchaseOrderItems, itemPackingListItems] = await Promise.all([
         db.select().from(quotationItems).where(eq(quotationItems.itemId, id)).limit(1),
-        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id)).limit(1)
+        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id)).limit(1),
+        db.select().from(purchaseOrderItems).where(eq(purchaseOrderItems.itemId, id)).limit(1),
+        db.select().from(packingListItems).where(eq(packingListItems.itemId, id)).limit(1)
       ]);
 
-      if (itemQuotationItems.length > 0 || itemInvoiceItems.length > 0) {
+      if (itemQuotationItems.length > 0 || itemInvoiceItems.length > 0 || itemPurchaseOrderItems.length > 0 || itemPackingListItems.length > 0) {
         return res.status(409).json({ message: "Inventory item is in use and cannot be deleted" });
       }
 
