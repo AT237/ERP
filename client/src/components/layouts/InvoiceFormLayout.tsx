@@ -245,7 +245,10 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       width: 80, 
       filterable: false, 
       sortable: true,
-      className: 'text-right'
+      className: 'text-right',
+      renderCell: (value: any) => (
+        <span className="text-right w-full block">{value != null ? parseFloat(String(value)).toString() : "0"}</span>
+      )
     },
     {
       key: 'unit',

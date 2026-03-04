@@ -193,7 +193,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
   const itemsData = items.map((item, index) => ({
     positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'), // e.g., "010", "020"
     description: item.description,
-    quantity: item.quantity || 0,
+    quantity: parseFloat(String(item.quantity || 0)),
     unit: (item as any).unit || "",
     unitPrice: item.unitPrice || "0.00",
     lineTotal: item.lineTotal || "0.00",
@@ -409,7 +409,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'),
     description: item.description,
     descriptionInternal: item.descriptionInternal || null,
-    quantity: item.quantity || 0,
+    quantity: parseFloat(String(item.quantity || 0)),
     unit: item.unit ? (uomMap[item.unit] || uomMapLower[item.unit.toLowerCase()] || item.unit) : "",
     unitPrice: item.unitPrice || "0.00",
     lineTotal: item.lineTotal || "0.00",

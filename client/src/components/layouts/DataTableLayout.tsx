@@ -142,8 +142,8 @@ const createNumericColumn = (key: string, label: string, width = 100): ColumnCon
   width,
   filterable: true,
   sortable: true,
-  renderCell: (value: number) => (
-    <span className="text-right w-full block">{value?.toString() || "0"}</span>
+  renderCell: (value: any) => (
+    <span className="text-right w-full block">{value != null ? parseFloat(String(value)).toString() : "0"}</span>
   )
 });
 
