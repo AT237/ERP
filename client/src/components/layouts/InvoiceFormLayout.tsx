@@ -58,6 +58,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const [, navigate] = useLocation();
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [deleteItemTarget, setDeleteItemTarget] = useState<InvoiceItem | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const { toast } = useToast();
   const isEditing = !!invoiceId;
 
@@ -380,6 +381,22 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     deleteItemMutation.mutate(deleteItemTarget.id);
     setInvoiceItems(prev => prev.filter(i => i.id !== deleteItemTarget.id));
     setDeleteItemTarget(null);
+  };
+
+  const handleBulkDeleteItems = async () => {
+    const selectedIds = itemTableState.selectedRows;
+    if (selectedIds.length === 0) return;
+    try {
+      await Promise.all(selectedIds.map(id => apiRequest("DELETE", `/api/invoice-items/${id}`)));
+      setInvoiceItems(prev => prev.filter(i => !selectedIds.includes(i.id)));
+      itemTableState.setSelectedRows([]);
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
+      toast({ title: "Deleted", description: `${selectedIds.length} rule(s) deleted` });
+    } catch {
+      toast({ title: "Error", description: "Failed to delete selected items", variant: "destructive" });
+    } finally {
+      setIsBulkDeleteOpen(false);
+    }
   };
 
   const handleDuplicateItem = async (item: InvoiceItem) => {
@@ -732,6 +749,12 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                 variant: 'default' as const
               }
             ]}
+            deleteConfirmDialog={{
+              isOpen: isBulkDeleteOpen,
+              onOpenChange: setIsBulkDeleteOpen,
+              onConfirm: handleBulkDeleteItems,
+              itemCount: itemTableState.selectedRows.length,
+            }}
             onDuplicate={handleDuplicateItem}
             rowActions={(item: InvoiceItem) => [
               {
