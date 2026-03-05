@@ -3355,10 +3355,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
     const repeatSpacingMm = section.config?.repeat?.spacingMm || 0;
     const repeatSpacingPx = mmToPx(repeatSpacingMm);
     
-    // Add bottom margin to content height
-    contentHeight = contentHeight > 0 ? contentHeight + bottomMarginPx : 0;
-    
     // Determine final section height based on canGrow/canShrink
+    // Note: bottomMarginPx is no longer added here — sections use full page coordinates,
+    // the gray margin overlay is purely visual and does not affect section heights.
     let sectionHeight = configuredHeight;
     const heightCanShrink = section.config?.heightCanShrink || false;
     const heightCanGrow = section.config?.heightCanGrow || false;
@@ -3368,10 +3367,6 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
     }
     if (heightCanGrow && contentHeight > configuredHeight) {
       sectionHeight = contentHeight;
-    }
-    
-    if (!heightCanShrink && bottomMarginPx > 0) {
-      sectionHeight = configuredHeight + bottomMarginPx;
     }
 
     // Auto-shrink: when repeating with conditional groups, shrink to the visible group's content height
@@ -3541,9 +3536,10 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
             const capturedSection = matchingSection;
             const capturedKey = `${matchingSection.id}-item-${itemIndex}`;
             const capturedItem = { item, index: itemIndex };
+            const sectionRepeatSpacingPx = mmToPx(matchingSection.config?.repeat?.spacingMm || 0);
             renderedItems.push({
               renderFn: (ctx: PageCtx) => renderSectionInstance(capturedSection, capturedKey, capturedItem, ctx),
-              heightPx: matchingSection.config?.dimensions?.height || 200,
+              heightPx: (matchingSection.config?.dimensions?.height || 200) + sectionRepeatSpacingPx,
               isEveryPage,
               isFirstPage,
               isLastPage,
@@ -3562,13 +3558,14 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           if (items.length === 0) return;
           
           // Render one copy of this section for each item
+          const repeatSpacingPxEst = mmToPx(section.config?.repeat?.spacingMm || 0);
           items.forEach((item: any, itemIndex: number) => {
             const capturedItemCtx = { item, index: itemIndex };
             const capturedKey2 = `${section.id}-item-${itemIndex}`;
             const capturedSec2 = section;
             renderedItems.push({
               renderFn: (ctx: PageCtx) => renderSectionInstance(capturedSec2, capturedKey2, capturedItemCtx, ctx),
-              heightPx: baseSectionHeight,
+              heightPx: baseSectionHeight + repeatSpacingPxEst,
               isEveryPage,
               isFirstPage,
               isLastPage,
@@ -3634,26 +3631,17 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         const bottomMarginMm = section.config?.bottomMarginMm || 0;
         const bottomMarginPx = mmToPx(bottomMarginMm);
         
-        // Add bottom margin to content height
-        contentHeight = contentHeight > 0 ? contentHeight + bottomMarginPx : 0;
-        
         // Determine final section height based on canGrow/canShrink
+        // Note: bottomMarginPx no longer added — full-page coordinate system, overlay is visual only.
         let sectionHeight = configuredHeight;
         const heightCanShrink = section.config?.heightCanShrink || false;
         const heightCanGrow = section.config?.heightCanGrow || false;
         
         if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
-          // Shrink section to fit content (includes bottom margin)
           sectionHeight = contentHeight;
         }
         if (heightCanGrow && contentHeight > configuredHeight) {
-          // Grow section to fit content
           sectionHeight = contentHeight;
-        }
-        
-        // Ensure minimum bottom margin even when not shrinking
-        if (!heightCanShrink && bottomMarginPx > 0) {
-          sectionHeight = configuredHeight + bottomMarginPx;
         }
         
         const capturedSectionHeight = sectionHeight;
