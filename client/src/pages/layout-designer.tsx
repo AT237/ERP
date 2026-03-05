@@ -4529,6 +4529,19 @@ function BlockProperties({
                 />
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Ondermarge (mm):</Label>
+              <input
+                type="number"
+                min="0"
+                max="50"
+                step="0.5"
+                value={styleSource.marginBottom ? parseFloat(String(styleSource.marginBottom)) : ''}
+                placeholder="0"
+                onChange={(e) => handleTextStyleChange('marginBottom', e.target.value === '' ? undefined : `${e.target.value}mm`)}
+                className="h-7 w-16 px-2 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-orange-400"
+              />
+            </div>
           </div>
 
           {/* Hide When Empty - for all block types */}
