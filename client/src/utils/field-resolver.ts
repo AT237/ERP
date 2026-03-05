@@ -279,6 +279,8 @@ export function replacePlaceholders(
             fieldName.includes('amount') || fieldName === 'unitprice' || 
             fieldName === 'linetotal') {
           resolvedFormat = 'currency';
+        } else if (fieldName === 'quantity' || fieldName === 'aantal') {
+          resolvedFormat = 'number';
         }
       }
       

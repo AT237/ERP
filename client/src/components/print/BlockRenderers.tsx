@@ -442,6 +442,13 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
     if (isNaN(num)) return '€ 0,00';
     return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(num);
   };
+
+  // Format quantity — Dutch comma decimal, strip trailing zeros
+  const formatQuantity = (value: string | number) => {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(num)) return '';
+    return new Intl.NumberFormat('nl-NL', { maximumFractionDigits: 6 }).format(num);
+  };
   
   // Items are already sorted server-side by printSortOrder — use as-is
   const sortedItems = items;
@@ -481,7 +488,7 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
               <tr key={index} className={rowClass}>
                 <td className="py-1 px-1 text-gray-500">{item.positionNo}</td>
                 <td className={`py-1 px-1 ${isTextLine ? 'font-medium' : ''}`}>{item.description}</td>
-                <td className="py-1 px-1 text-right">{isTextLine ? '' : item.quantity}</td>
+                <td className="py-1 px-1 text-right">{isTextLine ? '' : formatQuantity(item.quantity)}</td>
                 {showUnit && <td className="py-1 px-1 text-left text-gray-600">{isTextLine ? '' : (item.unit || '')}</td>}
                 <td className="py-1 px-1 text-right">{isTextLine ? '' : formatCurrency(item.unitPrice)}</td>
                 <td className="py-1 px-1 text-right">{isTextLine ? '' : formatCurrency(item.lineTotal)}</td>
