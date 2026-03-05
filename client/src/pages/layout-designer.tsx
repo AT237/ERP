@@ -4529,8 +4529,17 @@ function BlockProperties({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Ondermarge - standalone section for all block types */}
+          <div className="pt-2 border-t">
+            <Label className="text-xs font-semibold block mb-1">
+              Ondermarge
+              {block.type === 'Group' && (
+                <span className="ml-1 text-[10px] font-normal text-orange-600">(overschrijft alle blokken in groep)</span>
+              )}
+            </Label>
             <div className="flex items-center gap-2">
-              <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Ondermarge (mm):</Label>
               <input
                 type="number"
                 min="0"
@@ -4539,8 +4548,9 @@ function BlockProperties({
                 value={styleSource.marginBottom ? parseFloat(String(styleSource.marginBottom)) : ''}
                 placeholder="0"
                 onChange={(e) => handleTextStyleChange('marginBottom', e.target.value === '' ? undefined : `${e.target.value}mm`)}
-                className="h-7 w-16 px-2 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-orange-400"
+                className="h-8 w-20 px-2 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-orange-400"
               />
+              <span className="text-[10px] text-muted-foreground">mm</span>
             </div>
           </div>
 
