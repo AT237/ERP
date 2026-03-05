@@ -380,7 +380,7 @@ const FIELD_LABELS: Record<string, string> = {
   quotationNumber: 'Offerte nr.', quotationDate: 'Offerte datum', validUntil: 'Geldig tot',
   validityDays: 'Geldig (dagen)', revisionNumber: 'Revisie nr.', status: 'Status',
   isBudgetQuotation: 'Budgetofferte', subtotal: 'Subtotaal', taxAmount: 'BTW bedrag',
-  totalAmount: 'Totaal bedrag', incoTerms: 'Incoterms', paymentConditions: 'Betalingsconditie',
+  totalAmount: 'Totaal bedrag', totalAmountInWords: 'Totaal bedrag in woorden', incoTerms: 'Incoterms', paymentConditions: 'Betalingsconditie',
   deliveryConditions: 'Leveringsconditie', notes: 'Notities', invoiceNumber: 'Factuur nr.',
   invoiceDate: 'Factuurdatum', dueDate: 'Vervaldatum', paidAmount: 'Betaald bedrag',
   orderNumber: 'Order nr.', orderDate: 'Orderdatum', expectedDate: 'Verwachte datum',
@@ -545,7 +545,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   // Available database tables for selection - all tables related to quotations and documents
   const availableTables = [
     // Document Types
-    { name: 'quotation', label: 'Offerte', fields: ['quotationNumber', 'quotationDate', 'validUntil', 'validityDays', 'description', 'revisionNumber', 'status', 'isBudgetQuotation', 'subtotal', 'taxAmount', 'totalAmount', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
+    { name: 'quotation', label: 'Offerte', fields: ['quotationNumber', 'quotationDate', 'validUntil', 'validityDays', 'description', 'revisionNumber', 'status', 'isBudgetQuotation', 'subtotal', 'taxAmount', 'totalAmount', 'totalAmountInWords', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
     { name: 'quotationItems', label: 'Offerte Regels', fields: ['positionNo', 'lineType', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal', 'itemId', 'sourceSnippetId', 'deliveryDate', 'hsCode', 'countryOfOrigin'] },
     { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'invoiceDate', 'dueDate', 'description', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'paidAmount', 'notes'] },
     { name: 'invoiceItems', label: 'Factuur Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'unit', 'unitPrice', 'lineTotal', 'discountPercent', 'workDate', 'technicianNames', 'technicianIds', 'customerRateId', 'itemId', 'sourceSnippetId', 'sourceSnippetVersion'] },

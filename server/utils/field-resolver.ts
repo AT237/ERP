@@ -2,6 +2,57 @@ import { db } from "../db";
 import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, unitsOfMeasure } from "../../shared/schema";
 import { eq, asc } from "drizzle-orm";
 
+/**
+ * Convert a numeric amount to English words.
+ * Example: 14692.49 → "Fourteen thousand six hundred ninety-two euros and forty-nine cents"
+ */
+export function amountToWords(amount: number): string {
+  const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+    'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+  const tensWords = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+  function threeDigits(n: number): string {
+    if (n === 0) return '';
+    let result = '';
+    if (n >= 100) {
+      result += ones[Math.floor(n / 100)] + ' hundred';
+      n = n % 100;
+      if (n > 0) result += ' ';
+    }
+    if (n >= 20) {
+      result += tensWords[Math.floor(n / 10)];
+      if (n % 10 > 0) result += '-' + ones[n % 10];
+    } else if (n > 0) {
+      result += ones[n];
+    }
+    return result;
+  }
+
+  if (isNaN(amount) || amount < 0) return '';
+
+  const intPart = Math.floor(amount);
+  const centPart = Math.round((amount - intPart) * 100);
+
+  let words = '';
+  if (intPart === 0) {
+    words = 'zero';
+  } else {
+    const millions = Math.floor(intPart / 1000000);
+    const thousands = Math.floor((intPart % 1000000) / 1000);
+    const remainder = intPart % 1000;
+    if (millions > 0) words += threeDigits(millions) + ' million';
+    if (thousands > 0) { if (words) words += ' '; words += threeDigits(thousands) + ' thousand'; }
+    if (remainder > 0) { if (words) words += ' '; words += threeDigits(remainder); }
+  }
+
+  words = words.charAt(0).toUpperCase() + words.slice(1);
+  words += intPart === 1 ? ' euro' : ' euros';
+  if (centPart > 0) {
+    words += ' and ' + threeDigits(centPart) + (centPart === 1 ? ' cent' : ' cents');
+  }
+  return words;
+}
+
 function applyPrintSortOrder<T extends { position?: number | null; positionNo?: string | null; description?: string | null; unitPrice?: string | null; lineTotal?: string | null; [key: string]: any }>(
   items: T[],
   sortOrder: string | null | undefined
@@ -454,8 +505,17 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
  */
 export function resolveFieldValue(data: QuotationPrintData, fieldKey: string): any {
   const parts = fieldKey.split('.');
-  let current: any = data;
 
+  // Virtual computed fields: {tableName}.totalAmountInWords
+  if (parts.length === 2 && parts[1] === 'totalAmountInWords') {
+    const tableData: any = (data as any)[parts[0]];
+    if (tableData && tableData.totalAmount !== undefined) {
+      return amountToWords(parseFloat(tableData.totalAmount || '0'));
+    }
+    return '';
+  }
+
+  let current: any = data;
   for (const part of parts) {
     if (current === null || current === undefined) {
       return null;
