@@ -5084,6 +5084,49 @@ function SectionProperties({
         />
       </div>
 
+      {/* Fixed Position */}
+      <div className="space-y-2 border-t pt-2">
+        <div className="text-xs font-bold text-orange-600">Vaste positie</div>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="section-fixed-pos-enabled"
+            checked={section.config.fixedPosition?.enabled || false}
+            onChange={(e) => onUpdateProperty(section.id, 'config.fixedPosition', {
+              ...(section.config.fixedPosition || { y: 250 }),
+              enabled: e.target.checked,
+            })}
+            className="h-3.5 w-3.5"
+          />
+          <Label htmlFor="section-fixed-pos-enabled" className="text-xs font-normal cursor-pointer">
+            Vaste positie gebruiken
+          </Label>
+        </div>
+        {section.config.fixedPosition?.enabled && (
+          <div>
+            <Label htmlFor="section-fixed-pos-y" className="text-xs">Positie Y (mm vanaf bovenkant)</Label>
+            <Input
+              id="section-fixed-pos-y"
+              type="number"
+              step="1"
+              min="0"
+              max="297"
+              value={section.config.fixedPosition?.y ?? 250}
+              onChange={(e) => onUpdateProperty(section.id, 'config.fixedPosition', {
+                ...(section.config.fixedPosition || {}),
+                enabled: true,
+                y: parseInt(e.target.value) || 0,
+              })}
+              onFocus={(e) => e.target.select()}
+              className="h-8 text-xs"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Sectie wordt absoluut geplaatst op deze Y-positie op elke pagina
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Bottom Margin */}
       <div>
         <Label htmlFor="section-bottom-margin" className="text-xs">Ondermarge (mm)</Label>
