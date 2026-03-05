@@ -798,7 +798,7 @@ export function DataTableLayout<T = any>({
                   key={action.key}
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0"
+                  className={`h-8 w-8 p-0 ${action.disabled ? 'opacity-30' : 'ring-1 ring-orange-400 text-orange-600'}`}
                   onClick={action.onClick}
                   disabled={action.disabled}
                   title={action.label}
@@ -813,7 +813,7 @@ export function DataTableLayout<T = any>({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`h-8 w-8 p-0 ${selectedRows.length === 0 ? 'opacity-40' : ''}`}
+                  className={`h-8 w-8 p-0 ${selectedRows.length === 0 ? 'opacity-30' : 'ring-1 ring-orange-400 text-orange-600'}`}
                   onClick={() => deleteConfirmDialog.onOpenChange(true)}
                   disabled={selectedRows.length === 0}
                   title={`Delete${selectedRows.length > 0 ? ` (${selectedRows.length})` : ''}`}
@@ -828,7 +828,7 @@ export function DataTableLayout<T = any>({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`h-8 w-8 p-0 ${selectedRows.length !== 1 ? 'opacity-40' : ''}`}
+                  className={`h-8 w-8 p-0 ${selectedRows.length !== 1 ? 'opacity-30' : 'ring-1 ring-orange-400 text-orange-600'}`}
                   disabled={selectedRows.length !== 1}
                   onClick={() => {
                     if (selectedRows.length === 1) {
@@ -854,7 +854,7 @@ export function DataTableLayout<T = any>({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 ring-1 ring-orange-400 text-orange-600"
                         title="Export"
                         data-testid="button-export"
                       >

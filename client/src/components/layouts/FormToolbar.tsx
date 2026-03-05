@@ -84,6 +84,8 @@ export function FormToolbar({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const buttonClass = "h-8 w-8 p-0";
   const iconClass = "h-4 w-4";
+  const activeClass = "ring-1 ring-orange-400 text-orange-600";
+  const inactiveClass = "opacity-30";
 
   const handlePrintClick = () => {
     if (documentType) {
@@ -99,7 +101,7 @@ export function FormToolbar({
         <Button
           variant="ghost"
           size="sm"
-          className={buttonClass}
+          className={`${buttonClass} ${(saveDisabled || saveLoading) ? inactiveClass : activeClass}`}
           onClick={onSave}
           disabled={saveDisabled || saveLoading}
           title="Save"
@@ -117,7 +119,7 @@ export function FormToolbar({
         <Button
           variant="ghost"
           size="sm"
-          className={buttonClass}
+          className={`${buttonClass} ${addNewDisabled ? inactiveClass : activeClass}`}
           onClick={onAddNew}
           disabled={addNewDisabled}
           title="Add New"
@@ -131,7 +133,7 @@ export function FormToolbar({
         <Button
           variant="ghost"
           size="sm"
-          className={buttonClass}
+          className={`${buttonClass} ${deleteDisabled ? inactiveClass : activeClass}`}
           onClick={() => {
             if (checkUsagesUrl && entityId) {
               setDeleteDialogOpen(true);
@@ -151,7 +153,7 @@ export function FormToolbar({
         <Button
           variant="ghost"
           size="sm"
-          className={buttonClass}
+          className={`${buttonClass} ${printDisabled ? inactiveClass : activeClass}`}
           onClick={handlePrintClick}
           disabled={printDisabled}
           title="Print Report"
@@ -167,7 +169,7 @@ export function FormToolbar({
           <Button
             variant="ghost"
             size="sm"
-            className={buttonClass}
+            className={`${buttonClass} ${previousDisabled ? inactiveClass : activeClass}`}
             onClick={onPrevious}
             disabled={previousDisabled}
             title="Previous Record"
@@ -178,7 +180,7 @@ export function FormToolbar({
           <Button
             variant="ghost"
             size="sm"
-            className={buttonClass}
+            className={`${buttonClass} ${nextDisabled ? inactiveClass : activeClass}`}
             onClick={onNext}
             disabled={nextDisabled}
             title="Next Record"
@@ -195,7 +197,7 @@ export function FormToolbar({
           <Button
             variant="ghost"
             size="sm"
-            className={buttonClass}
+            className={`${buttonClass} ${exportDisabled ? inactiveClass : activeClass}`}
             onClick={onExportExcel}
             disabled={exportDisabled}
             title="Export to Excel"

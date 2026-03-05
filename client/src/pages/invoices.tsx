@@ -225,26 +225,24 @@ export default function Invoices({}: InvoicesProps) {
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
         headerActions={React.useMemo(() => {
-          const actions: any[] = [{
-            key: 'add',
-            label: 'Add Invoice',
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleAddInvoice,
-            variant: 'default'
-          }];
-          if (tableState.selectedRows.length === 1) {
-            const selectedInvoice = enrichedInvoices.find(inv => inv.id === tableState.selectedRows[0]);
-            if (selectedInvoice) {
-              actions.unshift({
-                key: 'print',
-                label: 'Afdrukken',
-                icon: <Printer className="h-4 w-4" />,
-                onClick: () => handlePrintInvoice(selectedInvoice),
-                variant: 'outline'
-              });
-            }
-          }
-          return actions;
+          const selectedInvoice = tableState.selectedRows.length === 1
+            ? enrichedInvoices.find(inv => inv.id === tableState.selectedRows[0])
+            : undefined;
+          return [
+            {
+              key: 'print',
+              label: 'Afdrukken',
+              icon: <Printer className="h-4 w-4" />,
+              onClick: () => selectedInvoice && handlePrintInvoice(selectedInvoice),
+              disabled: !selectedInvoice,
+            },
+            {
+              key: 'add',
+              label: 'Add Invoice',
+              icon: <Plus className="h-4 w-4" />,
+              onClick: handleAddInvoice,
+            },
+          ];
         }, [handleAddInvoice, tableState.selectedRows, enrichedInvoices, handlePrintInvoice])}
         rowActions={React.useCallback((invoice: Invoice) => [
           {

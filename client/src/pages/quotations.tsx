@@ -1,11 +1,12 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { PrintLayoutDialog } from "@/components/layouts/PrintLayoutDialog";
 import type { Quotation, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -196,7 +197,13 @@ export default function Quotations({}: QuotationsProps) {
 
 
 
-  // Debug removed - component should now be stable
+  const [printDialogOpen, setPrintDialogOpen] = React.useState(false);
+  const [printQuotationId, setPrintQuotationId] = React.useState<string | undefined>();
+
+  const handlePrintQuotation = React.useCallback((quotation: Quotation) => {
+    setPrintQuotationId(quotation.id);
+    setPrintDialogOpen(true);
+  }, []);
 
   return (
     <div className="p-6">
@@ -233,13 +240,26 @@ export default function Quotations({}: QuotationsProps) {
         entityNamePlural="Quotations"
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
-        headerActions={React.useMemo(() => [{
-          key: 'add',
-          label: 'Add Quotation',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleAddQuotation,
-          variant: 'default'
-        }], [handleAddQuotation])}
+        headerActions={React.useMemo(() => {
+          const selectedQuotation = tableState.selectedRows.length === 1
+            ? quotations.find(q => q.id === tableState.selectedRows[0])
+            : undefined;
+          return [
+            {
+              key: 'print',
+              label: 'Afdrukken',
+              icon: <Printer className="h-4 w-4" />,
+              onClick: () => selectedQuotation && handlePrintQuotation(selectedQuotation),
+              disabled: !selectedQuotation,
+            },
+            {
+              key: 'add',
+              label: 'Add Quotation',
+              icon: <Plus className="h-4 w-4" />,
+              onClick: handleAddQuotation,
+            },
+          ];
+        }, [handleAddQuotation, tableState.selectedRows, quotations, handlePrintQuotation])}
         rowActions={React.useCallback((quotation: Quotation) => [
           {
             key: 'view',
@@ -265,6 +285,12 @@ export default function Quotations({}: QuotationsProps) {
         ], [handleViewQuotation, handleEditQuotation, del.handleDeleteRow])}
       />
       {del.renderDeleteDialogs()}
+      <PrintLayoutDialog
+        open={printDialogOpen}
+        onOpenChange={setPrintDialogOpen}
+        documentType="quotation"
+        entityId={printQuotationId}
+      />
     </div>
   );
 }
