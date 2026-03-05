@@ -2384,24 +2384,15 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                   ) : (
                     <>
                       {/* Left Side Panel - All Section Labels */}
-                      <div className="flex-shrink-0 flex flex-col relative" style={{ width: '40px', minHeight: '1123px' }}>
+                      <div className="flex-shrink-0 flex flex-col" style={{ width: '40px' }}>
                         {sections.map((section) => {
                           const sectionHeight = section.config.dimensions?.height || 200;
-                          const fixedPos = section.config.fixedPosition;
-                          const isFixed = fixedPos?.enabled && fixedPos?.y != null;
                           return (
                             <div 
                               key={`label-${section.id}`}
                               className="bg-orange-50 border border-orange-200 px-1 py-2" 
                               style={{ 
                                 height: `${sectionHeight}px`,
-                                ...(isFixed ? {
-                                  position: 'absolute',
-                                  top: `${mmToPx(fixedPos.y)}px`,
-                                  left: 0,
-                                  right: 0,
-                                  zIndex: 10,
-                                } : {}),
                                 boxSizing: 'border-box',
                                 writingMode: 'vertical-rl',
                                 display: 'flex',
@@ -2411,9 +2402,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                                 width: '100%'
                               }}
                             >
-                              <span className="font-medium text-sm text-gray-700 flex items-center gap-1" style={{ transform: 'rotate(180deg)' }}>
+                              <span className="font-medium text-sm text-gray-700" style={{ transform: 'rotate(180deg)' }}>
                                 {section.name}
-                                {isFixed && <span style={{ fontSize: '8px', opacity: 0.7 }}>📌</span>}
                               </span>
                             </div>
                           );
@@ -2471,11 +2461,9 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                               </div>
                             </>
                           )}
-                          <div className="bg-white relative" style={{ boxSizing: 'border-box', minHeight: '1123px' }}>
+                          <div className="bg-white" style={{ boxSizing: 'border-box' }}>
                           {sections.map((section, index) => {
                             const sectionHeight = section.config.dimensions?.height || 200;
-                            const fixedPos = section.config.fixedPosition;
-                            const isFixed = fixedPos?.enabled && fixedPos?.y != null;
                             return (
                               <div 
                                 key={section.id}
@@ -2483,7 +2471,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                                   selectedSection?.id === section.id 
                                     ? 'ring-4 ring-orange-500 ring-inset' 
                                     : ''
-                                } ${!isFixed && index > 0 ? 'border-t-2 border-dashed border-gray-300' : ''} ${
+                                } ${index > 0 ? 'border-t-2 border-dashed border-gray-300' : ''} ${
                                   isDraggingBlock && hoverSectionId === section.id && dragSectionId !== section.id
                                     ? 'ring-4 ring-green-500 ring-inset'
                                     : ''
@@ -2497,13 +2485,6 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                                   height: `${sectionHeight}px`,
                                   minHeight: `${sectionHeight}px`,
                                   boxSizing: 'border-box',
-                                  ...(isFixed ? {
-                                    position: 'absolute',
-                                    top: `${mmToPx(fixedPos.y)}px`,
-                                    left: 0,
-                                    right: 0,
-                                    zIndex: 5,
-                                  } : {}),
                                 }}
                                 onClick={() => handleSectionClick(section)}
                                 onMouseEnter={() => {
@@ -3084,7 +3065,7 @@ export function PreviewView({ layout }: { layout: any }) {
             </div>
           </div>
         ) : (
-          <div ref={printRef} className="bg-white mx-auto shadow-2xl" style={{ width: '794px', minHeight: '1123px' }}>
+          <div ref={printRef} className="mx-auto" style={{ width: '794px' }}>
             <LayoutPreview
               layout={layout}
               sections={sections}
@@ -3463,8 +3444,10 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
     );
   };
 
+  const PAGE_HEIGHT_PX = 1123;
+
   return (
-    <div className="font-['Arial',sans-serif] relative" style={{ minHeight: '1123px' }}>
+    <>
       {(() => {
         // Pre-process: track which sections are absorbed into a lineType group
         const groupAbsorbed = new Set<string>();
@@ -3475,8 +3458,14 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           return repeats && filter && filter !== 'all';
         };
 
-        return sections.flatMap((section: any, sectionIndex: number) => {
-        if (groupAbsorbed.has(section.id)) return [];
+        // Collect all rendered items with heights
+        const renderedItems: { element: React.ReactNode; heightPx: number; isEveryPage: boolean }[] = [];
+
+        sections.forEach((section: any, sectionIndex: number) => {
+        if (groupAbsorbed.has(section.id)) return;
+
+        const isEveryPage = section.config?.printRules?.everyPage === true;
+        const baseSectionHeight = section.config?.dimensions?.height || 200;
 
         // Auto-detect if this section should repeat for line items
         const hasItemPlaceholders = sectionContainsItemPlaceholders(section);
@@ -3506,29 +3495,37 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           }
 
           const allItems = typedPrintData.items || [];
-          if (allItems.length === 0) return [];
+          if (allItems.length === 0) return;
 
           // For each item (already in print sort order), find matching section template
-          return allItems.flatMap((item: any, itemIndex: number) => {
+          allItems.forEach((item: any, itemIndex: number) => {
             const matchingSection = group.find((gs: any) => gs.config?.lineTypeFilter === item.lineType);
-            if (!matchingSection) return [];
-            return [renderSectionInstance(matchingSection, `${matchingSection.id}-item-${itemIndex}`, { item, index: itemIndex })];
+            if (!matchingSection) return;
+            renderedItems.push({
+              element: renderSectionInstance(matchingSection, `${matchingSection.id}-item-${itemIndex}`, { item, index: itemIndex }),
+              heightPx: matchingSection.config?.dimensions?.height || 200,
+              isEveryPage,
+            });
           });
+          return;
         }
 
         if (shouldRepeat) {
           const allItems = typedPrintData.items || [];
           const items = allItems; // no filter — unfiltered repeating section shows all items
           
-          if (items.length === 0) {
-            return [];
-          }
+          if (items.length === 0) return;
           
           // Render one copy of this section for each item
-          return items.map((item: any, itemIndex: number) => {
+          items.forEach((item: any, itemIndex: number) => {
             const itemContext = { item, index: itemIndex };
-            return renderSectionInstance(section, `${section.id}-item-${itemIndex}`, itemContext);
+            renderedItems.push({
+              element: renderSectionInstance(section, `${section.id}-item-${itemIndex}`, itemContext),
+              heightPx: baseSectionHeight,
+              isEveryPage,
+            });
           });
+          return;
         }
         
         // Regular non-repeating section - use original logic
@@ -3607,129 +3604,140 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           sectionHeight = configuredHeight + bottomMarginPx;
         }
         
-        // Fixed position: place section absolutely at specified Y (mm)
-        const sectionFixedPos = section.config?.fixedPosition;
-        const isSectionFixed = sectionFixedPos?.enabled && sectionFixedPos?.y != null;
-        
-        return (
-        <div
-          key={section.id}
-          className="relative overflow-hidden"
-          style={{
-            backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
-            height: `${sectionHeight}px`,
-            minHeight: heightCanShrink ? 'auto' : `${sectionHeight}px`,
-            maxHeight: heightCanGrow ? 'none' : `${sectionHeight}px`,
-            borderColor: section.config?.style?.borderColor || 'transparent',
-            borderStyle: section.config?.style?.borderStyle || 'none',
-            borderWidth: section.config?.style?.borderWidth || 0,
-            position: isSectionFixed ? 'absolute' : 'relative',
-            top: isSectionFixed ? `${mmToPx(sectionFixedPos.y)}px` : undefined,
-            left: isSectionFixed ? 0 : undefined,
-            right: isSectionFixed ? 0 : undefined,
-            zIndex: isSectionFixed ? 5 : undefined,
-            boxSizing: 'border-box',
-          }}
-        >
-          {/* Render blocks within section */}
-          {blocks.length > 0 ? (
-            <>
-              {blocks.flatMap((block: any, blockIndex: number) => {
-                const dynamicPos = dynamicPositions.get(block.id);
-                
-                // Skip rendering if block should be collapsed
-                if (dynamicPos && !dynamicPos.visible) {
-                  return [];
-                }
-                
-                // Check if this block should repeat for line items
-                const shouldRepeat = block.config?.repeat?.enabled === true;
-                const repeatPath = block.config?.repeat?.path || 'items';
-                
-                if (shouldRepeat) {
-                  // Get the collection to iterate over
-                  const collection = repeatPath === 'items' ? typedPrintData.items || [] : [];
+        renderedItems.push({
+          heightPx: sectionHeight,
+          isEveryPage,
+          element: (
+          <div
+            key={section.id}
+            className="relative overflow-hidden"
+            style={{
+              backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
+              height: `${sectionHeight}px`,
+              minHeight: heightCanShrink ? 'auto' : `${sectionHeight}px`,
+              maxHeight: heightCanGrow ? 'none' : `${sectionHeight}px`,
+              borderColor: section.config?.style?.borderColor || 'transparent',
+              borderStyle: section.config?.style?.borderStyle || 'none',
+              borderWidth: section.config?.style?.borderWidth || 0,
+              boxSizing: 'border-box',
+            }}
+          >
+            {/* Render blocks within section */}
+            {blocks.length > 0 ? (
+              <>
+                {blocks.flatMap((block: any, blockIndex: number) => {
+                  const dynamicPos = dynamicPositions.get(block.id);
                   
-                  if (collection.length === 0) {
-                    return []; // No items to render
-                  }
+                  if (dynamicPos && !dynamicPos.visible) return [];
                   
-                  // Render one copy of this block for each item
-                  const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
-                  const blockHeight = block.size?.height || 25;
-                  const spacing = block.config?.repeat?.spacing || 0; // mm between rows
+                  const shouldRepeatBlock = block.config?.repeat?.enabled === true;
+                  const repeatPath = block.config?.repeat?.path || 'items';
                   
-                  return collection.map((item: any, itemIndex: number) => {
-                    const itemContext = { item, index: itemIndex };
-                    const BlockRenderer = BlockRenderers[block.type];
-                    
-                    const blockStyle: React.CSSProperties = {
-                      position: 'absolute',
-                      left: `${mmToPx(block.position?.x || 0)}px`,
-                      top: `${mmToPx(adjustedY + (itemIndex * (blockHeight + spacing)))}px`,
-                      width: `${mmToPx(block.size?.width || 50)}px`,
-                      height: `${mmToPx(blockHeight + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
-                    };
-                    
-                    if (BlockRenderer) {
-                      return (
+                  if (shouldRepeatBlock) {
+                    const collection = repeatPath === 'items' ? typedPrintData.items || [] : [];
+                    if (collection.length === 0) return [];
+                    const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
+                    const blockHeight = block.size?.height || 25;
+                    const spacing = block.config?.repeat?.spacing || 0;
+                    return collection.map((item: any, itemIndex: number) => {
+                      const itemContext = { item, index: itemIndex };
+                      const BlockRenderer = BlockRenderers[block.type];
+                      const blockStyle: React.CSSProperties = {
+                        position: 'absolute',
+                        left: `${mmToPx(block.position?.x || 0)}px`,
+                        top: `${mmToPx(adjustedY + (itemIndex * (blockHeight + spacing)))}px`,
+                        width: `${mmToPx(block.size?.width || 50)}px`,
+                        height: `${mmToPx(blockHeight + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
+                      };
+                      return BlockRenderer ? (
                         <div key={`${block.id}-item-${itemIndex}`} style={blockStyle}>
                           <BlockRenderer block={block} printData={typedPrintData} itemContext={itemContext} />
                         </div>
-                      );
-                    } else {
-                      return (
+                      ) : (
                         <div key={`${block.id}-item-${itemIndex}`} style={blockStyle}>
                           <UnknownBlockRenderer block={block} printData={typedPrintData} />
                         </div>
                       );
-                    }
-                  });
-                }
-                
-                // Regular non-repeating block
-                const BlockRenderer = BlockRenderers[block.type];
-                const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
-                
-                const blockStyle: React.CSSProperties = {
-                  position: 'absolute',
-                  left: `${mmToPx(block.position?.x || 0)}px`,
-                  top: `${mmToPx(adjustedY)}px`,
-                  width: `${mmToPx(block.size?.width || 50)}px`,
-                  height: `${mmToPx((block.size?.height || 25) + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
-                };
-                
-                if (BlockRenderer) {
-                  return [(
+                    });
+                  }
+                  
+                  const BlockRenderer = BlockRenderers[block.type];
+                  const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
+                  const blockStyle: React.CSSProperties = {
+                    position: 'absolute',
+                    left: `${mmToPx(block.position?.x || 0)}px`,
+                    top: `${mmToPx(adjustedY)}px`,
+                    width: `${mmToPx(block.size?.width || 50)}px`,
+                    height: `${mmToPx((block.size?.height || 25) + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
+                  };
+                  return BlockRenderer ? [(
                     <div key={block.id || blockIndex} style={blockStyle}>
                       <BlockRenderer block={block} printData={typedPrintData} />
                     </div>
-                  )];
-                } else {
-                  return [(
+                  )] : [(
                     <div key={block.id || blockIndex} style={blockStyle}>
                       <UnknownBlockRenderer block={block} printData={typedPrintData} />
                     </div>
                   )];
-                }
-              })}
-            </>
-          ) : (
-            <div className="text-sm text-gray-400 italic text-center py-8">
-              Geen blokken in deze sectie - sleep blokken hierheen in de Designer tab
-            </div>
-          )}
-        </div>
-        );
+                })}
+              </>
+            ) : (
+              <div className="text-sm text-gray-400 italic text-center py-8">
+                Geen blokken in deze sectie - sleep blokken hierheen in de Designer tab
+              </div>
+            )}
+          </div>
+          ),
         });
+        }); // end sections.forEach
+
+        // --- Paginate ---
+        // Separate everyPage sections from content sections
+        const everyPageItems = renderedItems.filter(i => i.isEveryPage);
+        const contentItems = renderedItems.filter(i => !i.isEveryPage);
+        const everyPageTotalHeight = everyPageItems.reduce((sum, i) => sum + i.heightPx, 0);
+        const availablePerPage = PAGE_HEIGHT_PX - everyPageTotalHeight;
+
+        // Group content into pages based on accumulated height
+        const pages: typeof contentItems[] = [];
+        let currentPage: typeof contentItems = [];
+        let currentPageHeight = 0;
+        for (const item of contentItems) {
+          if (currentPageHeight + item.heightPx > availablePerPage && currentPage.length > 0) {
+            pages.push(currentPage);
+            currentPage = [item];
+            currentPageHeight = item.heightPx;
+          } else {
+            currentPage.push(item);
+            currentPageHeight += item.heightPx;
+          }
+        }
+        if (currentPage.length > 0) pages.push(currentPage);
+        if (pages.length === 0) pages.push([]);
+
+        // Empty state
+        if (sections.length === 0) {
+          return [
+            <div key="empty" className="bg-white shadow-2xl" style={{ height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden' }}>
+              <div className="text-center text-gray-400 italic py-8">
+                Geen secties geconfigureerd - maak secties aan in de Designer tab
+              </div>
+            </div>
+          ];
+        }
+
+        // Render each page with everyPage sections at the top
+        return pages.map((pageContent, pageIndex) => (
+          <Fragment key={`page-${pageIndex}`}>
+            {pageIndex > 0 && <div style={{ height: '20px' }} />}
+            <div className="bg-white shadow-2xl" style={{ height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page' }}>
+              {everyPageItems.map((item, i) => <Fragment key={`ep-${i}`}>{item.element}</Fragment>)}
+              {pageContent.map((item, i) => <Fragment key={`c-${i}`}>{item.element}</Fragment>)}
+            </div>
+          </Fragment>
+        ));
       })()}
-      
-      {sections.length === 0 && (
-        <div className="text-center text-gray-400 italic py-8">
-          Geen secties geconfigureerd - maak secties aan in de Designer tab
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
