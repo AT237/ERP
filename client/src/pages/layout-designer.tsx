@@ -3621,6 +3621,7 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
     zIndex: layerIndex + 1,
     cursor: isDragging ? 'grabbing' : 'grab',
     opacity: isDragging ? 0.8 : 1,
+    ...(block.style?.marginBottom ? { paddingBottom: block.style.marginBottom } : {}),
   };
 
   // Special styling for Group blocks
