@@ -292,10 +292,8 @@ export function DocumentTitleRenderer({ block }: BlockRendererProps) {
 }
 
 // Page Number Block - page numbering
-export function PageNumberRenderer({ block }: BlockRendererProps) {
+export function PageNumberRenderer({ block, currentPage = 1, totalPages = 1 }: BlockRendererProps) {
   const format = block.config?.format || 'of_total';
-  const currentPage = block.config?.currentPage || 1;
-  const totalPages = block.config?.totalPages || 1;
 
   let text = '';
   switch (format) {
