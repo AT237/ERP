@@ -3175,7 +3175,11 @@ function estimateActualBlockHeightMm(
   if (block.type !== 'Text' && block.type !== 'DataField') return configuredHeightMm;
 
   const text = resolveBlockText(block, printData, itemContext);
-  if (!text) return configuredHeightMm;
+  if (!text) {
+    // No content: when shrinking is allowed the block takes no space;
+    // otherwise keep the configured height (block is visible but empty).
+    return allowShrink ? 0 : configuredHeightMm;
+  }
 
   const fontSizePt = parseFloat(String(block.style?.fontSize || '10')) || 10;
   const blockWidthPx = mmToPx(block.size?.width || 50);
@@ -3215,7 +3219,9 @@ function estimateActualSectionHeightPx(
   let maxBottomPx = 0;
   for (const block of blocks) {
     const blockY = block.position?.y || 0;
-    const blockH = estimateActualBlockHeightMm(block, printData, itemContext);
+    const blockH = estimateActualBlockHeightMm(block, printData, itemContext, heightCanShrink);
+    // Skip zero-height blocks (empty shrinkable blocks) — their Y must not count
+    if (blockH <= 0) continue;
     const blockBottomPx = mmToPx(blockY + blockH);
     maxBottomPx = Math.max(maxBottomPx, blockBottomPx);
   }
@@ -3475,6 +3481,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           adjustedY = rawY;
         }
         const blockHeight = getEffectiveBlockHeightMm(block);
+        // Skip blocks with zero effective height (empty shrinkable blocks) —
+        // their Y position must not count toward the section's content height.
+        if (blockHeight <= 0) continue;
         const blockBottom = mmToPx(adjustedY + blockHeight);
         contentHeight = Math.max(contentHeight, blockBottom);
       }
@@ -3729,12 +3738,16 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         // Calculate dynamic positions for blocks in this section
         const dynamicPositions = calculateDynamicPositions(blocks, typedPrintData);
         
+        // Pre-compute shrink flag so the helper closure can reference it.
+        const staticSectionCanShrink = section.config?.heightCanShrink || false;
+
         // Helper: effective rendered height (mm) for a block.
         // For Text/DataField: uses canvas measurement to account for text wrapping.
         // For Group blocks: accounts for cumulative child marginBottom and collapseEmpty.
         const getEffectiveBlockHeightMmStatic = (block: any): number => {
-          // Use canvas measurement for Text/DataField blocks (no itemContext for non-repeating sections)
-          const baseHeight = estimateActualBlockHeightMm(block, typedPrintData, undefined);
+          // Use canvas measurement for Text/DataField blocks (no itemContext for non-repeating sections).
+          // Pass staticSectionCanShrink so empty blocks return 0 in shrinking sections.
+          const baseHeight = estimateActualBlockHeightMm(block, typedPrintData, undefined, staticSectionCanShrink);
           if (block.type !== 'Group') return baseHeight;
           const childBlocks: any[] = block.config?.childBlocks || [];
           const collapseEmpty = block.config?.collapseEmpty || false;
@@ -3772,6 +3785,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           if (dynamicPos?.visible !== false) {
             const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
             const blockHeight = getEffectiveBlockHeightMmStatic(block);
+            // Skip zero-height blocks (empty shrinkable blocks) — Y must not count
+            if (blockHeight <= 0) continue;
             const blockBottom = mmToPx(adjustedY + blockHeight);
             contentHeight = Math.max(contentHeight, blockBottom);
           }
@@ -3784,7 +3799,6 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         // Determine final section height.
         // Sections always grow to fit actual content — never clip printed text mid-line.
         let sectionHeight = configuredHeight;
-        const heightCanShrink = section.config?.heightCanShrink || false;
         const heightCanGrow = section.config?.heightCanGrow || false;
         
         // Always grow when actual content is taller than configured.
@@ -3793,7 +3807,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         }
         // Only shrink when explicitly enabled.
         // Preserve bottom margin so configured blank space below the section is maintained.
-        if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
+        if (staticSectionCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
           sectionHeight = Math.min(configuredHeight, contentHeight + bottomMarginPx);
         }
         
@@ -3815,7 +3829,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
             style={{
               backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
               height: `${capturedSectionHeight}px`,
-              minHeight: heightCanShrink ? 'auto' : `${capturedSectionHeight}px`,
+              minHeight: staticSectionCanShrink ? 'auto' : `${capturedSectionHeight}px`,
               maxHeight: heightCanGrow ? 'none' : `${capturedSectionHeight}px`,
               borderColor: section.config?.style?.borderColor || 'transparent',
               borderStyle: section.config?.style?.borderStyle || 'none',
