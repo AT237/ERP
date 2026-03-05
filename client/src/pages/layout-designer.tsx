@@ -3061,10 +3061,10 @@ export function PreviewView({ layout }: { layout: any }) {
         )}
       </div>
 
-      {/* Right: preview area */}
-      <div className="flex-1 flex flex-col items-center overflow-auto">
+      {/* Right: preview area - gray background so A4 page stands out */}
+      <div className="flex-1 flex flex-col items-center overflow-auto bg-gray-300 p-8">
         {!selectedDocumentId ? (
-          <div className="bg-white mx-auto" style={{ width: '794px', height: '1123px' }}>
+          <div className="bg-white mx-auto shadow-2xl" style={{ width: '794px', height: '1123px' }}>
             <div className="h-full flex items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <div className="text-4xl mb-4">📄</div>
@@ -3075,7 +3075,7 @@ export function PreviewView({ layout }: { layout: any }) {
             </div>
           </div>
         ) : isPrintDataLoading ? (
-          <div className="bg-white mx-auto" style={{ width: '794px', height: '1123px' }}>
+          <div className="bg-white mx-auto shadow-2xl" style={{ width: '794px', height: '1123px' }}>
             <div className="h-full flex items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <div className="text-4xl mb-4">⏳</div>
@@ -3084,7 +3084,7 @@ export function PreviewView({ layout }: { layout: any }) {
             </div>
           </div>
         ) : (
-          <div ref={printRef} className="bg-white mx-auto" style={{ width: '794px', minHeight: '1123px' }}>
+          <div ref={printRef} className="bg-white mx-auto shadow-2xl" style={{ width: '794px', minHeight: '1123px' }}>
             <LayoutPreview
               layout={layout}
               sections={sections}
