@@ -3470,6 +3470,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
   };
 
   const PAGE_HEIGHT_PX = 1123;
+  const previewMargins = layout?.metadata?.printMargins || { top: 10, bottom: 10, left: 10, right: 10 };
+  const topMarginPx = mmToPx(previewMargins.top || 0);
+  const bottomMarginPx = mmToPx(previewMargins.bottom || 0);
 
   return (
     <>
@@ -3755,7 +3758,15 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         return pages.map((pageContent, pageIndex) => (
           <Fragment key={`page-${pageIndex}`}>
             {pageIndex > 0 && <div style={{ height: '20px' }} />}
-            <div className="bg-white shadow-2xl" style={{ height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page' }}>
+            <div className="bg-white shadow-2xl relative" style={{ height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page' }}>
+              {/* Top margin gray overlay */}
+              {topMarginPx > 0 && (
+                <div className="absolute top-0 left-0 right-0 pointer-events-none z-10" style={{ height: `${topMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />
+              )}
+              {/* Bottom margin gray overlay */}
+              {bottomMarginPx > 0 && (
+                <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-10" style={{ height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />
+              )}
               {everyPageItems.map((item, i) => <Fragment key={`ep-${i}`}>{item.element}</Fragment>)}
               {pageContent.map((item, i) => <Fragment key={`c-${i}`}>{item.element}</Fragment>)}
             </div>
