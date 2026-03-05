@@ -3997,14 +3997,22 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
               {rightMarginPx > 0 && <div className="absolute top-0 bottom-0 right-0 pointer-events-none z-20" style={{ width: `${rightMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
               {/* Content clipped vertically at print margins; horizontal spans full page (block x-coords are page-relative) */}
               <div style={{ position: 'absolute', top: `${topMarginPx}px`, bottom: `${bottomMarginPx}px`, left: 0, right: 0, overflow: 'hidden' }}>
-                {/* everyPage sections — on every page */}
-                {everyPageItems.map((item, i) => <Fragment key={`ep-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
-                {/* firstPage sections — only on page 1, rendered after everyPage */}
-                {pageIndex === 0 && firstPageOnlyItems.map((item, i) => <Fragment key={`fp-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
-                {/* Regular content for this page */}
-                {pageContent.map((item, i) => <Fragment key={`c-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
-                {/* lastPage sections — only on the last page, in normal flow */}
-                {pageIndex === lastPageIndex && lastPageOnlyItems.map((item, i) => <Fragment key={`lp-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
+                {/* Render ALL flow sections in canvas order, filtered by page rules.
+                    This preserves the visual ordering from the designer: a firstPage section
+                    that sits between two everyPage sections in the canvas will still appear
+                    between them in the print preview — not forced to the bottom of the zone. */}
+                {(() => {
+                  const pageContentSet = new Set(pageContent);
+                  return flowItems
+                    .filter(item => {
+                      if (item.isEveryPage) return true;
+                      if (item.isFirstPage) return pageIndex === 0;
+                      if (item.isLastPage) return pageIndex === lastPageIndex;
+                      // Content (repeating line items etc.): only the items assigned to this page
+                      return pageContentSet.has(item);
+                    })
+                    .map((item, i) => <Fragment key={`flow-${i}`}>{item.renderFn(pageCtx)}</Fragment>);
+                })()}
               </div>
               {/* Fixed position sections — page-coordinate Y (from page top) */}
               {pageFixedItems.map((item, i) => (
