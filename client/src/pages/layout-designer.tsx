@@ -2415,9 +2415,9 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                         className="shadow-lg relative"
                         style={{
                           width: '794px',
-                          height: '1123px',
+                          minHeight: '1123px',
                           border: '2px solid #666',
-                          overflow: 'hidden',
+                          overflow: 'visible',
                         }}
                       >
                           {/* Print Margin Overlays */}
@@ -2461,7 +2461,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                               </div>
                             </>
                           )}
-                          <div className="bg-white h-full overflow-y-auto" style={{ boxSizing: 'border-box' }}>
+                          <div className="bg-white" style={{ boxSizing: 'border-box' }}>
                           {sections.map((section, index) => {
                             const sectionHeight = section.config.dimensions?.height || 200;
                             return (
@@ -2633,7 +2633,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                   {/* Right Ruler - Vertical (297mm) */}
                   <div 
                     className="bg-gray-100 border-l border-gray-300 relative flex-shrink-0 pointer-events-none"
-                    style={{ width: '20px', height: '1123px' }}
+                    style={{ width: '20px', minHeight: '1123px' }}
                   >
                     {Array.from({ length: 298 }).map((_, i) => {
                       const yPos = i * MM_TO_PX;
