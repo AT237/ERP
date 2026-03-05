@@ -3227,7 +3227,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
   const renderSectionInstance = (
     section: any, 
     keyPrefix: string, 
-    itemContext?: { item: any; index: number }
+    itemContext?: { item: any; index: number },
+    pageCtx?: { currentPage: number; totalPages: number }
   ) => {
     const configuredHeight = section.config?.dimensions?.height || 200;
     const blocks = section.config?.blocks || [];
@@ -3448,7 +3449,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
               if (BlockRenderer) {
                 return (
                   <div key={`${keyPrefix}-block-${block.id || blockIndex}`} style={blockStyle}>
-                    <BlockRenderer block={block} printData={typedPrintData} itemContext={itemContext} />
+                    <BlockRenderer block={block} printData={typedPrintData} itemContext={itemContext} currentPage={pageCtx?.currentPage || 1} totalPages={pageCtx?.totalPages || 1} />
                   </div>
                 );
               } else {
