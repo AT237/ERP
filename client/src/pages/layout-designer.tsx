@@ -3493,7 +3493,6 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
     // Canvas-based measurement (getEffectiveBlockHeightMm → estimateActualBlockHeightMm) provides
     // accurate estimates even when text wraps to more lines than the designer's configured block height.
     let sectionHeight = configuredHeight;
-    const heightCanShrink = section.config?.heightCanShrink || false;
     const heightCanGrow = section.config?.heightCanGrow || false;
     
     // Always grow when content is taller than configured — never clip printed content mid-line.
@@ -3503,7 +3502,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
     // Only shrink when explicitly enabled.
     // IMPORTANT: always add bottomMarginPx so the configured blank space below the section
     // is preserved even after shrinking (e.g. ondermarge = 20mm stays 20mm of empty space).
-    if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
+    if (sectionCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
       sectionHeight = Math.min(configuredHeight, contentHeight + bottomMarginPx);
     }
 
@@ -3521,7 +3520,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         style={{
           backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
           height: `${sectionHeight}px`,
-          minHeight: heightCanShrink ? 'auto' : `${sectionHeight}px`,
+          minHeight: sectionCanShrink ? 'auto' : `${sectionHeight}px`,
           maxHeight: 'none',
           borderColor: section.config?.style?.borderColor || 'transparent',
           borderStyle: section.config?.style?.borderStyle || 'none',
