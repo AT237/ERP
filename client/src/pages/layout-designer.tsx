@@ -3530,6 +3530,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           if (allItems.length === 0) return;
 
           // For each item (already in print sort order), find matching section template
+          // Repeating sections always paginate as regular content — never as everyPage (which would
+          // put ALL instances at the top of every page, breaking canvas order).
           allItems.forEach((item: any, itemIndex: number) => {
             const matchingSection = group.find((gs: any) => gs.config?.lineTypeFilter === item.lineType);
             if (!matchingSection) return;
@@ -3540,9 +3542,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
             renderedItems.push({
               renderFn: (ctx: PageCtx) => renderSectionInstance(capturedSection, capturedKey, capturedItem, ctx),
               heightPx: (matchingSection.config?.dimensions?.height || 200) + sectionRepeatSpacingPx,
-              isEveryPage,
-              isFirstPage,
-              isLastPage,
+              isEveryPage: false,
+              isFirstPage: false,
+              isLastPage: false,
               isFixed: false,
               fixedY: 0,
               fixedPrintRules: printRules,
@@ -3557,7 +3559,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           
           if (items.length === 0) return;
           
-          // Render one copy of this section for each item
+          // Render one copy of this section for each item.
+          // Repeating sections always paginate as regular content — never as everyPage.
           const repeatSpacingPxEst = mmToPx(section.config?.repeat?.spacingMm || 0);
           items.forEach((item: any, itemIndex: number) => {
             const capturedItemCtx = { item, index: itemIndex };
@@ -3566,9 +3569,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
             renderedItems.push({
               renderFn: (ctx: PageCtx) => renderSectionInstance(capturedSec2, capturedKey2, capturedItemCtx, ctx),
               heightPx: baseSectionHeight + repeatSpacingPxEst,
-              isEveryPage,
-              isFirstPage,
-              isLastPage,
+              isEveryPage: false,
+              isFirstPage: false,
+              isLastPage: false,
               isFixed: false,
               fixedY: 0,
               fixedPrintRules: printRules,
