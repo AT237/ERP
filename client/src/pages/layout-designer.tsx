@@ -3762,30 +3762,78 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         const contentItems = flowItems.filter(i => !i.isEveryPage && !i.isFirstPage && !i.isLastPage);
 
         const everyPageTotalHeight = everyPageItems.reduce((sum, i) => sum + i.heightPx, 0);
-        // Available content height = page height minus print margins minus everyPage sections
-        const usablePageHeight = PAGE_HEIGHT_PX - topMarginPx - bottomMarginPx;
-        const availablePerPage = usablePageHeight - everyPageTotalHeight;
-        // Available height on page 1 also subtracts firstPage-only sections
         const firstPageOnlyHeight = firstPageOnlyItems.reduce((sum, i) => sum + i.heightPx, 0);
-        const availableFirstPage = availablePerPage - firstPageOnlyHeight;
+        // Usable printable height (after removing print margins)
+        const usablePageHeight = PAGE_HEIGHT_PX - topMarginPx - bottomMarginPx;
 
-        // Group regular content into pages based on accumulated height
-        const pages: typeof contentItems[] = [];
-        let currentPageItems: typeof contentItems = [];
-        let currentPageHeight = 0;
-        for (const item of contentItems) {
-          const available = pages.length === 0 ? availableFirstPage : availablePerPage;
-          if (currentPageHeight + item.heightPx > available && currentPageItems.length > 0) {
-            pages.push(currentPageItems);
-            currentPageItems = [item];
-            currentPageHeight = item.heightPx;
-          } else {
-            currentPageItems.push(item);
-            currentPageHeight += item.heightPx;
+        // Fixed sections reserve space at their Y position — content must not enter those zones.
+        // fixedY is in mm from the top of the printable area (after top margin).
+        // Helper: find content ceiling for a given set of fixed sections (lowest fixedY wins).
+        const everyPageFixed = fixedItems.filter(fi => fi.fixedPrintRules?.everyPage);
+        const firstPageFixed = fixedItems.filter(fi => fi.fixedPrintRules?.firstPage);
+        const lastPageFixed  = fixedItems.filter(fi => fi.fixedPrintRules?.lastPage);
+
+        const getContentCeiling = (extraFixed: typeof fixedItems): number => {
+          const allFixed = [...everyPageFixed, ...extraFixed];
+          if (allFixed.length === 0) return usablePageHeight;
+          return Math.min(...allFixed.map(fi => mmToPx(fi.fixedY)));
+        };
+
+        // Available flow height per page (ceiling minus already-occupied everyPage sections)
+        const ceilingAll       = getContentCeiling([]);
+        const ceilingFirstPage = getContentCeiling(firstPageFixed);
+        const ceilingLastPage  = getContentCeiling(lastPageFixed);
+
+        const availablePerPage   = ceilingAll       - everyPageTotalHeight;
+        const availableFirstPage = ceilingFirstPage - everyPageTotalHeight - firstPageOnlyHeight;
+        const availableLastPage  = ceilingLastPage  - everyPageTotalHeight;
+
+        // --- Two-pass pagination ---
+        // Pass 1: paginate using everyPage/firstPage ceilings (don't know last page yet)
+        const paginateItems = (items: typeof contentItems, getAvail: (idx: number) => number) => {
+          const pages: typeof contentItems[] = [];
+          let cur: typeof contentItems = [];
+          let curH = 0;
+          for (const item of items) {
+            const avail = getAvail(pages.length);
+            if (curH + item.heightPx > avail && cur.length > 0) {
+              pages.push(cur);
+              cur = [item];
+              curH = item.heightPx;
+            } else {
+              cur.push(item);
+              curH += item.heightPx;
+            }
+          }
+          if (cur.length > 0) pages.push(cur);
+          if (pages.length === 0) pages.push([]);
+          return pages;
+        };
+
+        let pages = paginateItems(contentItems, (idx) => idx === 0 ? availableFirstPage : availablePerPage);
+
+        // Pass 2: check if last page exceeds the last-page ceiling (due to lastPage-only fixed sections)
+        if (lastPageFixed.length > 0 && availableLastPage < availablePerPage) {
+          const lastIdx = pages.length - 1;
+          const lastPageContent = pages[lastIdx];
+          const lastPageH = lastPageContent.reduce((s, i) => s + i.heightPx, 0);
+          if (lastPageH > availableLastPage) {
+            // Split the last page: move overflowing items to a new page
+            const kept: typeof contentItems = [];
+            const overflow: typeof contentItems = [];
+            let h = 0;
+            for (const item of lastPageContent) {
+              if (h + item.heightPx <= availableLastPage) {
+                kept.push(item);
+                h += item.heightPx;
+              } else {
+                overflow.push(item);
+              }
+            }
+            pages[lastIdx] = kept;
+            if (overflow.length > 0) pages.push(overflow);
           }
         }
-        if (currentPageItems.length > 0) pages.push(currentPageItems);
-        if (pages.length === 0) pages.push([]);
 
         // Empty state
         if (sections.length === 0) {
