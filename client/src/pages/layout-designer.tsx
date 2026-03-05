@@ -3487,8 +3487,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           return repeats && filter && filter !== 'all';
         };
 
-        // Collect all rendered items with heights
-        const renderedItems: { element: React.ReactNode; heightPx: number; isEveryPage: boolean; isFirstPage: boolean; isLastPage: boolean }[] = [];
+        type PageCtx = { currentPage: number; totalPages: number };
+        // Collect all rendered items with heights — element is a render function called with page context
+        const renderedItems: { renderFn: (ctx: PageCtx) => React.ReactNode; heightPx: number; isEveryPage: boolean; isFirstPage: boolean; isLastPage: boolean; isFixed: boolean; fixedY: number; fixedPrintRules: any }[] = [];
 
         sections.forEach((section: any, sectionIndex: number) => {
         if (groupAbsorbed.has(section.id)) return;
@@ -3497,6 +3498,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         const isEveryPage = printRules.everyPage === true;
         const isFirstPage = !isEveryPage && printRules.firstPage === true;
         const isLastPage = !isEveryPage && !isFirstPage && printRules.lastPage === true;
+        const isFixed = section.config?.fixedPosition?.enabled === true;
+        const fixedY = section.config?.fixedPosition?.y ?? 250;
         const baseSectionHeight = section.config?.dimensions?.height || 200;
 
         // Auto-detect if this section should repeat for line items
@@ -3533,12 +3536,18 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           allItems.forEach((item: any, itemIndex: number) => {
             const matchingSection = group.find((gs: any) => gs.config?.lineTypeFilter === item.lineType);
             if (!matchingSection) return;
+            const capturedSection = matchingSection;
+            const capturedKey = `${matchingSection.id}-item-${itemIndex}`;
+            const capturedItem = { item, index: itemIndex };
             renderedItems.push({
-              element: renderSectionInstance(matchingSection, `${matchingSection.id}-item-${itemIndex}`, { item, index: itemIndex }),
+              renderFn: (ctx: PageCtx) => renderSectionInstance(capturedSection, capturedKey, capturedItem, ctx),
               heightPx: matchingSection.config?.dimensions?.height || 200,
               isEveryPage,
               isFirstPage,
               isLastPage,
+              isFixed: false,
+              fixedY: 0,
+              fixedPrintRules: printRules,
             });
           });
           return;
@@ -3552,13 +3561,18 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           
           // Render one copy of this section for each item
           items.forEach((item: any, itemIndex: number) => {
-            const itemContext = { item, index: itemIndex };
+            const capturedItemCtx = { item, index: itemIndex };
+            const capturedKey2 = `${section.id}-item-${itemIndex}`;
+            const capturedSec2 = section;
             renderedItems.push({
-              element: renderSectionInstance(section, `${section.id}-item-${itemIndex}`, itemContext),
+              renderFn: (ctx: PageCtx) => renderSectionInstance(capturedSec2, capturedKey2, capturedItemCtx, ctx),
               heightPx: baseSectionHeight,
               isEveryPage,
               isFirstPage,
               isLastPage,
+              isFixed: false,
+              fixedY: 0,
+              fixedPrintRules: printRules,
             });
           });
           return;
@@ -3640,31 +3654,36 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           sectionHeight = configuredHeight + bottomMarginPx;
         }
         
+        const capturedSectionHeight = sectionHeight;
+        const capturedBlocks = blocks;
+        const capturedDynamicPositions = dynamicPositions;
         renderedItems.push({
-          heightPx: sectionHeight,
+          heightPx: capturedSectionHeight,
           isEveryPage,
           isFirstPage,
           isLastPage,
-          element: (
+          isFixed,
+          fixedY,
+          fixedPrintRules: printRules,
+          renderFn: (ctx: PageCtx) => (
           <div
             key={section.id}
             className="relative overflow-hidden"
             style={{
               backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
-              height: `${sectionHeight}px`,
-              minHeight: heightCanShrink ? 'auto' : `${sectionHeight}px`,
-              maxHeight: heightCanGrow ? 'none' : `${sectionHeight}px`,
+              height: `${capturedSectionHeight}px`,
+              minHeight: heightCanShrink ? 'auto' : `${capturedSectionHeight}px`,
+              maxHeight: heightCanGrow ? 'none' : `${capturedSectionHeight}px`,
               borderColor: section.config?.style?.borderColor || 'transparent',
               borderStyle: section.config?.style?.borderStyle || 'none',
               borderWidth: section.config?.style?.borderWidth || 0,
               boxSizing: 'border-box',
             }}
           >
-            {/* Render blocks within section */}
-            {blocks.length > 0 ? (
+            {capturedBlocks.length > 0 ? (
               <>
-                {blocks.flatMap((block: any, blockIndex: number) => {
-                  const dynamicPos = dynamicPositions.get(block.id);
+                {capturedBlocks.flatMap((block: any, blockIndex: number) => {
+                  const dynamicPos = capturedDynamicPositions.get(block.id);
                   
                   if (dynamicPos && !dynamicPos.visible) return [];
                   
@@ -3678,7 +3697,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                     const blockHeight = block.size?.height || 25;
                     const spacing = block.config?.repeat?.spacing || 0;
                     return collection.map((item: any, itemIndex: number) => {
-                      const itemContext = { item, index: itemIndex };
+                      const itemCtx = { item, index: itemIndex };
                       const BlockRenderer = BlockRenderers[block.type];
                       const blockStyle: React.CSSProperties = {
                         position: 'absolute',
@@ -3689,7 +3708,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                       };
                       return BlockRenderer ? (
                         <div key={`${block.id}-item-${itemIndex}`} style={blockStyle}>
-                          <BlockRenderer block={block} printData={typedPrintData} itemContext={itemContext} />
+                          <BlockRenderer block={block} printData={typedPrintData} itemContext={itemCtx} currentPage={ctx.currentPage} totalPages={ctx.totalPages} />
                         </div>
                       ) : (
                         <div key={`${block.id}-item-${itemIndex}`} style={blockStyle}>
@@ -3710,7 +3729,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                   };
                   return BlockRenderer ? [(
                     <div key={block.id || blockIndex} style={blockStyle}>
-                      <BlockRenderer block={block} printData={typedPrintData} />
+                      <BlockRenderer block={block} printData={typedPrintData} currentPage={ctx.currentPage} totalPages={ctx.totalPages} />
                     </div>
                   )] : [(
                     <div key={block.id || blockIndex} style={blockStyle}>
@@ -3730,30 +3749,40 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         }); // end sections.forEach
 
         // --- Paginate ---
+        // fixedPosition sections are rendered as absolute overlays, not in the content flow
+        const fixedItems = renderedItems.filter(i => i.isFixed);
+        const flowItems = renderedItems.filter(i => !i.isFixed);
+
         // Separate everyPage, firstPage, lastPage and regular content sections
-        const everyPageItems = renderedItems.filter(i => i.isEveryPage);
-        const firstPageOnlyItems = renderedItems.filter(i => i.isFirstPage);
-        const lastPageOnlyItems = renderedItems.filter(i => i.isLastPage);
-        const contentItems = renderedItems.filter(i => !i.isEveryPage && !i.isFirstPage && !i.isLastPage);
+        const everyPageItems = flowItems.filter(i => i.isEveryPage);
+        const firstPageOnlyItems = flowItems.filter(i => i.isFirstPage);
+        const lastPageOnlyItems = flowItems.filter(i => i.isLastPage);
+        const contentItems = flowItems.filter(i => !i.isEveryPage && !i.isFirstPage && !i.isLastPage);
 
         const everyPageTotalHeight = everyPageItems.reduce((sum, i) => sum + i.heightPx, 0);
-        const availablePerPage = PAGE_HEIGHT_PX - everyPageTotalHeight;
+        // Available content height = page height minus print margins minus everyPage sections
+        const usablePageHeight = PAGE_HEIGHT_PX - topMarginPx - bottomMarginPx;
+        const availablePerPage = usablePageHeight - everyPageTotalHeight;
+        // Available height on page 1 also subtracts firstPage-only sections
+        const firstPageOnlyHeight = firstPageOnlyItems.reduce((sum, i) => sum + i.heightPx, 0);
+        const availableFirstPage = availablePerPage - firstPageOnlyHeight;
 
         // Group regular content into pages based on accumulated height
         const pages: typeof contentItems[] = [];
-        let currentPage: typeof contentItems = [];
+        let currentPageItems: typeof contentItems = [];
         let currentPageHeight = 0;
         for (const item of contentItems) {
-          if (currentPageHeight + item.heightPx > availablePerPage && currentPage.length > 0) {
-            pages.push(currentPage);
-            currentPage = [item];
+          const available = pages.length === 0 ? availableFirstPage : availablePerPage;
+          if (currentPageHeight + item.heightPx > available && currentPageItems.length > 0) {
+            pages.push(currentPageItems);
+            currentPageItems = [item];
             currentPageHeight = item.heightPx;
           } else {
-            currentPage.push(item);
+            currentPageItems.push(item);
             currentPageHeight += item.heightPx;
           }
         }
-        if (currentPage.length > 0) pages.push(currentPage);
+        if (currentPageItems.length > 0) pages.push(currentPageItems);
         if (pages.length === 0) pages.push([]);
 
         // Empty state
@@ -3767,32 +3796,53 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           ];
         }
 
-        const lastPageIndex = pages.length - 1;
+        const totalPages = pages.length;
+        const lastPageIndex = totalPages - 1;
 
         // Render each page with everyPage sections at the top
-        return pages.map((pageContent, pageIndex) => (
+        return pages.map((pageContent, pageIndex) => {
+          const pageCtx: PageCtx = { currentPage: pageIndex + 1, totalPages };
+          // Fixed items visible on this page based on their printRules
+          const pageFixedItems = fixedItems.filter(fi => {
+            const pr = fi.fixedPrintRules || { everyPage: true };
+            if (pr.everyPage) return true;
+            if (pr.firstPage && pageIndex === 0) return true;
+            if (pr.lastPage && pageIndex === lastPageIndex) return true;
+            return false;
+          });
+          return (
           <Fragment key={`page-${pageIndex}`}>
             {pageIndex > 0 && <div style={{ height: '20px' }} />}
             <div className="bg-white shadow-2xl relative" style={{ height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page' }}>
               {/* Top margin gray overlay */}
               {topMarginPx > 0 && (
-                <div className="absolute top-0 left-0 right-0 pointer-events-none z-10" style={{ height: `${topMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />
+                <div className="absolute top-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${topMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />
               )}
               {/* Bottom margin gray overlay */}
               {bottomMarginPx > 0 && (
-                <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-10" style={{ height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />
+                <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />
               )}
-              {/* everyPage sections — on every page */}
-              {everyPageItems.map((item, i) => <Fragment key={`ep-${i}`}>{item.element}</Fragment>)}
-              {/* firstPage sections — only on page 1, rendered after everyPage */}
-              {pageIndex === 0 && firstPageOnlyItems.map((item, i) => <Fragment key={`fp-${i}`}>{item.element}</Fragment>)}
-              {/* Regular content for this page */}
-              {pageContent.map((item, i) => <Fragment key={`c-${i}`}>{item.element}</Fragment>)}
-              {/* lastPage sections — only on the last page */}
-              {pageIndex === lastPageIndex && lastPageOnlyItems.map((item, i) => <Fragment key={`lp-${i}`}>{item.element}</Fragment>)}
+              {/* Content starts after top margin */}
+              <div style={{ position: 'absolute', top: `${topMarginPx}px`, left: 0, right: 0 }}>
+                {/* everyPage sections — on every page */}
+                {everyPageItems.map((item, i) => <Fragment key={`ep-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
+                {/* firstPage sections — only on page 1, rendered after everyPage */}
+                {pageIndex === 0 && firstPageOnlyItems.map((item, i) => <Fragment key={`fp-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
+                {/* Regular content for this page */}
+                {pageContent.map((item, i) => <Fragment key={`c-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
+                {/* lastPage sections — only on the last page, in normal flow */}
+                {pageIndex === lastPageIndex && lastPageOnlyItems.map((item, i) => <Fragment key={`lp-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
+              </div>
+              {/* Fixed position sections — absolutely placed at their configured Y position */}
+              {pageFixedItems.map((item, i) => (
+                <div key={`fixed-${i}`} className="absolute left-0 right-0" style={{ top: `${mmToPx(item.fixedY)}px`, zIndex: 5 }}>
+                  {item.renderFn(pageCtx)}
+                </div>
+              ))}
             </div>
           </Fragment>
-        ));
+          );
+        });
       })()}
     </>
   );
