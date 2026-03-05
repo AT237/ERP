@@ -4003,15 +4003,32 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                     between them in the print preview — not forced to the bottom of the zone. */}
                 {(() => {
                   const pageContentSet = new Set(pageContent);
-                  return flowItems
-                    .filter(item => {
-                      if (item.isEveryPage) return true;
-                      if (item.isFirstPage) return pageIndex === 0;
-                      if (item.isLastPage) return pageIndex === lastPageIndex;
-                      // Content (repeating line items etc.): only the items assigned to this page
-                      return pageContentSet.has(item);
-                    })
-                    .map((item, i) => <Fragment key={`flow-${i}`}>{item.renderFn(pageCtx)}</Fragment>);
+
+                  if (pageIndex === 0) {
+                    // Page 1: walk all sections in canvas order.
+                    // Include: everyPage, firstPage, page-1 content items, and lastPage (if only 1 page).
+                    return flowItems
+                      .filter(item => {
+                        if (item.isEveryPage) return true;
+                        if (item.isFirstPage) return true;
+                        if (item.isLastPage) return pageIndex === lastPageIndex;
+                        return pageContentSet.has(item);
+                      })
+                      .map((item, i) => <Fragment key={`flow-${i}`}>{item.renderFn(pageCtx)}</Fragment>);
+                  } else {
+                    // Page 2+: "elke pagina"-secties EERST (in canvas-volgorde),
+                    // dan de content-items voor deze pagina (in canvas-volgorde),
+                    // dan "laatste pagina"-secties (indien dit de laatste pagina is).
+                    const everyPageSections = flowItems.filter(item => item.isEveryPage);
+                    const pageContentItems  = flowItems.filter(item =>
+                      !item.isEveryPage && !item.isFirstPage && !item.isLastPage && pageContentSet.has(item)
+                    );
+                    const lastPageSections  = pageIndex === lastPageIndex
+                      ? flowItems.filter(item => item.isLastPage)
+                      : [];
+                    return [...everyPageSections, ...pageContentItems, ...lastPageSections]
+                      .map((item, i) => <Fragment key={`flow-${i}`}>{item.renderFn(pageCtx)}</Fragment>);
+                  }
                 })()}
               </div>
               {/* Fixed position sections — page-coordinate Y (from page top) */}
