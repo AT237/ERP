@@ -2384,15 +2384,24 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                   ) : (
                     <>
                       {/* Left Side Panel - All Section Labels */}
-                      <div className="flex-shrink-0 flex flex-col" style={{ width: '40px' }}>
+                      <div className="flex-shrink-0 flex flex-col relative" style={{ width: '40px', minHeight: '1123px' }}>
                         {sections.map((section) => {
                           const sectionHeight = section.config.dimensions?.height || 200;
+                          const fixedPos = section.config.fixedPosition;
+                          const isFixed = fixedPos?.enabled && fixedPos?.y != null;
                           return (
                             <div 
                               key={`label-${section.id}`}
                               className="bg-orange-50 border border-orange-200 px-1 py-2" 
                               style={{ 
-                                height: `${sectionHeight}px`, 
+                                height: `${sectionHeight}px`,
+                                ...(isFixed ? {
+                                  position: 'absolute',
+                                  top: `${mmToPx(fixedPos.y)}px`,
+                                  left: 0,
+                                  right: 0,
+                                  zIndex: 10,
+                                } : {}),
                                 boxSizing: 'border-box',
                                 writingMode: 'vertical-rl',
                                 display: 'flex',
@@ -2402,8 +2411,9 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                                 width: '100%'
                               }}
                             >
-                                <span className="font-medium text-sm text-gray-700 flex items-center gap-1" style={{ transform: 'rotate(180deg)' }}>
+                              <span className="font-medium text-sm text-gray-700 flex items-center gap-1" style={{ transform: 'rotate(180deg)' }}>
                                 {section.name}
+                                {isFixed && <span style={{ fontSize: '8px', opacity: 0.7 }}>📌</span>}
                               </span>
                             </div>
                           );
@@ -2461,9 +2471,11 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                               </div>
                             </>
                           )}
-                          <div className="bg-white" style={{ boxSizing: 'border-box' }}>
+                          <div className="bg-white relative" style={{ boxSizing: 'border-box', minHeight: '1123px' }}>
                           {sections.map((section, index) => {
                             const sectionHeight = section.config.dimensions?.height || 200;
+                            const fixedPos = section.config.fixedPosition;
+                            const isFixed = fixedPos?.enabled && fixedPos?.y != null;
                             return (
                               <div 
                                 key={section.id}
@@ -2471,7 +2483,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                                   selectedSection?.id === section.id 
                                     ? 'ring-4 ring-orange-500 ring-inset' 
                                     : ''
-                                } ${index > 0 ? 'border-t-2 border-dashed border-gray-300' : ''} ${
+                                } ${!isFixed && index > 0 ? 'border-t-2 border-dashed border-gray-300' : ''} ${
                                   isDraggingBlock && hoverSectionId === section.id && dragSectionId !== section.id
                                     ? 'ring-4 ring-green-500 ring-inset'
                                     : ''
@@ -2485,6 +2497,13 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                                   height: `${sectionHeight}px`,
                                   minHeight: `${sectionHeight}px`,
                                   boxSizing: 'border-box',
+                                  ...(isFixed ? {
+                                    position: 'absolute',
+                                    top: `${mmToPx(fixedPos.y)}px`,
+                                    left: 0,
+                                    right: 0,
+                                    zIndex: 5,
+                                  } : {}),
                                 }}
                                 onClick={() => handleSectionClick(section)}
                                 onMouseEnter={() => {
@@ -3445,7 +3464,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
   };
 
   return (
-    <div className="font-['Arial',sans-serif]">
+    <div className="font-['Arial',sans-serif] relative" style={{ minHeight: '1123px' }}>
       {(() => {
         // Pre-process: track which sections are absorbed into a lineType group
         const groupAbsorbed = new Set<string>();
@@ -3588,6 +3607,10 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           sectionHeight = configuredHeight + bottomMarginPx;
         }
         
+        // Fixed position: place section absolutely at specified Y (mm)
+        const sectionFixedPos = section.config?.fixedPosition;
+        const isSectionFixed = sectionFixedPos?.enabled && sectionFixedPos?.y != null;
+        
         return (
         <div
           key={section.id}
@@ -3600,7 +3623,11 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
             borderColor: section.config?.style?.borderColor || 'transparent',
             borderStyle: section.config?.style?.borderStyle || 'none',
             borderWidth: section.config?.style?.borderWidth || 0,
-            position: 'relative',
+            position: isSectionFixed ? 'absolute' : 'relative',
+            top: isSectionFixed ? `${mmToPx(sectionFixedPos.y)}px` : undefined,
+            left: isSectionFixed ? 0 : undefined,
+            right: isSectionFixed ? 0 : undefined,
+            zIndex: isSectionFixed ? 5 : undefined,
             boxSizing: 'border-box',
           }}
         >
