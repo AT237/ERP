@@ -3763,11 +3763,10 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
 
         const everyPageTotalHeight = everyPageItems.reduce((sum, i) => sum + i.heightPx, 0);
         const firstPageOnlyHeight = firstPageOnlyItems.reduce((sum, i) => sum + i.heightPx, 0);
-        // Usable printable height (after removing print margins)
-        const usablePageHeight = PAGE_HEIGHT_PX - topMarginPx - bottomMarginPx;
+        // Full page height in px — sections use page coordinates (x/y from page top-left), margins are visual-only
 
         // Fixed sections reserve space at their Y position — content must not enter those zones.
-        // fixedY is in mm from the top of the printable area (after top margin).
+        // fixedY is in mm from the page top (page coordinates, same as block positions in the canvas).
         // Helper: find content ceiling for a given set of fixed sections (lowest fixedY wins).
         const everyPageFixed = fixedItems.filter(fi => fi.fixedPrintRules?.everyPage);
         const firstPageFixed = fixedItems.filter(fi => fi.fixedPrintRules?.firstPage);
@@ -3775,10 +3774,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
 
         const getContentCeiling = (extraFixed: typeof fixedItems): number => {
           const allFixed = [...everyPageFixed, ...extraFixed];
-          if (allFixed.length === 0) return usablePageHeight;
-          // fixedY is in page coordinates (from page top, incl. margin).
-          // Content area starts at topMarginPx, so convert to content-area coordinates:
-          return Math.min(...allFixed.map(fi => mmToPx(fi.fixedY) - topMarginPx));
+          if (allFixed.length === 0) return PAGE_HEIGHT_PX;
+          // fixedY is in page coordinates (mm from page top). Content must stop before this zone.
+          return Math.min(...allFixed.map(fi => mmToPx(fi.fixedY)));
         };
 
         // Available flow height per page (ceiling minus already-occupied everyPage sections)
@@ -3871,8 +3869,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
               {bottomMarginPx > 0 && <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
               {leftMarginPx > 0 && <div className="absolute top-0 bottom-0 left-0 pointer-events-none z-20" style={{ width: `${leftMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
               {rightMarginPx > 0 && <div className="absolute top-0 bottom-0 right-0 pointer-events-none z-20" style={{ width: `${rightMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
-              {/* Content confined within print margins */}
-              <div style={{ position: 'absolute', top: `${topMarginPx}px`, bottom: `${bottomMarginPx}px`, left: `${leftMarginPx}px`, right: `${rightMarginPx}px`, overflow: 'hidden' }}>
+              {/* Content at full page dimensions — sections use page-coordinate positions (x/y from page top-left) */}
+              <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, overflow: 'hidden' }}>
                 {/* everyPage sections — on every page */}
                 {everyPageItems.map((item, i) => <Fragment key={`ep-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
                 {/* firstPage sections — only on page 1, rendered after everyPage */}
@@ -3882,9 +3880,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                 {/* lastPage sections — only on the last page, in normal flow */}
                 {pageIndex === lastPageIndex && lastPageOnlyItems.map((item, i) => <Fragment key={`lp-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
               </div>
-              {/* Fixed position sections — placed at their page-absolute Y position (fixedY is from page top, incl. margin) */}
+              {/* Fixed position sections — page-coordinate Y (from page top) */}
               {pageFixedItems.map((item, i) => (
-                <div key={`fixed-${i}`} style={{ position: 'absolute', top: `${mmToPx(item.fixedY)}px`, left: `${leftMarginPx}px`, right: `${rightMarginPx}px`, zIndex: 5 }}>
+                <div key={`fixed-${i}`} style={{ position: 'absolute', top: `${mmToPx(item.fixedY)}px`, left: 0, right: 0, zIndex: 5 }}>
                   {item.renderFn(pageCtx)}
                 </div>
               ))}
