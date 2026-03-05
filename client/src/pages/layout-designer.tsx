@@ -3751,8 +3751,6 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
 
         const everyPageTotalHeight = everyPageItems.reduce((sum, i) => sum + i.heightPx, 0);
         const firstPageOnlyHeight = firstPageOnlyItems.reduce((sum, i) => sum + i.heightPx, 0);
-        // Full page height in px — sections use page coordinates (x/y from page top-left), margins are visual-only
-
         // Fixed sections reserve space at their Y position — content must not enter those zones.
         // fixedY is in mm from the page top (page coordinates, same as block positions in the canvas).
         // Helper: find content ceiling for a given set of fixed sections (lowest fixedY wins).
@@ -3760,11 +3758,15 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         const firstPageFixed = fixedItems.filter(fi => fi.fixedPrintRules?.firstPage);
         const lastPageFixed  = fixedItems.filter(fi => fi.fixedPrintRules?.lastPage);
 
+        // Usable vertical height within the content div (between top and bottom margins)
+        const usablePageHeight = PAGE_HEIGHT_PX - topMarginPx - bottomMarginPx;
+
         const getContentCeiling = (extraFixed: typeof fixedItems): number => {
           const allFixed = [...everyPageFixed, ...extraFixed];
-          if (allFixed.length === 0) return PAGE_HEIGHT_PX;
-          // fixedY is in page coordinates (mm from page top). Content must stop before this zone.
-          return Math.min(...allFixed.map(fi => mmToPx(fi.fixedY)));
+          if (allFixed.length === 0) return usablePageHeight;
+          // fixedY is in page coordinates (mm from page top).
+          // Content div starts at topMarginPx, so convert to content-div coordinates:
+          return Math.min(...allFixed.map(fi => mmToPx(fi.fixedY) - topMarginPx));
         };
 
         // Available flow height per page (ceiling minus already-occupied everyPage sections)
@@ -3857,8 +3859,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
               {bottomMarginPx > 0 && <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
               {leftMarginPx > 0 && <div className="absolute top-0 bottom-0 left-0 pointer-events-none z-20" style={{ width: `${leftMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
               {rightMarginPx > 0 && <div className="absolute top-0 bottom-0 right-0 pointer-events-none z-20" style={{ width: `${rightMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
-              {/* Content at full page dimensions — sections use page-coordinate positions (x/y from page top-left) */}
-              <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, overflow: 'hidden' }}>
+              {/* Content clipped vertically at print margins; horizontal spans full page (block x-coords are page-relative) */}
+              <div style={{ position: 'absolute', top: `${topMarginPx}px`, bottom: `${bottomMarginPx}px`, left: 0, right: 0, overflow: 'hidden' }}>
                 {/* everyPage sections — on every page */}
                 {everyPageItems.map((item, i) => <Fragment key={`ep-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
                 {/* firstPage sections — only on page 1, rendered after everyPage */}
