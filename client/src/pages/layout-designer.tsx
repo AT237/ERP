@@ -3347,8 +3347,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                 left: `${mmToPx(block.position?.x || 0)}px`,
                 top: `${mmToPx(adjustedY)}px`,
                 width: `${mmToPx(block.size?.width || 50)}px`,
-                height: `${mmToPx(block.size?.height || 25)}px`,
-                ...(block.style?.marginBottom ? { paddingBottom: block.style.marginBottom } : {}),
+                height: `${mmToPx((block.size?.height || 25) + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
               };
               
               if (BlockRenderer) {
@@ -3541,8 +3540,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                       left: `${mmToPx(block.position?.x || 0)}px`,
                       top: `${mmToPx(adjustedY + (itemIndex * (blockHeight + spacing)))}px`,
                       width: `${mmToPx(block.size?.width || 50)}px`,
-                      height: `${mmToPx(blockHeight)}px`,
-                      ...(block.style?.marginBottom ? { paddingBottom: block.style.marginBottom } : {}),
+                      height: `${mmToPx(blockHeight + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
                     };
                     
                     if (BlockRenderer) {
@@ -3570,8 +3568,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                   left: `${mmToPx(block.position?.x || 0)}px`,
                   top: `${mmToPx(adjustedY)}px`,
                   width: `${mmToPx(block.size?.width || 50)}px`,
-                  height: `${mmToPx(block.size?.height || 25)}px`,
-                  ...(block.style?.marginBottom ? { paddingBottom: block.style.marginBottom } : {}),
+                  height: `${mmToPx((block.size?.height || 25) + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
                 };
                 
                 if (BlockRenderer) {
@@ -3621,7 +3618,6 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
     zIndex: layerIndex + 1,
     cursor: isDragging ? 'grabbing' : 'grab',
     opacity: isDragging ? 0.8 : 1,
-    ...(block.style?.marginBottom ? { paddingBottom: block.style.marginBottom } : {}),
   };
 
   // Special styling for Group blocks

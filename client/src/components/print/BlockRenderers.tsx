@@ -614,8 +614,7 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
           left: `${mmToPx(childBlock.position?.x || 0)}px`,
           top: `${mmToPx(childBlock.position?.y || 0)}px`,
           width: `${mmToPx(childBlock.size?.width || 50)}px`,
-          height: `${mmToPx(childBlock.size?.height || 25)}px`,
-          ...(childBlock.style?.marginBottom ? { paddingBottom: childBlock.style.marginBottom } : {}),
+          height: `${mmToPx((childBlock.size?.height || 25) + (parseFloat(childBlock.style?.marginBottom || '0') || 0))}px`,
         };
         
         if (BlockRenderer) {
