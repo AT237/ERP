@@ -3187,6 +3187,7 @@ function estimateActualBlockHeightMm(
 
 // Returns the actual section height in pixels for a given item context.
 // Used in pagination heightPx to prevent text that wraps being cut at page boundaries.
+// Preserves the configured bottom margin (ondermarge) even when shrinking.
 function estimateActualSectionHeightPx(
   section: any,
   printData: PrintData,
@@ -3194,6 +3195,9 @@ function estimateActualSectionHeightPx(
 ): number {
   const blocks: any[] = section.config?.blocks || [];
   const configuredPx = mmToPx(section.config?.dimensions?.height || 200);
+  const bottomMarginPx = mmToPx(section.config?.bottomMarginMm || 0);
+  const heightCanShrink = section.config?.heightCanShrink || false;
+
   if (blocks.length === 0) return configuredPx;
 
   let maxBottomPx = 0;
@@ -3204,7 +3208,15 @@ function estimateActualSectionHeightPx(
     maxBottomPx = Math.max(maxBottomPx, blockBottomPx);
   }
 
-  return Math.max(configuredPx, maxBottomPx);
+  // Always grow when content is taller than configured.
+  if (maxBottomPx > configuredPx) return maxBottomPx;
+
+  // When shrinking: preserve the bottom margin — content + margin, capped at configuredHeight.
+  if (heightCanShrink && maxBottomPx > 0 && maxBottomPx < configuredPx) {
+    return Math.min(configuredPx, maxBottomPx + bottomMarginPx);
+  }
+
+  return configuredPx;
 }
 
 function calculateDynamicPositions(
@@ -3472,14 +3484,17 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
       sectionHeight = contentHeight;
     }
     // Only shrink when explicitly enabled.
+    // IMPORTANT: always add bottomMarginPx so the configured blank space below the section
+    // is preserved even after shrinking (e.g. ondermarge = 20mm stays 20mm of empty space).
     if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
-      sectionHeight = contentHeight;
+      sectionHeight = Math.min(configuredHeight, contentHeight + bottomMarginPx);
     }
 
     // Auto-shrink: when repeating with conditional groups, shrink to the visible group's content height
     // (groups are placed at different y-positions for design clarity but print should be compact)
+    // Also preserve bottom margin here.
     if (hasConditionalGroups && contentHeight > 0 && contentHeight < configuredHeight) {
-      sectionHeight = contentHeight;
+      sectionHeight = Math.min(configuredHeight, contentHeight + bottomMarginPx);
     }
     
     return (
@@ -3760,8 +3775,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           sectionHeight = contentHeight;
         }
         // Only shrink when explicitly enabled.
+        // Preserve bottom margin so configured blank space below the section is maintained.
         if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
-          sectionHeight = contentHeight;
+          sectionHeight = Math.min(configuredHeight, contentHeight + bottomMarginPx);
         }
         
         const capturedSectionHeight = sectionHeight;
