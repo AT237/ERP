@@ -2420,6 +2420,24 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                           overflow: 'visible',
                         }}
                       >
+                          {/* Page break indicators */}
+                          {(() => {
+                            const totalSectionsPx = sections.reduce((sum: number, sec: any) => sum + (sec.config?.dimensions?.height || 200), 0);
+                            const numPageBreaks = Math.floor(totalSectionsPx / 1123);
+                            return Array.from({ length: numPageBreaks }).map((_, pi) => (
+                              <div
+                                key={`pb-${pi}`}
+                                className="absolute left-0 right-0 pointer-events-none z-30 flex items-center"
+                                style={{ top: `${(pi + 1) * 1123}px` }}
+                              >
+                                <div style={{ flex: 1, borderTop: '2px dashed #f97316', opacity: 0.7 }} />
+                                <span style={{ fontSize: '9px', color: '#f97316', padding: '0 4px', background: 'white', opacity: 0.9, whiteSpace: 'nowrap' }}>
+                                  pagina {pi + 2}
+                                </span>
+                                <div style={{ flex: 1, borderTop: '2px dashed #f97316', opacity: 0.7 }} />
+                              </div>
+                            ));
+                          })()}
                           {/* Print Margin Overlays */}
                           {showPrintMargins && (
                             <>
@@ -2630,12 +2648,17 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                     </div>
                   </div>
 
-                  {/* Right Ruler - Vertical (297mm) */}
+                  {/* Right Ruler - Vertical (dynamic height) */}
+                  {(() => {
+                    const totalSectionsPx = sections.reduce((sum: number, sec: any) => sum + (sec.config?.dimensions?.height || 200), 0);
+                    const rulerHeightPx = Math.max(1123, totalSectionsPx + 80);
+                    const rulerMm = Math.ceil(rulerHeightPx / MM_TO_PX) + 5;
+                    return (
                   <div 
                     className="bg-gray-100 border-l border-gray-300 relative flex-shrink-0 pointer-events-none"
-                    style={{ width: '20px', minHeight: '1123px' }}
+                    style={{ width: '20px', minHeight: `${rulerHeightPx}px` }}
                   >
-                    {Array.from({ length: 298 }).map((_, i) => {
+                    {Array.from({ length: rulerMm }).map((_, i) => {
                       const yPos = i * MM_TO_PX;
                       const isMajor = i % 10 === 0;
                       const isMid = i % 5 === 0 && !isMajor;
@@ -2664,6 +2687,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                       );
                     })}
                   </div>
+                    );
+                  })()}
                 </>
               )}
             </div>
@@ -2671,7 +2696,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
               
               {/* Page Info */}
               <div className="text-center mt-4 text-xs text-gray-500">
-                A4 Format: 210 × 297 mm
+                A4 Format: 210mm × 297mm per pagina
               </div>
             </div>
           </div>
