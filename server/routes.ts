@@ -611,6 +611,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/suppliers/:id/check-usages", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const usages: { location: string; id: string; label: string }[] = [];
+
+      const linkedPOs = await db.select().from(purchaseOrders).where(eq(purchaseOrders.supplierId, id));
+      for (const po of linkedPOs) {
+        usages.push({ location: "Purchase Orders", id: po.id, label: po.orderNumber || po.id });
+      }
+
+      res.json({ canDelete: usages.length === 0, usages });
+    } catch (error) {
+      console.error("Error checking supplier usages:", error);
+      res.status(500).json({ message: "Failed to check supplier usages" });
+    }
+  });
+
   app.delete("/api/suppliers/:id", async (req, res) => {
     try {
       const { id } = req.params;
