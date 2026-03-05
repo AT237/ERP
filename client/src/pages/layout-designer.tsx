@@ -2650,7 +2650,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
           <CardHeader>
             <CardTitle className="text-base text-orange-600">Properties</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pb-20">
             {selectedSection ? (
               <SectionProperties 
                 section={selectedSection}
