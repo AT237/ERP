@@ -3161,10 +3161,15 @@ function resolveBlockText(
 // Returns the actual rendered height (mm) of a block, accounting for text wrap.
 // For Text / DataField blocks: uses canvas measurement so the estimate matches
 // real browser rendering. For all other block types: returns the configured height.
+//
+// allowShrink: when true AND the block itself has heightCanShrink, returns the
+// canvas-measured height instead of max(configured, measured).  Used by sections
+// that have heightCanShrink enabled so they can compact to the real text height.
 function estimateActualBlockHeightMm(
   block: any,
   printData: PrintData,
-  itemContext?: { item: any; index: number }
+  itemContext?: { item: any; index: number },
+  allowShrink: boolean = false
 ): number {
   const configuredHeightMm: number = block.size?.height || 25;
   if (block.type !== 'Text' && block.type !== 'DataField') return configuredHeightMm;
@@ -3181,8 +3186,15 @@ function estimateActualBlockHeightMm(
 
   const measuredPx = measureTextHeightPx(text, fontSizePt, blockWidthPx, fontFamily, lineHeightFactor);
   const measuredMm = measuredPx / MM_TO_PX;
+  const totalMm = measuredMm + paddingTopMm + paddingBottomMm;
 
-  return Math.max(configuredHeightMm, measuredMm + paddingTopMm + paddingBottomMm);
+  // When the block can shrink (and the caller allows it), use the actual measured height —
+  // not the configured height — so the section can compact to real content size.
+  if (allowShrink && (block.config?.heightCanShrink || false)) {
+    return Math.min(configuredHeightMm, totalMm);
+  }
+
+  return Math.max(configuredHeightMm, totalMm);
 }
 
 // Returns the actual section height in pixels for a given item context.
@@ -3388,12 +3400,17 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         })()
       : 0;
     
+    // Whether this section is allowed to compact to actual content height.
+    // Defined before the block-height helpers so closures can reference it.
+    const sectionCanShrink = section.config?.heightCanShrink || false;
+
     // Helper: compute the effective rendered height (mm) of a block.
     // For Text/DataField: uses canvas measurement to account for text wrapping.
     // For Group blocks: accounts for cumulative child marginBottom and collapseEmpty.
     const getEffectiveBlockHeightMm = (block: any): number => {
-      // Use canvas measurement for Text/DataField blocks
-      const baseHeight = estimateActualBlockHeightMm(block, typedPrintData, itemContext);
+      // When the section can shrink, also allow individual Text/DataField blocks to shrink
+      // to their canvas-measured height (instead of the larger configured height).
+      const baseHeight = estimateActualBlockHeightMm(block, typedPrintData, itemContext, sectionCanShrink);
       if (block.type !== 'Group') return baseHeight;
 
       const childBlocks: any[] = block.config?.childBlocks || [];
@@ -3556,8 +3573,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
               }
               
               // Use canvas-measured actual height for Text/DataField blocks so wrapped text
-              // is never clipped within the block. For other block types the configured height is used.
-              const actualBlockHeightMm = estimateActualBlockHeightMm(block, typedPrintData, itemContext);
+              // is never clipped within the block. When the section can shrink, allow the block
+              // to also shrink to its measured height (so no empty space appears below short text).
+              const actualBlockHeightMm = estimateActualBlockHeightMm(block, typedPrintData, itemContext, sectionCanShrink);
               const blockStyle: React.CSSProperties = {
                 position: 'absolute',
                 left: `${mmToPx(block.position?.x || 0)}px`,
