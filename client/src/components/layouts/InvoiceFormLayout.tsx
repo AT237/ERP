@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, Project } from "@shared/schema";
+import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, Project, VatRate } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
@@ -59,6 +59,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [deleteItemTarget, setDeleteItemTarget] = useState<InvoiceItem | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [vatRatePercent, setVatRatePercent] = useState<number>(0);
   const { toast } = useToast();
   const isEditing = !!invoiceId;
 
@@ -112,6 +113,11 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: vatRates = [] } = useQuery<VatRate[]>({
+    queryKey: ["/api/masterdata/vat-rates"],
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data: fetchedInvoiceItems = [] } = useQuery<InvoiceItem[]>({
     queryKey: ["/api/invoices", invoiceId, "items"],
     enabled: !!invoiceId,
@@ -141,6 +147,14 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     }
   }, [invoice]);
 
+  // Restore vatRatePercent from customer when invoice or vatRates load
+  useEffect(() => {
+    if (!invoice || vatRates.length === 0 || vatRatePercent !== 0) return;
+    const customer = customers.find(c => c.id === invoice.customerId);
+    const vatRate = vatRates.find(v => v.id === (customer as any)?.vatRateId);
+    if (vatRate) setVatRatePercent(parseFloat(String(vatRate.rate)));
+  }, [invoice, vatRates, customers]);
+
   useEffect(() => {
     if (fetchedInvoiceItems.length > 0) {
       setInvoiceItems(fetchedInvoiceItems);
@@ -151,10 +165,16 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     const subtotal = invoiceItems.reduce((sum, item) => {
       return sum + (parseFloat(item.lineTotal || "0") || 0);
     }, 0);
-    const taxAmount = parseFloat(invoiceForm.getValues("taxAmount") || "0") || 0;
     invoiceForm.setValue("subtotal", subtotal.toFixed(2));
-    invoiceForm.setValue("totalAmount", (subtotal + taxAmount).toFixed(2));
-  }, [invoiceItems]);
+    if (vatRatePercent > 0) {
+      const taxAmount = subtotal * vatRatePercent / 100;
+      invoiceForm.setValue("taxAmount", taxAmount.toFixed(2));
+      invoiceForm.setValue("totalAmount", (subtotal + taxAmount).toFixed(2));
+    } else {
+      const taxAmount = parseFloat(invoiceForm.getValues("taxAmount") || "0") || 0;
+      invoiceForm.setValue("totalAmount", (subtotal + taxAmount).toFixed(2));
+    }
+  }, [invoiceItems, vatRatePercent]);
 
   const calculateDueDate = (invoiceDateStr: string, pDaysId: string) => {
     if (!invoiceDateStr || !pDaysId || paymentDaysList.length === 0) return;
@@ -197,6 +217,14 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       invoiceForm.setValue("paymentDaysId", "");
       invoiceForm.setValue("dueDate", "");
     }
+    // Auto-apply customer's VAT rate
+    const vatRate = vatRates.find(v => v.id === (customer as any)?.vatRateId);
+    const pct = vatRate ? parseFloat(String(vatRate.rate)) : 0;
+    setVatRatePercent(pct);
+    const subtotal = parseFloat(invoiceForm.getValues("subtotal") || "0") || 0;
+    const taxAmount = subtotal * pct / 100;
+    invoiceForm.setValue("taxAmount", taxAmount.toFixed(2));
+    invoiceForm.setValue("totalAmount", (subtotal + taxAmount).toFixed(2));
   };
 
   const handlePaymentDaysChange = (pDaysId: string) => {
@@ -592,15 +620,12 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           testId: "display-subtotal"
         } as any),
         createFieldRow({
-          key: "taxAmount",
-          label: "Tax Amount",
-          type: "text",
-          register: invoiceForm.register("taxAmount"),
-          validation: {
-            error: invoiceForm.formState.errors.taxAmount?.message
-          },
-          testId: "input-tax-amount"
-        }),
+          key: "taxAmount" as any,
+          label: vatRatePercent > 0 ? `VAT Amount (${vatRatePercent}%)` : "VAT Amount",
+          type: "display",
+          displayValue: `€ ${invoiceForm.watch("taxAmount") || "0.00"}`,
+          testId: "display-vat-amount"
+        } as any),
         createFieldRow({
           key: "totalAmount" as any,
           label: "Total Amount",
