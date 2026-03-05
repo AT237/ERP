@@ -3348,6 +3348,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                 top: `${mmToPx(adjustedY)}px`,
                 width: `${mmToPx(block.size?.width || 50)}px`,
                 height: `${mmToPx(block.size?.height || 25)}px`,
+                ...(block.style?.marginBottom ? { paddingBottom: block.style.marginBottom } : {}),
               };
               
               if (BlockRenderer) {
@@ -3541,6 +3542,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                       top: `${mmToPx(adjustedY + (itemIndex * (blockHeight + spacing)))}px`,
                       width: `${mmToPx(block.size?.width || 50)}px`,
                       height: `${mmToPx(blockHeight)}px`,
+                      ...(block.style?.marginBottom ? { paddingBottom: block.style.marginBottom } : {}),
                     };
                     
                     if (BlockRenderer) {
@@ -3569,6 +3571,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                   top: `${mmToPx(adjustedY)}px`,
                   width: `${mmToPx(block.size?.width || 50)}px`,
                   height: `${mmToPx(block.size?.height || 25)}px`,
+                  ...(block.style?.marginBottom ? { paddingBottom: block.style.marginBottom } : {}),
                 };
                 
                 if (BlockRenderer) {
