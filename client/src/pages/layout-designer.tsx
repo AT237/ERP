@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, Fragment } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline, Copy, Trash2, Group, Ungroup, Minus, Square, Repeat } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES } from '@/components/print/BlockRenderers';
-import { PrintData, blockHasContent } from '@/utils/field-resolver';
+import { PrintData, blockHasContent, replacePlaceholders, resolveAndFormat } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -3104,6 +3104,87 @@ export function PreviewView({ layout }: { layout: any }) {
 }
 // Helper function to calculate dynamic block positions
 // When a block is hidden (hideWhenEmpty), blocks below it shift up automatically
+// ── Canvas-based text height measurement ─────────────────────────────────────
+// Measures how many lines a text string occupies at a given block width and
+// returns the total rendered height in pixels (including line-height factor).
+const _measureCanvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+const _measureCtx = _measureCanvas?.getContext('2d') ?? null;
+
+function measureTextHeightPx(
+  text: string,
+  fontSizePt: number,
+  blockWidthPx: number,
+  fontFamily: string = 'Arial',
+  lineHeightFactor: number = 1.2
+): number {
+  if (!text || !_measureCtx || blockWidthPx <= 0) return 0;
+  const fontSizePx = fontSizePt * 1.333; // 1 pt ≈ 1.333 px at 96 dpi
+  _measureCtx.font = `${fontSizePt}pt ${fontFamily}`;
+
+  let lines = 0;
+  for (const paragraph of text.split('\n')) {
+    if (paragraph.trim() === '') { lines++; continue; }
+    const words = paragraph.split(' ');
+    let lineW = 0;
+    let firstWord = true;
+    for (const word of words) {
+      const wordW = _measureCtx.measureText((firstWord ? '' : ' ') + word).width;
+      if (!firstWord && lineW + wordW > blockWidthPx) {
+        lines++;
+        lineW = _measureCtx.measureText(word).width;
+      } else {
+        lineW += wordW;
+      }
+      firstWord = false;
+    }
+    lines++;
+  }
+  return Math.max(lines, 1) * fontSizePx * lineHeightFactor;
+}
+
+function resolveBlockText(
+  block: any,
+  printData: PrintData,
+  itemContext?: { item: any; index: number }
+): string {
+  if (block.type === 'Text') {
+    const raw = block.config?.text || block.text || '';
+    return replacePlaceholders(raw, printData, itemContext);
+  }
+  if (block.type === 'DataField') {
+    const fieldKey = block.config?.dataField || block.dataField || '';
+    return resolveAndFormat(fieldKey, printData, 'text') || '';
+  }
+  return '';
+}
+
+// Returns the actual rendered height (mm) of a block, accounting for text wrap.
+// For Text / DataField blocks: uses canvas measurement so the estimate matches
+// real browser rendering. For all other block types: returns the configured height.
+function estimateActualBlockHeightMm(
+  block: any,
+  printData: PrintData,
+  itemContext?: { item: any; index: number }
+): number {
+  const configuredHeightMm: number = block.size?.height || 25;
+  if (block.type !== 'Text' && block.type !== 'DataField') return configuredHeightMm;
+
+  const text = resolveBlockText(block, printData, itemContext);
+  if (!text) return configuredHeightMm;
+
+  const fontSizePt = parseFloat(String(block.style?.fontSize || '10')) || 10;
+  const blockWidthPx = mmToPx(block.size?.width || 50);
+  const fontFamily: string = block.style?.fontFamily || 'Arial';
+  const lineHeightFactor = parseFloat(String(block.style?.lineHeight || '1.2')) || 1.2;
+  const paddingTopMm = parseFloat(String(block.style?.paddingTop || '0')) || 0;
+  const paddingBottomMm = parseFloat(String(block.style?.paddingBottom || '0')) || 0;
+
+  const measuredPx = measureTextHeightPx(text, fontSizePt, blockWidthPx, fontFamily, lineHeightFactor);
+  const measuredMm = measuredPx / MM_TO_PX;
+
+  return Math.max(configuredHeightMm, measuredMm + paddingTopMm + paddingBottomMm);
+}
+
 function calculateDynamicPositions(
   blocks: any[], 
   printData: PrintData,
