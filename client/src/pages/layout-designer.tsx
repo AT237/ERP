@@ -3215,6 +3215,44 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         })()
       : 0;
     
+    // Helper: compute the effective rendered height (mm) of a block.
+    // For Group blocks, accounts for cumulative child marginBottom offsets
+    // and collapseEmpty filtering — mirroring what GroupBlockRenderer actually renders.
+    const getEffectiveBlockHeightMm = (block: any): number => {
+      const baseHeight = block.size?.height || 25;
+      if (block.type !== 'Group') return baseHeight;
+
+      const childBlocks: any[] = block.config?.childBlocks || [];
+      const collapseEmpty = block.config?.collapseEmpty || false;
+
+      let visibleChildren = childBlocks;
+      if (collapseEmpty) {
+        visibleChildren = childBlocks.filter((child: any) =>
+          blockHasContent(child, typedPrintData, itemContext)
+        );
+        if (visibleChildren.length === 0) return 0;
+      }
+
+      const sorted = [...visibleChildren].sort(
+        (a: any, b: any) => (a.position?.y || 0) - (b.position?.y || 0)
+      );
+
+      let calcHeight = 0;
+      let cumOff = 0;
+      for (const child of sorted) {
+        const childMargin = parseFloat(child.style?.marginBottom || '0') || 0;
+        const adjustedChildY = (child.position?.y || 0) + cumOff;
+        const childBottom = adjustedChildY + (child.size?.height || 25) + childMargin;
+        calcHeight = Math.max(calcHeight, childBottom);
+        cumOff += childMargin;
+      }
+
+      const cumulativeMargin = sorted.reduce(
+        (sum: number, child: any) => sum + (parseFloat(child.style?.marginBottom || '0') || 0), 0
+      );
+      return (collapseEmpty || cumulativeMargin > 0) ? calcHeight : baseHeight;
+    };
+
     // Calculate actual content height (bottom of lowest visible block)
     let contentHeight = 0;
     for (const block of blocks) {
@@ -3245,7 +3283,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         } else {
           adjustedY = rawY;
         }
-        const blockHeight = block.size?.height || 25;
+        const blockHeight = getEffectiveBlockHeightMm(block);
         const blockBottom = mmToPx(adjustedY + blockHeight);
         contentHeight = Math.max(contentHeight, blockBottom);
       }
@@ -3449,13 +3487,44 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         // Calculate dynamic positions for blocks in this section
         const dynamicPositions = calculateDynamicPositions(blocks, typedPrintData);
         
+        // Helper: effective rendered height (mm) for a block — same logic as renderSectionInstance
+        const getEffectiveBlockHeightMmStatic = (block: any): number => {
+          const baseHeight = block.size?.height || 25;
+          if (block.type !== 'Group') return baseHeight;
+          const childBlocks: any[] = block.config?.childBlocks || [];
+          const collapseEmpty = block.config?.collapseEmpty || false;
+          let visibleChildren = childBlocks;
+          if (collapseEmpty) {
+            visibleChildren = childBlocks.filter((child: any) =>
+              blockHasContent(child, typedPrintData, undefined)
+            );
+            if (visibleChildren.length === 0) return 0;
+          }
+          const sorted = [...visibleChildren].sort(
+            (a: any, b: any) => (a.position?.y || 0) - (b.position?.y || 0)
+          );
+          let calcHeight = 0;
+          let cumOff = 0;
+          for (const child of sorted) {
+            const childMargin = parseFloat(child.style?.marginBottom || '0') || 0;
+            const adjustedChildY = (child.position?.y || 0) + cumOff;
+            const childBottom = adjustedChildY + (child.size?.height || 25) + childMargin;
+            calcHeight = Math.max(calcHeight, childBottom);
+            cumOff += childMargin;
+          }
+          const cumulativeMargin = sorted.reduce(
+            (sum: number, child: any) => sum + (parseFloat(child.style?.marginBottom || '0') || 0), 0
+          );
+          return (collapseEmpty || cumulativeMargin > 0) ? calcHeight : baseHeight;
+        };
+
         // Calculate actual content height (bottom of lowest visible block)
         let contentHeight = 0;
         for (const block of blocks) {
           const dynamicPos = dynamicPositions.get(block.id);
           if (dynamicPos?.visible !== false) {
             const adjustedY = dynamicPos?.y ?? (block.position?.y || 0);
-            const blockHeight = block.size?.height || 25;
+            const blockHeight = getEffectiveBlockHeightMmStatic(block);
             const blockBottom = mmToPx(adjustedY + blockHeight);
             contentHeight = Math.max(contentHeight, blockBottom);
           }
