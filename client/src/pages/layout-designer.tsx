@@ -3471,9 +3471,11 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
   };
 
   const PAGE_HEIGHT_PX = 1123;
-  const previewMargins = layout?.metadata?.printMargins || { top: 10, bottom: 10, left: 10, right: 10 };
+  const previewMargins = layout?.metadata?.printMargins || { top: 0, bottom: 0, left: 0, right: 0 };
   const topMarginPx = mmToPx(previewMargins.top || 0);
   const bottomMarginPx = mmToPx(previewMargins.bottom || 0);
+  const leftMarginPx = mmToPx(previewMargins.left || 0);
+  const rightMarginPx = mmToPx(previewMargins.right || 0);
 
   return (
     <>
@@ -3814,16 +3816,13 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           <Fragment key={`page-${pageIndex}`}>
             {pageIndex > 0 && <div style={{ height: '20px' }} />}
             <div className="bg-white shadow-2xl relative" style={{ height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page' }}>
-              {/* Top margin gray overlay */}
-              {topMarginPx > 0 && (
-                <div className="absolute top-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${topMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />
-              )}
-              {/* Bottom margin gray overlay */}
-              {bottomMarginPx > 0 && (
-                <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />
-              )}
-              {/* Content starts after top margin */}
-              <div style={{ position: 'absolute', top: `${topMarginPx}px`, left: 0, right: 0 }}>
+              {/* Print margin overlays — content never enters these zones */}
+              {topMarginPx > 0 && <div className="absolute top-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${topMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
+              {bottomMarginPx > 0 && <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
+              {leftMarginPx > 0 && <div className="absolute top-0 bottom-0 left-0 pointer-events-none z-20" style={{ width: `${leftMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
+              {rightMarginPx > 0 && <div className="absolute top-0 bottom-0 right-0 pointer-events-none z-20" style={{ width: `${rightMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
+              {/* Content confined within print margins */}
+              <div style={{ position: 'absolute', top: `${topMarginPx}px`, bottom: `${bottomMarginPx}px`, left: `${leftMarginPx}px`, right: `${rightMarginPx}px`, overflow: 'hidden' }}>
                 {/* everyPage sections — on every page */}
                 {everyPageItems.map((item, i) => <Fragment key={`ep-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
                 {/* firstPage sections — only on page 1, rendered after everyPage */}
@@ -3833,9 +3832,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                 {/* lastPage sections — only on the last page, in normal flow */}
                 {pageIndex === lastPageIndex && lastPageOnlyItems.map((item, i) => <Fragment key={`lp-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
               </div>
-              {/* Fixed position sections — absolutely placed at their configured Y position */}
+              {/* Fixed position sections — absolutely placed at their Y position within the printable area */}
               {pageFixedItems.map((item, i) => (
-                <div key={`fixed-${i}`} className="absolute left-0 right-0" style={{ top: `${mmToPx(item.fixedY)}px`, zIndex: 5 }}>
+                <div key={`fixed-${i}`} style={{ position: 'absolute', top: `${topMarginPx + mmToPx(item.fixedY)}px`, left: `${leftMarginPx}px`, right: `${rightMarginPx}px`, zIndex: 5 }}>
                   {item.renderFn(pageCtx)}
                 </div>
               ))}
