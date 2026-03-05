@@ -20,8 +20,8 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
 
   return (
     <div className={`-space-y-px ${className}`}>
-      {/* Tab Bar - With white background */}
-      <div className={`bg-white ${isMobile ? 'px-1' : 'px-4'} border-b-0 ${isMobile ? 'h-[50px]' : 'h-[62px]'} flex items-end`}>
+      {/* Tab Bar - sticky below toolbar */}
+      <div className={`sticky top-14 z-10 bg-white ${isMobile ? 'px-1' : 'px-4'} border-b-0 ${isMobile ? 'h-[50px]' : 'h-[62px]'} flex items-end`}>
         <div className={`flex items-end ${isMobile ? 'space-x-0.5' : 'space-x-1'} overflow-x-auto ${isMobile ? 'ml-0 w-full' : 'ml-2'}`}>
           {tabs.map((tab) => (
             <div

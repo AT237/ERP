@@ -1501,8 +1501,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Toolbar */}
-      <div className="border-b border-border bg-white px-4 py-2">
+      {/* Toolbar - sticky so it stays visible when scrolling */}
+      <div className="sticky top-0 z-20 border-b border-border bg-white px-4 py-2">
         <div className="flex items-center gap-2 flex-wrap">
           {/* Save */}
           <TooltipProvider delayDuration={2000}>
