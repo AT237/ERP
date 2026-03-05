@@ -3828,6 +3828,27 @@ function BlockProperties({
     onUpdateProperty(sectionId, block.id, 'style', { ...block.style, [property]: value });
   };
 
+  const styleSource = block.type === 'Group'
+    ? (block.config?.groupStyle || {})
+    : (block.style || {});
+
+  const handleTextStyleChange = (property: string, value: any) => {
+    if (block.type === 'Group') {
+      const newGroupStyle = { ...block.config?.groupStyle, [property]: value };
+      const updatedChildBlocks = (block.config?.childBlocks || []).map((child: any) => ({
+        ...child,
+        style: { ...child.style, [property]: value },
+      }));
+      onUpdateProperty(sectionId, block.id, 'config', {
+        ...block.config,
+        groupStyle: newGroupStyle,
+        childBlocks: updatedChildBlocks,
+      });
+    } else {
+      updateStyle(property, value);
+    }
+  };
+
   const selectedTable = availableTables.find(t => t.name === block.config?.tableName);
   const currentSection = sections.find(s => s.id === sectionId);
   
@@ -4041,106 +4062,6 @@ function BlockProperties({
           {/* Text Block Properties */}
           {block.type === "Text" && (
             <div className="space-y-3 border-t pt-3">
-              {/* Text Styling */}
-              <div>
-                <Label className="text-xs font-semibold mb-2 block">Tekststijl</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label htmlFor="font-family" className="text-[10px] text-muted-foreground">Lettertype</Label>
-                    <Select 
-                      value={block.style?.fontFamily || 'helvetica'}
-                      onValueChange={(value) => updateStyle('fontFamily', value)}
-                    >
-                      <SelectTrigger id="font-family" className="h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="helvetica">Helvetica</SelectItem>
-                        <SelectItem value="arial">Arial</SelectItem>
-                        <SelectItem value="calibri">Calibri</SelectItem>
-                        <SelectItem value="times">Times New Roman</SelectItem>
-                        <SelectItem value="courier">Courier</SelectItem>
-                        <SelectItem value="georgia">Georgia</SelectItem>
-                        <SelectItem value="verdana">Verdana</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="font-size" className="text-[10px] text-muted-foreground">Grootte</Label>
-                    <Select 
-                      value={String(block.style?.fontSize || 9)}
-                      onValueChange={(value) => updateStyle('fontSize', parseInt(value))}
-                    >
-                      <SelectTrigger id="font-size" className="h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="6">6pt</SelectItem>
-                        <SelectItem value="7">7pt</SelectItem>
-                        <SelectItem value="8">8pt</SelectItem>
-                        <SelectItem value="9">9pt</SelectItem>
-                        <SelectItem value="10">10pt</SelectItem>
-                        <SelectItem value="11">11pt</SelectItem>
-                        <SelectItem value="12">12pt</SelectItem>
-                        <SelectItem value="14">14pt</SelectItem>
-                        <SelectItem value="16">16pt</SelectItem>
-                        <SelectItem value="18">18pt</SelectItem>
-                        <SelectItem value="20">20pt</SelectItem>
-                        <SelectItem value="24">24pt</SelectItem>
-                        <SelectItem value="28">28pt</SelectItem>
-                        <SelectItem value="32">32pt</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                {/* Bold, Italic, Underline toggles */}
-                <div className="flex items-center gap-1 mt-2">
-                  <Button
-                    type="button"
-                    variant={block.style?.fontWeight === 'bold' ? 'default' : 'outline'}
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={() => updateStyle('fontWeight', block.style?.fontWeight === 'bold' ? 'normal' : 'bold')}
-                    data-testid="btn-bold"
-                  >
-                    <Bold className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={block.style?.fontStyle === 'italic' ? 'default' : 'outline'}
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={() => updateStyle('fontStyle', block.style?.fontStyle === 'italic' ? 'normal' : 'italic')}
-                    data-testid="btn-italic"
-                  >
-                    <Italic className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={block.style?.textDecoration === 'underline' ? 'default' : 'outline'}
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={() => updateStyle('textDecoration', block.style?.textDecoration === 'underline' ? 'none' : 'underline')}
-                    data-testid="btn-underline"
-                  >
-                    <Underline className="h-3.5 w-3.5" />
-                  </Button>
-                  
-                  {/* Color picker */}
-                  <div className="flex items-center gap-1 ml-2">
-                    <Label className="text-[10px] text-muted-foreground">Kleur:</Label>
-                    <input
-                      type="color"
-                      value={block.style?.color || '#000000'}
-                      onChange={(e) => updateStyle('color', e.target.value)}
-                      className="h-7 w-7 p-0.5 border rounded cursor-pointer"
-                      data-testid="input-text-color"
-                    />
-                  </div>
-                </div>
-              </div>
-
               <div>
                 <Label htmlFor={`text-content-${block.id}`} className="text-xs">Tekst</Label>
                 <textarea
@@ -4512,6 +4433,103 @@ function BlockProperties({
               </div>
             </div>
           )}
+
+          {/* Tekststijl - universal for all block types */}
+          <div className="pt-2 border-t space-y-2">
+            <Label className="text-xs font-semibold block">
+              Tekststijl
+              {block.type === 'Group' && (
+                <span className="ml-1 text-[10px] font-normal text-orange-600">(overschrijft alle blokken in groep)</span>
+              )}
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-[10px] text-muted-foreground">Lettertype</Label>
+                <Select
+                  value={String(styleSource.fontFamily || '')}
+                  onValueChange={(value) => handleTextStyleChange('fontFamily', value)}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue placeholder="Standaard" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="arial">Arial</SelectItem>
+                    <SelectItem value="helvetica">Helvetica</SelectItem>
+                    <SelectItem value="calibri">Calibri</SelectItem>
+                    <SelectItem value="times">Times New Roman</SelectItem>
+                    <SelectItem value="courier">Courier</SelectItem>
+                    <SelectItem value="georgia">Georgia</SelectItem>
+                    <SelectItem value="verdana">Verdana</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px] text-muted-foreground">Grootte</Label>
+                <Select
+                  value={styleSource.fontSize ? String(styleSource.fontSize) : ''}
+                  onValueChange={(value) => handleTextStyleChange('fontSize', parseInt(value))}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue placeholder="Standaard" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="6">6pt</SelectItem>
+                    <SelectItem value="7">7pt</SelectItem>
+                    <SelectItem value="8">8pt</SelectItem>
+                    <SelectItem value="9">9pt</SelectItem>
+                    <SelectItem value="10">10pt</SelectItem>
+                    <SelectItem value="11">11pt</SelectItem>
+                    <SelectItem value="12">12pt</SelectItem>
+                    <SelectItem value="14">14pt</SelectItem>
+                    <SelectItem value="16">16pt</SelectItem>
+                    <SelectItem value="18">18pt</SelectItem>
+                    <SelectItem value="20">20pt</SelectItem>
+                    <SelectItem value="24">24pt</SelectItem>
+                    <SelectItem value="28">28pt</SelectItem>
+                    <SelectItem value="32">32pt</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant={styleSource.fontWeight === 'bold' ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => handleTextStyleChange('fontWeight', styleSource.fontWeight === 'bold' ? 'normal' : 'bold')}
+              >
+                <Bold className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                type="button"
+                variant={styleSource.fontStyle === 'italic' ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => handleTextStyleChange('fontStyle', styleSource.fontStyle === 'italic' ? 'normal' : 'italic')}
+              >
+                <Italic className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                type="button"
+                variant={styleSource.textDecoration === 'underline' ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => handleTextStyleChange('textDecoration', styleSource.textDecoration === 'underline' ? 'none' : 'underline')}
+              >
+                <Underline className="h-3.5 w-3.5" />
+              </Button>
+              <div className="flex items-center gap-1 ml-2">
+                <Label className="text-[10px] text-muted-foreground">Kleur:</Label>
+                <input
+                  type="color"
+                  value={styleSource.color || '#000000'}
+                  onChange={(e) => handleTextStyleChange('color', e.target.value)}
+                  className="h-7 w-7 p-0.5 border rounded cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Hide When Empty - for all block types */}
           <div className="pt-2 border-t">
