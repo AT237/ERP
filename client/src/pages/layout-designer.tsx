@@ -3185,6 +3185,28 @@ function estimateActualBlockHeightMm(
   return Math.max(configuredHeightMm, measuredMm + paddingTopMm + paddingBottomMm);
 }
 
+// Returns the actual section height in pixels for a given item context.
+// Used in pagination heightPx to prevent text that wraps being cut at page boundaries.
+function estimateActualSectionHeightPx(
+  section: any,
+  printData: PrintData,
+  itemContext?: { item: any; index: number }
+): number {
+  const blocks: any[] = section.config?.blocks || [];
+  const configuredPx = mmToPx(section.config?.dimensions?.height || 200);
+  if (blocks.length === 0) return configuredPx;
+
+  let maxBottomPx = 0;
+  for (const block of blocks) {
+    const blockY = block.position?.y || 0;
+    const blockH = estimateActualBlockHeightMm(block, printData, itemContext);
+    const blockBottomPx = mmToPx(blockY + blockH);
+    maxBottomPx = Math.max(maxBottomPx, blockBottomPx);
+  }
+
+  return Math.max(configuredPx, maxBottomPx);
+}
+
 function calculateDynamicPositions(
   blocks: any[], 
   printData: PrintData,
@@ -3355,10 +3377,11 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
       : 0;
     
     // Helper: compute the effective rendered height (mm) of a block.
-    // For Group blocks, accounts for cumulative child marginBottom offsets
-    // and collapseEmpty filtering — mirroring what GroupBlockRenderer actually renders.
+    // For Text/DataField: uses canvas measurement to account for text wrapping.
+    // For Group blocks: accounts for cumulative child marginBottom and collapseEmpty.
     const getEffectiveBlockHeightMm = (block: any): number => {
-      const baseHeight = block.size?.height || 25;
+      // Use canvas measurement for Text/DataField blocks
+      const baseHeight = estimateActualBlockHeightMm(block, typedPrintData, itemContext);
       if (block.type !== 'Group') return baseHeight;
 
       const childBlocks: any[] = block.config?.childBlocks || [];
@@ -3436,17 +3459,20 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
     const repeatSpacingMm = section.config?.repeat?.spacingMm || 0;
     const repeatSpacingPx = mmToPx(repeatSpacingMm);
     
-    // Determine final section height based on canGrow/canShrink
-    // Note: bottomMarginPx is no longer added here — sections use full page coordinates,
-    // the gray margin overlay is purely visual and does not affect section heights.
+    // Determine final section height.
+    // Sections always grow to fit actual content (prevents mid-line text cuts at page boundaries).
+    // Canvas-based measurement (getEffectiveBlockHeightMm → estimateActualBlockHeightMm) provides
+    // accurate estimates even when text wraps to more lines than the designer's configured block height.
     let sectionHeight = configuredHeight;
     const heightCanShrink = section.config?.heightCanShrink || false;
     const heightCanGrow = section.config?.heightCanGrow || false;
     
-    if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
+    // Always grow when content is taller than configured — never clip printed content mid-line.
+    if (contentHeight > configuredHeight) {
       sectionHeight = contentHeight;
     }
-    if (heightCanGrow && contentHeight > configuredHeight) {
+    // Only shrink when explicitly enabled.
+    if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
       sectionHeight = contentHeight;
     }
 
@@ -3464,7 +3490,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
           height: `${sectionHeight}px`,
           minHeight: heightCanShrink ? 'auto' : `${sectionHeight}px`,
-          maxHeight: heightCanGrow ? 'none' : `${sectionHeight}px`,
+          maxHeight: 'none',
           borderColor: section.config?.style?.borderColor || 'transparent',
           borderStyle: section.config?.style?.borderStyle || 'none',
           borderWidth: section.config?.style?.borderWidth || 0,
@@ -3514,12 +3540,15 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                 adjustedY = rawY;
               }
               
+              // Use canvas-measured actual height for Text/DataField blocks so wrapped text
+              // is never clipped within the block. For other block types the configured height is used.
+              const actualBlockHeightMm = estimateActualBlockHeightMm(block, typedPrintData, itemContext);
               const blockStyle: React.CSSProperties = {
                 position: 'absolute',
                 left: `${mmToPx(block.position?.x || 0)}px`,
                 top: `${mmToPx(adjustedY)}px`,
                 width: `${mmToPx(block.size?.width || 50)}px`,
-                height: `${mmToPx((block.size?.height || 25) + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
+                height: `${mmToPx(actualBlockHeightMm + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
               };
               
               if (BlockRenderer) {
@@ -3622,7 +3651,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
             const sectionRepeatSpacingPx = mmToPx(matchingSection.config?.repeat?.spacingMm || 0);
             renderedItems.push({
               renderFn: (ctx: PageCtx) => renderSectionInstance(capturedSection, capturedKey, capturedItem, ctx),
-              heightPx: (matchingSection.config?.dimensions?.height || 200) + sectionRepeatSpacingPx,
+              heightPx: estimateActualSectionHeightPx(capturedSection, typedPrintData, capturedItem) + sectionRepeatSpacingPx,
               isEveryPage: false,
               isFirstPage: false,
               isLastPage: false,
@@ -3649,7 +3678,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
             const capturedSec2 = section;
             renderedItems.push({
               renderFn: (ctx: PageCtx) => renderSectionInstance(capturedSec2, capturedKey2, capturedItemCtx, ctx),
-              heightPx: baseSectionHeight + repeatSpacingPxEst,
+              heightPx: estimateActualSectionHeightPx(capturedSec2, typedPrintData, capturedItemCtx) + repeatSpacingPxEst,
               isEveryPage: false,
               isFirstPage: false,
               isLastPage: false,
@@ -3668,9 +3697,12 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         // Calculate dynamic positions for blocks in this section
         const dynamicPositions = calculateDynamicPositions(blocks, typedPrintData);
         
-        // Helper: effective rendered height (mm) for a block — same logic as renderSectionInstance
+        // Helper: effective rendered height (mm) for a block.
+        // For Text/DataField: uses canvas measurement to account for text wrapping.
+        // For Group blocks: accounts for cumulative child marginBottom and collapseEmpty.
         const getEffectiveBlockHeightMmStatic = (block: any): number => {
-          const baseHeight = block.size?.height || 25;
+          // Use canvas measurement for Text/DataField blocks (no itemContext for non-repeating sections)
+          const baseHeight = estimateActualBlockHeightMm(block, typedPrintData, undefined);
           if (block.type !== 'Group') return baseHeight;
           const childBlocks: any[] = block.config?.childBlocks || [];
           const collapseEmpty = block.config?.collapseEmpty || false;
@@ -3688,15 +3720,17 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           let cumOff = 0;
           for (const child of sorted) {
             const childMargin = parseFloat(child.style?.marginBottom || '0') || 0;
+            const childHeight = estimateActualBlockHeightMm(child, typedPrintData, undefined);
             const adjustedChildY = (child.position?.y || 0) + cumOff;
-            const childBottom = adjustedChildY + (child.size?.height || 25) + childMargin;
+            const childBottom = adjustedChildY + childHeight + childMargin;
             calcHeight = Math.max(calcHeight, childBottom);
             cumOff += childMargin;
           }
           const cumulativeMargin = sorted.reduce(
             (sum: number, child: any) => sum + (parseFloat(child.style?.marginBottom || '0') || 0), 0
           );
-          return (collapseEmpty || cumulativeMargin > 0) ? calcHeight : baseHeight;
+          const configuredGroupH = block.size?.height || 25;
+          return (collapseEmpty || cumulativeMargin > 0) ? calcHeight : Math.max(configuredGroupH, calcHeight);
         };
 
         // Calculate actual content height (bottom of lowest visible block)
@@ -3715,16 +3749,18 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         const bottomMarginMm = section.config?.bottomMarginMm || 0;
         const bottomMarginPx = mmToPx(bottomMarginMm);
         
-        // Determine final section height based on canGrow/canShrink
-        // Note: bottomMarginPx no longer added — full-page coordinate system, overlay is visual only.
+        // Determine final section height.
+        // Sections always grow to fit actual content — never clip printed text mid-line.
         let sectionHeight = configuredHeight;
         const heightCanShrink = section.config?.heightCanShrink || false;
         const heightCanGrow = section.config?.heightCanGrow || false;
         
-        if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
+        // Always grow when actual content is taller than configured.
+        if (contentHeight > configuredHeight) {
           sectionHeight = contentHeight;
         }
-        if (heightCanGrow && contentHeight > configuredHeight) {
+        // Only shrink when explicitly enabled.
+        if (heightCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
           sectionHeight = contentHeight;
         }
         
