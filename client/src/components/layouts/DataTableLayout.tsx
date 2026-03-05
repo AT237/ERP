@@ -732,7 +732,7 @@ export function DataTableLayout<T = any>({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 relative"
+                    className="h-8 w-8 p-0 relative ring-1 ring-orange-400 text-orange-600"
                     title="Filter"
                     data-testid="toolbar-filter"
                   >
@@ -763,7 +763,7 @@ export function DataTableLayout<T = any>({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 ring-1 ring-orange-400 text-orange-600"
                     title="Column Visibility"
                     data-testid="toolbar-columns"
                   >
