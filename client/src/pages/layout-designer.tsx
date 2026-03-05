@@ -510,7 +510,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const [showTableSelectorDialog, setShowTableSelectorDialog] = useState(false);
   const [allowedTables, setAllowedTables] = useState<string[]>(layout?.allowedTables || []);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<{ type: 'block' | 'section'; id: string; sectionId?: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'block' | 'section' | 'childBlock'; id: string; sectionId?: string; parentGroupId?: string } | null>(null);
   const [localLayoutName, setLocalLayoutName] = useState<string>(layout?.name || '');
   const [localLayoutNumber, setLocalLayoutNumber] = useState<string>(layout?.layoutNumber || '');
   const { toast } = useToast();
@@ -948,6 +948,25 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     if (selectedBlock?.id === blockId) {
       setSelectedBlock(null);
     }
+  };
+
+  const handleRemoveChildBlock = (sectionId: string, parentGroupId: string, childBlockId: string) => {
+    const updatedSections = sections.map(s => {
+      if (s.id !== sectionId) return s;
+      return applyBlocksToSection(s, getSectionBlocks(s).map((b: any) => {
+        if (b.id !== parentGroupId) return b;
+        return {
+          ...b,
+          config: {
+            ...b.config,
+            childBlocks: (b.config?.childBlocks || []).filter((child: any) => child.id !== childBlockId),
+          },
+        };
+      }));
+    });
+    pushHistory(sections);
+    setSections(updatedSections);
+    setSelectedChildBlock(null);
   };
 
   // Move block forward (on top of others) - higher index = rendered later = on top
@@ -1545,10 +1564,18 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  className={`h-8 w-8 p-0 ${(selectedBlock || selectedSection) ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-gray-400 opacity-40'}`}
-                  disabled={!selectedBlock && !selectedSection}
+                  className={`h-8 w-8 p-0 ${(selectedBlock || selectedSection || selectedChildBlock) ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-gray-400 opacity-40'}`}
+                  disabled={!selectedBlock && !selectedSection && !selectedChildBlock}
                   onClick={() => {
-                    if (selectedBlock) {
+                    if (selectedChildBlock) {
+                      const sectionId = sections.find(s =>
+                        s.config.blocks?.some((b: any) => b.id === selectedChildBlock.parentGroupId)
+                      )?.id;
+                      if (sectionId) {
+                        setDeleteTarget({ type: 'childBlock', id: selectedChildBlock.block.id, sectionId, parentGroupId: selectedChildBlock.parentGroupId });
+                        setShowDeleteConfirmDialog(true);
+                      }
+                    } else if (selectedBlock) {
                       const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
                       if (sectionId) {
                         setDeleteTarget({ type: 'block', id: selectedBlock.id, sectionId });
@@ -1567,7 +1594,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
               <TooltipContent>
                 <p className="font-medium">Verwijderen</p>
                 <p className="text-xs text-muted-foreground">
-                  {selectedBlock ? 'Verwijder geselecteerd blok' : selectedSection ? 'Verwijder geselecteerde sectie' : 'Selecteer een blok of sectie'}
+                  {selectedChildBlock ? 'Verwijder blok uit groep' : selectedBlock ? 'Verwijder geselecteerd blok' : selectedSection ? 'Verwijder geselecteerde sectie' : 'Selecteer een blok of sectie'}
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -2122,7 +2149,9 @@ export function VisualDesignerView({ layout }: { layout: any }) {
           <DialogHeader>
             <DialogTitle>Verwijderen bevestigen</DialogTitle>
             <DialogDescription>
-              {deleteTarget?.type === 'block' 
+              {deleteTarget?.type === 'childBlock'
+                ? 'Weet je zeker dat je dit blok wilt verwijderen uit de groep?'
+                : deleteTarget?.type === 'block' 
                 ? 'Weet je zeker dat je dit blok wilt verwijderen?' 
                 : 'Weet je zeker dat je deze sectie wilt verwijderen? Alle blokken in deze sectie worden ook verwijderd.'}
             </DialogDescription>
@@ -2137,7 +2166,10 @@ export function VisualDesignerView({ layout }: { layout: any }) {
             <Button 
               variant="destructive"
               onClick={() => {
-                if (deleteTarget?.type === 'block' && deleteTarget.sectionId) {
+                if (deleteTarget?.type === 'childBlock' && deleteTarget.sectionId && deleteTarget.parentGroupId) {
+                  handleRemoveChildBlock(deleteTarget.sectionId, deleteTarget.parentGroupId, deleteTarget.id);
+                  toast({ title: 'Blok verwijderd', description: 'Het blok is verwijderd uit de groep' });
+                } else if (deleteTarget?.type === 'block' && deleteTarget.sectionId) {
                   handleRemoveBlock(deleteTarget.sectionId, deleteTarget.id);
                   toast({ title: 'Blok verwijderd', description: 'Het blok is verwijderd' });
                 } else if (deleteTarget?.type === 'section') {
