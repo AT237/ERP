@@ -3776,7 +3776,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         const getContentCeiling = (extraFixed: typeof fixedItems): number => {
           const allFixed = [...everyPageFixed, ...extraFixed];
           if (allFixed.length === 0) return usablePageHeight;
-          return Math.min(...allFixed.map(fi => mmToPx(fi.fixedY)));
+          // fixedY is in page coordinates (from page top, incl. margin).
+          // Content area starts at topMarginPx, so convert to content-area coordinates:
+          return Math.min(...allFixed.map(fi => mmToPx(fi.fixedY) - topMarginPx));
         };
 
         // Available flow height per page (ceiling minus already-occupied everyPage sections)
@@ -3880,9 +3882,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                 {/* lastPage sections — only on the last page, in normal flow */}
                 {pageIndex === lastPageIndex && lastPageOnlyItems.map((item, i) => <Fragment key={`lp-${i}`}>{item.renderFn(pageCtx)}</Fragment>)}
               </div>
-              {/* Fixed position sections — absolutely placed at their Y position within the printable area */}
+              {/* Fixed position sections — placed at their page-absolute Y position (fixedY is from page top, incl. margin) */}
               {pageFixedItems.map((item, i) => (
-                <div key={`fixed-${i}`} style={{ position: 'absolute', top: `${topMarginPx + mmToPx(item.fixedY)}px`, left: `${leftMarginPx}px`, right: `${rightMarginPx}px`, zIndex: 5 }}>
+                <div key={`fixed-${i}`} style={{ position: 'absolute', top: `${mmToPx(item.fixedY)}px`, left: `${leftMarginPx}px`, right: `${rightMarginPx}px`, zIndex: 5 }}>
                   {item.renderFn(pageCtx)}
                 </div>
               ))}
