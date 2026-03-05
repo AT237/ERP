@@ -587,26 +587,47 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
   if (collapseEmpty && visibleBlocks.length === 0) {
     return null;
   }
-  
-  // Calculate actual height needed based on visible blocks
+
+  // Apply cumulative marginBottom offsets: shift each block's y by the sum of all
+  // previous blocks' marginBottom values (sorted by y-position ascending).
+  const sortedVisible = [...visibleBlocks].sort((a: any, b: any) =>
+    (a.position?.y || 0) - (b.position?.y || 0)
+  );
+  let cumulativeMarginOffset = 0;
+  const blocksWithMargin = sortedVisible.map((childBlock: any) => {
+    const marginBottomMm = parseFloat(childBlock.style?.marginBottom || '0') || 0;
+    const adjusted = {
+      ...childBlock,
+      position: {
+        ...childBlock.position,
+        y: (childBlock.position?.y || 0) + cumulativeMarginOffset,
+      },
+    };
+    cumulativeMarginOffset += marginBottomMm;
+    return adjusted;
+  });
+
+  // Calculate actual height: include each block's own marginBottom so the container
+  // is tall enough to show the spacing after the last block too.
   let calculatedHeight = 0;
-  if (collapseEmpty && visibleBlocks.length > 0) {
-    for (const vBlock of visibleBlocks) {
-      const blockBottom = (vBlock.position?.y || 0) + (vBlock.size?.height || 25);
-      calculatedHeight = Math.max(calculatedHeight, blockBottom);
-    }
+  for (const vBlock of blocksWithMargin) {
+    const blockMargin = parseFloat(vBlock.style?.marginBottom || '0') || 0;
+    const blockBottom = (vBlock.position?.y || 0) + (vBlock.size?.height || 25) + blockMargin;
+    calculatedHeight = Math.max(calculatedHeight, blockBottom);
   }
-  
+
+  const useCalculatedHeight = collapseEmpty || cumulativeMarginOffset > 0;
+
   const containerStyle: React.CSSProperties = {
     position: 'relative',
     width: '100%',
-    height: collapseEmpty && calculatedHeight > 0 ? `${mmToPx(calculatedHeight)}px` : '100%',
+    height: useCalculatedHeight && calculatedHeight > 0 ? `${mmToPx(calculatedHeight)}px` : '100%',
     overflow: 'visible',
   };
   
   return (
     <div style={containerStyle}>
-      {visibleBlocks.map((childBlock: any, index: number) => {
+      {blocksWithMargin.map((childBlock: any, index: number) => {
         const BlockRenderer = BlockRenderers[childBlock.type];
         
         const blockStyle: React.CSSProperties = {
@@ -614,7 +635,7 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
           left: `${mmToPx(childBlock.position?.x || 0)}px`,
           top: `${mmToPx(childBlock.position?.y || 0)}px`,
           width: `${mmToPx(childBlock.size?.width || 50)}px`,
-          height: `${mmToPx((childBlock.size?.height || 25) + (parseFloat(childBlock.style?.marginBottom || '0') || 0))}px`,
+          height: `${mmToPx(childBlock.size?.height || 25)}px`,
         };
         
         if (BlockRenderer) {
