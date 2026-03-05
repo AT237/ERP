@@ -3487,12 +3487,15 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         };
 
         // Collect all rendered items with heights
-        const renderedItems: { element: React.ReactNode; heightPx: number; isEveryPage: boolean }[] = [];
+        const renderedItems: { element: React.ReactNode; heightPx: number; isEveryPage: boolean; isFirstPage: boolean; isLastPage: boolean }[] = [];
 
         sections.forEach((section: any, sectionIndex: number) => {
         if (groupAbsorbed.has(section.id)) return;
 
-        const isEveryPage = section.config?.printRules?.everyPage === true;
+        const printRules = section.config?.printRules || { everyPage: true };
+        const isEveryPage = printRules.everyPage === true;
+        const isFirstPage = !isEveryPage && printRules.firstPage === true;
+        const isLastPage = !isEveryPage && !isFirstPage && printRules.lastPage === true;
         const baseSectionHeight = section.config?.dimensions?.height || 200;
 
         // Auto-detect if this section should repeat for line items
@@ -3533,6 +3536,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
               element: renderSectionInstance(matchingSection, `${matchingSection.id}-item-${itemIndex}`, { item, index: itemIndex }),
               heightPx: matchingSection.config?.dimensions?.height || 200,
               isEveryPage,
+              isFirstPage,
+              isLastPage,
             });
           });
           return;
@@ -3551,6 +3556,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
               element: renderSectionInstance(section, `${section.id}-item-${itemIndex}`, itemContext),
               heightPx: baseSectionHeight,
               isEveryPage,
+              isFirstPage,
+              isLastPage,
             });
           });
           return;
@@ -3635,6 +3642,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         renderedItems.push({
           heightPx: sectionHeight,
           isEveryPage,
+          isFirstPage,
+          isLastPage,
           element: (
           <div
             key={section.id}
@@ -3720,13 +3729,16 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
         }); // end sections.forEach
 
         // --- Paginate ---
-        // Separate everyPage sections from content sections
+        // Separate everyPage, firstPage, lastPage and regular content sections
         const everyPageItems = renderedItems.filter(i => i.isEveryPage);
-        const contentItems = renderedItems.filter(i => !i.isEveryPage);
+        const firstPageOnlyItems = renderedItems.filter(i => i.isFirstPage);
+        const lastPageOnlyItems = renderedItems.filter(i => i.isLastPage);
+        const contentItems = renderedItems.filter(i => !i.isEveryPage && !i.isFirstPage && !i.isLastPage);
+
         const everyPageTotalHeight = everyPageItems.reduce((sum, i) => sum + i.heightPx, 0);
         const availablePerPage = PAGE_HEIGHT_PX - everyPageTotalHeight;
 
-        // Group content into pages based on accumulated height
+        // Group regular content into pages based on accumulated height
         const pages: typeof contentItems[] = [];
         let currentPage: typeof contentItems = [];
         let currentPageHeight = 0;
@@ -3754,6 +3766,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           ];
         }
 
+        const lastPageIndex = pages.length - 1;
+
         // Render each page with everyPage sections at the top
         return pages.map((pageContent, pageIndex) => (
           <Fragment key={`page-${pageIndex}`}>
@@ -3767,8 +3781,14 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
               {bottomMarginPx > 0 && (
                 <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-10" style={{ height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />
               )}
+              {/* everyPage sections — on every page */}
               {everyPageItems.map((item, i) => <Fragment key={`ep-${i}`}>{item.element}</Fragment>)}
+              {/* firstPage sections — only on page 1, rendered after everyPage */}
+              {pageIndex === 0 && firstPageOnlyItems.map((item, i) => <Fragment key={`fp-${i}`}>{item.element}</Fragment>)}
+              {/* Regular content for this page */}
               {pageContent.map((item, i) => <Fragment key={`c-${i}`}>{item.element}</Fragment>)}
+              {/* lastPage sections — only on the last page */}
+              {pageIndex === lastPageIndex && lastPageOnlyItems.map((item, i) => <Fragment key={`lp-${i}`}>{item.element}</Fragment>)}
             </div>
           </Fragment>
         ));
