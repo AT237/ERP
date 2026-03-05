@@ -89,6 +89,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/customers/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const [customerQuotations, customerInvoices, customerProjects] = await Promise.all([
+        db.select().from(quotations).where(eq(quotations.customerId, id)).limit(1),
+        db.select().from(invoices).where(eq(invoices.customerId, id)).limit(1),
+        db.select().from(projects).where(eq(projects.customerId, id)).limit(1)
+      ]);
+
+      if (customerQuotations.length > 0 || customerInvoices.length > 0 || customerProjects.length > 0) {
+        return res.status(409).json({ message: "Customer is in use and cannot be deleted" });
+      }
+
+      await storage.deleteCustomer(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      res.status(500).json({ message: "Failed to delete customer" });
+    }
+  });
+
   app.get("/api/customers", async (req, res) => {
     try {
       const customers = await storage.getCustomers();
@@ -591,6 +612,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/suppliers/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const supplierPurchaseOrders = await db.select().from(purchaseOrders).where(eq(purchaseOrders.supplierId, id)).limit(1);
+
+      if (supplierPurchaseOrders.length > 0) {
+        return res.status(409).json({ message: "Supplier is in use and cannot be deleted" });
+      }
+
+      await storage.deleteSupplier(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting supplier:", error);
+      res.status(500).json({ message: "Failed to delete supplier" });
+    }
+  });
+
   app.get("/api/suppliers", async (req, res) => {
     try {
       const suppliers = await storage.getSuppliers();
@@ -730,6 +768,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error checking inventory usages:", error);
       res.status(500).json({ message: "Failed to check inventory usages" });
+    }
+  });
+
+  app.delete("/api/inventory/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const [itemQuotationItems, itemInvoiceItems, itemPurchaseOrderItems, itemPackingListItems] = await Promise.all([
+        db.select().from(quotationItems).where(eq(quotationItems.itemId, id)).limit(1),
+        db.select().from(invoiceItems).where(eq(invoiceItems.itemId, id)).limit(1),
+        db.select().from(purchaseOrderItems).where(eq(purchaseOrderItems.itemId, id)).limit(1),
+        db.select().from(packingListItems).where(eq(packingListItems.itemId, id)).limit(1)
+      ]);
+
+      if (itemQuotationItems.length > 0 || itemInvoiceItems.length > 0 || itemPurchaseOrderItems.length > 0 || itemPackingListItems.length > 0) {
+        return res.status(409).json({ message: "Inventory item is in use and cannot be deleted" });
+      }
+
+      await storage.deleteInventoryItem(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting inventory item:", error);
+      res.status(500).json({ message: "Failed to delete inventory item" });
     }
   });
 
