@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, ChevronsUpDown, Plus, RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Popover, PopoverContent, PopoverTrigger 
@@ -165,7 +165,7 @@ export function VatRateSelectWithAdd({
                         }}
                         data-testid={`${testId}-view-${vatRate.code}`}
                       >
-                        <Search className="h-3.5 w-3.5" />
+                        <ExternalLink className="h-3.5 w-3.5" />
                       </Button>
                     </CommandItem>
                   ))}

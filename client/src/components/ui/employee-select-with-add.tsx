@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, ChevronsUpDown, Plus, RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -169,7 +169,7 @@ export function EmployeeSelectWithAdd({
                         }}
                         data-testid={`${testId}-view-${emp.id}`}
                       >
-                        <Search className="h-3.5 w-3.5" />
+                        <ExternalLink className="h-3.5 w-3.5" />
                       </Button>
                     </CommandItem>
                   ))}
