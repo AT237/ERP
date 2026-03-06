@@ -3229,7 +3229,8 @@ function estimateActualBlockHeightMm(
 
 // Returns the actual section height in pixels for a given item context.
 // Used in pagination heightPx to prevent text that wraps being cut at page boundaries.
-// Preserves the configured bottom margin (ondermarge) even when shrinking.
+// IMPORTANT: must mirror the Y-normalization logic in renderSectionInstance exactly,
+// otherwise the pagination estimate and the rendered height diverge → white gaps.
 function estimateActualSectionHeightPx(
   section: any,
   printData: PrintData,
@@ -3242,21 +3243,71 @@ function estimateActualSectionHeightPx(
 
   if (blocks.length === 0) return configuredPx;
 
+  // Mirror renderSectionInstance: detect conditional groups and find the matching one.
+  const hasConditionalGroups = itemContext && blocks.some(
+    (b: any) => b.type === 'Group' && (b.config?.conditionField || b.config?.lineTypeCondition)
+  );
+
+  let matchingGroupId: string | null = null;
+  if (hasConditionalGroups) {
+    for (const b of blocks) {
+      if (b.type !== 'Group') continue;
+      const cf = b.config?.conditionField;
+      const cv = b.config?.conditionValue;
+      const ltc = b.config?.lineTypeCondition;
+      if (cf && cv) {
+        if (String(itemContext!.item?.[cf] ?? '') === String(cv)) { matchingGroupId = b.id; break; }
+      } else if (ltc) {
+        if (itemContext!.item?.lineType === ltc) { matchingGroupId = b.id; break; }
+      }
+    }
+  }
+
+  // Fallback Y-offset: when no group matches, non-group blocks are shifted to Y=0.
+  let fallbackYOffset = 0;
+  if (hasConditionalGroups && matchingGroupId === null) {
+    const fallbackBlocks = blocks.filter((b: any) => b.type !== 'Group');
+    if (fallbackBlocks.length > 0) {
+      fallbackYOffset = Math.min(...fallbackBlocks.map((b: any) => b.position?.y || 0));
+    }
+  }
+
   let maxBottomPx = 0;
   for (const block of blocks) {
-    const blockY = block.position?.y || 0;
+    // Skip non-matching conditional groups (they don't render for this item).
+    if (hasConditionalGroups && block.type === 'Group') {
+      const isConditional = block.config?.conditionField || block.config?.lineTypeCondition;
+      if (isConditional && block.id !== matchingGroupId) continue;
+    }
+    // When a group matches: skip non-group blocks (they belong to other conditional paths).
+    if (hasConditionalGroups && block.type !== 'Group' && matchingGroupId !== null) continue;
+
+    // Mirror renderSectionInstance Y normalization:
+    // matching group → y=0; fallback non-group blocks → shift by fallbackYOffset.
+    let blockY: number;
+    if (hasConditionalGroups && block.id === matchingGroupId) {
+      blockY = 0;
+    } else if (hasConditionalGroups && matchingGroupId === null) {
+      blockY = (block.position?.y || 0) - fallbackYOffset;
+    } else {
+      blockY = block.position?.y || 0;
+    }
+
     const blockH = estimateActualBlockHeightMm(block, printData, itemContext, heightCanShrink);
-    // Skip zero-height blocks (empty shrinkable blocks) — their Y must not count
+    // Skip zero-height blocks (empty shrinkable blocks) — their Y must not count.
     if (blockH <= 0) continue;
     const blockBottomPx = mmToPx(blockY + blockH);
     maxBottomPx = Math.max(maxBottomPx, blockBottomPx);
   }
 
+  // Mirror auto-shrink for conditional groups (renderSectionInstance lines 3552-3557).
+  const autoShrink = hasConditionalGroups && maxBottomPx > 0 && maxBottomPx < configuredPx;
+
   // Always grow when content is taller than configured.
   if (maxBottomPx > configuredPx) return maxBottomPx;
 
-  // When shrinking: preserve the bottom margin — content + margin, capped at configuredHeight.
-  if (heightCanShrink && maxBottomPx > 0 && maxBottomPx < configuredPx) {
+  // When shrinking (explicit or auto): preserve the bottom margin — content + margin, capped at configuredHeight.
+  if ((heightCanShrink || autoShrink) && maxBottomPx > 0 && maxBottomPx < configuredPx) {
     return Math.min(configuredPx, maxBottomPx + bottomMarginPx);
   }
 
