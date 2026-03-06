@@ -195,9 +195,17 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
         name: customer.name,
         customerNumber: customer.customerNumber,
         email: customer.email,
+        generalEmail: customer.generalEmail ?? null,
+        invoiceEmail: customer.invoiceEmail ?? null,
         phone: customer.phone,
+        mobile: customer.mobile ?? null,
         btwNummer: customer.btwNummer ?? null,
+        taxId: customer.taxId ?? null,
+        kvkNummer: customer.kvkNummer ?? null,
+        bankAccount: customer.bankAccount ?? null,
         countryCode: customer.countryCode ?? null,
+        memo: customer.memo ?? null,
+        invoiceNotes: customer.invoiceNotes ?? null,
         address: addressData,
       };
     }
@@ -307,9 +315,17 @@ export interface InvoicePrintData {
     name: string;
     customerNumber: string;
     email: string | null;
+    generalEmail: string | null;
+    invoiceEmail: string | null;
     phone: string | null;
+    mobile: string | null;
     btwNummer: string | null;
+    taxId: string | null;
+    kvkNummer: string | null;
+    bankAccount: string | null;
     countryCode: string | null;
+    memo: string | null;
+    invoiceNotes: string | null;
     address: {
       street: string | null;
       houseNumber: string | null;
@@ -400,9 +416,17 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       name: customer.name,
       customerNumber: customer.customerNumber,
       email: customer.email,
+      generalEmail: customer.generalEmail ?? null,
+      invoiceEmail: customer.invoiceEmail ?? null,
       phone: customer.phone,
+      mobile: customer.mobile ?? null,
       btwNummer: customer.btwNummer ?? null,
+      taxId: customer.taxId ?? null,
+      kvkNummer: customer.kvkNummer ?? null,
+      bankAccount: customer.bankAccount ?? null,
       countryCode: customer.countryCode ?? null,
+      memo: customer.memo ?? null,
+      invoiceNotes: customer.invoiceNotes ?? null,
       address: addressData,
     };
   }
