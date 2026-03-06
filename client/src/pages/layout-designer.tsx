@@ -4174,9 +4174,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
                   }
                 })()}
               </div>
-              {/* Fixed position sections — page-coordinate Y (from page top) */}
+              {/* Fixed position sections — page-coordinate Y (from page top), X aligned to print area */}
               {pageFixedItems.map((item, i) => (
-                <div key={`fixed-${i}`} style={{ position: 'absolute', top: `${mmToPx(item.fixedY)}px`, left: 0, right: 0, zIndex: 5 }}>
+                <div key={`fixed-${i}`} style={{ position: 'absolute', top: `${mmToPx(item.fixedY)}px`, left: `${leftMarginPx}px`, right: `${rightMarginPx}px`, zIndex: 5 }}>
                   {item.renderFn(pageCtx)}
                 </div>
               ))}
