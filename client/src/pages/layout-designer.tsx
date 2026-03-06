@@ -3172,6 +3172,32 @@ function estimateActualBlockHeightMm(
   allowShrink: boolean = false
 ): number {
   const configuredHeightMm: number = block.size?.height || 25;
+
+  // Group blocks: when shrinking is allowed, measure actual content height from children.
+  if (block.type === 'Group' && allowShrink) {
+    const childBlocks: any[] = block.config?.childBlocks || [];
+    const collapseEmpty = block.config?.collapseEmpty || false;
+    let visibleChildren = childBlocks;
+    if (collapseEmpty) {
+      visibleChildren = childBlocks.filter((ch: any) => blockHasContent(ch, printData, itemContext));
+      if (visibleChildren.length === 0) return 0;
+    }
+    const sorted = [...visibleChildren].sort(
+      (a: any, b: any) => (a.position?.y || 0) - (b.position?.y || 0)
+    );
+    let calcHeight = 0;
+    let cumOff = 0;
+    for (const child of sorted) {
+      const childMarginMm = parseFloat(child.style?.marginBottom || '0') || 0;
+      const childH = estimateActualBlockHeightMm(child, printData, itemContext, true);
+      if (childH <= 0) continue;
+      const adjustedY = (child.position?.y || 0) + cumOff;
+      calcHeight = Math.max(calcHeight, adjustedY + childH + childMarginMm);
+      cumOff += childMarginMm;
+    }
+    return calcHeight;
+  }
+
   if (block.type !== 'Text' && block.type !== 'DataField') return configuredHeightMm;
 
   const text = resolveBlockText(block, printData, itemContext);
@@ -3439,7 +3465,13 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
       for (const child of sorted) {
         const childMargin = parseFloat(child.style?.marginBottom || '0') || 0;
         const adjustedChildY = (child.position?.y || 0) + cumOff;
-        const childBottom = adjustedChildY + (child.size?.height || 25) + childMargin;
+        // When section can shrink: use canvas-measured child height instead of configured height.
+        const childH = sectionCanShrink
+          ? estimateActualBlockHeightMm(child, typedPrintData, itemContext, true)
+          : (child.size?.height || 25);
+        // Skip empty children (height=0) when shrinking — they contribute no space.
+        if (sectionCanShrink && childH <= 0) continue;
+        const childBottom = adjustedChildY + childH + childMargin;
         calcHeight = Math.max(calcHeight, childBottom);
         cumOff += childMargin;
       }
@@ -3447,6 +3479,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
       const cumulativeMargin = sorted.reduce(
         (sum: number, child: any) => sum + (parseFloat(child.style?.marginBottom || '0') || 0), 0
       );
+      // When section can shrink: always use the measured calcHeight (not configured baseHeight).
+      if (sectionCanShrink && calcHeight > 0) return calcHeight;
       return (collapseEmpty || cumulativeMargin > 0) ? calcHeight : baseHeight;
     };
 
@@ -3765,9 +3799,12 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           let cumOff = 0;
           for (const child of sorted) {
             const childMargin = parseFloat(child.style?.marginBottom || '0') || 0;
-            const childHeight = estimateActualBlockHeightMm(child, typedPrintData, undefined);
+            // Pass staticSectionCanShrink so measured heights are used when the section can shrink.
+            const childH = estimateActualBlockHeightMm(child, typedPrintData, undefined, staticSectionCanShrink);
+            // Skip empty children when shrinking — they contribute no space.
+            if (staticSectionCanShrink && childH <= 0) continue;
             const adjustedChildY = (child.position?.y || 0) + cumOff;
-            const childBottom = adjustedChildY + childHeight + childMargin;
+            const childBottom = adjustedChildY + childH + childMargin;
             calcHeight = Math.max(calcHeight, childBottom);
             cumOff += childMargin;
           }
@@ -3775,6 +3812,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
             (sum: number, child: any) => sum + (parseFloat(child.style?.marginBottom || '0') || 0), 0
           );
           const configuredGroupH = block.size?.height || 25;
+          // When section can shrink: use measured calcHeight instead of configured group height.
+          if (staticSectionCanShrink && calcHeight > 0) return calcHeight;
           return (collapseEmpty || cumulativeMargin > 0) ? calcHeight : Math.max(configuredGroupH, calcHeight);
         };
 
