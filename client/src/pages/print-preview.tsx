@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRoute, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Printer, ZoomIn, ZoomOut, RotateCcw, Loader2 } from "lucide-react";
+import { Printer, ZoomIn, ZoomOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LayoutPreview } from "./layout-designer";
 import html2canvas from "html2canvas";
@@ -14,6 +14,7 @@ export default function PrintPreviewPage() {
   const [, params] = useRoute("/print/:documentType/:entityId");
   const search = useSearch();
   const printRef = useRef<HTMLDivElement>(null);
+  const captureRef = useRef<HTMLDivElement>(null);
 
   const documentType = params?.documentType ?? "";
   const entityId = params?.entityId ?? "";
@@ -23,6 +24,7 @@ export default function PrintPreviewPage() {
   const [fitScale, setFitScale] = useState(1);
   const [userZoom, setUserZoom] = useState(1);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   useEffect(() => {
     const updateFitScale = () => {
@@ -101,31 +103,20 @@ export default function PrintPreviewPage() {
   }, [printData]);
 
   const handlePrint = async () => {
-    if (!printRef.current || isPrinting) return;
+    if (isPrinting || !layout || !sections || !printData) return;
     setIsPrinting(true);
-
-    const wrapper = printRef.current;
-    const originalTransform = wrapper.style.transform;
-    const originalPosition = wrapper.style.position;
-    const originalTop = wrapper.style.top;
-    const originalLeft = wrapper.style.left;
+    setIsCapturing(true);
 
     try {
-      // Temporarily remove the CSS transform from the scale wrapper so
-      // html2canvas reads correct getBoundingClientRect() dimensions
-      wrapper.style.transform = "none";
-      wrapper.style.position = "absolute";
-      wrapper.style.top = "0";
-      wrapper.style.left = "0";
+      // Wait for React to render the off-screen capture container
+      await new Promise(r => setTimeout(r, 300));
 
-      // Wait two frames for the DOM to settle at the new layout
-      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const captureContainer = captureRef.current;
+      if (!captureContainer) return;
 
-      // Find all page divs (marked with data-pdf-page)
       const pageDivs = Array.from(
-        wrapper.querySelectorAll<HTMLElement>("[data-pdf-page]")
+        captureContainer.querySelectorAll<HTMLElement>("[data-pdf-page]")
       );
-
       if (pageDivs.length === 0) return;
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -139,13 +130,10 @@ export default function PrintPreviewPage() {
           logging: false,
           backgroundColor: "#ffffff",
           onclone: (_clonedDoc, clonedEl) => {
-            // Hide margin overlay divs (semi-transparent gray areas)
+            // Hide margin overlay divs
             clonedEl
               .querySelectorAll<HTMLElement>(".pointer-events-none.z-20")
-              .forEach(overlay => {
-                overlay.style.display = "none";
-              });
-            // Remove box shadow from page container
+              .forEach(overlay => { overlay.style.display = "none"; });
             clonedEl.style.boxShadow = "none";
           },
         });
@@ -161,11 +149,7 @@ export default function PrintPreviewPage() {
         "document";
       pdf.save(`${filename}.pdf`);
     } finally {
-      // Restore wrapper to its original state
-      wrapper.style.transform = originalTransform;
-      wrapper.style.position = originalPosition;
-      wrapper.style.top = originalTop;
-      wrapper.style.left = originalLeft;
+      setIsCapturing(false);
       setIsPrinting(false);
     }
   };
@@ -197,6 +181,27 @@ export default function PrintPreviewPage() {
   return (
     <>
       <style>{`body { background: #f3f4f6; }`}</style>
+
+      {/* Hidden off-screen container at 1:1 scale — used for PDF capture only */}
+      {isCapturing && (
+        <div
+          ref={captureRef}
+          style={{
+            position: "fixed",
+            left: "-10000px",
+            top: 0,
+            width: `${DOC_WIDTH}px`,
+            fontFamily: "Arial, Helvetica, sans-serif",
+            pointerEvents: "none",
+          }}
+        >
+          <LayoutPreview
+            layout={layout}
+            sections={sections}
+            printData={printData}
+          />
+        </div>
+      )}
 
       <div className="print-toolbar flex items-center justify-between px-4 py-2 bg-white border-b shadow-sm gap-2 flex-wrap">
         <div className="text-sm font-medium text-gray-700 truncate">
@@ -254,7 +259,7 @@ export default function PrintPreviewPage() {
               minHeight: `${DOC_HEIGHT}px`,
               transform: `scale(${totalScale})`,
               transformOrigin: "top left",
-              fontFamily: 'Arial, Helvetica, sans-serif',
+              fontFamily: "Arial, Helvetica, sans-serif",
             }}
           >
             <LayoutPreview
