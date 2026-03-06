@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRoute, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Printer, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { Printer, ZoomIn, ZoomOut, RotateCcw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LayoutPreview } from "./layout-designer";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 const DOC_WIDTH = 794;
 const DOC_HEIGHT = 1123;
@@ -20,6 +22,7 @@ export default function PrintPreviewPage() {
 
   const [fitScale, setFitScale] = useState(1);
   const [userZoom, setUserZoom] = useState(1);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   useEffect(() => {
     const updateFitScale = () => {
@@ -97,7 +100,66 @@ export default function PrintPreviewPage() {
       "Print Preview";
   }, [printData]);
 
-  const handlePrint = () => window.print();
+  const handlePrint = async () => {
+    if (!printRef.current || isPrinting) return;
+    setIsPrinting(true);
+
+    const wrapper = printRef.current;
+    const originalTransform = wrapper.style.transform;
+    const originalWidth = wrapper.style.width;
+
+    try {
+      wrapper.style.transform = "none";
+      wrapper.style.width = `${DOC_WIDTH}px`;
+
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+      const canvas = await html2canvas(wrapper, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        width: DOC_WIDTH,
+      });
+
+      const PAGE_STRIDE = DOC_HEIGHT + 20;
+      const totalPages = Math.max(1, Math.round(canvas.height / 2 / PAGE_STRIDE));
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      for (let i = 0; i < totalPages; i++) {
+        if (i > 0) pdf.addPage();
+
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = DOC_HEIGHT * 2;
+        const ctx = pageCanvas.getContext("2d");
+        if (!ctx) continue;
+
+        const srcY = i * PAGE_STRIDE * 2;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(
+          canvas,
+          0, srcY, canvas.width, DOC_HEIGHT * 2,
+          0, 0, canvas.width, DOC_HEIGHT * 2
+        );
+
+        const imgData = pageCanvas.toDataURL("image/jpeg", 0.95);
+        pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
+      }
+
+      const filename =
+        printData?.invoice?.invoiceNumber ||
+        printData?.quotation?.quotationNumber ||
+        "document";
+      pdf.save(`${filename}.pdf`);
+    } finally {
+      wrapper.style.transform = originalTransform;
+      wrapper.style.width = originalWidth;
+      setIsPrinting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -125,17 +187,7 @@ export default function PrintPreviewPage() {
 
   return (
     <>
-      <style>{`
-        @media print {
-          .print-toolbar { display: none !important; }
-          body { margin: 0; padding: 0; background: white; }
-          @page { size: A4; margin: 0; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .print-scale-wrapper { transform: none !important; width: ${DOC_WIDTH}px !important; }
-          .print-outer { padding: 0 !important; overflow: visible !important; }
-        }
-        body { background: #f3f4f6; }
-      `}</style>
+      <style>{`body { background: #f3f4f6; }`}</style>
 
       <div className="print-toolbar flex items-center justify-between px-4 py-2 bg-white border-b shadow-sm gap-2 flex-wrap">
         <div className="text-sm font-medium text-gray-700 truncate">
@@ -159,11 +211,16 @@ export default function PrintPreviewPage() {
           </Button>
           <Button
             onClick={handlePrint}
+            disabled={isPrinting}
             className="bg-orange-500 hover:bg-orange-600 text-white ml-1"
             size="sm"
           >
-            <Printer className="h-4 w-4 mr-1" />
-            Afdrukken
+            {isPrinting ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Printer className="h-4 w-4 mr-1" />
+            )}
+            {isPrinting ? "Bezig..." : "Afdrukken"}
           </Button>
         </div>
       </div>
