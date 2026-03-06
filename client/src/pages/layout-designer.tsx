@@ -5183,11 +5183,8 @@ function BlockProperties({
                   id="block-x"
                   type="number"
                   step="1"
-                  value={Math.round(((block.position?.x ?? 0) - (printMargins?.left ?? 0)) * 10) / 10}
-                  onChange={(e) => {
-                    const displayVal = parseFloat(e.target.value) || 0;
-                    onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: displayVal + (printMargins?.left ?? 0) });
-                  }}
+                  value={block.position?.x ?? 0}
+                  onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: parseFloat(e.target.value) || 0 })}
                   onFocus={(e) => e.target.select()}
                   className="h-8 text-xs"
                 />
@@ -5198,11 +5195,8 @@ function BlockProperties({
                   id="block-y"
                   type="number"
                   step="1"
-                  value={Math.round(((block.position?.y ?? 0) - (printMargins?.top ?? 0)) * 10) / 10}
-                  onChange={(e) => {
-                    const displayVal = parseFloat(e.target.value) || 0;
-                    onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: displayVal + (printMargins?.top ?? 0) });
-                  }}
+                  value={block.position?.y ?? 0}
+                  onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: parseFloat(e.target.value) || 0 })}
                   onFocus={(e) => e.target.select()}
                   className="h-8 text-xs"
                 />
