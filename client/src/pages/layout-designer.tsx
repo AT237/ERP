@@ -3257,7 +3257,8 @@ function estimateActualSectionHeightPx(
   itemContext?: { item: any; index: number }
 ): number {
   const blocks: any[] = section.config?.blocks || [];
-  const configuredPx = mmToPx(section.config?.dimensions?.height || 200);
+  // height is stored in PIXELS (not mm) in config.dimensions.height
+  const configuredPx = section.config?.dimensions?.height || 200;
   const bottomMarginPx = mmToPx(section.config?.bottomMarginMm || 0);
   const heightCanShrink = section.config?.heightCanShrink || false;
 
