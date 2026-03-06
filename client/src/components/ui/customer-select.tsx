@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, X, Search } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Check, ChevronsUpDown, Plus, X, RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Popover, PopoverContent, PopoverTrigger 
@@ -66,6 +66,7 @@ export function CustomerSelect({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Load customers only when not provided externally
   const { data: internalCustomers = [] } = useQuery({
@@ -224,15 +225,12 @@ export function CustomerSelect({
               >
                 <span className="truncate">{selectedCustomer ? selectedCustomer.name : placeholder}</span>
                 {value && selectedCustomer && (
-                  <Search
+                  <RefreshCw
                     className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      const uniqueTabId = `customer-edit-${selectedCustomer.id}-${Date.now()}`;
-                      window.dispatchEvent(new CustomEvent('open-form-tab', {
-                        detail: { id: uniqueTabId, name: selectedCustomer.name, formType: 'customer', entityId: selectedCustomer.id, parentId: parentId || testId }
-                      }));
+                      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
                     }}
                   />
                 )}
@@ -342,7 +340,7 @@ export function CustomerSelect({
                           }}
                           data-testid={`${testId}-edit-${customer.id}`}
                         >
-                          <Search className="h-3 w-3" />
+                          <ExternalLink className="h-3 w-3" />
                         </Button>
                       </CommandItem>
                     ))}

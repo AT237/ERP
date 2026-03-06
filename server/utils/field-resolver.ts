@@ -188,6 +188,8 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
         customerNumber: customer.customerNumber,
         email: customer.email,
         phone: customer.phone,
+        btwNummer: customer.btwNummer ?? null,
+        countryCode: customer.countryCode ?? null,
         address: addressData,
       };
     }
@@ -298,6 +300,8 @@ export interface InvoicePrintData {
     customerNumber: string;
     email: string | null;
     phone: string | null;
+    btwNummer: string | null;
+    countryCode: string | null;
     address: {
       street: string | null;
       houseNumber: string | null;
@@ -389,6 +393,8 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       customerNumber: customer.customerNumber,
       email: customer.email,
       phone: customer.phone,
+      btwNummer: customer.btwNummer ?? null,
+      countryCode: customer.countryCode ?? null,
       address: addressData,
     };
   }

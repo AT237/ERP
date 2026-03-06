@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, ChevronsUpDown, Plus, RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover, PopoverContent, PopoverTrigger,
@@ -40,6 +40,7 @@ export function EntitySelect({
   disabled,
 }: EntitySelectProps) {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: items = [] } = useQuery<any[]>({
     queryKey: [`/api/masterdata/${endpoint}`],
@@ -101,9 +102,13 @@ export function EntitySelect({
             >
               <span className="truncate">{displayValue}</span>
               {value && selected && (
-                <Search
+                <RefreshCw
                   className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
-                  onClick={(e) => openNewTab(e, selected.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    queryClient.invalidateQueries({ queryKey: [`/api/masterdata/${endpoint}`] });
+                  }}
                 />
               )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
@@ -182,7 +187,7 @@ export function EntitySelect({
                           onClick={(e) => openNewTab(e, item.id)}
                           data-testid={`${testId}-edit-${item.id}`}
                         >
-                          <Search className="h-3 w-3" />
+                          <ExternalLink className="h-3 w-3" />
                         </Button>
                       </CommandItem>
                     );
