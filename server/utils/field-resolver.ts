@@ -103,6 +103,8 @@ export interface QuotationPrintData {
     customerNumber: string;
     email: string | null;
     phone: string | null;
+    btwNummer: string | null;
+    countryCode: string | null;
     address: {
       street: string | null;
       houseNumber: string | null;
