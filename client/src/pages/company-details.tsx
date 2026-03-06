@@ -269,7 +269,7 @@ export default function CompanyDetailsPage() {
               type: "text",
               register: {
                 ...reg,
-                onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
+                onBlur: (e: any) => {
                   reg.onBlur(e);
                   const formatted = formatIban(e.target.value);
                   if (formatted !== e.target.value) {

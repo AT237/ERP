@@ -39,6 +39,12 @@ import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { Customer, InsertCustomer, Country } from "@shared/schema";
 import { z } from "zod";
 
+function formatIban(value: string | null | undefined): string {
+  if (!value) return "";
+  const cleaned = value.replace(/\s+/g, "").toUpperCase();
+  return cleaned.match(/.{1,4}/g)?.join(" ") ?? cleaned;
+}
+
 // Base form schema for customer data - include all fields from insertCustomerSchema
 const baseCustomerFormSchema = insertCustomerSchema.extend({
   paymentTerms: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined), // Keep for backward compatibility
@@ -379,7 +385,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         contactPersonEmail: customer.contactPersonEmail || "",
         contactPerson2Email: customer.contactPerson2Email || "",
         taxId: customer.taxId || "",
-        bankAccount: customer.bankAccount || "",
+        bankAccount: formatIban(customer.bankAccount),
         invoiceEmail: customer.invoiceEmail || "",
         invoiceNotes: customer.invoiceNotes || "",
         memo: customer.memo || "",
@@ -951,16 +957,28 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       icon: <FileText className="h-4 w-4" />,
       rows: [
         createFieldsRow([
-          {
-            key: "bankAccount",
-            label: "Bank Account",
-            type: "text",
-            register: form.register("bankAccount"),
-            validation: {
-              error: form.formState.errors.bankAccount?.message
-            },
-            testId: "input-customer-bank-account"
-          } as FormField2<CustomerFormData>,
+          (() => {
+            const reg = form.register("bankAccount");
+            return {
+              key: "bankAccount",
+              label: "Bank Account",
+              type: "text",
+              register: {
+                ...reg,
+                onBlur: (e: any) => {
+                  reg.onBlur(e);
+                  const formatted = formatIban(e.target.value);
+                  if (formatted !== e.target.value) {
+                    form.setValue("bankAccount", formatted, { shouldDirty: true });
+                  }
+                },
+              },
+              validation: {
+                error: form.formState.errors.bankAccount?.message
+              },
+              testId: "input-customer-bank-account"
+            } as FormField2<CustomerFormData>;
+          })(),
           {
             key: "paymentDaysId",
             label: "Payment Days",
