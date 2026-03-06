@@ -31,6 +31,7 @@ export function AddressSelectWithAdd({
   const [open, setOpen] = useState(false);
   // Dialog state removed - using tab system instead
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
   // Active section state removed - using tab system instead
   // Toast removed - not needed for tab-based system
 
@@ -78,19 +79,12 @@ export function AddressSelectWithAdd({
             >
               <span className="truncate">{selectedAddress ? formatAddress(selectedAddress) : placeholder}</span>
               {value && selectedAddress && (
-                <Search 
-                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer" 
+                <RefreshCw
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('open-form-tab', {
-                      detail: {
-                        id: `address-${selectedAddress.id}`,
-                        name: 'Edit Address',
-                        formType: 'address',
-                        recordId: selectedAddress.id
-                      }
-                    }));
+                    queryClient.invalidateQueries({ queryKey: ["/api/addresses"] });
                   }}
                 />
               )}

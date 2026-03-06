@@ -28,6 +28,7 @@ export function LanguageSelectWithAdd({
 }: LanguageSelectWithAddProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
   // Load languages with search
   const { data: languages = [] } = useQuery<Language[]>({
@@ -57,19 +58,12 @@ export function LanguageSelectWithAdd({
             >
               <span className="truncate">{selectedLanguage ? selectedLanguage.name : placeholder}</span>
               {value && selectedLanguage && (
-                <Search 
-                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer" 
+                <RefreshCw
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('open-form-tab', {
-                      detail: {
-                        id: `language-${selectedLanguage.id}`,
-                        name: selectedLanguage.name,
-                        formType: 'language',
-                        recordId: selectedLanguage.id
-                      }
-                    }));
+                    queryClient.invalidateQueries({ queryKey: ["/api/languages"] });
                   }}
                 />
               )}

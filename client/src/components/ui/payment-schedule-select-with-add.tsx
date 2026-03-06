@@ -29,6 +29,7 @@ export function PaymentScheduleSelectWithAdd({
 }: PaymentScheduleSelectWithAddProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: paymentTerms = [] } = useQuery<PaymentTerm[]>({
     queryKey: ["/api/masterdata/payment-terms"],
@@ -54,19 +55,12 @@ export function PaymentScheduleSelectWithAdd({
             >
               <span className="truncate">{displayName}</span>
               {value && selectedTerm && (
-                <Search 
-                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer" 
+                <RefreshCw
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('open-form-tab', {
-                      detail: {
-                        id: `masterdata-payment-terms-${selectedTerm.id}`,
-                        name: selectedTerm.name,
-                        formType: 'masterdata-payment-terms',
-                        entityId: selectedTerm.id
-                      }
-                    }));
+                    queryClient.invalidateQueries({ queryKey: ["/api/masterdata/payment-terms"] });
                   }}
                 />
               )}

@@ -28,6 +28,7 @@ export function CountrySelectWithAdd({
 }: CountrySelectWithAddProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
   // Load countries with search
   const { data: countries = [] } = useQuery<Country[]>({
@@ -61,19 +62,12 @@ export function CountrySelectWithAdd({
             >
               <span className="truncate">{selectedCountry ? formatCountry(selectedCountry) : placeholder}</span>
               {value && selectedCountry && (
-                <Search 
-                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer" 
+                <RefreshCw
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('open-form-tab', {
-                      detail: {
-                        id: `country-${selectedCountry.id}`,
-                        name: selectedCountry.name,
-                        formType: 'country',
-                        recordId: selectedCountry.id
-                      }
-                    }));
+                    queryClient.invalidateQueries({ queryKey: ["/api/countries"] });
                   }}
                 />
               )}

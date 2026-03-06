@@ -30,6 +30,7 @@ export function ContactPersonSelectWithAdd({
 }: ContactPersonSelectWithAddProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: contacts = [] } = useQuery<CustomerContact[]>({
     queryKey: ["/api/customer-contacts", customerId, searchQuery],
@@ -77,19 +78,12 @@ export function ContactPersonSelectWithAdd({
             >
               <span className="truncate">{selectedContact ? formatContact(selectedContact) : placeholder}</span>
               {value && selectedContact && (
-                <Search 
-                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer" 
+                <RefreshCw
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('open-form-tab', {
-                      detail: {
-                        id: `contact-person-${selectedContact.id}`,
-                        name: `${selectedContact.firstName} ${selectedContact.lastName}`,
-                        formType: 'contact-person',
-                        entityId: selectedContact.id
-                      }
-                    }));
+                    queryClient.invalidateQueries({ queryKey: ["/api/customer-contacts"] });
                   }}
                 />
               )}

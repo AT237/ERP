@@ -30,6 +30,7 @@ export function RateSelectWithAdd({
 }: RateSelectWithAddProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: rates = [] } = useQuery<RateAndCharge[]>({
     queryKey: ["/api/masterdata/rates-and-charges"],
@@ -55,19 +56,12 @@ export function RateSelectWithAdd({
             >
               <span className="truncate">{displayName}</span>
               {value && selectedRate && (
-                <Search 
-                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer" 
+                <RefreshCw
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('open-form-tab', {
-                      detail: {
-                        id: `masterdata-rates-and-charges-${selectedRate.id}`,
-                        name: `${selectedRate.code} - ${selectedRate.name}`,
-                        formType: 'masterdata-rates-and-charges',
-                        entityId: selectedRate.id
-                      }
-                    }));
+                    queryClient.invalidateQueries({ queryKey: ["/api/masterdata/rates-and-charges"] });
                   }}
                 />
               )}

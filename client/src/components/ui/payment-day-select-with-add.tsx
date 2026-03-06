@@ -30,6 +30,7 @@ export function PaymentDaySelectWithAdd({
 }: PaymentDaySelectWithAddProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
   // Load payment days
   const { data: paymentDays = [] } = useQuery<PaymentDay[]>({
@@ -56,20 +57,12 @@ export function PaymentDaySelectWithAdd({
             >
               <span className="truncate">{displayName}</span>
               {value && selectedPaymentDay && (
-                <Search 
-                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer" 
+                <RefreshCw
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    const itemName = language === "en" ? selectedPaymentDay.name_en : selectedPaymentDay.name_nl;
-                    window.dispatchEvent(new CustomEvent('open-form-tab', {
-                      detail: {
-                        id: `masterdata-payment-days-${selectedPaymentDay.id}`,
-                        name: itemName,
-                        formType: 'masterdata-payment-days',
-                        entityId: selectedPaymentDay.id
-                      }
-                    }));
+                    queryClient.invalidateQueries({ queryKey: ["/api/masterdata/payment-days"] });
                   }}
                 />
               )}

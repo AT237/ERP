@@ -28,6 +28,7 @@ export function VatRateSelectWithAdd({
 }: VatRateSelectWithAddProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: vatRates = [] } = useQuery<VatRate[]>({
     queryKey: ["/api/masterdata/vat-rates"],
@@ -53,19 +54,12 @@ export function VatRateSelectWithAdd({
             >
               <span className="truncate">{displayName}</span>
               {value && selectedVatRate && (
-                <Search 
-                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer" 
+                <RefreshCw
+                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('open-form-tab', {
-                      detail: {
-                        id: `masterdata-vat-rates-${selectedVatRate.id}`,
-                        name: `${selectedVatRate.code} - ${selectedVatRate.name}`,
-                        formType: 'masterdata-vat-rates',
-                        entityId: selectedVatRate.id
-                      }
-                    }));
+                    queryClient.invalidateQueries({ queryKey: ["/api/masterdata/vat-rates"] });
                   }}
                 />
               )}

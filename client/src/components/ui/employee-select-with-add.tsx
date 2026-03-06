@@ -24,6 +24,7 @@ export function EmployeeSelectWithAdd({
 }: EmployeeSelectWithAddProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
@@ -56,19 +57,12 @@ export function EmployeeSelectWithAdd({
                 {selectedEmployee ? displayName(selectedEmployee) : placeholder}
               </span>
               {value && selectedEmployee && (
-                <Search
+                <RefreshCw
                   className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('open-form-tab', {
-                      detail: {
-                        id: `edit-employee-${selectedEmployee.id}`,
-                        name: displayName(selectedEmployee),
-                        formType: 'employee',
-                        entityId: selectedEmployee.id
-                      }
-                    }));
+                    queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
                   }}
                 />
               )}
