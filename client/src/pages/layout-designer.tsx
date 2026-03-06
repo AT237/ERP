@@ -2480,7 +2480,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                               </div>
                             </>
                           )}
-                          <div className="bg-white" style={{ boxSizing: 'border-box' }}>
+                          <div className="bg-white" style={{ boxSizing: 'border-box', paddingTop: `${mmToPx(printMargins.top)}px`, paddingLeft: `${mmToPx(printMargins.left)}px` }}>
                           {sections.map((section, index) => {
                             const sectionHeight = section.config.dimensions?.height || 200;
                             return (
