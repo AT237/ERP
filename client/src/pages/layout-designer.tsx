@@ -2386,6 +2386,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                     <>
                       {/* Left Side Panel - All Section Labels */}
                       <div className="flex-shrink-0 flex flex-col" style={{ width: '40px' }}>
+                        {/* Spacer matching the document's top print margin so labels align with sections */}
+                        <div style={{ height: `${mmToPx(printMargins.top)}px`, flexShrink: 0 }} />
                         {sections.map((section) => {
                           const sectionHeight = section.config.dimensions?.height || 200;
                           return (
