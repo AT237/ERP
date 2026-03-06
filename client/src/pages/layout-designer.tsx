@@ -4486,9 +4486,14 @@ function BlockProperties({
                   data-testid="checkbox-collapse-empty"
                 />
                 <Label htmlFor="collapse-empty" className="text-xs font-normal">
-                  Opschuiven bij lege velden
+                  Lege velden verbergen en opschuiven
                 </Label>
               </div>
+              {block.config?.collapseEmpty && (
+                <p className="text-[10px] text-muted-foreground">
+                  Velden zonder database-waarde worden niet getoond en reserveren geen ruimte. Overige velden schuiven omhoog.
+                </p>
+              )}
 
               {/* Conditie koppeling aan item-veld */}
               {(() => {
