@@ -2764,6 +2764,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                   onUpdateProperty={(sectionId, _blockId, property, value) => {
                     updateChildBlockProperty(sectionId, selectedChildBlock.parentGroupId, selectedChildBlock.block.id, property, value);
                   }}
+                  printMargins={printMargins}
                 />
               </div>
             ) : selectedBlock ? (
@@ -2775,6 +2776,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                 availableTables={availableTables}
                 onUpdateProperty={updateBlockProperty}
                 onMoveBlock={moveBlockToSection}
+                printMargins={printMargins}
               />
             ) : (
               <div className="space-y-4">
@@ -4376,7 +4378,8 @@ function BlockProperties({
   allowedTables,
   availableTables,
   onUpdateProperty,
-  onMoveBlock
+  onMoveBlock,
+  printMargins
 }: { 
   block: any; 
   sectionId: string;
@@ -4385,6 +4388,7 @@ function BlockProperties({
   availableTables: any[];
   onUpdateProperty: (sectionId: string, blockId: string, property: string, value: any) => void;
   onMoveBlock?: (fromSectionId: string, toSectionId: string, blockId: string) => void;
+  printMargins?: { top: number; bottom: number; left: number; right: number };
 }) {
   const updateConfig = (property: string, value: any) => {
     onUpdateProperty(sectionId, block.id, 'config', { ...block.config, [property]: value });
@@ -5179,8 +5183,11 @@ function BlockProperties({
                   id="block-x"
                   type="number"
                   step="1"
-                  value={block.position?.x ?? 0}
-                  onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: parseFloat(e.target.value) || 0 })}
+                  value={Math.round(((block.position?.x ?? 0) - (printMargins?.left ?? 0)) * 10) / 10}
+                  onChange={(e) => {
+                    const displayVal = parseFloat(e.target.value) || 0;
+                    onUpdateProperty(sectionId, block.id, 'position', { ...block.position, x: displayVal + (printMargins?.left ?? 0) });
+                  }}
                   onFocus={(e) => e.target.select()}
                   className="h-8 text-xs"
                 />
@@ -5191,8 +5198,11 @@ function BlockProperties({
                   id="block-y"
                   type="number"
                   step="1"
-                  value={block.position?.y ?? 0}
-                  onChange={(e) => onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: parseFloat(e.target.value) || 0 })}
+                  value={Math.round(((block.position?.y ?? 0) - (printMargins?.top ?? 0)) * 10) / 10}
+                  onChange={(e) => {
+                    const displayVal = parseFloat(e.target.value) || 0;
+                    onUpdateProperty(sectionId, block.id, 'position', { ...block.position, y: displayVal + (printMargins?.top ?? 0) });
+                  }}
                   onFocus={(e) => e.target.select()}
                   className="h-8 text-xs"
                 />
