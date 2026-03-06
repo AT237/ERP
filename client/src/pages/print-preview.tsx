@@ -104,14 +104,33 @@ export default function PrintPreviewPage() {
     if (!printRef.current || isPrinting) return;
     setIsPrinting(true);
 
+    const wrapper = printRef.current;
+    const originalTransform = wrapper.style.transform;
+    const originalPosition = wrapper.style.position;
+    const originalTop = wrapper.style.top;
+    const originalLeft = wrapper.style.left;
+
     try {
-      const wrapper = printRef.current;
+      // Temporarily remove the CSS transform from the scale wrapper so
+      // html2canvas reads correct getBoundingClientRect() dimensions
+      wrapper.style.transform = "none";
+      wrapper.style.position = "absolute";
+      wrapper.style.top = "0";
+      wrapper.style.left = "0";
+
+      // Wait two frames for the DOM to settle at the new layout
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
       // Find all page divs (marked with data-pdf-page)
       const pageDivs = Array.from(
         wrapper.querySelectorAll<HTMLElement>("[data-pdf-page]")
       );
+
       if (pageDivs.length === 0) {
+        wrapper.style.transform = originalTransform;
+        wrapper.style.position = "";
+        wrapper.style.top = "";
+        wrapper.style.left = "";
         setIsPrinting(false);
         return;
       }
@@ -121,23 +140,12 @@ export default function PrintPreviewPage() {
       for (let i = 0; i < pageDivs.length; i++) {
         const pageDiv = pageDivs[i];
 
-        // Let the browser settle between pages
-        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
         const canvas = await html2canvas(pageDiv, {
           scale: 2,
           useCORS: true,
           logging: false,
           backgroundColor: "#ffffff",
           onclone: (_clonedDoc, clonedEl) => {
-            // Remove any CSS transform from parent wrappers so
-            // the page div renders at its natural 794×1123 dimensions
-            let el: HTMLElement | null = clonedEl.parentElement;
-            while (el) {
-              el.style.transform = "none";
-              el.style.overflow = "visible";
-              el = el.parentElement;
-            }
             // Hide margin overlay divs (semi-transparent gray areas)
             clonedEl
               .querySelectorAll<HTMLElement>(".pointer-events-none.z-20")
