@@ -5145,25 +5145,6 @@ function BlockProperties({
             </div>
           </div>
 
-          {/* Hide When Empty - for all block types */}
-          <div className="pt-2 border-t">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="hide-when-empty"
-                checked={block.config?.hideWhenEmpty || false}
-                onChange={(e) => updateConfig('hideWhenEmpty', e.target.checked)}
-                className="h-4 w-4 accent-orange-500"
-                data-testid="checkbox-hide-when-empty"
-              />
-              <Label htmlFor="hide-when-empty" className="text-xs font-normal">
-                Verberg als leeg
-              </Label>
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Blok wordt niet getoond wanneer de data leeg is.
-            </p>
-          </div>
         </TabsContent>
 
         {/* LAYOUT TAB - Position, size, alignment, dynamic behavior */}
@@ -5436,6 +5417,24 @@ function BlockProperties({
                 <Label htmlFor="lock-aspect-ratio" className="text-xs font-normal">Vergrendel verhouding</Label>
               </div>
             )}
+
+            {/* Hide When Empty */}
+            <div className="pt-1 border-t">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="hide-when-empty"
+                  checked={block.config?.hideWhenEmpty || false}
+                  onChange={(e) => updateConfig('hideWhenEmpty', e.target.checked)}
+                  className="h-3.5 w-3.5 accent-orange-500"
+                  data-testid="checkbox-hide-when-empty"
+                />
+                <Label htmlFor="hide-when-empty" className="text-xs font-normal">Verberg als leeg</Label>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Blok wordt niet getoond wanneer de data leeg is.
+              </p>
+            </div>
 
           </div>
         </TabsContent>
