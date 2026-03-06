@@ -2299,27 +2299,28 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                   >
                     {Array.from({ length: 211 }).map((_, i) => {
                       const xPos = i * MM_TO_PX;
-                      const isMajor = i % 10 === 0;
-                      const isMid = i % 5 === 0 && !isMajor;
+                      const displayVal = i - printMargins.left;
+                      const isMajor = displayVal % 10 === 0;
+                      const isMid = displayVal % 5 === 0 && !isMajor;
                       return (
                         <div key={`h-tick-${i}`} className="absolute bottom-0" style={{ left: `${xPos}px` }}>
                           <div 
-                            className="bg-gray-500"
+                            className={displayVal === 0 ? 'bg-orange-500' : 'bg-gray-500'}
                             style={{ 
                               width: '1px', 
                               height: isMajor ? '10px' : isMid ? '6px' : '3px' 
                             }}
                           />
-                          {isMajor && i > 0 && (
+                          {isMajor && (
                             <span 
-                              className="absolute text-gray-600"
+                              className={`absolute ${displayVal === 0 ? 'text-orange-600 font-bold' : 'text-gray-600'}`}
                               style={{ 
                                 fontSize: '8px', 
-                                left: '-6px', 
+                                left: displayVal === 0 ? '2px' : displayVal < 0 ? '-8px' : '-6px',
                                 top: '-10px' 
                               }}
                             >
-                              {i}
+                              {displayVal}
                             </span>
                           )}
                         </div>
@@ -2660,27 +2661,28 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                   >
                     {Array.from({ length: rulerMm }).map((_, i) => {
                       const yPos = i * MM_TO_PX;
-                      const isMajor = i % 10 === 0;
-                      const isMid = i % 5 === 0 && !isMajor;
+                      const displayVal = i - printMargins.top;
+                      const isMajor = displayVal % 10 === 0;
+                      const isMid = displayVal % 5 === 0 && !isMajor;
                       return (
                         <div key={`v-tick-${i}`} className="absolute left-0" style={{ top: `${yPos}px` }}>
                           <div 
-                            className="bg-gray-500"
+                            className={displayVal === 0 ? 'bg-orange-500' : 'bg-gray-500'}
                             style={{ 
                               height: '1px', 
                               width: isMajor ? '10px' : isMid ? '6px' : '3px' 
                             }}
                           />
-                          {isMajor && i > 0 && (
+                          {isMajor && (
                             <span 
-                              className="absolute text-gray-600"
+                              className={`absolute ${displayVal === 0 ? 'text-orange-600 font-bold' : 'text-gray-600'}`}
                               style={{ 
                                 fontSize: '8px', 
                                 left: '12px', 
-                                top: '-4px' 
+                                top: displayVal === 0 ? '2px' : '-4px'
                               }}
                             >
-                              {i}
+                              {displayVal}
                             </span>
                           )}
                         </div>
