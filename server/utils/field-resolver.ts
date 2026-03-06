@@ -142,6 +142,7 @@ export interface QuotationPrintData {
     kvkNummer: string | null;
     btwNummer: string | null;
     bankAccount: string | null;
+    iban: string | null;
     bankName: string | null;
   } | null;
   items: Array<{
@@ -356,6 +357,7 @@ export interface InvoicePrintData {
     kvkNummer: string | null;
     btwNummer: string | null;
     bankAccount: string | null;
+    iban: string | null;
     bankName: string | null;
   } | null;
   items: Array<{
