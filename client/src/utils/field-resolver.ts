@@ -477,16 +477,17 @@ export function hasContent(
 export function blockHasContent(
   block: any,
   printData: PrintData,
-  itemContext?: { item: any; index: number }
+  itemContext?: { item: any; index: number },
+  forceCheck: boolean = false
 ): boolean {
   if (!block) return false;
 
-  // If hideWhenEmpty is not enabled, always show block (backward compatible)
-  if (!block.config?.hideWhenEmpty) {
+  // If hideWhenEmpty is not enabled AND not forced, always show block (backward compatible)
+  if (!block.config?.hideWhenEmpty && !forceCheck) {
     return true;
   }
 
-  // hideWhenEmpty is enabled - check if block has actual content
+  // hideWhenEmpty is enabled (or forced by parent group collapseEmpty) - check actual content
   switch (block.type) {
     case 'Text':
     case 'Text Block':
@@ -532,8 +533,9 @@ export function blockHasContent(
     
     case 'Group':
       // Group has content if any child block has content
+      // When forceCheck is true (from parent collapseEmpty), propagate force to children too
       const childBlocks = block.config?.childBlocks || [];
-      return childBlocks.some((child: any) => blockHasContent(child, printData, itemContext));
+      return childBlocks.some((child: any) => blockHasContent(child, printData, itemContext, forceCheck));
     
     case 'Line Items Table':
       // Has content if there are items

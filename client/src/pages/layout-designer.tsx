@@ -3505,8 +3505,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
 
       let visibleChildren = childBlocks;
       if (collapseEmpty) {
+        // forceCheck=true: collapse empty children regardless of their individual hideWhenEmpty setting
         visibleChildren = childBlocks.filter((child: any) =>
-          blockHasContent(child, typedPrintData, itemContext)
+          blockHasContent(child, typedPrintData, itemContext, true)
         );
         if (visibleChildren.length === 0) return 0;
       }
@@ -3842,8 +3843,9 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           const collapseEmpty = block.config?.collapseEmpty || false;
           let visibleChildren = childBlocks;
           if (collapseEmpty) {
+            // forceCheck=true: collapse empty children regardless of their individual hideWhenEmpty setting
             visibleChildren = childBlocks.filter((child: any) =>
-              blockHasContent(child, typedPrintData, undefined)
+              blockHasContent(child, typedPrintData, undefined, true)
             );
             if (visibleChildren.length === 0) return 0;
           }

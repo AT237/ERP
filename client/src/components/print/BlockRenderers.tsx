@@ -562,8 +562,9 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
     
     visibleBlocks = [];
     for (const childBlock of sortedBlocks) {
-      // Check if block has content (pass itemContext so {{item.*}} fields are evaluated)
-      const hasContent = blockHasContent(childBlock, printData, itemContext);
+      // forceCheck=true: check actual content regardless of individual hideWhenEmpty setting
+      // This means a single collapseEmpty checkbox on the group is all that's needed
+      const hasContent = blockHasContent(childBlock, printData, itemContext, true);
       
       if (hasContent) {
         // Shift block up by accumulated offset from ALL previously hidden blocks
