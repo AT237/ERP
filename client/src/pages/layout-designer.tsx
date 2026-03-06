@@ -4131,7 +4131,7 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           return (
           <Fragment key={`page-${pageIndex}`}>
             {pageIndex > 0 && <div style={{ height: '20px' }} />}
-            <div className="bg-white shadow-2xl relative" style={{ height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page' }}>
+            <div data-pdf-page="true" className="bg-white shadow-2xl relative" style={{ height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page' }}>
               {/* Print margin overlays — content never enters these zones */}
               {topMarginPx > 0 && <div className="absolute top-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${topMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
               {bottomMarginPx > 0 && <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}

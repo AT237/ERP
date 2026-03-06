@@ -104,48 +104,53 @@ export default function PrintPreviewPage() {
     if (!printRef.current || isPrinting) return;
     setIsPrinting(true);
 
-    const wrapper = printRef.current;
-    const originalTransform = wrapper.style.transform;
-    const originalWidth = wrapper.style.width;
-
     try {
-      wrapper.style.transform = "none";
-      wrapper.style.width = `${DOC_WIDTH}px`;
+      const wrapper = printRef.current;
 
-      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
-      const canvas = await html2canvas(wrapper, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        width: DOC_WIDTH,
-      });
-
-      const PAGE_STRIDE = DOC_HEIGHT + 20;
-      const totalPages = Math.max(1, Math.round(canvas.height / 2 / PAGE_STRIDE));
+      // Find all page divs (marked with data-pdf-page)
+      const pageDivs = Array.from(
+        wrapper.querySelectorAll<HTMLElement>("[data-pdf-page]")
+      );
+      if (pageDivs.length === 0) {
+        setIsPrinting(false);
+        return;
+      }
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-      for (let i = 0; i < totalPages; i++) {
+      for (let i = 0; i < pageDivs.length; i++) {
+        const pageDiv = pageDivs[i];
+
+        // Let the browser settle between pages
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+        const canvas = await html2canvas(pageDiv, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff",
+          onclone: (_clonedDoc, clonedEl) => {
+            // Remove any CSS transform from parent wrappers so
+            // the page div renders at its natural 794×1123 dimensions
+            let el: HTMLElement | null = clonedEl.parentElement;
+            while (el) {
+              el.style.transform = "none";
+              el.style.overflow = "visible";
+              el = el.parentElement;
+            }
+            // Hide margin overlay divs (semi-transparent gray areas)
+            clonedEl
+              .querySelectorAll<HTMLElement>(".pointer-events-none.z-20")
+              .forEach(overlay => {
+                overlay.style.display = "none";
+              });
+            // Remove box shadow from page container
+            clonedEl.style.boxShadow = "none";
+          },
+        });
+
         if (i > 0) pdf.addPage();
-
-        const pageCanvas = document.createElement("canvas");
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = DOC_HEIGHT * 2;
-        const ctx = pageCanvas.getContext("2d");
-        if (!ctx) continue;
-
-        const srcY = i * PAGE_STRIDE * 2;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-        ctx.drawImage(
-          canvas,
-          0, srcY, canvas.width, DOC_HEIGHT * 2,
-          0, 0, canvas.width, DOC_HEIGHT * 2
-        );
-
-        const imgData = pageCanvas.toDataURL("image/jpeg", 0.95);
+        const imgData = canvas.toDataURL("image/jpeg", 0.95);
         pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
       }
 
@@ -155,8 +160,6 @@ export default function PrintPreviewPage() {
         "document";
       pdf.save(`${filename}.pdf`);
     } finally {
-      wrapper.style.transform = originalTransform;
-      wrapper.style.width = originalWidth;
       setIsPrinting(false);
     }
   };
