@@ -102,9 +102,17 @@ export interface QuotationPrintData {
     name: string;
     customerNumber: string;
     email: string | null;
+    generalEmail: string | null;
+    invoiceEmail: string | null;
     phone: string | null;
+    mobile: string | null;
     btwNummer: string | null;
+    taxId: string | null;
+    kvkNummer: string | null;
+    bankAccount: string | null;
     countryCode: string | null;
+    memo: string | null;
+    invoiceNotes: string | null;
     address: {
       street: string | null;
       houseNumber: string | null;
