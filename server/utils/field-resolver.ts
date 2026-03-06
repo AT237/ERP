@@ -250,6 +250,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
       kvkNummer: companyProfile.kvkNummer,
       btwNummer: companyProfile.btwNummer,
       bankAccount: companyProfile.bankAccount,
+      iban: companyProfile.bankAccount,
       bankName: companyProfile.bankName,
     };
   }
@@ -469,6 +470,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       kvkNummer: companyProfile.kvkNummer,
       btwNummer: companyProfile.btwNummer,
       bankAccount: companyProfile.bankAccount,
+      iban: companyProfile.bankAccount,
       bankName: companyProfile.bankName,
     };
   }
