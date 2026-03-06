@@ -126,14 +126,7 @@ export default function PrintPreviewPage() {
         wrapper.querySelectorAll<HTMLElement>("[data-pdf-page]")
       );
 
-      if (pageDivs.length === 0) {
-        wrapper.style.transform = originalTransform;
-        wrapper.style.position = "";
-        wrapper.style.top = "";
-        wrapper.style.left = "";
-        setIsPrinting(false);
-        return;
-      }
+      if (pageDivs.length === 0) return;
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
@@ -168,6 +161,11 @@ export default function PrintPreviewPage() {
         "document";
       pdf.save(`${filename}.pdf`);
     } finally {
+      // Restore wrapper to its original state
+      wrapper.style.transform = originalTransform;
+      wrapper.style.position = originalPosition;
+      wrapper.style.top = originalTop;
+      wrapper.style.left = originalLeft;
       setIsPrinting(false);
     }
   };
