@@ -10,6 +10,12 @@ import { LayoutForm2, type FormSection2, type FormField2 } from "@/components/la
 import type { ActionButton } from "@/components/layouts/BaseFormLayout";
 import { Building, Mail, MapPin, Landmark } from "lucide-react";
 
+function formatIban(value: string | null | undefined): string {
+  if (!value) return "";
+  const cleaned = value.replace(/\s+/g, "").toUpperCase();
+  return cleaned.match(/.{1,4}/g)?.join(" ") ?? cleaned;
+}
+
 // Form schema based on insertCompanyProfileSchema
 const companyDetailsFormSchema = insertCompanyProfileSchema.extend({
   // All fields are optional for the form since we might not have data yet
@@ -66,7 +72,7 @@ export default function CompanyDetailsPage() {
         website: companyProfile.website || "",
         kvkNummer: companyProfile.kvkNummer || "",
         btwNummer: companyProfile.btwNummer || "",
-        bankAccount: companyProfile.bankAccount || "",
+        bankAccount: formatIban(companyProfile.bankAccount),
         bankName: companyProfile.bankName || "",
         isActive: companyProfile.isActive ?? true
       });
@@ -255,13 +261,25 @@ export default function CompanyDetailsPage() {
       icon: <Landmark className="h-4 w-4" />,
       rows: [
         createFieldsRow([
-          {
-            key: "bankAccount",
-            label: "Bank Account (IBAN)",
-            type: "text",
-            register: form.register("bankAccount"),
-            testId: "input-company-bank-account"
-          } as FormField2<CompanyDetailsFormData>,
+          (() => {
+            const reg = form.register("bankAccount");
+            return {
+              key: "bankAccount",
+              label: "Bank Account (IBAN)",
+              type: "text",
+              register: {
+                ...reg,
+                onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
+                  reg.onBlur(e);
+                  const formatted = formatIban(e.target.value);
+                  if (formatted !== e.target.value) {
+                    form.setValue("bankAccount", formatted, { shouldDirty: true });
+                  }
+                },
+              },
+              testId: "input-company-bank-account"
+            } as FormField2<CompanyDetailsFormData>;
+          })(),
           {
             key: "bankName",
             label: "Bank Name",
