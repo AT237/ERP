@@ -2,6 +2,12 @@ import { db } from "../db";
 import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, unitsOfMeasure } from "../../shared/schema";
 import { eq, asc } from "drizzle-orm";
 
+function formatIban(value: string | null): string | null {
+  if (!value) return null;
+  const cleaned = value.replace(/\s+/g, "").toUpperCase();
+  return cleaned.match(/.{1,4}/g)?.join(" ") ?? cleaned;
+}
+
 /**
  * Convert a numeric amount to English words.
  * Example: 14692.49 → "Fourteen thousand six hundred ninety-two euros and forty-nine cents"
@@ -203,7 +209,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
         btwNummer: customer.btwNummer ?? null,
         taxId: customer.taxId ?? null,
         kvkNummer: customer.kvkNummer ?? null,
-        bankAccount: customer.bankAccount ?? null,
+        bankAccount: formatIban(customer.bankAccount ?? null),
         countryCode: customer.countryCode ?? null,
         memo: customer.memo ?? null,
         invoiceNotes: customer.invoiceNotes ?? null,
@@ -250,8 +256,8 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
       },
       kvkNummer: companyProfile.kvkNummer,
       btwNummer: companyProfile.btwNummer,
-      bankAccount: companyProfile.bankAccount,
-      iban: companyProfile.bankAccount,
+      bankAccount: formatIban(companyProfile.bankAccount ?? null),
+      iban: formatIban(companyProfile.bankAccount ?? null),
       bankName: companyProfile.bankName,
     };
   }
@@ -426,7 +432,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       btwNummer: customer.btwNummer ?? null,
       taxId: customer.taxId ?? null,
       kvkNummer: customer.kvkNummer ?? null,
-      bankAccount: customer.bankAccount ?? null,
+      bankAccount: formatIban(customer.bankAccount ?? null),
       countryCode: customer.countryCode ?? null,
       memo: customer.memo ?? null,
       invoiceNotes: customer.invoiceNotes ?? null,
@@ -471,8 +477,8 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       },
       kvkNummer: companyProfile.kvkNummer,
       btwNummer: companyProfile.btwNummer,
-      bankAccount: companyProfile.bankAccount,
-      iban: companyProfile.bankAccount,
+      bankAccount: formatIban(companyProfile.bankAccount ?? null),
+      iban: formatIban(companyProfile.bankAccount ?? null),
       bankName: companyProfile.bankName,
     };
   }
