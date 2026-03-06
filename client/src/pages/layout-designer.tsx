@@ -2421,6 +2421,25 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                           overflow: 'visible',
                         }}
                       >
+                          {/* Grid overlay — only within the print area (inside all margins) */}
+                          {showGrid && (
+                            <div
+                              className="pointer-events-none"
+                              style={{
+                                position: 'absolute',
+                                top: `${mmToPx(printMargins.top)}px`,
+                                left: `${mmToPx(printMargins.left)}px`,
+                                right: `${mmToPx(printMargins.right)}px`,
+                                bottom: `${mmToPx(printMargins.bottom)}px`,
+                                backgroundImage: `
+                                  linear-gradient(to right, #e5e5e5 1px, transparent 1px),
+                                  linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)
+                                `,
+                                backgroundSize: `${gridSize}px ${gridSize}px`,
+                                zIndex: 0,
+                              }}
+                            />
+                          )}
                           {/* Page break indicators */}
                           {(() => {
                             const totalSectionsPx = sections.reduce((sum: number, sec: any) => sum + (sec.config?.dimensions?.height || 200), 0);
@@ -2525,11 +2544,6 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                               data-section-id={section.id}
                               style={{
                                 boxSizing: 'border-box',
-                              backgroundImage: showGrid ? `
-                                linear-gradient(to right, #e5e5e5 1px, transparent 1px),
-                                linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)
-                              ` : 'none',
-                              backgroundSize: showGrid ? `${gridSize}px ${gridSize}px` : 'auto',
                               cursor: isDraggingBlock ? 'grabbing' : 'default',
                             }}
                             onDrop={(e) => handleDropOnSection(e, section.id)}
