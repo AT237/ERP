@@ -232,10 +232,10 @@ export function CustomerSelect({
                     setOpen(false);
                     window.dispatchEvent(new CustomEvent('open-form-tab', {
                       detail: {
-                        id: `edit-customer-${value}`,
-                        name: selectedCustomer.name,
+                        id: `customer-${value}`,
+                        name: selectedCustomer.customerNumber || selectedCustomer.name,
                         formType: 'customer',
-                        parentId: value,
+                        entityId: value,
                       }
                     }));
                   }}

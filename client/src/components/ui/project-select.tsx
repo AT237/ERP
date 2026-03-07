@@ -85,11 +85,8 @@ export function ProjectSelect({
                   window.dispatchEvent(new CustomEvent('open-form-tab', {
                     detail: {
                       id: `edit-project-${value}`,
-                      name: selectedProject.projectNumber
-                        ? `${selectedProject.projectNumber} - ${selectedProject.name}`
-                        : selectedProject.name,
+                      name: selectedProject.projectNumber || selectedProject.name,
                       formType: 'project',
-                      parentId: value,
                     }
                   }));
                 }}
