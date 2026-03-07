@@ -89,7 +89,17 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
             <span
               key={woId}
               className="inline-flex items-center gap-1 pl-2.5 pr-1 py-1 bg-orange-500 text-white text-xs rounded-full select-none cursor-pointer"
-              onDoubleClick={e => { e.stopPropagation(); window.open(`/work-order-form/${woId}`, '_blank'); }}
+              onDoubleClick={e => {
+                e.stopPropagation();
+                window.dispatchEvent(new CustomEvent('open-form-tab', {
+                  detail: {
+                    id: `edit-work-order-${woId}`,
+                    name: wo?.orderNumber || woId.slice(0, 8),
+                    formType: 'work-order',
+                    parentId: woId,
+                  }
+                }));
+              }}
               title={wo?.title ? `${wo.orderNumber} – ${wo.title}\nDubbelklik om te openen` : 'Dubbelklik om te openen'}
             >
               <span className="font-medium">{wo?.orderNumber || '...'}</span>
