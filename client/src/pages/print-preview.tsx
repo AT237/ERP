@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRoute, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Printer, ZoomIn, ZoomOut, Loader2 } from "lucide-react";
+import { Printer, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LayoutPreview } from "./layout-designer";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 
 const DOC_WIDTH = 794;
 const DOC_HEIGHT = 1123;
@@ -14,7 +12,6 @@ export default function PrintPreviewPage() {
   const [, params] = useRoute("/print/:documentType/:entityId");
   const search = useSearch();
   const printRef = useRef<HTMLDivElement>(null);
-  const captureRef = useRef<HTMLDivElement>(null);
 
   const documentType = params?.documentType ?? "";
   const entityId = params?.entityId ?? "";
@@ -23,8 +20,6 @@ export default function PrintPreviewPage() {
 
   const [fitScale, setFitScale] = useState(1);
   const [userZoom, setUserZoom] = useState(1);
-  const [isPrinting, setIsPrinting] = useState(false);
-  const [isCapturing, setIsCapturing] = useState(false);
 
   useEffect(() => {
     const updateFitScale = () => {
@@ -102,56 +97,8 @@ export default function PrintPreviewPage() {
       "Print Preview";
   }, [printData]);
 
-  const handlePrint = async () => {
-    if (isPrinting || !layout || !sections || !printData) return;
-    setIsPrinting(true);
-    setIsCapturing(true);
-
-    try {
-      // Wait for React to render the off-screen capture container
-      await new Promise(r => setTimeout(r, 300));
-
-      const captureContainer = captureRef.current;
-      if (!captureContainer) return;
-
-      const pageDivs = Array.from(
-        captureContainer.querySelectorAll<HTMLElement>("[data-pdf-page]")
-      );
-      if (pageDivs.length === 0) return;
-
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-      for (let i = 0; i < pageDivs.length; i++) {
-        const pageDiv = pageDivs[i];
-
-        const canvas = await html2canvas(pageDiv, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: "#ffffff",
-          onclone: (_clonedDoc, clonedEl) => {
-            // Hide margin overlay divs
-            clonedEl
-              .querySelectorAll<HTMLElement>(".pointer-events-none.z-20")
-              .forEach(overlay => { overlay.style.display = "none"; });
-            clonedEl.style.boxShadow = "none";
-          },
-        });
-
-        if (i > 0) pdf.addPage();
-        const imgData = canvas.toDataURL("image/jpeg", 0.95);
-        pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
-      }
-
-      const filename =
-        printData?.invoice?.invoiceNumber ||
-        printData?.quotation?.quotationNumber ||
-        "document";
-      pdf.save(`${filename}.pdf`);
-    } finally {
-      setIsCapturing(false);
-      setIsPrinting(false);
-    }
+  const handlePrint = () => {
+    window.print();
   };
 
   if (isLoading) {
@@ -180,28 +127,22 @@ export default function PrintPreviewPage() {
 
   return (
     <>
-      <style>{`body { background: #f3f4f6; }`}</style>
-
-      {/* Hidden off-screen container at 1:1 scale — used for PDF capture only */}
-      {isCapturing && (
-        <div
-          ref={captureRef}
-          style={{
-            position: "fixed",
-            left: "-10000px",
-            top: 0,
-            width: `${DOC_WIDTH}px`,
-            fontFamily: "Arial, Helvetica, sans-serif",
-            pointerEvents: "none",
-          }}
-        >
-          <LayoutPreview
-            layout={layout}
-            sections={sections}
-            printData={printData}
-          />
-        </div>
-      )}
+      <style>{`
+        body { background: #f3f4f6; }
+        @media print {
+          @page { size: A4; margin: 0; }
+          body { background: white !important; margin: 0 !important; }
+          .print-toolbar { display: none !important; }
+          .print-outer { padding: 0 !important; overflow: visible !important; }
+          .print-scale-wrapper {
+            transform: none !important;
+            box-shadow: none !important;
+            width: 210mm !important;
+            min-height: 297mm !important;
+          }
+          .pointer-events-none.z-20 { display: none !important; }
+        }
+      `}</style>
 
       <div className="print-toolbar flex items-center justify-between px-4 py-2 bg-white border-b shadow-sm gap-2 flex-wrap">
         <div className="text-sm font-medium text-gray-700 truncate">
@@ -225,16 +166,11 @@ export default function PrintPreviewPage() {
           </Button>
           <Button
             onClick={handlePrint}
-            disabled={isPrinting}
             className="bg-orange-500 hover:bg-orange-600 text-white ml-1"
             size="sm"
           >
-            {isPrinting ? (
-              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-            ) : (
-              <Printer className="h-4 w-4 mr-1" />
-            )}
-            {isPrinting ? "Bezig..." : "Afdrukken"}
+            <Printer className="h-4 w-4 mr-1" />
+            Afdrukken / PDF
           </Button>
         </div>
       </div>
