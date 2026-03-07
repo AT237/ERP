@@ -60,6 +60,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const [deleteItemTarget, setDeleteItemTarget] = useState<InvoiceItem | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [vatRatePercent, setVatRatePercent] = useState<number>(0);
+  const [selectedWorkOrderIds, setSelectedWorkOrderIds] = useState<string[]>([]);
   const { toast } = useToast();
   const isEditing = !!invoiceId;
 
@@ -123,6 +124,15 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     enabled: !!invoiceId,
   });
 
+  const { data: allWorkOrders = [] } = useQuery<any[]>({
+    queryKey: ["/api/work-orders"],
+  });
+
+  const { data: invoiceWorkOrderIds = [] } = useQuery<string[]>({
+    queryKey: ["/api/invoices", invoiceId, "work-orders"],
+    enabled: !!invoiceId,
+  });
+
   const formInitializedForId = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -160,6 +170,12 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       setInvoiceItems(fetchedInvoiceItems);
     }
   }, [fetchedInvoiceItems]);
+
+  useEffect(() => {
+    if (invoiceWorkOrderIds.length > 0) {
+      setSelectedWorkOrderIds(invoiceWorkOrderIds);
+    }
+  }, [invoiceWorkOrderIds]);
 
   useEffect(() => {
     const subtotal = invoiceItems.reduce((sum, item) => {
@@ -300,7 +316,12 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       const response = await apiRequest("POST", "/api/invoices", data);
       return response.json();
     },
-    onSuccess: (newInvoice) => {
+    onSuccess: async (newInvoice) => {
+      if (selectedWorkOrderIds.length > 0) {
+        try {
+          await apiRequest("PUT", `/api/invoices/${newInvoice.id}/work-orders`, { workOrderIds: selectedWorkOrderIds });
+        } catch {}
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
@@ -338,7 +359,13 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       const response = await apiRequest("PUT", `/api/invoices/${invoiceId}`, data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      if (invoiceId) {
+        try {
+          await apiRequest("PUT", `/api/invoices/${invoiceId}/work-orders`, { workOrderIds: selectedWorkOrderIds });
+          queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "work-orders"] });
+        } catch {}
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
