@@ -2473,24 +2473,6 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                               }}
                             />
                           )}
-                          {/* Page break indicators */}
-                          {(() => {
-                            const totalSectionsPx = sections.reduce((sum: number, sec: any) => sum + (sec.config?.dimensions?.height || 200), 0);
-                            const numPageBreaks = Math.floor(totalSectionsPx / 1123);
-                            return Array.from({ length: numPageBreaks }).map((_, pi) => (
-                              <div
-                                key={`pb-${pi}`}
-                                className="absolute left-0 right-0 pointer-events-none z-30 flex items-center"
-                                style={{ top: `${(pi + 1) * 1123}px` }}
-                              >
-                                <div style={{ flex: 1, borderTop: '2px dashed #f97316', opacity: 0.7 }} />
-                                <span style={{ fontSize: '9px', color: '#f97316', padding: '0 4px', background: 'white', opacity: 0.9, whiteSpace: 'nowrap' }}>
-                                  pagina {pi + 2}
-                                </span>
-                                <div style={{ flex: 1, borderTop: '2px dashed #f97316', opacity: 0.7 }} />
-                              </div>
-                            ));
-                          })()}
                           {/* Print Margin Overlays */}
                           {showPrintMargins && (
                             <>
