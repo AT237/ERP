@@ -85,13 +85,13 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
         {selectedIds.map(woId => {
           const wo = allWorkOrders.find((w: any) => w.id === woId);
           return (
-            <span key={woId} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 bg-orange-100 text-orange-800 text-xs rounded border border-orange-200 select-none">
-              <span className="font-mono font-medium">{wo?.orderNumber || '...'}</span>
-              <span className="text-orange-600 max-w-[80px] truncate hidden sm:inline">{wo?.title}</span>
+            <span key={woId} className="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 bg-orange-500 text-white text-xs rounded-full select-none">
+              <span className="font-medium">{wo?.orderNumber || '...'}</span>
+              {wo?.title && <span className="opacity-80 max-w-[90px] truncate">– {wo.title}</span>}
               <button
                 type="button"
                 onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onToggle(woId); }}
-                className="ml-0.5 w-4 h-4 flex items-center justify-center rounded hover:bg-orange-300 hover:text-red-700 text-orange-500 font-bold text-xs leading-none"
+                className="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full hover:bg-orange-700 text-white font-bold text-xs leading-none"
               >×</button>
             </span>
           );
