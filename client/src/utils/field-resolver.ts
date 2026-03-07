@@ -482,9 +482,21 @@ export function blockHasContent(
 ): boolean {
   if (!block) return false;
 
-  // If hideWhenEmpty is not enabled AND not forced, always show block (backward compatible)
-  if (!block.config?.hideWhenEmpty && !forceCheck) {
+  // If hideWhenEmpty is not enabled AND hideWhenFieldEmpty is not set AND not forced, always show block (backward compatible)
+  if (!block.config?.hideWhenEmpty && !block.config?.hideWhenFieldEmpty && !forceCheck) {
     return true;
+  }
+
+  // New: hide this block whenever a specified field key has no value (works on any block type)
+  if (block.config?.hideWhenFieldEmpty) {
+    const value = resolveFieldValue(block.config.hideWhenFieldEmpty, printData);
+    if (value === null || value === undefined || String(value).trim() === '') {
+      return false; // Linked field is empty → hide this block
+    }
+    // Linked field has a value; if hideWhenEmpty is not also set, block is visible
+    if (!block.config?.hideWhenEmpty && !forceCheck) {
+      return true;
+    }
   }
 
   // hideWhenEmpty is enabled (or forced by parent group collapseEmpty) - check actual content

@@ -5462,6 +5462,21 @@ function BlockProperties({
               </p>
             </div>
 
+            {/* Hide When Field Empty — link any block to a data field */}
+            <div className="pt-1 border-t">
+              <Label className="text-xs font-medium">Verberg wanneer veld leeg is</Label>
+              <input
+                type="text"
+                value={block.config?.hideWhenFieldEmpty || ''}
+                onChange={(e) => updateConfig('hideWhenFieldEmpty', e.target.value || undefined)}
+                placeholder="bijv. invoice.workOrderNumbers"
+                className="mt-1 w-full text-xs border rounded px-2 py-1 font-mono bg-background"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Vul een veldsleutel in (tabel.veld). Dit blok én ruimte verdwijnen als dat veld leeg is.
+              </p>
+            </div>
+
           </div>
         </TabsContent>
       </Tabs>
