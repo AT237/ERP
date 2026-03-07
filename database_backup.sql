@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict A6KTPgY4hSSWwIur6knbVMaZnhmfHWGGdx72DBfA3YAIxjZHqKcUpLc6z90JTea
+\restrict gFcNp1ZFOHrBc4ZMtgMqmhBD4Z9Vjirf3v3pfhqt5wHo0obGjqPb2Syu4B2UrTN
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -1694,6 +1694,7 @@ c47be150-9ed1-49e0-aea6-5f4514fcd839	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Dai
 --
 
 COPY public.invoice_work_orders (id, invoice_id, work_order_id) FROM stdin;
+ea75de8a-7453-4f34-b809-7fe61141ca9c	52676213-2666-46ab-8d3e-0ef4d4c23153	3516c127-4e9e-4a41-91ac-2e590e6a943e
 \.
 
 
@@ -1879,6 +1880,7 @@ cab94cb5-edbe-40d1-90a9-fd4eba96dc6d	MDB for hospital	\N	c1a06cc3-d874-4c6f-a235
 5a55caa8-97ec-4f89-8614-a7ac58693450	Services 2025	\N	551523db-f536-462c-a12d-59e95bee641a	planning	\N	\N	\N	0	2026-02-18 20:09:04.475107	PR-0018
 652dc338-4c24-47e8-89db-ae51c185f03c	Adami Tulu standard Main Distribution Panel	\N	c1a06cc3-d874-4c6f-a235-8933113838d7	planning	\N	\N	\N	0	2026-02-18 20:09:04.475107	PR-0019
 44d871db-266d-4dea-b5fb-7f1c8800729d	UPS System Kilifi Kenia	UPS system for voltage stabilization. \n	26188fba-4c83-451c-b8c1-6cc9a75e9606	planning	2026-02-07 23:00:00	2026-03-30 22:00:00	33000.00	5	2026-02-18 20:09:04.475107	PR-0020
+db43039e-cb89-460a-9308-2453f5bad5d0	Consulting fees 2026	Service visits to Sher Ethiopia.	1698a4d0-7d34-4685-b256-1d0cf6e5200b	in-progress	\N	\N	\N	0	2026-03-07 11:47:57.86859	PR-0021
 \.
 
 
@@ -2889,7 +2891,7 @@ d259ddcd-e75e-465a-9f8e-f4ff1a6df96e	\N	\N	\N	2026-02-23 10:03:54.505894	2026-02
 deaed565-e163-4094-b2a6-f912be4c7b74	\N	\N	\N	2026-02-23 10:10:43.288279	2026-02-23 10:10:43.288279	\N	\N
 ef2cb817-b635-4bb4-8ab4-9366bd75bc80	\N	\N	\N	2026-02-23 10:18:15.731732	2026-02-23 10:18:15.731732	\N	\N
 d89d943c-8acc-4f97-a10e-a3b5924c13f2	\N	\N	\N	2026-02-23 10:18:25.249937	2026-02-23 10:18:25.249937	\N	\N
-b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}]	{"Sales": false, "Tools": false, "Reports": true, "Overview": true, "Inventory": true, "Relations": true, "Operations": true, "Master Data": true, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-03-07 11:38:08.60222	layout-designer	page
+b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}]	{"Sales": false, "Tools": false, "Reports": true, "Overview": true, "Inventory": true, "Relations": true, "Operations": false, "Master Data": true, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-03-07 11:50:37.282149	layout-designer	page
 c627eaa0-22b9-477f-a97d-558eb254ec1a	\N	\N	\N	2026-02-23 10:35:39.86801	2026-02-23 10:35:39.86801	\N	\N
 edb58413-7021-4e1b-8592-fb495bb8940d	\N	\N	\N	2026-02-23 10:19:42.580459	2026-02-23 10:19:42.580459	\N	\N
 c3f161df-331a-4746-9f78-224cab856721	\N	\N	\N	2026-02-23 10:19:49.234351	2026-02-23 10:19:49.234351	\N	\N
@@ -3049,6 +3051,7 @@ f32ecc90-713f-48b3-9820-084bcd5a2325	000	No VAT	0.00	NL	No VAT applied	t	2026-02
 --
 
 COPY public.work_orders (id, order_number, project_id, title, description, assigned_to, status, priority, start_date, due_date, completed_date, estimated_hours, actual_hours, created_at) FROM stdin;
+3516c127-4e9e-4a41-91ac-2e590e6a943e	WO-0018	db43039e-cb89-460a-9308-2453f5bad5d0				pending	medium	\N	\N	\N	\N	\N	2026-03-07 11:48:05.806873
 \.
 
 
@@ -3084,7 +3087,7 @@ SELECT pg_catalog.setval('public.packing_list_number_seq', 1, true);
 -- Name: project_number_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_number_seq', 20, true);
+SELECT pg_catalog.setval('public.project_number_seq', 21, true);
 
 
 --
@@ -4160,5 +4163,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict A6KTPgY4hSSWwIur6knbVMaZnhmfHWGGdx72DBfA3YAIxjZHqKcUpLc6z90JTea
+\unrestrict gFcNp1ZFOHrBc4ZMtgMqmhBD4Z9Vjirf3v3pfhqt5wHo0obGjqPb2Syu4B2UrTN
 
