@@ -519,6 +519,106 @@ function DataFieldInsertMenu({
   );
 }
 
+// Hide When Field Empty Picker — mirrors DataFieldInsertMenu but for field selection
+function HideWhenFieldPicker({
+  value,
+  onChange,
+  availableTables,
+}: {
+  value: string;
+  onChange: (fieldKey: string | undefined) => void;
+  availableTables: { name: string; label: string; fields: string[] }[];
+}) {
+  const [expandedTables, setExpandedTables] = useState<string[]>([]);
+  const [search, setSearch] = useState('');
+
+  const toggleTable = (tableName: string) => {
+    setExpandedTables(prev =>
+      prev.includes(tableName) ? prev.filter(t => t !== tableName) : [...prev, tableName]
+    );
+  };
+
+  const lowerSearch = search.toLowerCase();
+  const filteredTables = availableTables
+    .map(table => ({
+      ...table,
+      filteredFields: table.fields.filter(
+        f => !lowerSearch || getFieldLabel(f).toLowerCase().includes(lowerSearch) || f.toLowerCase().includes(lowerSearch)
+      ),
+    }))
+    .filter(table => !lowerSearch || table.label.toLowerCase().includes(lowerSearch) || table.name.toLowerCase().includes(lowerSearch) || table.filteredFields.length > 0);
+
+  const isSearching = lowerSearch.length > 0;
+
+  return (
+    <div className="border rounded-md overflow-hidden">
+      <div className="p-2 border-b bg-muted/20 flex items-center gap-1">
+        <Input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Zoek veld..."
+          className="h-7 text-xs flex-1"
+        />
+        {value && (
+          <button
+            type="button"
+            className="text-[10px] text-red-500 hover:text-red-700 px-1 whitespace-nowrap"
+            onClick={() => onChange(undefined)}
+          >✕ wis</button>
+        )}
+      </div>
+      {value && (
+        <div className="px-3 py-1.5 bg-orange-50 border-b text-xs text-orange-700 font-medium">
+          ✓ {value}
+        </div>
+      )}
+      <div className="max-h-60 overflow-y-auto">
+        {filteredTables.length === 0 ? (
+          <div className="px-3 py-4 text-xs text-muted-foreground text-center">Geen velden gevonden</div>
+        ) : (
+          filteredTables.map((table) => {
+            const isExpanded = isSearching || expandedTables.includes(table.name);
+            return (
+              <div key={table.name} className="border-b last:border-b-0">
+                <button
+                  type="button"
+                  className="w-full px-3 py-2 text-left text-xs font-medium flex items-center justify-between hover:bg-muted"
+                  onClick={() => toggleTable(table.name)}
+                >
+                  <span>{table.label}</span>
+                  <span className="text-muted-foreground">{isExpanded ? '−' : '+'}</span>
+                </button>
+                {isExpanded && (
+                  <div className="bg-muted/30 px-2 py-1">
+                    {table.filteredFields.map((field) => {
+                      const fieldKey = `${table.name}.${field}`;
+                      const isSelected = value === fieldKey;
+                      return (
+                        <button
+                          key={field}
+                          type="button"
+                          className={`w-full px-3 py-1.5 text-left text-xs rounded flex items-center gap-2 ${isSelected ? 'bg-orange-100 text-orange-700 font-medium' : 'hover:bg-orange-50'}`}
+                          onClick={() => onChange(isSelected ? undefined : fieldKey)}
+                        >
+                          <span className={isSelected ? 'text-orange-600' : 'text-muted-foreground'}>
+                            {isSelected ? '✓' : '○'}
+                          </span>
+                          <span>{getFieldLabel(field)}</span>
+                          <span className="text-[10px] text-muted-foreground ml-auto font-mono">{field}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Visual Designer Component
 export function VisualDesignerView({ layout }: { layout: any }) {
   // Section-based state
@@ -4414,11 +4514,6 @@ function BlockProperties({
   };
 
   const [fieldSearch, setFieldSearch] = useState('');
-  const [hideFieldTable, setHideFieldTable] = useState<string>(() => {
-    const v = block.config?.hideWhenFieldEmpty || '';
-    return v.includes('.') ? v.split('.')[0] : '';
-  });
-  const [hideFieldSearch, setHideFieldSearch] = useState('');
 
   const styleSource = block.type === 'Group'
     ? (block.config?.groupStyle || {})
@@ -5467,76 +5562,17 @@ function BlockProperties({
               </p>
             </div>
 
-            {/* Hide When Field Empty — link any block to a data field via picker */}
+            {/* Hide When Field Empty — same UI as DATA INVOEGEN */}
             <div className="pt-1 border-t">
               <Label className="text-xs font-medium">Verberg wanneer veld leeg is</Label>
               <p className="text-[10px] text-muted-foreground mb-1">
-                Selecteer een veld — dit blok verdwijnt (incl. ruimte) als dat veld leeg is.
+                Blok én ruimte verdwijnen als het gekozen veld geen waarde heeft.
               </p>
-              <Select
-                value={hideFieldTable}
-                onValueChange={(v) => { setHideFieldTable(v); setHideFieldSearch(''); }}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Kies tabel..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">— geen koppeling —</SelectItem>
-                  {availableTables.map((t: any) => (
-                    <SelectItem key={t.name} value={t.name}>{t.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {hideFieldTable && hideFieldTable !== '_none' && (() => {
-                const tbl = availableTables.find((t: any) => t.name === hideFieldTable);
-                if (!tbl) return null;
-                const currentField = block.config?.hideWhenFieldEmpty?.startsWith(hideFieldTable + '.')
-                  ? block.config.hideWhenFieldEmpty.slice(hideFieldTable.length + 1)
-                  : '';
-                return (
-                  <div className="border rounded-md overflow-hidden mt-1">
-                    <Input
-                      value={hideFieldSearch}
-                      onChange={e => setHideFieldSearch(e.target.value)}
-                      placeholder="Zoek veld..."
-                      className="h-7 text-xs border-0 border-b rounded-none focus-visible:ring-0"
-                    />
-                    <div className="max-h-36 overflow-y-auto">
-                      {tbl.fields
-                        .filter((f: string) => !hideFieldSearch || f.toLowerCase().includes(hideFieldSearch.toLowerCase()) || getFieldLabel(f).toLowerCase().includes(hideFieldSearch.toLowerCase()))
-                        .map((f: string) => (
-                          <button
-                            key={f}
-                            type="button"
-                            className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between hover:bg-orange-50 ${currentField === f ? 'bg-orange-100 text-orange-700 font-medium' : ''}`}
-                            onClick={() => { updateConfig('hideWhenFieldEmpty', `${hideFieldTable}.${f}`); setHideFieldSearch(''); }}
-                          >
-                            <span>{getFieldLabel(f)}</span>
-                            <span className="text-[10px] text-muted-foreground font-mono">{f}</span>
-                          </button>
-                        ))}
-                    </div>
-                    {currentField && (
-                      <div className="px-3 py-1.5 border-t bg-orange-50 text-xs text-orange-700 font-medium flex items-center justify-between">
-                        <span>✓ {hideFieldTable}.{currentField}</span>
-                        <button
-                          type="button"
-                          className="text-[10px] text-red-500 hover:text-red-700"
-                          onClick={() => { updateConfig('hideWhenFieldEmpty', undefined); setHideFieldTable(''); }}
-                        >verwijder</button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {block.config?.hideWhenFieldEmpty && !hideFieldTable && (
-                <div className="mt-1 px-2 py-1 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700 flex items-center justify-between">
-                  <span className="font-mono">{block.config.hideWhenFieldEmpty}</span>
-                  <button type="button" className="text-red-500 hover:text-red-700 text-[10px]" onClick={() => updateConfig('hideWhenFieldEmpty', undefined)}>×</button>
-                </div>
-              )}
+              <HideWhenFieldPicker
+                value={block.config?.hideWhenFieldEmpty || ''}
+                onChange={(v) => updateConfig('hideWhenFieldEmpty', v)}
+                availableTables={availableTables}
+              />
             </div>
 
           </div>
