@@ -85,7 +85,12 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
         {selectedIds.map(woId => {
           const wo = allWorkOrders.find((w: any) => w.id === woId);
           return (
-            <span key={woId} className="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 bg-orange-500 text-white text-xs rounded-full select-none">
+            <span
+              key={woId}
+              className="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 bg-orange-500 text-white text-xs rounded-full select-none cursor-pointer"
+              onDoubleClick={e => { e.stopPropagation(); window.open(`/work-order-form/${woId}`, '_blank'); }}
+              title="Dubbelklik om te openen"
+            >
               <span className="font-medium">{wo?.orderNumber || '...'}</span>
               {wo?.title && <span className="opacity-80 max-w-[90px] truncate">– {wo.title}</span>}
               <button
