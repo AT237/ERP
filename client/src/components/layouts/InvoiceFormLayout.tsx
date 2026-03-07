@@ -53,6 +53,93 @@ interface InvoiceFormLayoutProps {
   parentId?: string;
 }
 
+interface WorkOrderMultiSelectProps {
+  allWorkOrders: any[];
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+  projectId?: string;
+  search: string;
+  onSearchChange: (v: string) => void;
+  dropdownOpen: boolean;
+  onDropdownOpenChange: (v: boolean) => void;
+}
+
+function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId, search, onSearchChange, dropdownOpen, onDropdownOpenChange }: WorkOrderMultiSelectProps) {
+  const filtered = allWorkOrders.filter((wo: any) =>
+    !search ||
+    wo.title?.toLowerCase().includes(search.toLowerCase()) ||
+    wo.orderNumber?.toLowerCase().includes(search.toLowerCase())
+  );
+  const projectWOs = filtered.filter((wo: any) => projectId && wo.projectId === projectId);
+  const otherWOs = filtered.filter((wo: any) => !projectId || wo.projectId !== projectId);
+
+  return (
+    <div className="space-y-1">
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-1">
+          {selectedIds.map(woId => {
+            const wo = allWorkOrders.find((w: any) => w.id === woId);
+            return (
+              <span key={woId} className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-800 text-xs rounded-full border border-orange-200">
+                <span>{wo?.orderNumber || woId.slice(0, 8)}</span>
+                <button type="button" onClick={() => onToggle(woId)} className="hover:text-red-600 font-bold leading-none ml-0.5">×</button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+      <div className="relative">
+        <input
+          type="text"
+          value={search}
+          onChange={e => { onSearchChange(e.target.value); onDropdownOpenChange(true); }}
+          onFocus={() => onDropdownOpenChange(true)}
+          onBlur={() => setTimeout(() => onDropdownOpenChange(false), 150)}
+          placeholder="Zoek of selecteer work order..."
+          className="w-full h-9 px-3 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-orange-400"
+        />
+        {dropdownOpen && (
+          <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-52 overflow-y-auto">
+            {projectWOs.length > 0 && (
+              <>
+                <div className="px-3 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b bg-orange-50">Van dit project</div>
+                {projectWOs.map((wo: any) => (
+                  <button key={wo.id} type="button" onMouseDown={() => onToggle(wo.id)}
+                    className={`w-full px-3 py-2 text-left text-xs flex items-center gap-2 hover:bg-orange-50 ${selectedIds.includes(wo.id) ? 'bg-orange-100' : ''}`}>
+                    <span className={`w-3.5 h-3.5 flex-shrink-0 rounded border flex items-center justify-center ${selectedIds.includes(wo.id) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
+                      {selectedIds.includes(wo.id) && <span className="text-white text-[8px] font-bold">✓</span>}
+                    </span>
+                    <span className="font-mono text-orange-600 text-[11px]">{wo.orderNumber}</span>
+                    <span className="truncate">{wo.title}</span>
+                  </button>
+                ))}
+              </>
+            )}
+            {otherWOs.length > 0 && (
+              <>
+                {projectWOs.length > 0 && <div className="px-3 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b bg-muted/30">Overige work orders</div>}
+                {otherWOs.map((wo: any) => (
+                  <button key={wo.id} type="button" onMouseDown={() => onToggle(wo.id)}
+                    className={`w-full px-3 py-2 text-left text-xs flex items-center gap-2 hover:bg-orange-50 ${selectedIds.includes(wo.id) ? 'bg-orange-100' : ''}`}>
+                    <span className={`w-3.5 h-3.5 flex-shrink-0 rounded border flex items-center justify-center ${selectedIds.includes(wo.id) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
+                      {selectedIds.includes(wo.id) && <span className="text-white text-[8px] font-bold">✓</span>}
+                    </span>
+                    <span className="font-mono text-[11px] text-muted-foreground">{wo.orderNumber}</span>
+                    <span className="truncate">{wo.title}</span>
+                  </button>
+                ))}
+              </>
+            )}
+            {filtered.length === 0 && (
+              <div className="px-3 py-3 text-xs text-muted-foreground text-center">Geen work orders gevonden</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLayoutProps) {
   const [activeTab, setActiveTab] = useState("general");
   const [, navigate] = useLocation();
@@ -61,6 +148,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [vatRatePercent, setVatRatePercent] = useState<number>(0);
   const [selectedWorkOrderIds, setSelectedWorkOrderIds] = useState<string[]>([]);
+  const [woSearch, setWoSearch] = useState('');
+  const [woDropdownOpen, setWoDropdownOpen] = useState(false);
   const { toast } = useToast();
   const isEditing = !!invoiceId;
 
@@ -608,6 +697,21 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                   parentId={invoiceId || 'new-invoice'}
                 />
               ),
+            },
+            {
+              key: "workOrderIds",
+              label: "Work Orders",
+              type: "custom",
+              customComponent: <WorkOrderMultiSelect
+                allWorkOrders={allWorkOrders}
+                selectedIds={selectedWorkOrderIds}
+                onToggle={(woId) => setSelectedWorkOrderIds(prev => prev.includes(woId) ? prev.filter(id => id !== woId) : [...prev, woId])}
+                projectId={invoiceForm.watch("projectId") || undefined}
+                search={woSearch}
+                onSearchChange={setWoSearch}
+                dropdownOpen={woDropdownOpen}
+                onDropdownOpenChange={setWoDropdownOpen}
+              />,
             },
             {
               key: "description",
