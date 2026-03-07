@@ -56,7 +56,18 @@ export function LanguageSelectWithAdd({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              <span className="truncate">{selectedLanguage ? selectedLanguage.name : placeholder}</span>
+              <span
+                className={cn("truncate", value && selectedLanguage ? "cursor-pointer hover:underline" : "")}
+                title={value && selectedLanguage ? "Dubbelklik om te openen" : undefined}
+                onDoubleClick={(e) => {
+                  if (!value || !selectedLanguage) return;
+                  e.stopPropagation();
+                  setOpen(false);
+                  window.dispatchEvent(new CustomEvent('open-form-tab', {
+                    detail: { id: `language-${value}`, name: selectedLanguage.name, formType: 'language', entityId: value }
+                  }));
+                }}
+              >{selectedLanguage ? selectedLanguage.name : placeholder}</span>
               {value && selectedLanguage && (
                 <RefreshCw
                   className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"

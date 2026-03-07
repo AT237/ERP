@@ -53,7 +53,18 @@ export function PaymentScheduleSelectWithAdd({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              <span className="truncate">{displayName}</span>
+              <span
+                className={cn("truncate", value && selectedTerm ? "cursor-pointer hover:underline" : "")}
+                title={value && selectedTerm ? "Dubbelklik om te openen" : undefined}
+                onDoubleClick={(e) => {
+                  if (!value || !selectedTerm) return;
+                  e.stopPropagation();
+                  setOpen(false);
+                  window.dispatchEvent(new CustomEvent('open-form-tab', {
+                    detail: { id: `masterdata-payment-terms-${value}`, name: displayName, formType: 'masterdata-payment-terms', entityId: value }
+                  }));
+                }}
+              >{displayName}</span>
               {value && selectedTerm && (
                 <RefreshCw
                   className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"

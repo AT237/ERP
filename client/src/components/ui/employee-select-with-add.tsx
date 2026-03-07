@@ -53,7 +53,18 @@ export function EmployeeSelectWithAdd({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              <span className="truncate">
+              <span
+                className={cn("truncate", value && selectedEmployee ? "cursor-pointer hover:underline" : "")}
+                title={value && selectedEmployee ? "Dubbelklik om te openen" : undefined}
+                onDoubleClick={(e) => {
+                  if (!value || !selectedEmployee) return;
+                  e.stopPropagation();
+                  setOpen(false);
+                  window.dispatchEvent(new CustomEvent('open-form-tab', {
+                    detail: { id: `edit-employee-${value}`, name: displayName(selectedEmployee), formType: 'employee', entityId: value }
+                  }));
+                }}
+              >
                 {selectedEmployee ? displayName(selectedEmployee) : placeholder}
               </span>
               {value && selectedEmployee && (

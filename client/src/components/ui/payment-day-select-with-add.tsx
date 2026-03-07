@@ -55,7 +55,18 @@ export function PaymentDaySelectWithAdd({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              <span className="truncate">{displayName}</span>
+              <span
+                className={cn("truncate", value && selectedPaymentDay ? "cursor-pointer hover:underline" : "")}
+                title={value && selectedPaymentDay ? "Dubbelklik om te openen" : undefined}
+                onDoubleClick={(e) => {
+                  if (!value || !selectedPaymentDay) return;
+                  e.stopPropagation();
+                  setOpen(false);
+                  window.dispatchEvent(new CustomEvent('open-form-tab', {
+                    detail: { id: `masterdata-payment-days-${value}`, name: displayName, formType: 'masterdata-payment-days', entityId: value }
+                  }));
+                }}
+              >{displayName}</span>
               {value && selectedPaymentDay && (
                 <RefreshCw
                   className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"

@@ -77,7 +77,18 @@ export function AddressSelectWithAdd({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              <span className="truncate">{selectedAddress ? formatAddress(selectedAddress) : placeholder}</span>
+              <span
+                className={cn("truncate", value && selectedAddress ? "cursor-pointer hover:underline" : "")}
+                title={value && selectedAddress ? "Dubbelklik om te openen" : undefined}
+                onDoubleClick={(e) => {
+                  if (!value || !selectedAddress) return;
+                  e.stopPropagation();
+                  setOpen(false);
+                  window.dispatchEvent(new CustomEvent('open-form-tab', {
+                    detail: { id: `address-${value}`, name: formatAddress(selectedAddress), formType: 'address', entityId: value }
+                  }));
+                }}
+              >{selectedAddress ? formatAddress(selectedAddress) : placeholder}</span>
               {value && selectedAddress && (
                 <RefreshCw
                   className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"

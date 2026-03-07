@@ -60,7 +60,18 @@ export function CountrySelectWithAdd({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              <span className="truncate">{selectedCountry ? formatCountry(selectedCountry) : placeholder}</span>
+              <span
+                className={cn("truncate", value && selectedCountry ? "cursor-pointer hover:underline" : "")}
+                title={value && selectedCountry ? "Dubbelklik om te openen" : undefined}
+                onDoubleClick={(e) => {
+                  if (!value || !selectedCountry) return;
+                  e.stopPropagation();
+                  setOpen(false);
+                  window.dispatchEvent(new CustomEvent('open-form-tab', {
+                    detail: { id: `country-${value}`, name: formatCountry(selectedCountry), formType: 'country', entityId: value }
+                  }));
+                }}
+              >{selectedCountry ? formatCountry(selectedCountry) : placeholder}</span>
               {value && selectedCountry && (
                 <RefreshCw
                   className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"

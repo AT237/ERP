@@ -76,7 +76,18 @@ export function ContactPersonSelectWithAdd({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              <span className="truncate">{selectedContact ? formatContact(selectedContact) : placeholder}</span>
+              <span
+                className={cn("truncate", value && selectedContact ? "cursor-pointer hover:underline" : "")}
+                title={value && selectedContact ? "Dubbelklik om te openen" : undefined}
+                onDoubleClick={(e) => {
+                  if (!value || !selectedContact) return;
+                  e.stopPropagation();
+                  setOpen(false);
+                  window.dispatchEvent(new CustomEvent('open-form-tab', {
+                    detail: { id: `edit-contact-person-${value}`, name: formatContact(selectedContact), formType: 'contact-person', entityId: value }
+                  }));
+                }}
+              >{selectedContact ? formatContact(selectedContact) : placeholder}</span>
               {value && selectedContact && (
                 <RefreshCw
                   className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
