@@ -75,7 +75,25 @@ export function ProjectSelect({
               className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
-              <span className="truncate">
+              <span
+                className={cn("truncate", value && selectedProject ? "cursor-pointer hover:underline" : "")}
+                title={value && selectedProject ? "Dubbelklik om te openen" : undefined}
+                onDoubleClick={(e) => {
+                  if (!value || !selectedProject) return;
+                  e.stopPropagation();
+                  setOpen(false);
+                  window.dispatchEvent(new CustomEvent('open-form-tab', {
+                    detail: {
+                      id: `edit-project-${value}`,
+                      name: selectedProject.projectNumber
+                        ? `${selectedProject.projectNumber} - ${selectedProject.name}`
+                        : selectedProject.name,
+                      formType: 'project',
+                      parentId: value,
+                    }
+                  }));
+                }}
+              >
                 {selectedProject
                   ? (selectedProject.projectNumber
                       ? `${selectedProject.projectNumber} - ${selectedProject.name}`

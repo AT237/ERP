@@ -223,7 +223,23 @@ export function CustomerSelect({
                 className={cn("w-full justify-between", className)}
                 data-testid={testId}
               >
-                <span className="truncate">{selectedCustomer ? selectedCustomer.name : placeholder}</span>
+                <span
+                  className={cn("truncate", value && selectedCustomer ? "cursor-pointer hover:underline" : "")}
+                  title={value && selectedCustomer ? "Dubbelklik om te openen" : undefined}
+                  onDoubleClick={(e) => {
+                    if (!value || !selectedCustomer) return;
+                    e.stopPropagation();
+                    setOpen(false);
+                    window.dispatchEvent(new CustomEvent('open-form-tab', {
+                      detail: {
+                        id: `edit-customer-${value}`,
+                        name: selectedCustomer.name,
+                        formType: 'customer',
+                        parentId: value,
+                      }
+                    }));
+                  }}
+                >{selectedCustomer ? selectedCustomer.name : placeholder}</span>
                 {value && selectedCustomer && (
                   <RefreshCw
                     className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
