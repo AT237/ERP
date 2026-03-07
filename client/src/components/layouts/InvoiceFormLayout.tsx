@@ -62,9 +62,10 @@ interface WorkOrderMultiSelectProps {
   onSearchChange: (v: string) => void;
   dropdownOpen: boolean;
   onDropdownOpenChange: (v: boolean) => void;
+  error?: string;
 }
 
-function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId, search, onSearchChange, dropdownOpen, onDropdownOpenChange }: WorkOrderMultiSelectProps) {
+function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId, search, onSearchChange, dropdownOpen, onDropdownOpenChange, error }: WorkOrderMultiSelectProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const filtered = allWorkOrders.filter((wo: any) =>
@@ -112,6 +113,16 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
           className="flex-1 min-w-[140px] text-sm bg-transparent outline-none placeholder:text-muted-foreground py-0.5"
         />
       </div>
+
+      {/* Validation error */}
+      {error && (
+        <div className="flex items-start gap-1.5 mt-1.5 text-xs text-red-600">
+          <svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Dropdown */}
       {dropdownOpen && (
@@ -597,6 +608,18 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     saveLoading: createMutation.isPending || updateMutation.isPending,
   });
 
+  const currentProjectId = invoiceForm.watch("projectId");
+  const mismatchedWOs = selectedWorkOrderIds.filter(woId => {
+    const wo = (allWorkOrders as any[]).find((w: any) => w.id === woId);
+    return currentProjectId && wo && wo.projectId !== currentProjectId;
+  });
+  const woMismatchError = mismatchedWOs.length > 0
+    ? `${mismatchedWOs.map(woId => {
+        const wo = (allWorkOrders as any[]).find((w: any) => w.id === woId);
+        return wo?.orderNumber || woId.slice(0, 8);
+      }).join(', ')} ${mismatchedWOs.length === 1 ? 'hoort' : 'horen'} niet bij dit project. Pas de work order${mismatchedWOs.length === 1 ? '' : 's'} of het project aan.`
+    : undefined;
+
   const formSections: any[] = [
     {
       id: "general",
@@ -721,11 +744,12 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                 allWorkOrders={allWorkOrders}
                 selectedIds={selectedWorkOrderIds}
                 onToggle={(woId) => setSelectedWorkOrderIds(prev => prev.includes(woId) ? prev.filter(id => id !== woId) : [...prev, woId])}
-                projectId={invoiceForm.watch("projectId") || undefined}
+                projectId={currentProjectId || undefined}
                 search={woSearch}
                 onSearchChange={setWoSearch}
                 dropdownOpen={woDropdownOpen}
                 onDropdownOpenChange={setWoDropdownOpen}
+                error={woMismatchError}
               />,
             },
             {
