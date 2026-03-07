@@ -1,6 +1,6 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, unitsOfMeasure } from "../../shared/schema";
-import { eq, asc } from "drizzle-orm";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, unitsOfMeasure, workOrders, invoiceWorkOrders } from "../../shared/schema";
+import { eq, asc, inArray } from "drizzle-orm";
 
 function formatIban(value: string | null): string | null {
   if (!value) return null;
@@ -282,11 +282,15 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
   return {
     quotation: {
       number: quotation.quotationNumber,
+      quotationNumber: quotation.quotationNumber,
       date: quotation.quotationDate,
+      quotationDate: quotation.quotationDate,
       validUntil: quotation.validUntil,
+      validityDays: quotation.validityDays ?? null,
       description: quotation.description,
       revisionNumber: quotation.revisionNumber,
       status: quotation.status,
+      isBudgetQuotation: quotation.isBudgetQuotation ?? false,
       subtotal: quotation.subtotal,
       taxAmount: quotation.taxAmount,
       totalAmount: quotation.totalAmount,
@@ -525,10 +529,35 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     sourceSnippetVersion: item.sourceSnippetVersion || null,
   }));
 
+  // Load work orders linked to this invoice via junction table
+  const junctionRows = await db.select().from(invoiceWorkOrders).where(eq(invoiceWorkOrders.invoiceId, invoiceId));
+  const workOrderIds = junctionRows.map(r => r.workOrderId);
+  let workOrdersData: any[] = [];
+  let workOrderNumbersList = '';
+  if (workOrderIds.length > 0) {
+    const wos = await db.select().from(workOrders).where(inArray(workOrders.id, workOrderIds));
+    workOrdersData = wos.map(wo => ({
+      orderNumber: wo.orderNumber,
+      title: wo.title,
+      description: wo.description,
+      status: wo.status,
+      priority: wo.priority,
+      assignedTo: wo.assignedTo,
+      startDate: wo.startDate,
+      dueDate: wo.dueDate,
+      completedDate: wo.completedDate,
+      estimatedHours: wo.estimatedHours,
+      actualHours: wo.actualHours,
+    }));
+    workOrderNumbersList = wos.map(wo => wo.orderNumber).join(', ');
+  }
+
   return {
     invoice: {
       number: invoice.invoiceNumber,
+      invoiceNumber: invoice.invoiceNumber,
       date: invoice.invoiceDate,
+      invoiceDate: invoice.invoiceDate,
       dueDate: invoice.dueDate,
       description: invoice.description,
       status: invoice.status,
@@ -538,11 +567,13 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       paidAmount: invoice.paidAmount,
       notes: invoice.notes,
       paymentTerms: paymentTermsLabel,
+      workOrderNumbers: workOrderNumbersList,
     },
     customer: customerData,
     project: projectData,
     company: companyData,
     items: itemsData,
+    workOrders: workOrdersData,
   };
 }
 
