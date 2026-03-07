@@ -1,6 +1,6 @@
 import {
   users, customers, suppliers, prospects, inventoryItems, projects, quotations, quotationItems,
-  invoices, invoiceItems, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
+  invoices, invoiceItems, invoiceWorkOrders, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
   unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, ratesAndCharges, incoterms, vatRates, cities, statuses, companyProfiles, textSnippets, textSnippetUsages,
   documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields, sectionTemplates, customerRates, technicians,
@@ -151,6 +151,8 @@ export interface IStorage {
   addInvoiceItem(item: InsertInvoiceItem): Promise<InvoiceItem>;
   updateInvoiceItem(id: string, item: Partial<InsertInvoiceItem>): Promise<InvoiceItem>;
   deleteInvoiceItem(id: string): Promise<void>;
+  getInvoiceWorkOrderIds(invoiceId: string): Promise<string[]>;
+  setInvoiceWorkOrders(invoiceId: string, workOrderIds: string[]): Promise<void>;
 
   // Purchase Order methods
   getPurchaseOrders(): Promise<PurchaseOrder[]>;
@@ -959,6 +961,22 @@ export class DatabaseStorage implements IStorage {
 
   async deleteInvoiceItem(id: string): Promise<void> {
     await db.delete(invoiceItems).where(eq(invoiceItems.id, id));
+  }
+
+  async getInvoiceWorkOrderIds(invoiceId: string): Promise<string[]> {
+    const rows = await db.select({ workOrderId: invoiceWorkOrders.workOrderId })
+      .from(invoiceWorkOrders)
+      .where(eq(invoiceWorkOrders.invoiceId, invoiceId));
+    return rows.map(r => r.workOrderId);
+  }
+
+  async setInvoiceWorkOrders(invoiceId: string, workOrderIds: string[]): Promise<void> {
+    await db.delete(invoiceWorkOrders).where(eq(invoiceWorkOrders.invoiceId, invoiceId));
+    if (workOrderIds.length > 0) {
+      await db.insert(invoiceWorkOrders).values(
+        workOrderIds.map(woId => ({ invoiceId, workOrderId: woId }))
+      );
+    }
   }
 
   // Purchase Order methods

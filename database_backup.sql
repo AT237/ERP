@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 2zhX0Jpx9wyyREZI52yhFof1bNtdw8NVgzol2QGWV0ICbWNNXJPNK72Av8s5ygc
+\restrict wuxYx0kexFGbQvHZa2nKcquplaf8zhL2w5gO0o2iicKOhKo5r0L7FEPEWVwEbFX
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -679,6 +679,19 @@ CREATE TABLE public.invoice_items (
 
 
 ALTER TABLE public.invoice_items OWNER TO postgres;
+
+--
+-- Name: invoice_work_orders; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.invoice_work_orders (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    invoice_id character varying NOT NULL,
+    work_order_id character varying NOT NULL
+);
+
+
+ALTER TABLE public.invoice_work_orders OWNER TO postgres;
 
 --
 -- Name: invoices; Type: TABLE; Schema: public; Owner: postgres
@@ -1673,6 +1686,14 @@ daec7990-9721-403a-88ff-ebaec9cdc00b	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Dai
 ac56a6b9-b71e-4235-81a2-1e2f1b2cf78a	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Daily charge  - Aart Tomassen	1.000	715.05	715.05	charges	1	\N	\N	030	2026-01-21 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00
 c47be150-9ed1-49e0-aea6-5f4514fcd839	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Daily charge  - Aart Tomassen	0.750	715.05	536.29	charges	1	\N	\N	040	2026-01-22 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00
 99ef9406-91e4-4942-a0eb-c987b078cada	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Aart Tomassen consult	0.750	715.05	536.29	charges	1	\N	\N	010	2026-01-19 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00
+\.
+
+
+--
+-- Data for Name: invoice_work_orders; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.invoice_work_orders (id, invoice_id, work_order_id) FROM stdin;
 \.
 
 
@@ -3280,6 +3301,14 @@ ALTER TABLE ONLY public.invoice_items
 
 
 --
+-- Name: invoice_work_orders invoice_work_orders_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.invoice_work_orders
+    ADD CONSTRAINT invoice_work_orders_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: invoices invoices_invoice_number_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -3824,6 +3853,22 @@ ALTER TABLE ONLY public.invoice_items
 
 
 --
+-- Name: invoice_work_orders invoice_work_orders_invoice_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.invoice_work_orders
+    ADD CONSTRAINT invoice_work_orders_invoice_id_fkey FOREIGN KEY (invoice_id) REFERENCES public.invoices(id) ON DELETE CASCADE;
+
+
+--
+-- Name: invoice_work_orders invoice_work_orders_work_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.invoice_work_orders
+    ADD CONSTRAINT invoice_work_orders_work_order_id_fkey FOREIGN KEY (work_order_id) REFERENCES public.work_orders(id) ON DELETE CASCADE;
+
+
+--
 -- Name: invoices invoices_customer_id_customers_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4115,5 +4160,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2zhX0Jpx9wyyREZI52yhFof1bNtdw8NVgzol2QGWV0ICbWNNXJPNK72Av8s5ygc
+\unrestrict wuxYx0kexFGbQvHZa2nKcquplaf8zhL2w5gO0o2iicKOhKo5r0L7FEPEWVwEbFX
 

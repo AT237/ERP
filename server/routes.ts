@@ -1110,6 +1110,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/invoices/:id/work-orders", async (req, res) => {
+    try {
+      const workOrderIds = await storage.getInvoiceWorkOrderIds(req.params.id);
+      res.json(workOrderIds);
+    } catch (error) {
+      console.error("Error fetching invoice work orders:", error);
+      res.status(500).json({ message: "Failed to fetch invoice work orders" });
+    }
+  });
+
+  app.put("/api/invoices/:id/work-orders", async (req, res) => {
+    try {
+      const { workOrderIds } = req.body;
+      if (!Array.isArray(workOrderIds)) {
+        return res.status(400).json({ message: "workOrderIds must be an array" });
+      }
+      await storage.setInvoiceWorkOrders(req.params.id, workOrderIds);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating invoice work orders:", error);
+      res.status(500).json({ message: "Failed to update invoice work orders" });
+    }
+  });
+
   app.post("/api/invoices", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['invoiceDate', 'dueDate']);
