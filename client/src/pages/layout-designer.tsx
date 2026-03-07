@@ -3426,7 +3426,7 @@ function sectionContainsItemPlaceholders(section: any): boolean {
 }
 
 // Layout Preview Renderer Component
-export function LayoutPreview({ layout, sections, printData }: { layout: any; sections: any[]; printData: any }) {
+export function LayoutPreview({ layout, sections, printData, showMarginOverlays = true }: { layout: any; sections: any[]; printData: any; showMarginOverlays?: boolean }) {
   if (!printData) {
     return (
       <div className="border border-gray-200 h-full p-8 flex items-center justify-center">
@@ -4131,11 +4131,11 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           <Fragment key={`page-${pageIndex}`}>
             {pageIndex > 0 && <div style={{ height: '20px' }} />}
             <div data-pdf-page="true" className="bg-white shadow-2xl relative" style={{ position: 'relative', height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page', backgroundColor: '#ffffff' }}>
-              {/* Print margin overlays — content never enters these zones */}
-              {topMarginPx > 0 && <div className="absolute top-0 left-0 right-0 pointer-events-none z-20" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: `${topMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
-              {bottomMarginPx > 0 && <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
-              {leftMarginPx > 0 && <div className="absolute top-0 bottom-0 left-0 pointer-events-none z-20" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: `${leftMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
-              {rightMarginPx > 0 && <div className="absolute top-0 bottom-0 right-0 pointer-events-none z-20" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: `${rightMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
+              {/* Print margin overlays — only shown in designer, not in actual print */}
+              {showMarginOverlays && topMarginPx > 0 && <div className="absolute top-0 left-0 right-0 pointer-events-none z-20" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: `${topMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
+              {showMarginOverlays && bottomMarginPx > 0 && <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
+              {showMarginOverlays && leftMarginPx > 0 && <div className="absolute top-0 bottom-0 left-0 pointer-events-none z-20" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: `${leftMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
+              {showMarginOverlays && rightMarginPx > 0 && <div className="absolute top-0 bottom-0 right-0 pointer-events-none z-20" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: `${rightMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
               {/* Content starts at the print area (after margins). Block X/Y=0 = top-left of print area.
                   The gray overlays show the margin zones visually; content is clipped to the print area. */}
               <div style={{ position: 'absolute', top: `${topMarginPx}px`, bottom: `${bottomMarginPx}px`, left: `${leftMarginPx}px`, right: `${rightMarginPx}px`, overflow: 'hidden' }}>

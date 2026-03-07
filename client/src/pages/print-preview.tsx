@@ -202,6 +202,7 @@ export default function PrintPreviewPage() {
               layout={layout}
               sections={sections}
               printData={printData}
+              showMarginOverlays={false}
             />
           </div>
         </div>
