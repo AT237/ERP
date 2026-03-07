@@ -425,6 +425,7 @@ function DataFieldInsertMenu({
   availableTables: { name: string; label: string; fields: string[] }[];
 }) {
   const [expandedTables, setExpandedTables] = useState<string[]>([]);
+  const [search, setSearch] = useState('');
 
   const toggleTable = (tableName: string) => {
     setExpandedTables(prev => 
@@ -452,38 +453,68 @@ function DataFieldInsertMenu({
     }
   };
 
+  const lowerSearch = search.toLowerCase();
+
+  const filteredTables = availableTables
+    .map(table => ({
+      ...table,
+      filteredFields: table.fields.filter(
+        f => !lowerSearch || getFieldLabel(f).toLowerCase().includes(lowerSearch) || f.toLowerCase().includes(lowerSearch)
+      ),
+    }))
+    .filter(table => !lowerSearch || table.name.toLowerCase().includes(lowerSearch) || table.filteredFields.length > 0);
+
+  const isSearching = lowerSearch.length > 0;
+
   return (
-    <div className="border rounded-md max-h-80 overflow-y-auto">
-      {availableTables.map((table) => (
-        <div key={table.name} className="border-b last:border-b-0">
-          <button
-            type="button"
-            className="w-full px-3 py-2 text-left text-xs font-medium flex items-center justify-between hover:bg-muted"
-            onClick={() => toggleTable(table.name)}
-          >
-            <span>{table.name}</span>
-            <span className="text-muted-foreground">
-              {expandedTables.includes(table.name) ? '−' : '+'}
-            </span>
-          </button>
-          {expandedTables.includes(table.name) && (
-            <div className="bg-muted/30 px-2 py-1">
-              {table.fields.map((field) => (
+    <div className="border rounded-md overflow-hidden">
+      <div className="p-2 border-b bg-muted/20">
+        <Input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Zoek veld..."
+          className="h-7 text-xs"
+        />
+      </div>
+      <div className="max-h-72 overflow-y-auto">
+        {filteredTables.length === 0 ? (
+          <div className="px-3 py-4 text-xs text-muted-foreground text-center">Geen velden gevonden</div>
+        ) : (
+          filteredTables.map((table) => {
+            const isExpanded = isSearching || expandedTables.includes(table.name);
+            return (
+              <div key={table.name} className="border-b last:border-b-0">
                 <button
-                  key={field}
                   type="button"
-                  className="w-full px-3 py-1.5 text-left text-xs hover:bg-orange-100 rounded flex items-center gap-2"
-                  onClick={() => insertField(table.name, field)}
+                  className="w-full px-3 py-2 text-left text-xs font-medium flex items-center justify-between hover:bg-muted"
+                  onClick={() => toggleTable(table.name)}
                 >
-                  <span className="text-orange-600">+</span>
-                  <span>{getFieldLabel(field)}</span>
-                  <span className="text-[10px] text-muted-foreground ml-auto">{`{{${table.name}.${field}}}`}</span>
+                  <span>{table.name}</span>
+                  <span className="text-muted-foreground">
+                    {isExpanded ? '−' : '+'}
+                  </span>
                 </button>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+                {isExpanded && (
+                  <div className="bg-muted/30 px-2 py-1">
+                    {table.filteredFields.map((field) => (
+                      <button
+                        key={field}
+                        type="button"
+                        className="w-full px-3 py-1.5 text-left text-xs hover:bg-orange-100 rounded flex items-center gap-2"
+                        onClick={() => insertField(table.name, field)}
+                      >
+                        <span className="text-orange-600">+</span>
+                        <span>{getFieldLabel(field)}</span>
+                        <span className="text-[10px] text-muted-foreground ml-auto">{`{{${table.name}.${field}}}`}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
@@ -4400,6 +4431,8 @@ function BlockProperties({
     onUpdateProperty(sectionId, block.id, 'style', { ...block.style, [property]: value });
   };
 
+  const [fieldSearch, setFieldSearch] = useState('');
+
   const styleSource = block.type === 'Group'
     ? (block.config?.groupStyle || {})
     : (block.style || {});
@@ -4739,22 +4772,47 @@ function BlockProperties({
 
                   {selectedTable && (
                     <div>
-                      <Label htmlFor="data-field" className="text-xs">Veld</Label>
-                      <Select 
-                        value={block.config?.fieldName || ''}
-                        onValueChange={(value) => updateConfig('fieldName', value)}
-                      >
-                        <SelectTrigger id="data-field" className="h-8 text-xs">
-                          <SelectValue placeholder="Selecteer veld..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {selectedTable.fields.map((field: string) => (
-                            <SelectItem key={field} value={field}>
-                              {getFieldLabel(field)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="data-field-search" className="text-xs">Veld</Label>
+                      <div className="border rounded-md overflow-hidden">
+                        <Input
+                          id="data-field-search"
+                          value={fieldSearch}
+                          onChange={e => setFieldSearch(e.target.value)}
+                          placeholder="Zoek veld..."
+                          className="h-7 text-xs border-0 border-b rounded-none focus-visible:ring-0"
+                        />
+                        <div className="max-h-40 overflow-y-auto">
+                          {selectedTable.fields
+                            .filter((f: string) =>
+                              !fieldSearch ||
+                              getFieldLabel(f).toLowerCase().includes(fieldSearch.toLowerCase()) ||
+                              f.toLowerCase().includes(fieldSearch.toLowerCase())
+                            )
+                            .map((field: string) => (
+                              <button
+                                key={field}
+                                type="button"
+                                className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between hover:bg-orange-50 ${block.config?.fieldName === field ? 'bg-orange-100 text-orange-700 font-medium' : ''}`}
+                                onClick={() => { updateConfig('fieldName', field); setFieldSearch(''); }}
+                              >
+                                <span>{getFieldLabel(field)}</span>
+                                <span className="text-[10px] text-muted-foreground">{field}</span>
+                              </button>
+                            ))}
+                          {selectedTable.fields.filter((f: string) =>
+                            !fieldSearch ||
+                            getFieldLabel(f).toLowerCase().includes(fieldSearch.toLowerCase()) ||
+                            f.toLowerCase().includes(fieldSearch.toLowerCase())
+                          ).length === 0 && (
+                            <div className="px-3 py-2 text-xs text-muted-foreground text-center">Geen velden gevonden</div>
+                          )}
+                        </div>
+                        {block.config?.fieldName && (
+                          <div className="px-3 py-1.5 border-t bg-orange-50 text-xs text-orange-700 font-medium">
+                            ✓ {getFieldLabel(block.config.fieldName)}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
