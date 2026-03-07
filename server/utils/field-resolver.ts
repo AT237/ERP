@@ -9,52 +9,61 @@ function formatIban(value: string | null): string | null {
 }
 
 /**
- * Convert a numeric amount to English words.
- * Example: 14692.49 → "Fourteen thousand six hundred ninety-two euros and forty-nine cents"
+ * Convert a numeric amount to Dutch words.
+ * Example: 14692.49 → "Veertienduizend zeshonderdtweeënnegentig euro en negenenveertig cent"
  */
 export function amountToWords(amount: number): string {
-  const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
-    'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
-  const tensWords = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  if (isNaN(amount) || amount < 0) return '';
 
-  function threeDigits(n: number): string {
+  const ones = ['', 'één', 'twee', 'drie', 'vier', 'vijf', 'zes', 'zeven', 'acht', 'negen',
+    'tien', 'elf', 'twaalf', 'dertien', 'veertien', 'vijftien', 'zestien', 'zeventien', 'achttien', 'negentien'];
+  const tensWords = ['', '', 'twintig', 'dertig', 'veertig', 'vijftig', 'zestig', 'zeventig', 'tachtig', 'negentig'];
+
+  function underHundred(n: number): string {
     if (n === 0) return '';
-    let result = '';
-    if (n >= 100) {
-      result += ones[Math.floor(n / 100)] + ' hundred';
-      n = n % 100;
-      if (n > 0) result += ' ';
-    }
-    if (n >= 20) {
-      result += tensWords[Math.floor(n / 10)];
-      if (n % 10 > 0) result += '-' + ones[n % 10];
-    } else if (n > 0) {
-      result += ones[n];
-    }
-    return result;
+    if (n < 20) return ones[n];
+    const t = Math.floor(n / 10);
+    const o = n % 10;
+    if (o === 0) return tensWords[t];
+    return (o === 1 ? 'een' : ones[o]) + 'en' + tensWords[t];
   }
 
-  if (isNaN(amount) || amount < 0) return '';
+  function underThousand(n: number): string {
+    if (n === 0) return '';
+    if (n < 100) return underHundred(n);
+    const h = Math.floor(n / 100);
+    const rest = n % 100;
+    const hStr = h === 1 ? 'honderd' : ones[h] + 'honderd';
+    return rest === 0 ? hStr : hStr + underHundred(rest);
+  }
 
   const intPart = Math.floor(amount);
   const centPart = Math.round((amount - intPart) * 100);
 
   let words = '';
   if (intPart === 0) {
-    words = 'zero';
+    words = 'nul';
   } else {
     const millions = Math.floor(intPart / 1000000);
     const thousands = Math.floor((intPart % 1000000) / 1000);
     const remainder = intPart % 1000;
-    if (millions > 0) words += threeDigits(millions) + ' million';
-    if (thousands > 0) { if (words) words += ' '; words += threeDigits(thousands) + ' thousand'; }
-    if (remainder > 0) { if (words) words += ' '; words += threeDigits(remainder); }
+    if (millions > 0) {
+      words += (millions === 1 ? 'één' : underThousand(millions)) + ' miljoen';
+    }
+    if (thousands > 0) {
+      if (words) words += ' ';
+      words += (thousands === 1 ? '' : underThousand(thousands)) + 'duizend';
+    }
+    if (remainder > 0) {
+      if (words) words += ' ';
+      words += underThousand(remainder);
+    }
   }
 
   words = words.charAt(0).toUpperCase() + words.slice(1);
-  words += intPart === 1 ? ' euro' : ' euros';
+  words += ' euro';
   if (centPart > 0) {
-    words += ' and ' + threeDigits(centPart) + (centPart === 1 ? ' cent' : ' cents');
+    words += ' en ' + underHundred(centPart) + ' cent';
   }
   return words;
 }
@@ -588,10 +597,12 @@ export function resolveFieldValue(data: QuotationPrintData, fieldKey: string): a
   const parts = fieldKey.split('.');
 
   // Virtual computed fields: {tableName}.totalAmountInWords
+  // Falls back across quotation ↔ invoice when the primary table has no totalAmount
   if (parts.length === 2 && parts[1] === 'totalAmountInWords') {
     const tableData: any = (data as any)[parts[0]];
-    if (tableData && tableData.totalAmount !== undefined) {
-      return amountToWords(parseFloat(tableData.totalAmount || '0'));
+    const totalAmount = tableData?.totalAmount ?? (data as any).invoice?.totalAmount ?? (data as any).quotation?.totalAmount;
+    if (totalAmount !== undefined && totalAmount !== null) {
+      return amountToWords(parseFloat(totalAmount || '0'));
     }
     return '';
   }
