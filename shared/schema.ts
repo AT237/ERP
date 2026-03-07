@@ -407,6 +407,17 @@ export const workOrders = pgTable("work_orders", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Invoice Work Orders junction table (many-to-many: invoice ↔ work orders)
+export const invoiceWorkOrders = pgTable("invoice_work_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceId: varchar("invoice_id").references(() => invoices.id, { onDelete: 'cascade' }).notNull(),
+  workOrderId: varchar("work_order_id").references(() => workOrders.id, { onDelete: 'cascade' }).notNull(),
+});
+
+export const insertInvoiceWorkOrderSchema = createInsertSchema(invoiceWorkOrders).omit({ id: true });
+export type InvoiceWorkOrder = typeof invoiceWorkOrders.$inferSelect;
+export type InsertInvoiceWorkOrder = z.infer<typeof insertInvoiceWorkOrderSchema>;
+
 // Packing lists table
 export const packingLists = pgTable("packing_lists", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
