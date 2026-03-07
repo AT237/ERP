@@ -2933,42 +2933,23 @@ export function PreviewView({ layout }: { layout: any }) {
   const { toast } = useToast();
 
   const handlePrint = () => {
-    if (!printRef.current) return;
-    
-    const printContent = printRef.current.innerHTML;
-    const printWindow = window.open('', '_blank');
+    if (!selectedDocumentId || !layout?.id) {
+      toast({
+        title: 'Geen document geselecteerd',
+        description: 'Selecteer eerst een document om af te drukken',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const documentType = isInvoiceLayout ? 'invoice' : 'quotation';
+    const printWindow = window.open(`/print/${documentType}/${selectedDocumentId}?layoutId=${layout.id}`, '_blank');
     if (!printWindow) {
       toast({
         title: 'Print geblokkeerd',
         description: 'Sta pop-ups toe om te kunnen printen',
         variant: 'destructive',
       });
-      return;
     }
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Print Preview</title>
-        <style>
-          @page { size: A4; margin: 0; }
-          @media print {
-            body { margin: 0; padding: 0; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          }
-          body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        </style>
-      </head>
-      <body>${printContent}</body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 250);
   };
 
   const { data: quotations = [] } = useQuery<any[]>({
@@ -3940,6 +3921,8 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
             key={section.id}
             className="relative overflow-hidden"
             style={{
+              position: 'relative',
+              overflow: 'hidden',
               backgroundColor: section.config?.style?.backgroundColor || '#ffffff',
               height: `${capturedSectionHeight}px`,
               minHeight: staticSectionCanShrink ? 'auto' : `${capturedSectionHeight}px`,
@@ -4134,12 +4117,12 @@ export function LayoutPreview({ layout, sections, printData }: { layout: any; se
           return (
           <Fragment key={`page-${pageIndex}`}>
             {pageIndex > 0 && <div style={{ height: '20px' }} />}
-            <div data-pdf-page="true" className="bg-white shadow-2xl relative" style={{ height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page' }}>
+            <div data-pdf-page="true" className="bg-white shadow-2xl relative" style={{ position: 'relative', height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page', backgroundColor: '#ffffff' }}>
               {/* Print margin overlays — content never enters these zones */}
-              {topMarginPx > 0 && <div className="absolute top-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${topMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
-              {bottomMarginPx > 0 && <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
-              {leftMarginPx > 0 && <div className="absolute top-0 bottom-0 left-0 pointer-events-none z-20" style={{ width: `${leftMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
-              {rightMarginPx > 0 && <div className="absolute top-0 bottom-0 right-0 pointer-events-none z-20" style={{ width: `${rightMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)' }} />}
+              {topMarginPx > 0 && <div className="absolute top-0 left-0 right-0 pointer-events-none z-20" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: `${topMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
+              {bottomMarginPx > 0 && <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
+              {leftMarginPx > 0 && <div className="absolute top-0 bottom-0 left-0 pointer-events-none z-20" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: `${leftMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
+              {rightMarginPx > 0 && <div className="absolute top-0 bottom-0 right-0 pointer-events-none z-20" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: `${rightMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
               {/* Content starts at the print area (after margins). Block X/Y=0 = top-left of print area.
                   The gray overlays show the margin zones visually; content is clipped to the print area. */}
               <div style={{ position: 'absolute', top: `${topMarginPx}px`, bottom: `${bottomMarginPx}px`, left: `${leftMarginPx}px`, right: `${rightMarginPx}px`, overflow: 'hidden' }}>
