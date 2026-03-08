@@ -3473,15 +3473,16 @@ function calculateDynamicPositions(
         const otherY = otherBlock.position?.y || 0;
         if (otherY < originalY) {
           const otherVisible = blockVisibility.get(otherBlock.id) ?? true;
+          const otherMarginMm = parseFloat(String(otherBlock.style?.marginBottom || '0')) || 0;
           if (!otherVisible) {
-            // Hidden block: shift this block up by its full configured height
-            shiftUp += otherBlock.size?.height || 0;
+            // Hidden block: shift this block up by its full configured height + marginBottom
+            shiftUp += (otherBlock.size?.height || 0) + otherMarginMm;
           } else {
-            // Visible block that grew: shift this block down by the overflow
+            // Visible block: shift down by text overflow AND marginBottom
             const configuredH = otherBlock.size?.height || 0;
             const actualH = actualHeights.get(otherBlock.id) ?? configuredH;
-            const overflow = actualH - configuredH;
-            if (overflow > 0) shiftDown += overflow;
+            const overflow = Math.max(0, actualH - configuredH);
+            shiftDown += overflow + otherMarginMm;
           }
         }
       }
@@ -3803,7 +3804,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
                 left: `${mmToPx(block.position?.x || 0)}px`,
                 top: `${mmToPx(adjustedY)}px`,
                 width: `${mmToPx(block.size?.width || 50)}px`,
-                height: `${mmToPx(actualBlockHeightMm + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
+                height: `${mmToPx(actualBlockHeightMm)}px`,
               };
               
               if (BlockRenderer) {
@@ -4083,7 +4084,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
                         left: `${mmToPx(block.position?.x || 0)}px`,
                         top: `${mmToPx(adjustedY + (itemIndex * (blockHeight + spacing)))}px`,
                         width: `${mmToPx(block.size?.width || 50)}px`,
-                        height: `${mmToPx(blockHeight + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
+                        height: `${mmToPx(blockHeight)}px`,
                       };
                       return BlockRenderer ? (
                         <div key={`${block.id}-item-${itemIndex}`} style={blockStyle}>
@@ -4104,7 +4105,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
                     left: `${mmToPx(block.position?.x || 0)}px`,
                     top: `${mmToPx(adjustedY)}px`,
                     width: `${mmToPx(block.size?.width || 50)}px`,
-                    height: `${mmToPx((block.size?.height || 25) + (parseFloat(block.style?.marginBottom || '0') || 0))}px`,
+                    height: `${mmToPx(block.size?.height || 25)}px`,
                   };
                   return BlockRenderer ? [(
                     <div key={block.id || blockIndex} style={blockStyle}>
