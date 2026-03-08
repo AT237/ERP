@@ -190,6 +190,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentScheduleId: customerData.paymentScheduleId === '' ? null : customerData.paymentScheduleId,
         countryCode: customerData.countryCode === '' ? null : customerData.countryCode,
         languageId: customerData.languageId === '' ? null : customerData.languageId,
+        vatRateId: (customerData as any).vatRateId === '' ? null : (customerData as any).vatRateId,
+        rateId: (customerData as any).rateId === '' ? null : (customerData as any).rateId,
       };
       const customer = await storage.createCustomer(cleanedData);
       res.status(201).json(customer);
@@ -211,6 +213,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentScheduleId: customerData.paymentScheduleId === '' ? null : customerData.paymentScheduleId,
         countryCode: customerData.countryCode === '' ? null : customerData.countryCode,
         languageCode: customerData.languageCode === '' ? null : customerData.languageCode,
+        vatRateId: (customerData as any).vatRateId === '' ? null : (customerData as any).vatRateId,
+        rateId: (customerData as any).rateId === '' ? null : (customerData as any).rateId,
       };
       const customer = await storage.updateCustomer(req.params.id, cleanedData);
       res.json(customer);
@@ -231,6 +235,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentScheduleId: customerData.paymentScheduleId === '' ? null : customerData.paymentScheduleId,
         countryCode: customerData.countryCode === '' ? null : customerData.countryCode,
         languageCode: customerData.languageCode === '' ? null : customerData.languageCode,
+        vatRateId: (customerData as any).vatRateId === '' ? null : (customerData as any).vatRateId,
+        rateId: (customerData as any).rateId === '' ? null : (customerData as any).rateId,
       };
       const customer = await storage.updateCustomer(req.params.id, cleanedData);
       res.json(customer);
