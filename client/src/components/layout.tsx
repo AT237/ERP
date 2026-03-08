@@ -1078,13 +1078,7 @@ export default function Layout({ children }: LayoutProps) {
           <Suspense fallback={<div></div>}>
             <QuotationForm 
               quotationId={quotationId}
-              onSave={() => {
-                const quotationsTab = allTabs.find(t => t.id === 'quotations');
-                if (quotationsTab) {
-                  panelSetActiveTabId('quotations');
-                  panelCloseTab(tab.id);
-                }
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1103,13 +1097,7 @@ export default function Layout({ children }: LayoutProps) {
               key={tab.id}
               customerId={customerId}
               parentId={tab.parentId}
-              onSave={() => {
-                const customersTab = allTabs.find(t => t.id === 'customers');
-                if (customersTab) {
-                  panelSetActiveTabId('customers');
-                  panelCloseTab(tab.id);
-                }
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1126,15 +1114,7 @@ export default function Layout({ children }: LayoutProps) {
               lineItemId={lineItemId}
               quotationId={quotationId}
               parentId={tab.parentId}
-              onSave={() => {
-                if (tab.parentId) {
-                  const parentTab = allTabs.find(t => t.id === tab.parentId);
-                  if (parentTab) {
-                    panelSetActiveTabId(tab.parentId);
-                    panelCloseTab(tab.id);
-                  }
-                }
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1150,13 +1130,7 @@ export default function Layout({ children }: LayoutProps) {
             <SupplierForm 
               supplierId={supplierId}
               parentId={tab.parentId}
-              onSave={() => {
-                const suppliersTab = allTabs.find(t => t.id === 'suppliers');
-                if (suppliersTab) {
-                  panelSetActiveTabId('suppliers');
-                  panelCloseTab(tab.id);
-                }
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1172,13 +1146,7 @@ export default function Layout({ children }: LayoutProps) {
             <InventoryForm 
               inventoryId={inventoryId}
               parentId={tab.parentId}
-              onSave={() => {
-                const inventoryTab = allTabs.find(t => t.id === 'inventory');
-                if (inventoryTab) {
-                  panelSetActiveTabId('inventory');
-                  panelCloseTab(tab.id);
-                }
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1194,13 +1162,7 @@ export default function Layout({ children }: LayoutProps) {
             <ProjectForm 
               projectId={projectId}
               parentId={tab.parentId}
-              onSave={() => {
-                const projectsTab = allTabs.find(t => t.id === 'projects');
-                if (projectsTab) {
-                  panelSetActiveTabId('projects');
-                  panelCloseTab(tab.id);
-                }
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1216,13 +1178,7 @@ export default function Layout({ children }: LayoutProps) {
             <WorkOrderForm 
               workOrderId={workOrderId}
               parentId={tab.parentId}
-              onSave={() => {
-                const workOrdersTab = allTabs.find(t => t.id === 'work-orders');
-                if (workOrdersTab) {
-                  panelSetActiveTabId('work-orders');
-                  panelCloseTab(tab.id);
-                }
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1238,13 +1194,7 @@ export default function Layout({ children }: LayoutProps) {
             <PurchaseOrderForm 
               purchaseOrderId={purchaseOrderId}
               parentId={tab.parentId}
-              onSave={() => {
-                const purchaseOrdersTab = allTabs.find(t => t.id === 'purchase-orders');
-                if (purchaseOrdersTab) {
-                  panelSetActiveTabId('purchase-orders');
-                  panelCloseTab(tab.id);
-                }
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1262,13 +1212,7 @@ export default function Layout({ children }: LayoutProps) {
             <InvoiceForm 
               invoiceId={invoiceId}
               parentId={tab.parentId}
-              onSave={() => {
-                const invoicesTab = allTabs.find(t => t.id === 'invoices');
-                if (invoicesTab) {
-                  panelSetActiveTabId('invoices');
-                  panelCloseTab(tab.id);
-                }
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1283,13 +1227,7 @@ export default function Layout({ children }: LayoutProps) {
           <Suspense fallback={<div></div>}>
             <ContactPersonForm 
               contactPersonId={contactPersonId}
-              onSave={() => {
-                const contactPersonsTab = allTabs.find(t => t.id === 'contact-persons');
-                if (contactPersonsTab) {
-                  panelSetActiveTabId('contact-persons');
-                  panelCloseTab(tab.id);
-                }
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1304,13 +1242,7 @@ export default function Layout({ children }: LayoutProps) {
           <Suspense fallback={<div></div>}>
             <EmployeeForm 
               employeeId={employeeId}
-              onSave={() => {
-                const employeesTab = allTabs.find(t => t.id === 'employees');
-                if (employeesTab) {
-                  panelSetActiveTabId('employees');
-                  panelCloseTab(tab.id);
-                }
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1325,10 +1257,7 @@ export default function Layout({ children }: LayoutProps) {
           <Suspense fallback={<div></div>}>
             <AddressFormLayout 
               addressId={addressId}
-              onSave={() => {
-                navigate('/addresses');
-                panelCloseTab(tab.id);
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1343,10 +1272,7 @@ export default function Layout({ children }: LayoutProps) {
           <Suspense fallback={<div></div>}>
             <ImageForm 
               imageId={imageId}
-              onSave={() => {
-                navigate('/master-data/images');
-                panelCloseTab(tab.id);
-              }} 
+              onSave={() => {}} 
             />
           </Suspense>
         );
@@ -1362,13 +1288,7 @@ export default function Layout({ children }: LayoutProps) {
               <MasterDataFormLayout
                 type={mdType}
                 id={entityId}
-                onSave={() => {
-                  const parentTab = allTabs.find(t => t.id === mdType);
-                  if (parentTab) {
-                    panelSetActiveTabId(mdType);
-                  }
-                  panelCloseTab(tab.id);
-                }}
+                onSave={() => {}}
               />
             </Suspense>
           );

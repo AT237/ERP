@@ -188,7 +188,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     subtotal: { label: "Subtotaal" },
     totalAmount: { label: "Totaal" },
   });
-  const isEditing = !!invoiceId;
+  const [currentInvoiceId, setCurrentInvoiceId] = useState<string | undefined>(invoiceId);
+  const isEditing = !!currentInvoiceId;
 
   const invoiceForm = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceFormSchema),
@@ -477,6 +478,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           await apiRequest("PUT", `/api/invoices/${newInvoice.id}/work-orders`, { workOrderIds: selectedWorkOrderIds });
         } catch {}
       }
+      setCurrentInvoiceId(newInvoice.id);
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
@@ -491,8 +493,6 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           parentId: parentId
         }
       }));
-      
-      onSave();
     },
     onError: (error: Error) => {
       let description = "Failed to create invoice";
@@ -511,24 +511,23 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
 
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<InsertInvoice>) => {
-      const response = await apiRequest("PUT", `/api/invoices/${invoiceId}`, data);
+      const response = await apiRequest("PUT", `/api/invoices/${currentInvoiceId}`, data);
       return response.json();
     },
     onSuccess: async () => {
-      if (invoiceId) {
+      if (currentInvoiceId) {
         try {
-          await apiRequest("PUT", `/api/invoices/${invoiceId}/work-orders`, { workOrderIds: selectedWorkOrderIds });
-          queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "work-orders"] });
+          await apiRequest("PUT", `/api/invoices/${currentInvoiceId}/work-orders`, { workOrderIds: selectedWorkOrderIds });
+          queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId, "work-orders"] });
         } catch {}
       }
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
         title: "Success",
         description: "Invoice updated successfully",
       });
-      onSave();
     },
     onError: (error: Error) => {
       let description = "Failed to update invoice";
