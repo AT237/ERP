@@ -3443,38 +3443,50 @@ function calculateDynamicPositions(
     blockVisibility.set(block.id, hasContent);
   }
   
+  // Second pass: measure actual heights (canvas-based for Text/DataField blocks)
+  // This detects blocks whose text content wraps beyond the configured height.
+  const actualHeights = new Map<string, number>();
+  for (const block of blocks) {
+    const actualH = estimateActualBlockHeightMm(block, printData, itemContext, false);
+    actualHeights.set(block.id, actualH);
+  }
+
   // Sort ALL blocks by Y position
   const sortedBlocks = [...blocks].sort((a, b) => 
     (a.position?.y || 0) - (b.position?.y || 0)
   );
   
-  // Calculate cumulative offset from hidden blocks for each visible block
-  // All blocks below a hidden block shift up by the hidden block's height
+  // For each visible block calculate two offsets from blocks that START above it:
+  //   shiftUp:   sum of heights of HIDDEN blocks above → block moves up
+  //   shiftDown: sum of overflow of VISIBLE blocks above → block moves down when content wraps
   for (const block of sortedBlocks) {
     const isVisible = blockVisibility.get(block.id) ?? true;
     const originalY = block.position?.y || 0;
     
     if (!isVisible) {
-      // Hidden block - store original position but mark as not visible
       positions.set(block.id, { y: originalY, visible: false });
     } else {
-      // Visible block - calculate offset from all hidden blocks above it
-      let offsetFromAbove = 0;
+      let shiftUp = 0;
+      let shiftDown = 0;
       for (const otherBlock of sortedBlocks) {
+        if (otherBlock.id === block.id) continue;
         const otherY = otherBlock.position?.y || 0;
-        
-        // Consider any hidden block that STARTS above this block's Y position.
-        // Using otherY < originalY (instead of otherBottom <= originalY) ensures that
-        // blocks sitting inside a hidden block also shift up, preserving relative spacing.
         if (otherY < originalY) {
           const otherVisible = blockVisibility.get(otherBlock.id) ?? true;
           if (!otherVisible) {
-            offsetFromAbove += otherBlock.size?.height || 0;
+            // Hidden block: shift this block up by its full configured height
+            shiftUp += otherBlock.size?.height || 0;
+          } else {
+            // Visible block that grew: shift this block down by the overflow
+            const configuredH = otherBlock.size?.height || 0;
+            const actualH = actualHeights.get(otherBlock.id) ?? configuredH;
+            const overflow = actualH - configuredH;
+            if (overflow > 0) shiftDown += overflow;
           }
         }
       }
       
-      positions.set(block.id, { y: originalY - offsetFromAbove, visible: true });
+      positions.set(block.id, { y: originalY - shiftUp + shiftDown, visible: true });
     }
   }
   
