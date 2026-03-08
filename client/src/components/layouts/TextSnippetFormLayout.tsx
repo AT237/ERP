@@ -163,8 +163,7 @@ export function TextSnippetFormLayout({ onSave, textSnippetId, parentId }: TextS
         title: "Success",
         description: "Text snippet created successfully",
       });
-      onSave();
-    },
+          },
     onError: (error: any) => {
       toast({
         title: "Error",
@@ -190,8 +189,7 @@ export function TextSnippetFormLayout({ onSave, textSnippetId, parentId }: TextS
         title: "Success",
         description: "Text snippet updated successfully",
       });
-      onSave();
-    },
+          },
     onError: (error: any) => {
       toast({
         title: "Error",

@@ -221,6 +221,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
       return response.json();
     },
     onSuccess: (newPackingList) => {
+      setCurrentPackingListId(newPackingList.id);
       queryClient.invalidateQueries({ queryKey: ["/api/packing-lists"] });
       setHasUnsavedChanges(false);
       setModifiedFields(new Set());
@@ -241,8 +242,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         }
       }));
       
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",
@@ -270,8 +270,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         title: "Success",
         description: "Packing list updated successfully",
       });
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",

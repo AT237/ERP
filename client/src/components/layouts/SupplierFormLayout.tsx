@@ -116,6 +116,7 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
       return response.json();
     },
     onSuccess: (newSupplier) => {
+      setCurrentSupplierId(newSupplier.id);
       queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setHasUnsavedChanges(false);
@@ -136,8 +137,7 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
         }
       }));
       
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",
@@ -165,8 +165,7 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
         title: "Success",
         description: "Supplier updated successfully",
       });
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",

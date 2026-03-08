@@ -508,6 +508,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       return response.json();
     },
     onSuccess: async (newCustomer) => {
+      setCurrentCustomerId(newCustomer.id);
       try {
         await saveCustomerRatesFor(newCustomer.id);
       } catch (error) {
@@ -534,8 +535,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         }
       }));
       
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Fout",
@@ -573,8 +573,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         title: "Succes",
         description: "Klant bijgewerkt",
       });
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Fout",

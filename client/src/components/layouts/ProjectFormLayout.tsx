@@ -208,6 +208,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       return response.json();
     },
     onSuccess: (newProject) => {
+      setCurrentProjectId(newProject.id);
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setHasUnsavedChanges(false);
@@ -229,8 +230,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
         }
       }));
       
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",
@@ -259,8 +259,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
         title: "Success",
         description: "Project updated successfully",
       });
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",

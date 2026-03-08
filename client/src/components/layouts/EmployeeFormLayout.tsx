@@ -186,8 +186,7 @@ export default function EmployeeFormLayout({ onSave, employeeId }: EmployeeFormL
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId: 'new-employee', hasUnsavedChanges: false }
       }));
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",
@@ -217,8 +216,7 @@ export default function EmployeeFormLayout({ onSave, employeeId }: EmployeeFormL
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId, hasUnsavedChanges: false }
       }));
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",

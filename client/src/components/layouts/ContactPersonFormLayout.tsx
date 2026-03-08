@@ -207,8 +207,7 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId: 'new-contact-person', hasUnsavedChanges: false }
       }));
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",
@@ -241,8 +240,7 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId, hasUnsavedChanges: false }
       }));
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",

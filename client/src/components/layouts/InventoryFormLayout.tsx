@@ -167,6 +167,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       return response.json();
     },
     onSuccess: (newItem) => {
+      setCurrentInventoryId(newItem.id);
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setHasUnsavedChanges(false);
@@ -187,8 +188,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         }
       }));
       
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",
@@ -216,8 +216,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         title: "Success",
         description: "Inventory item updated successfully",
       });
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",

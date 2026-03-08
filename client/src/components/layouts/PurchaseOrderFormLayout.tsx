@@ -112,6 +112,7 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
       return response.json();
     },
     onSuccess: (newPurchaseOrder) => {
+      setCurrentPurchaseOrderId(newPurchaseOrder.id);
       queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setHasUnsavedChanges(false);
@@ -132,8 +133,7 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
         }
       }));
       
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",
@@ -161,8 +161,7 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
         title: "Success",
         description: "Purchase order updated successfully",
       });
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",

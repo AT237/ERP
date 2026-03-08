@@ -224,6 +224,7 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
       return response.json();
     },
     onSuccess: (newSalesOrder) => {
+      setCurrentSalesOrderId(newSalesOrder.id);
       queryClient.invalidateQueries({ queryKey: ["/api/sales-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setHasUnsavedChanges(false);
@@ -245,8 +246,7 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
         }
       }));
       
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",
@@ -283,8 +283,7 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
         title: "Success",
         description: "Sales order updated successfully",
       });
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",

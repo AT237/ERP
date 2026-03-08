@@ -188,8 +188,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     items: QuotationItem[],
     customer: { id: string; name: string; email?: string; phone?: string; city?: string }
   }>({
-    queryKey: ["/api/quotations", quotationId, "details"],
-    enabled: !!quotationId,
+    queryKey: ["/api/quotations", currentQuotationId, "details"],
+    enabled: !!currentQuotationId,
     staleTime: 2 * 60 * 1000, // 2 minutes
     refetchOnWindowFocus: false,
   });
@@ -202,7 +202,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   // Fetch all quotations to calculate next number for new quotations
   const { data: allQuotations = [] } = useQuery<Quotation[]>({
     queryKey: ["/api/quotations"],
-    enabled: !quotationId, // Only fetch when creating new quotation
+    enabled: !currentQuotationId, // Only fetch when creating new quotation
   });
 
   // Helper function to convert yyyy-MM-dd to dd-mm-yyyy
@@ -253,7 +253,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const itemForm = useForm<QuotationItemFormData>({
     resolver: zodResolver(quotationItemFormSchema),
     defaultValues: {
-      quotationId: "",
+      currentQuotationId: "",
       description: "",
       quantity: 1,
       unitPrice: "0.00",
@@ -395,7 +395,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
   // Calculate next quotation number for new quotations
   useEffect(() => {
-    if (!quotationId && allQuotations.length >= 0) {
+    if (!currentQuotationId && allQuotations.length >= 0) {
       const currentYear = new Date().getFullYear();
       
       // Filter quotations for current year and find the highest number
@@ -413,7 +413,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       
       setNextQuotationNumber(newQuotationNumber);
     }
-  }, [allQuotations, quotationId]);
+  }, [allQuotations, currentQuotationId]);
 
   // Load existing quotation data when editing
   useEffect(() => {
@@ -448,7 +448,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       // For existing quotations: show quotation number and revision
       const title = `${existingQuotation.quotationNumber} ${existingQuotation.revisionNumber || 'V1.0'}`;
       document.title = title;
-    } else if (!quotationId) {
+    } else if (!currentQuotationId) {
       // For new quotations: show "New Quotation" with the next quotation number
       document.title = `New Quotation - ${nextQuotationNumber}`;
     }
@@ -457,7 +457,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     return () => {
       document.title = 'Business Management System';
     };
-  }, [existingQuotation, quotationId, nextQuotationNumber]);
+  }, [existingQuotation, currentQuotationId, nextQuotationNumber]);
 
   // Image upload function
   const handleImageUpload = async (file: File) => {
@@ -572,13 +572,13 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       if (!response.ok) throw new Error('Failed to create quotation');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (savedQuotation: any) => {
+      setCurrentQuotationId(savedQuotation.id);
       toast({
         title: "Success",
         description: "Quotation created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
-      onSave();
     },
     onError: (error) => {
       console.error('Error creating quotation:', error);
@@ -602,7 +602,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         totalAmount: data.totalAmount,
       };
       
-      const response = await fetch(`/api/quotations/${quotationId}`, {
+      const response = await fetch(`/api/quotations/${currentQuotationId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(processedData),
@@ -616,7 +616,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         description: "Quotation updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
-      onSave();
     },
     onError: (error) => {
       console.error('Error updating quotation:', error);
@@ -636,7 +635,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       validUntil: formatDateForStorage(data.validUntil || ""),
     };
     
-    if (quotationId) {
+    if (currentQuotationId) {
       updateQuotationMutation.mutate(dataWithConvertedDates);
     } else {
       createQuotationMutation.mutate(dataWithConvertedDates);
@@ -660,7 +659,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     
     const newItem: QuotationItem = {
       id: editingItem?.id || Math.random().toString(36).substr(2, 9),
-      quotationId: quotationId || '',
+      currentQuotationId: currentQuotationId || '',
       description: data.description,
       quantity: data.quantity ?? 0,
       unitPrice: data.unitPrice,
@@ -683,7 +682,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
     // Item saved, dialog removed - now uses tab navigation
     itemForm.reset({
-      quotationId: quotationId || "",
+      currentQuotationId: currentQuotationId || "",
       description: "",
       quantity: 1,
       unitPrice: "0.00",
@@ -707,20 +706,20 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   };
 
   const handleDuplicateItem = async (item: QuotationItem) => {
-    if (!quotationId) return;
+    if (!currentQuotationId) return;
     try {
       const { id, createdAt, updatedAt, ...duplicateData } = item as any;
       const nextPosition = quotationItems.length > 0
         ? String(Math.max(...quotationItems.map(i => parseInt(String(i.position || '0'), 10))) + 10).padStart(3, '0')
         : '010';
-      const response = await apiRequest("POST", `/api/quotations/${quotationId}/items`, {
+      const response = await apiRequest("POST", `/api/quotations/${currentQuotationId}/items`, {
         ...duplicateData,
         position: nextPosition,
         description: `${duplicateData.description || ''} (Copy)`,
       });
       const newItem = await response.json();
       setQuotationItems(prev => [...prev, newItem]);
-      queryClient.invalidateQueries({ queryKey: ["/api/quotations", quotationId, "items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "items"] });
       toast({ title: "Success", description: "Line item duplicated" });
     } catch (error) {
       toast({ title: "Error", description: "Failed to duplicate line item", variant: "destructive" });
@@ -1266,7 +1265,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             onClick={() => {
               // Cancel functionality removed - now uses tab navigation
               itemForm.reset({
-                quotationId: quotationId || "",
+                currentQuotationId: currentQuotationId || "",
                 description: "",
                 quantity: 1,
                 unitPrice: "0.00",
@@ -1684,7 +1683,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const headerFields: InfoField[] = [
     {
       label: 'Quotation Number',
-      value: quotationId ? existingQuotation?.quotationNumber || '...' : nextQuotationNumber
+      value: currentQuotationId ? existingQuotation?.quotationNumber || '...' : nextQuotationNumber
     },
     {
       label: 'Customer',
@@ -1697,7 +1696,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
   const toolbar = useFormToolbar({
     entityType: "quotation",
-    entityId: quotationId,
+    entityId: currentQuotationId,
     onSave: quotationForm.handleSubmit(handleSaveQuotation, quotationOnInvalid),
     onClose: onSave,
     saveDisabled: createQuotationMutation.isPending || updateQuotationMutation.isPending,
@@ -1707,9 +1706,9 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   return (
     <div className="h-full">
       {/* Print Dialog */}
-      {quotationId && existingQuotation && (
+      {currentQuotationId && existingQuotation && (
         <QuotationPrintDialog
-          quotationId={quotationId}
+          currentQuotationId={currentQuotationId}
           quotationNumber={existingQuotation.quotationNumber}
           triggerButton={<span style={{ display: 'none' }} />}
           isOpen={printDialogOpen}
@@ -1725,7 +1724,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         onSubmit={handleSaveQuotation}
         toolbar={toolbar}
         documentType="quotation"
-        entityId={quotationId}
+        entityId={currentQuotationId}
         isLoading={quotationLoading}
       />
       {/* Quotation Items Table */}
@@ -1758,8 +1757,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           applySorting={itemTableState.applySorting}
           compact={true}
           onRowDoubleClick={(item: QuotationItem) => {
-            if (quotationId) {
-              navigate(`/quotations/${quotationId}/items/${item.id}`);
+            if (currentQuotationId) {
+              navigate(`/quotations/${currentQuotationId}/items/${item.id}`);
             }
           }}
           headerActions={[
@@ -1769,8 +1768,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               icon: <Plus className="h-4 w-4" />,
               onClick: () => {
                 // Navigate to the line item form page instead of showing dialog
-                if (quotationId) {
-                  navigate(`/quotations/${quotationId}/items/new`);
+                if (currentQuotationId) {
+                  navigate(`/quotations/${currentQuotationId}/items/new`);
                 }
               },
               variant: 'default' as const
@@ -1785,7 +1784,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               onClick: () => {
                 setEditingItem(item);
                 itemForm.reset({
-                  quotationId: item.quotationId,
+                  currentQuotationId: item.currentQuotationId,
                   description: item.description,
                   quantity: parseFloat(String(item.quantity || 1)),
                   unitPrice: item.unitPrice || "0.00",

@@ -220,6 +220,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
       return response.json();
     },
     onSuccess: (newWorkOrder) => {
+      setCurrentWorkOrderId(newWorkOrder.id);
       queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
       setHasUnsavedChanges(false);
       setModifiedFields(new Set());
@@ -240,8 +241,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         }
       }));
       
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",
@@ -269,8 +269,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         title: "Success",
         description: "Work order updated successfully",
       });
-      onSave();
-    },
+          },
     onError: () => {
       toast({
         title: "Error",
