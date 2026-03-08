@@ -195,6 +195,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       subtotal: "0.00",
       taxAmount: "0.00",
       totalAmount: "0.00",
+      totalAmountInWords: "",
       paidAmount: "0.00",
       notes: "",
       printSortOrder: "position",

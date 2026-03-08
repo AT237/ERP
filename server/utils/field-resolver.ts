@@ -685,12 +685,16 @@ export function resolveFieldValue(data: QuotationPrintData, fieldKey: string): a
   const parts = fieldKey.split('.');
 
   // Virtual computed fields: {tableName}.totalAmountInWords
-  // Falls back across quotation ↔ invoice when the primary table has no totalAmount
+  // Uses stored value from DB when available; falls back to computing with customer's language.
   if (parts.length === 2 && parts[1] === 'totalAmountInWords') {
     const tableData: any = (data as any)[parts[0]];
+    // Use stored value if present (invoice has it saved from the form)
+    if (tableData?.totalAmountInWords) return tableData.totalAmountInWords;
+    // Fall back to computing from totalAmount with customer's language
     const totalAmount = tableData?.totalAmount ?? (data as any).invoice?.totalAmount ?? (data as any).quotation?.totalAmount;
     if (totalAmount !== undefined && totalAmount !== null) {
-      return amountToWords(parseFloat(totalAmount || '0'));
+      const lang = (data as any).customer?.languageCode || 'nl';
+      return amountToWords(parseFloat(totalAmount || '0'), lang);
     }
     return '';
   }

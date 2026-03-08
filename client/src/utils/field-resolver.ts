@@ -263,11 +263,13 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
   }
 
   // Virtual computed field: totalAmountInWords
-  // Falls back across quotation ↔ invoice when the primary table has no totalAmount
+  // Uses stored value from DB when available; falls back to computing with customer's language.
   if (fieldPath.length === 1 && fieldPath[0] === 'totalAmountInWords') {
+    if ((data as any)?.totalAmountInWords) return (data as any).totalAmountInWords;
     const totalAmount = data?.totalAmount ?? printData.invoice?.totalAmount ?? printData.quotation?.totalAmount;
     const total = parseFloat(totalAmount || '0');
-    return amountToWords(total);
+    const lang = (printData.customer as any)?.languageCode || 'nl';
+    return amountToWords(total, lang);
   }
 
   if (!data) return null;
