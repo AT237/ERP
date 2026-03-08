@@ -31,9 +31,122 @@ export type PrintData = {
  * Convert a numeric amount to Dutch words.
  * Example: 14692.49 → "Veertienduizend zeshonderd tweeënnegentig euro en negenenveertig cent"
  */
-export function amountToWords(amount: number): string {
+export function amountToWords(amount: number, language: string = 'nl'): string {
   if (isNaN(amount) || amount < 0) return '';
+  const lang = (language || 'nl').toLowerCase().split('-')[0];
 
+  if (lang === 'en') {
+    const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+      'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+    const tensW = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+    function enUnderHundred(n: number): string {
+      if (n === 0) return '';
+      if (n < 20) return ones[n];
+      const t = Math.floor(n / 10), o = n % 10;
+      return o === 0 ? tensW[t] : tensW[t] + '-' + ones[o];
+    }
+    function enUnderThousand(n: number): string {
+      if (n === 0) return '';
+      if (n < 100) return enUnderHundred(n);
+      const h = Math.floor(n / 100), rest = n % 100;
+      return ones[h] + ' hundred' + (rest ? ' ' + enUnderHundred(rest) : '');
+    }
+
+    const intPart = Math.floor(amount);
+    const centPart = Math.round((amount - intPart) * 100);
+    let words = '';
+    if (intPart === 0) {
+      words = 'zero';
+    } else {
+      const millions = Math.floor(intPart / 1000000);
+      const thousands = Math.floor((intPart % 1000000) / 1000);
+      const remainder = intPart % 1000;
+      if (millions > 0) { words += enUnderThousand(millions) + ' million'; }
+      if (thousands > 0) { if (words) words += ' '; words += enUnderThousand(thousands) + ' thousand'; }
+      if (remainder > 0) { if (words) words += ' '; words += enUnderThousand(remainder); }
+    }
+    words = words.charAt(0).toUpperCase() + words.slice(1);
+    words += ' euro';
+    if (centPart > 0) words += ' and ' + enUnderHundred(centPart) + ' cents';
+    return words;
+  }
+
+  if (lang === 'fr') {
+    const ones = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf',
+      'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
+    const tensW = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante', 'quatre-vingt', 'quatre-vingt'];
+
+    function frUnderHundred(n: number): string {
+      if (n === 0) return '';
+      if (n < 20) return ones[n];
+      if (n >= 70 && n < 80) return 'soixante-' + ones[n - 60];
+      if (n >= 90) return 'quatre-vingt-' + ones[n - 80];
+      const t = Math.floor(n / 10), o = n % 10;
+      if (o === 0) return tensW[t] + (t === 8 ? 's' : '');
+      return tensW[t] + (o === 1 && t < 8 ? '-et-' : '-') + ones[o];
+    }
+    function frUnderThousand(n: number): string {
+      if (n === 0) return '';
+      if (n < 100) return frUnderHundred(n);
+      const h = Math.floor(n / 100), rest = n % 100;
+      const hStr = h === 1 ? 'cent' : ones[h] + ' cent';
+      return rest === 0 ? hStr + (h > 1 ? 's' : '') : hStr + ' ' + frUnderHundred(rest);
+    }
+
+    const intPart = Math.floor(amount);
+    const centPart = Math.round((amount - intPart) * 100);
+    let words = '';
+    if (intPart === 0) { words = 'zéro'; } else {
+      const millions = Math.floor(intPart / 1000000);
+      const thousands = Math.floor((intPart % 1000000) / 1000);
+      const remainder = intPart % 1000;
+      if (millions > 0) { words += (millions === 1 ? 'un' : frUnderThousand(millions)) + ' million' + (millions > 1 ? 's' : ''); }
+      if (thousands > 0) { if (words) words += ' '; words += (thousands === 1 ? '' : frUnderThousand(thousands) + ' ') + 'mille'; }
+      if (remainder > 0) { if (words) words += ' '; words += frUnderThousand(remainder); }
+    }
+    words = words.charAt(0).toUpperCase() + words.slice(1);
+    words += ' euro';
+    if (centPart > 0) words += ' et ' + frUnderHundred(centPart) + ' centime' + (centPart > 1 ? 's' : '');
+    return words;
+  }
+
+  if (lang === 'de') {
+    const ones = ['', 'ein', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun',
+      'zehn', 'elf', 'zwölf', 'dreizehn', 'vierzehn', 'fünfzehn', 'sechzehn', 'siebzehn', 'achtzehn', 'neunzehn'];
+    const tensW = ['', '', 'zwanzig', 'dreißig', 'vierzig', 'fünfzig', 'sechzig', 'siebzig', 'achtzig', 'neunzig'];
+
+    function deUnderHundred(n: number): string {
+      if (n === 0) return '';
+      if (n < 20) return ones[n];
+      const t = Math.floor(n / 10), o = n % 10;
+      return o === 0 ? tensW[t] : ones[o] + 'und' + tensW[t];
+    }
+    function deUnderThousand(n: number): string {
+      if (n === 0) return '';
+      if (n < 100) return deUnderHundred(n);
+      const h = Math.floor(n / 100), rest = n % 100;
+      return (h === 1 ? 'ein' : ones[h]) + 'hundert' + (rest ? deUnderHundred(rest) : '');
+    }
+
+    const intPart = Math.floor(amount);
+    const centPart = Math.round((amount - intPart) * 100);
+    let words = '';
+    if (intPart === 0) { words = 'null'; } else {
+      const millions = Math.floor(intPart / 1000000);
+      const thousands = Math.floor((intPart % 1000000) / 1000);
+      const remainder = intPart % 1000;
+      if (millions > 0) { words += (millions === 1 ? 'eine' : deUnderThousand(millions)) + ' Million' + (millions > 1 ? 'en' : ''); }
+      if (thousands > 0) { if (words) words += ' '; words += (thousands === 1 ? 'ein' : deUnderThousand(thousands)) + 'tausend'; }
+      if (remainder > 0) { if (words) words += ' '; words += deUnderThousand(remainder); }
+    }
+    words = words.charAt(0).toUpperCase() + words.slice(1);
+    words += ' Euro';
+    if (centPart > 0) words += ' und ' + deUnderHundred(centPart) + ' Cent';
+    return words;
+  }
+
+  // Default: Dutch (nl)
   const ones = ['', 'één', 'twee', 'drie', 'vier', 'vijf', 'zes', 'zeven', 'acht', 'negen',
     'tien', 'elf', 'twaalf', 'dertien', 'veertien', 'vijftien', 'zestien', 'zeventien', 'achttien', 'negentien'];
   const tensWords = ['', '', 'twintig', 'dertig', 'veertig', 'vijftig', 'zestig', 'zeventig', 'tachtig', 'negentig'];

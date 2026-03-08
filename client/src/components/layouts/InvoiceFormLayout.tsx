@@ -21,6 +21,7 @@ import { useDataTable } from '@/hooks/useDataTable';
 import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, Project, VatRate } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
+import { amountToWords } from "@/utils/field-resolver";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
 import { ProjectSelect } from "@/components/ui/project-select";
 import { addDays } from "date-fns";
@@ -33,6 +34,7 @@ const invoiceFormSchema = insertInvoiceSchema.omit({
   subtotal: z.string().min(1, "Subtotal is required"),
   taxAmount: z.string().optional(),
   totalAmount: z.string().min(1, "Total amount is required"),
+  totalAmountInWords: z.string().optional(),
   paidAmount: z.string().optional(),
   dueDate: z.string().optional(),
   invoiceDate: z.string().optional(),
@@ -171,6 +173,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const [deleteItemTarget, setDeleteItemTarget] = useState<InvoiceItem | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [vatRatePercent, setVatRatePercent] = useState<number>(0);
+  const [customerLanguageCode, setCustomerLanguageCode] = useState<string>('nl');
   const [selectedWorkOrderIds, setSelectedWorkOrderIds] = useState<string[]>([]);
   const [woSearch, setWoSearch] = useState('');
   const [woDropdownOpen, setWoDropdownOpen] = useState(false);
@@ -263,6 +266,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         subtotal: invoice.subtotal || "0.00",
         taxAmount: invoice.taxAmount || "0.00",
         totalAmount: invoice.totalAmount || "0.00",
+        totalAmountInWords: (invoice as any).totalAmountInWords || "",
         paidAmount: invoice.paidAmount || "0.00",
         notes: invoice.notes || "",
         printSortOrder: (invoice as any).printSortOrder || "position",
@@ -295,15 +299,19 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       return sum + (parseFloat(item.lineTotal || "0") || 0);
     }, 0);
     invoiceForm.setValue("subtotal", subtotal.toFixed(2));
+    let total: number;
     if (vatRatePercent > 0) {
       const taxAmount = subtotal * vatRatePercent / 100;
       invoiceForm.setValue("taxAmount", taxAmount.toFixed(2));
-      invoiceForm.setValue("totalAmount", (subtotal + taxAmount).toFixed(2));
+      total = subtotal + taxAmount;
+      invoiceForm.setValue("totalAmount", total.toFixed(2));
     } else {
       const taxAmount = parseFloat(invoiceForm.getValues("taxAmount") || "0") || 0;
-      invoiceForm.setValue("totalAmount", (subtotal + taxAmount).toFixed(2));
+      total = subtotal + taxAmount;
+      invoiceForm.setValue("totalAmount", total.toFixed(2));
     }
-  }, [invoiceItems, vatRatePercent]);
+    invoiceForm.setValue("totalAmountInWords", amountToWords(total, customerLanguageCode));
+  }, [invoiceItems, vatRatePercent, customerLanguageCode]);
 
   const calculateDueDate = (invoiceDateStr: string, pDaysId: string) => {
     if (!invoiceDateStr || !pDaysId || paymentDaysList.length === 0) return;
@@ -350,10 +358,15 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     const vatRate = vatRates.find(v => v.id === (customer as any)?.vatRateId);
     const pct = vatRate ? parseFloat(String(vatRate.rate)) : 0;
     setVatRatePercent(pct);
+    // Apply customer's language code for amount in words
+    const lang = (customer as any)?.languageCode || 'nl';
+    setCustomerLanguageCode(lang);
     const subtotal = parseFloat(invoiceForm.getValues("subtotal") || "0") || 0;
     const taxAmount = subtotal * pct / 100;
+    const total = subtotal + taxAmount;
     invoiceForm.setValue("taxAmount", taxAmount.toFixed(2));
-    invoiceForm.setValue("totalAmount", (subtotal + taxAmount).toFixed(2));
+    invoiceForm.setValue("totalAmount", total.toFixed(2));
+    invoiceForm.setValue("totalAmountInWords", amountToWords(total, lang));
   };
 
   const handlePaymentDaysChange = (pDaysId: string) => {

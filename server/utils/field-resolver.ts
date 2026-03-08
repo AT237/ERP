@@ -9,12 +9,100 @@ function formatIban(value: string | null): string | null {
 }
 
 /**
- * Convert a numeric amount to Dutch words.
- * Example: 14692.49 → "Veertienduizend zeshonderdtweeënnegentig euro en negenenveertig cent"
+ * Convert a numeric amount to words in the given language.
+ * Supported: nl (Dutch), en (English), fr (French), de (German). Defaults to nl.
+ * Example (nl): 14692.49 → "Veertienduizend zeshonderdtweeënnegentig euro en negenenveertig cent"
  */
-export function amountToWords(amount: number): string {
+export function amountToWords(amount: number, language: string = 'nl'): string {
   if (isNaN(amount) || amount < 0) return '';
+  const lang = (language || 'nl').toLowerCase().split('-')[0];
 
+  if (lang === 'en') {
+    const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+      'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+    const tensW = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+    function enU100(n: number): string {
+      if (n === 0) return ''; if (n < 20) return ones[n];
+      const t = Math.floor(n / 10), o = n % 10;
+      return o === 0 ? tensW[t] : tensW[t] + '-' + ones[o];
+    }
+    function enU1000(n: number): string {
+      if (n === 0) return ''; if (n < 100) return enU100(n);
+      const h = Math.floor(n / 100), rest = n % 100;
+      return ones[h] + ' hundred' + (rest ? ' ' + enU100(rest) : '');
+    }
+    const intPart = Math.floor(amount), centPart = Math.round((amount - intPart) * 100);
+    let words = '';
+    if (intPart === 0) { words = 'zero'; } else {
+      const mil = Math.floor(intPart / 1000000), th = Math.floor((intPart % 1000000) / 1000), rem = intPart % 1000;
+      if (mil > 0) words += enU1000(mil) + ' million';
+      if (th > 0) { if (words) words += ' '; words += enU1000(th) + ' thousand'; }
+      if (rem > 0) { if (words) words += ' '; words += enU1000(rem); }
+    }
+    words = words.charAt(0).toUpperCase() + words.slice(1) + ' euro';
+    if (centPart > 0) words += ' and ' + enU100(centPart) + ' cents';
+    return words;
+  }
+
+  if (lang === 'fr') {
+    const ones = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf',
+      'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
+    const tensW = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante', 'quatre-vingt', 'quatre-vingt'];
+    function frU100(n: number): string {
+      if (n === 0) return ''; if (n < 20) return ones[n];
+      if (n >= 70 && n < 80) return 'soixante-' + ones[n - 60];
+      if (n >= 90) return 'quatre-vingt-' + ones[n - 80];
+      const t = Math.floor(n / 10), o = n % 10;
+      if (o === 0) return tensW[t] + (t === 8 ? 's' : '');
+      return tensW[t] + (o === 1 && t < 8 ? '-et-' : '-') + ones[o];
+    }
+    function frU1000(n: number): string {
+      if (n === 0) return ''; if (n < 100) return frU100(n);
+      const h = Math.floor(n / 100), rest = n % 100;
+      const hStr = h === 1 ? 'cent' : ones[h] + ' cent';
+      return rest === 0 ? hStr + (h > 1 ? 's' : '') : hStr + ' ' + frU100(rest);
+    }
+    const intPart = Math.floor(amount), centPart = Math.round((amount - intPart) * 100);
+    let words = '';
+    if (intPart === 0) { words = 'zéro'; } else {
+      const mil = Math.floor(intPart / 1000000), th = Math.floor((intPart % 1000000) / 1000), rem = intPart % 1000;
+      if (mil > 0) words += (mil === 1 ? 'un' : frU1000(mil)) + ' million' + (mil > 1 ? 's' : '');
+      if (th > 0) { if (words) words += ' '; words += (th === 1 ? '' : frU1000(th) + ' ') + 'mille'; }
+      if (rem > 0) { if (words) words += ' '; words += frU1000(rem); }
+    }
+    words = words.charAt(0).toUpperCase() + words.slice(1) + ' euro';
+    if (centPart > 0) words += ' et ' + frU100(centPart) + ' centime' + (centPart > 1 ? 's' : '');
+    return words;
+  }
+
+  if (lang === 'de') {
+    const ones = ['', 'ein', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun',
+      'zehn', 'elf', 'zwölf', 'dreizehn', 'vierzehn', 'fünfzehn', 'sechzehn', 'siebzehn', 'achtzehn', 'neunzehn'];
+    const tensW = ['', '', 'zwanzig', 'dreißig', 'vierzig', 'fünfzig', 'sechzig', 'siebzig', 'achtzig', 'neunzig'];
+    function deU100(n: number): string {
+      if (n === 0) return ''; if (n < 20) return ones[n];
+      const t = Math.floor(n / 10), o = n % 10;
+      return o === 0 ? tensW[t] : ones[o] + 'und' + tensW[t];
+    }
+    function deU1000(n: number): string {
+      if (n === 0) return ''; if (n < 100) return deU100(n);
+      const h = Math.floor(n / 100), rest = n % 100;
+      return (h === 1 ? 'ein' : ones[h]) + 'hundert' + (rest ? deU100(rest) : '');
+    }
+    const intPart = Math.floor(amount), centPart = Math.round((amount - intPart) * 100);
+    let words = '';
+    if (intPart === 0) { words = 'null'; } else {
+      const mil = Math.floor(intPart / 1000000), th = Math.floor((intPart % 1000000) / 1000), rem = intPart % 1000;
+      if (mil > 0) words += (mil === 1 ? 'eine' : deU1000(mil)) + ' Million' + (mil > 1 ? 'en' : '');
+      if (th > 0) { if (words) words += ' '; words += (th === 1 ? 'ein' : deU1000(th)) + 'tausend'; }
+      if (rem > 0) { if (words) words += ' '; words += deU1000(rem); }
+    }
+    words = words.charAt(0).toUpperCase() + words.slice(1) + ' Euro';
+    if (centPart > 0) words += ' und ' + deU100(centPart) + ' Cent';
+    return words;
+  }
+
+  // Default: Dutch (nl)
   const ones = ['', 'één', 'twee', 'drie', 'vier', 'vijf', 'zes', 'zeven', 'acht', 'negen',
     'tien', 'elf', 'twaalf', 'dertien', 'veertien', 'vijftien', 'zestien', 'zeventien', 'achttien', 'negentien'];
   const tensWords = ['', '', 'twintig', 'dertig', 'veertig', 'vijftig', 'zestig', 'zeventig', 'tachtig', 'negentig'];
