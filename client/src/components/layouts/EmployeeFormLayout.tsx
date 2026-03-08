@@ -174,9 +174,11 @@ export default function EmployeeFormLayout({ onSave, employeeId }: EmployeeFormL
         ...data,
         dateOfBirth: convertDateString(data.dateOfBirth)
       };
-      return await apiRequest("POST", "/api/employees", submitData);
+      const res = await apiRequest("POST", "/api/employees", submitData);
+      return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (newEmployee: any) => {
+      setCurrentEmployeeId(newEmployee.id);
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
       toast({
         title: "Success",

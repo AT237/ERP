@@ -31,7 +31,8 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
   const queryClient = useQueryClient();
   
   const config = useMemo(() => getMasterDataConfig(type), [type]);
-  const isEditing = !!id;
+  const [currentId, setCurrentId] = useState<string | undefined>(id);
+  const isEditing = !!currentId;
 
   const allFields = useMemo(() => {
     if (!config) return [];
@@ -93,14 +94,14 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
   });
 
   const { data: existingData, isLoading: isLoadingData } = useQuery({
-    queryKey: [`/api/masterdata/${config?.endpoint}`, id],
+    queryKey: [`/api/masterdata/${config?.endpoint}`, currentId],
     queryFn: async () => {
-      if (!id || !config) return null;
-      const response = await fetch(`/api/masterdata/${config.endpoint}/${id}`);
+      if (!currentId || !config) return null;
+      const response = await fetch(`/api/masterdata/${config.endpoint}/${currentId}`);
       if (!response.ok) throw new Error('Failed to fetch');
       return response.json();
     },
-    enabled: !!id && !!config
+    enabled: !!currentId && !!config
   });
 
   useEffect(() => {
@@ -113,7 +114,7 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
     mutationFn: async (data: any) => {
       if (!config) throw new Error('No config');
       const url = isEditing 
-        ? `/api/masterdata/${config.endpoint}/${id}`
+        ? `/api/masterdata/${config.endpoint}/${currentId}`
         : `/api/masterdata/${config.endpoint}`;
       const method = isEditing ? 'PUT' : 'POST';
       
@@ -128,7 +129,8 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (saved: any) => {
+      if (!isEditing && saved?.id) setCurrentId(saved.id);
       if (config) {
         queryClient.invalidateQueries({ queryKey: [`/api/masterdata/${config.endpoint}`] });
       }
@@ -136,7 +138,6 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
         title: "Success",
         description: `${config?.singularTitle || 'Item'} ${isEditing ? 'updated' : 'created'} successfully`,
       });
-      onSave?.();
     },
     onError: (error: any) => {
       toast({

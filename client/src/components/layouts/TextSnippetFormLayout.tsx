@@ -150,9 +150,11 @@ export function TextSnippetFormLayout({ onSave, textSnippetId, parentId }: TextS
   // Mutations
   const createMutation = useMutation({
     mutationFn: async (data: InsertTextSnippet) => {
-      await apiRequest("POST", "/api/text-snippets", data);
+      const res = await apiRequest("POST", "/api/text-snippets", data);
+      return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (newSnippet: any) => {
+      setCurrentTextSnippetId(newSnippet.id);
       queryClient.invalidateQueries({ queryKey: ["/api/text-snippets"] });
       setHasUnsavedChanges(false);
       setModifiedFields(new Set());

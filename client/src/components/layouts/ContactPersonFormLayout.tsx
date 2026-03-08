@@ -194,9 +194,11 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
         customerId: null, // Independent contacts
         dateOfBirth: convertDateString(data.dateOfBirth)
       };
-      return await apiRequest("POST", "/api/customer-contacts", submitData);
+      const res = await apiRequest("POST", "/api/customer-contacts", submitData);
+      return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (newContact: any) => {
+      setCurrentContactPersonId(newContact.id);
       queryClient.invalidateQueries({ queryKey: ["/api/customer-contacts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
