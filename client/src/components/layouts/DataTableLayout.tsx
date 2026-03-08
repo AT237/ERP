@@ -355,8 +355,7 @@ export function DataTableLayout<T = any>({
   onRowDoubleClickRef.current = onRowDoubleClick;
   const getRowIdRef = useRef(getRowId);
   getRowIdRef.current = getRowId;
-  const isMobileRef = useRef(isMobile);
-  isMobileRef.current = isMobile;
+  const isMobileRef = useRef(false);
 
   const attachClickListeners = useCallback((container: HTMLDivElement) => {
     if (cleanupRef.current) cleanupRef.current();
@@ -634,6 +633,7 @@ export function DataTableLayout<T = any>({
 
   // Mobile detection
   const isMobile = useIsMobile();
+  isMobileRef.current = isMobile;
 
   if (isLoading) {
     return (
