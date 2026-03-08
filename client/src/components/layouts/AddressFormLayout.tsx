@@ -6,6 +6,8 @@ import { MapPin, Building, Globe } from "lucide-react";
 import { insertAddressSchema, type InsertAddress, type Address } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { z } from "zod";
 import { 
@@ -39,6 +41,12 @@ interface AddressFormLayoutProps {
 
 export default function AddressFormLayout({ onSave, addressId }: AddressFormLayoutProps) {
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    street: { label: "Straat" },
+    houseNumber: { label: "Huisnummer" },
+    postalCode: { label: "Postcode" },
+    city: { label: "Stad" },
+  });
   const [activeSection, setActiveSection] = useState("address");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -185,7 +193,7 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
   const toolbar = useFormToolbar({
     entityType: "address",
     entityId: addressId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending || hasValidationErrors,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -306,6 +314,14 @@ export default function AddressFormLayout({ onSave, addressId }: AddressFormLayo
         entityId: addressId
       }}
       isLoading={isLoadingAddress}
+      validationErrorDialog={
+        <ValidationErrorDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          errors={validErrors}
+          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+        />
+      }
     />
   );
 }

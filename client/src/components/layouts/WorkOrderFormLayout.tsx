@@ -20,6 +20,8 @@ import { queryClient } from "@/lib/queryClient";
 import { ClipboardList, Calendar, User, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import type { WorkOrder, InsertWorkOrder, Project } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
@@ -57,6 +59,10 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    title: { label: "Titel" },
+    projectId: { label: "Project" },
+  });
   const isEditing = !!workOrderId;
 
   const form = useForm<FormData>({
@@ -485,7 +491,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
   const toolbar = useFormToolbar({
     entityType: "work_order",
     entityId: workOrderId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -529,6 +535,14 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         }
       }}
       originalValues={originalValues}
+      validationErrorDialog={
+        <ValidationErrorDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          errors={validErrors}
+          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+        />
+      }
     />
   );
 }

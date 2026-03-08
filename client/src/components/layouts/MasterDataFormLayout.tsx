@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { LayoutForm2, type FormSection2, type FormField2, createFieldRow } from '@/components/layouts/LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { getMasterDataConfig, type MasterDataField, type MasterDataSection } from "@/config/masterdata-config";
 import { EntitySelect } from "@/components/ui/entity-select";
 
@@ -25,6 +27,7 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
     return cfg?.sections ? cfg.sections[0].id : "data";
   });
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors();
   const queryClient = useQueryClient();
   
   const config = useMemo(() => getMasterDataConfig(type), [type]);
@@ -279,7 +282,7 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
   const toolbar = useFormToolbar({
     entityType: `masterdata-${type}`,
     entityId: id,
-    onSave: form.handleSubmit(handleSubmit),
+    onSave: form.handleSubmit(handleSubmit, onInvalid),
     onClose: () => onSave?.(),
     saveDisabled: createMutation.isPending,
     saveLoading: createMutation.isPending,
@@ -316,6 +319,14 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
         documentType={`masterdata-${type}`}
         entityId={id}
         isLoading={createMutation.isPending}
+        validationErrorDialog={
+          <ValidationErrorDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            errors={validErrors}
+            onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+          />
+        }
       />
     </Form>
   );

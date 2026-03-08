@@ -19,6 +19,8 @@ import { queryClient } from "@/lib/queryClient";
 import { FolderOpen, Calendar, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import type { Project, InsertProject, Customer } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
@@ -55,6 +57,10 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    name: { label: "Projectnaam" },
+    customerId: { label: "Klant" },
+  });
   const isEditing = !!projectId;
 
   const form = useForm<FormData>({
@@ -431,7 +437,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
   const toolbar = useFormToolbar({
     entityType: "project",
     entityId: projectId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -475,6 +481,14 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
         }
       }}
       originalValues={originalValues}
+      validationErrorDialog={
+        <ValidationErrorDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          errors={validErrors}
+          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+        />
+      }
     />
   );
 }

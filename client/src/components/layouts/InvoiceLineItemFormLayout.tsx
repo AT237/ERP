@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createFieldsRow, createCustomRow, createSectionHeaderRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import type { InfoField } from './InfoHeaderLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -90,6 +92,10 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    description: { label: "Omschrijving" },
+    unitPrice: { label: "Eenheidsprijs" },
+  });
   const isEditing = !!lineItemId;
 
   const form = useForm<LineItemFormData>({
@@ -563,7 +569,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const toolbar = useFormToolbar({
     entityType: "invoice_line_item",
     entityId: lineItemId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: !hasUnsavedChanges,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -986,6 +992,12 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         isLoading={isLoadingLineItem}
       />
       {snippetSelectionDialog}
+      <ValidationErrorDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        errors={validErrors}
+        onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+      />
     </>
   );
 }

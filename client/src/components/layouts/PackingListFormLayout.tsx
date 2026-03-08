@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BaseFormLayout } from './BaseFormLayout';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import type { InfoField } from './InfoHeaderLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -50,6 +52,10 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
   const [suppressTracking, setSuppressTracking] = useState(true);
   
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    packingNumber: { label: "Paklijst nummer" },
+    customerId: { label: "Klant" },
+  });
   const isEditing = !!packingListId;
 
   const form = useForm<FormData>({
@@ -514,7 +520,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
   const toolbar = useFormToolbar({
     entityType: "packing_list",
     entityId: packingListId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -600,6 +606,14 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
       activeTab={activeSection}
       onTabChange={setActiveSection}
       isLoading={isLoadingPackingList || createMutation.isPending || updateMutation.isPending}
+      validationErrorDialog={
+        <ValidationErrorDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          errors={validErrors}
+          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+        />
+      }
     />
   );
 }

@@ -7,6 +7,8 @@ import { insertEmployeeSchema, type InsertEmployee, type Employee } from "@share
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { z } from "zod";
 import { 
   LayoutForm2, 
@@ -52,6 +54,10 @@ interface EmployeeFormLayoutProps {
 
 export default function EmployeeFormLayout({ onSave, employeeId }: EmployeeFormLayoutProps) {
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    firstName: { label: "Voornaam" },
+    lastName: { label: "Achternaam" },
+  });
   const [activeSection, setActiveSection] = useState("personal");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [mobileNumbers, setMobileNumbers] = useState<string[]>([""]);
@@ -374,7 +380,7 @@ export default function EmployeeFormLayout({ onSave, employeeId }: EmployeeFormL
   const toolbar = useFormToolbar({
     entityType: "employee",
     entityId: employeeId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -405,6 +411,14 @@ export default function EmployeeFormLayout({ onSave, employeeId }: EmployeeFormL
         dateOfBirth: employee.dateOfBirth ? formatDateString(employee.dateOfBirth) : "",
       } : undefined}
       isLoading={isLoadingEmployee}
+      validationErrorDialog={
+        <ValidationErrorDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          errors={validErrors}
+          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+        />
+      }
     />
   );
 }

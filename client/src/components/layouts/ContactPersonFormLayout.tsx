@@ -7,6 +7,8 @@ import { insertCustomerContactSchema, type InsertCustomerContact, type CustomerC
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { z } from "zod";
 import { 
   LayoutForm2, 
@@ -63,6 +65,10 @@ interface ContactPersonFormLayoutProps {
 
 export default function ContactPersonFormLayout({ onSave, contactPersonId }: ContactPersonFormLayoutProps) {
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    firstName: { label: "Voornaam" },
+    lastName: { label: "Achternaam" },
+  });
   const [activeSection, setActiveSection] = useState("personal");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [mobileNumbers, setMobileNumbers] = useState<string[]>([""]);
@@ -394,7 +400,7 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
   const toolbar = useFormToolbar({
     entityType: "contact_person",
     entityId: contactPersonId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -424,6 +430,14 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
         dateOfBirth: contactPerson.dateOfBirth ? formatDateString(contactPerson.dateOfBirth) : "",
       } : undefined}
       isLoading={isLoadingContact}
+      validationErrorDialog={
+        <ValidationErrorDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          errors={validErrors}
+          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+        />
+      }
     />
   );
 }

@@ -9,6 +9,8 @@ import { queryClient } from "@/lib/queryClient";
 import { Package, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import type { InventoryItem, InsertInventoryItem } from "@shared/schema";
 import { z } from "zod";
 import { 
@@ -45,6 +47,12 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
   const [imagePreview, setImagePreview] = useState<string>("");
   
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    sku: { label: "Artikelcode (SKU)" },
+    name: { label: "Productnaam" },
+    unitPrice: { label: "Verkoopprijs" },
+    costPrice: { label: "Kostprijs" },
+  });
   const isEditing = !!inventoryId;
 
   const form = useForm<InventoryFormData>({
@@ -252,7 +260,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
   const toolbar = useFormToolbar({
     entityType: "inventory",
     entityId: inventoryId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -548,6 +556,14 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       changeTracking={changeTrackingConfig}
       originalValues={originalValues}
       isLoading={isLoadingInventory}
+      validationErrorDialog={
+        <ValidationErrorDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          errors={validErrors}
+          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+        />
+      }
     />
   );
 }

@@ -47,6 +47,7 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors(supplierFieldLabels);
   const isEditing = !!supplierId;
 
   const form = useForm<SupplierFormData>({
@@ -205,7 +206,7 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
   const toolbar = useFormToolbar({
     entityType: "supplier",
     entityId: supplierId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -404,6 +405,14 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
         entityId: supplierId
       }}
       isLoading={isLoadingSupplier}
+      validationErrorDialog={
+        <ValidationErrorDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          errors={validErrors}
+          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+        />
+      }
     />
   );
 }

@@ -7,6 +7,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { LayoutForm2, createFieldRow, createSectionHeaderRow } from './LayoutForm2';
 import { SelectWithAdd } from "@/components/ui/select-with-add";
 import { SelectItem } from "@/components/ui/select";
@@ -35,6 +37,11 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
   const [activeSection, setActiveSection] = useState('general');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    supplierId: { label: "Leverancier" },
+    subtotal: { label: "Subtotaal" },
+    totalAmount: { label: "Totaal" },
+  });
   const isEditing = !!purchaseOrderId;
 
   const form = useForm<FormData>({
@@ -184,7 +191,7 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
   const toolbar = useFormToolbar({
     entityType: "purchase_order",
     entityId: purchaseOrderId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -334,6 +341,14 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
       form={form}
       onSubmit={onSubmit}
       toolbar={toolbar}
+      validationErrorDialog={
+        <ValidationErrorDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          errors={validErrors}
+          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+        />
+      }
     />
   );
 }

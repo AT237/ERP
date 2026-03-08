@@ -9,6 +9,8 @@ import { BaseFormLayout, type ActionButton } from './BaseFormLayout';
 import type { InfoField } from './InfoHeaderLayout';
 import type { FormTab } from './FormTabLayout';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { LayoutForm2, type FormSection2, type FormRow, type FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow, createCustomRow, type ChangeTrackingConfig } from './LayoutForm2';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -107,6 +109,12 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
   const [projectPopoverOpen, setProjectPopoverOpen] = useState(false);
   const { toast } = useToast();
+  const { dialogOpen: validDialogOpen, setDialogOpen: setValidDialogOpen, errors: validErrors, onInvalid: quotationOnInvalid, handleShowFields } = useValidationErrors({
+    quotationNumber: { label: "Offertenummer" },
+    customerId: { label: "Klant" },
+    subtotal: { label: "Subtotaal" },
+    totalAmount: { label: "Totaal" },
+  });
 
   // Data table state for quotation items
   // Uses standardized helper functions for consistent column styling (see replit.md)
@@ -1689,7 +1697,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const toolbar = useFormToolbar({
     entityType: "quotation",
     entityId: quotationId,
-    onSave: quotationForm.handleSubmit(handleSaveQuotation),
+    onSave: quotationForm.handleSubmit(handleSaveQuotation, quotationOnInvalid),
     onClose: onSave,
     saveDisabled: createQuotationMutation.isPending || updateQuotationMutation.isPending,
     saveLoading: createQuotationMutation.isPending || updateQuotationMutation.isPending,
@@ -1839,7 +1847,12 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           </div>
         </DialogContent>
       </Dialog>
-      
+      <ValidationErrorDialog
+        open={validDialogOpen}
+        onOpenChange={setValidDialogOpen}
+        errors={validErrors}
+        onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+      />
     </div>
   );
 }

@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, Project, VatRate } from "@shared/schema";
@@ -179,6 +181,13 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const [woSearch, setWoSearch] = useState('');
   const [woDropdownOpen, setWoDropdownOpen] = useState(false);
   const { toast } = useToast();
+  const { dialogOpen: validDialogOpen, setDialogOpen: setValidDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    invoiceNumber: { label: "Factuurnummer" },
+    invoiceDate: { label: "Factuurdatum" },
+    customerId: { label: "Klant" },
+    subtotal: { label: "Subtotaal" },
+    totalAmount: { label: "Totaal" },
+  });
   const isEditing = !!invoiceId;
 
   const invoiceForm = useForm<InvoiceFormData>({
@@ -633,7 +642,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const toolbar = useFormToolbar({
     entityType: "invoice",
     entityId: invoiceId,
-    onSave: invoiceForm.handleSubmit(handleSaveInvoice),
+    onSave: invoiceForm.handleSubmit(handleSaveInvoice, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -1057,6 +1066,12 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         entityName={deleteItemTarget?.description || 'dit regelitem'}
         entityId={deleteItemTarget?.id || ''}
         isPending={deleteItemMutation.isPending}
+      />
+      <ValidationErrorDialog
+        open={validDialogOpen}
+        onOpenChange={setValidDialogOpen}
+        errors={validErrors}
+        onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
       />
     </div>
   );

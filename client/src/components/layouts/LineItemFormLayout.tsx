@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createCustomRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import type { InfoField } from './InfoHeaderLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -87,6 +89,10 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("all");
   
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    description: { label: "Omschrijving" },
+    unitPrice: { label: "Eenheidsprijs" },
+  });
   const isEditing = !!lineItemId;
 
   // Form setup
@@ -446,7 +452,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   const toolbar = useFormToolbar({
     entityType: "line_item",
     entityId: lineItemId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: !hasUnsavedChanges,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -807,6 +813,12 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         isLoading={isLoadingLineItem}
       />
       {snippetSelectionDialog}
+      <ValidationErrorDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        errors={validErrors}
+        onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+      />
     </>
   );
 }

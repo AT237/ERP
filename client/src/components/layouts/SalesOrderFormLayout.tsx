@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BaseFormLayout } from './BaseFormLayout';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import type { InfoField } from './InfoHeaderLayout';
 import type { FormTab } from './FormTabLayout';
 import { 
@@ -54,6 +56,11 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   const { toast } = useToast();
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    customerId: { label: "Klant" },
+    subtotal: { label: "Subtotaal" },
+    totalAmount: { label: "Totaal" },
+  });
   const isEditing = !!salesOrderId;
 
   // Form setup
@@ -491,7 +498,7 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
   const toolbar = useFormToolbar({
     entityType: "sales_order",
     entityId: salesOrderId,
-    onSave: form.handleSubmit(onSubmit),
+    onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
@@ -505,6 +512,14 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
       onTabChange={setActiveTab}
       toolbar={toolbar}
       isLoading={isLoadingSalesOrder || customersLoading}
+      validationErrorDialog={
+        <ValidationErrorDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          errors={validErrors}
+          onShowFields={() => handleShowFields(setActiveTab, setActiveTab)}
+        />
+      }
     />
   );
 }
