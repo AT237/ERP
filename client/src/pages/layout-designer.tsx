@@ -3462,10 +3462,11 @@ function calculateDynamicPositions(
       let offsetFromAbove = 0;
       for (const otherBlock of sortedBlocks) {
         const otherY = otherBlock.position?.y || 0;
-        const otherBottom = otherY + (otherBlock.size?.height || 0);
         
-        // Only consider blocks that are fully above this one
-        if (otherBottom <= originalY) {
+        // Consider any hidden block that STARTS above this block's Y position.
+        // Using otherY < originalY (instead of otherBottom <= originalY) ensures that
+        // blocks sitting inside a hidden block also shift up, preserving relative spacing.
+        if (otherY < originalY) {
           const otherVisible = blockVisibility.get(otherBlock.id) ?? true;
           if (!otherVisible) {
             offsetFromAbove += otherBlock.size?.height || 0;
