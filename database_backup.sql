@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict JMfmoaAVw8dECKHCflbXXN6lbcBAQIitJcAXEoVWiVDOk9alokEwhKpYK0eI9FT
+\restrict VItoI3OlLcp9dxjsWf4nDnsJTjktm7Bi0XwFksfQODaHOYI1xatC4qpaF4EatS7
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -717,7 +717,8 @@ CREATE TABLE public.invoices (
     print_sort_order text DEFAULT 'position'::text,
     print_language_code text DEFAULT 'nl'::text,
     print_project_no boolean DEFAULT true,
-    print_payment_conditions boolean DEFAULT true
+    print_payment_conditions boolean DEFAULT true,
+    total_amount_in_words text
 );
 
 
@@ -1702,9 +1703,9 @@ COPY public.invoice_work_orders (id, invoice_id, work_order_id) FROM stdin;
 -- Data for Name: invoices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.invoices (id, invoice_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, paid_amount, notes, created_at, payment_days_id, invoice_date, description, print_sort_order, print_language_code, print_project_no, print_payment_conditions) FROM stdin;
-03ad8c0d-2665-41b1-9b18-e3d45be6c636	CI-2026-002	84d6a39c-c26b-4ecf-84b6-b8ee09f0f3b9	\N	\N	pending	\N	0.00	0.00	0.00	0.00		2026-02-10 15:31:46.937416	\N	2026-02-15 19:25:58.713955	\N	position	nl	t	t
-52676213-2666-46ab-8d3e-0ef4d4c23153	CI-2026-001	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	db43039e-cb89-460a-9308-2453f5bad5d0	pending	2026-02-24 23:00:00	3048.40	640.16	3688.56	0.00	gergSfga\nsag\nafg\nasf	2025-09-16 14:20:11.218727	333d11d7-4ad5-44eb-aa85-c4330918c602	2026-02-17 23:00:00	Consulting fees P1-2026	position_low_high	nl	t	t
+COPY public.invoices (id, invoice_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, paid_amount, notes, created_at, payment_days_id, invoice_date, description, print_sort_order, print_language_code, print_project_no, print_payment_conditions, total_amount_in_words) FROM stdin;
+03ad8c0d-2665-41b1-9b18-e3d45be6c636	CI-2026-002	84d6a39c-c26b-4ecf-84b6-b8ee09f0f3b9	\N	\N	pending	\N	0.00	0.00	0.00	0.00		2026-02-10 15:31:46.937416	\N	2026-02-15 19:25:58.713955	\N	position	nl	t	t	\N
+52676213-2666-46ab-8d3e-0ef4d4c23153	CI-2026-001	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	db43039e-cb89-460a-9308-2453f5bad5d0	pending	2026-02-24 23:00:00	3048.40	640.16	3688.56	0.00	gergSfga\nsag\nafg\nasf	2025-09-16 14:20:11.218727	333d11d7-4ad5-44eb-aa85-c4330918c602	2026-02-17 23:00:00	Consulting fees P1-2026	position_low_high	nl	t	t	\N
 \.
 
 
@@ -4163,5 +4164,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict JMfmoaAVw8dECKHCflbXXN6lbcBAQIitJcAXEoVWiVDOk9alokEwhKpYK0eI9FT
+\unrestrict VItoI3OlLcp9dxjsWf4nDnsJTjktm7Bi0XwFksfQODaHOYI1xatC4qpaF4EatS7
 

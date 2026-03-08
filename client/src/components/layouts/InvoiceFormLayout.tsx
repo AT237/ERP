@@ -274,11 +274,17 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     }
   }, [invoice]);
 
-  // Restore vatRatePercent from customer when invoice or vatRates load
+  // Restore vatRatePercent and customerLanguageCode from customer when invoice or vatRates load
   useEffect(() => {
-    if (!invoice || vatRates.length === 0 || vatRatePercent !== 0) return;
+    if (!invoice || customers.length === 0) return;
     const customer = customers.find(c => c.id === invoice.customerId);
-    const vatRate = vatRates.find(v => v.id === (customer as any)?.vatRateId);
+    if (customer) {
+      const lang = (customer as any)?.languageCode || 'nl';
+      setCustomerLanguageCode(lang);
+    }
+    if (vatRates.length === 0 || vatRatePercent !== 0) return;
+    const customer2 = customers.find(c => c.id === invoice.customerId);
+    const vatRate = vatRates.find(v => v.id === (customer2 as any)?.vatRateId);
     if (vatRate) setVatRatePercent(parseFloat(String(vatRate.rate)));
   }, [invoice, vatRates, customers]);
 
@@ -824,6 +830,13 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           type: "display",
           displayValue: `€ ${invoiceForm.watch("totalAmount") || "0.00"}`,
           testId: "display-total-amount"
+        } as any),
+        createFieldRow({
+          key: "totalAmountInWords" as any,
+          label: "Bedrag in woorden",
+          type: "textarea",
+          register: invoiceForm.register("totalAmountInWords"),
+          testId: "input-total-amount-in-words"
         } as any),
         createFieldRow({
           key: "paidAmount",
