@@ -31,6 +31,9 @@ export interface BaseFormLayoutProps {
   
   // Optional loading state
   isLoading?: boolean;
+
+  // Optional validation error dialog
+  validationErrorDialog?: ReactNode;
 }
 
 export function BaseFormLayout({
@@ -39,7 +42,8 @@ export function BaseFormLayout({
   tabs,
   activeTab,
   onTabChange,
-  isLoading = false
+  isLoading = false,
+  validationErrorDialog,
 }: BaseFormLayoutProps) {
   const isMobile = useIsMobile();
   
@@ -118,6 +122,7 @@ export function BaseFormLayout({
           </CardContent>
         </Card>
       </div>
+      {validationErrorDialog}
     </div>
   );
 }

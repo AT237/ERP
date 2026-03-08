@@ -8,6 +8,8 @@ import { queryClient } from "@/lib/queryClient";
 import { Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import type { Supplier, InsertSupplier } from "@shared/schema";
 import { z } from "zod";
 import { 
@@ -32,6 +34,12 @@ interface SupplierFormLayoutProps {
   supplierId?: string;
   parentId?: string;
 }
+
+const supplierFieldLabels: Record<string, { label: string; section?: string }> = {
+  name: { label: "Bedrijfsnaam", section: "general" },
+  email: { label: "E-mail", section: "general" },
+  paymentTerms: { label: "Betalingstermijn", section: "financial" },
+};
 
 export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFormLayoutProps) {
   const [activeSection, setActiveSection] = useState("general");
