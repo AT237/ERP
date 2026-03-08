@@ -494,7 +494,8 @@ export function blockHasContent(
   if (!block) return false;
 
   // If hideWhenEmpty is not enabled AND hideWhenFieldEmpty is not set AND not forced, always show block (backward compatible)
-  if (!block.config?.hideWhenEmpty && !block.config?.hideWhenFieldEmpty && !forceCheck) {
+  // Exception: Group blocks must always check their children in case children have hideWhenFieldEmpty set
+  if (!block.config?.hideWhenEmpty && !block.config?.hideWhenFieldEmpty && !forceCheck && block.type !== 'Group') {
     return true;
   }
 
