@@ -1071,6 +1071,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Invoice routes
+  app.get("/api/invoices/next-number", async (req, res) => {
+    try {
+      const currentYear = new Date().getFullYear();
+      const pattern = `^CI-${currentYear}-[0-9]{3}$`;
+      const rows = await db.execute(
+        sql`SELECT invoice_number FROM invoices WHERE invoice_number ~ ${pattern} ORDER BY invoice_number`
+      );
+      const used = new Set((rows.rows as any[]).map((r: any) => r.invoice_number as string));
+      let next = 1;
+      while (used.has(`CI-${currentYear}-${String(next).padStart(3, '0')}`)) {
+        next++;
+      }
+      res.json({ number: `CI-${currentYear}-${String(next).padStart(3, '0')}` });
+    } catch (error) {
+      console.error("Error generating next invoice number:", error);
+      res.status(500).json({ message: "Failed to generate next invoice number" });
+    }
+  });
+
   app.get("/api/invoices", async (req, res) => {
     try {
       const invoiceList = await storage.getInvoices();
