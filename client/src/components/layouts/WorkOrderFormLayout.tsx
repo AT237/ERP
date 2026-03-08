@@ -63,7 +63,8 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     title: { label: "Titel" },
     projectId: { label: "Project" },
   });
-  const isEditing = !!workOrderId;
+  const [currentWorkOrderId, setCurrentWorkOrderId] = useState<string | undefined>(workOrderId);
+  const isEditing = !!currentWorkOrderId;
 
   const form = useForm<FormData>({
     resolver: zodResolver(workOrderFormSchema),

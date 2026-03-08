@@ -61,7 +61,8 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
     subtotal: { label: "Subtotaal" },
     totalAmount: { label: "Totaal" },
   });
-  const isEditing = !!salesOrderId;
+  const [currentSalesOrderId, setCurrentSalesOrderId] = useState<string | undefined>(salesOrderId);
+  const isEditing = !!currentSalesOrderId;
 
   // Form setup
   const form = useForm<SalesOrderFormData>({

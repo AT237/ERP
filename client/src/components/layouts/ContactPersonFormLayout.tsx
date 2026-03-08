@@ -73,7 +73,8 @@ export default function ContactPersonFormLayout({ onSave, contactPersonId }: Con
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [mobileNumbers, setMobileNumbers] = useState<string[]>([""]);
 
-  const isEditing = !!contactPersonId;
+  const [currentContactPersonId, setCurrentContactPersonId] = useState<string | undefined>(contactPersonId);
+  const isEditing = !!currentContactPersonId;
 
   // Fetch contact person data if editing
   const { data: contactPerson, isLoading: isLoadingContact } = useQuery<CustomerContact>({

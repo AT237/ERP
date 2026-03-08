@@ -93,6 +93,7 @@ interface QuotationFormLayoutProps {
 }
 
 export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayoutProps) {
+  const [currentQuotationId, setCurrentQuotationId] = useState<string | undefined>(quotationId);
   const [activeTab, setActiveTab] = useState("general");
   const [, navigate] = useLocation();
   const [quotationItems, setQuotationItems] = useState<QuotationItem[]>([]);

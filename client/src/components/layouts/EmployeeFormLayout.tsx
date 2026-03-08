@@ -62,7 +62,8 @@ export default function EmployeeFormLayout({ onSave, employeeId }: EmployeeFormL
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [mobileNumbers, setMobileNumbers] = useState<string[]>([""]);
 
-  const isEditing = !!employeeId;
+  const [currentEmployeeId, setCurrentEmployeeId] = useState<string | undefined>(employeeId);
+  const isEditing = !!currentEmployeeId;
 
   const { data: employee, isLoading: isLoadingEmployee } = useQuery<Employee>({
     queryKey: ["/api/employees", employeeId],

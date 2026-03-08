@@ -216,7 +216,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const itemForm = useForm<InvoiceItemFormData>({
     resolver: zodResolver(invoiceItemFormSchema),
     defaultValues: {
-      invoiceId: "",
+      currentInvoiceId: "",
       description: "",
       quantity: 1,
       unitPrice: "0.00",
@@ -225,8 +225,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   });
 
   const { data: invoice, isLoading: invoiceLoading } = useQuery<Invoice>({
-    queryKey: ["/api/invoices", invoiceId],
-    enabled: !!invoiceId,
+    queryKey: ["/api/invoices", currentInvoiceId],
+    enabled: !!currentInvoiceId,
   });
 
   const { data: customers = [] } = useQuery<Customer[]>({
@@ -248,8 +248,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   });
 
   const { data: fetchedInvoiceItems = [] } = useQuery<InvoiceItem[]>({
-    queryKey: ["/api/invoices", invoiceId, "items"],
-    enabled: !!invoiceId,
+    queryKey: ["/api/invoices", currentInvoiceId, "items"],
+    enabled: !!currentInvoiceId,
   });
 
   const { data: allWorkOrders = [] } = useQuery<any[]>({
@@ -257,8 +257,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   });
 
   const { data: invoiceWorkOrderIds = [] } = useQuery<string[]>({
-    queryKey: ["/api/invoices", invoiceId, "work-orders"],
-    enabled: !!invoiceId,
+    queryKey: ["/api/invoices", currentInvoiceId, "work-orders"],
+    enabled: !!currentInvoiceId,
   });
 
   const { data: nextNumberData, refetch: refetchNextNumber } = useQuery<{ number: string }>({
@@ -549,7 +549,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       await apiRequest("DELETE", `/api/invoice-items/${itemId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId, "items"] });
       toast({
         title: "Success",
         description: "Invoice item deleted",
@@ -602,7 +602,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       await Promise.all(selectedIds.map(id => apiRequest("DELETE", `/api/invoice-items/${id}`)));
       setInvoiceItems(prev => prev.filter(i => !selectedIds.includes(i.id)));
       itemTableState.setSelectedRows([]);
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId, "items"] });
       toast({ title: "Deleted", description: `${selectedIds.length} rule(s) deleted` });
     } catch {
       toast({ title: "Error", description: "Failed to delete selected items", variant: "destructive" });
@@ -612,20 +612,20 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   };
 
   const handleDuplicateItem = async (item: InvoiceItem) => {
-    if (!invoiceId) return;
+    if (!currentInvoiceId) return;
     try {
       const { id, createdAt, updatedAt, ...duplicateData } = item as any;
       const nextPosition = invoiceItems.length > 0
         ? String(Math.max(...invoiceItems.map(i => parseInt(String(i.position || '0'), 10))) + 10).padStart(3, '0')
         : '010';
-      const response = await apiRequest("POST", `/api/invoices/${invoiceId}/items`, {
+      const response = await apiRequest("POST", `/api/invoices/${currentInvoiceId}/items`, {
         ...duplicateData,
         position: nextPosition,
         description: `${duplicateData.description || ''} (Copy)`,
       });
       const newItem = await response.json();
       setInvoiceItems(prev => [...prev, newItem]);
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId, "items"] });
       toast({ title: "Success", description: "Line item duplicated" });
     } catch (error) {
       toast({ title: "Error", description: "Failed to duplicate line item", variant: "destructive" });
@@ -634,13 +634,13 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
 
   const handleCancel = () => {
     window.dispatchEvent(new CustomEvent('close-form-tab', {
-      detail: { tabId: invoiceId ? `edit-invoice-${invoiceId}` : 'new-invoice' }
+      detail: { tabId: currentInvoiceId ? `edit-invoice-${currentInvoiceId}` : 'new-invoice' }
     }));
   };
 
   const toolbar = useFormToolbar({
     entityType: "invoice",
-    entityId: invoiceId,
+    entityId: currentInvoiceId,
     onSave: invoiceForm.handleSubmit(handleSaveInvoice, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
@@ -731,7 +731,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                     email: (c as any).generalEmail || (c as any).email || undefined,
                     phone: (c as any).phone || undefined,
                   }))}
-                  parentId={invoiceId || 'new-invoice'}
+                  parentId={currentInvoiceId || 'new-invoice'}
                 />
               ),
             },
@@ -807,7 +807,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                     projectNumber: (p as any).projectNumber || '',
                     name: p.name,
                   }))}
-                  parentId={invoiceId || 'new-invoice'}
+                  parentId={currentInvoiceId || 'new-invoice'}
                 />
               ),
             },
@@ -978,7 +978,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         onSubmit={handleSaveInvoice}
         toolbar={toolbar}
         documentType="invoice"
-        entityId={invoiceId}
+        entityId={currentInvoiceId}
         isLoading={invoiceLoading}
       />
       {isEditing && (
@@ -1011,8 +1011,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
             applySorting={itemTableState.applySorting}
             compact={true}
             onRowDoubleClick={(item: InvoiceItem) => {
-              if (invoiceId) {
-                navigate(`/invoices/${invoiceId}/items/${item.id}`);
+              if (currentInvoiceId) {
+                navigate(`/invoices/${currentInvoiceId}/items/${item.id}`);
               }
             }}
             headerActions={[
@@ -1021,8 +1021,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                 label: 'ADD LINE',
                 icon: <Plus className="h-4 w-4" />,
                 onClick: () => {
-                  if (invoiceId) {
-                    navigate(`/invoices/${invoiceId}/items/new`);
+                  if (currentInvoiceId) {
+                    navigate(`/invoices/${currentInvoiceId}/items/new`);
                   }
                 },
                 variant: 'default' as const
@@ -1041,8 +1041,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                 label: 'Edit',
                 icon: <FileText className="h-4 w-4" />,
                 onClick: () => {
-                  if (invoiceId) {
-                    navigate(`/invoices/${invoiceId}/items/${item.id}`);
+                  if (currentInvoiceId) {
+                    navigate(`/invoices/${currentInvoiceId}/items/${item.id}`);
                   }
                 },
                 variant: 'outline'

@@ -53,7 +53,8 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     unitPrice: { label: "Verkoopprijs" },
     costPrice: { label: "Kostprijs" },
   });
-  const isEditing = !!inventoryId;
+  const [currentInventoryId, setCurrentInventoryId] = useState<string | undefined>(inventoryId);
+  const isEditing = !!currentInventoryId;
 
   const form = useForm<InventoryFormData>({
     resolver: zodResolver(inventoryFormSchema),

@@ -61,7 +61,8 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     name: { label: "Projectnaam" },
     customerId: { label: "Klant" },
   });
-  const isEditing = !!projectId;
+  const [currentProjectId, setCurrentProjectId] = useState<string | undefined>(projectId);
+  const isEditing = !!currentProjectId;
 
   const form = useForm<FormData>({
     resolver: zodResolver(projectFormSchema),

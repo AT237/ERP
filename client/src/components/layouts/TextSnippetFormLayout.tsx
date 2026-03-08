@@ -80,7 +80,8 @@ export function TextSnippetFormLayout({ onSave, textSnippetId, parentId }: TextS
     name: { label: "Naam" },
     code: { label: "Code" },
   });
-  const isEditing = !!textSnippetId;
+  const [currentTextSnippetId, setCurrentTextSnippetId] = useState<string | undefined>(textSnippetId);
+  const isEditing = !!currentTextSnippetId;
 
   // Form setup
   const form = useForm<TextSnippetFormData>({

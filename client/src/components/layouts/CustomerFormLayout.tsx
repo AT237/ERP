@@ -141,7 +141,8 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   
   const { toast } = useToast();
-  const isEditing = !!customerId;
+  const [currentCustomerId, setCurrentCustomerId] = useState<string | undefined>(customerId);
+  const isEditing = !!currentCustomerId;
 
   // Create schema dynamically based on current country requirements
   const customerFormSchema = useMemo(() => {

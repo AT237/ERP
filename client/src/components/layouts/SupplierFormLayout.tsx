@@ -48,7 +48,8 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
   
   const { toast } = useToast();
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors(supplierFieldLabels);
-  const isEditing = !!supplierId;
+  const [currentSupplierId, setCurrentSupplierId] = useState<string | undefined>(supplierId);
+  const isEditing = !!currentSupplierId;
 
   const form = useForm<SupplierFormData>({
     resolver: zodResolver(supplierFormSchema),

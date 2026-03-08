@@ -56,7 +56,8 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     packingNumber: { label: "Paklijst nummer" },
     customerId: { label: "Klant" },
   });
-  const isEditing = !!packingListId;
+  const [currentPackingListId, setCurrentPackingListId] = useState<string | undefined>(packingListId);
+  const isEditing = !!currentPackingListId;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),

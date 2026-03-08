@@ -42,7 +42,8 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
     subtotal: { label: "Subtotaal" },
     totalAmount: { label: "Totaal" },
   });
-  const isEditing = !!purchaseOrderId;
+  const [currentPurchaseOrderId, setCurrentPurchaseOrderId] = useState<string | undefined>(purchaseOrderId);
+  const isEditing = !!currentPurchaseOrderId;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
