@@ -12,9 +12,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInvoiceSchema, insertInvoiceItemSchema } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Save, X, FileText, Printer, CopyPlus, RefreshCw } from "lucide-react";
+import { Plus, Save, X, FileText, Printer, CopyPlus, RefreshCw, ChevronsUpDown, Search, Check, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
@@ -26,7 +28,6 @@ import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { amountToWords } from "@/utils/field-resolver";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
-import { ProjectSelect } from "@/components/ui/project-select";
 import { addDays } from "date-fns";
 
 const invoiceFormSchema = insertInvoiceSchema.omit({
@@ -180,6 +181,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const [selectedWorkOrderIds, setSelectedWorkOrderIds] = useState<string[]>([]);
   const [woSearch, setWoSearch] = useState('');
   const [woDropdownOpen, setWoDropdownOpen] = useState(false);
+  const [projectPopoverOpen, setProjectPopoverOpen] = useState(false);
   const { toast } = useToast();
   const { dialogOpen: validDialogOpen, setDialogOpen: setValidDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
     invoiceNumber: { label: "Factuurnummer" },
@@ -797,18 +799,127 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
               label: "Project",
               type: "custom",
               customComponent: (
-                <ProjectSelect
-                  value={invoiceForm.watch("projectId") || ""}
-                  onValueChange={(value) => invoiceForm.setValue("projectId", value || "")}
-                  placeholder="Select project..."
-                  testId="select-invoice-project"
-                  projects={projects.map(p => ({
-                    id: p.id,
-                    projectNumber: (p as any).projectNumber || '',
-                    name: p.name,
-                  }))}
-                  parentId={currentInvoiceId || 'new-invoice'}
-                />
+                <Popover open={projectPopoverOpen} onOpenChange={setProjectPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={projectPopoverOpen}
+                      className="w-full justify-between"
+                      data-testid="select-invoice-project"
+                    >
+                      {invoiceForm.watch("projectId")
+                        ? (() => {
+                            const p = projects.find((pr: any) => pr.id === invoiceForm.watch("projectId"));
+                            return p ? ((p as any).projectNumber ? `${(p as any).projectNumber} - ${p.name}` : p.name) : "Select project...";
+                          })()
+                        : "Select project..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="p-0 max-h-[300px]"
+                    align="start"
+                    sideOffset={4}
+                    style={{ width: 'var(--radix-popover-trigger-width)' }}
+                  >
+                    <Command
+                      filter={(value, search) => {
+                        const project = projects.find((p: any) => p.name === value);
+                        if (!project) return 0;
+                        const searchLower = search.toLowerCase();
+                        return (
+                          project.name?.toLowerCase().includes(searchLower) ||
+                          (project as any).projectNumber?.toLowerCase().includes(searchLower)
+                        ) ? 1 : 0;
+                      }}
+                    >
+                      <div className="flex items-center border-b px-3">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        <CommandInput placeholder="Search projects..." className="border-0 focus:ring-0" />
+                      </div>
+                      <CommandList>
+                        <CommandEmpty>No project found.</CommandEmpty>
+                        <CommandGroup>
+                          {invoiceForm.watch("projectId") && (
+                            <CommandItem
+                              value="__clear__"
+                              onSelect={() => {
+                                invoiceForm.setValue("projectId", "");
+                                setProjectPopoverOpen(false);
+                              }}
+                              className="text-muted-foreground italic"
+                            >
+                              — Clear selection —
+                            </CommandItem>
+                          )}
+                          {projects.map((project: any) => (
+                            <CommandItem
+                              key={project.id}
+                              value={project.name}
+                              onSelect={() => {
+                                invoiceForm.setValue("projectId", project.id);
+                                setProjectPopoverOpen(false);
+                              }}
+                              className="flex items-center justify-between"
+                            >
+                              <div className="flex items-center">
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${invoiceForm.watch("projectId") === project.id ? "opacity-100" : "opacity-0"}`}
+                                />
+                                <div className="font-medium">
+                                  {project.projectNumber ? `${project.projectNumber} - ${project.name}` : project.name}
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  window.dispatchEvent(new CustomEvent('open-form-tab', {
+                                    detail: {
+                                      id: `edit-project-${project.id}`,
+                                      name: project.name || 'Edit Project',
+                                      formType: 'project',
+                                      entityId: project.id,
+                                    }
+                                  }));
+                                  setProjectPopoverOpen(false);
+                                }}
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </Button>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                      <div className="border-t p-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                          onClick={() => {
+                            setProjectPopoverOpen(false);
+                            window.dispatchEvent(new CustomEvent('open-form-tab', {
+                              detail: {
+                                id: `project-new-${Date.now()}`,
+                                name: 'New Project',
+                                formType: 'project',
+                              }
+                            }));
+                          }}
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add new project
+                        </Button>
+                      </div>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               ),
             },
             {
