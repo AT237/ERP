@@ -458,9 +458,10 @@ export function replacePlaceholders(
         const fieldName = itemFieldPath.toLowerCase();
         if (fieldName.includes('date') || fieldName.includes('datum')) {
           resolvedFormat = 'date';
-        } else if (fieldName.includes('price') || fieldName.includes('total') || 
+        } else if (!fieldName.includes('inwords') &&
+            (fieldName.includes('price') || fieldName.includes('total') || 
             fieldName.includes('amount') || fieldName === 'unitprice' || 
-            fieldName === 'linetotal') {
+            fieldName === 'linetotal')) {
           resolvedFormat = 'currency';
         } else if (fieldName === 'quantity' || fieldName === 'aantal') {
           resolvedFormat = 'number';
@@ -482,11 +483,12 @@ export function replacePlaceholders(
           fieldNameLower === 'validuntil' || fieldNameLower.includes('quotationdate')) {
         resolvedFormat = 'date';
       }
-      // Auto-detect currency fields
-      else if (fieldNameLower.includes('amount') || fieldNameLower.includes('price') || 
+      // Auto-detect currency fields (exclude "...InWords" / "...inwords" variants)
+      else if (!fieldNameLower.includes('inwords') &&
+               (fieldNameLower.includes('amount') || fieldNameLower.includes('price') || 
                fieldNameLower.includes('total') || fieldNameLower.includes('bedrag') ||
                fieldNameLower.includes('prijs') || fieldNameLower.includes('subtotal') ||
-               fieldNameLower.includes('taxamount')) {
+               fieldNameLower.includes('taxamount'))) {
         resolvedFormat = 'currency';
       }
     }
