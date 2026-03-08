@@ -251,6 +251,18 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     enabled: !!invoiceId,
   });
 
+  const { data: nextNumberData, refetch: refetchNextNumber } = useQuery<{ number: string }>({
+    queryKey: ["/api/invoices/next-number"],
+    enabled: !isEditing,
+    staleTime: 0,
+  });
+
+  useEffect(() => {
+    if (!isEditing && nextNumberData?.number && !invoiceForm.getValues("invoiceNumber")) {
+      invoiceForm.setValue("invoiceNumber", nextNumberData.number);
+    }
+  }, [nextNumberData, isEditing]);
+
   const formInitializedForId = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -662,12 +674,36 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
             {
               key: "invoiceNumber",
               label: "Number",
-              type: "text",
-              register: invoiceForm.register("invoiceNumber"),
-              validation: {
-                error: invoiceForm.formState.errors.invoiceNumber?.message,
-                isRequired: true
-              },
+              type: "custom",
+              customComponent: (
+                <div className="flex gap-1 items-center">
+                  <Input
+                    {...invoiceForm.register("invoiceNumber")}
+                    className={`h-10 text-xs flex-1 ${invoiceForm.formState.errors.invoiceNumber ? 'border-red-500' : ''}`}
+                    placeholder="CI-2026-001"
+                    data-testid="input-invoice-number"
+                  />
+                  {!isEditing && (
+                    <button
+                      type="button"
+                      title="Nieuw beschikbaar nummer ophalen"
+                      onClick={async () => {
+                        const result = await refetchNextNumber();
+                        if (result.data?.number) {
+                          invoiceForm.setValue("invoiceNumber", result.data.number);
+                        }
+                      }}
+                      className="h-10 w-10 flex items-center justify-center rounded border border-input bg-background hover:bg-orange-50 hover:border-orange-400 transition-colors flex-shrink-0"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  )}
+                  {invoiceForm.formState.errors.invoiceNumber && (
+                    <span className="text-xs text-red-500 mt-1">{invoiceForm.formState.errors.invoiceNumber.message}</span>
+                  )}
+                </div>
+              ),
+              validation: { isRequired: true },
               testId: "input-invoice-number"
             },
             {
