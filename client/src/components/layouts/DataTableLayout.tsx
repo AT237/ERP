@@ -355,6 +355,8 @@ export function DataTableLayout<T = any>({
   onRowDoubleClickRef.current = onRowDoubleClick;
   const getRowIdRef = useRef(getRowId);
   getRowIdRef.current = getRowId;
+  const isMobileRef = useRef(isMobile);
+  isMobileRef.current = isMobile;
 
   const attachClickListeners = useCallback((container: HTMLDivElement) => {
     if (cleanupRef.current) cleanupRef.current();
@@ -369,12 +371,16 @@ export function DataTableLayout<T = any>({
       return row ? (row.getAttribute('data-row-id') || null) : null;
     };
 
+    const openRow = (rowId: string) => {
+      const dataRow = sortedDataRef.current.find(r => getRowIdRef.current(r) === rowId);
+      if (dataRow && onRowDoubleClickRef.current) onRowDoubleClickRef.current(dataRow);
+    };
+
     const tryDoubleTap = (rowId: string) => {
       const now = Date.now();
       const timeDiff = now - lastTap.time;
       if (lastTap.rowId === rowId && timeDiff < 800) {
-        const dataRow = sortedDataRef.current.find(r => getRowIdRef.current(r) === rowId);
-        if (dataRow && onRowDoubleClickRef.current) onRowDoubleClickRef.current(dataRow);
+        openRow(rowId);
         lastTap = { time: 0, rowId: '' };
         return true;
       } else {
@@ -390,7 +396,11 @@ export function DataTableLayout<T = any>({
       const rowId = findRowId(e.target as HTMLElement);
       if (!rowId) return;
       touchHandled = true;
-      if (tryDoubleTap(rowId)) {
+      // On mobile: single tap opens the row (double-tap is unreliable on touch screens)
+      if (isMobileRef.current) {
+        openRow(rowId);
+        e.preventDefault();
+      } else if (tryDoubleTap(rowId)) {
         e.preventDefault();
       }
       setTimeout(() => { touchHandled = false; }, 300);
