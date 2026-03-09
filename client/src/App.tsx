@@ -27,6 +27,7 @@ import TextSnippets from "@/pages/text-snippets";
 import Images from "@/pages/images";
 import Pictograms from "@/pages/pictograms";
 import LayoutDesigner from "@/pages/layout-designer";
+import EmailDesigner from "@/pages/email-designer";
 import StyleGuide from "@/pages/style-guide";
 import DevFutures from "@/pages/dev-futures";
 import Layout from "@/components/layout";
@@ -55,6 +56,7 @@ function Router() {
         <Route path="/pdf-archive" component={PdfArchive} />
         <Route path="/text-snippets" component={TextSnippets} />
         <Route path="/layout-designer" component={LayoutDesigner} />
+        <Route path="/email-designer" component={EmailDesigner} />
         <Route path="/style-guide" component={StyleGuide} />
         <Route path="/dev-futures" component={DevFutures} />
         

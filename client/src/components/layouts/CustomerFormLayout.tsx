@@ -123,6 +123,141 @@ interface ValidationError {
   section: string;
 }
 
+// ─── Standaard emails tab ─────────────────────────────────────────────────────
+
+const TEMPLATE_TYPE_LABELS: Record<string, string> = {
+  invoice: "Factuur",
+  quotation: "Offerte",
+  purchase_order: "Inkooporder",
+  packing_list: "Paklijst",
+  work_order: "Werkbon",
+  general: "Algemeen",
+};
+
+function EmailTemplatesTab({ customer }: { customer: any }) {
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState("invoice");
+
+  const { data: templates = [] } = useQuery<EmailTemplate[]>({
+    queryKey: ["/api/email-templates"],
+  });
+
+  const filtered = templates.filter((t) => t.templateType === typeFilter);
+  const selected = templates.find((t) => t.id === selectedTemplateId) ?? filtered[0] ?? null;
+
+  // Auto-select first when filter changes
+  useEffect(() => {
+    if (filtered.length > 0 && (!selectedTemplateId || !filtered.find(t => t.id === selectedTemplateId))) {
+      setSelectedTemplateId(filtered[0].id);
+    }
+  }, [typeFilter, filtered.length]);
+
+  const resolveTokens = (text: string): string => {
+    if (!text) return "";
+    return text
+      .replace(/\{\{customer\.name\}\}/g, customer?.name ?? "{{customer.name}}")
+      .replace(/\{\{customer\.email\}\}/g, customer?.email ?? "{{customer.email}}")
+      .replace(/\{\{customer\.invoiceEmail\}\}/g, customer?.invoiceEmail ?? "{{customer.invoiceEmail}}")
+      .replace(/\{\{customer\.generalEmail\}\}/g, customer?.generalEmail ?? "{{customer.generalEmail}}")
+      .replace(/\{\{customer\.phone\}\}/g, customer?.phone ?? "{{customer.phone}}")
+      .replace(/\{\{contact\.name\}\}/g, customer?.primaryContactName ?? "{{contact.name}}")
+      .replace(/\{\{contact\.email\}\}/g, customer?.primaryContactEmail ?? "{{contact.email}}")
+      .replace(/\{\{contact\.phone\}\}/g, customer?.primaryContactPhone ?? "{{contact.phone}}");
+  };
+
+  const handleOpenOutlook = () => {
+    if (!selected) return;
+    const to = customer?.invoiceEmail || customer?.email || "";
+    const subject = encodeURIComponent(selected.subject ?? "");
+    const body = encodeURIComponent(selected.body ?? "");
+    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+  };
+
+  const handleOpenDesigner = () => {
+    window.open("/email-designer", "_blank");
+  };
+
+  return (
+    <div className="space-y-4 pt-2">
+      {/* Filter by type */}
+      <div className="flex items-center gap-3">
+        <Label className="text-sm font-medium w-[130px] text-right flex-shrink-0">Type</Label>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="h-9 w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(TEMPLATE_TYPE_LABELS).map(([v, l]) => (
+              <SelectItem key={v} value={v}>{l}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-orange-500 hover:bg-orange-50 text-xs ml-auto"
+          onClick={handleOpenDesigner}>
+          <ExternalLink className="h-3.5 w-3.5" />
+          Email Designer
+        </Button>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-10 text-muted-foreground border rounded-lg bg-gray-50">
+          <Mail className="h-10 w-10 mx-auto mb-2 opacity-20" />
+          <p className="text-sm font-medium">Geen templates voor dit type</p>
+          <p className="text-xs mt-1">Maak templates aan via Tools → Email Designer</p>
+          <Button size="sm" variant="outline" className="mt-3 gap-1.5 text-orange-500 border-orange-200"
+            onClick={handleOpenDesigner}>
+            <ExternalLink className="h-3.5 w-3.5" />
+            Naar Email Designer
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-[200px_1fr] gap-4">
+          {/* Template list */}
+          <div className="border rounded-lg overflow-hidden bg-white">
+            {filtered.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setSelectedTemplateId(t.id)}
+                className={`w-full text-left px-3 py-2.5 hover:bg-gray-50 transition-colors border-b last:border-b-0 border-l-2 ${
+                  (selected?.id === t.id) ? "border-l-orange-500 bg-orange-50/50" : "border-l-transparent"
+                }`}
+              >
+                <p className={`text-xs font-medium ${selected?.id === t.id ? "text-orange-700" : ""}`}>{t.name}</p>
+                <p className="text-[10px] text-muted-foreground">{TEMPLATE_TYPE_LABELS[t.templateType] ?? t.templateType}</p>
+              </button>
+            ))}
+          </div>
+
+          {/* Preview */}
+          {selected && (
+            <div className="border rounded-lg bg-white overflow-hidden">
+              <div className="px-4 py-2.5 bg-gray-50 border-b flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-700">{selected.name}</span>
+                <Button size="sm" className="h-7 gap-1.5 text-xs bg-orange-500 hover:bg-orange-600"
+                  onClick={handleOpenOutlook}>
+                  <Mail className="h-3 w-3" />
+                  Versturen via Outlook
+                </Button>
+              </div>
+              {selected.subject && (
+                <div className="px-4 pt-3 pb-1 border-b">
+                  <span className="text-xs text-muted-foreground">Onderwerp: </span>
+                  <span className="text-sm font-medium">{resolveTokens(selected.subject)}</span>
+                </div>
+              )}
+              <div className="px-4 py-3">
+                <pre className="text-sm font-sans whitespace-pre-wrap text-gray-700 leading-relaxed">
+                  {resolveTokens(selected.body ?? "")}
+                </pre>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFormLayoutProps) {
   const [activeTab, setActiveTab] = useState("general");
   const [activeSection, setActiveSection] = useState("general");
@@ -1050,6 +1185,19 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                 )}
               </div>
             </div>
+          )
+        }
+      ]
+    },
+    {
+      id: "emails",
+      label: "Standaard emails",
+      icon: <Mail className="h-4 w-4" />,
+      rows: [
+        {
+          type: 'custom',
+          customContent: (
+            <EmailTemplatesTab customer={customer} />
           )
         }
       ]
