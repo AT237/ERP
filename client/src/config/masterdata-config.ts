@@ -14,11 +14,12 @@ import {
 export interface MasterDataField {
   name: string;
   label: string;
-  type: 'text' | 'number' | 'textarea' | 'select';
+  type: 'text' | 'number' | 'textarea' | 'select' | 'auto-code';
   required?: boolean;
   options?: Array<{ value: string; label: string }>;
   fetchOptionsFrom?: string; // API endpoint to fetch options from (e.g. 'units-of-measure')
   fetchOptionsMap?: { value: string; label: string }; // field mapping: {value: 'code', label: 'name'}
+  nextCodeEndpoint?: string; // API endpoint to fetch the next auto-generated code
 }
 
 export interface MasterDataColumn {
