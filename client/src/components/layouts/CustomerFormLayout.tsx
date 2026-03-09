@@ -546,25 +546,25 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("PUT", `/api/customers/${customerId}`, data);
+      const response = await apiRequest("PUT", `/api/customers/${currentCustomerId}`, data);
       return response.json();
     },
     onSuccess: async () => {
-      if (customerId) {
+      if (currentCustomerId) {
         try {
-          await saveCustomerRatesFor(customerId);
+          await saveCustomerRatesFor(currentCustomerId);
         } catch (error) {
           console.error("Error saving customer rates:", error);
         }
       }
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/customers", customerId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/customer-rates", customerId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers", currentCustomerId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customer-rates", currentCustomerId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setHasUnsavedChanges(false);
       setModifiedFields(new Set());
-      const tabId = customerId ? `edit-customer-${customerId}` : 'new-customer';
+      const tabId = currentCustomerId ? `edit-customer-${currentCustomerId}` : 'new-customer';
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId, hasUnsavedChanges: false }
       }));
@@ -661,7 +661,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
 
   const toolbar = useFormToolbar({
     entityType: "customer",
-    entityId: customerId,
+    entityId: currentCustomerId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
@@ -1070,10 +1070,10 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           onChangesDetected: (hasChanges) => setHasUnsavedChanges(hasChanges)
         }}
         documentType="customer"
-        entityId={customerId}
+        entityId={currentCustomerId}
         persistence={{
           formType: 'customer',
-          entityId: customerId
+          entityId: currentCustomerId
         }}
         isLoading={isLoadingCustomer}
       />

@@ -243,16 +243,16 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
 
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<InsertProject>) => {
-      const response = await apiRequest("PUT", `/api/projects/${projectId}`, data);
+      const response = await apiRequest("PUT", `/api/projects/${currentProjectId}`, data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setHasUnsavedChanges(false);
       setModifiedFields(new Set());
-      const tabId = projectId ? `edit-project-${projectId}` : 'new-project';
+      const tabId = currentProjectId ? `edit-project-${currentProjectId}` : 'new-project';
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId, hasUnsavedChanges: false }
       }));
@@ -442,7 +442,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
         {
           type: "custom" as const,
           customContent: (
-            <AttachmentsGallery entityType="project" entityId={projectId} />
+            <AttachmentsGallery entityType="project" entityId={currentProjectId} />
           ),
         },
       ],
@@ -451,7 +451,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
 
   const toolbar = useFormToolbar({
     entityType: "project",
-    entityId: projectId,
+    entityId: currentProjectId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
@@ -484,7 +484,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       toolbar={toolbar}
       headerFields={createHeaderFields()}
       documentType="project"
-      entityId={projectId}
+      entityId={currentProjectId}
       isLoading={isLoadingProject}
       changeTracking={{
         enabled: true,

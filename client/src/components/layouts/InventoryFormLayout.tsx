@@ -203,15 +203,15 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("PUT", `/api/inventory/${inventoryId}`, data);
+      const response = await apiRequest("PUT", `/api/inventory/${currentInventoryId}`, data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory", inventoryId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory", currentInventoryId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setHasUnsavedChanges(false);
-      const tabId = inventoryId ? `edit-inventory-${inventoryId}` : 'new-inventory';
+      const tabId = currentInventoryId ? `edit-inventory-${currentInventoryId}` : 'new-inventory';
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId, hasUnsavedChanges: false }
       }));
@@ -262,7 +262,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
 
   const toolbar = useFormToolbar({
     entityType: "inventory",
-    entityId: inventoryId,
+    entityId: currentInventoryId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
@@ -557,7 +557,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       toolbar={toolbar}
       headerFields={headerFields}
       documentType="inventory"
-      entityId={inventoryId}
+      entityId={currentInventoryId}
       changeTracking={changeTrackingConfig}
       originalValues={originalValues}
       isLoading={isLoadingInventory}
