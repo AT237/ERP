@@ -314,7 +314,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         createFieldsRow([
           {
             key: "sku",
-            label: "Artikelcode (SKU) *",
+            label: "Artikelcode (SKU)",
             type: "text",
             placeholder: "Voer artikelcode in",
             layout: "single",
@@ -348,7 +348,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         
         createFieldRow({
           key: "name",
-          label: "Product Name *",
+          label: "Product Name",
           type: "text",
           placeholder: "Enter product name",
           register: form.register("name"),
