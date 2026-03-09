@@ -213,10 +213,16 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
   const endDateValue = form.watch("endDate");
   const totalValueValue = form.watch("totalValue");
   const progressValue = form.watch("progress");
-  
+  const incotermIdValue = form.watch("incotermId");
+  const insuranceCoveredValue = form.watch("insuranceCovered");
+  const modeOfShipmentValue = form.watch("modeOfShipment");
+  const deliveryTimeValue = form.watch("deliveryTime");
+  const portOfLoadingValue = form.watch("portOfLoading");
+  const finalDestinationValue = form.watch("finalDestination");
+
   useEffect(() => {
     scheduleChangeCheck();
-  }, [nameValue, descriptionValue, customerIdValue, statusValue, startDateValue, endDateValue, totalValueValue, progressValue, scheduleChangeCheck]);
+  }, [nameValue, descriptionValue, customerIdValue, statusValue, startDateValue, endDateValue, totalValueValue, progressValue, incotermIdValue, insuranceCoveredValue, modeOfShipmentValue, deliveryTimeValue, portOfLoadingValue, finalDestinationValue, scheduleChangeCheck]);
 
   // Communicate unsaved changes status to parent Layout
   useEffect(() => {
@@ -379,6 +385,16 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
           isModified: modifiedFields.has("status")
         } as FormField2<FormData>),
         createFieldRow({
+          key: "incotermId",
+          label: "Incoterm",
+          type: "select",
+          options: incoterms.map(i => ({ value: i.id, label: `${i.code} – ${i.name}` })),
+          setValue: (value) => form.setValue("incotermId", value),
+          watch: () => form.watch("incotermId"),
+          testId: "select-incoterm",
+          isModified: modifiedFields.has("incotermId")
+        } as FormField2<FormData>),
+        createFieldRow({
           key: "description",
           label: "Description",
           type: "textarea",
@@ -456,6 +472,58 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
           displayValue: isEditing ? `€ ${invoicedTotalData?.total || "0.00"}` : "—",
           testId: "display-invoiced-total",
         } as any),
+      ]
+    },
+    {
+      id: "transport",
+      label: "Transport",
+      icon: <Truck className="h-4 w-4" />,
+      rows: [
+        createFieldRow({
+          key: "modeOfShipment",
+          label: "Mode of Shipment",
+          type: "text",
+          placeholder: "e.g. Sea freight, Air freight",
+          register: form.register("modeOfShipment"),
+          testId: "input-mode-of-shipment",
+          isModified: modifiedFields.has("modeOfShipment")
+        } as FormField2<FormData>),
+        createFieldRow({
+          key: "portOfLoading",
+          label: "Port of Loading",
+          type: "text",
+          placeholder: "e.g. Rotterdam",
+          register: form.register("portOfLoading"),
+          testId: "input-port-of-loading",
+          isModified: modifiedFields.has("portOfLoading")
+        } as FormField2<FormData>),
+        createFieldRow({
+          key: "finalDestination",
+          label: "Final Destination",
+          type: "text",
+          placeholder: "e.g. Shanghai",
+          register: form.register("finalDestination"),
+          testId: "input-final-destination",
+          isModified: modifiedFields.has("finalDestination")
+        } as FormField2<FormData>),
+        createFieldRow({
+          key: "deliveryTime",
+          label: "Delivery Time",
+          type: "text",
+          placeholder: "e.g. 6-8 weeks",
+          register: form.register("deliveryTime"),
+          testId: "input-delivery-time",
+          isModified: modifiedFields.has("deliveryTime")
+        } as FormField2<FormData>),
+        createFieldRow({
+          key: "insuranceCovered",
+          label: "Insurance Covered",
+          type: "text",
+          placeholder: "e.g. Yes – by seller",
+          register: form.register("insuranceCovered"),
+          testId: "input-insurance-covered",
+          isModified: modifiedFields.has("insuranceCovered")
+        } as FormField2<FormData>),
       ]
     },
     {
