@@ -23,7 +23,7 @@ import {
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact, UserCheck,
   ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search, ChevronsDown, ChevronsUp,
-  Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen, Layout, Image, Archive, Mail, ListTodo
+  Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen, Layout, Image, Archive, Mail, ListTodo, Hash
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -86,7 +86,8 @@ export const defaultNavigation = [
       { id: "confirmations", name: "Order Confirmations", href: "/order-confirmations", icon: CheckSquare },
       { id: "work-orders", name: "Work Orders", href: "/work-orders", icon: ClipboardList },
       { id: "projects", name: "Projects", href: "/projects", icon: FolderOpen },
-      { id: "packing-lists", name: "Packing Lists", href: "/packing-lists", icon: Box }
+      { id: "packing-lists", name: "Packing Lists", href: "/packing-lists", icon: Box },
+      { id: "serial-numbers", name: "Serial Numbers", href: "/serial-numbers", icon: Hash }
     ]
   },
   {
