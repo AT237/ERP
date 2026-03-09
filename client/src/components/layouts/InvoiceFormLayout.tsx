@@ -296,7 +296,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         vatRatePercent: (invoice as any).vatRatePercent ? parseFloat(String((invoice as any).vatRatePercent)).toString() : "",
         notes: invoice.notes || "",
         printSortOrder: (invoice as any).printSortOrder || "position",
-      });
+        printLanguageCode: (invoice as any).printLanguageCode || "nl",
+      } as any);
     }
   }, [invoice]);
 
@@ -396,9 +397,10 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     const pct = vatRate ? parseFloat(String(vatRate.rate)) : 0;
     setVatRatePercent(pct);
     invoiceForm.setValue("vatRatePercent", pct > 0 ? pct.toString() : "");
-    // Apply customer's language code for amount in words
+    // Apply customer's language code — set as print language (Taal) and fallback state
     const lang = (customer as any)?.languageCode || 'nl';
     setCustomerLanguageCode(lang);
+    invoiceForm.setValue("printLanguageCode" as any, lang);
     const subtotal = parseFloat(invoiceForm.getValues("subtotal") || "0") || 0;
     const taxAmount = subtotal * pct / 100;
     const total = subtotal + taxAmount;
