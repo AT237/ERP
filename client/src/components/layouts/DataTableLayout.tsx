@@ -312,8 +312,6 @@ function DraggableColumnHeader({
           {children}
         </div>
         
-        {/* Visual separator line */}
-        <div className="absolute right-0 top-1 bottom-1 w-px bg-orange-300/30"></div>
       </div>
     </TableHead>
   );
@@ -581,7 +579,7 @@ export function DataTableLayout<T = any>({
   const applyResize = (clientX: number) => {
     if (resizing) {
       const diff = clientX - resizing.startX;
-      const newWidth = Math.max(1, resizing.startWidth + diff);
+      const newWidth = Math.max(50, resizing.startWidth + diff);
       
       setColumns((prev: ColumnConfig[]) => prev.map((col: ColumnConfig) => {
         if (col.key === resizing.column) {
@@ -1001,14 +999,15 @@ export function DataTableLayout<T = any>({
                           )}
                         </div>
                         
-                        {/* Enhanced Resize Handle - touch-friendly */}
+                        {/* Resize Handle - always visible, drag to resize */}
                         <div 
-                          className="absolute right-0 top-0 bottom-0 w-4 -mr-2 cursor-col-resize z-10 touch-none"
+                          className="absolute top-0 bottom-0 w-4 cursor-col-resize z-10 touch-none group"
+                          style={{ right: '-8px' }}
                           onMouseDown={(e) => handleMouseDown(e, column.key)}
                           onTouchStart={(e) => handleTouchStartResize(e, column.key)}
-                          title="Drag to resize column"
+                          title="Sleep om kolombreedte aan te passen"
                         >
-                          <div className="absolute right-2 top-0 bottom-0 w-[2px] hover:bg-orange-400 active:bg-orange-500 transition-colors" />
+                          <div className="absolute inset-x-[7px] top-[20%] bottom-[20%] w-[2px] bg-orange-300/60 group-hover:bg-orange-500 group-active:bg-orange-600 transition-colors rounded-full" />
                         </div>
                       </DraggableColumnHeader>
                     ))}

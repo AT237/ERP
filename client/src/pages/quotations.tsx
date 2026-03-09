@@ -32,23 +32,27 @@ export default function Quotations({}: QuotationsProps) {
   // Combined loading state to prevent partial renders
   const isLoading = quotationsLoading || customersLoading;
 
-  // Customer name lookup - memoized to prevent re-creation
-  const getCustomerName = React.useCallback((customerId: string) => {
-    const customer = customers?.find((c: Customer) => c.id === customerId);
-    return customer?.name || 'Unknown Customer';
-  }, [customers]);
+  // Pre-enrich quotations with resolved customer names (stable, no renderCell dependency)
+  const enrichedQuotations = React.useMemo(() => {
+    return quotations.map(q => ({
+      ...q,
+      customerName: customers.find((c: Customer) => c.id === q.customerId)?.name || '',
+      quotationDateFormatted: q.quotationDate ? format(new Date(q.quotationDate), 'dd-MM-yyyy') : '',
+      validUntilFormatted: (q as any).validUntil ? format(new Date((q as any).validUntil), 'dd-MM-yyyy') : '',
+      totalAmountFormatted: `€${q.totalAmount || "0.00"}`,
+    }));
+  }, [quotations, customers]);
 
-  // Stabilized column configuration for quotations table - prevents flicker  
-  const baseColumns: ColumnConfig[] = React.useMemo(() => [
+  // Stable column configuration - no renderCell closures, uses pre-resolved fields
+  const defaultColumns: ColumnConfig[] = React.useMemo(() => [
     createIdColumn('quotationNumber', 'Quotation Number'),
     { 
-      key: 'customerId', 
+      key: 'customerName', 
       label: 'Customer', 
       visible: true, 
       width: 200, 
       filterable: true, 
       sortable: true,
-      renderCell: getCustomerName
     },
     { 
       key: 'description', 
@@ -57,34 +61,30 @@ export default function Quotations({}: QuotationsProps) {
       width: 250, 
       filterable: true, 
       sortable: true,
-      renderCell: (value: string) => value || ''
     },
     { 
-      key: 'quotationDate', 
+      key: 'quotationDateFormatted', 
       label: 'Quotation Date', 
       visible: true, 
       width: 120, 
       filterable: true, 
       sortable: true,
-      renderCell: (value: string) => value ? format(new Date(value), 'dd-MM-yyyy') : ''
     },
     { 
-      key: 'validUntil', 
+      key: 'validUntilFormatted', 
       label: 'Valid Until', 
       visible: true, 
       width: 120, 
       filterable: true, 
       sortable: true,
-      renderCell: (value: string) => value ? format(new Date(value), 'dd-MM-yyyy') : ''
     },
     { 
-      key: 'totalAmount', 
+      key: 'totalAmountFormatted', 
       label: 'Total Amount', 
       visible: true, 
       width: 120, 
       filterable: true, 
       sortable: true,
-      renderCell: (value: string) => `€${value || "0.00"}`
     },
     { 
       key: 'status', 
@@ -107,10 +107,7 @@ export default function Quotations({}: QuotationsProps) {
       filterable: true, 
       sortable: true 
     },
-  ], [getCustomerName]); // Stable dependency
-
-  // Use base columns directly - no need for additional processing
-  const defaultColumns = baseColumns;
+  ], []); // Stable - no dependencies
 
   // Data table state
   const tableState = useDataTable({ 
@@ -208,7 +205,7 @@ export default function Quotations({}: QuotationsProps) {
   return (
     <div className="p-6">
       <DataTableLayout
-        data={quotations}
+        data={enrichedQuotations}
         isLoading={isLoading}
         columns={tableState.columns}
         setColumns={tableState.setColumns}
@@ -225,13 +222,13 @@ export default function Quotations({}: QuotationsProps) {
         setSelectedRows={tableState.setSelectedRows}
         onToggleRowSelection={tableState.toggleRowSelection}
         onToggleAllRows={React.useCallback(() => {
-          const allIds = quotations.map(quotation => quotation.id);
+          const allIds = enrichedQuotations.map(q => q.id);
           tableState.toggleAllRows(allIds);
-        }, [quotations, tableState.toggleAllRows])}
+        }, [enrichedQuotations, tableState.toggleAllRows])}
         deleteConfirmDialog={{
           isOpen: del.isBulkDeleteOpen,
           onOpenChange: del.setIsBulkDeleteOpen,
-          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, quotations),
+          onConfirm: () => del.handleBulkDelete(tableState.selectedRows, enrichedQuotations),
           itemCount: tableState.selectedRows.length
         }}
         onRowDoubleClick={handleViewQuotation}
@@ -242,7 +239,7 @@ export default function Quotations({}: QuotationsProps) {
         applySorting={tableState.applySorting}
         headerActions={React.useMemo(() => {
           const selectedQuotation = tableState.selectedRows.length === 1
-            ? quotations.find(q => q.id === tableState.selectedRows[0])
+            ? enrichedQuotations.find(q => q.id === tableState.selectedRows[0])
             : undefined;
           return [
             {
@@ -259,7 +256,7 @@ export default function Quotations({}: QuotationsProps) {
               onClick: handleAddQuotation,
             },
           ];
-        }, [handleAddQuotation, tableState.selectedRows, quotations, handlePrintQuotation])}
+        }, [handleAddQuotation, tableState.selectedRows, enrichedQuotations, handlePrintQuotation])}
         rowActions={React.useCallback((quotation: Quotation) => [
           {
             key: 'view',
