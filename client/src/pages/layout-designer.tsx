@@ -408,6 +408,7 @@ const FIELD_LABELS: Record<string, string> = {
   isDefault: 'Standaard', order: 'Volgorde', color: 'Kleur', title: 'Titel',
   content: 'Inhoud', version: 'Versie', url: 'URL', width: 'Breedte', height: 'Hoogte',
   function: 'Functie', logoUrl: 'Logo URL',
+  vatRatePercent: 'BTW tarief (%)',
 };
 
 const getFieldLabel = (fieldName: string) => FIELD_LABELS[fieldName] || fieldName;
@@ -678,7 +679,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     // Document Types
     { name: 'quotation', label: 'Offerte', fields: ['quotationNumber', 'quotationDate', 'validUntil', 'validityDays', 'description', 'revisionNumber', 'status', 'isBudgetQuotation', 'subtotal', 'taxAmount', 'totalAmount', 'totalAmountInWords', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
     { name: 'quotationItems', label: 'Offerte Regels', fields: ['positionNo', 'lineType', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal', 'itemId', 'sourceSnippetId', 'deliveryDate', 'hsCode', 'countryOfOrigin'] },
-    { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'invoiceDate', 'dueDate', 'description', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'totalAmountInWords', 'paidAmount', 'notes', 'paymentTerms', 'workOrderNumbers'] },
+    { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'invoiceDate', 'dueDate', 'description', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'totalAmountInWords', 'paidAmount', 'vatRatePercent', 'notes', 'paymentTerms', 'workOrderNumbers'] },
     { name: 'invoiceItems', label: 'Factuur Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'unit', 'unitPrice', 'lineTotal', 'discountPercent', 'workDate', 'technicianNames', 'technicianIds', 'customerRateId', 'itemId', 'sourceSnippetId', 'sourceSnippetVersion'] },
     { name: 'proformaInvoice', label: 'Proforma Factuur', fields: ['invoiceNumber', 'status', 'dueDate', 'subtotal', 'taxAmount', 'totalAmount'] },
     { name: 'purchaseOrder', label: 'Inkooporder', fields: ['orderNumber', 'orderDate', 'expectedDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
