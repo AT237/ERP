@@ -184,10 +184,19 @@ export const inventoryItems = pgTable("inventory_items", {
 export const inventoryComponents = pgTable("inventory_components", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   parentItemId: varchar("parent_item_id").references(() => inventoryItems.id).notNull(),
-  componentItemId: varchar("component_item_id").references(() => inventoryItems.id).notNull(),
-  quantity: decimal("quantity", { precision: 10, scale: 3 }).notNull(), // Amount of component needed
+  componentType: text("component_type").notNull().default("standard"), // standard | unique
+  componentItemId: varchar("component_item_id").references(() => inventoryItems.id), // null for unique items
+  componentName: text("component_name"), // used for unique items
+  componentUnit: text("component_unit"), // used for unique items
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).notNull().default("1"),
+  notes: text("notes"),
+  sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const insertInventoryComponentSchema = createInsertSchema(inventoryComponents).omit({ id: true, createdAt: true });
+export type InsertInventoryComponent = z.infer<typeof insertInventoryComponentSchema>;
+export type InventoryComponent = typeof inventoryComponents.$inferSelect;
 
 // Projects table
 export const projects = pgTable("projects", {

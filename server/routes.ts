@@ -44,7 +44,7 @@ import {
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, 
   insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertRateAndChargeSchema, insertIncotermSchema,
-  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema, insertInventoryCategorySchema, inventoryCategories,
+  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema, insertInventoryCategorySchema, inventoryCategories, inventoryComponents, insertInventoryComponentSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
   insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema, insertEmployeeSchema,
@@ -851,6 +851,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting inventory item:", error);
       res.status(500).json({ message: "Failed to delete inventory item" });
+    }
+  });
+
+  // ── Inventory Components (composite items) ────────────────────────────────
+  app.get("/api/inventory/:id/components", async (req, res) => {
+    try {
+      const components = await db.select().from(inventoryComponents)
+        .where(eq(inventoryComponents.parentItemId, req.params.id))
+        .orderBy(inventoryComponents.sortOrder, inventoryComponents.createdAt);
+      res.json(components);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch components", error: error.message });
+    }
+  });
+
+  app.post("/api/inventory/:id/components", async (req, res) => {
+    try {
+      const body = { ...req.body, parentItemId: req.params.id };
+      const parsed = insertInventoryComponentSchema.safeParse(body);
+      if (!parsed.success) return res.status(400).json({ message: "Validation failed", errors: parsed.error.errors });
+      const [created] = await db.insert(inventoryComponents).values(parsed.data).returning();
+      res.status(201).json(created);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to create component", error: error.message });
+    }
+  });
+
+  app.patch("/api/inventory/:id/components/:componentId", async (req, res) => {
+    try {
+      const [updated] = await db.update(inventoryComponents)
+        .set(req.body)
+        .where(eq(inventoryComponents.id, req.params.componentId))
+        .returning();
+      if (!updated) return res.status(404).json({ message: "Component not found" });
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update component", error: error.message });
+    }
+  });
+
+  app.delete("/api/inventory/:id/components/:componentId", async (req, res) => {
+    try {
+      await db.delete(inventoryComponents).where(eq(inventoryComponents.id, req.params.componentId));
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete component", error: error.message });
     }
   });
 
