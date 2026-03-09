@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ARzL6vwKmkn6Hf8EKsXBx9fSRhhA4eRFWdlnXm04trRpr1qt7jGdFPuTtS9zbmn
+\restrict 68cRVPgOTyCBfksK6nsx9THgLEkEXQoGcTKS1iFcwKjP8sJ0ctIq0t2VebQnHtv
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -557,6 +557,26 @@ CREATE TABLE public.employees (
 
 
 ALTER TABLE public.employees OWNER TO postgres;
+
+--
+-- Name: entity_attachments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.entity_attachments (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    entity_type text NOT NULL,
+    entity_id character varying NOT NULL,
+    file_name text NOT NULL,
+    mime_type text DEFAULT 'image/jpeg'::text NOT NULL,
+    file_data text NOT NULL,
+    width integer,
+    height integer,
+    sort_order integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.entity_attachments OWNER TO postgres;
 
 --
 -- Name: images; Type: TABLE; Schema: public; Owner: postgres
@@ -1628,6 +1648,14 @@ ba775d65-a8b3-485c-a8ae-6358e96b837e	invoice	Commercial invoice (kopie) (kopie)	
 COPY public.employees (id, first_name, last_name, date_of_birth, email, phone, mobile, title, created_at, employee_number, first_initial) FROM stdin;
 1f6910b8-96f8-49eb-bc08-e8de661488e6	Getayakal 	Tomassen	2001-01-23 23:00:00			[]		2026-02-25 12:15:18.381874	EM-0002	\N
 fb7a089a-ce13-460d-bc5f-a970a23cbac6	Aart	Tomassen	1989-02-13 23:00:00			[]	Manager	2026-02-24 11:44:04.372417	EM-0001	A.
+\.
+
+
+--
+-- Data for Name: entity_attachments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.entity_attachments (id, entity_type, entity_id, file_name, mime_type, file_data, width, height, sort_order, created_at) FROM stdin;
 \.
 
 
@@ -2898,7 +2926,7 @@ d51e7de9-dd37-47a3-9227-1db7a1709de6	\N	\N	\N	2026-02-22 20:45:17.2383	2026-02-2
 9c67dd15-f429-4b69-a690-345c52432a90	\N	\N	\N	2026-02-23 10:03:45.51764	2026-02-23 10:03:45.51764	\N	\N
 d259ddcd-e75e-465a-9f8e-f4ff1a6df96e	\N	\N	\N	2026-02-23 10:03:54.505894	2026-02-23 10:03:54.505894	\N	\N
 deaed565-e163-4094-b2a6-f912be4c7b74	\N	\N	\N	2026-02-23 10:10:43.288279	2026-02-23 10:10:43.288279	\N	\N
-b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}]	{"Sales": false, "Tools": false, "Reports": true, "Overview": true, "Inventory": true, "Relations": false, "Operations": false, "Master Data": true, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-03-09 11:18:32.487191	layout-designer	page
+b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}]	{"Sales": false, "Tools": false, "Reports": true, "Overview": true, "Inventory": false, "Relations": false, "Operations": false, "Master Data": true, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-03-09 11:21:50.684736	layout-designer	page
 ef2cb817-b635-4bb4-8ab4-9366bd75bc80	\N	\N	\N	2026-02-23 10:18:15.731732	2026-02-23 10:18:15.731732	\N	\N
 d89d943c-8acc-4f97-a10e-a3b5924c13f2	\N	\N	\N	2026-02-23 10:18:25.249937	2026-02-23 10:18:25.249937	\N	\N
 c627eaa0-22b9-477f-a97d-558eb254ec1a	\N	\N	\N	2026-02-23 10:35:39.86801	2026-02-23 10:35:39.86801	\N	\N
@@ -3238,6 +3266,14 @@ ALTER TABLE ONLY public.employees
 
 ALTER TABLE ONLY public.employees
     ADD CONSTRAINT employees_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: entity_attachments entity_attachments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.entity_attachments
+    ADD CONSTRAINT entity_attachments_pkey PRIMARY KEY (id);
 
 
 --
@@ -3761,6 +3797,13 @@ ALTER TABLE ONLY public.work_orders
 
 
 --
+-- Name: entity_attachments_entity_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX entity_attachments_entity_idx ON public.entity_attachments USING btree (entity_type, entity_id);
+
+
+--
 -- Name: customer_contacts customer_contacts_customer_id_customers_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4172,5 +4215,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ARzL6vwKmkn6Hf8EKsXBx9fSRhhA4eRFWdlnXm04trRpr1qt7jGdFPuTtS9zbmn
+\unrestrict 68cRVPgOTyCBfksK6nsx9THgLEkEXQoGcTKS1iFcwKjP8sJ0ctIq0t2VebQnHtv
 

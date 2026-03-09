@@ -1191,6 +1191,24 @@ export const insertDevFutureSchema = createInsertSchema(devFutures).omit({ id: t
 export type InsertDevFuture = z.infer<typeof insertDevFutureSchema>;
 export type DevFuture = typeof devFutures.$inferSelect;
 
+// Entity Attachments — photos/files linked to any entity (project, customer, etc.)
+export const entityAttachments = pgTable("entity_attachments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  entityType: text("entity_type").notNull(), // 'project', 'customer', 'invoice', etc.
+  entityId: varchar("entity_id").notNull(),
+  fileName: text("file_name").notNull(),
+  mimeType: text("mime_type").notNull().default("image/jpeg"),
+  fileData: text("file_data").notNull(), // Base64 data URI
+  width: integer("width"),
+  height: integer("height"),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertEntityAttachmentSchema = createInsertSchema(entityAttachments).omit({ id: true, createdAt: true });
+export type InsertEntityAttachment = z.infer<typeof insertEntityAttachmentSchema>;
+export type EntityAttachment = typeof entityAttachments.$inferSelect;
+
 export type InsertDocumentLayout = z.infer<typeof insertDocumentLayoutSchema>;
 export type LayoutBlock = typeof layoutBlocks.$inferSelect;
 export type InsertLayoutBlock = z.infer<typeof insertLayoutBlockSchema>;
