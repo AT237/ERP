@@ -413,6 +413,20 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     invoiceForm.setValue("paymentDaysId", pDaysId);
   };
 
+  const handleRefreshCustomer = async () => {
+    if (!currentInvoiceId) {
+      toast({ title: "Sla de factuur eerst op", description: "Bewaar de factuur voordat je de klantgegevens synchroniseert.", variant: "destructive" });
+      return;
+    }
+    try {
+      await apiRequest("POST", `/api/invoices/${currentInvoiceId}/refresh-customer`);
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId] });
+      toast({ title: "Klantgegevens bijgewerkt", description: "De adresgegevens van de klant zijn gesynchroniseerd met deze factuur." });
+    } catch {
+      toast({ title: "Fout", description: "Synchronisatie mislukt.", variant: "destructive" });
+    }
+  };
+
   const handleInvoiceDateChange = (value: string) => {
     invoiceForm.setValue("invoiceDate", value);
   };
@@ -742,6 +756,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                     phone: (c as any).phone || undefined,
                   }))}
                   parentId={currentInvoiceId || 'new-invoice'}
+                  onRefreshCustomer={handleRefreshCustomer}
                 />
               ),
             },

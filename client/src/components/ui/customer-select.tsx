@@ -242,13 +242,14 @@ export function CustomerSelect({
                     }));
                   }}
                 >{selectedCustomer ? selectedCustomer.name : placeholder}</span>
-                {value && selectedCustomer && (
+                {value && selectedCustomer && onRefreshCustomer && (
                   <RefreshCw
                     className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
+                    title="Klantgegevens synchroniseren met dit document"
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+                      onRefreshCustomer();
                     }}
                   />
                 )}

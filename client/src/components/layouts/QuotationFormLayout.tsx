@@ -748,6 +748,20 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     setMemos(prev => prev.filter(memo => memo.id !== memoId));
   };
 
+  const handleRefreshCustomer = async () => {
+    if (!currentQuotationId) {
+      toast({ title: "Sla de offerte eerst op", description: "Bewaar de offerte voordat je de klantgegevens synchroniseert.", variant: "destructive" });
+      return;
+    }
+    try {
+      await apiRequest("POST", `/api/quotations/${currentQuotationId}/refresh-customer`);
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId] });
+      toast({ title: "Klantgegevens bijgewerkt", description: "De adresgegevens van de klant zijn gesynchroniseerd met deze offerte." });
+    } catch {
+      toast({ title: "Fout", description: "Synchronisatie mislukt.", variant: "destructive" });
+    }
+  };
+
   const handleInsertTimestamp = (memoId: string, existingContent: string) => {
     const timestamp = new Date().toLocaleString('nl-NL');
     const newContent = existingContent ? `${existingContent}\n\n[${timestamp}] ` : `[${timestamp}] `;
@@ -1316,6 +1330,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                     email: c.generalEmail || undefined, 
                     phone: c.phone || undefined 
                   }))}
+                  onRefreshCustomer={handleRefreshCustomer}
                 />
               ),
               validation: {
