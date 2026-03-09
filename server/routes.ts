@@ -53,7 +53,8 @@ import {
   quotationItems, salesOrders, packingLists, quotationRequests, proformaInvoices,
   pdfArchive, insertPdfArchiveSchema,
   emailTemplates, insertEmailTemplateSchema,
-  tasks, insertTaskSchema
+  tasks, insertTaskSchema,
+  serialNumbers, insertSerialNumberSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { eq, sql } from 'drizzle-orm';
@@ -3605,6 +3606,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to delete task", error: error.message });
+    }
+  });
+
+  // ── Serial Numbers ──────────────────────────────────────────────────────────
+  app.get("/api/serial-numbers", async (req, res) => {
+    try {
+      const records = await db.select().from(serialNumbers).orderBy(serialNumbers.serialNo);
+      res.json(records);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch serial numbers", error: error.message });
+    }
+  });
+
+  app.get("/api/serial-numbers/:id", async (req, res) => {
+    try {
+      const [record] = await db.select().from(serialNumbers).where(eq(serialNumbers.id, req.params.id));
+      if (!record) return res.status(404).json({ message: "Serial number not found" });
+      res.json(record);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch serial number", error: error.message });
+    }
+  });
+
+  app.post("/api/serial-numbers", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ["date"]);
+      const parsed = insertSerialNumberSchema.safeParse(body);
+      if (!parsed.success) return res.status(400).json({ message: "Validation failed", errors: parsed.error.errors });
+      const [created] = await db.insert(serialNumbers).values(parsed.data).returning();
+      res.status(201).json(created);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to create serial number", error: error.message });
+    }
+  });
+
+  app.patch("/api/serial-numbers/:id", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ["date"]);
+      const [updated] = await db.update(serialNumbers).set(body).where(eq(serialNumbers.id, req.params.id)).returning();
+      if (!updated) return res.status(404).json({ message: "Serial number not found" });
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update serial number", error: error.message });
+    }
+  });
+
+  app.delete("/api/serial-numbers/:id", async (req, res) => {
+    try {
+      await db.delete(serialNumbers).where(eq(serialNumbers.id, req.params.id));
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete serial number", error: error.message });
     }
   });
 

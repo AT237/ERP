@@ -1300,3 +1300,21 @@ export const tasks = pgTable("tasks", {
 export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true, taskNumber: true, createdAt: true, updatedAt: true });
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
+
+// Serial Numbers table — production serial number tracking
+export const serialNumbers = pgTable("serial_numbers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  serialNo: text("serial_no").notNull().unique(),
+  model: text("model"),
+  customerId: varchar("customer_id").references(() => customers.id),
+  projectId: varchar("project_id").references(() => projects.id),
+  comment: text("comment"),
+  fileNo: text("file_no"),
+  date: timestamp("date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSerialNumberSchema = createInsertSchema(serialNumbers).omit({ id: true, createdAt: true });
+export type InsertSerialNumber = z.infer<typeof insertSerialNumberSchema>;
+export type SerialNumber = typeof serialNumbers.$inferSelect;

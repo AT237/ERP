@@ -31,6 +31,7 @@ import EmailDesigner from "@/pages/email-designer";
 import StyleGuide from "@/pages/style-guide";
 import DevFutures from "@/pages/dev-futures";
 import TaskOverview from "@/pages/task-overview";
+import SerialNumbers from "@/pages/serial-numbers";
 import Layout from "@/components/layout";
 
 function Router() {
@@ -40,6 +41,7 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/task-overview" component={TaskOverview} />
+        <Route path="/serial-numbers" component={SerialNumbers} />
         <Route path="/customers" component={Customers} />
         <Route path="/inventory" component={Inventory} />
         <Route path="/suppliers" component={Suppliers} />
