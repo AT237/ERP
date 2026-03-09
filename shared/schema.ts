@@ -1212,6 +1212,28 @@ export const insertEntityAttachmentSchema = createInsertSchema(entityAttachments
 export type InsertEntityAttachment = z.infer<typeof insertEntityAttachmentSchema>;
 export type EntityAttachment = typeof entityAttachments.$inferSelect;
 
+// PDF Archive — records of printed PDFs with explicit user consent
+export const pdfArchive = pgTable("pdf_archive", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  documentType: text("document_type").notNull(),
+  documentId: varchar("document_id").notNull(),
+  documentNumber: text("document_number"),
+  customerId: varchar("customer_id"),
+  customerName: text("customer_name"),
+  projectId: varchar("project_id"),
+  projectName: text("project_name"),
+  workOrderNumbers: text("work_order_numbers"),
+  layoutId: varchar("layout_id"),
+  layoutName: text("layout_name"),
+  printUrl: text("print_url"),
+  printedAt: timestamp("printed_at").defaultNow(),
+  notes: text("notes"),
+});
+
+export const insertPdfArchiveSchema = createInsertSchema(pdfArchive).omit({ id: true, printedAt: true });
+export type InsertPdfArchive = z.infer<typeof insertPdfArchiveSchema>;
+export type PdfArchiveEntry = typeof pdfArchive.$inferSelect;
+
 export type InsertDocumentLayout = z.infer<typeof insertDocumentLayoutSchema>;
 export type LayoutBlock = typeof layoutBlocks.$inferSelect;
 export type InsertLayoutBlock = z.infer<typeof insertLayoutBlockSchema>;
