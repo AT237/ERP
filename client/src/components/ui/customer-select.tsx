@@ -264,12 +264,14 @@ export function CustomerSelect({
             >
               <Command
                 filter={(value, search) => {
-                  const customer = customersTyped.find(c => c.name === value);
+                  if (value === '__clear__') return search ? 0 : 1;
+                  const customer = customersTyped.find(c => c.id === value);
                   if (!customer) return 0;
                   
                   const searchLower = search.toLowerCase();
                   return (
                     customer.name?.toLowerCase().includes(searchLower) ||
+                    customer.customerNumber?.toLowerCase().includes(searchLower) ||
                     customer.email?.toLowerCase().includes(searchLower) ||
                     customer.phone?.toLowerCase().includes(searchLower)
                   ) ? 1 : 0;
@@ -319,7 +321,7 @@ export function CustomerSelect({
                     {customersTyped.map((customer) => (
                       <CommandItem
                         key={customer.id}
-                        value={customer.name}
+                        value={customer.id}
                         onSelect={() => {
                           onValueChange?.(customer.id);
                           setOpen(false);

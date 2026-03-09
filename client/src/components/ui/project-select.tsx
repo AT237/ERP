@@ -118,7 +118,8 @@ export function ProjectSelect({
           >
             <Command
               filter={(value, search) => {
-                const project = projects.find(p => p.name === value);
+                if (value === '__clear__') return search ? 0 : 1;
+                const project = projects.find(p => p.id === value);
                 if (!project) return 0;
                 const searchLower = search.toLowerCase();
                 return (
@@ -174,7 +175,7 @@ export function ProjectSelect({
                   {projects.map((project) => (
                     <CommandItem
                       key={project.id}
-                      value={project.name}
+                      value={project.id}
                       onSelect={() => {
                         onValueChange?.(project.id);
                         setOpen(false);
