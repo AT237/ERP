@@ -14,8 +14,7 @@ import { insertInvoiceSchema, insertInvoiceItemSchema } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Save, X, FileText, Printer, CopyPlus, RefreshCw } from "lucide-react";
-import { SelectWithAdd } from "@/components/ui/select-with-add";
-import { QuickAddProject } from "@/components/quick-add-forms";
+import { ProjectSelect } from "@/components/ui/project-select";
 import { Input } from "@/components/ui/input";
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -24,7 +23,7 @@ import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, Project, VatRate } from "@shared/schema";
+import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, VatRate } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { amountToWords } from "@/utils/field-resolver";
@@ -237,9 +236,6 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     queryKey: ["/api/customers"],
   });
 
-  const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
-  });
 
   const { data: paymentDaysList = [] } = useQuery<PaymentDay[]>({
     queryKey: ["/api/masterdata/payment-days"],
@@ -822,27 +818,12 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
               label: "Project",
               type: "custom",
               customComponent: (
-                <SelectWithAdd
+                <ProjectSelect
                   value={invoiceForm.watch("projectId") || ""}
                   onValueChange={(value) => invoiceForm.setValue("projectId", value || "")}
                   placeholder="Selecteer project..."
-                  addFormTitle="Nieuw project"
                   testId="select-invoice-project"
-                  addFormContent={
-                    <QuickAddProject
-                      onSuccess={(projectId) => {
-                        queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-                        invoiceForm.setValue("projectId", projectId);
-                      }}
-                    />
-                  }
-                >
-                  {projects.map((project: any) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.projectNumber ? `${project.projectNumber} - ${project.name}` : project.name}
-                    </SelectItem>
-                  ))}
-                </SelectWithAdd>
+                />
               ),
             },
             {
