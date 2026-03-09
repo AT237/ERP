@@ -131,14 +131,32 @@ export default function PrintPreviewPage() {
         body { background: #f3f4f6; }
         @media print {
           @page { size: A4; margin: 0; }
-          body { background: white !important; margin: 0 !important; }
+          html, body {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
+          }
           .print-toolbar { display: none !important; }
-          .print-outer { padding: 0 !important; overflow: visible !important; }
+          #print-outer {
+            padding: 0 !important;
+            overflow: visible !important;
+            background: white !important;
+            min-height: 0 !important;
+            height: auto !important;
+          }
+          #print-doc-container {
+            width: 210mm !important;
+            height: auto !important;
+            position: static !important;
+            margin: 0 !important;
+          }
           .print-scale-wrapper {
             transform: none !important;
             box-shadow: none !important;
             width: 210mm !important;
             min-height: 297mm !important;
+            height: auto !important;
           }
           .pointer-events-none.z-20 { display: none !important; }
         }
@@ -176,10 +194,12 @@ export default function PrintPreviewPage() {
       </div>
 
       <div
+        id="print-outer"
         className="print-outer overflow-x-auto py-6"
         style={{ minHeight: `${scaledHeight + 48}px` }}
       >
         <div
+          id="print-doc-container"
           style={{
             width: `${DOC_WIDTH * totalScale}px`,
             height: `${scaledHeight}px`,
