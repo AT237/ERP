@@ -75,6 +75,8 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       isComposite: false,
       status: "active",
       imageUrl: "",
+      brand: "",
+      manufacturerPartNumber: "",
     },
   });
 
@@ -106,6 +108,8 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         isComposite: inventoryItem.isComposite || false,
         status: inventoryItem.status || "active",
         imageUrl: inventoryItem.imageUrl || "",
+        brand: (inventoryItem as any).brand || "",
+        manufacturerPartNumber: (inventoryItem as any).manufacturerPartNumber || "",
       };
       
       form.reset(formData);
@@ -354,6 +358,27 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
           },
           testId: "input-inventory-name"
         } as FormField2<InventoryFormData>),
+
+        createFieldsRow([
+          {
+            key: "brand",
+            label: "Merk",
+            type: "text",
+            layout: "single",
+            placeholder: "Bijv. Bosch, Siemens...",
+            register: form.register("brand" as any),
+            testId: "input-inventory-brand"
+          } as FormField2<InventoryFormData>,
+          {
+            key: "manufacturerPartNumber",
+            label: "Fabrikant type nr.",
+            type: "text",
+            layout: "single",
+            placeholder: "Bijv. MPN-12345",
+            register: form.register("manufacturerPartNumber" as any),
+            testId: "input-inventory-manufacturer-part-number"
+          } as FormField2<InventoryFormData>
+        ]),
 
         createFieldRow({
           key: "description",
