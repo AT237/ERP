@@ -686,10 +686,11 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     workOrderNumbersList = wos.map(wo => wo.orderNumber).join(', ');
   }
 
-  // Load VAT rate from customer's vatRateId
+  // Load VAT rate from customer's vatRateId (always from live customer, not snapshot)
   let vatRateData = null;
-  if (customer?.vatRateId) {
-    const vr = await db.query.vatRates.findFirst({ where: eq(vatRates.id, customer.vatRateId) });
+  const invoiceCustomerVatRateId = customer?.vatRateId ?? (await db.query.customers.findFirst({ where: eq(customers.id, invoice.customerId) }))?.vatRateId;
+  if (invoiceCustomerVatRateId) {
+    const vr = await db.query.vatRates.findFirst({ where: eq(vatRates.id, invoiceCustomerVatRateId) });
     if (vr) vatRateData = { code: vr.code, percentage: parseFloat(String(vr.rate)).toString(), description: vr.description ?? null };
   }
 
