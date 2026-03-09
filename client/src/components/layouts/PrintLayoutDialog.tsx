@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Printer, FileText, Check } from "lucide-react";
+import { Printer, FileText, Check, Archive } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { DocumentLayout } from "@shared/schema";
 
 interface PrintLayoutDialogProps {
@@ -25,6 +28,7 @@ export function PrintLayoutDialog({
   entityId,
 }: PrintLayoutDialogProps) {
   const [selectedLayoutId, setSelectedLayoutId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const { data: layouts = [], isLoading } = useQuery<DocumentLayout[]>({
     queryKey: ["/api/layouts", { documentType }],
@@ -36,6 +40,29 @@ export function PrintLayoutDialog({
     enabled: open,
   });
 
+  const archiveMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/pdf-archive", {
+        documentType,
+        documentId: entityId,
+        layoutId: selectedLayoutId,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Opgeslagen in PDF database",
+        description: "Het document is opgeslagen in de PDF database.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Opslaan mislukt",
+        description: "Het document kon niet worden opgeslagen in de PDF database.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen) {
       setSelectedLayoutId(null);
@@ -43,12 +70,23 @@ export function PrintLayoutDialog({
     onOpenChange(isOpen);
   };
 
-  const handlePrint = () => {
-    if (!selectedLayoutId) return;
+  const openPdf = () => {
     window.open(
       `/print/${documentType}/${entityId}?layoutId=${selectedLayoutId}`,
       "_blank"
     );
+  };
+
+  const handlePrintOnly = () => {
+    if (!selectedLayoutId) return;
+    openPdf();
+    onOpenChange(false);
+  };
+
+  const handleAgreePrint = async () => {
+    if (!selectedLayoutId) return;
+    await archiveMutation.mutateAsync();
+    openPdf();
     onOpenChange(false);
   };
 
@@ -62,13 +100,16 @@ export function PrintLayoutDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Printer className="h-5 w-5 text-orange-500" />
-            Print Report - {documentTypeLabel}
+            Print - {documentTypeLabel}
           </DialogTitle>
+          <DialogDescription>
+            Selecteer een lay-out en kies hoe u wilt afdrukken.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="py-4">
           <p className="text-sm text-muted-foreground mb-3">
-            Select a layout for this report:
+            Selecteer een lay-out voor dit document:
           </p>
 
           {isLoading ? (
@@ -83,11 +124,11 @@ export function PrintLayoutDialog({
           ) : layouts.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No layouts available for {documentTypeLabel}.</p>
-              <p className="text-xs mt-1">Create a layout in the Layout Designer first.</p>
+              <p className="text-sm">Geen lay-outs beschikbaar voor {documentTypeLabel}.</p>
+              <p className="text-xs mt-1">Maak eerst een lay-out aan in de lay-outontwerper.</p>
             </div>
           ) : (
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            <div className="space-y-2 max-h-[260px] overflow-y-auto">
               {layouts.map((layout) => (
                 <button
                   key={layout.id}
@@ -104,7 +145,7 @@ export function PrintLayoutDialog({
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {layout.pageFormat} - {layout.orientation}
                         {layout.isDefault && (
-                          <span className="ml-2 text-orange-600 font-medium">(Default)</span>
+                          <span className="ml-2 text-orange-600 font-medium">(Standaard)</span>
                         )}
                       </p>
                     </div>
@@ -116,19 +157,37 @@ export function PrintLayoutDialog({
               ))}
             </div>
           )}
+
+          {selectedLayoutId && (
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                <Archive className="inline h-3.5 w-3.5 mr-1" />
+                Met <strong>Akkoord en printen</strong> geeft u toestemming om dit document
+                op te slaan in de PDF database.
+              </p>
+            </div>
+          )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0 flex-col sm:flex-row">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Annuleren
           </Button>
           <Button
-            onClick={handlePrint}
+            variant="outline"
+            onClick={handlePrintOnly}
             disabled={!selectedLayoutId || layouts.length === 0}
-            className="bg-orange-500 hover:bg-orange-600 text-white"
           >
             <Printer className="h-4 w-4 mr-1" />
-            Print PDF
+            Alleen printen
+          </Button>
+          <Button
+            onClick={handleAgreePrint}
+            disabled={!selectedLayoutId || layouts.length === 0 || archiveMutation.isPending}
+            className="bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            <Archive className="h-4 w-4 mr-1" />
+            Akkoord en printen
           </Button>
         </DialogFooter>
       </DialogContent>

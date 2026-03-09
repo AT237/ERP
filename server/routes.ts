@@ -50,7 +50,8 @@ import {
   insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema, insertEmployeeSchema,
   unitsOfMeasure, inventoryItems, invoiceItems, ratesAndCharges,
   quotations, invoices, projects, purchaseOrders, suppliers,
-  quotationItems, salesOrders, packingLists, quotationRequests, proformaInvoices
+  quotationItems, salesOrders, packingLists, quotationRequests, proformaInvoices,
+  pdfArchive, insertPdfArchiveSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { eq, sql } from 'drizzle-orm';
@@ -3312,6 +3313,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("GitHub backup error:", error);
       res.status(500).json({ message: "Backup failed", error: error.message });
+    }
+  });
+
+  // ─── PDF Archive ──────────────────────────────────────────────────────────
+  app.get("/api/pdf-archive", async (_req, res) => {
+    try {
+      const entries = await db.query.pdfArchive.findMany({
+        orderBy: (t, { desc }) => [desc(t.printedAt)],
+      });
+      res.json(entries);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch PDF archive", error: error.message });
+    }
+  });
+
+  app.post("/api/pdf-archive", async (req, res) => {
+    try {
+      const { documentType, documentId, layoutId } = req.body as {
+        documentType: string; documentId: string; layoutId?: string;
+      };
+      if (!documentType || !documentId) {
+        return res.status(400).json({ message: "documentType and documentId required" });
+      }
+
+      // Gather document metadata
+      let documentNumber: string | null = null;
+      let customerId: string | null = null;
+      let customerName: string | null = null;
+      let projectId: string | null = null;
+      let projectName: string | null = null;
+      let workOrderNumbers: string | null = null;
+
+      const { customers: customersTable, workOrders, documentLayouts } = await import('@shared/schema');
+
+      if (documentType === 'invoice') {
+        const inv = await db.query.invoices.findFirst({ where: eq(invoices.id, documentId) });
+        if (inv) {
+          documentNumber = inv.invoiceNumber;
+          customerId = inv.customerId;
+          if (inv.projectId) projectId = inv.projectId;
+        }
+      } else if (documentType === 'quotation') {
+        const quot = await db.query.quotations.findFirst({ where: eq(quotations.id, documentId) });
+        if (quot) {
+          documentNumber = quot.quotationNumber;
+          customerId = quot.customerId;
+          if (quot.projectId) projectId = quot.projectId;
+        }
+      } else if (documentType === 'packing_list' || documentType === 'packing-list') {
+        const { packingLists: plTable } = await import('@shared/schema');
+        const pl = await db.query.packingLists.findFirst({ where: eq(plTable.id, documentId) });
+        if (pl) {
+          documentNumber = pl.listNumber;
+          if ((pl as any).customerId) customerId = (pl as any).customerId;
+          if ((pl as any).projectId) projectId = (pl as any).projectId;
+        }
+      }
+
+      // Customer name lookup
+      if (customerId) {
+        const cust = await db.query.customers.findFirst({ where: eq(customersTable.id, customerId) });
+        if (cust) customerName = cust.name;
+      }
+
+      // Project name lookup
+      if (projectId) {
+        const proj = await db.query.projects.findFirst({ where: eq(projects.id, projectId) });
+        if (proj) projectName = proj.name;
+      }
+
+      // Work order lookup (linked to project)
+      if (projectId) {
+        const wos = await db.query.workOrders.findMany({ where: eq(workOrders.projectId, projectId) });
+        if (wos.length > 0) workOrderNumbers = wos.map(w => w.orderNumber).join(', ');
+      }
+
+      // Layout name lookup
+      let layoutName: string | null = null;
+      if (layoutId) {
+        const layout = await db.query.documentLayouts.findFirst({ where: eq(documentLayouts.id, layoutId) });
+        if (layout) layoutName = layout.name;
+      }
+
+      const printUrl = `/print/${documentType}/${documentId}${layoutId ? `?layoutId=${layoutId}` : ''}`;
+
+      const [entry] = await db.insert(pdfArchive).values({
+        documentType,
+        documentId,
+        documentNumber,
+        customerId,
+        customerName,
+        projectId,
+        projectName,
+        workOrderNumbers,
+        layoutId: layoutId ?? null,
+        layoutName,
+        printUrl,
+        notes: null,
+      }).returning();
+
+      res.status(201).json(entry);
+    } catch (error: any) {
+      console.error("PDF archive error:", error);
+      res.status(500).json({ message: "Failed to save PDF archive entry", error: error.message });
+    }
+  });
+
+  app.delete("/api/pdf-archive/:id", async (req, res) => {
+    try {
+      await db.delete(pdfArchive).where(eq(pdfArchive.id, req.params.id));
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete PDF archive entry", error: error.message });
     }
   });
 
