@@ -1100,6 +1100,34 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     setSelectedChildBlock(null);
   };
 
+  const handleAddBlockToGroup = (sectionId: string, blockId: string, targetGroupId: string) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+    const block = getSectionBlocks(section).find((b: any) => b.id === blockId);
+    if (!block) return;
+    const targetGroup = getSectionBlocks(section).find((b: any) => b.id === targetGroupId);
+    const childBlock = {
+      ...block,
+      position: {
+        x: (block.position?.x || 0) - (targetGroup?.position?.x || 0),
+        y: (block.position?.y || 0) - (targetGroup?.position?.y || 0),
+      },
+    };
+    pushHistory(sections);
+    const updatedSections = sections.map(s => {
+      if (s.id !== sectionId) return s;
+      const withoutBlock = getSectionBlocks(s).filter((b: any) => b.id !== blockId);
+      const withBlockInGroup = withoutBlock.map((b: any) => {
+        if (b.id !== targetGroupId) return b;
+        return { ...b, config: { ...b.config, childBlocks: [...(b.config?.childBlocks || []), childBlock] } };
+      });
+      return applyBlocksToSection(s, withBlockInGroup);
+    });
+    setSections(updatedSections);
+    setSelectedBlock(null);
+    toast({ title: 'Toegevoegd aan groep', description: 'Blok is verplaatst naar de groep.' });
+  };
+
   // Move block forward (on top of others) - higher index = rendered later = on top
   const handleMoveBlockUp = (sectionId: string, blockId: string) => {
     const updatedSections = sections.map(s => {
