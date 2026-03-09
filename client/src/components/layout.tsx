@@ -41,6 +41,7 @@ const PurchaseOrderForm = lazy(() => import('@/pages/purchase-order-form'));
 const SalesOrderForm = lazy(() => import('@/pages/sales-order-form'));
 const PackingListForm = lazy(() => import('@/pages/packing-list-form'));
 const InvoiceForm = lazy(() => import('@/pages/invoice-form'));
+const InvoiceLineItemForm = lazy(() => import('@/pages/invoice-line-item-form'));
 const TextSnippetForm = lazy(() => import('@/pages/text-snippet-form'));
 const ContactPersonForm = lazy(() => import('@/pages/contact-person-form'));
 const EmployeesPage = lazy(() => import('@/pages/employees'));
@@ -1299,6 +1300,20 @@ export default function Layout({ children }: LayoutProps) {
         return (
           <Suspense fallback={<div className="flex items-center justify-center h-64 text-muted-foreground">Laden...</div>}>
             <LayoutDesignerForm layoutId={tab.entityId!} />
+          </Suspense>
+        );
+      }
+
+      if (tab.formType === 'invoice-line-item') {
+        const lineItemId = tab.entityId ?? tab.id.replace('invoice-line-item-edit-', '');
+        const invoiceId = tab.parentId;
+        return (
+          <Suspense fallback={<div></div>}>
+            <InvoiceLineItemForm
+              invoiceId={invoiceId!}
+              itemId={lineItemId}
+              onSave={() => {}}
+            />
           </Suspense>
         );
       }

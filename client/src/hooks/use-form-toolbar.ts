@@ -186,11 +186,11 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
   invoice_line_item: {
     apiPath: "/api/invoice-items",
     formType: "invoice-line-item",
-    label: "Invoice Line Item",
-    labelPlural: "Invoice Line Items",
+    label: "Invoice Line",
+    labelPlural: "Invoice Lines",
     listQueryKey: "/api/invoice-items",
     documentType: "invoice_line_item",
-    supportsNavigation: false,
+    supportsNavigation: true,
     supportsDelete: true,
     supportsAddNew: false,
   },
@@ -297,6 +297,8 @@ export interface UseFormToolbarOptions {
   showNavigation?: boolean;
   showExport?: boolean;
   extraQueryKeysToInvalidate?: string[][];
+  navigationListQueryKey?: string[];
+  navigationParentId?: string;
 }
 
 export function useFormToolbar({
@@ -312,6 +314,8 @@ export function useFormToolbar({
   showNavigation,
   showExport = true,
   extraQueryKeysToInvalidate = [],
+  navigationListQueryKey,
+  navigationParentId,
 }: UseFormToolbarOptions): FormToolbarProps & { deleteConflict: { name: string; usages: UsageLocation[] } | null; onClearDeleteConflict: () => void } {
   const { toast } = useToast();
   const config = ENTITY_CONFIGS[entityType];
@@ -322,9 +326,11 @@ export function useFormToolbar({
   const resolvedShowDelete = showDelete ?? (config?.supportsDelete ?? false);
   const resolvedShowNavigation = showNavigation ?? (config?.supportsNavigation ?? false);
 
+  const effectiveNavQueryKey = navigationListQueryKey ?? (config?.listQueryKey ? [config.listQueryKey] : undefined);
+
   const { data: entityList } = useQuery<any[]>({
-    queryKey: [config?.listQueryKey],
-    enabled: !!config && isEditing && resolvedShowNavigation,
+    queryKey: effectiveNavQueryKey ?? [],
+    enabled: !!effectiveNavQueryKey && isEditing && resolvedShowNavigation,
   });
 
   const entityIds = useMemo(() => {
@@ -407,10 +413,11 @@ export function useFormToolbar({
           formType: config.formType,
           entityId: prevId,
           recordId: prevId,
+          parentId: navigationParentId,
         },
       })
     );
-  }, [currentIndex, entityIds, config]);
+  }, [currentIndex, entityIds, config, navigationParentId]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < 0 || currentIndex >= entityIds.length - 1 || !config) return;
@@ -423,10 +430,11 @@ export function useFormToolbar({
           formType: config.formType,
           entityId: nextId,
           recordId: nextId,
+          parentId: navigationParentId,
         },
       })
     );
-  }, [currentIndex, entityIds, config]);
+  }, [currentIndex, entityIds, config, navigationParentId]);
 
   return {
     onSave,
