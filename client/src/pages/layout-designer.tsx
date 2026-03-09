@@ -3403,7 +3403,7 @@ function estimateActualSectionHeightPx(
   const bottomMarginPx = mmToPx(section.config?.bottomMarginMm || 0);
   const heightCanShrink = section.config?.heightCanShrink || false;
 
-  if (blocks.length === 0) return configuredPx;
+  if (blocks.length === 0) return configuredPx + bottomMarginPx;
 
   // Mirror renderSectionInstance: detect conditional groups and find the matching one.
   const hasConditionalGroups = itemContext && blocks.some(
