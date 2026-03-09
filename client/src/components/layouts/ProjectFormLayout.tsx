@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProjectSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { FolderOpen, Calendar, DollarSign, Image } from "lucide-react";
+import { FolderOpen, Calendar, DollarSign, Image, Truck } from "lucide-react";
 import { AttachmentsGallery } from "@/components/ui/attachments-gallery";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";

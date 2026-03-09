@@ -201,6 +201,12 @@ export const projects = pgTable("projects", {
   endDate: timestamp("end_date"),
   totalValue: decimal("total_value", { precision: 10, scale: 2 }),
   progress: integer("progress").default(0),
+  incotermId: varchar("incoterm_id").references(() => incoterms.id),
+  insuranceCovered: text("insurance_covered"),
+  modeOfShipment: text("mode_of_shipment"),
+  deliveryTime: text("delivery_time"),
+  portOfLoading: text("port_of_loading"),
+  finalDestination: text("final_destination"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
