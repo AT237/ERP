@@ -676,7 +676,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
   let vatRateData = null;
   if (customer?.vatRateId) {
     const vr = await db.query.vatRates.findFirst({ where: eq(vatRates.id, customer.vatRateId) });
-    if (vr) vatRateData = { code: vr.code, percentage: String(vr.percentage), description: vr.description ?? null };
+    if (vr) vatRateData = { code: vr.code, percentage: String(vr.rate), description: vr.description ?? null };
   }
 
   return {
