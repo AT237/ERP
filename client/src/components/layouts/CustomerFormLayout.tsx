@@ -32,10 +32,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Users, User, Building, CreditCard, FileText, AlertTriangle, Plus, Trash2 } from "lucide-react";
+import { Save, ArrowLeft, Users, User, Building, CreditCard, FileText, AlertTriangle, Plus, Trash2, Mail, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
-import type { Customer, InsertCustomer, Country } from "@shared/schema";
+import type { Customer, InsertCustomer, Country, EmailTemplate } from "@shared/schema";
 import { z } from "zod";
 
 function formatIban(value: string | null | undefined): string {
