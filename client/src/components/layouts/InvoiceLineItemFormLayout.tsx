@@ -793,7 +793,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const getRightColumnFields = (): FormField2<LineItemFormData>[] => {
     switch (lineTypeValue) {
       case 'charges':
-        return [fieldTechnician, fieldWorkDate, fieldRate, fieldQuantity, fieldUnitPrice, fieldUnit];
+        return [fieldTechnician, fieldWorkDate, fieldRate, fieldDescription, fieldQuantity, fieldUnitPrice, fieldUnit];
       case 'unique':
         return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice];
       case 'standard':
