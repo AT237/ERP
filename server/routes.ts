@@ -51,7 +51,8 @@ import {
   unitsOfMeasure, inventoryItems, invoiceItems, ratesAndCharges,
   quotations, invoices, projects, purchaseOrders, suppliers,
   quotationItems, salesOrders, packingLists, quotationRequests, proformaInvoices,
-  pdfArchive, insertPdfArchiveSchema
+  pdfArchive, insertPdfArchiveSchema,
+  emailTemplates, insertEmailTemplateSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { eq, sql } from 'drizzle-orm';
@@ -3426,6 +3427,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to delete PDF archive entry", error: error.message });
+    }
+  });
+
+  // ─── Email Templates ───────────────────────────────────────────────────────
+  app.get("/api/email-templates", async (_req, res) => {
+    try {
+      const templates = await db.select().from(emailTemplates).orderBy(emailTemplates.name);
+      res.json(templates);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch email templates", error: error.message });
+    }
+  });
+
+  app.get("/api/email-templates/:id", async (req, res) => {
+    try {
+      const [template] = await db.select().from(emailTemplates).where(eq(emailTemplates.id, req.params.id));
+      if (!template) return res.status(404).json({ message: "Email template not found" });
+      res.json(template);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch email template", error: error.message });
+    }
+  });
+
+  app.post("/api/email-templates", async (req, res) => {
+    try {
+      const parsed = insertEmailTemplateSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Validation failed", errors: parsed.error.errors });
+      const [created] = await db.insert(emailTemplates).values(parsed.data).returning();
+      res.status(201).json(created);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to create email template", error: error.message });
+    }
+  });
+
+  app.put("/api/email-templates/:id", async (req, res) => {
+    try {
+      const parsed = insertEmailTemplateSchema.partial().safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Validation failed", errors: parsed.error.errors });
+      const [updated] = await db.update(emailTemplates)
+        .set({ ...parsed.data, updatedAt: new Date() })
+        .where(eq(emailTemplates.id, req.params.id))
+        .returning();
+      if (!updated) return res.status(404).json({ message: "Email template not found" });
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update email template", error: error.message });
+    }
+  });
+
+  app.delete("/api/email-templates/:id", async (req, res) => {
+    try {
+      await db.delete(emailTemplates).where(eq(emailTemplates.id, req.params.id));
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete email template", error: error.message });
     }
   });
 
