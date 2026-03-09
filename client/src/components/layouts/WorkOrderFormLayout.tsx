@@ -10,8 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { SelectWithAdd } from "@/components/ui/select-with-add";
-import { QuickAddProject } from "@/components/quick-add-forms";
+import { ProjectSelect } from "@/components/ui/project-select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertWorkOrderSchema } from "@shared/schema";
@@ -22,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
-import type { WorkOrder, InsertWorkOrder, Project } from "@shared/schema";
+import type { WorkOrder, InsertWorkOrder } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -129,11 +128,6 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
   const { data: workOrder, isLoading: isLoadingWorkOrder } = useQuery<WorkOrder>({
     queryKey: ["/api/work-orders", workOrderId],
     enabled: !!workOrderId,
-  });
-
-  // Load projects data for select options
-  const { data: projects } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
   });
 
   // Update form when work order data loads and store original values for change tracking
@@ -297,28 +291,15 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     }
   };
 
-  // Custom project select component
+  // Standard ProjectSelect component (Popover+Command pattern with search and ExternalLink)
   const renderProjectSelect = () => (
-    <SelectWithAdd
+    <ProjectSelect
       value={form.watch("projectId") || ""}
       onValueChange={(value) => form.setValue("projectId", value || "")}
-      placeholder="Select project"
-      addFormTitle="Add New Project"
-      testId="select-project"
-      addFormContent={
-        <QuickAddProject 
-          onSuccess={(projectId) => {
-            form.setValue("projectId", projectId);
-          }}
-        />
-      }
-    >
-      {projects?.map((project) => (
-        <SelectItem key={project.id} value={project.id}>
-          {project.name}
-        </SelectItem>
-      ))}
-    </SelectWithAdd>
+      placeholder="Select project..."
+      testId="select-work-order-project"
+      parentId={currentWorkOrderId || 'new-work-order'}
+    />
   );
 
   // Create form sections
