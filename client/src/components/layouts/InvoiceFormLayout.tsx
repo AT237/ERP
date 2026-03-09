@@ -179,6 +179,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [vatRatePercent, setVatRatePercent] = useState<number>(0);
   const [customerLanguageCode, setCustomerLanguageCode] = useState<string>('nl');
+  const watchedPrintLanguageCode = invoiceForm.watch("printLanguageCode" as any) as string | undefined;
   const [selectedWorkOrderIds, setSelectedWorkOrderIds] = useState<string[]>([]);
   const [woSearch, setWoSearch] = useState('');
   const [woDropdownOpen, setWoDropdownOpen] = useState(false);
@@ -345,8 +346,9 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       total = subtotal + taxAmount;
       invoiceForm.setValue("totalAmount", total.toFixed(2));
     }
-    invoiceForm.setValue("totalAmountInWords", amountToWords(total, customerLanguageCode));
-  }, [invoiceItems, vatRatePercent, customerLanguageCode]);
+    const lang = watchedPrintLanguageCode || customerLanguageCode || 'nl';
+    invoiceForm.setValue("totalAmountInWords", amountToWords(total, lang));
+  }, [invoiceItems, vatRatePercent, customerLanguageCode, watchedPrintLanguageCode]);
 
   const calculateDueDate = (invoiceDateStr: string, pDaysId: string) => {
     if (!invoiceDateStr || !pDaysId || paymentDaysList.length === 0) return;
