@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { EntitySelect } from "@/components/ui/entity-select";
 import { useForm } from "react-hook-form";
@@ -126,21 +126,48 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     }
   }, [inventoryItem, form]);
 
-  // Calculate margin when prices change
+  // Track which sale-price field the user last edited to determine calculation direction
+  const lastSalePriceRef = useRef<'unitPrice' | 'margin'>('unitPrice');
+  const isCalculating = useRef(false);
+
+  // Bidirectional calculation:
+  // - unitPrice changed (or costPrice with unitPrice leading) → recalculate margin
+  // - margin changed (or costPrice with margin leading)       → recalculate unitPrice
   useEffect(() => {
-    const subscription = form.watch((values) => {
-      const unitPrice = parseFloat(values.unitPrice || "0");
-      const costPrice = parseFloat(values.costPrice || "0");
-      
-      if (unitPrice && costPrice && costPrice > 0) {
-        const newMargin = ((unitPrice - costPrice) / costPrice * 100).toFixed(2);
-        // Only set if value changed — prevents infinite watch→setValue→watch loop
-        if (newMargin !== values.margin) {
-          form.setValue("margin", newMargin, { shouldDirty: false, shouldValidate: false });
+    const subscription = form.watch((values, { name }) => {
+      if (isCalculating.current) return;
+      const costPrice = parseFloat(String(values.costPrice || "0").replace(',', '.'));
+      if (!costPrice || costPrice <= 0) return;
+
+      isCalculating.current = true;
+      try {
+        const leading = name === 'unitPrice' ? 'unitPrice'
+          : name === 'margin'     ? 'margin'
+          : lastSalePriceRef.current; // costPrice changed — use whichever was last edited
+
+        if (leading === 'unitPrice') {
+          const unitPrice = parseFloat(String(values.unitPrice || "0").replace(',', '.'));
+          if (unitPrice > 0) {
+            const newMargin = ((unitPrice - costPrice) / costPrice * 100).toFixed(2);
+            if (newMargin !== String(values.margin)) {
+              form.setValue("margin", newMargin, { shouldDirty: false, shouldValidate: false });
+            }
+          }
+        } else {
+          const margin = parseFloat(String(values.margin || "0").replace(',', '.'));
+          const newUnitPrice = (costPrice * (1 + margin / 100)).toFixed(2);
+          if (newUnitPrice !== String(values.unitPrice)) {
+            form.setValue("unitPrice", newUnitPrice, { shouldDirty: false, shouldValidate: false });
+          }
         }
+
+        if (name === 'unitPrice') lastSalePriceRef.current = 'unitPrice';
+        else if (name === 'margin') lastSalePriceRef.current = 'margin';
+      } finally {
+        isCalculating.current = false;
       }
     });
-    
+
     return () => subscription.unsubscribe();
   }, [form]);
 
@@ -434,9 +461,11 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         createFieldRow({
           key: "margin",
           label: "Margin %",
-          type: "display",
-          displayValue: form.watch("margin") ? `${String(form.watch("margin")).replace('.', ',')}%` : "0%",
-          displayClassName: "text-lg font-semibold text-green-600"
+          type: "decimal",
+          placeholder: "0,00",
+          setValue: (value) => form.setValue("margin", value),
+          watch: () => form.watch("margin"),
+          testId: "input-inventory-margin"
         } as FormField2<InventoryFormData>)
       ]
     },
