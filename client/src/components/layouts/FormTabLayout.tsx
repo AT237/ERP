@@ -16,7 +16,6 @@ interface FormTabLayoutProps {
 
 export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: FormTabLayoutProps) {
   const isMobile = useIsMobile();
-  const activeTabContent = tabs.find(tab => tab.id === activeTab)?.content;
   const mx = isMobile ? 'mx-0' : 'mx-4';
 
   return (
@@ -45,10 +44,15 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
       </div>
 
       {/* Orange frame — starts directly below the tab bar.
-          rounded-lg gives rounded corners on all 4 sides including the top,
-          so the top orange border (visible under the tabs) has rounded left/right corners. */}
+          All tab contents are rendered but inactive ones are hidden via CSS
+          so that form field refs remain mounted and react-hook-form tracks
+          all field values regardless of which tab is currently active. */}
       <div className={`border border-orange-500 bg-white ${isMobile ? 'p-2' : 'p-6'} rounded-lg ${mx}`}>
-        {activeTabContent}
+        {tabs.map((tab) => (
+          <div key={tab.id} className={tab.id === activeTab ? '' : 'hidden'}>
+            {tab.content}
+          </div>
+        ))}
       </div>
     </div>
   );
