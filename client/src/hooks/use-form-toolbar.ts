@@ -338,6 +338,13 @@ export function useFormToolbar({
     return entityList.map((e: any) => e.id);
   }, [entityList]);
 
+  const getEntityLabel = useCallback((id: string): string => {
+    if (!entityList) return id.slice(0, 8);
+    const entity = entityList.find((e: any) => e.id === id);
+    if (!entity) return id.slice(0, 8);
+    return entity.positionNo || entity.number || entity.code || entity.name || id.slice(0, 8);
+  }, [entityList]);
+
   const currentIndex = useMemo(() => {
     if (!entityId || entityIds.length === 0) return -1;
     return entityIds.indexOf(entityId);
@@ -409,7 +416,7 @@ export function useFormToolbar({
       new CustomEvent("open-form-tab", {
         detail: {
           id: `${config.formType}-edit-${prevId}`,
-          name: `${config.label} ${prevId}`,
+          name: `${config.label} ${getEntityLabel(prevId)}`,
           formType: config.formType,
           entityId: prevId,
           recordId: prevId,
@@ -417,7 +424,7 @@ export function useFormToolbar({
         },
       })
     );
-  }, [currentIndex, entityIds, config, navigationParentId]);
+  }, [currentIndex, entityIds, config, navigationParentId, getEntityLabel]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < 0 || currentIndex >= entityIds.length - 1 || !config) return;
@@ -426,7 +433,7 @@ export function useFormToolbar({
       new CustomEvent("open-form-tab", {
         detail: {
           id: `${config.formType}-edit-${nextId}`,
-          name: `${config.label} ${nextId}`,
+          name: `${config.label} ${getEntityLabel(nextId)}`,
           formType: config.formType,
           entityId: nextId,
           recordId: nextId,
@@ -434,7 +441,7 @@ export function useFormToolbar({
         },
       })
     );
-  }, [currentIndex, entityIds, config, navigationParentId]);
+  }, [currentIndex, entityIds, config, navigationParentId, getEntityLabel]);
 
   return {
     onSave,

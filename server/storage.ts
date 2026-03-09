@@ -29,7 +29,7 @@ import {
   employees, type Employee, type InsertEmployee
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql, and, or, ilike } from "drizzle-orm";
+import { eq, desc, asc, sql, and, or, ilike } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 
 async function safeUpdate<T>(table: any, data: any, id: string): Promise<T> {
@@ -942,7 +942,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getInvoiceItems(invoiceId: string): Promise<InvoiceItem[]> {
-    return await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, invoiceId));
+    return await db.select().from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, invoiceId))
+      .orderBy(asc(invoiceItems.position));
   }
 
   async getInvoiceItem(id: string): Promise<InvoiceItem | undefined> {
