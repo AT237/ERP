@@ -246,13 +246,20 @@ export default function Invoices({}: InvoicesProps) {
               disabled: !selectedInvoice,
             },
             {
+              key: 'email',
+              label: 'E-mail versturen',
+              icon: <Mail className="h-4 w-4" />,
+              onClick: () => selectedInvoice && handleEmailInvoice(selectedInvoice),
+              disabled: !selectedInvoice,
+            },
+            {
               key: 'add',
               label: 'Add Invoice',
               icon: <Plus className="h-4 w-4" />,
               onClick: handleAddInvoice,
             },
           ];
-        }, [handleAddInvoice, tableState.selectedRows, enrichedInvoices, handlePrintInvoice])}
+        }, [handleAddInvoice, tableState.selectedRows, enrichedInvoices, handlePrintInvoice, handleEmailInvoice])}
         rowActions={React.useCallback((invoice: Invoice) => [
           {
             key: 'view',
