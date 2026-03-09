@@ -799,6 +799,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
               label: "Status",
               type: "select",
               options: [
+                { value: "concept", label: "Concept" },
+                { value: "sent", label: "Sent" },
                 { value: "pending", label: "Pending" },
                 { value: "paid", label: "Paid" },
                 { value: "overdue", label: "Overdue" },
