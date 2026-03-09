@@ -551,42 +551,45 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
   // Convert mm to px for rendering
   const mmToPx = (mm: number) => mm * 3.7795275591;
   
-  // If collapseEmpty is enabled, filter out empty blocks and recalculate positions.
-  // If heightCanShrink is enabled, also filter out children with hideWhenEmpty=true that have no content.
+  // If collapseEmpty or heightCanShrink is enabled, filter out hidden blocks and recalculate positions.
+  // Uses a "holes" approach: each hidden block creates a hole at its y-position.
+  // Visible blocks shift UP by the total height of holes that are STRICTLY ABOVE them.
+  // This correctly handles multi-column layouts where blocks share the same y-position.
   let visibleBlocks = childBlocks;
-  let cumulativeOffset = 0;
   
   if (collapseEmpty || heightCanShrink) {
-    // Sort blocks by y-position first for correct collapse order
-    const sortedBlocks = [...childBlocks].sort((a: any, b: any) => 
-      (a.position?.y || 0) - (b.position?.y || 0)
-    );
-    
-    visibleBlocks = [];
-    for (const childBlock of sortedBlocks) {
+    // Determine which blocks are hidden
+    const hiddenSet = new Set<any>();
+    const holes: Array<{ y: number; h: number }> = [];
+    for (const childBlock of childBlocks) {
       let shouldHide = false;
       if (collapseEmpty) {
-        // forceCheck=true: check actual content regardless of individual hideWhenEmpty setting
         shouldHide = !blockHasContent(childBlock, printData, itemContext, true);
       } else if (heightCanShrink && childBlock.config?.hideWhenEmpty) {
-        // When group can shrink: respect each child's own hideWhenEmpty setting
         shouldHide = !blockHasContent(childBlock, printData, itemContext, false);
       }
-      
-      if (!shouldHide) {
-        // Shift block up by accumulated offset from all previously hidden blocks
-        visibleBlocks.push({
+      if (shouldHide) {
+        hiddenSet.add(childBlock);
+        holes.push({ y: childBlock.position?.y || 0, h: childBlock.size?.height || 25 });
+      }
+    }
+
+    visibleBlocks = childBlocks
+      .filter((cb: any) => !hiddenSet.has(cb))
+      .map((childBlock: any) => {
+        const blockY = childBlock.position?.y || 0;
+        // Sum heights of holes that are strictly above this block (y < blockY)
+        const upwardShift = holes
+          .filter(hole => hole.y < blockY)
+          .reduce((sum, hole) => sum + hole.h, 0);
+        return {
           ...childBlock,
           position: {
             x: childBlock.position?.x || 0,
-            y: (childBlock.position?.y || 0) - cumulativeOffset,
-          }
-        });
-      } else {
-        // Add height of this hidden block to cumulative offset
-        cumulativeOffset += (childBlock.size?.height || 25);
-      }
-    }
+            y: blockY - upwardShift,
+          },
+        };
+      });
   }
   
   // If no visible blocks and group collapses, render nothing

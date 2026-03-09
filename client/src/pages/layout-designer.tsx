@@ -3318,33 +3318,43 @@ function estimateActualBlockHeightMm(
 
   // Group blocks: when shrinking is allowed (by section or by the group's own heightCanShrink),
   // measure actual content height from visible children.
+  // Uses a "holes" approach: hidden blocks create holes; visible blocks shift up by holes strictly above them.
   const groupOwnCanShrink = block.type === 'Group' && (block.config?.heightCanShrink || false);
   if (block.type === 'Group' && (allowShrink || groupOwnCanShrink)) {
     const childBlocks: any[] = block.config?.childBlocks || [];
     const collapseEmpty = block.config?.collapseEmpty || false;
-    let visibleChildren = childBlocks;
-    if (collapseEmpty) {
-      visibleChildren = childBlocks.filter((ch: any) => blockHasContent(ch, printData, itemContext));
-      if (visibleChildren.length === 0) return 0;
-    } else {
-      // When shrinking: skip children with hideWhenEmpty=true that have no content
-      visibleChildren = childBlocks.filter((ch: any) => {
-        if (!ch.config?.hideWhenEmpty) return true;
-        return blockHasContent(ch, printData, itemContext, false);
-      });
+
+    // Determine which children are hidden and record their holes
+    const holes: Array<{ y: number; h: number }> = [];
+    const hiddenSet = new Set<any>();
+    for (const ch of childBlocks) {
+      let hidden = false;
+      if (collapseEmpty) {
+        hidden = !blockHasContent(ch, printData, itemContext);
+      } else {
+        hidden = !!(ch.config?.hideWhenEmpty && !blockHasContent(ch, printData, itemContext, false));
+      }
+      if (hidden) {
+        hiddenSet.add(ch);
+        holes.push({ y: ch.position?.y || 0, h: ch.size?.height || 25 });
+      }
     }
-    const sorted = [...visibleChildren].sort(
-      (a: any, b: any) => (a.position?.y || 0) - (b.position?.y || 0)
-    );
+
+    const visibleChildren = childBlocks.filter((ch: any) => !hiddenSet.has(ch));
+    if (visibleChildren.length === 0) return 0;
+
     let calcHeight = 0;
-    let cumOff = 0;
-    for (const child of sorted) {
+    for (const child of visibleChildren) {
       const childMarginMm = parseFloat(child.style?.marginBottom || '0') || 0;
       const childH = estimateActualBlockHeightMm(child, printData, itemContext, true);
       if (childH <= 0) continue;
-      const adjustedY = (child.position?.y || 0) + cumOff;
+      const blockY = child.position?.y || 0;
+      // Shift up by height of holes strictly above this block
+      const upwardShift = holes
+        .filter(hole => hole.y < blockY)
+        .reduce((sum, hole) => sum + hole.h, 0);
+      const adjustedY = blockY - upwardShift;
       calcHeight = Math.max(calcHeight, adjustedY + childH + childMarginMm);
-      cumOff += childMarginMm;
     }
     return calcHeight;
   }
@@ -3667,42 +3677,48 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
       // The group itself can shrink when either the section allows it OR the group's own heightCanShrink is set.
       const groupCanShrink = sectionCanShrink || (block.config?.heightCanShrink || false);
 
-      let visibleChildren = childBlocks;
-      if (collapseEmpty) {
-        // forceCheck=true: collapse empty children regardless of their individual hideWhenEmpty setting
-        visibleChildren = childBlocks.filter((child: any) =>
-          blockHasContent(child, typedPrintData, itemContext, true)
-        );
-        if (visibleChildren.length === 0) return 0;
-      } else if (groupCanShrink) {
-        // When shrinking: exclude children with hideWhenEmpty=true that have no content
-        visibleChildren = childBlocks.filter((child: any) => {
-          if (!child.config?.hideWhenEmpty) return true;
-          return blockHasContent(child, typedPrintData, itemContext, false);
-        });
+      // Determine hidden children and collect holes (y, h).
+      // Visible blocks shift UP by height of holes strictly above them.
+      const holes: Array<{ y: number; h: number }> = [];
+      const hiddenSet = new Set<any>();
+      if (collapseEmpty || groupCanShrink) {
+        for (const child of childBlocks) {
+          let hidden = false;
+          if (collapseEmpty) {
+            hidden = !blockHasContent(child, typedPrintData, itemContext, true);
+          } else if (groupCanShrink && child.config?.hideWhenEmpty) {
+            hidden = !blockHasContent(child, typedPrintData, itemContext, false);
+          }
+          if (hidden) {
+            hiddenSet.add(child);
+            holes.push({ y: child.position?.y || 0, h: child.size?.height || 25 });
+          }
+        }
       }
 
-      const sorted = [...visibleChildren].sort(
-        (a: any, b: any) => (a.position?.y || 0) - (b.position?.y || 0)
-      );
+      const visibleChildren = (collapseEmpty || groupCanShrink)
+        ? childBlocks.filter((c: any) => !hiddenSet.has(c))
+        : childBlocks;
+
+      if ((collapseEmpty || groupCanShrink) && visibleChildren.length === 0) return 0;
 
       let calcHeight = 0;
-      let cumOff = 0;
-      for (const child of sorted) {
+      for (const child of visibleChildren) {
         const childMargin = parseFloat(child.style?.marginBottom || '0') || 0;
-        const adjustedChildY = (child.position?.y || 0) + cumOff;
         // When group or section can shrink: use canvas-measured child height instead of configured height.
         const childH = groupCanShrink
           ? estimateActualBlockHeightMm(child, typedPrintData, itemContext, true)
           : (child.size?.height || 25);
-        // Skip empty children (height=0) when shrinking — they contribute no space.
         if (groupCanShrink && childH <= 0) continue;
-        const childBottom = adjustedChildY + childH + childMargin;
-        calcHeight = Math.max(calcHeight, childBottom);
-        cumOff += childMargin;
+        const blockY = child.position?.y || 0;
+        const upwardShift = holes
+          .filter(hole => hole.y < blockY)
+          .reduce((sum: number, hole) => sum + hole.h, 0);
+        const adjustedY = blockY - upwardShift;
+        calcHeight = Math.max(calcHeight, adjustedY + childH + childMargin);
       }
 
-      const cumulativeMargin = sorted.reduce(
+      const cumulativeMargin = visibleChildren.reduce(
         (sum: number, child: any) => sum + (parseFloat(child.style?.marginBottom || '0') || 0), 0
       );
       // When group or section can shrink: always use the measured calcHeight (not configured baseHeight).
@@ -4014,37 +4030,45 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
           const collapseEmpty = block.config?.collapseEmpty || false;
           // Group can shrink when section allows it OR group has its own heightCanShrink set.
           const staticGroupCanShrink = staticSectionCanShrink || (block.config?.heightCanShrink || false);
-          let visibleChildren = childBlocks;
-          if (collapseEmpty) {
-            // forceCheck=true: collapse empty children regardless of their individual hideWhenEmpty setting
-            visibleChildren = childBlocks.filter((child: any) =>
-              blockHasContent(child, typedPrintData, undefined, true)
-            );
-            if (visibleChildren.length === 0) return 0;
-          } else if (staticGroupCanShrink) {
-            // When shrinking: skip children with hideWhenEmpty=true that have no content
-            visibleChildren = childBlocks.filter((child: any) => {
-              if (!child.config?.hideWhenEmpty) return true;
-              return blockHasContent(child, typedPrintData, undefined, false);
-            });
+
+          // Collect holes from hidden children; visible blocks shift up by holes strictly above them.
+          const holes: Array<{ y: number; h: number }> = [];
+          const hiddenSet = new Set<any>();
+          if (collapseEmpty || staticGroupCanShrink) {
+            for (const child of childBlocks) {
+              let hidden = false;
+              if (collapseEmpty) {
+                hidden = !blockHasContent(child, typedPrintData, undefined, true);
+              } else if (staticGroupCanShrink && child.config?.hideWhenEmpty) {
+                hidden = !blockHasContent(child, typedPrintData, undefined, false);
+              }
+              if (hidden) {
+                hiddenSet.add(child);
+                holes.push({ y: child.position?.y || 0, h: child.size?.height || 25 });
+              }
+            }
           }
-          const sorted = [...visibleChildren].sort(
-            (a: any, b: any) => (a.position?.y || 0) - (b.position?.y || 0)
-          );
+
+          const visibleChildren = (collapseEmpty || staticGroupCanShrink)
+            ? childBlocks.filter((c: any) => !hiddenSet.has(c))
+            : childBlocks;
+
+          if ((collapseEmpty || staticGroupCanShrink) && visibleChildren.length === 0) return 0;
+
           let calcHeight = 0;
-          let cumOff = 0;
-          for (const child of sorted) {
+          for (const child of visibleChildren) {
             const childMargin = parseFloat(child.style?.marginBottom || '0') || 0;
-            // Use canvas-measured heights when group or section can shrink.
             const childH = estimateActualBlockHeightMm(child, typedPrintData, undefined, staticGroupCanShrink);
-            // Skip empty children when shrinking — they contribute no space.
             if (staticGroupCanShrink && childH <= 0) continue;
-            const adjustedChildY = (child.position?.y || 0) + cumOff;
-            const childBottom = adjustedChildY + childH + childMargin;
-            calcHeight = Math.max(calcHeight, childBottom);
-            cumOff += childMargin;
+            const blockY = child.position?.y || 0;
+            const upwardShift = holes
+              .filter(hole => hole.y < blockY)
+              .reduce((sum: number, hole) => sum + hole.h, 0);
+            const adjustedY = blockY - upwardShift;
+            calcHeight = Math.max(calcHeight, adjustedY + childH + childMargin);
           }
-          const cumulativeMargin = sorted.reduce(
+
+          const cumulativeMargin = visibleChildren.reduce(
             (sum: number, child: any) => sum + (parseFloat(child.style?.marginBottom || '0') || 0), 0
           );
           const configuredGroupH = block.size?.height || 25;
