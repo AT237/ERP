@@ -1,12 +1,14 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Eye, Printer } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Printer, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
 import { PrintLayoutDialog } from "@/components/layouts/PrintLayoutDialog";
+import { InvoiceEmailPanel } from "@/components/layouts/InvoiceEmailPanel";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Invoice, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -16,10 +18,17 @@ export default function Invoices({}: InvoicesProps) {
   const { toast } = useToast();
   const [printDialogOpen, setPrintDialogOpen] = React.useState(false);
   const [printInvoiceId, setPrintInvoiceId] = React.useState<string | undefined>();
+  const [emailDialogOpen, setEmailDialogOpen] = React.useState(false);
+  const [emailInvoiceId, setEmailInvoiceId] = React.useState<string | undefined>();
 
   const handlePrintInvoice = React.useCallback((invoice: Invoice) => {
     setPrintInvoiceId(invoice.id);
     setPrintDialogOpen(true);
+  }, []);
+
+  const handleEmailInvoice = React.useCallback((invoice: Invoice) => {
+    setEmailInvoiceId(invoice.id);
+    setEmailDialogOpen(true);
   }, []);
 
   const { data: invoices = [], isLoading: invoicesLoading } = useQuery<Invoice[]>({
@@ -267,13 +276,20 @@ export default function Invoices({}: InvoicesProps) {
             variant: 'outline' as const
           },
           {
+            key: 'email',
+            label: 'E-mail versturen',
+            icon: <Mail className="h-4 w-4" />,
+            onClick: () => handleEmailInvoice(invoice),
+            variant: 'outline' as const
+          },
+          {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
             onClick: () => del.handleDeleteRow(invoice),
             variant: 'destructive' as const
           }
-        ], [handleViewInvoice, handleEditInvoice, handlePrintInvoice, del.handleDeleteRow])}
+        ], [handleViewInvoice, handleEditInvoice, handlePrintInvoice, handleEmailInvoice, del.handleDeleteRow])}
       />
       {del.renderDeleteDialogs()}
       <PrintLayoutDialog
@@ -282,6 +298,19 @@ export default function Invoices({}: InvoicesProps) {
         documentType="invoice"
         entityId={printInvoiceId}
       />
+      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-orange-600">
+              <Mail className="h-5 w-5" />
+              Factuur versturen
+            </DialogTitle>
+          </DialogHeader>
+          {emailInvoiceId && (
+            <InvoiceEmailPanel invoiceId={emailInvoiceId} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
