@@ -160,19 +160,22 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
 
   const { data: selectedInventoryItem } = useQuery<any>({
     queryKey: ["/api/inventory", itemIdValue],
-    enabled: !!itemIdValue && !isEditing,
+    enabled: !!itemIdValue,
     staleTime: 5 * 60 * 1000,
   });
 
   useEffect(() => {
-    if (selectedInventoryItem && !isEditing) {
+    const currentItemId = itemIdValue || "";
+    if (selectedInventoryItem && currentItemId && currentItemId !== prevItemIdRef.current) {
+      prevItemIdRef.current = currentItemId;
       form.setValue("description", selectedInventoryItem.description || selectedInventoryItem.name || "");
       const unit = selectedInventoryItem.unit;
       if (unit) form.setValue("unit" as any, unit);
       const price = selectedInventoryItem.sellingPrice || selectedInventoryItem.unitPrice;
       if (price) form.setValue("unitPrice", Number(price).toFixed(2));
+      setHasUnsavedChanges(true);
     }
-  }, [selectedInventoryItem, isEditing, form]);
+  }, [selectedInventoryItem, itemIdValue, form]);
 
   const customerRateOptions = useMemo(() => {
     const customerRateMap = new Map<string, CustomerRate>();
@@ -266,6 +269,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       form.reset(formData);
       setOriginalValues(formData);
       setHasUnsavedChanges(false);
+      prevItemIdRef.current = lineItem.itemId || "";
     } else {
       const defaultFormData = form.getValues();
       setOriginalValues(defaultFormData);
@@ -275,6 +279,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
 
   const lineTypeValue = form.watch("lineType");
   const prevLineTypeRef = useRef<string>("");
+  const prevItemIdRef = useRef<string>("");
   const quantityValue = form.watch("quantity");
   const unitPriceValue = form.watch("unitPrice");
   const lineTotalValue = form.watch("lineTotal");
