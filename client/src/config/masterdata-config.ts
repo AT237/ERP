@@ -167,7 +167,7 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
     endpoint: "rates-and-charges",
     schema: insertRateAndChargeSchema,
     fields: [
-      { name: "code", label: "Code", type: "text", required: true },
+      { name: "code", label: "Code", type: "auto-code", required: true, nextCodeEndpoint: "/api/masterdata/rates-and-charges/next-code" },
       { name: "name", label: "Name", type: "text", required: true },
       { name: "description", label: "Description", type: "text" },
       { 

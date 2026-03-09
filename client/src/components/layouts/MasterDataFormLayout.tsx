@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Database } from "lucide-react";
+import { Database, RefreshCw } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -109,6 +109,27 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
       form.reset(existingData);
     }
   }, [existingData, isEditing, form]);
+
+  // Auto-code: find the first auto-code field in the config
+  const autoCodeField = useMemo(() => allFields.find(f => f.type === 'auto-code'), [allFields]);
+
+  const { data: nextCodeData, refetch: refetchNextCode } = useQuery<{ code: string }>({
+    queryKey: [autoCodeField?.nextCodeEndpoint],
+    queryFn: async () => {
+      if (!autoCodeField?.nextCodeEndpoint) return { code: '' };
+      const res = await fetch(autoCodeField.nextCodeEndpoint);
+      if (!res.ok) throw new Error('Failed to fetch next code');
+      return res.json();
+    },
+    enabled: !!autoCodeField?.nextCodeEndpoint && !isEditing,
+    staleTime: 0,
+  });
+
+  useEffect(() => {
+    if (!isEditing && nextCodeData?.code && autoCodeField && !form.getValues(autoCodeField.name)) {
+      form.setValue(autoCodeField.name, nextCodeData.code);
+    }
+  }, [nextCodeData, isEditing, autoCodeField]);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -220,6 +241,33 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
             data-testid={`input-${field.name}`}
             onChange={(e) => formField.onChange(parseFloat(e.target.value) || 0)}
           />
+        );
+      case 'auto-code':
+        return (
+          <div className="flex gap-1 items-center">
+            <Input
+              {...formField}
+              type="text"
+              placeholder="RC-0001"
+              data-testid={`input-${field.name}`}
+              className="h-10 text-xs flex-1 font-mono"
+            />
+            {!isEditing && (
+              <button
+                type="button"
+                title="Nieuw beschikbaar nummer ophalen"
+                onClick={async () => {
+                  const result = await refetchNextCode();
+                  if (result.data?.code) {
+                    formField.onChange(result.data.code);
+                  }
+                }}
+                className="h-10 w-10 flex items-center justify-center rounded border border-input bg-background hover:bg-orange-50 hover:border-orange-400 transition-colors flex-shrink-0"
+              >
+                <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            )}
+          </div>
         );
       default:
         return (
