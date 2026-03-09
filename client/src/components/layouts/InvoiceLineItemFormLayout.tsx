@@ -87,8 +87,6 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
-  const [rateOpen, setRateOpen] = useState(false);
-  const [rateSearchQuery, setRateSearchQuery] = useState("");
   
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -199,15 +197,6 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       });
   }, [customerRates, allRates]);
 
-  const filteredRateOptions = useMemo(() => {
-    if (!rateSearchQuery) return customerRateOptions;
-    const q = rateSearchQuery.toLowerCase();
-    return customerRateOptions.filter(opt =>
-      opt.code.toLowerCase().includes(q) ||
-      opt.name.toLowerCase().includes(q) ||
-      opt.label.toLowerCase().includes(q)
-    );
-  }, [rateSearchQuery, customerRateOptions]);
 
   useEffect(() => {
     if (!isEditing && invoiceDetails?.items) {
@@ -673,52 +662,26 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     label: 'Rate',
     type: 'custom',
     customComponent: (
-      <Popover open={rateOpen} onOpenChange={setRateOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={rateOpen}
-            className="w-full h-10 justify-between font-normal"
-            data-testid="select-customer-rate"
-          >
-            <span className="truncate">
-              {customerRateIdValue
-                ? (customerRateOptions.find(o => o.rateId === customerRateIdValue)?.label || "Selecteer tarief...")
-                : "Selecteer tarief..."}
-            </span>
-            <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="p-0" align="start" sideOffset={4} style={{ width: 'var(--radix-popover-trigger-width)' }}>
-          <Command shouldFilter={false}>
-            <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-              <CommandInput
-                placeholder="Zoek tarieven..."
-                className="flex-1 border-0 bg-transparent outline-none focus:ring-0 pr-2"
-                value={rateSearchQuery}
-                onValueChange={setRateSearchQuery}
-              />
-            </div>
-            <CommandList>
-              <CommandEmpty>Geen tarieven gevonden.</CommandEmpty>
-              <CommandGroup>
-                {customerRateIdValue && (
-                  <CommandItem value="__clear__" onSelect={() => { handleCustomerRateChange(""); setRateOpen(false); setRateSearchQuery(""); }} className="text-muted-foreground italic">
-                    — Selectie wissen —
-                  </CommandItem>
-                )}
-                {filteredRateOptions.map(opt => (
-                  <CommandItem key={opt.rateId} value={opt.rateId} onSelect={() => { handleCustomerRateChange(opt.rateId); setRateOpen(false); setRateSearchQuery(""); }}>
-                    <Check className={cn("mr-2 h-4 w-4 shrink-0", customerRateIdValue === opt.rateId ? "opacity-100" : "opacity-0")} />
-                    {opt.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+      <Select
+        value={customerRateIdValue || ""}
+        onValueChange={(value) => handleCustomerRateChange(value === "__none__" ? "" : value)}
+      >
+        <SelectTrigger data-testid="select-customer-rate" className="h-10">
+          <SelectValue placeholder="Selecteer tarief..." />
+        </SelectTrigger>
+        <SelectContent>
+          {customerRateIdValue && (
+            <SelectItem value="__none__" className="text-muted-foreground italic">
+              — Selectie wissen —
+            </SelectItem>
+          )}
+          {customerRateOptions.map(opt => (
+            <SelectItem key={opt.rateId} value={opt.rateId}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     ),
     testId: 'select-customer-rate',
   };
