@@ -578,6 +578,8 @@ export default function Layout({ children }: LayoutProps) {
         return '/text-snippets';
       case 'layout-designer':
         return '/layout-designer';
+      case 'email-designer':
+        return '/email-designer';
       case 'uom':
         return '/master-data/uom';
       case 'payment-terms':
