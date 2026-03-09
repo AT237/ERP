@@ -12,6 +12,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ProjectSelect } from "@/components/ui/project-select";
 import { EmployeeSelect } from "@/components/ui/employee-select";
+import { CustomerSelect } from "@/components/ui/customer-select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertWorkOrderSchema } from "@shared/schema";
@@ -52,7 +53,8 @@ interface WorkOrderFormLayoutProps {
 
 export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrderFormLayoutProps) {
   const [activeSection, setActiveSection] = useState("basic");
-  
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+
   // Change tracking state
   const [originalValues, setOriginalValues] = useState<FormFieldValues>({});
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
@@ -131,6 +133,13 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     enabled: !!workOrderId,
   });
 
+  // Load all projects so we can filter by customer
+  const { data: allProjects = [] } = useQuery<any[]>({
+    queryKey: ["/api/projects"],
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   // Update form when work order data loads and store original values for change tracking
   useEffect(() => {
     if (workOrder) {
@@ -148,7 +157,15 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         estimatedHours: workOrder.estimatedHours?.toString() || "",
         actualHours: workOrder.actualHours?.toString() || "",
       };
-      
+
+      // Auto-derive customer from the linked project
+      if (workOrder.projectId && allProjects.length > 0) {
+        const linkedProject = allProjects.find((p: any) => p.id === workOrder.projectId);
+        if (linkedProject?.customerId) {
+          setSelectedCustomerId(linkedProject.customerId);
+        }
+      }
+
       form.reset(formData);
       
       // Store original values for change tracking
