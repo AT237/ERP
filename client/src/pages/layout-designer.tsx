@@ -489,7 +489,7 @@ function DataFieldInsertMenu({
                   className="w-full px-3 py-2 text-left text-xs font-medium flex items-center justify-between hover:bg-muted"
                   onClick={() => toggleTable(table.name)}
                 >
-                  <span>{table.name}</span>
+                  <span>{table.label || table.name}</span>
                   <span className="text-muted-foreground">
                     {isExpanded ? '−' : '+'}
                   </span>
