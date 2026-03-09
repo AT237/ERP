@@ -5,17 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
-  Plus, Save, Trash2, Mail, ChevronRight, FileText, ReceiptText,
-  Package, User, Building2, FolderOpen, AlertCircle, Copy
+  Plus, Save, Trash2, Mail, Copy, AlertCircle
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 import type { EmailTemplate } from "@shared/schema";
 
+// ─── Template types ──────────────────────────────────────────────────────────
 const TEMPLATE_TYPES = [
   { value: "invoice", label: "Factuur" },
   { value: "quotation", label: "Offerte" },
@@ -25,79 +23,163 @@ const TEMPLATE_TYPES = [
   { value: "general", label: "Algemeen" },
 ];
 
-const DATA_FIELDS: { category: string; icon: any; fields: { token: string; label: string }[] }[] = [
+// ─── Data tables for field insertion (mirrors Layout Designer) ──────────────
+const EMAIL_TABLES: { name: string; label: string; fields: { key: string; label: string }[] }[] = [
   {
-    category: "Factuur",
-    icon: ReceiptText,
+    name: "invoice", label: "Factuur",
     fields: [
-      { token: "{{invoice.number}}", label: "Factuurnummer" },
-      { token: "{{invoice.date}}", label: "Factuurdatum" },
-      { token: "{{invoice.dueDate}}", label: "Vervaldatum" },
-      { token: "{{invoice.totalAmount}}", label: "Totaalbedrag" },
-      { token: "{{invoice.currency}}", label: "Valuta" },
+      { key: "number", label: "Factuurnummer" },
+      { key: "date", label: "Factuurdatum" },
+      { key: "dueDate", label: "Vervaldatum" },
+      { key: "totalAmount", label: "Totaalbedrag" },
+      { key: "currency", label: "Valuta" },
     ],
   },
   {
-    category: "Offerte",
-    icon: FileText,
+    name: "quotation", label: "Offerte",
     fields: [
-      { token: "{{quotation.number}}", label: "Offertenummer" },
-      { token: "{{quotation.date}}", label: "Offertedatum" },
-      { token: "{{quotation.totalAmount}}", label: "Totaalbedrag" },
+      { key: "number", label: "Offertenummer" },
+      { key: "date", label: "Offertedatum" },
+      { key: "validUntil", label: "Geldig tot" },
+      { key: "totalAmount", label: "Totaalbedrag" },
     ],
   },
   {
-    category: "Klant",
-    icon: Building2,
+    name: "customer", label: "Klant",
     fields: [
-      { token: "{{customer.name}}", label: "Bedrijfsnaam" },
-      { token: "{{customer.email}}", label: "E-mail" },
-      { token: "{{customer.invoiceEmail}}", label: "Factuur e-mail" },
-      { token: "{{customer.generalEmail}}", label: "Algemeen e-mail" },
-      { token: "{{customer.phone}}", label: "Telefoon" },
+      { key: "name", label: "Bedrijfsnaam" },
+      { key: "email", label: "E-mail" },
+      { key: "invoiceEmail", label: "Factuur e-mail" },
+      { key: "generalEmail", label: "Algemeen e-mail" },
+      { key: "phone", label: "Telefoon" },
+      { key: "customerNumber", label: "Klantnummer" },
     ],
   },
   {
-    category: "Contact",
-    icon: User,
+    name: "contact", label: "Contact",
     fields: [
-      { token: "{{contact.name}}", label: "Contactnaam" },
-      { token: "{{contact.email}}", label: "Contacte-mail" },
-      { token: "{{contact.phone}}", label: "Contacttelefoon" },
+      { key: "name", label: "Contactnaam" },
+      { key: "email", label: "E-mail" },
+      { key: "phone", label: "Telefoon" },
     ],
   },
   {
-    category: "Project",
-    icon: FolderOpen,
+    name: "project", label: "Project",
     fields: [
-      { token: "{{project.name}}", label: "Projectnaam" },
-      { token: "{{project.number}}", label: "Projectnummer" },
+      { key: "name", label: "Projectnaam" },
+      { key: "number", label: "Projectnummer" },
     ],
   },
   {
-    category: "Bedrijf",
-    icon: Building2,
+    name: "company", label: "Bedrijf",
     fields: [
-      { token: "{{company.name}}", label: "Bedrijfsnaam" },
-      { token: "{{company.email}}", label: "E-mail" },
-      { token: "{{company.phone}}", label: "Telefoon" },
-      { token: "{{company.address}}", label: "Adres" },
+      { key: "name", label: "Bedrijfsnaam" },
+      { key: "email", label: "E-mail" },
+      { key: "phone", label: "Telefoon" },
+      { key: "address", label: "Adres" },
     ],
   },
 ];
 
+// ─── Field insert panel (exact clone of Layout Designer's DataFieldInsertMenu) ─
+function DataFieldInsertPanel({ onInsert }: { onInsert: (token: string) => void }) {
+  const [expandedTables, setExpandedTables] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+
+  const toggleTable = (name: string) => {
+    setExpandedTables((prev) =>
+      prev.includes(name) ? prev.filter((t) => t !== name) : [...prev, name]
+    );
+  };
+
+  const lowerSearch = search.toLowerCase();
+  const isSearching = lowerSearch.length > 0;
+
+  const filteredTables = EMAIL_TABLES.map((table) => ({
+    ...table,
+    filteredFields: table.fields.filter(
+      (f) =>
+        !lowerSearch ||
+        f.label.toLowerCase().includes(lowerSearch) ||
+        f.key.toLowerCase().includes(lowerSearch)
+    ),
+  })).filter(
+    (table) =>
+      !lowerSearch ||
+      table.label.toLowerCase().includes(lowerSearch) ||
+      table.filteredFields.length > 0
+  );
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-3 border-b">
+        <p className="text-xs font-semibold">Data invoegen</p>
+        <p className="text-[10px] text-muted-foreground mt-0.5">Klik om in te voegen</p>
+      </div>
+      <div className="p-2 border-b bg-muted/20">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Zoek veld..."
+          className="h-7 text-xs"
+        />
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {filteredTables.length === 0 ? (
+          <div className="px-3 py-4 text-xs text-muted-foreground text-center">Geen velden gevonden</div>
+        ) : (
+          filteredTables.map((table) => {
+            const isExpanded = isSearching || expandedTables.includes(table.name);
+            return (
+              <div key={table.name} className="border-b last:border-b-0">
+                <button
+                  type="button"
+                  className="w-full px-3 py-2 text-left text-xs font-medium flex items-center justify-between hover:bg-muted"
+                  onClick={() => toggleTable(table.name)}
+                >
+                  <span>{table.label}</span>
+                  <span className="text-muted-foreground">{isExpanded ? "−" : "+"}</span>
+                </button>
+                {isExpanded && (
+                  <div className="bg-muted/30 px-2 py-1">
+                    {table.filteredFields.map((field) => {
+                      const token = `{{${table.name}.${field.key}}}`;
+                      return (
+                        <button
+                          key={field.key}
+                          type="button"
+                          className="w-full px-3 py-1.5 text-left text-xs hover:bg-orange-100 rounded flex items-center gap-2"
+                          onClick={() => onInsert(token)}
+                        >
+                          <span className="text-orange-600">+</span>
+                          <span>{field.label}</span>
+                          <span className="text-[10px] text-muted-foreground ml-auto font-mono">{token}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Cursor insert helper ─────────────────────────────────────────────────────
 function insertAtCursor(el: HTMLInputElement | HTMLTextAreaElement, text: string) {
   const start = el.selectionStart ?? el.value.length;
   const end = el.selectionEnd ?? el.value.length;
-  const before = el.value.slice(0, start);
-  const after = el.value.slice(end);
-  el.value = before + text + after;
+  el.value = el.value.slice(0, start) + text + el.value.slice(end);
   const newPos = start + text.length;
   el.setSelectionRange(newPos, newPos);
   el.dispatchEvent(new Event("input", { bubbles: true }));
   el.focus();
 }
 
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function EmailDesignerPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -106,7 +188,6 @@ export default function EmailDesignerPage() {
   const [draft, setDraft] = useState<Partial<EmailTemplate>>({});
   const [isDirty, setIsDirty] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>("Factuur");
 
   const subjectRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
@@ -124,7 +205,7 @@ export default function EmailDesignerPage() {
       setSelectedId(created.id);
       setDraft(created);
       setIsDirty(false);
-      toast({ title: "Aangemaakt", description: `Template "${created.name}" aangemaakt.` });
+      toast({ title: "Aangemaakt", description: `"${created.name}" aangemaakt.` });
     },
   });
 
@@ -136,7 +217,7 @@ export default function EmailDesignerPage() {
       qc.invalidateQueries({ queryKey: ["/api/email-templates"] });
       setDraft(updated);
       setIsDirty(false);
-      toast({ title: "Opgeslagen", description: "Template opgeslagen." });
+      toast({ title: "Opgeslagen" });
     },
   });
 
@@ -148,25 +229,19 @@ export default function EmailDesignerPage() {
       setDraft({});
       setIsDirty(false);
       setDeleteId(null);
-      toast({ title: "Verwijderd", description: "Template verwijderd." });
+      toast({ title: "Verwijderd" });
     },
   });
 
   const handleSelect = (t: EmailTemplate) => {
-    if (isDirty) {
-      const ok = window.confirm("Je hebt niet-opgeslagen wijzigingen. Wil je doorgaan?");
-      if (!ok) return;
-    }
+    if (isDirty && !window.confirm("Niet-opgeslagen wijzigingen. Doorgaan?")) return;
     setSelectedId(t.id);
     setDraft(t);
     setIsDirty(false);
   };
 
   const handleNew = () => {
-    if (isDirty) {
-      const ok = window.confirm("Je hebt niet-opgeslagen wijzigingen. Wil je doorgaan?");
-      if (!ok) return;
-    }
+    if (isDirty && !window.confirm("Niet-opgeslagen wijzigingen. Doorgaan?")) return;
     setSelectedId(null);
     setDraft({ name: "Nieuw template", templateType: "invoice", subject: "", body: "" });
     setIsDirty(true);
@@ -199,20 +274,12 @@ export default function EmailDesignerPage() {
     }
   }, []);
 
-  const handleDuplicate = async (t: EmailTemplate) => {
-    createMutation.mutate({
-      name: `${t.name} (kopie)`,
-      templateType: t.templateType,
-      subject: t.subject ?? "",
-      body: t.body ?? "",
-    });
-  };
-
   const typeLabel = (type: string) =>
     TEMPLATE_TYPES.find((t) => t.value === type)?.label ?? type;
 
   return (
     <div className="flex h-[calc(100vh-56px)] bg-gray-50 overflow-hidden">
+
       {/* ── Left: template list ── */}
       <div className="w-64 flex-shrink-0 bg-white border-r flex flex-col">
         <div className="p-4 border-b flex items-center justify-between">
@@ -247,9 +314,7 @@ export default function EmailDesignerPage() {
               >
                 <Mail className={`h-3.5 w-3.5 flex-shrink-0 ${selectedId === t.id ? "text-orange-500" : "text-muted-foreground"}`} />
                 <div className="min-w-0 flex-1">
-                  <p className={`text-xs font-medium truncate ${selectedId === t.id ? "text-orange-700" : ""}`}>
-                    {t.name}
-                  </p>
+                  <p className={`text-xs font-medium truncate ${selectedId === t.id ? "text-orange-700" : ""}`}>{t.name}</p>
                   <p className="text-[10px] text-muted-foreground">{typeLabel(t.templateType)}</p>
                 </div>
               </button>
@@ -280,7 +345,10 @@ export default function EmailDesignerPage() {
               {selectedId && (
                 <>
                   <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-gray-500 hover:text-gray-700"
-                    onClick={() => { const t = templates.find(x => x.id === selectedId); if (t) handleDuplicate(t); }}>
+                    onClick={() => {
+                      const t = templates.find((x) => x.id === selectedId);
+                      if (t) createMutation.mutate({ name: `${t.name} (kopie)`, templateType: t.templateType, subject: t.subject ?? "", body: t.body ?? "" });
+                    }}>
                     <Copy className="h-3.5 w-3.5" />
                     Dupliceren
                   </Button>
@@ -291,9 +359,12 @@ export default function EmailDesignerPage() {
                   </Button>
                 </>
               )}
-              <Button size="sm" className="h-8 gap-1.5 bg-orange-500 hover:bg-orange-600"
+              <Button
+                size="sm"
+                className="h-8 gap-1.5 bg-orange-500 hover:bg-orange-600"
                 onClick={handleSave}
-                disabled={saveMutation.isPending || createMutation.isPending}>
+                disabled={saveMutation.isPending || createMutation.isPending}
+              >
                 <Save className="h-3.5 w-3.5" />
                 Opslaan
               </Button>
@@ -342,7 +413,7 @@ export default function EmailDesignerPage() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-medium">Tekst (body)</Label>
-                <span className="text-[10px] text-muted-foreground">Klik op een veld rechts om het in te voegen op de cursorpositie</span>
+                <span className="text-[10px] text-muted-foreground">Klik op een veld rechts → wordt ingevoegd op cursorpositie</span>
               </div>
               <Textarea
                 ref={bodyRef}
@@ -356,19 +427,19 @@ export default function EmailDesignerPage() {
 
             {/* Preview */}
             {(draft.subject || draft.body) && (
-              <div className="border rounded-lg bg-white">
-                <div className="px-4 py-2 border-b flex items-center gap-2 bg-gray-50 rounded-t-lg">
+              <div className="border rounded-lg bg-white overflow-hidden">
+                <div className="px-4 py-2 border-b flex items-center gap-2 bg-gray-50">
                   <AlertCircle className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">Voorbeeld (tokens worden ingevuld bij gebruik)</span>
                 </div>
                 {draft.subject && (
-                  <div className="px-4 pt-3 pb-1">
+                  <div className="px-4 pt-3 pb-1 border-b">
                     <span className="text-xs text-muted-foreground">Onderwerp: </span>
                     <span className="text-sm font-medium">{draft.subject}</span>
                   </div>
                 )}
                 {draft.body && (
-                  <div className="px-4 pb-3 pt-1">
+                  <div className="px-4 py-3">
                     <pre className="text-sm font-sans whitespace-pre-wrap text-gray-700">{draft.body}</pre>
                   </div>
                 )}
@@ -378,43 +449,9 @@ export default function EmailDesignerPage() {
         </div>
       )}
 
-      {/* ── Right: data fields panel ── */}
-      <div className="w-56 flex-shrink-0 bg-white border-l flex flex-col">
-        <div className="p-3 border-b">
-          <p className="text-xs font-semibold text-gray-700">Data invoegen</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Klik om in te voegen</p>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          {DATA_FIELDS.map(({ category, icon: Icon, fields }) => (
-            <div key={category}>
-              <button
-                className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                onClick={() => setExpandedCategory(expandedCategory === category ? null : category)}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Icon className="h-3 w-3" />
-                  {category}
-                </div>
-                <ChevronRight className={`h-3 w-3 transition-transform ${expandedCategory === category ? "rotate-90" : ""}`} />
-              </button>
-              {expandedCategory === category && (
-                <div className="bg-gray-50/60 pb-1">
-                  {fields.map(({ token, label }) => (
-                    <button
-                      key={token}
-                      onClick={() => handleInsertToken(token)}
-                      className="w-full text-left px-4 py-1.5 hover:bg-orange-50 group transition-colors"
-                    >
-                      <p className="text-[10px] text-muted-foreground group-hover:text-orange-600">{label}</p>
-                      <p className="text-[10px] font-mono text-gray-400 group-hover:text-orange-500">{token}</p>
-                    </button>
-                  ))}
-                </div>
-              )}
-              <Separator />
-            </div>
-          ))}
-        </div>
+      {/* ── Right: data field insert panel (identical to Layout Designer) ── */}
+      <div className="w-60 flex-shrink-0 bg-white border-l flex flex-col">
+        <DataFieldInsertPanel onInsert={handleInsertToken} />
       </div>
 
       {deleteId && (
