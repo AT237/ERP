@@ -159,6 +159,10 @@ export default function PrintPreviewPage() {
             height: auto !important;
           }
           .pointer-events-none.z-20 { display: none !important; }
+          [data-pdf-page="true"] {
+            box-shadow: none !important;
+            margin: 0 !important;
+          }
         }
       `}</style>
 
