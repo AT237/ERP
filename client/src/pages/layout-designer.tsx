@@ -4325,8 +4325,8 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
           });
           return (
           <Fragment key={`page-${pageIndex}`}>
-            {pageIndex > 0 && <div style={{ height: '20px' }} />}
-            <div data-pdf-page="true" className="bg-white shadow-2xl relative" style={{ position: 'relative', height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page', backgroundColor: '#ffffff' }}>
+            {pageIndex > 0 && <div className="print:hidden" style={{ height: '20px' }} />}
+            <div data-pdf-page="true" className="bg-white shadow-2xl relative" style={{ position: 'relative', height: `${PAGE_HEIGHT_PX}px`, overflow: 'hidden', pageBreakAfter: pageIndex < lastPageIndex ? 'always' : 'avoid', breakAfter: pageIndex < lastPageIndex ? 'page' : 'avoid', backgroundColor: '#ffffff' }}>
               {/* Print margin overlays — only shown in designer, not in actual print */}
               {showMarginOverlays && topMarginPx > 0 && <div className="absolute top-0 left-0 right-0 pointer-events-none z-20" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: `${topMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
               {showMarginOverlays && bottomMarginPx > 0 && <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-20" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${bottomMarginPx}px`, backgroundColor: 'rgba(0,0,0,0.05)', pointerEvents: 'none', zIndex: 20 }} />}
