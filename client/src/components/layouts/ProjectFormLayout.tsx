@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
-import type { Project, InsertProject, Customer } from "@shared/schema";
+import type { Project, InsertProject, Customer, Incoterm } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -34,6 +34,12 @@ const projectFormSchema = insertProjectSchema.extend({
   progress: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  incotermId: z.string().optional(),
+  insuranceCovered: z.string().optional(),
+  modeOfShipment: z.string().optional(),
+  deliveryTime: z.string().optional(),
+  portOfLoading: z.string().optional(),
+  finalDestination: z.string().optional(),
 });
 
 type FormData = z.infer<typeof projectFormSchema>;
@@ -77,6 +83,12 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       endDate: undefined,
       totalValue: "",
       progress: "0",
+      incotermId: "",
+      insuranceCovered: "",
+      modeOfShipment: "",
+      deliveryTime: "",
+      portOfLoading: "",
+      finalDestination: "",
     },
   });
 
@@ -131,6 +143,12 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     queryKey: ["/api/customers"],
   });
 
+  // Load incoterms for select
+  const { data: incoterms = [] } = useQuery<Incoterm[]>({
+    queryKey: ["/api/masterdata/incoterms"],
+    staleTime: 10 * 60 * 1000,
+  });
+
   // Load invoiced total for this project
   const { data: invoicedTotalData } = useQuery<{ total: string }>({
     queryKey: ["/api/projects", projectId, "invoiced-total"],
@@ -149,6 +167,12 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
         endDate: project.endDate ? toDisplayDate(project.endDate) : undefined,
         totalValue: project.totalValue || "",
         progress: project.progress?.toString() || "0",
+        incotermId: (project as any).incotermId || "",
+        insuranceCovered: (project as any).insuranceCovered || "",
+        modeOfShipment: (project as any).modeOfShipment || "",
+        deliveryTime: (project as any).deliveryTime || "",
+        portOfLoading: (project as any).portOfLoading || "",
+        finalDestination: (project as any).finalDestination || "",
       };
       
       form.reset(formData);
