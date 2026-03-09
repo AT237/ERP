@@ -30,6 +30,43 @@ function formatCurrency(value: string | number | null | undefined): string {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(num);
 }
 
+const CURRENCY_FIELDS = new Set(["subtotal", "taxAmount", "totalAmount", "paidAmount", "totalValue"]);
+const DATE_FIELDS = new Set(["date", "invoiceDate", "dueDate", "startDate", "endDate", "orderDate",
+  "expectedDate", "expectedDeliveryDate", "completedDate", "validUntil", "quotationDate"]);
+
+function resolveToken(printData: any, tableName: string, fieldName: string): string {
+  if (!printData) return "";
+
+  // Map singular "workOrder" to "workOrders[0]"
+  let source: any = null;
+  if (tableName === "workOrder") {
+    source = Array.isArray(printData.workOrders) ? printData.workOrders[0] : null;
+  } else {
+    source = printData[tableName];
+  }
+
+  if (!source) return "";
+
+  const raw = source[fieldName];
+  if (raw === null || raw === undefined) return "";
+
+  if (DATE_FIELDS.has(fieldName)) return formatDate(raw);
+  if (CURRENCY_FIELDS.has(fieldName)) return formatCurrency(raw);
+  return String(raw);
+}
+
+/**
+ * Replace all {{table.field}} tokens in text using printData.
+ * Uses the same data structure returned by /api/invoices/:id/print-data.
+ */
+function resolveTokens(text: string, printData: any): string {
+  if (!text || !printData) return text ?? "";
+  return text.replace(/\{\{(\w+)\.(\w+)\}\}/g, (match, table, field) => {
+    const resolved = resolveToken(printData, table, field);
+    return resolved !== "" ? resolved : match; // keep original if no data found
+  });
+}
+
 async function elementToPdfBase64(element: HTMLElement): Promise<string> {
   const canvas = await html2canvas(element, {
     scale: 2,
@@ -188,52 +225,24 @@ export function InvoiceEmailPanel({ invoiceId }: InvoiceEmailPanelProps) {
     }
   }, [layouts.length]);
 
-  const resolveTokens = (text: string): string => {
-    if (!text) return "";
-    return text
-      .replace(/\{\{invoice\.invoiceNumber\}\}/g, invoice?.invoiceNumber ?? "")
-      .replace(/\{\{invoice\.invoiceDate\}\}/g, formatDate(invoice?.invoiceDate))
-      .replace(/\{\{invoice\.dueDate\}\}/g, formatDate(invoice?.dueDate))
-      .replace(/\{\{invoice\.status\}\}/g, invoice?.status ?? "")
-      .replace(/\{\{invoice\.subtotal\}\}/g, formatCurrency(invoice?.subtotal))
-      .replace(/\{\{invoice\.taxAmount\}\}/g, formatCurrency(invoice?.taxAmount))
-      .replace(/\{\{invoice\.totalAmount\}\}/g, formatCurrency(invoice?.totalAmount))
-      .replace(/\{\{invoice\.paidAmount\}\}/g, formatCurrency(invoice?.paidAmount))
-      .replace(/\{\{invoice\.notes\}\}/g, invoice?.notes ?? "")
-      .replace(/\{\{customer\.customerNumber\}\}/g, (customer as any)?.customerNumber ?? "")
-      .replace(/\{\{customer\.name\}\}/g, customer?.name ?? "")
-      .replace(/\{\{customer\.email\}\}/g, customer?.email ?? "")
-      .replace(/\{\{customer\.invoiceEmail\}\}/g, (customer as any)?.invoiceEmail ?? "")
-      .replace(/\{\{customer\.phone\}\}/g, customer?.phone ?? "")
-      .replace(/\{\{contact\.name\}\}/g, (customer as any)?.primaryContactName ?? customer?.name ?? "")
-      .replace(/\{\{contact\.email\}\}/g, (customer as any)?.primaryContactEmail ?? customer?.email ?? "")
-      .replace(/\{\{company\.name\}\}/g, "ATE Solutions")
-      .replace(/\{\{company\.email\}\}/g, "")
-      .replace(/\{\{company\.phone\}\}/g, "");
-  };
-
   const handleCreateEmail = async () => {
     if (!selected || !hiddenPreviewRef.current) return;
     setGenerating(true);
     try {
-      const to = (customer as any)?.invoiceEmail || customer?.email || "";
-      const subject = resolveTokens(selected.subject ?? "");
-      const body = resolveTokens(selected.body ?? "");
-      const invoiceNumber = invoice?.invoiceNumber ?? "factuur";
+      const to = printData?.customer?.invoiceEmail || printData?.customer?.email || "";
+      const subject = resolveTokens(selected.subject ?? "", printData);
+      const body = resolveTokens(selected.body ?? "", printData);
+      const invoiceNumber = printData?.invoice?.invoiceNumber ?? printData?.invoice?.number ?? "factuur";
       const pdfFilename = `${invoiceNumber}.pdf`;
 
       let pdfBase64 = "";
       if (layout && layoutSections.length > 0 && printData) {
-        // Wait a tick to ensure LayoutPreview has rendered
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 500));
         pdfBase64 = await elementToPdfBase64(hiddenPreviewRef.current);
       }
 
       if (!pdfBase64) {
-        // Fallback: EML without attachment, just open mailto
-        const subject64 = encodeURIComponent(subject);
-        const body64 = encodeURIComponent(body);
-        window.location.href = `mailto:${to}?subject=${subject64}&body=${body64}`;
+        window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         return;
       }
 
@@ -241,10 +250,9 @@ export function InvoiceEmailPanel({ invoiceId }: InvoiceEmailPanelProps) {
       openEmlInOutlook(emlContent);
     } catch (err) {
       console.error("Email generation failed:", err);
-      // Fallback to plain mailto
-      if (selected) {
-        const to = (customer as any)?.invoiceEmail || customer?.email || "";
-        window.location.href = `mailto:${to}?subject=${encodeURIComponent(resolveTokens(selected.subject ?? ""))}&body=${encodeURIComponent(resolveTokens(selected.body ?? ""))}`;
+      if (selected && printData) {
+        const to = printData?.customer?.invoiceEmail || printData?.customer?.email || "";
+        window.location.href = `mailto:${to}?subject=${encodeURIComponent(resolveTokens(selected.subject ?? "", printData))}&body=${encodeURIComponent(resolveTokens(selected.body ?? "", printData))}`;
       }
     } finally {
       setGenerating(false);
@@ -369,14 +377,14 @@ export function InvoiceEmailPanel({ invoiceId }: InvoiceEmailPanelProps) {
                 {selected.subject && (
                   <div className="px-4 pt-3 pb-1 border-b">
                     <span className="text-xs text-muted-foreground">Onderwerp: </span>
-                    <span className="text-sm font-medium">{resolveTokens(selected.subject)}</span>
+                    <span className="text-sm font-medium">{resolveTokens(selected.subject, printData)}</span>
                   </div>
                 )}
 
                 {/* Body preview */}
                 <div className="px-4 py-3 max-h-56 overflow-y-auto">
                   <pre className="text-sm font-sans whitespace-pre-wrap text-gray-700 leading-relaxed">
-                    {resolveTokens(selected.body ?? "")}
+                    {resolveTokens(selected.body ?? "", printData)}
                   </pre>
                 </div>
               </div>
