@@ -22,6 +22,7 @@ import PurchaseOrders from "@/pages/purchase-orders";
 import SalesOrders from "@/pages/sales-orders";
 import PackingLists from "@/pages/packing-lists";
 import Reports from "@/pages/reports";
+import PdfArchive from "@/pages/pdf-archive";
 import TextSnippets from "@/pages/text-snippets";
 import Images from "@/pages/images";
 import Pictograms from "@/pages/pictograms";
@@ -51,6 +52,7 @@ function Router() {
         <Route path="/sales-orders" component={() => <SalesOrders />} />
         <Route path="/packing-lists" component={PackingLists} />
         <Route path="/reports" component={Reports} />
+        <Route path="/pdf-archive" component={PdfArchive} />
         <Route path="/text-snippets" component={TextSnippets} />
         <Route path="/layout-designer" component={LayoutDesigner} />
         <Route path="/style-guide" component={StyleGuide} />

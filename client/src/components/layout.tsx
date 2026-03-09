@@ -60,6 +60,7 @@ const PurchaseOrdersPage = lazy(() => import('@/pages/purchase-orders'));
 const SalesOrdersPage = lazy(() => import('@/pages/sales-orders'));
 const PackingListsPage = lazy(() => import('@/pages/packing-lists'));
 const ReportsPage = lazy(() => import('@/pages/reports'));
+const PdfArchivePage = lazy(() => import('@/pages/pdf-archive'));
 const AddressesPage = lazy(() => import('@/pages/addresses'));
 const TextSnippetsPage = lazy(() => import('@/pages/text-snippets'));
 const LayoutDesignerPage = lazy(() => import('@/pages/layout-designer'));
@@ -155,6 +156,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'packing-lists', name: 'Packing Lists' };
       case '/reports':
         return { id: 'reports', name: 'Reports' };
+      case '/pdf-archive':
+        return { id: 'pdf-archive', name: 'PDF Database' };
       case '/addresses':
         return { id: 'addresses', name: 'Addresses' };
       case '/customer-form':
@@ -564,6 +567,8 @@ export default function Layout({ children }: LayoutProps) {
         return '/packing-lists';
       case 'reports':
         return '/reports';
+      case 'pdf-archive':
+        return '/pdf-archive';
       case 'addresses':
         return '/addresses';
       case 'text-snippets':
@@ -1006,6 +1011,14 @@ export default function Layout({ children }: LayoutProps) {
         return (
           <Suspense fallback={<div></div>}>
             <ReportsPage />
+          </Suspense>
+        );
+      }
+
+      if (tab.id === 'pdf-archive') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <PdfArchivePage />
           </Suspense>
         );
       }

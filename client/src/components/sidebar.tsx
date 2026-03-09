@@ -23,7 +23,7 @@ import {
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact, UserCheck,
   ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search, ChevronsDown, ChevronsUp,
-  Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen, Layout, Image
+  Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen, Layout, Image, Archive
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -111,7 +111,8 @@ export const defaultNavigation = [
     name: "Reports",
     collapsible: true,
     items: [
-      { id: "analytics", name: "Analytics", href: "/reports", icon: BarChart3 }
+      { id: "analytics", name: "Analytics", href: "/reports", icon: BarChart3 },
+      { id: "pdf-archive", name: "PDF Database", href: "/pdf-archive", icon: Archive }
     ]
   },
   {
