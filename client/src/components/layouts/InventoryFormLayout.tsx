@@ -129,8 +129,11 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       const costPrice = parseFloat(values.costPrice || "0");
       
       if (unitPrice && costPrice && costPrice > 0) {
-        const margin = ((unitPrice - costPrice) / costPrice * 100).toFixed(2);
-        form.setValue("margin", margin);
+        const newMargin = ((unitPrice - costPrice) / costPrice * 100).toFixed(2);
+        // Only set if value changed — prevents infinite watch→setValue→watch loop
+        if (newMargin !== values.margin) {
+          form.setValue("margin", newMargin, { shouldDirty: false, shouldValidate: false });
+        }
       }
     });
     
