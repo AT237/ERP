@@ -1268,3 +1268,26 @@ export const emailTemplates = pgTable("email_templates", {
 export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
 export type EmailTemplate = typeof emailTemplates.$inferSelect;
+
+// Tasks table — company task management
+export const tasks = pgTable("tasks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  taskNumber: text("task_number").notNull().unique().default(sql`CONCAT('TASK-', LPAD(nextval('task_number_seq')::text, 4, '0'))`),
+  title: text("title").notNull(),
+  description: text("description"),
+  priority: text("priority").notNull().default("medium"), // low | medium | high | urgent
+  status: text("status").notNull().default("todo"), // todo | in_progress | review | done
+  dueDate: timestamp("due_date"),
+  completedAt: timestamp("completed_at"),
+  assignedEmployeeId: varchar("assigned_employee_id").references(() => employees.id),
+  relatedEntityType: text("related_entity_type"), // quotation | invoice | project | work-order | purchase-order | customer
+  relatedEntityId: varchar("related_entity_id"),
+  relatedEntityRef: text("related_entity_ref"), // display label e.g. "Q-2025-001"
+  tags: jsonb("tags").$type<string[]>().default(sql`'[]'::jsonb`),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true, taskNumber: true, createdAt: true, updatedAt: true });
+export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type Task = typeof tasks.$inferSelect;

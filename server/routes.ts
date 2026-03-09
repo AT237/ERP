@@ -52,7 +52,8 @@ import {
   quotations, invoices, projects, purchaseOrders, suppliers,
   quotationItems, salesOrders, packingLists, quotationRequests, proformaInvoices,
   pdfArchive, insertPdfArchiveSchema,
-  emailTemplates, insertEmailTemplateSchema
+  emailTemplates, insertEmailTemplateSchema,
+  tasks, insertTaskSchema
 } from "@shared/schema";
 import { Request, Response } from 'express';
 import { eq, sql } from 'drizzle-orm';
@@ -3499,6 +3500,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to delete email template", error: error.message });
+    }
+  });
+
+  // ── Tasks ──────────────────────────────────────────────────────────────────
+  app.get("/api/tasks", async (req, res) => {
+    try {
+      const allTasks = await db.select().from(tasks).orderBy(tasks.createdAt);
+      res.json(allTasks);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch tasks", error: error.message });
+    }
+  });
+
+  app.get("/api/tasks/:id", async (req, res) => {
+    try {
+      const [task] = await db.select().from(tasks).where(eq(tasks.id, req.params.id));
+      if (!task) return res.status(404).json({ message: "Task not found" });
+      res.json(task);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch task", error: error.message });
+    }
+  });
+
+  app.post("/api/tasks", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ["dueDate", "completedAt"]);
+      const parsed = insertTaskSchema.safeParse(body);
+      if (!parsed.success) return res.status(400).json({ message: "Validation failed", errors: parsed.error.errors });
+      const [created] = await db.insert(tasks).values(parsed.data).returning();
+      res.status(201).json(created);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to create task", error: error.message });
+    }
+  });
+
+  app.patch("/api/tasks/:id", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ["dueDate", "completedAt"]);
+      const updateData: any = { ...body, updatedAt: new Date() };
+      if (updateData.status === "done" && !updateData.completedAt) {
+        updateData.completedAt = new Date();
+      }
+      if (updateData.status !== "done") {
+        updateData.completedAt = null;
+      }
+      const [updated] = await db.update(tasks).set(updateData).where(eq(tasks.id, req.params.id)).returning();
+      if (!updated) return res.status(404).json({ message: "Task not found" });
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update task", error: error.message });
+    }
+  });
+
+  app.delete("/api/tasks/:id", async (req, res) => {
+    try {
+      await db.delete(tasks).where(eq(tasks.id, req.params.id));
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete task", error: error.message });
     }
   });
 
