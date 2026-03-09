@@ -2933,6 +2933,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                 availableTables={availableTables}
                 onUpdateProperty={updateBlockProperty}
                 onMoveBlock={moveBlockToSection}
+                onAddToGroup={handleAddBlockToGroup}
                 printMargins={printMargins}
               />
             ) : (
@@ -4536,6 +4537,7 @@ function BlockProperties({
   availableTables,
   onUpdateProperty,
   onMoveBlock,
+  onAddToGroup,
   printMargins
 }: { 
   block: any; 
@@ -4545,6 +4547,7 @@ function BlockProperties({
   availableTables: any[];
   onUpdateProperty: (sectionId: string, blockId: string, property: string, value: any) => void;
   onMoveBlock?: (fromSectionId: string, toSectionId: string, blockId: string) => void;
+  onAddToGroup?: (sectionId: string, blockId: string, targetGroupId: string) => void;
   printMargins?: { top: number; bottom: number; left: number; right: number };
 }) {
   const updateConfig = (property: string, value: any) => {
@@ -4600,6 +4603,29 @@ function BlockProperties({
         <div className="text-xs text-muted-foreground">Sectie: {currentSection?.name || 'Unknown'}</div>
       </div>
 
+      {/* Add to Group section - only for non-Group blocks when groups exist in same section */}
+      {block.type !== 'Group' && onAddToGroup && (() => {
+        const sectionGroups = (currentSection?.config?.blocks || []).filter((b: any) => b.type === 'Group' && b.id !== block.id);
+        if (sectionGroups.length === 0) return null;
+        return (
+          <div className="pb-2 border-b space-y-1">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Toevoegen aan groep</div>
+            {sectionGroups.map((group: any) => (
+              <Button
+                key={group.id}
+                size="sm"
+                variant="outline"
+                className="w-full text-xs justify-start h-7 px-2"
+                onClick={() => onAddToGroup(sectionId, block.id, group.id)}
+              >
+                <Group className="h-3 w-3 mr-1.5 text-orange-500" />
+                {group.config?.groupName || 'Groep'}
+              </Button>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* Two-tab layout */}
       <Tabs defaultValue="inhoud" className="w-full">
         <TabsList className="grid w-full grid-cols-2 h-8 bg-orange-100">
@@ -4626,11 +4652,23 @@ function BlockProperties({
               
               <div className="bg-orange-50 p-2 rounded text-xs">
                 <div className="font-medium mb-1">Bevat {block.config?.childBlocks?.length || 0} blokken</div>
-                {block.config?.childBlocks?.map((child: any, idx: number) => (
-                  <div key={idx} className="text-muted-foreground pl-2">
-                    • {child.type}
-                  </div>
-                ))}
+                {block.config?.childBlocks?.map((child: any, idx: number) => {
+                  let label = child.config?.title || child.type;
+                  if (child.type === 'Data Field') {
+                    const field = child.config?.fieldName || '';
+                    label = FIELD_LABELS[field] ? FIELD_LABELS[field] : (field ? `{{${child.config?.tableName || ''}.${field}}}` : 'Data Veld');
+                  } else if (child.type === 'Text') {
+                    const text = (child.config?.text || '').replace(/\n/g, ' ');
+                    label = text.length > 30 ? text.substring(0, 30) + '…' : (text || 'Tekst');
+                  } else if (child.type === 'Image') {
+                    label = child.config?.imageName || 'Afbeelding';
+                  }
+                  return (
+                    <div key={idx} className="text-muted-foreground pl-2 truncate" title={label}>
+                      • {label}
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="flex items-center space-x-2">
