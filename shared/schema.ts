@@ -228,6 +228,7 @@ export const quotations = pgTable("quotations", {
   printProjectNo: boolean("print_project_no").default(true),
   printPaymentConditions: boolean("print_payment_conditions").default(true),
   printLanguageCode: text("print_language_code").references(() => languages.code).default("nl"),
+  customerSnapshot: text("customer_snapshot"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -290,6 +291,7 @@ export const invoices = pgTable("invoices", {
   notes: text("notes"),
   totalAmountInWords: text("total_amount_in_words"),
   vatRatePercent: decimal("vat_rate_percent", { precision: 5, scale: 2 }),
+  customerSnapshot: text("customer_snapshot"),
   printSortOrder: text("print_sort_order").default("position"),
   printLanguageCode: text("print_language_code").default("nl"),
   printProjectNo: boolean("print_project_no").default(true),
