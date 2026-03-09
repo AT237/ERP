@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Edit, Trash2, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { InventoryItem } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
@@ -23,6 +23,7 @@ const defaultColumns: ColumnConfig[] = [
 
 export default function Inventory() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Data table state  
   const tableState = useDataTable({ 
@@ -42,6 +43,29 @@ export default function Inventory() {
     checkUsages: true,
     getName: (row) => row.name || row.sku
   });
+
+  const duplicateMutation = useMutation({
+    mutationFn: (item: InventoryItem) =>
+      fetch(`/api/inventory/${item.id}/duplicate`, { method: 'POST' }).then(r => {
+        if (!r.ok) throw new Error('Duplicate failed');
+        return r.json();
+      }),
+    onSuccess: (newItem: InventoryItem) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory'] });
+      toast({ title: 'Item gedupliceerd', description: `${newItem.name || newItem.sku} aangemaakt` });
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: `edit-inventory-${newItem.id}`,
+          name: `${newItem.name || newItem.sku}`,
+          formType: 'inventory',
+          parentId: newItem.id,
+        }
+      }));
+    },
+    onError: () => toast({ title: 'Fout', description: 'Dupliceren mislukt', variant: 'destructive' }),
+  });
+
+  const handleDuplicate = (item: InventoryItem) => duplicateMutation.mutate(item);
 
   const handleEdit = (item: InventoryItem) => {
     // Dispatch custom event to open inventory edit form in new tab
@@ -141,12 +165,20 @@ export default function Inventory() {
           variant: 'default' as const
         }
       ]}
+      onDuplicate={handleDuplicate}
       rowActions={(row: InventoryItem) => [
         {
           key: 'edit',
           label: 'Edit',
           icon: <Edit className="h-4 w-4" />,
           onClick: () => handleEdit(row)
+        },
+        {
+          key: 'duplicate',
+          label: 'Duplicate',
+          icon: <CopyPlus className="h-4 w-4" />,
+          onClick: () => handleDuplicate(row),
+          variant: 'outline' as const
         },
         {
           key: 'delete',

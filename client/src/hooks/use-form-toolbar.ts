@@ -363,6 +363,38 @@ export function useFormToolbar({
     return entityIds.indexOf(entityId);
   }, [entityId, entityIds]);
 
+  const duplicateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!config) throw new Error("No config for entity type");
+      const response = await fetch(`${config.apiPath}/${id}/duplicate`, { method: "POST" });
+      if (!response.ok) throw new Error("Failed to duplicate");
+      return response.json();
+    },
+    onSuccess: (newRecord: any) => {
+      if (config) queryClient.invalidateQueries({ queryKey: [config.listQueryKey] });
+      toast({ title: "Duplicated", description: `${config?.label || "Item"} duplicated` });
+      window.dispatchEvent(
+        new CustomEvent("open-form-tab", {
+          detail: {
+            id: `${config?.formType}-edit-${newRecord.id}`,
+            name: `${config?.label} ${newRecord.name || newRecord.sku || newRecord.id.slice(0, 8)}`,
+            formType: config?.formType,
+            entityId: newRecord.id,
+            recordId: newRecord.id,
+          },
+        })
+      );
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to duplicate", variant: "destructive" });
+    },
+  });
+
+  const handleDuplicate = useCallback(() => {
+    if (!entityId || !config) return;
+    duplicateMutation.mutate(entityId);
+  }, [entityId, config, duplicateMutation]);
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       if (!config) throw new Error("No config for entity type");
@@ -456,6 +488,8 @@ export function useFormToolbar({
     );
   }, [currentIndex, entityIds, config, navigationParentId, getEntityLabel]);
 
+  const resolvedShowDuplicate = config?.supportsDuplicate ?? false;
+
   return {
     onSave,
     saveDisabled,
@@ -463,6 +497,10 @@ export function useFormToolbar({
 
     onAddNew: resolvedShowAddNew ? handleAddNew : undefined,
     showAddNew: resolvedShowAddNew,
+
+    onDuplicate: resolvedShowDuplicate && isEditing ? handleDuplicate : undefined,
+    showDuplicate: resolvedShowDuplicate,
+    duplicateDisabled: !isEditing || duplicateMutation.isPending,
 
     onDelete: resolvedShowDelete && isEditing ? handleDelete : undefined,
     showDelete: resolvedShowDelete,
