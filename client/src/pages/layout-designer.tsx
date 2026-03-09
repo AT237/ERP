@@ -3462,18 +3462,19 @@ function estimateActualSectionHeightPx(
     maxBottomPx = Math.max(maxBottomPx, blockBottomPx);
   }
 
-  // Mirror auto-shrink for conditional groups (renderSectionInstance lines 3552-3557).
+  // Mirror auto-shrink for conditional groups.
   const autoShrink = hasConditionalGroups && maxBottomPx > 0 && maxBottomPx < configuredPx;
 
   // Always grow when content is taller than configured.
-  if (maxBottomPx > configuredPx) return maxBottomPx;
+  if (maxBottomPx > configuredPx) return maxBottomPx + bottomMarginPx;
 
-  // When shrinking (explicit or auto): preserve the bottom margin — content + margin, capped at configuredHeight.
+  // When shrinking (explicit or auto): reduce to content height.
   if ((heightCanShrink || autoShrink) && maxBottomPx > 0 && maxBottomPx < configuredPx) {
-    return Math.min(configuredPx, maxBottomPx + bottomMarginPx);
+    return maxBottomPx + bottomMarginPx;
   }
 
-  return configuredPx;
+  // Default: configured height + bottom margin.
+  return configuredPx + bottomMarginPx;
 }
 
 function calculateDynamicPositions(
@@ -3785,19 +3786,18 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
     if (contentHeight > configuredHeight) {
       sectionHeight = contentHeight;
     }
-    // Only shrink when explicitly enabled.
-    // IMPORTANT: always add bottomMarginPx so the configured blank space below the section
-    // is preserved even after shrinking (e.g. ondermarge = 20mm stays 20mm of empty space).
+    // Only shrink when explicitly enabled — reduce height to content height.
     if (sectionCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
-      sectionHeight = Math.min(configuredHeight, contentHeight + bottomMarginPx);
+      sectionHeight = contentHeight;
     }
 
-    // Auto-shrink: when repeating with conditional groups, shrink to the visible group's content height
-    // (groups are placed at different y-positions for design clarity but print should be compact)
-    // Also preserve bottom margin here.
+    // Auto-shrink: when repeating with conditional groups, shrink to the visible group's content height.
     if (hasConditionalGroups && contentHeight > 0 && contentHeight < configuredHeight) {
-      sectionHeight = Math.min(configuredHeight, contentHeight + bottomMarginPx);
+      sectionHeight = contentHeight;
     }
+
+    // Always add bottom margin — provides consistent spacing between sections regardless of grow/shrink state.
+    sectionHeight += bottomMarginPx;
     
     return (
       <div
@@ -4105,11 +4105,13 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
         if (contentHeight > configuredHeight) {
           sectionHeight = contentHeight;
         }
-        // Only shrink when explicitly enabled.
-        // Preserve bottom margin so configured blank space below the section is maintained.
+        // Only shrink when explicitly enabled — reduce height to content height.
         if (staticSectionCanShrink && contentHeight > 0 && contentHeight < configuredHeight) {
-          sectionHeight = Math.min(configuredHeight, contentHeight + bottomMarginPx);
+          sectionHeight = contentHeight;
         }
+
+        // Always add bottom margin — provides consistent spacing between sections regardless of grow/shrink state.
+        sectionHeight += bottomMarginPx;
         
         const capturedSectionHeight = sectionHeight;
         const capturedBlocks = blocks;
