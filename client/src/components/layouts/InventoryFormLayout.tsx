@@ -232,9 +232,9 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
   const onSubmit = (data: InventoryFormData) => {
     const transformedData = {
       ...data,
-      unitPrice: parseFloat(data.unitPrice),
-      costPrice: parseFloat(data.costPrice),
-      margin: data.margin ? parseFloat(data.margin) : null,
+      unitPrice: String(parseFloat(data.unitPrice) || 0),
+      costPrice: String(parseFloat(data.costPrice || "0") || 0),
+      margin: data.margin != null && data.margin !== "" ? String(parseFloat(data.margin) || 0) : null,
     };
     
     if (isEditing) {
