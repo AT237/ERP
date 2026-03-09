@@ -20,10 +20,10 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
   const mx = isMobile ? 'mx-0' : 'mx-4';
 
   return (
-    <div className={className}>
-      {/* Tab Bar — sits directly above the orange frame, bg-white covers scrolling content */}
+    <div className={`border border-orange-500 rounded-lg ${mx} ${className}`}>
+      {/* Tab bar — sticky, inside the orange frame, with rounded top corners to match the frame */}
       <div
-        className={`sticky top-14 z-10 bg-white ${mx} ${isMobile ? 'h-[50px] px-1' : 'h-[44px] px-2'} flex items-end`}
+        className={`sticky top-14 z-10 bg-white rounded-t-lg border-b border-orange-500 ${isMobile ? 'h-[50px] px-1' : 'h-[44px] px-2'} flex items-end`}
       >
         <div className={`flex items-end ${isMobile ? 'space-x-0.5 w-full' : 'space-x-1'} overflow-x-auto`}>
           {tabs.map((tab) => (
@@ -31,8 +31,8 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
               key={tab.id}
               className={`flex items-center gap-1 ${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'} rounded-t-lg transition-colors cursor-pointer min-w-0 font-sans ${isMobile ? 'flex-1 justify-center' : ''} ${
                 activeTab === tab.id
-                  ? 'bg-orange-500 text-white border border-orange-500 border-b-0'
-                  : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200 mb-[2px]'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200'
               }`}
               onClick={() => onTabChange(tab.id)}
               data-testid={`form-tab-${tab.id}`}
@@ -44,8 +44,8 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
         </div>
       </div>
 
-      {/* Orange frame — straight top edge (runs under tabs), rounded bottom corners */}
-      <div className={`border border-orange-500 bg-white ${isMobile ? 'p-2' : 'p-6'} rounded-b-lg ${mx}`}>
+      {/* Content area */}
+      <div className={`bg-white rounded-b-lg ${isMobile ? 'p-2' : 'p-6'}`}>
         {activeTabContent}
       </div>
     </div>
