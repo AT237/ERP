@@ -484,7 +484,15 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   // ========================================================================
   
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
-  
+
+  // Keep a ref to originalValues so the watch callback always reads the latest
+  // value without stale closure issues (the 200ms debounce could otherwise fire
+  // after a save and compare against outdated originalValues).
+  const originalValuesRef = useRef<Partial<T> | undefined>(originalValues);
+  useEffect(() => {
+    originalValuesRef.current = originalValues;
+  }, [originalValues]);
+
   /**
    * Compare values for change detection
    * Handles type conversions between string/number and null/undefined
@@ -508,18 +516,20 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   }, []);
 
   /**
-   * Check for changes and update tracking state
+   * Check for changes and update tracking state.
+   * Reads originalValues from a ref so the callback is stable and never
+   * captures a stale closure of originalValues.
    */
   const checkForChanges = useCallback(() => {
-    if (!changeTracking?.enabled || !originalValues) return false;
+    if (!changeTracking?.enabled || !originalValuesRef.current) return false;
     
     const currentValues = form.getValues();
     const modifiedFieldsSet = new Set<string>();
     let hasChanges = false;
 
-    // Compare each field with original values
-    Object.keys(originalValues).forEach(fieldName => {
-      const originalValue = originalValues[fieldName as keyof T];
+    // Compare each field with original values (from ref — always fresh)
+    Object.keys(originalValuesRef.current).forEach(fieldName => {
+      const originalValue = originalValuesRef.current![fieldName as keyof T];
       const currentValue = currentValues[fieldName as FieldPath<T>];
       
       if (!compareValues(originalValue, currentValue)) {
@@ -532,22 +542,26 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
     changeTracking.onChangesDetected?.(hasChanges, modifiedFieldsSet);
     
     return hasChanges;
-  }, [changeTracking, originalValues, form, compareValues]);
+  }, [changeTracking, form, compareValues]); // originalValues removed — read via ref
 
-  // Set up change tracking watchers
+  // Set up change tracking watchers with proper debounce cleanup
   useEffect(() => {
     if (!changeTracking?.enabled || changeTracking.suppressTracking) return;
     
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
     const subscription = form.watch(() => {
-      // Debounce change checking
-      const timeout = setTimeout(() => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
         checkForChanges();
+        debounceTimer = null;
       }, 200);
-      
-      return () => clearTimeout(timeout);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
   }, [form, checkForChanges, changeTracking]);
 
   // ========================================================================
