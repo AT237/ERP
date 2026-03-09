@@ -403,7 +403,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         createFieldsRow([
           {
             key: "costPrice",
-            label: "Cost Price *",
+            label: "Cost Price",
             type: "decimal",
             placeholder: "0,00",
             layout: "single",
@@ -417,7 +417,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
           } as FormField2<InventoryFormData>,
           {
             key: "unitPrice",
-            label: "Selling Price *",
+            label: "Selling Price",
             type: "decimal",
             placeholder: "0,00",
             layout: "single",
