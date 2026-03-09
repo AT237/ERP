@@ -175,19 +175,19 @@ export function PrintLayoutDialog({
           </Button>
           <Button
             variant="outline"
-            onClick={handlePrintOnly}
-            disabled={!selectedLayoutId || layouts.length === 0}
-          >
-            <Printer className="h-4 w-4 mr-1" />
-            Alleen printen
-          </Button>
-          <Button
             onClick={handleAgreePrint}
             disabled={!selectedLayoutId || layouts.length === 0 || archiveMutation.isPending}
-            className="bg-orange-500 hover:bg-orange-600 text-white"
           >
             <Archive className="h-4 w-4 mr-1" />
             Akkoord en printen
+          </Button>
+          <Button
+            onClick={handlePrintOnly}
+            disabled={!selectedLayoutId || layouts.length === 0}
+            className="bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            <Printer className="h-4 w-4 mr-1" />
+            Alleen printen
           </Button>
         </DialogFooter>
       </DialogContent>
