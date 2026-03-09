@@ -555,6 +555,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     saveDisabled: !hasUnsavedChanges,
     saveLoading: createMutation.isPending || updateMutation.isPending,
     extraQueryKeysToInvalidate: invoiceId ? [["/api/invoices", invoiceId, "items"], ["/api/invoices", invoiceId]] : [],
+    navigationListQueryKey: invoiceId ? ["/api/invoices", invoiceId, "items"] : undefined,
+    navigationParentId: invoiceId,
   });
 
   const lineTypeOptions = [
