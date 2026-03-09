@@ -23,7 +23,7 @@ import {
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact, UserCheck,
   ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search, ChevronsDown, ChevronsUp,
-  Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen, Layout, Image, Archive, Mail
+  Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen, Layout, Image, Archive, Mail, ListTodo
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -41,7 +41,8 @@ export const defaultNavigation = [
     name: "Overview",
     collapsible: true,
     items: [
-      { id: "dashboard", name: "Dashboard", href: "/dashboard", icon: BarChart3 }
+      { id: "dashboard", name: "Dashboard", href: "/dashboard", icon: BarChart3 },
+      { id: "task-overview", name: "Task Overview", href: "/task-overview", icon: ListTodo }
     ]
   },
   {

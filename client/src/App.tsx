@@ -30,6 +30,7 @@ import LayoutDesigner from "@/pages/layout-designer";
 import EmailDesigner from "@/pages/email-designer";
 import StyleGuide from "@/pages/style-guide";
 import DevFutures from "@/pages/dev-futures";
+import TaskOverview from "@/pages/task-overview";
 import Layout from "@/components/layout";
 
 function Router() {
@@ -38,6 +39,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/dashboard" component={Dashboard} />
+        <Route path="/task-overview" component={TaskOverview} />
         <Route path="/customers" component={Customers} />
         <Route path="/inventory" component={Inventory} />
         <Route path="/suppliers" component={Suppliers} />
