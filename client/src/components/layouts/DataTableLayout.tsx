@@ -130,7 +130,11 @@ const createCurrencyColumn = (key: string, label: string, width = 120): ColumnCo
   filterable: true,
   sortable: true,
   renderCell: (value: string) => (
-    <span className="text-right w-full block">{`€${value || "0.00"}`}</span>
+    <span className="text-right w-full block">
+      {value != null && value !== '' && value !== '0'
+        ? `€\u00A0${parseFloat(String(value)).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : '€\u00A00,00'}
+    </span>
   )
 });
 
@@ -143,7 +147,9 @@ const createNumericColumn = (key: string, label: string, width = 100): ColumnCon
   filterable: true,
   sortable: true,
   renderCell: (value: any) => (
-    <span className="text-right w-full block">{value != null ? parseFloat(String(value)).toString() : "0"}</span>
+    <span className="text-right w-full block">
+      {value != null && value !== '' ? parseFloat(String(value)).toLocaleString('nl-NL') : '0'}
+    </span>
   )
 });
 

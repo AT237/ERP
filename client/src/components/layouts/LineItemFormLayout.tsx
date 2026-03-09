@@ -517,8 +517,10 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     {
       key: 'unitPrice',
       label: 'Prijs per eenheid',
-      type: 'number',
-      register: form.register('unitPrice'),
+      type: 'decimal',
+      placeholder: '0,00',
+      setValue: (value: string) => form.setValue('unitPrice', value),
+      watch: () => form.watch('unitPrice'),
       validation: {
         isRequired: true,
         error: form.formState.errors.unitPrice?.message

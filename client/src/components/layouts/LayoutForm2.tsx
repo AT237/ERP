@@ -46,7 +46,7 @@ export interface FormField2<T extends FieldValues = FieldValues> {
   // Basic field properties
   key: FieldPath<T>;
   label: string;
-  type: 'text' | 'email' | 'tel' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'custom' | 'display';
+  type: 'text' | 'email' | 'tel' | 'number' | 'decimal' | 'date' | 'select' | 'textarea' | 'checkbox' | 'custom' | 'display';
   
   // Layout and positioning
   layout?: FieldLayout;
@@ -278,6 +278,31 @@ function renderField<T extends FieldValues>(
           {...(field.register || {})}
         />
       );
+    
+    case 'decimal': {
+      const rawValue = String(field.watch?.() ?? '');
+      const displayValue = rawValue.replace('.', ',');
+      return (
+        <Input
+          {...baseProps}
+          type="text"
+          inputMode="decimal"
+          value={displayValue}
+          onChange={(e) => {
+            const raw = e.target.value;
+            // Allow only digits, one comma, one dot, and minus sign
+            if (/^-?[\d]*[,.]?[\d]*$/.test(raw)) {
+              field.setValue?.(raw.replace(',', '.'));
+            }
+          }}
+          onBlur={(e) => {
+            // On blur: normalize display (strip trailing dot/comma)
+            const normalized = rawValue.replace(/[,.]$/, '');
+            if (normalized !== rawValue) field.setValue?.(normalized);
+          }}
+        />
+      );
+    }
     
     case 'date':
       return (

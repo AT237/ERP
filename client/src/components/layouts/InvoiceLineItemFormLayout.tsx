@@ -692,8 +692,10 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const fieldUnitPrice: FormField2<LineItemFormData> = {
     key: 'unitPrice',
     label: 'Prijs per eenheid',
-    type: 'number',
-    register: form.register('unitPrice'),
+    type: 'decimal',
+    placeholder: '0,00',
+    setValue: (value) => form.setValue('unitPrice', value),
+    watch: () => form.watch('unitPrice'),
     validation: { isRequired: true, error: form.formState.errors.unitPrice?.message },
     testId: 'input-unit-price',
   };
@@ -748,9 +750,10 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const fieldDiscount: FormField2<LineItemFormData> = {
     key: 'discountPercent',
     label: 'Korting %',
-    type: 'number',
-    register: form.register('discountPercent'),
-    placeholder: '0',
+    type: 'decimal',
+    placeholder: '0,00',
+    setValue: (value) => form.setValue('discountPercent', value),
+    watch: () => form.watch('discountPercent'),
     validation: { error: form.formState.errors.discountPercent?.message },
     testId: 'input-discount-percent',
   };

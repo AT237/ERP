@@ -379,10 +379,11 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
           {
             key: "costPrice",
             label: "Cost Price *",
-            type: "text",
-            placeholder: "0.00",
+            type: "decimal",
+            placeholder: "0,00",
             layout: "single",
-            register: form.register("costPrice"),
+            setValue: (value) => form.setValue("costPrice", value),
+            watch: () => form.watch("costPrice"),
             validation: {
               error: form.formState.errors.costPrice?.message,
               isRequired: true
@@ -392,10 +393,11 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
           {
             key: "unitPrice",
             label: "Selling Price *",
-            type: "text",
-            placeholder: "0.00",
+            type: "decimal",
+            placeholder: "0,00",
             layout: "single",
-            register: form.register("unitPrice"),
+            setValue: (value) => form.setValue("unitPrice", value),
+            watch: () => form.watch("unitPrice"),
             validation: {
               error: form.formState.errors.unitPrice?.message,
               isRequired: true
@@ -408,7 +410,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
           key: "margin",
           label: "Margin %",
           type: "display",
-          displayValue: form.watch("margin") ? `${form.watch("margin")}%` : "0%",
+          displayValue: form.watch("margin") ? `${String(form.watch("margin")).replace('.', ',')}%` : "0%",
           displayClassName: "text-lg font-semibold text-green-600"
         } as FormField2<InventoryFormData>)
       ]

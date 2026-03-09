@@ -406,9 +406,10 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
           {
             key: "totalValue",
             label: "Total Value",
-            type: "number",
-            placeholder: "0.00",
-            register: form.register("totalValue"),
+            type: "decimal",
+            placeholder: "0,00",
+            setValue: (value) => form.setValue("totalValue", value),
+            watch: () => form.watch("totalValue"),
             testId: "input-total-value",
             width: "50%",
             isModified: modifiedFields.has("totalValue")
