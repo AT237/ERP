@@ -546,15 +546,17 @@ export function FooterBlockRenderer({ block }: BlockRendererProps) {
 export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPages = 1, itemContext }: BlockRendererProps) {
   const childBlocks = block.config?.childBlocks || [];
   const collapseEmpty = block.config?.collapseEmpty || false;
+  const heightCanShrink = block.config?.heightCanShrink || false;
   
   // Convert mm to px for rendering
   const mmToPx = (mm: number) => mm * 3.7795275591;
   
-  // If collapseEmpty is enabled, filter out empty blocks and recalculate positions
+  // If collapseEmpty is enabled, filter out empty blocks and recalculate positions.
+  // If heightCanShrink is enabled, also filter out children with hideWhenEmpty=true that have no content.
   let visibleBlocks = childBlocks;
   let cumulativeOffset = 0;
   
-  if (collapseEmpty) {
+  if (collapseEmpty || heightCanShrink) {
     // Sort blocks by y-position first for correct collapse order
     const sortedBlocks = [...childBlocks].sort((a: any, b: any) => 
       (a.position?.y || 0) - (b.position?.y || 0)
@@ -562,12 +564,17 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
     
     visibleBlocks = [];
     for (const childBlock of sortedBlocks) {
-      // forceCheck=true: check actual content regardless of individual hideWhenEmpty setting
-      // This means a single collapseEmpty checkbox on the group is all that's needed
-      const hasContent = blockHasContent(childBlock, printData, itemContext, true);
+      let shouldHide = false;
+      if (collapseEmpty) {
+        // forceCheck=true: check actual content regardless of individual hideWhenEmpty setting
+        shouldHide = !blockHasContent(childBlock, printData, itemContext, true);
+      } else if (heightCanShrink && childBlock.config?.hideWhenEmpty) {
+        // When group can shrink: respect each child's own hideWhenEmpty setting
+        shouldHide = !blockHasContent(childBlock, printData, itemContext, false);
+      }
       
-      if (hasContent) {
-        // Shift block up by accumulated offset from ALL previously hidden blocks
+      if (!shouldHide) {
+        // Shift block up by accumulated offset from all previously hidden blocks
         visibleBlocks.push({
           ...childBlock,
           position: {
@@ -576,14 +583,14 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
           }
         });
       } else {
-        // Add height of this hidden block to cumulative offset (no extra gap needed)
+        // Add height of this hidden block to cumulative offset
         cumulativeOffset += (childBlock.size?.height || 25);
       }
     }
   }
   
-  // If no visible blocks and collapseEmpty is enabled, render nothing (fully collapse)
-  if (collapseEmpty && visibleBlocks.length === 0) {
+  // If no visible blocks and group collapses, render nothing
+  if ((collapseEmpty || heightCanShrink) && visibleBlocks.length === 0) {
     return null;
   }
 
@@ -615,7 +622,7 @@ export function GroupBlockRenderer({ block, printData, currentPage = 1, totalPag
     calculatedHeight = Math.max(calculatedHeight, blockBottom);
   }
 
-  const useCalculatedHeight = collapseEmpty || cumulativeMarginOffset > 0;
+  const useCalculatedHeight = collapseEmpty || heightCanShrink || cumulativeMarginOffset > 0;
 
   const containerStyle: React.CSSProperties = {
     position: 'relative',
