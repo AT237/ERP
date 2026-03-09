@@ -27,7 +27,6 @@ import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
 import { LanguageSelectWithAdd } from "@/components/ui/language-select-with-add";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
 import { VatRateSelectWithAdd } from "@/components/ui/vat-rate-select-with-add";
-import { RateSelectWithAdd } from "@/components/ui/rate-select-with-add";
 import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
@@ -896,13 +895,21 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                       <div className="flex flex-col gap-[20px] pr-8">
                         <div className="grid grid-cols-[130px_1fr] items-center gap-3">
                           <Label className="text-sm font-medium text-right">Rate</Label>
-                          <RateSelectWithAdd
-                            value={entry.rateId}
+                          <Select
+                            value={entry.rateId || ""}
                             onValueChange={(value) => handleRateEntryChange(index, 'rateId', value)}
-                            placeholder="Select rate..."
-                            testId={`select-customer-rate-${index}`}
-                            excludeIds={usedRateIds}
-                          />
+                          >
+                            <SelectTrigger data-testid={`select-customer-rate-${index}`} className="h-10">
+                              <SelectValue placeholder="Select rate..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ratesAndCharges?.filter(r => !usedRateIds.includes(r.id) || r.id === entry.rateId).map(r => (
+                                <SelectItem key={r.id} value={r.id}>
+                                  {r.code} - {r.name} (€{Number(r.rate).toFixed(2)})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="grid grid-cols-[130px_1fr] items-center gap-3">
                           <Label className="text-sm font-medium text-right">Discount</Label>
