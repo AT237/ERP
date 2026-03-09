@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, Hash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, type ColumnConfig, createIdColumn } from "@/components/layouts/DataTableLayout";
@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import type { SerialNumber, Customer, Project } from "@shared/schema";
 
 // ── enriched type ──────────────────────────────────────────────────────────
@@ -78,6 +79,7 @@ const defaultColumns: ColumnConfig[] = [
     width: 200,
     filterable: true,
     sortable: false,
+    renderCell: (value: string) => <span className="text-xs">{value || ""}</span>,
   },
   {
     key: "fileNo",
@@ -108,6 +110,7 @@ const defaultColumns: ColumnConfig[] = [
     width: 200,
     filterable: true,
     sortable: false,
+    renderCell: (value: string) => <span className="text-xs text-slate-500">{value || ""}</span>,
   },
 ];
 
@@ -259,7 +262,7 @@ function SerialNumberFormSheet({ open, onClose, record, customers, projects }: F
                 <Label>Datum</Label>
                 <Popover open={calOpen} onOpenChange={setCalOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !date && "text-slate-400")}>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-10", !date && "text-slate-400")}>
                       {date ? format(date, "d MMM yyyy", { locale: nl }) : "Kies datum"}
                     </Button>
                   </PopoverTrigger>
@@ -311,9 +314,7 @@ function SerialNumberFormSheet({ open, onClose, record, customers, projects }: F
 // ── main page ──────────────────────────────────────────────────────────────
 
 export default function SerialNumbers() {
-  const { toast } = useToast();
-
-  const { data: records = [], isLoading: recordsLoading } = useQuery<SerialNumber[]>({
+  const { data: records = [], isLoading } = useQuery<SerialNumber[]>({
     queryKey: ["/api/serial-numbers"],
   });
   const { data: customers = [] } = useQuery<Customer[]>({
@@ -324,8 +325,6 @@ export default function SerialNumbers() {
     queryKey: ["/api/projects"],
     staleTime: 60000,
   });
-
-  const isLoading = recordsLoading;
 
   const customerMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -348,59 +347,83 @@ export default function SerialNumbers() {
     }));
   }, [records, customerMap, projectMap]);
 
-  const del = useEntityDelete({
-    entityName: "serienummer",
-    deleteEndpoint: (id) => `/api/serial-numbers/${id}`,
-    queryKey: ["/api/serial-numbers"],
+  const tableState = useDataTable({
+    defaultColumns,
+    defaultSort: { column: "serialNo", direction: "asc" },
+    tableKey: "serial-numbers",
   });
 
-  const tableState = useDataTable({
-    data: enriched,
-    columns: defaultColumns,
-    tableKey: "serial-numbers",
+  const del = useEntityDelete<EnrichedSerialNumber>({
+    endpoint: "/api/serial-numbers",
+    queryKeys: ["/api/serial-numbers"],
+    entityLabel: "Serienummer",
+    checkUsages: false,
+    getName: (r) => r.serialNo,
   });
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<SerialNumber | null>(null);
 
   function openNew() { setEditRecord(null); setSheetOpen(true); }
-  function openEdit(r: SerialNumber) { setEditRecord(r); setSheetOpen(true); }
+  function openEdit(r: EnrichedSerialNumber) { setEditRecord(r); setSheetOpen(true); }
   function closeSheet() { setSheetOpen(false); setEditRecord(null); }
 
+  const handleToggleAllRows = () => {
+    const allIds = enriched.map(r => r.id);
+    tableState.toggleAllRows(allIds);
+  };
+
   return (
-    <>
+    <div className="p-6">
       <DataTableLayout
-        title="Serienummers"
         data={enriched}
-        columns={defaultColumns}
         isLoading={isLoading}
-        tableState={tableState}
         tableKey="serial-numbers"
-        quickAddButton={{
-          label: "Serienummer",
-          onClick: openNew,
-        }}
+        getRowId={(r: EnrichedSerialNumber) => r.id}
+
+        columns={tableState.columns}
+        setColumns={tableState.setColumns}
+
+        searchTerm={tableState.searchTerm}
+        setSearchTerm={tableState.setSearchTerm}
+        filters={tableState.filters}
+        setFilters={tableState.setFilters}
+        onAddFilter={tableState.addFilter}
+        onUpdateFilter={tableState.updateFilter}
+        onRemoveFilter={tableState.removeFilter}
+
+        sortConfig={tableState.sortConfig}
+        onSort={tableState.handleSort}
+
+        selectedRows={tableState.selectedRows}
+        setSelectedRows={tableState.setSelectedRows}
+        onToggleRowSelection={tableState.toggleRowSelection}
+        onToggleAllRows={handleToggleAllRows}
+
         deleteConfirmDialog={{
           isOpen: del.isBulkDeleteOpen,
           onOpenChange: del.setIsBulkDeleteOpen,
           onConfirm: () => del.handleBulkDelete(tableState.selectedRows, enriched),
           itemCount: tableState.selectedRows.length,
         }}
-        onRowDoubleClick={openEdit}
-        getRowId={(r: EnrichedSerialNumber) => r.id}
-        onToggleAllRows={React.useMemo(
-          () => (checked: boolean) => tableState.toggleAllRows(checked, enriched),
-          [enriched, tableState.toggleAllRows]
-        )}
-        headerActions={React.useMemo(() => [
+
+        applyFiltersAndSearch={tableState.applyFiltersAndSearch}
+        applySorting={tableState.applySorting}
+
+        entityName="Serienummer"
+        entityNamePlural="Serienummers"
+
+        headerActions={[
           {
             key: "add",
             label: "Toevoegen",
             icon: <Plus className="h-4 w-4" />,
             onClick: openNew,
+            variant: "default" as const,
           },
-        ], [openNew])}
-        rowActions={React.useCallback((r: EnrichedSerialNumber) => [
+        ]}
+
+        rowActions={(r: EnrichedSerialNumber) => [
           {
             key: "edit",
             label: "Bewerken",
@@ -413,9 +436,11 @@ export default function SerialNumbers() {
             label: "Verwijderen",
             icon: <Trash2 className="h-4 w-4" />,
             onClick: () => del.handleDeleteRow(r),
-            variant: "outline" as const,
+            variant: "destructive" as const,
           },
-        ], [del.handleDeleteRow])}
+        ]}
+
+        onRowDoubleClick={openEdit}
       />
 
       <SerialNumberFormSheet
@@ -426,8 +451,7 @@ export default function SerialNumbers() {
         projects={projects}
       />
 
-      {del.SafeDeleteDialogComponent}
-      {del.UsageConflictDialogComponent}
-    </>
+      {del.renderDeleteDialogs()}
+    </div>
   );
 }
