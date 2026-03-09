@@ -289,6 +289,7 @@ export const invoices = pgTable("invoices", {
   paidAmount: decimal("paid_amount", { precision: 10, scale: 2 }).default("0"),
   notes: text("notes"),
   totalAmountInWords: text("total_amount_in_words"),
+  vatRatePercent: decimal("vat_rate_percent", { precision: 5, scale: 2 }),
   printSortOrder: text("print_sort_order").default("position"),
   printLanguageCode: text("print_language_code").default("nl"),
   printProjectNo: boolean("print_project_no").default(true),
