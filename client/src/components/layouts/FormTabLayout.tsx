@@ -17,19 +17,22 @@ interface FormTabLayoutProps {
 export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: FormTabLayoutProps) {
   const isMobile = useIsMobile();
   const activeTabContent = tabs.find(tab => tab.id === activeTab)?.content;
+  const mx = isMobile ? 'mx-0' : 'mx-4';
 
   return (
-    <div className={`-space-y-px ${className}`}>
-      {/* Tab Bar - sticky below toolbar */}
-      <div className={`sticky top-14 z-10 bg-white ${isMobile ? 'px-1' : 'px-4'} border-b-0 ${isMobile ? 'h-[50px]' : 'h-[62px]'} flex items-end`}>
-        <div className={`flex items-end ${isMobile ? 'space-x-0.5' : 'space-x-1'} overflow-x-auto ${isMobile ? 'ml-0 w-full' : 'ml-2'}`}>
+    <div className={className}>
+      {/* Tab Bar — top/left/right orange border, no bottom border, rounded top corners */}
+      <div
+        className={`sticky top-14 z-10 bg-white border border-b-0 border-orange-500 rounded-t-lg ${mx} ${isMobile ? 'h-[50px]' : 'h-[44px]'} flex items-end ${isMobile ? 'px-1' : 'px-2'}`}
+      >
+        <div className={`flex items-end ${isMobile ? 'space-x-0.5 w-full' : 'space-x-1'} overflow-x-auto`}>
           {tabs.map((tab) => (
             <div
               key={tab.id}
               className={`flex items-center gap-1 ${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'} rounded-t-lg transition-colors cursor-pointer min-w-0 font-sans ${isMobile ? 'flex-1 justify-center' : ''} ${
                 activeTab === tab.id
-                  ? 'bg-orange-500 text-white relative z-10 border-2 border-orange-500 border-b-orange-500'
-                  : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200 mb-[2px]'
+                  ? 'bg-orange-500 text-white border border-orange-500 border-b-0'
+                  : 'bg-gray-100 border border-gray-300 border-b-0 text-gray-600 hover:bg-gray-200'
               }`}
               onClick={() => onTabChange(tab.id)}
               data-testid={`form-tab-${tab.id}`}
@@ -41,8 +44,8 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
         </div>
       </div>
 
-      {/* Tab Content - With orange border to connect with active tab */}
-      <div className={`border border-orange-500 bg-white ${isMobile ? 'p-2' : 'p-6'} rounded-lg ${isMobile ? 'mx-0' : 'mx-4'}`}>
+      {/* Tab Content — left/right/bottom orange border, no top border, rounded bottom corners */}
+      <div className={`border border-t-0 border-orange-500 bg-white ${isMobile ? 'p-2' : 'p-6'} rounded-b-lg ${mx}`}>
         {activeTabContent}
       </div>
     </div>
