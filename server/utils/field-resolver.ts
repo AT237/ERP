@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, unitsOfMeasure, workOrders, invoiceWorkOrders } from "../../shared/schema";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, unitsOfMeasure, workOrders, invoiceWorkOrders, vatRates } from "../../shared/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 
 function formatIban(value: string | null): string | null {
@@ -256,6 +256,11 @@ export interface QuotationPrintData {
     lineTotal: string;
     lineType: string;
   }>;
+  vatRate: {
+    code: string;
+    percentage: string;
+    description: string | null;
+  } | null;
 }
 
 /**
@@ -377,6 +382,16 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
     lineType: item.lineType || "standard",
   }));
 
+  // Load VAT rate from customer's vatRateId
+  let vatRateData = null;
+  const customerVatRateId = (await db.query.customers.findFirst({
+    where: quotation.customerId ? eq(customers.id, quotation.customerId) : undefined,
+  }))?.vatRateId;
+  if (customerVatRateId) {
+    const vr = await db.query.vatRates.findFirst({ where: eq(vatRates.id, customerVatRateId) });
+    if (vr) vatRateData = { code: vr.code, percentage: String(vr.percentage), description: vr.description ?? null };
+  }
+
   return {
     quotation: {
       number: quotation.quotationNumber,
@@ -401,6 +416,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
     project: projectData,
     company: companyData,
     items: itemsData,
+    vatRate: vatRateData,
   };
 }
 
@@ -486,6 +502,11 @@ export interface InvoicePrintData {
     sourceSnippetId: string | null;
     sourceSnippetVersion: number | null;
   }>;
+  vatRate: {
+    code: string;
+    percentage: string;
+    description: string | null;
+  } | null;
 }
 
 /**
@@ -649,6 +670,13 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       actualHours: wo.actualHours,
     }));
     workOrderNumbersList = wos.map(wo => wo.orderNumber).join(', ');
+  }
+
+  // Load VAT rate from customer's vatRateId
+  let vatRateData = null;
+  if (customer?.vatRateId) {
+    const vr = await db.query.vatRates.findFirst({ where: eq(vatRates.id, customer.vatRateId) });
+    if (vr) vatRateData = { code: vr.code, percentage: String(vr.percentage), description: vr.description ?? null };
   }
 
   return {
