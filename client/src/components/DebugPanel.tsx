@@ -47,7 +47,7 @@ export function DebugPanel() {
         onClick={() => setIsOpen(true)}
         variant="outline"
         size="sm"
-        className="fixed bottom-4 right-4 z-50 bg-orange-600 text-white hover:bg-orange-700"
+        className="fixed bottom-4 right-4 z-50 bg-orange-600 text-white hover:bg-orange-700 print:hidden"
         data-testid="debug-panel-toggle"
       >
         <Bug className="h-4 w-4 mr-1" />
@@ -57,7 +57,7 @@ export function DebugPanel() {
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-96 h-96 z-50 shadow-lg border-orange-200">
+    <Card className="fixed bottom-4 right-4 w-96 h-96 z-50 shadow-lg border-orange-200 print:hidden">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center">
