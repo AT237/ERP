@@ -154,16 +154,18 @@ export default function WorkOrders() {
     queryKey: ["/api/employees"],
   });
 
-  // Enhanced data with project names
+  // Enhanced data with project names and employee names
   const enhancedWorkOrders = React.useMemo(() => {
     return workOrders.map(order => {
       const project = projects.find(p => p.id === order.projectId);
+      const emp = (employees as any[]).find((e: any) => e.id === order.assignedTo);
       return {
         ...order,
-        projectName: project?.name || 'No Project'
+        projectName: project?.name || 'No Project',
+        assignedTo: emp ? `${emp.firstName} ${emp.lastName}` : order.assignedTo
       };
     });
-  }, [workOrders, projects]);
+  }, [workOrders, projects, employees]);
 
   const del = useEntityDelete<WorkOrder>({
     endpoint: '/api/work-orders',

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ProjectSelect } from "@/components/ui/project-select";
+import { EmployeeSelect } from "@/components/ui/employee-select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertWorkOrderSchema } from "@shared/schema";
@@ -356,10 +357,15 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         createFieldRow({
           key: "assignedTo",
           label: "Assigned To",
-          type: "text",
-          placeholder: "Employee name",
-          register: form.register("assignedTo"),
-          testId: "input-assigned-to",
+          type: "custom",
+          customComponent: (
+            <EmployeeSelect
+              value={form.watch("assignedTo") || ""}
+              onValueChange={(value) => form.setValue("assignedTo", value || "")}
+              placeholder="Select employee..."
+              testId="select-assigned-to"
+            />
+          ),
           isModified: modifiedFields.has("assignedTo")
         } as FormField2<FormData>)
       ]
