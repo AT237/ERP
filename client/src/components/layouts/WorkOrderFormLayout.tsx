@@ -179,7 +179,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
       setModifiedFields(new Set());
       setHasUnsavedChanges(false);
     }
-  }, [workOrder, form]);
+  }, [workOrder, form, allProjects]);
 
   // Throttled change checking
   const [checkScheduled, setCheckScheduled] = useState(false);
@@ -309,14 +309,44 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     }
   };
 
-  // Standard ProjectSelect component (Popover+Command pattern with search and ExternalLink)
+  // Projects filtered by selected customer
+  const filteredProjects = useMemo(() => {
+    if (!selectedCustomerId) return [];
+    return allProjects
+      .filter((p: any) => p.customerId === selectedCustomerId)
+      .map((p: any) => ({ id: p.id, projectNumber: p.projectNumber || "", name: p.name }));
+  }, [allProjects, selectedCustomerId]);
+
+  // Customer select — drives project filter
+  const renderCustomerSelect = () => (
+    <CustomerSelect
+      value={selectedCustomerId}
+      onValueChange={(value) => {
+        setSelectedCustomerId(value || "");
+        // Clear project if it no longer belongs to the new customer
+        const currentProjectId = form.getValues("projectId");
+        if (currentProjectId) {
+          const stillValid = allProjects.some(
+            (p: any) => p.id === currentProjectId && p.customerId === value
+          );
+          if (!stillValid) form.setValue("projectId", "");
+        }
+      }}
+      placeholder="Select customer..."
+      testId="select-work-order-customer"
+      parentId={currentWorkOrderId || 'new-work-order'}
+    />
+  );
+
+  // Project select — filtered by selected customer
   const renderProjectSelect = () => (
     <ProjectSelect
       value={form.watch("projectId") || ""}
       onValueChange={(value) => form.setValue("projectId", value || "")}
-      placeholder="Select project..."
+      placeholder={selectedCustomerId ? "Select project..." : "Select a customer first..."}
       testId="select-work-order-project"
       parentId={currentWorkOrderId || 'new-work-order'}
+      projects={selectedCustomerId ? filteredProjects : []}
     />
   );
 
@@ -339,6 +369,13 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
           },
           testId: "input-order-number",
           isModified: modifiedFields.has("orderNumber")
+        } as FormField2<FormData>),
+        createFieldRow({
+          key: "customerId" as any,
+          label: "Customer",
+          type: "custom",
+          customComponent: renderCustomerSelect(),
+          testId: "select-customer",
         } as FormField2<FormData>),
         createFieldRow({
           key: "projectId",
