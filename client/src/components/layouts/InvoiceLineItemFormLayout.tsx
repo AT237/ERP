@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { EntitySelect } from "@/components/ui/entity-select";
+import { InventorySelect } from "@/components/ui/inventory-select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
@@ -736,17 +737,13 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
 
   const fieldInventoryItem: FormField2<LineItemFormData> = {
     key: 'itemId',
-    label: 'Artikel uit database',
+    label: 'Artikel uit catalogus',
     type: 'custom',
     customComponent: (
-      <EntitySelect
-        endpoint="inventory"
-        formType="inventory"
-        labelField="name"
-        secondaryField="sku"
+      <InventorySelect
         value={form.watch("itemId" as any) || ""}
         onValueChange={(val) => { form.setValue("itemId" as any, val); setHasUnsavedChanges(true); }}
-        placeholder="Selecteer artikel..."
+        placeholder="Artikel zoeken..."
         testId="select-inventory-item"
       />
     ),
@@ -758,11 +755,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     type: 'custom',
     customComponent: (
       <div className="space-y-2">
-        <EntitySelect
-          endpoint="inventory"
-          formType="inventory"
-          labelField="name"
-          secondaryField="sku"
+        <InventorySelect
           value={form.watch("itemId" as any) || ""}
           onValueChange={(val) => { form.setValue("itemId" as any, val); setHasUnsavedChanges(true); }}
           placeholder="Artikel zoeken in catalogus..."
