@@ -56,6 +56,49 @@ import { Request, Response } from 'express';
 import { eq, sql } from 'drizzle-orm';
 import { db, pool, checkDatabaseStatus } from './db';
 
+async function buildCustomerSnapshot(customerId: string): Promise<string | null> {
+  try {
+    const { customers: customersTable, addresses } = await import('@shared/schema');
+    const customer = await db.query.customers.findFirst({ where: eq(customersTable.id, customerId) });
+    if (!customer) return null;
+    let addressData = null;
+    if (customer.addressId) {
+      const address = await db.query.addresses.findFirst({ where: eq(addresses.id, customer.addressId) });
+      if (address) {
+        addressData = {
+          street: address.street,
+          houseNumber: address.houseNumber,
+          postalCode: address.postalCode,
+          city: address.city,
+          country: address.country,
+        };
+      }
+    }
+    const snapshot = {
+      name: customer.name,
+      customerNumber: customer.customerNumber,
+      email: customer.email,
+      generalEmail: customer.generalEmail ?? null,
+      invoiceEmail: customer.invoiceEmail ?? null,
+      phone: customer.phone,
+      mobile: (customer as any).mobile ?? null,
+      btwNummer: (customer as any).btwNummer ?? null,
+      taxId: customer.taxId ?? null,
+      kvkNummer: (customer as any).kvkNummer ?? null,
+      bankAccount: customer.bankAccount ?? null,
+      countryCode: (customer as any).countryCode ?? null,
+      languageCode: (customer as any).languageCode ?? null,
+      memo: customer.memo ?? null,
+      invoiceNotes: (customer as any).invoiceNotes ?? null,
+      address: addressData,
+    };
+    return JSON.stringify(snapshot);
+  } catch (e) {
+    console.error('buildCustomerSnapshot error:', e);
+    return null;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard routes
   app.get("/api/dashboard/stats", async (req, res) => {
@@ -953,6 +996,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching invoice print data:", error);
       res.status(500).json({ message: "Failed to fetch invoice print data" });
+    }
+  });
+
+  app.post("/api/quotations/:id/refresh-customer", async (req, res) => {
+    try {
+      const quotation = await db.query.quotations.findFirst({ where: eq(quotations.id, req.params.id) });
+      if (!quotation) return res.status(404).json({ message: "Quotation not found" });
+      const snapshot = quotation.customerId ? await buildCustomerSnapshot(quotation.customerId) : null;
+      await db.update(quotations).set({ customerSnapshot: snapshot } as any).where(eq(quotations.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("refresh-customer quotation error:", error);
+      res.status(500).json({ message: "Failed to refresh customer snapshot" });
+    }
+  });
+
+  app.post("/api/invoices/:id/refresh-customer", async (req, res) => {
+    try {
+      const invoice = await db.query.invoices.findFirst({ where: eq(invoices.id, req.params.id) });
+      if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+      const snapshot = invoice.customerId ? await buildCustomerSnapshot(invoice.customerId) : null;
+      await db.update(invoices).set({ customerSnapshot: snapshot } as any).where(eq(invoices.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("refresh-customer invoice error:", error);
+      res.status(500).json({ message: "Failed to refresh customer snapshot" });
     }
   });
 

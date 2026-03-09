@@ -49,6 +49,7 @@ interface CustomerSelectProps {
   onOpen?: () => void; // Callback to trigger lazy loading
   customers?: Array<{ id: string; customerNumber: string; name: string; email?: string; phone?: string }>; // Optional external customers data
   parentId?: string; // ID of the parent tab that opened this select
+  onRefreshCustomer?: () => void; // Called when user clicks the refresh icon to sync customer snapshot
 }
 
 export function CustomerSelect({
@@ -59,7 +60,8 @@ export function CustomerSelect({
   className,
   onOpen,
   customers: externalCustomers,
-  parentId
+  parentId,
+  onRefreshCustomer,
 }: CustomerSelectProps) {
   const [open, setOpen] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);

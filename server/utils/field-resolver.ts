@@ -276,9 +276,16 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
     return null;
   }
 
-  // Load customer with address
+  // Load customer with address — use snapshot when available
   let customerData = null;
-  if (quotation.customerId) {
+  if ((quotation as any).customerSnapshot) {
+    try {
+      const snap = JSON.parse((quotation as any).customerSnapshot);
+      if (snap.bankAccount) snap.bankAccount = formatIban(snap.bankAccount);
+      customerData = snap;
+    } catch { /* fall through to live lookup */ }
+  }
+  if (!customerData && quotation.customerId) {
     const customer = await db.query.customers.findFirst({
       where: eq(customers.id, quotation.customerId),
     });
@@ -522,9 +529,16 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     return null;
   }
 
-  // Load customer with address
+  // Load customer with address — use snapshot when available
   let customerData = null;
-  const customer = await db.query.customers.findFirst({
+  if ((invoice as any).customerSnapshot) {
+    try {
+      const snap = JSON.parse((invoice as any).customerSnapshot);
+      if (snap.bankAccount) snap.bankAccount = formatIban(snap.bankAccount);
+      customerData = snap;
+    } catch { /* fall through to live lookup */ }
+  }
+  const customer = customerData ? null : await db.query.customers.findFirst({
     where: eq(customers.id, invoice.customerId),
   });
 
