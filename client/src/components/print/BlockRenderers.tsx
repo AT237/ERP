@@ -53,6 +53,8 @@ export const DATA_FIELD_EXAMPLES = [
   { code: '{{company.kvkNummer}}', label: 'Bedrijf KVK' },
   { code: '{{company.btwNummer}}', label: 'Bedrijf BTW' },
   { code: '{{company.bankAccount}}', label: 'Bedrijf IBAN' },
+  { code: '{{vatRate.percentage}}', label: 'BTW percentage (bijv. 21)' },
+  { code: '{{vatRate.code}}', label: 'BTW code' },
 ];
 
 // Item field placeholders - for repeating blocks (line items)
@@ -501,15 +503,19 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
 
 // Totals Summary Block - subtotal, tax, total
 export function TotalsSummaryRenderer({ block, printData }: BlockRendererProps) {
-  const quotation = printData.quotation;
-  
-  if (!quotation) {
+  const isInvoice = !!printData.invoice;
+  const docData = printData.invoice || printData.quotation;
+
+  if (!docData) {
     return <div className="text-xs text-gray-400 italic">Totalen niet beschikbaar</div>;
   }
 
-  const subtotal = resolveAndFormat('quotation.subtotal', printData, 'currency');
-  const taxAmount = resolveAndFormat('quotation.taxAmount', printData, 'currency');
-  const totalAmount = resolveAndFormat('quotation.totalAmount', printData, 'currency');
+  const prefix = isInvoice ? 'invoice' : 'quotation';
+  const subtotal = resolveAndFormat(`${prefix}.subtotal`, printData, 'currency');
+  const taxAmount = resolveAndFormat(`${prefix}.taxAmount`, printData, 'currency');
+  const totalAmount = resolveAndFormat(`${prefix}.totalAmount`, printData, 'currency');
+  const vatPercentage = printData.vatRate?.percentage;
+  const btwLabel = vatPercentage ? `BTW ${vatPercentage}%:` : 'BTW:';
 
   return (
     <div style={block.style || {}} className="space-y-1 text-sm">
@@ -519,7 +525,7 @@ export function TotalsSummaryRenderer({ block, printData }: BlockRendererProps) 
       </div>
       {taxAmount && (
         <div className="flex justify-between">
-          <span>BTW:</span>
+          <span>{btwLabel}</span>
           <span className="font-medium">{taxAmount}</span>
         </div>
       )}

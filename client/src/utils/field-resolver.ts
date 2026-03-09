@@ -7,6 +7,7 @@ export type PrintData = {
   customer: Record<string, any> | null;
   project: Record<string, any> | null;
   company: Record<string, any> | null;
+  vatRate?: { code: string; percentage: string; description: string | null } | null;
   items?: Array<{
     positionNo: string;
     description: string;
@@ -257,6 +258,10 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
       break;
     case 'company':
       data = printData.company;
+      break;
+    case 'vatrate':
+    case 'vatRate':
+      data = printData.vatRate;
       break;
     default:
       return null;
