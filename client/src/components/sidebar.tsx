@@ -67,24 +67,6 @@ export const defaultNavigation = [
     ]
   },
   {
-    id: "master-data",
-    name: "Master Data",
-    collapsible: true,
-    items: [
-      { id: "company-details", name: "Our Company Details", href: "/master-data/company-details", icon: Building },
-      { id: "text-snippets", name: "Text Snippets", href: "/text-snippets", icon: BookOpen },
-      { id: "images", name: "Images", href: "/master-data/images", icon: Image },
-      { id: "uom", name: "Units of Measure", href: "/master-data/uom", icon: Ruler },
-      { id: "payment-terms", name: "Payment Terms", href: "/master-data/payment-terms", icon: Calendar },
-      { id: "rates-and-charges", name: "Rates & Charges", href: "/master-data/rates-and-charges", icon: CreditCard },
-      { id: "incoterms", name: "Incoterms", href: "/master-data/incoterms", icon: Plane },
-      { id: "vat", name: "VAT Rates", href: "/master-data/vat", icon: Percent },
-      { id: "cities", name: "Cities", href: "/master-data/cities", icon: MapPin },
-      { id: "statuses", name: "Statuses", href: "/master-data/statuses", icon: Tag },
-      { id: "pictograms", name: "Pictograms", href: "/master-data/pictograms", icon: FileCheck }
-    ]
-  },
-  {
     id: "sales",
     name: "Sales",
     collapsible: true,
@@ -113,6 +95,24 @@ export const defaultNavigation = [
     items: [
       { id: "analytics", name: "Analytics", href: "/reports", icon: BarChart3 },
       { id: "pdf-archive", name: "PDF Database", href: "/pdf-archive", icon: Archive }
+    ]
+  },
+  {
+    id: "master-data",
+    name: "Master Data",
+    collapsible: true,
+    items: [
+      { id: "company-details", name: "Our Company Details", href: "/master-data/company-details", icon: Building },
+      { id: "text-snippets", name: "Text Snippets", href: "/text-snippets", icon: BookOpen },
+      { id: "images", name: "Images", href: "/master-data/images", icon: Image },
+      { id: "uom", name: "Units of Measure", href: "/master-data/uom", icon: Ruler },
+      { id: "payment-terms", name: "Payment Terms", href: "/master-data/payment-terms", icon: Calendar },
+      { id: "rates-and-charges", name: "Rates & Charges", href: "/master-data/rates-and-charges", icon: CreditCard },
+      { id: "incoterms", name: "Incoterms", href: "/master-data/incoterms", icon: Plane },
+      { id: "vat", name: "VAT Rates", href: "/master-data/vat", icon: Percent },
+      { id: "cities", name: "Cities", href: "/master-data/cities", icon: MapPin },
+      { id: "statuses", name: "Statuses", href: "/master-data/statuses", icon: Tag },
+      { id: "pictograms", name: "Pictograms", href: "/master-data/pictograms", icon: FileCheck }
     ]
   },
   {
