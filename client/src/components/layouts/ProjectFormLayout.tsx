@@ -16,7 +16,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProjectSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { FolderOpen, Calendar, DollarSign } from "lucide-react";
+import { FolderOpen, Calendar, DollarSign, Image } from "lucide-react";
+import { AttachmentsGallery } from "@/components/ui/attachments-gallery";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
@@ -431,6 +432,19 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
           testId: "display-invoiced-total",
         } as any),
       ]
+    },
+    {
+      id: "images",
+      label: "Images",
+      icon: <Image className="h-4 w-4" />,
+      rows: [
+        {
+          type: "custom" as const,
+          customContent: (
+            <AttachmentsGallery entityType="project" entityId={projectId} />
+          ),
+        },
+      ],
     }
   ];
 
