@@ -3,8 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { LayoutForm2, FormSection2, FormField2, createFieldRow } from "./LayoutForm2";
+import { LayoutForm2, FormSection2, FormField2, FormRow, createFieldRow } from "./LayoutForm2";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +30,7 @@ const TEMPLATE_TYPES = [
   { value: "general", label: "Algemeen" },
 ];
 
-// ─── Data field tables (same data as email-designer.tsx) ────────────────────
+// ─── Data field tables ────────────────────────────────────────────────────────
 const EMAIL_TABLES: { name: string; label: string; fields: { key: string; label: string }[] }[] = [
   {
     name: "invoice", label: "Factuur",
@@ -179,43 +178,19 @@ const EMAIL_TABLES: { name: string; label: string; fields: { key: string; label:
 ];
 
 // ─── Insert helper ────────────────────────────────────────────────────────────
-function insertAtCursor(
-  el: HTMLInputElement | HTMLTextAreaElement,
-  text: string
-) {
+function insertAtCursor(el: HTMLInputElement | HTMLTextAreaElement, text: string) {
   const start = el.selectionStart ?? el.value.length;
   const end = el.selectionEnd ?? el.value.length;
   const newValue = el.value.slice(0, start) + text + el.value.slice(end);
-  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-    window.HTMLInputElement.prototype,
-    "value"
-  );
-  const nativeTextareaSetter = Object.getOwnPropertyDescriptor(
-    window.HTMLTextAreaElement.prototype,
-    "value"
-  );
-  const setter =
-    el instanceof HTMLTextAreaElement
-      ? nativeTextareaSetter?.set
-      : nativeInputValueSetter?.set;
-  if (setter) {
-    setter.call(el, newValue);
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  } else {
-    el.value = newValue;
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  }
+  el.value = newValue;
+  el.dispatchEvent(new Event("input", { bubbles: true }));
   const newPos = start + text.length;
   el.setSelectionRange(newPos, newPos);
   el.focus();
 }
 
 // ─── Data Field Insert Panel ─────────────────────────────────────────────────
-function DataFieldInsertPanel({
-  onInsert,
-}: {
-  onInsert: (token: string) => void;
-}) {
+function DataFieldInsertPanel({ onInsert }: { onInsert: (token: string) => void }) {
   const [expandedTables, setExpandedTables] = useState<string[]>([]);
   const [search, setSearch] = useState("");
 
@@ -244,7 +219,7 @@ function DataFieldInsertPanel({
   );
 
   return (
-    <div className="flex flex-col h-full border rounded-md overflow-hidden">
+    <div className="flex flex-col border rounded-md overflow-hidden" style={{ height: 400 }}>
       <div className="px-3 py-2 border-b bg-muted/20 flex-shrink-0">
         <p className="text-xs font-semibold mb-1.5">Data invoegen</p>
         <Input
@@ -270,9 +245,7 @@ function DataFieldInsertPanel({
                   onClick={() => toggleTable(table.name)}
                 >
                   <span>{table.label}</span>
-                  <span className="text-muted-foreground">
-                    {isExpanded ? "−" : "+"}
-                  </span>
+                  <span className="text-muted-foreground">{isExpanded ? "−" : "+"}</span>
                 </button>
                 {isExpanded && (
                   <div className="bg-muted/30 px-2 py-1">
@@ -287,9 +260,7 @@ function DataFieldInsertPanel({
                         >
                           <span className="text-orange-600">+</span>
                           <span>{field.label}</span>
-                          <span className="text-[10px] text-muted-foreground ml-auto font-mono">
-                            {token}
-                          </span>
+                          <span className="text-[10px] text-muted-foreground ml-auto font-mono">{token}</span>
                         </button>
                       );
                     })}
@@ -319,6 +290,7 @@ export function EmailTemplateFormLayout({
 }: EmailTemplateFormLayoutProps) {
   const { toast } = useToast();
   const [currentId, setCurrentId] = useState<string | undefined>(emailTemplateId);
+  const [activeSection, setActiveSection] = useState("general");
   const isEditing = !!currentId;
 
   const subjectRef = useRef<HTMLInputElement>(null);
@@ -362,14 +334,11 @@ export function EmailTemplateFormLayout({
       toast({ title: "Aangemaakt", description: `"${created.name}" aangemaakt.` });
       window.dispatchEvent(
         new CustomEvent("update-tab-name", {
-          detail: {
-            tabId: "new-email-template",
-            name: created.name,
-          },
+          detail: { tabId: "new-email-template", name: created.name },
         })
       );
     },
-    onError: () => toast({ title: "Fout", variant: "destructive" }),
+    onError: () => toast({ title: "Fout bij opslaan", variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -379,7 +348,7 @@ export function EmailTemplateFormLayout({
       queryClient.invalidateQueries({ queryKey: ["/api/email-templates"] });
       toast({ title: "Opgeslagen" });
     },
-    onError: () => toast({ title: "Fout", variant: "destructive" }),
+    onError: () => toast({ title: "Fout bij opslaan", variant: "destructive" }),
   });
 
   const onSubmit = (data: EmailTemplateFormData) => {
@@ -412,7 +381,7 @@ export function EmailTemplateFormLayout({
     [form]
   );
 
-  // ── Form sections ──────────────────────────────────────────────────────────
+  // ── Field definitions ──────────────────────────────────────────────────────
   const nameField: FormField2<EmailTemplateFormData> = {
     key: "name",
     label: "Naam",
@@ -441,9 +410,7 @@ export function EmailTemplateFormLayout({
         </SelectTrigger>
         <SelectContent>
           {TEMPLATE_TYPES.map((t) => (
-            <SelectItem key={t.value} value={t.value}>
-              {t.label}
-            </SelectItem>
+            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -467,35 +434,34 @@ export function EmailTemplateFormLayout({
     ),
   };
 
-  // Body section: custom row renders textarea + insert panel side by side
-  const bodyAndPanelRow = {
-    type: "custom" as const,
-    content: (
-      <div className="flex gap-4" style={{ minHeight: 400 }}>
+  // Custom row: body textarea + insert panel side by side
+  const bodyRow: FormRow<EmailTemplateFormData> = {
+    type: "custom",
+    customContent: (
+      <div className="flex gap-4">
         <div className="flex-1 flex flex-col gap-1.5">
-          <p className="text-xs text-muted-foreground">
-            Klik een veld rechts aan → token wordt ingevoegd op cursorpositie
+          <p className="text-[11px] text-muted-foreground">
+            Tekst (body) — klik een veld rechts aan om het token in te voegen op cursorpositie
           </p>
           <Textarea
             ref={bodyRef}
             value={form.watch("body") ?? ""}
-            onChange={(e) =>
-              form.setValue("body", e.target.value, { shouldDirty: true })
-            }
+            onChange={(e) => form.setValue("body", e.target.value, { shouldDirty: true })}
             onFocus={() => { focusedFieldRef.current = "body"; }}
             placeholder={"Beste {{contact.name}},\n\nHierbij sturen wij u factuur {{invoice.invoiceNumber}}.\n\nMet vriendelijke groet,\n{{company.name}}"}
-            className="flex-1 font-mono text-sm resize-none"
+            className="font-mono text-sm resize-none"
             style={{ minHeight: 360 }}
           />
         </div>
-        <div className="w-64 flex-shrink-0" style={{ minHeight: 400 }}>
+        <div className="w-64 flex-shrink-0">
           <DataFieldInsertPanel onInsert={handleInsertToken} />
         </div>
       </div>
     ),
   };
 
-  const formSections: FormSection2<EmailTemplateFormData>[] = [
+  // ── Sections ───────────────────────────────────────────────────────────────
+  const sections: FormSection2<EmailTemplateFormData>[] = [
     {
       id: "general",
       label: "Algemeen",
@@ -508,7 +474,7 @@ export function EmailTemplateFormLayout({
     {
       id: "body",
       label: "Tekst (body)",
-      rows: [bodyAndPanelRow],
+      rows: [bodyRow],
     },
   ];
 
@@ -516,23 +482,20 @@ export function EmailTemplateFormLayout({
     { label: "Template", value: form.watch("name") || "Nieuw template" },
     {
       label: "Type",
-      value:
-        TEMPLATE_TYPES.find((t) => t.value === form.watch("templateType"))?.label ??
-        form.watch("templateType") ??
-        "",
+      value: TEMPLATE_TYPES.find((t) => t.value === form.watch("templateType"))?.label ?? "",
     },
   ];
 
   return (
     <LayoutForm2
-      title={isEditing ? "E-mailtemplate bewerken" : "Nieuw e-mailtemplate"}
-      icon="mail"
+      sections={sections}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      form={form}
+      onSubmit={onSubmit}
       toolbar={toolbar}
-      formSections={formSections}
       infoFields={infoFields}
       isLoading={false}
-      hasUnsavedChanges={form.formState.isDirty}
-      modifiedFields={new Set(Object.keys(form.formState.dirtyFields))}
     />
   );
 }

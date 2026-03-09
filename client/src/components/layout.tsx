@@ -43,6 +43,7 @@ const PackingListForm = lazy(() => import('@/pages/packing-list-form'));
 const InvoiceForm = lazy(() => import('@/pages/invoice-form'));
 const InvoiceLineItemForm = lazy(() => import('@/pages/invoice-line-item-form'));
 const TextSnippetForm = lazy(() => import('@/pages/text-snippet-form'));
+const EmailTemplateForm = lazy(() => import('@/pages/email-template-form'));
 const ContactPersonForm = lazy(() => import('@/pages/contact-person-form'));
 const EmployeesPage = lazy(() => import('@/pages/employees'));
 const EmployeeForm = lazy(() => import('@/pages/employee-form'));
@@ -166,6 +167,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'text-snippets', name: 'Text Snippets' };
       case '/layout-designer':
         return { id: 'layout-designer', name: 'Layout Designer' };
+      case '/email-designer':
+        return { id: 'email-designer', name: 'E-mail Designer' };
       case '/master-data/uom':
         return { id: 'uom', name: 'Units of Measure' };
       case '/master-data/payment-terms':
@@ -1325,6 +1328,36 @@ export default function Layout({ children }: LayoutProps) {
             <InvoiceLineItemForm
               invoiceId={invoiceId!}
               itemId={lineItemId}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+
+      if (tab.formType === 'text-snippet') {
+        const snippetId = tab.parentId ?? (
+          tab.id.startsWith('edit-text-snippet-') ? tab.id.replace('edit-text-snippet-', '') : undefined
+        );
+        return (
+          <Suspense fallback={<div></div>}>
+            <TextSnippetForm
+              textSnippetId={snippetId}
+              parentId={tab.parentId}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+
+      if (tab.formType === 'email-template') {
+        const templateId = tab.parentId ?? (
+          tab.id.startsWith('email-template-') ? tab.id.replace('email-template-', '') : undefined
+        );
+        return (
+          <Suspense fallback={<div></div>}>
+            <EmailTemplateForm
+              emailTemplateId={templateId}
+              parentId={tab.parentId}
               onSave={() => {}}
             />
           </Suspense>

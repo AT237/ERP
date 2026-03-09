@@ -139,6 +139,17 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsDelete: true,
     supportsAddNew: true,
   },
+  email_template: {
+    apiPath: "/api/email-templates",
+    formType: "email-template",
+    label: "E-mailtemplate",
+    labelPlural: "E-mailtemplates",
+    listQueryKey: "/api/email-templates",
+    documentType: "email_template",
+    supportsNavigation: true,
+    supportsDelete: true,
+    supportsAddNew: true,
+  },
   contact_person: {
     apiPath: "/api/customer-contacts",
     formType: "contact-person",
