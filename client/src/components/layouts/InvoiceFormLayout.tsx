@@ -40,6 +40,7 @@ const invoiceFormSchema = insertInvoiceSchema.omit({
   totalAmount: z.string().min(1, "Total amount is required"),
   totalAmountInWords: z.string().optional(),
   paidAmount: z.string().optional(),
+  vatRatePercent: z.string().optional(),
   dueDate: z.string().optional(),
   invoiceDate: z.string().optional(),
   paymentDaysId: z.string().optional(),
@@ -210,6 +211,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       totalAmount: "0.00",
       totalAmountInWords: "",
       paidAmount: "0.00",
+      vatRatePercent: "",
       notes: "",
       printSortOrder: "position",
     },
@@ -294,6 +296,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         totalAmount: invoice.totalAmount || "0.00",
         totalAmountInWords: (invoice as any).totalAmountInWords || "",
         paidAmount: invoice.paidAmount || "0.00",
+        vatRatePercent: (invoice as any).vatRatePercent ? parseFloat(String((invoice as any).vatRatePercent)).toString() : "",
         notes: invoice.notes || "",
         printSortOrder: (invoice as any).printSortOrder || "position",
       });
@@ -311,7 +314,11 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     if (vatRates.length === 0 || vatRatePercent !== 0) return;
     const customer2 = customers.find(c => c.id === invoice.customerId);
     const vatRate = vatRates.find(v => v.id === (customer2 as any)?.vatRateId);
-    if (vatRate) setVatRatePercent(parseFloat(String(vatRate.rate)));
+    if (vatRate) {
+      const pct = parseFloat(String(vatRate.rate));
+      setVatRatePercent(pct);
+      invoiceForm.setValue("vatRatePercent", parseFloat(String(vatRate.rate)).toString());
+    }
   }, [invoice, vatRates, customers]);
 
   useEffect(() => {
@@ -390,6 +397,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     const vatRate = vatRates.find(v => v.id === (customer as any)?.vatRateId);
     const pct = vatRate ? parseFloat(String(vatRate.rate)) : 0;
     setVatRatePercent(pct);
+    invoiceForm.setValue("vatRatePercent", pct > 0 ? pct.toString() : "");
     // Apply customer's language code for amount in words
     const lang = (customer as any)?.languageCode || 'nl';
     setCustomerLanguageCode(lang);
@@ -967,6 +975,13 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       id: "amounts",
       label: "Amounts",
       rows: [
+        createFieldRow({
+          key: "vatRatePercent" as any,
+          label: "BTW tarief",
+          type: "display",
+          displayValue: invoiceForm.watch("vatRatePercent") ? `${invoiceForm.watch("vatRatePercent")}%` : "—",
+          testId: "display-vat-rate-percent"
+        } as any),
         createFieldRow({
           key: "subtotal" as any,
           label: "Subtotal",

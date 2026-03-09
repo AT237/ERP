@@ -693,6 +693,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       totalAmount: invoice.totalAmount,
       totalAmountInWords: invoice.totalAmountInWords || null,
       paidAmount: invoice.paidAmount,
+      vatRatePercent: (invoice as any).vatRatePercent ? parseFloat(String((invoice as any).vatRatePercent)).toString() : null,
       notes: invoice.notes,
       paymentTerms: paymentTermsLabel,
       workOrderNumbers: workOrderNumbersList,
