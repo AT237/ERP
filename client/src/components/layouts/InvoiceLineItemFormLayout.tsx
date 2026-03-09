@@ -178,7 +178,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     const customerRateMap = new Map<string, CustomerRate>();
     customerRates.forEach(cr => customerRateMap.set(cr.rateId, cr));
     return allRates
-      .filter(r => (r as any).isActive !== false)
+      .filter(r => (r as any).isActive !== false && customerRateMap.has(r.id))
       .map(r => {
         const customerRate = customerRateMap.get(r.id);
         const discount = customerRate ? Number(customerRate.discountPercent) || 0 : 0;
