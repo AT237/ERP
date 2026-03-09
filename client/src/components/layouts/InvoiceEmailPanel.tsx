@@ -93,15 +93,21 @@ function buildEml(to: string, subject: string, body: string, pdfBase64: string, 
   return lines.join("\r\n");
 }
 
-function downloadEml(emlContent: string, filename: string) {
+function openEmlInOutlook(emlContent: string) {
+  // Create a message/rfc822 blob without a `download` attribute.
+  // Windows recognises this MIME type and routes it to the default email
+  // client (Outlook), opening a compose window with attachment — no download
+  // bar shown.  Edge does this natively; Chrome may briefly show it at the
+  // bottom bar but the file is never saved to disk permanently.
   const blob = new Blob([emlContent], { type: "message/rfc822" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+  // window.open without download attr lets the OS handle the MIME type
+  const opened = window.open(url, "_blank");
+  if (!opened) {
+    // Popup blocked fallback: use location href
+    window.location.href = url;
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 interface InvoiceEmailPanelProps {
@@ -232,7 +238,7 @@ export function InvoiceEmailPanel({ invoiceId }: InvoiceEmailPanelProps) {
       }
 
       const emlContent = buildEml(to, subject, body, pdfBase64, pdfFilename);
-      downloadEml(emlContent, `${invoiceNumber}.eml`);
+      openEmlInOutlook(emlContent);
     } catch (err) {
       console.error("Email generation failed:", err);
       // Fallback to plain mailto
@@ -345,8 +351,7 @@ export function InvoiceEmailPanel({ invoiceId }: InvoiceEmailPanelProps) {
                   <div className="px-4 py-2 border-b bg-blue-50 flex items-start gap-2">
                     <AlertCircle className="h-3.5 w-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
                     <p className="text-[11px] text-blue-700">
-                      Er wordt een <strong>.eml bestand</strong> gedownload met de factuur-PDF als bijlage.
-                      Open het bestand om de e-mail in Outlook te zien en te versturen.
+                      Outlook opent automatisch met een nieuw concept — onderwerp, tekst en de factuur-PDF zijn al ingevuld. Controleer en klik op Verzenden.
                     </p>
                   </div>
                 )}
