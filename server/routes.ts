@@ -833,6 +833,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/inventory/:id/duplicate", async (req, res) => {
+    try {
+      const original = await storage.getInventoryItem(req.params.id);
+      if (!original) return res.status(404).json({ message: "Inventory item not found" });
+
+      // Build a unique SKU for the copy
+      const baseSku = original.sku.replace(/-COPY\d*$/, "");
+      const existing = await db.select({ sku: inventoryItems.sku })
+        .from(inventoryItems)
+        .where(sql`${inventoryItems.sku} LIKE ${baseSku + "-COPY%"}`);
+      const nextNum = existing.length + 1;
+      const newSku = `${baseSku}-COPY${nextNum > 1 ? nextNum : ""}`;
+
+      const { id: _id, createdAt: _c, updatedAt: _u, sku: _s, ...rest } = original as any;
+      const copy = await storage.createInventoryItem({
+        ...rest,
+        sku: newSku,
+        name: `${original.name} (copy)`,
+      });
+      res.status(201).json(copy);
+    } catch (error) {
+      console.error("Error duplicating inventory item:", error);
+      res.status(500).json({ message: "Failed to duplicate inventory item" });
+    }
+  });
+
   app.delete("/api/inventory/:id", async (req, res) => {
     try {
       const { id } = req.params;

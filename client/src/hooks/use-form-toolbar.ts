@@ -15,6 +15,7 @@ interface EntityConfig {
   supportsNavigation: boolean;
   supportsDelete: boolean;
   supportsAddNew: boolean;
+  supportsDuplicate?: boolean;
 }
 
 const ENTITY_CONFIGS: Record<string, EntityConfig> = {
@@ -105,6 +106,7 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsNavigation: true,
     supportsDelete: true,
     supportsAddNew: true,
+    supportsDuplicate: true,
   },
   packing_list: {
     apiPath: "/api/packing-lists",

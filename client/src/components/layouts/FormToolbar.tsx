@@ -8,7 +8,8 @@ import {
   Printer, 
   ChevronLeft, 
   ChevronRight,
-  FileSpreadsheet
+  FileSpreadsheet,
+  CopyPlus
 } from "lucide-react";
 import { PrintLayoutDialog } from "./PrintLayoutDialog";
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
@@ -18,6 +19,7 @@ import type { UsageLocation } from "@/components/ui/safe-delete-dialog";
 export interface FormToolbarProps {
   onSave?: () => void;
   onAddNew?: () => void;
+  onDuplicate?: () => void;
   onDelete?: () => void;
   onPrint?: () => void;
   onPrevious?: () => void;
@@ -27,6 +29,7 @@ export interface FormToolbarProps {
   saveDisabled?: boolean;
   saveLoading?: boolean;
   addNewDisabled?: boolean;
+  duplicateDisabled?: boolean;
   deleteDisabled?: boolean;
   printDisabled?: boolean;
   previousDisabled?: boolean;
@@ -35,6 +38,7 @@ export interface FormToolbarProps {
   
   showSave?: boolean;
   showAddNew?: boolean;
+  showDuplicate?: boolean;
   showDelete?: boolean;
   showPrint?: boolean;
   showNavigation?: boolean;
@@ -51,6 +55,7 @@ export interface FormToolbarProps {
 export function FormToolbar({
   onSave,
   onAddNew,
+  onDuplicate,
   onDelete,
   onPrint,
   onPrevious,
@@ -60,6 +65,7 @@ export function FormToolbar({
   saveDisabled = false,
   saveLoading = false,
   addNewDisabled = false,
+  duplicateDisabled = false,
   deleteDisabled = false,
   printDisabled = false,
   previousDisabled = false,
@@ -68,6 +74,7 @@ export function FormToolbar({
   
   showSave = true,
   showAddNew = true,
+  showDuplicate = false,
   showDelete = true,
   showPrint = true,
   showNavigation = true,
@@ -126,6 +133,20 @@ export function FormToolbar({
           data-testid="toolbar-add"
         >
           <Plus className={iconClass} />
+        </Button>
+      )}
+
+      {showDuplicate && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`${buttonClass} ${duplicateDisabled ? inactiveClass : activeClass}`}
+          onClick={onDuplicate}
+          disabled={duplicateDisabled}
+          title="Duplicate"
+          data-testid="toolbar-duplicate"
+        >
+          <CopyPlus className={iconClass} />
         </Button>
       )}
       
