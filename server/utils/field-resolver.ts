@@ -389,7 +389,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
   }))?.vatRateId;
   if (customerVatRateId) {
     const vr = await db.query.vatRates.findFirst({ where: eq(vatRates.id, customerVatRateId) });
-    if (vr) vatRateData = { code: vr.code, percentage: String(vr.rate), description: vr.description ?? null };
+    if (vr) vatRateData = { code: vr.code, percentage: parseFloat(String(vr.rate)).toString(), description: vr.description ?? null };
   }
 
   return {
@@ -676,7 +676,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
   let vatRateData = null;
   if (customer?.vatRateId) {
     const vr = await db.query.vatRates.findFirst({ where: eq(vatRates.id, customer.vatRateId) });
-    if (vr) vatRateData = { code: vr.code, percentage: String(vr.rate), description: vr.description ?? null };
+    if (vr) vatRateData = { code: vr.code, percentage: parseFloat(String(vr.rate)).toString(), description: vr.description ?? null };
   }
 
   return {
