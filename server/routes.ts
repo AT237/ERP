@@ -1543,6 +1543,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Work Order routes
+  app.get("/api/work-orders/next-number", async (req, res) => {
+    try {
+      const rows = await db.execute(
+        sql`SELECT order_number FROM work_orders WHERE order_number ~ '^WO-[0-9]{4}$' ORDER BY order_number`
+      );
+      const used = new Set((rows.rows as any[]).map((r: any) => r.order_number as string));
+      let next = 1;
+      while (used.has(`WO-${String(next).padStart(4, '0')}`)) {
+        next++;
+      }
+      res.json({ number: `WO-${String(next).padStart(4, '0')}` });
+    } catch (error) {
+      console.error("Error generating next work order number:", error);
+      res.status(500).json({ message: "Failed to generate next work order number" });
+    }
+  });
+
   app.get("/api/work-orders", async (req, res) => {
     try {
       const orders = await storage.getWorkOrders();
