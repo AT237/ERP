@@ -141,6 +141,19 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     refetchOnWindowFocus: false,
   });
 
+  // Fetch next available WO number (new records only)
+  const { data: nextNumberData, refetch: refetchNextNumber } = useQuery<{ number: string }>({
+    queryKey: ["/api/work-orders/next-number"],
+    enabled: !isEditing,
+  });
+
+  // Auto-populate order number for new work orders
+  useEffect(() => {
+    if (!isEditing && nextNumberData?.number && !form.getValues("orderNumber")) {
+      form.setValue("orderNumber", nextNumberData.number);
+    }
+  }, [nextNumberData, isEditing]);
+
   // Update form when work order data loads and store original values for change tracking
   useEffect(() => {
     if (workOrder) {
@@ -361,13 +374,36 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         createFieldRow({
           key: "orderNumber",
           label: "Order Number",
-          type: "text",
-          placeholder: "WO-2024-0001",
-          register: form.register("orderNumber"),
-          validation: {
-            error: form.formState.errors.orderNumber?.message,
-            isRequired: true
-          },
+          type: "custom",
+          customComponent: (
+            <div className="flex gap-1 items-center">
+              <Input
+                {...form.register("orderNumber")}
+                className={`h-10 text-xs flex-1 ${form.formState.errors.orderNumber ? 'border-red-500' : ''}`}
+                placeholder="WO-0001"
+                data-testid="input-order-number"
+              />
+              {!isEditing && (
+                <button
+                  type="button"
+                  title="Volgend beschikbaar nummer ophalen"
+                  onClick={async () => {
+                    const result = await refetchNextNumber();
+                    if (result.data?.number) {
+                      form.setValue("orderNumber", result.data.number);
+                    }
+                  }}
+                  className="h-10 w-10 flex items-center justify-center rounded border border-input bg-background hover:bg-orange-50 hover:border-orange-400 transition-colors flex-shrink-0"
+                >
+                  <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              )}
+              {form.formState.errors.orderNumber && (
+                <span className="text-xs text-red-500 mt-1">{form.formState.errors.orderNumber.message}</span>
+              )}
+            </div>
+          ),
+          validation: { isRequired: true },
           testId: "input-order-number",
           isModified: modifiedFields.has("orderNumber")
         } as FormField2<FormData>),
