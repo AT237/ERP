@@ -40,7 +40,7 @@ export function AttachmentsGallery({ entityType, entityId }: AttachmentsGalleryP
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiRequest(`/api/attachments/${id}`, { method: "DELETE" }),
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/attachments/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
       if (lightboxIndex !== null && lightboxIndex >= attachments.length - 1) {
@@ -57,15 +57,12 @@ export function AttachmentsGallery({ entityType, entityId }: AttachmentsGalleryP
     try {
       for (const file of files) {
         const { dataUrl, width, height } = await readFileAsDataURL(file);
-        await apiRequest(`/api/attachments/${entityType}/${entityId}`, {
-          method: "POST",
-          body: JSON.stringify({
-            fileName: file.name,
-            mimeType: file.type || "image/jpeg",
-            fileData: dataUrl,
-            width,
-            height,
-          }),
+        await apiRequest("POST", `/api/attachments/${entityType}/${entityId}`, {
+          fileName: file.name,
+          mimeType: file.type || "image/jpeg",
+          fileData: dataUrl,
+          width,
+          height,
         });
       }
       queryClient.invalidateQueries({ queryKey });
