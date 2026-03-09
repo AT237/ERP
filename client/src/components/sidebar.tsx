@@ -324,47 +324,49 @@ export default function Sidebar({ onSectionClick, onMenuClick }: SidebarProps) {
   // Merge saved navigation with default navigation to include new items
   const mergeNavigationWithDefaults = (savedNav: typeof defaultNavigation): typeof defaultNavigation => {
     const mergedSections: typeof defaultNavigation = [];
-    
-    // For each section in default navigation
+
+    // Step 1: iterate over SAVED order to preserve the user's custom ordering
+    for (const savedSection of savedNav) {
+      const defaultSection = defaultNavigation.find(s => s.id === (savedSection as any).id);
+      if (!defaultSection) continue; // Section removed from defaults → skip
+
+      // Merge items: keep saved order but add new items from defaults
+      const mergedItems: typeof defaultSection.items = [];
+      const savedItemIds = new Set(savedSection.items?.map((i: any) => i.id) || []);
+
+      // First: items in saved order (keep name/icon from defaults)
+      if (savedSection.items) {
+        for (const savedItem of savedSection.items) {
+          const defaultItem = defaultSection.items?.find(i => i.id === savedItem.id);
+          if (defaultItem) {
+            mergedItems.push(defaultItem);
+          }
+        }
+      }
+
+      // Then: new items from defaults not yet in saved
+      if (defaultSection.items) {
+        for (const defaultItem of defaultSection.items) {
+          if (!savedItemIds.has(defaultItem.id)) {
+            mergedItems.push(defaultItem);
+          }
+        }
+      }
+
+      mergedSections.push({
+        ...defaultSection,
+        items: mergedItems,
+      });
+    }
+
+    // Step 2: add any new sections from defaults that weren't saved yet
     for (const defaultSection of defaultNavigation) {
-      const savedSection = savedNav.find((s: any) => s.id === defaultSection.id);
-      
-      if (savedSection) {
-        // Merge items: keep saved order but add new items from defaults
-        const mergedItems: typeof defaultSection.items = [];
-        const savedItemIds = new Set(savedSection.items?.map((i: any) => i.id) || []);
-        const defaultItemIds = new Set(defaultSection.items?.map(i => i.id) || []);
-        
-        // First add items from saved order (if they still exist in defaults)
-        if (savedSection.items) {
-          for (const savedItem of savedSection.items) {
-            const defaultItem = defaultSection.items?.find(i => i.id === savedItem.id);
-            if (defaultItem) {
-              // Use default item data (updated name/icon) but keep position from saved
-              mergedItems.push(defaultItem);
-            }
-          }
-        }
-        
-        // Then add new items from defaults that weren't in saved
-        if (defaultSection.items) {
-          for (const defaultItem of defaultSection.items) {
-            if (!savedItemIds.has(defaultItem.id)) {
-              mergedItems.push(defaultItem);
-            }
-          }
-        }
-        
-        mergedSections.push({
-          ...defaultSection,
-          items: mergedItems
-        });
-      } else {
-        // Section is new, add it entirely
+      const alreadyAdded = mergedSections.some(s => s.id === defaultSection.id);
+      if (!alreadyAdded) {
         mergedSections.push(defaultSection);
       }
     }
-    
+
     return mergedSections;
   };
 
