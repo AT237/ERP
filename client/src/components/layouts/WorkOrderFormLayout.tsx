@@ -253,15 +253,15 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
 
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<InsertWorkOrder>) => {
-      const response = await apiRequest("PUT", `/api/work-orders/${workOrderId}`, data);
+      const response = await apiRequest("PUT", `/api/work-orders/${currentWorkOrderId}`, data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/work-orders", workOrderId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/work-orders", currentWorkOrderId] });
       setHasUnsavedChanges(false);
       setModifiedFields(new Set());
-      const tabId = workOrderId ? `edit-work-order-${workOrderId}` : 'new-work-order';
+      const tabId = currentWorkOrderId ? `edit-work-order-${currentWorkOrderId}` : 'new-work-order';
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId, hasUnsavedChanges: false }
       }));
@@ -490,7 +490,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
 
   const toolbar = useFormToolbar({
     entityType: "work_order",
-    entityId: workOrderId,
+    entityId: currentWorkOrderId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
