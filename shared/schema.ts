@@ -1245,3 +1245,18 @@ export type DocumentLayoutField = typeof documentLayoutFields.$inferSelect;
 export type InsertDocumentLayoutField = z.infer<typeof insertDocumentLayoutFieldSchema>;
 export type SectionTemplate = typeof sectionTemplates.$inferSelect;
 export type InsertSectionTemplate = z.infer<typeof insertSectionTemplateSchema>;
+
+// Email Templates — reusable email templates with dynamic data field tokens
+export const emailTemplates = pgTable("email_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  templateType: varchar("template_type", { length: 100 }).notNull().default("invoice"),
+  subject: text("subject").default(""),
+  body: text("body").default(""),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
