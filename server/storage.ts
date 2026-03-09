@@ -26,7 +26,8 @@ import {
   type SectionTemplate, type InsertSectionTemplate,
   type CustomerRate, type InsertCustomerRate,
   type Technician, type InsertTechnician,
-  employees, type Employee, type InsertEmployee
+  employees, type Employee, type InsertEmployee,
+  entityAttachments, type EntityAttachment, type InsertEntityAttachment
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, sql, and, or, ilike } from "drizzle-orm";
@@ -1889,6 +1890,22 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error initializing country data:', error);
     }
+  }
+
+  // Entity Attachments
+  async getEntityAttachments(entityType: string, entityId: string): Promise<EntityAttachment[]> {
+    return await db.select().from(entityAttachments)
+      .where(and(eq(entityAttachments.entityType, entityType), eq(entityAttachments.entityId, entityId)))
+      .orderBy(asc(entityAttachments.sortOrder), asc(entityAttachments.createdAt));
+  }
+
+  async createEntityAttachment(attachment: InsertEntityAttachment): Promise<EntityAttachment> {
+    const [newAttachment] = await db.insert(entityAttachments).values(attachment).returning();
+    return newAttachment;
+  }
+
+  async deleteEntityAttachment(id: string): Promise<void> {
+    await db.delete(entityAttachments).where(eq(entityAttachments.id, id));
   }
 }
 

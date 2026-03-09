@@ -3158,6 +3158,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Entity Attachments (photos/files linked to any entity)
+  app.get("/api/attachments/:entityType/:entityId", async (req, res) => {
+    try {
+      const { entityType, entityId } = req.params;
+      const attachments = await storage.getEntityAttachments(entityType, entityId);
+      res.json(attachments);
+    } catch (error) {
+      console.error("Error fetching attachments:", error);
+      res.status(500).json({ message: "Failed to fetch attachments" });
+    }
+  });
+
+  app.post("/api/attachments/:entityType/:entityId", async (req, res) => {
+    try {
+      const { entityType, entityId } = req.params;
+      const { fileName, mimeType, fileData, width, height, sortOrder } = req.body;
+      if (!fileName || !fileData) {
+        return res.status(400).json({ message: "fileName and fileData are required" });
+      }
+      const attachment = await storage.createEntityAttachment({
+        entityType,
+        entityId,
+        fileName,
+        mimeType: mimeType || "image/jpeg",
+        fileData,
+        width,
+        height,
+        sortOrder: sortOrder ?? 0,
+      });
+      res.status(201).json(attachment);
+    } catch (error) {
+      console.error("Error creating attachment:", error);
+      res.status(500).json({ message: "Failed to create attachment" });
+    }
+  });
+
+  app.delete("/api/attachments/:id", async (req, res) => {
+    try {
+      await storage.deleteEntityAttachment(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting attachment:", error);
+      res.status(500).json({ message: "Failed to delete attachment" });
+    }
+  });
+
   // GitHub auto-backup endpoint
   app.post("/api/github-backup", async (req, res) => {
     const { exec } = await import("child_process");
