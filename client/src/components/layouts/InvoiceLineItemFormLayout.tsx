@@ -747,6 +747,36 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     ),
   };
 
+  const fieldDescriptionWithLookup: FormField2<LineItemFormData> = {
+    key: 'description',
+    label: 'Omschrijving',
+    type: 'custom',
+    customComponent: (
+      <div className="space-y-2">
+        <EntitySelect
+          endpoint="inventory"
+          formType="inventory"
+          labelField="name"
+          secondaryField="sku"
+          value={form.watch("itemId" as any) || ""}
+          onValueChange={(val) => { form.setValue("itemId" as any, val); setHasUnsavedChanges(true); }}
+          placeholder="Artikel zoeken in catalogus..."
+          testId="select-inventory-item"
+        />
+        <textarea
+          {...form.register('description')}
+          placeholder="Omschrijving (zichtbaar op factuur)..."
+          rows={3}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+          data-testid="textarea-description"
+        />
+        {form.formState.errors.description?.message && (
+          <p className="text-sm text-destructive">{form.formState.errors.description.message}</p>
+        )}
+      </div>
+    ),
+  };
+
   const fieldDiscount: FormField2<LineItemFormData> = {
     key: 'discountPercent',
     label: 'Korting %',
@@ -794,7 +824,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       case 'unique':
         return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice];
       case 'standard':
-        return [fieldInventoryItem, fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount];
+        return [fieldDescriptionWithLookup, fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount];
       case 'text':
         return [fieldTextContent];
       default:
