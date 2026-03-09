@@ -513,15 +513,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     const techPrefix = emp ? ((emp as any).firstInitial || emp.firstName) : "";
     const techName = emp ? `${techPrefix} ${emp.lastName}` : undefined;
 
-    let description = data.description || '';
-    if (!description.trim()) {
-      if (data.lineType === 'charges') {
-        const rateOpt = customerRateOptions.find(o => o.rateId === data.customerRateId);
-        description = [rateOpt?.name, techName].filter(Boolean).join(' - ') || 'Charges';
-      } else {
-        description = data.descriptionInternal || '-';
-      }
-    }
+    const description = data.description || '';
 
     const transformedData = {
       ...data,
