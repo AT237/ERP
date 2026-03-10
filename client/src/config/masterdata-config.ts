@@ -8,7 +8,8 @@ import {
   insertVatRateSchema,
   insertCitySchema,
   insertStatusSchema,
-  insertImageSchema
+  insertImageSchema,
+  insertInventoryCategorySchema
 } from "@shared/schema";
 
 export interface MasterDataField {
