@@ -1814,6 +1814,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Master Data routes - Inventory Categories
+  app.get("/api/masterdata/inventory-categories/next-code", async (req, res) => {
+    try {
+      const existing = await db.select({ code: inventoryCategories.code }).from(inventoryCategories);
+      const usedNumbers = new Set<number>();
+      for (const { code } of existing) {
+        if (/^\d{3}$/.test(code)) usedNumbers.add(parseInt(code, 10));
+      }
+      let next = 1;
+      while (usedNumbers.has(next) && next <= 999) next++;
+      res.json({ code: next.toString().padStart(3, '0') });
+    } catch (error) {
+      console.error("Error generating next category code:", error);
+      res.status(500).json({ message: "Failed to generate next code" });
+    }
+  });
+
   app.get("/api/masterdata/inventory-categories", async (req, res) => {
     try {
       const categories = await db.select().from(inventoryCategories).orderBy(inventoryCategories.sortOrder, inventoryCategories.name);
