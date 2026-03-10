@@ -114,6 +114,7 @@ export const defaultNavigation = [
       { id: "vat", name: "VAT Rates", href: "/master-data/vat", icon: Percent },
       { id: "cities", name: "Cities", href: "/master-data/cities", icon: MapPin },
       { id: "statuses", name: "Statuses", href: "/master-data/statuses", icon: Tag },
+      { id: "categories", name: "Categories", href: "/master-data/categories", icon: FolderOpen },
       { id: "pictograms", name: "Pictograms", href: "/master-data/pictograms", icon: FileCheck }
     ]
   },
