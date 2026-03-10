@@ -29,6 +29,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { DataTableLayout, ColumnConfig } from '@/components/layouts/DataTableLayout';
 import { SafeDeleteDialog } from '@/components/ui/safe-delete-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useDataTable } from '@/hooks/useDataTable';
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
@@ -2948,9 +2949,11 @@ export function VisualDesignerView({ layout }: { layout: any }) {
               />
             ) : (
               <div className="space-y-4">
-                <div className="text-xs font-semibold text-orange-600 uppercase tracking-wide pb-1 border-b">Layout</div>
+                <div className="text-xs font-semibold text-orange-600 uppercase tracking-wide pb-1 border-b">Layout properties</div>
+
+                {/* ID */}
                 <div>
-                  <Label htmlFor="layout-info-number" className="text-xs">ID (lay-outnummer)</Label>
+                  <Label htmlFor="layout-info-number" className="text-xs">ID</Label>
                   <Input
                     id="layout-info-number"
                     value={localLayoutNumber}
@@ -2960,6 +2963,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                     placeholder="bijv. LY-0012"
                   />
                 </div>
+
+                {/* Name */}
                 <div>
                   <Label htmlFor="layout-info-name" className="text-xs">Naam</Label>
                   <Input
@@ -2971,7 +2976,86 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                     placeholder="bijv. Commercial invoice"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Wijzigingen worden opgeslagen zodra u het veld verlaat.</p>
+
+                {/* Document type */}
+                <div>
+                  <Label className="text-xs">Document type</Label>
+                  <Select
+                    value={localDocumentType}
+                    onValueChange={(v) => {
+                      setLocalDocumentType(v);
+                      handleLayoutPropsChange('documentType', v);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs mt-1">
+                      <SelectValue placeholder="Kies type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(DOCUMENT_TYPE_LABELS).map(([key, label]) => (
+                        <SelectItem key={key} value={key} className="text-xs">{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Page format */}
+                <div>
+                  <Label className="text-xs">Pagina formaat</Label>
+                  <Select
+                    value={localPageFormat}
+                    onValueChange={(v) => {
+                      setLocalPageFormat(v);
+                      handleLayoutPropsChange('pageFormat', v);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['A4', 'A3', 'A5', 'Letter', 'Legal'].map(f => (
+                        <SelectItem key={f} value={f} className="text-xs">{f}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Orientation */}
+                <div>
+                  <Label className="text-xs">Oriëntatie</Label>
+                  <Select
+                    value={localOrientation}
+                    onValueChange={(v) => {
+                      setLocalOrientation(v);
+                      handleLayoutPropsChange('orientation', v);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="portrait" className="text-xs">Portrait</SelectItem>
+                      <SelectItem value="landscape" className="text-xs">Landscape</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Is default */}
+                <div className="flex items-center gap-2 pt-1">
+                  <Checkbox
+                    id="layout-is-default"
+                    checked={localIsDefault}
+                    onCheckedChange={(checked) => {
+                      const val = !!checked;
+                      setLocalIsDefault(val);
+                      handleLayoutPropsChange('isDefault', val);
+                    }}
+                  />
+                  <Label htmlFor="layout-is-default" className="text-xs cursor-pointer">
+                    Standaard layout voor dit type
+                  </Label>
+                </div>
+
+                <p className="text-xs text-muted-foreground pt-1">Selecties worden direct opgeslagen. Tekstvelden opslaan bij verlaten veld.</p>
               </div>
             )}
           </CardContent>
