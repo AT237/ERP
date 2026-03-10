@@ -24,7 +24,6 @@ const defaultColumns: ColumnConfig[] = [
     width: 100,
     filterable: true,
     sortable: true,
-    renderCell: (v: string) => <span className="font-mono text-xs font-semibold text-orange-600">{v}</span>,
   },
   {
     key: "name",
@@ -41,7 +40,6 @@ const defaultColumns: ColumnConfig[] = [
     width: 300,
     filterable: true,
     sortable: false,
-    renderCell: (v: string) => <span className="text-xs text-slate-500">{v || ""}</span>,
   },
   {
     key: "isActiveLabel",
@@ -50,9 +48,6 @@ const defaultColumns: ColumnConfig[] = [
     width: 80,
     filterable: false,
     sortable: true,
-    renderCell: (v: string) => (
-      <span className={`text-xs font-medium ${v === "Ja" ? "text-green-600" : "text-slate-400"}`}>{v}</span>
-    ),
   },
 ];
 
