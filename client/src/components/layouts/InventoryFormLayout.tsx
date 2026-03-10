@@ -459,9 +459,8 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
   const [activeSection, setActiveSection] = useState("general");
   const [originalValues, setOriginalValues] = useState<InventoryFormData>({} as InventoryFormData);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
-  const [isDragOver, setIsDragOver] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState<string[]>(["", "", "", ""]);
+  const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
   
   const { toast } = useToast();
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
@@ -492,6 +491,9 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       isComposite: false,
       status: "active",
       image: "",
+      image2: "",
+      image3: "",
+      image4: "",
       brand: "",
       manufacturerPartNumber: "",
     },
@@ -540,6 +542,9 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         isComposite: inventoryItem.isComposite || false,
         status: inventoryItem.status || "active",
         image: inventoryItem.image || "",
+        image2: (inventoryItem as any).image2 || "",
+        image3: (inventoryItem as any).image3 || "",
+        image4: (inventoryItem as any).image4 || "",
         brand: (inventoryItem as any).brand || "",
         manufacturerPartNumber: (inventoryItem as any).manufacturerPartNumber || "",
       };
@@ -548,9 +553,12 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       setOriginalValues(formData);
       setHasUnsavedChanges(false);
       
-      if (inventoryItem.image) {
-        setImagePreview(inventoryItem.image);
-      }
+      setImagePreviews([
+        inventoryItem.image || "",
+        (inventoryItem as any).image2 || "",
+        (inventoryItem as any).image3 || "",
+        (inventoryItem as any).image4 || "",
+      ]);
     } else {
       const defaultFormData = form.getValues();
       setOriginalValues(defaultFormData);
@@ -611,52 +619,60 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     }));
   }, [hasUnsavedChanges, inventoryId]);
 
-  // Handle image upload
-  const applyImageFile = (file: File) => {
-    setImageFile(file);
+  // Image slot helpers
+  const imageFieldNames = ["image", "image2", "image3", "image4"] as const;
+
+  const applyImageToSlot = (slot: number, value: string) => {
+    setImagePreviews(prev => {
+      const next = [...prev];
+      next[slot] = value;
+      return next;
+    });
+    form.setValue(imageFieldNames[slot] as any, value);
+  };
+
+  const clearImageSlot = (slot: number) => {
+    applyImageToSlot(slot, "");
+  };
+
+  const applyFileToSlot = (slot: number, file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64 = e.target?.result as string;
-      setImagePreview(base64);
-      form.setValue("image", base64);
+      applyImageToSlot(slot, base64);
     };
     reader.readAsDataURL(file);
   };
 
-  const applyImageUrl = (url: string) => {
-    setImageFile(null);
-    setImagePreview(url);
-    form.setValue("image", url);
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUploadForSlot = (slot: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) applyImageFile(file);
+    if (file) applyFileToSlot(slot, file);
+    event.target.value = "";
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (slot: number) => (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragOver(true);
+    setDragOverSlot(slot);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragOver(false);
+    setDragOverSlot(null);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (slot: number) => (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragOver(false);
+    setDragOverSlot(null);
 
     // 1. File drop (from desktop / file manager)
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
       const file = files[0];
       if (file.type.startsWith("image/")) {
-        applyImageFile(file);
+        applyFileToSlot(slot, file);
         return;
       }
     }
@@ -666,7 +682,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     if (uriList) {
       const url = uriList.split("\n").find(u => u.trim() && !u.startsWith("#"));
       if (url) {
-        applyImageUrl(url.trim());
+        applyImageToSlot(slot, url.trim());
         return;
       }
     }
@@ -676,7 +692,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     if (html) {
       const match = html.match(/src=["']([^"']+)["']/);
       if (match?.[1]) {
-        applyImageUrl(match[1]);
+        applyImageToSlot(slot, match[1]);
         return;
       }
     }
