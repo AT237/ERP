@@ -790,32 +790,68 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     saveLoading: createMutation.isPending || updateMutation.isPending,
   });
 
-  // Custom image upload component
+  // Custom image upload component with drag-and-drop
   const imageUploadComponent = (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <div className="flex-shrink-0">
-          {imagePreview ? (
-            <img 
-              src={imagePreview} 
-              alt="Item preview" 
-              className="w-24 h-24 object-cover rounded-lg border"
-            />
-          ) : (
-            <div className="w-24 h-24 bg-gray-100 rounded-lg border flex items-center justify-center">
-              <Image className="h-8 w-8 text-gray-400" />
-            </div>
-          )}
-        </div>
-        <div className="flex-1">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
-            data-testid="input-inventory-image"
-          />
-          <p className="text-xs text-gray-500 mt-1">Upload an image (JPG, PNG, max 5MB)</p>
+    <div className="space-y-3">
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`relative border-2 border-dashed rounded-lg p-4 transition-colors cursor-default ${
+          isDragOver
+            ? "border-orange-500 bg-orange-50"
+            : "border-gray-200 hover:border-orange-300 hover:bg-orange-50/30"
+        }`}
+      >
+        <div className="flex items-center gap-4">
+          {/* Preview */}
+          <div className="flex-shrink-0">
+            {imagePreview ? (
+              <div className="relative group">
+                <img
+                  src={imagePreview}
+                  alt="Item preview"
+                  className="w-24 h-24 object-cover rounded-lg border"
+                />
+                <button
+                  type="button"
+                  onClick={() => { setImagePreview(""); setImageFile(null); form.setValue("imageUrl", ""); }}
+                  className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                >×</button>
+              </div>
+            ) : (
+              <div className={`w-24 h-24 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${isDragOver ? "border-orange-400 bg-orange-100" : "border-gray-300 bg-gray-50"}`}>
+                <Image className={`h-7 w-7 ${isDragOver ? "text-orange-500" : "text-gray-400"}`} />
+                {isDragOver && <span className="text-xs text-orange-600 font-medium">Loslaten!</span>}
+              </div>
+            )}
+          </div>
+
+          {/* Upload controls */}
+          <div className="flex-1 min-w-0">
+            {isDragOver ? (
+              <p className="text-sm font-medium text-orange-600">Sleep de afbeelding hier neer</p>
+            ) : (
+              <>
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <span className="py-1.5 px-3 rounded-full text-sm font-semibold bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors border border-orange-200">
+                    Bestand kiezen
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="sr-only"
+                    data-testid="input-inventory-image"
+                  />
+                </label>
+                {!imagePreview && <span className="ml-2 text-sm text-gray-500">Geen bestand gekozen</span>}
+                <p className="text-xs text-gray-400 mt-1.5">
+                  Sleep een afbeelding hierheen vanuit een website of bestandsbeheer · JPG, PNG, max 5MB
+                </p>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
