@@ -354,6 +354,38 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
   }
 };
 
+MASTERDATA_CONFIG['inventory-categories'] = {
+  title: "Inventory Categories",
+  singularTitle: "Category",
+  endpoint: "inventory-categories",
+  schema: insertInventoryCategorySchema,
+  fields: [
+    { name: "code", label: "Code", type: "auto-code", required: true, nextCodeEndpoint: "/api/masterdata/inventory-categories/next-code" },
+    { name: "name", label: "Naam", type: "text", required: true },
+    { name: "description", label: "Omschrijving", type: "textarea" },
+    { name: "isActive", label: "Actief", type: "select", options: [{ value: "true", label: "Ja" }, { value: "false", label: "Nee" }] },
+    { name: "sortOrder", label: "Sorteervolgorde", type: "number" },
+  ],
+  sections: [
+    {
+      id: "general",
+      label: "Algemeen",
+      fields: [
+        { name: "code", label: "Code", type: "auto-code", required: true, nextCodeEndpoint: "/api/masterdata/inventory-categories/next-code" },
+        { name: "name", label: "Naam", type: "text", required: true },
+        { name: "description", label: "Omschrijving", type: "textarea" },
+        { name: "isActive", label: "Actief", type: "select", options: [{ value: "true", label: "Ja" }, { value: "false", label: "Nee" }] },
+        { name: "sortOrder", label: "Sorteervolgorde", type: "number" },
+      ]
+    }
+  ],
+  columns: [
+    { key: "code", label: "Code" },
+    { key: "name", label: "Naam" },
+    { key: "description", label: "Omschrijving" },
+  ]
+};
+
 export function getMasterDataConfig(type: string): MasterDataConfig | undefined {
   return MASTERDATA_CONFIG[type];
 }
