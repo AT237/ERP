@@ -108,9 +108,9 @@ function CategoryFormSheet({ open, onClose, record }: FormSheetProps) {
   }, [nextCodeData, isEdit, codeManuallyChanged]);
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: (paddedCode: string) => {
       const payload = {
-        code: code.trim(),
+        code: paddedCode,
         name: name.trim(),
         description: description.trim() || null,
         isActive,
@@ -130,9 +130,13 @@ function CategoryFormSheet({ open, onClose, record }: FormSheetProps) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!code.trim()) { toast({ title: "Code is verplicht", variant: "destructive" }); return; }
+    const rawCode = code.trim();
+    if (!rawCode) { toast({ title: "Code is verplicht", variant: "destructive" }); return; }
+    if (!/^\d{1,3}$/.test(rawCode)) { toast({ title: "Code moet uit 1–3 cijfers bestaan", variant: "destructive" }); return; }
     if (!name.trim()) { toast({ title: "Naam is verplicht", variant: "destructive" }); return; }
-    mutation.mutate();
+    const paddedCode = rawCode.padStart(3, "0");
+    setCode(paddedCode);
+    mutation.mutate(paddedCode);
   }
 
   return (
@@ -152,13 +156,23 @@ function CategoryFormSheet({ open, onClose, record }: FormSheetProps) {
               <Label>Code <span className="text-red-500">*</span></Label>
               <Input
                 value={code}
-                onChange={e => { setCode(e.target.value); setCodeManuallyChanged(true); }}
-                placeholder="bijv. 001"
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 3);
+                  setCode(val);
+                  setCodeManuallyChanged(true);
+                }}
+                onBlur={() => {
+                  if (code && /^\d+$/.test(code)) {
+                    setCode(code.padStart(3, "0"));
+                  }
+                }}
+                placeholder="001"
                 className="font-mono h-10"
-                maxLength={10}
+                maxLength={3}
+                inputMode="numeric"
                 required
               />
-              <p className="text-xs text-slate-400">Automatisch ingevuld, handmatig aan te passen.</p>
+              <p className="text-xs text-slate-400">Automatisch ingevuld — alleen cijfers, wordt aangevuld tot 3 posities.</p>
             </div>
 
             <div className="space-y-1.5">
