@@ -645,6 +645,10 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'block' | 'section' | 'childBlock'; id: string; sectionId?: string; parentGroupId?: string } | null>(null);
   const [localLayoutName, setLocalLayoutName] = useState<string>(layout?.name || '');
   const [localLayoutNumber, setLocalLayoutNumber] = useState<string>(layout?.layoutNumber || '');
+  const [localDocumentType, setLocalDocumentType] = useState<string>(layout?.documentType || '');
+  const [localPageFormat, setLocalPageFormat] = useState<string>(layout?.pageFormat || 'A4');
+  const [localOrientation, setLocalOrientation] = useState<string>(layout?.orientation || 'portrait');
+  const [localIsDefault, setLocalIsDefault] = useState<boolean>(layout?.isDefault || false);
   const { toast } = useToast();
   
   // Drag state for block positioning with alignment guides
@@ -985,14 +989,15 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   });
 
   const updateLayoutInfoMutation = useMutation({
-    mutationFn: async ({ name, layoutNumber }: { name: string; layoutNumber: string }) => {
-      await apiRequest('PUT', `/api/layouts/${layout.id}`, { name, layoutNumber });
+    mutationFn: async (payload: { name?: string; layoutNumber?: string; documentType?: string; pageFormat?: string; orientation?: string; isDefault?: boolean }) => {
+      await apiRequest('PUT', `/api/layouts/${layout.id}`, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/layouts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/layouts', layout.id] });
     },
     onError: () => {
-      toast({ title: 'Fout bij opslaan', description: 'Kon naam/ID niet opslaan', variant: 'destructive' });
+      toast({ title: 'Fout bij opslaan', description: 'Kon properties niet opslaan', variant: 'destructive' });
     },
   });
 
@@ -1003,6 +1008,10 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     if (name !== layout.name || layoutNumber !== layout.layoutNumber) {
       updateLayoutInfoMutation.mutate({ name, layoutNumber });
     }
+  };
+
+  const handleLayoutPropsChange = (field: string, value: string | boolean) => {
+    updateLayoutInfoMutation.mutate({ [field]: value });
   };
 
   const handleDragStart = (blockType: string) => {
