@@ -792,67 +792,58 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
 
   // Custom image upload component with drag-and-drop
   const imageUploadComponent = (
-    <div className="space-y-3">
+    <div className="flex items-start gap-3">
+      {/* Preview: shown separately BEFORE the drop zone */}
+      {imagePreview && (
+        <div className="relative group flex-shrink-0">
+          <img
+            src={imagePreview}
+            alt="Item preview"
+            className="w-24 h-24 object-cover rounded-lg border border-gray-200 shadow-sm"
+          />
+          <button
+            type="button"
+            onClick={() => { setImagePreview(""); setImageFile(null); form.setValue("image", ""); }}
+            className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+          >×</button>
+        </div>
+      )}
+
+      {/* Drop zone: always visible */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`relative border-2 border-dashed rounded-lg p-4 transition-colors cursor-default ${
+        className={`flex-1 border-2 border-dashed rounded-lg p-4 transition-colors cursor-default ${
           isDragOver
             ? "border-orange-500 bg-orange-50"
             : "border-gray-200 hover:border-orange-300 hover:bg-orange-50/30"
         }`}
       >
-        <div className="flex items-center gap-4">
-          {/* Preview */}
-          <div className="flex-shrink-0">
-            {imagePreview ? (
-              <div className="relative group">
-                <img
-                  src={imagePreview}
-                  alt="Item preview"
-                  className="w-24 h-24 object-cover rounded-lg border"
-                />
-                <button
-                  type="button"
-                  onClick={() => { setImagePreview(""); setImageFile(null); form.setValue("image", ""); }}
-                  className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                >×</button>
-              </div>
-            ) : (
-              <div className={`w-24 h-24 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${isDragOver ? "border-orange-400 bg-orange-100" : "border-gray-300 bg-gray-50"}`}>
-                <Image className={`h-7 w-7 ${isDragOver ? "text-orange-500" : "text-gray-400"}`} />
-                {isDragOver && <span className="text-xs text-orange-600 font-medium">Loslaten!</span>}
-              </div>
-            )}
+        {isDragOver ? (
+          <div className="flex flex-col items-center justify-center gap-1 py-2">
+            <Image className="h-7 w-7 text-orange-500" />
+            <p className="text-sm font-medium text-orange-600">Loslaten!</p>
           </div>
-
-          {/* Upload controls */}
-          <div className="flex-1 min-w-0">
-            {isDragOver ? (
-              <p className="text-sm font-medium text-orange-600">Sleep de afbeelding hier neer</p>
-            ) : (
-              <>
-                <label className="inline-flex items-center gap-2 cursor-pointer">
-                  <span className="py-1.5 px-3 rounded-full text-sm font-semibold bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors border border-orange-200">
-                    Bestand kiezen
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="sr-only"
-                    data-testid="input-inventory-image"
-                  />
-                </label>
-                {!imagePreview && <span className="ml-2 text-sm text-gray-500">Geen bestand gekozen</span>}
-                <p className="text-xs text-gray-400 mt-1.5">
-                  Sleep een afbeelding hierheen vanuit een website of bestandsbeheer · JPG, PNG, max 5MB
-                </p>
-              </>
-            )}
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            <label className="inline-flex items-center gap-2 cursor-pointer w-fit">
+              <span className="py-1.5 px-3 rounded-full text-sm font-semibold bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors border border-orange-200">
+                Bestand kiezen
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="sr-only"
+                data-testid="input-inventory-image"
+              />
+            </label>
+            <p className="text-xs text-gray-400">
+              Sleep een afbeelding hierheen vanuit een website of bestandsbeheer · JPG, PNG, max 5MB
+            </p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
