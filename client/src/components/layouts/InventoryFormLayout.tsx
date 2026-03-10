@@ -491,7 +491,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       barcode: "",
       isComposite: false,
       status: "active",
-      imageUrl: "",
+      image: "",
       brand: "",
       manufacturerPartNumber: "",
     },
@@ -539,7 +539,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         barcode: inventoryItem.barcode || "",
         isComposite: inventoryItem.isComposite || false,
         status: inventoryItem.status || "active",
-        imageUrl: inventoryItem.imageUrl || "",
+        image: inventoryItem.image || "",
         brand: (inventoryItem as any).brand || "",
         manufacturerPartNumber: (inventoryItem as any).manufacturerPartNumber || "",
       };
@@ -548,8 +548,8 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       setOriginalValues(formData);
       setHasUnsavedChanges(false);
       
-      if (inventoryItem.imageUrl) {
-        setImagePreview(inventoryItem.imageUrl);
+      if (inventoryItem.image) {
+        setImagePreview(inventoryItem.image);
       }
     } else {
       const defaultFormData = form.getValues();
