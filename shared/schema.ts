@@ -173,6 +173,9 @@ export const inventoryItems = pgTable("inventory_items", {
   brand: text("brand"),
   manufacturerPartNumber: text("manufacturer_part_number"),
   image: text("image"), // URL or file path for product image
+  image2: text("image2"),
+  image3: text("image3"),
+  image4: text("image4"),
   currentStock: integer("current_stock").default(0),
   minimumStock: integer("minimum_stock").default(0),
   isComposite: boolean("is_composite").default(false), // true if made from other items
