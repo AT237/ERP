@@ -806,61 +806,68 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     saveLoading: createMutation.isPending || updateMutation.isPending,
   });
 
-  // Custom image upload component with drag-and-drop
+  // Custom image upload component with 4 slots
   const imageUploadComponent = (
-    <div className="flex items-start gap-3">
-      {/* Preview: shown separately BEFORE the drop zone */}
-      {imagePreview && (
-        <div className="relative group flex-shrink-0">
-          <img
-            src={imagePreview}
-            alt="Item preview"
-            className="w-24 h-24 object-cover rounded-lg border border-gray-200 shadow-sm"
-          />
-          <button
-            type="button"
-            onClick={() => { setImagePreview(""); setImageFile(null); form.setValue("image", ""); }}
-            className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-          >×</button>
-        </div>
-      )}
-
-      {/* Drop zone: always visible */}
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`flex-1 border-2 border-dashed rounded-lg p-4 transition-colors cursor-default ${
-          isDragOver
-            ? "border-orange-500 bg-orange-50"
-            : "border-gray-200 hover:border-orange-300 hover:bg-orange-50/30"
-        }`}
-      >
-        {isDragOver ? (
-          <div className="flex flex-col items-center justify-center gap-1 py-2">
-            <Image className="h-7 w-7 text-orange-500" />
-            <p className="text-sm font-medium text-orange-600">Loslaten!</p>
+    <div className="flex items-start gap-3 flex-wrap">
+      {[0, 1, 2, 3].map((slot) => {
+        const preview = imagePreviews[slot];
+        const isOver = dragOverSlot === slot;
+        return (
+          <div key={slot} className="flex flex-col items-center gap-1.5">
+            {/* If filled: show image + trash button below */}
+            {preview ? (
+              <div className="flex flex-col items-center gap-1.5">
+                <img
+                  src={preview}
+                  alt={`Afbeelding ${slot + 1}`}
+                  className="w-24 h-24 object-cover rounded-lg border border-gray-200 shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => clearImageSlot(slot)}
+                  className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Verwijderen
+                </button>
+              </div>
+            ) : (
+              /* Empty slot: dashed drop zone */
+              <div
+                onDragOver={handleDragOver(slot)}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop(slot)}
+                className={`w-24 h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-1 transition-colors cursor-default ${
+                  isOver
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-300 bg-gray-50 hover:border-orange-300 hover:bg-orange-50/40"
+                }`}
+              >
+                {isOver ? (
+                  <>
+                    <Image className="h-6 w-6 text-orange-500" />
+                    <span className="text-xs text-orange-600 font-medium">Loslaten!</span>
+                  </>
+                ) : (
+                  <label className="flex flex-col items-center gap-1 cursor-pointer w-full h-full justify-center">
+                    <Plus className="h-5 w-5 text-gray-400" />
+                    <span className="text-xs text-gray-400">Afbeelding {slot + 1}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUploadForSlot(slot)}
+                      className="sr-only"
+                    />
+                  </label>
+                )}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="flex flex-col gap-1.5">
-            <label className="inline-flex items-center gap-2 cursor-pointer w-fit">
-              <span className="py-1.5 px-3 rounded-full text-sm font-semibold bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors border border-orange-200">
-                Bestand kiezen
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="sr-only"
-                data-testid="input-inventory-image"
-              />
-            </label>
-            <p className="text-xs text-gray-400">
-              Sleep een afbeelding hierheen vanuit een website of bestandsbeheer · JPG, PNG, max 5MB
-            </p>
-          </div>
-        )}
-      </div>
+        );
+      })}
+      <p className="w-full text-xs text-gray-400 mt-0.5">
+        Klik op een vak of sleep een afbeelding erin · JPG, PNG, max 5MB
+      </p>
     </div>
   );
 
