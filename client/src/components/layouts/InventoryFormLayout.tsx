@@ -618,7 +618,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     reader.onload = (e) => {
       const base64 = e.target?.result as string;
       setImagePreview(base64);
-      form.setValue("imageUrl", base64);
+      form.setValue("image", base64);
     };
     reader.readAsDataURL(file);
   };
@@ -626,7 +626,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
   const applyImageUrl = (url: string) => {
     setImageFile(null);
     setImagePreview(url);
-    form.setValue("imageUrl", url);
+    form.setValue("image", url);
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -815,7 +815,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
                 />
                 <button
                   type="button"
-                  onClick={() => { setImagePreview(""); setImageFile(null); form.setValue("imageUrl", ""); }}
+                  onClick={() => { setImagePreview(""); setImageFile(null); form.setValue("image", ""); }}
                   className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                 >×</button>
               </div>
