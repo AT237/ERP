@@ -798,6 +798,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/inventory/next-sku", async (req, res) => {
+    try {
+      const existing = await db.select({ sku: inventoryItems.sku }).from(inventoryItems);
+      const usedNumbers = new Set<number>();
+      for (const { sku } of existing) {
+        if (/^\d{6}$/.test(sku)) usedNumbers.add(parseInt(sku, 10));
+      }
+      let next = 1;
+      while (usedNumbers.has(next) && next <= 999999) next++;
+      res.json({ sku: next.toString().padStart(6, '0') });
+    } catch (error) {
+      console.error("Error generating next SKU:", error);
+      res.status(500).json({ message: "Failed to generate next SKU" });
+    }
+  });
+
   app.get("/api/inventory/:id", async (req, res) => {
     try {
       const item = await storage.getInventoryItem(req.params.id);
@@ -838,19 +854,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const original = await storage.getInventoryItem(req.params.id);
       if (!original) return res.status(404).json({ message: "Inventory item not found" });
 
-      // Build a unique SKU for the copy
-      const baseSku = original.sku.replace(/-COPY\d*$/, "");
-      const existing = await db.select({ sku: inventoryItems.sku })
-        .from(inventoryItems)
-        .where(sql`${inventoryItems.sku} LIKE ${baseSku + "-COPY%"}`);
-      const nextNum = existing.length + 1;
-      const newSku = `${baseSku}-COPY${nextNum > 1 ? nextNum : ""}`;
+      // Find the next free 6-digit SKU
+      const allSkus = await db.select({ sku: inventoryItems.sku }).from(inventoryItems);
+      const usedNumbers = new Set<number>();
+      for (const { sku } of allSkus) {
+        if (/^\d{6}$/.test(sku)) usedNumbers.add(parseInt(sku, 10));
+      }
+      let next = 1;
+      while (usedNumbers.has(next) && next <= 999999) next++;
+      const newSku = next.toString().padStart(6, '0');
 
       const { id: _id, createdAt: _c, updatedAt: _u, sku: _s, ...rest } = original as any;
       const copy = await storage.createInventoryItem({
         ...rest,
         sku: newSku,
-        name: `${original.name} (copy)`,
+        name: original.name,
       });
       res.status(201).json(copy);
     } catch (error) {

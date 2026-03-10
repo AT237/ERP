@@ -505,6 +505,20 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     enabled: !!inventoryId,
   });
 
+  // Fetch next free SKU for new items
+  const { data: nextSkuData } = useQuery<{ sku: string }>({
+    queryKey: ["/api/inventory/next-sku"],
+    enabled: !inventoryId,
+    staleTime: 0,
+  });
+
+  // Auto-fill next free SKU when creating a new item
+  useEffect(() => {
+    if (!inventoryId && nextSkuData?.sku) {
+      form.setValue("sku", nextSkuData.sku);
+    }
+  }, [nextSkuData, inventoryId, form]);
+
   // Update form when inventory data loads
   useEffect(() => {
     if (inventoryItem) {
