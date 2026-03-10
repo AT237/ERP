@@ -461,6 +461,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [isDragOver, setIsDragOver] = useState(false);
   
   const { toast } = useToast();
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
@@ -611,18 +612,76 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
   }, [hasUnsavedChanges, inventoryId]);
 
   // Handle image upload
+  const applyImageFile = (file: File) => {
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      setImagePreview(base64);
+      form.setValue("imageUrl", base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const applyImageUrl = (url: string) => {
+    setImageFile(null);
+    setImagePreview(url);
+    form.setValue("imageUrl", url);
+  };
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (file) applyImageFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    // 1. File drop (from desktop / file manager)
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith("image/")) {
+        applyImageFile(file);
+        return;
+      }
     }
+
+    // 2. Image dragged from a website (URL)
+    const uriList = e.dataTransfer.getData("text/uri-list");
+    if (uriList) {
+      const url = uriList.split("\n").find(u => u.trim() && !u.startsWith("#"));
+      if (url) {
+        applyImageUrl(url.trim());
+        return;
+      }
+    }
+
+    // 3. HTML drag (image inside an <img> tag)
+    const html = e.dataTransfer.getData("text/html");
+    if (html) {
+      const match = html.match(/src=["']([^"']+)["']/);
+      if (match?.[1]) {
+        applyImageUrl(match[1]);
+        return;
+      }
+    }
+
+    toast({ title: "Niet ondersteund", description: "Sleep een afbeeldingsbestand of een afbeelding van een website.", variant: "destructive" });
   };
 
   // Mutations
