@@ -773,6 +773,19 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     }
   }, [layout?.allowedTables]);
 
+  // Clear all selections when header is clicked in LayoutDesignerForm
+  useEffect(() => {
+    const eventName = `clear-layout-selection-${layout?.id}`;
+    const handler = () => {
+      setSelectedBlock(null);
+      setSelectedSection(null);
+      setSelectedChildBlock(null);
+      setSelectedBlockIds([]);
+    };
+    window.addEventListener(eventName, handler);
+    return () => window.removeEventListener(eventName, handler);
+  }, [layout?.id]);
+
   // Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Y (redo), Ctrl+C/X/V (copy/cut/paste)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

@@ -49,7 +49,11 @@ export default function LayoutDesignerForm({ layoutId }: LayoutDesignerFormProps
   return (
     <div className="h-full flex flex-col bg-background">
       <div className="border-b border-border bg-white px-4 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
+        <div
+          className="flex items-center gap-3 cursor-pointer select-none"
+          title="Klik om layout-properties te tonen"
+          onClick={() => window.dispatchEvent(new CustomEvent(`clear-layout-selection-${layoutId}`))}
+        >
           <span className="font-mono text-sm font-semibold text-orange-600">
             {layout.layoutNumber || 'LY-????'}
           </span>
