@@ -1328,9 +1328,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  function sanitizeInvoiceBody(body: any) {
+    // Convert empty string numeric fields to null/default to avoid DB type errors
+    const nullableNumerics = ['vatRatePercent', 'taxAmount', 'paidAmount'];
+    nullableNumerics.forEach(f => { if (body[f] === '') body[f] = null; });
+    // Required numeric fields default to "0" if empty
+    const requiredNumerics = ['subtotal', 'totalAmount'];
+    requiredNumerics.forEach(f => { if (body[f] === '' || body[f] == null) body[f] = '0'; });
+    // Convert empty string FK fields to null
+    const nullableFKs = ['customerId', 'projectId', 'statusId', 'paymentDaysId', 'vatRateId'];
+    nullableFKs.forEach(f => { if (body[f] === '') body[f] = null; });
+    return body;
+  }
+
   app.post("/api/invoices", async (req, res) => {
     try {
-      const body = parseDateFields(req.body, ['invoiceDate', 'dueDate']);
+      const body = sanitizeInvoiceBody(parseDateFields(req.body, ['invoiceDate', 'dueDate']));
       const invoiceData = insertInvoiceSchema.parse(body);
       const invoice = await storage.createInvoice(invoiceData);
       res.status(201).json(invoice);
@@ -1361,7 +1374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/invoices/:id", async (req, res) => {
     try {
-      const body = parseDateFields(req.body, ['invoiceDate', 'dueDate']);
+      const body = sanitizeInvoiceBody(parseDateFields(req.body, ['invoiceDate', 'dueDate']));
       const invoiceData = insertInvoiceSchema.partial().parse(body);
       const invoice = await storage.updateInvoice(req.params.id, invoiceData);
       res.json(invoice);
