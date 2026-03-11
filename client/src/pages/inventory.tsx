@@ -10,9 +10,10 @@ import { useEntityDelete } from '@/hooks/useEntityDelete';
 const defaultColumns: ColumnConfig[] = [
   createIdColumn('sku', 'Artikelcode (SKU)'),
   {
-    key: 'image', label: 'Afbeelding', visible: false, width: 52, filterable: false, sortable: false,
+    key: 'image', label: 'Afbeelding', visible: false, width: 48, filterable: false, sortable: false,
+    fullCell: true,
     renderCell: (value: string) => value
-      ? <img src={value} alt="" className="-my-2 -ml-6 h-10 w-10 object-cover rounded border border-gray-200" />
+      ? <img src={value} alt="" className="w-full h-full object-cover" />
       : null,
   },
   { key: 'name', label: 'Product Name', visible: true, width: 200, filterable: true, sortable: true },

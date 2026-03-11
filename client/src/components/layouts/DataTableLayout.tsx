@@ -90,6 +90,7 @@ export type ColumnConfig = {
   filterable: boolean;
   sortable: boolean;
   renderCell?: (value: any, row: any) => ReactNode;
+  fullCell?: boolean; // bypasses all padding/wrappers — renderCell fills the entire cell
 };
 
 // ============================================================================
@@ -1053,19 +1054,28 @@ export function DataTableLayout<T = any>({
                         {currentVisibleColumns.map((column) => (
                           <TableCell 
                             key={column.key} 
-                            className={`p-2 truncate border-r border-gray-100 dark:border-gray-700 ${column.key === currentVisibleColumns[0]?.key ? 'font-medium' : ''}`}
-                            style={{ width: `${column.width}px`, minWidth: `${column.width}px`, maxWidth: `${column.width}px`, height: '32px', lineHeight: '1.2' }}
+                            className={`border-r border-gray-100 dark:border-gray-700 ${column.fullCell ? 'p-0 overflow-hidden' : 'p-2 truncate'} ${column.key === currentVisibleColumns[0]?.key ? 'font-medium' : ''}`}
+                            style={{ width: `${column.width}px`, minWidth: `${column.width}px`, maxWidth: `${column.width}px`, lineHeight: '1.2' }}
                           >
-                            {/* Content area with consistent left margin matching header */}
-                            <div className="flex items-center">
-                              <div className="w-6 flex-shrink-0"></div>
-                              <div className="flex-1 min-w-0 truncate">
-                                {column.renderCell 
+                            {column.fullCell ? (
+                              <div className="w-full h-full flex items-center justify-center">
+                                {column.renderCell
                                   ? column.renderCell(row[column.key as keyof T], row)
                                   : String(row[column.key as keyof T] || '-')
                                 }
                               </div>
-                            </div>
+                            ) : (
+                              /* Content area with consistent left margin matching header */
+                              <div className="flex items-center">
+                                <div className="w-6 flex-shrink-0"></div>
+                                <div className="flex-1 min-w-0 truncate">
+                                  {column.renderCell 
+                                    ? column.renderCell(row[column.key as keyof T], row)
+                                    : String(row[column.key as keyof T] || '-')
+                                  }
+                                </div>
+                              </div>
+                            )}
                           </TableCell>
                         ))}
                       </TableRow>
