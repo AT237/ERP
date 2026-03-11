@@ -283,6 +283,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const prevItemIdRef = useRef<string>("");
   const quantityValue = form.watch("quantity");
   const unitPriceValue = form.watch("unitPrice");
+  const discountPercentValue = form.watch("discountPercent");
   const lineTotalValue = form.watch("lineTotal");
   const customerRateIdValue = form.watch("customerRateId");
   const selectedRateOption = useMemo(() => {
@@ -319,9 +320,11 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   useEffect(() => {
     const quantity = form.getValues("quantity");
     const unitPrice = parseFloat(form.getValues("unitPrice")) || 0;
-    const lineTotal = (quantity * unitPrice).toFixed(2);
+    const discount = parseFloat(form.getValues("discountPercent") || "0") || 0;
+    const discountedPrice = unitPrice * (1 - discount / 100);
+    const lineTotal = (quantity * discountedPrice).toFixed(2);
     form.setValue("lineTotal", lineTotal);
-  }, [quantityValue, unitPriceValue, form]);
+  }, [quantityValue, unitPriceValue, discountPercentValue, form]);
 
   // Auto-fill unit and clear description when lineType changes
   useEffect(() => {
