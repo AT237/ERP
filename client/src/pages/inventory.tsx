@@ -8,17 +8,29 @@ import { useEntityDelete } from '@/hooks/useEntityDelete';
 
 
 const defaultColumns: ColumnConfig[] = [
-  createIdColumn('sku', 'SKU'),
-  { key: 'name', label: 'Name', visible: true, width: 200, filterable: true, sortable: true },
+  createIdColumn('sku', 'Artikelcode (SKU)'),
+  {
+    key: 'image', label: 'Afbeelding', visible: false, width: 70, filterable: false, sortable: false,
+    renderCell: (value: string) => value
+      ? <img src={value} alt="" className="w-8 h-8 object-cover rounded border border-gray-200" />
+      : null,
+  },
+  { key: 'name', label: 'Product Name', visible: true, width: 200, filterable: true, sortable: true },
+  { key: 'category', label: 'Categorie', visible: true, width: 120, filterable: true, sortable: true },
+  { key: 'brand', label: 'Merk', visible: false, width: 120, filterable: true, sortable: true },
+  { key: 'manufacturerPartNumber', label: 'Fabrikant type nr.', visible: false, width: 160, filterable: true, sortable: true },
   { key: 'description', label: 'Description', visible: true, width: 250, filterable: true, sortable: true },
-  { key: 'category', label: 'Category', visible: true, width: 120, filterable: true, sortable: true },
-  { key: 'unitPrice', label: 'Unit Price', visible: true, width: 120, filterable: false, sortable: true },
   { key: 'costPrice', label: 'Cost Price', visible: true, width: 120, filterable: false, sortable: true },
-  { key: 'margin', label: 'Margin', visible: true, width: 100, filterable: false, sortable: true },
-  { key: 'currentStock', label: 'Current Stock', visible: true, width: 80, filterable: false, sortable: true },
-  { key: 'minimumStock', label: 'Minimum Stock', visible: true, width: 80, filterable: false, sortable: true },
+  { key: 'unitPrice', label: 'Selling Price', visible: true, width: 120, filterable: false, sortable: true },
+  { key: 'margin', label: 'Margin %', visible: true, width: 100, filterable: false, sortable: true },
+  { key: 'currentStock', label: 'Current Stock', visible: true, width: 100, filterable: false, sortable: true },
+  { key: 'unit', label: 'Unit', visible: false, width: 80, filterable: true, sortable: true },
+  { key: 'minimumStock', label: 'Minimum Stock', visible: true, width: 110, filterable: false, sortable: true },
+  { key: 'maximumStock', label: 'Maximum Stock', visible: false, width: 110, filterable: false, sortable: true },
+  { key: 'location', label: 'Storage Location', visible: false, width: 140, filterable: true, sortable: true },
+  { key: 'barcode', label: 'Barcode', visible: false, width: 130, filterable: true, sortable: true },
+  { key: 'isComposite', label: 'Is Composite Item', visible: false, width: 130, filterable: false, sortable: true },
   { key: 'status', label: 'Status', visible: true, width: 100, filterable: true, sortable: true },
-  { key: 'isComposite', label: 'Is Composite', visible: true, width: 100, filterable: false, sortable: true },
 ];
 
 export default function Inventory() {
