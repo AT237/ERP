@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, ReactNode } from "react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -638,7 +639,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
           {field.label}
           {(field.validation?.isRequired || field.validation?.dynamicallyRequired) && <span className="text-red-600 ml-1">*</span>}
         </Label>
-        <div className={field.wrapperClassName || ''}>
+        <div className={cn("min-w-0 overflow-hidden", field.wrapperClassName || '')}>
           {field.labelExtra && (
             <div className="flex justify-end mb-1">
               {field.labelExtra}
@@ -832,14 +833,14 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
           content: (
             <div className="pt-[10px] space-y-[20px]">
               <div className="grid grid-cols-2 gap-8">
-                <div className="flex flex-col gap-[20px]">
+                <div className="flex flex-col gap-[20px] min-w-0 overflow-hidden">
                   {leftFields.map((field, idx) => (
                     <div key={field.key as string || idx}>
                       {renderSimpleField(field)}
                     </div>
                   ))}
                 </div>
-                <div className="flex flex-col gap-[20px]">
+                <div className="flex flex-col gap-[20px] min-w-0 overflow-hidden">
                   {rightFields.map((field, idx) => (
                     <div key={field.key as string || idx}>
                       {renderSimpleField(field)}
@@ -876,14 +877,14 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
           // Desktop layout: always 2-column grid, right column empty if fewer than 7 fields
           <div className="pt-[10px] space-y-[20px]">
             <div className="grid grid-cols-2 gap-8">
-              <div className="flex flex-col gap-[20px]">
+              <div className="flex flex-col gap-[20px] min-w-0 overflow-hidden">
                 {leftColFields.map((field, idx) => (
                   <div key={field.key as string || idx}>
                     {renderSimpleField(field)}
                   </div>
                 ))}
               </div>
-              <div className="flex flex-col gap-[20px]">
+              <div className="flex flex-col gap-[20px] min-w-0 overflow-hidden">
                 {rightColFields.map((field, idx) => (
                   <div key={field.key as string || idx}>
                     {renderSimpleField(field)}
