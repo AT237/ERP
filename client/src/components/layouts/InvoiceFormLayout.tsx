@@ -179,7 +179,6 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [vatRatePercent, setVatRatePercent] = useState<number>(0);
   const [customerLanguageCode, setCustomerLanguageCode] = useState<string>('nl');
-  const watchedPrintLanguageCode = invoiceForm.watch("printLanguageCode" as any) as string | undefined;
   const [selectedWorkOrderIds, setSelectedWorkOrderIds] = useState<string[]>([]);
   const [woSearch, setWoSearch] = useState('');
   const [woDropdownOpen, setWoDropdownOpen] = useState(false);
@@ -216,6 +215,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       printSortOrder: "position",
     },
   });
+
+  const watchedPrintLanguageCode = invoiceForm.watch("printLanguageCode" as any) as string | undefined;
 
   const itemForm = useForm<InvoiceItemFormData>({
     resolver: zodResolver(invoiceItemFormSchema),
