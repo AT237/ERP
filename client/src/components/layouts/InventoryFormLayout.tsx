@@ -821,7 +821,14 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
                   src={preview}
                   alt={`Afbeelding ${slot + 1}`}
                   className="w-24 h-24 object-cover rounded-lg border border-gray-200 shadow-sm cursor-zoom-in"
-                  onDoubleClick={() => window.open(preview, "_blank")}
+                  onDoubleClick={() => {
+                    const tabId = `image-viewer-${slot}-${inventoryId || "new"}`;
+                    (window as any).__imageViewerData = (window as any).__imageViewerData || {};
+                    (window as any).__imageViewerData[tabId] = preview;
+                    window.dispatchEvent(new CustomEvent("open-form-tab", {
+                      detail: { id: tabId, name: `Afbeelding ${slot + 1}`, formType: "image-viewer", entityId: tabId }
+                    }));
+                  }}
                   title="Dubbelklik om te vergroten"
                 />
                 <button

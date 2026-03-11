@@ -1282,6 +1282,24 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
+      if (tab.formType === 'image-viewer') {
+        const src = ((window as any).__imageViewerData || {})[tab.id] || "";
+        return (
+          <div className="flex flex-col items-center justify-center h-full w-full bg-gray-950 p-6">
+            {src ? (
+              <img
+                src={src}
+                alt="Afbeelding"
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                style={{ maxHeight: "calc(100vh - 120px)" }}
+              />
+            ) : (
+              <p className="text-gray-400">Afbeelding niet beschikbaar</p>
+            )}
+          </div>
+        );
+      }
+
       if (tab.formType === 'image') {
         const imageId = tab.id.startsWith('edit-image-') 
           ? tab.id.replace('edit-image-', '') 
