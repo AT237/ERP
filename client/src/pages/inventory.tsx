@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { InventoryItem } from "@shared/schema";
-import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
+import { DataTableLayout, ColumnConfig, createIdColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
 
@@ -21,8 +21,8 @@ const defaultColumns: ColumnConfig[] = [
   { key: 'brand', label: 'Merk', visible: false, width: 120, filterable: true, sortable: true },
   { key: 'manufacturerPartNumber', label: 'Fabrikant type nr.', visible: false, width: 160, filterable: true, sortable: true },
   { key: 'description', label: 'Description', visible: true, width: 250, filterable: true, sortable: true },
-  { key: 'costPrice', label: 'Cost Price', visible: true, width: 120, filterable: false, sortable: true },
-  { key: 'unitPrice', label: 'Selling Price', visible: true, width: 120, filterable: false, sortable: true },
+  createCurrencyColumn('costPrice', 'Cost Price'),
+  createCurrencyColumn('unitPrice', 'Selling Price'),
   { key: 'margin', label: 'Margin %', visible: true, width: 100, filterable: false, sortable: true },
   { key: 'currentStock', label: 'Current Stock', visible: true, width: 100, filterable: false, sortable: true },
   { key: 'unit', label: 'Unit', visible: false, width: 80, filterable: true, sortable: true },
