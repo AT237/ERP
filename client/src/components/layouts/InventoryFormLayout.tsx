@@ -820,7 +820,9 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
                 <img
                   src={preview}
                   alt={`Afbeelding ${slot + 1}`}
-                  className="w-24 h-24 object-cover rounded-lg border border-gray-200 shadow-sm"
+                  className="w-24 h-24 object-cover rounded-lg border border-gray-200 shadow-sm cursor-zoom-in"
+                  onDoubleClick={() => window.open(preview, "_blank")}
+                  title="Dubbelklik om te vergroten"
                 />
                 <button
                   type="button"
