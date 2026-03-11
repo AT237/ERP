@@ -987,6 +987,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['startDate', 'endDate']);
+      // Convert empty string FK fields to null to avoid FK constraint violations
+      const nullableFields = ['incotermId', 'customerId', 'statusId'];
+      nullableFields.forEach(f => { if (body[f] === '') body[f] = null; });
       const projectData = insertProjectSchema.parse(body);
       const project = await storage.createProject(projectData);
       res.status(201).json(project);
@@ -999,6 +1002,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/projects/:id", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['startDate', 'endDate']);
+      // Convert empty string FK fields to null to avoid FK constraint violations
+      const nullableFields = ['incotermId', 'customerId', 'statusId'];
+      nullableFields.forEach(f => { if (body[f] === '') body[f] = null; });
       const projectData = insertProjectSchema.partial().parse(body);
       const project = await storage.updateProject(req.params.id, projectData);
       res.json(project);
