@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createFieldsRow, createCustomRow, createSectionHeaderRow, createTwoColumnRow } from './LayoutForm2';
+import { LayoutForm2, buildFormPersistenceKey, type FormSection2, type FormField2, createFieldRow, createFieldsRow, createCustomRow, createSectionHeaderRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
@@ -409,6 +409,9 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", invoiceId] });
       setHasUnsavedChanges(false);
+      // Clear the "new" persistence key so restored data doesn't bleed into the next new item
+      const newKey = buildFormPersistenceKey({ formType: "invoice-line-item", entityId: undefined, scope: invoiceId });
+      localStorage.removeItem(newKey);
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId: 'new-invoice-line-item', hasUnsavedChanges: false }
       }));
@@ -970,6 +973,11 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         infoFields={headerFields}
         documentType="invoice_line_item"
         entityId={lineItemId}
+        persistence={{
+          formType: "invoice-line-item",
+          entityId: lineItemId,
+          scope: invoiceId
+        }}
         changeTracking={{
           enabled: true,
           onChangesDetected: handleChangesDetected

@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createTwoColumnRow } from './LayoutForm2';
+import { LayoutForm2, buildFormPersistenceKey, type FormSection2, type FormField2, createFieldRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
@@ -315,6 +315,9 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
     onSuccess: (newLineItem) => {
       queryClient.invalidateQueries({ queryKey: ["/api/work-orders", workOrderId, "items"] });
       setHasUnsavedChanges(false);
+      // Clear the "new" persistence key so data doesn't bleed into the next new item
+      const newKey = buildFormPersistenceKey({ formType: "work-order-line-item", entityId: undefined, scope: workOrderId });
+      localStorage.removeItem(newKey);
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId: 'new-work-order-line-item', hasUnsavedChanges: false }
       }));
@@ -698,6 +701,11 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
         infoFields={headerFields}
         documentType="work_order_line_item"
         entityId={lineItemId}
+        persistence={{
+          formType: "work-order-line-item",
+          entityId: lineItemId,
+          scope: workOrderId
+        }}
         changeTracking={{ enabled: true, onChangesDetected: handleChangesDetected }}
         originalValues={originalValues}
         isLoading={isLoadingLineItem}
