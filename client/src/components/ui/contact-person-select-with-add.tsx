@@ -89,9 +89,6 @@ export function ContactPersonSelectWithAdd({
                   }));
                 }}
               >{selectedContact ? formatContact(selectedContact) : placeholder}</span>
-              {value && selectedContact && (
-                <RefreshIconButton queryKeys={["/api/customer-contacts"]} className="ml-auto" />
-              )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -196,6 +193,9 @@ export function ContactPersonSelectWithAdd({
           </PopoverContent>
         </Popover>
       </div>
+      {value && selectedContact && (
+        <RefreshIconButton queryKeys={["/api/customer-contacts"]} />
+      )}
     </div>
   );
 }

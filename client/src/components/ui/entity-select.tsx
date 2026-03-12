@@ -102,9 +102,6 @@ export function EntitySelect({
               data-testid={testId}
             >
               <span className="truncate">{displayValue}</span>
-              {value && selected && (
-                <RefreshIconButton queryKeys={[`/api/masterdata/${endpoint}`]} className="ml-auto" />
-              )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -192,6 +189,9 @@ export function EntitySelect({
           </PopoverContent>
         </Popover>
       </div>
+      {value && selected && (
+        <RefreshIconButton queryKeys={[`/api/masterdata/${endpoint}`]} />
+      )}
     </div>
   );
 }

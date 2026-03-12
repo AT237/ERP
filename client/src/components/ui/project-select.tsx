@@ -98,9 +98,6 @@ export function ProjectSelect({
                       : selectedProject.name)
                   : placeholder}
               </span>
-              {value && selectedProject && (
-                <RefreshIconButton queryKeys={["/api/projects"]} className="ml-auto" />
-              )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -221,6 +218,9 @@ export function ProjectSelect({
           </PopoverContent>
         </Popover>
       </div>
+      {value && selectedProject && (
+        <RefreshIconButton queryKeys={["/api/projects"]} />
+      )}
     </div>
   );
 }

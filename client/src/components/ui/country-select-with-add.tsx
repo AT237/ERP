@@ -73,9 +73,6 @@ export function CountrySelectWithAdd({
                   }));
                 }}
               >{selectedCountry ? formatCountry(selectedCountry) : placeholder}</span>
-              {value && selectedCountry && (
-                <RefreshIconButton queryKeys={["/api/countries"]} className="ml-auto" />
-              )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -181,6 +178,9 @@ export function CountrySelectWithAdd({
           </PopoverContent>
         </Popover>
       </div>
+      {value && selectedCountry && (
+        <RefreshIconButton queryKeys={["/api/countries"]} />
+      )}
     </div>
   );
 }
