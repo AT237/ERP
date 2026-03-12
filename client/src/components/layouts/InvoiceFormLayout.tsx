@@ -964,7 +964,14 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           customComponent: (
             <Select
               value={invoiceForm.watch("printLanguageCode" as any) || "nl"}
-              onValueChange={(value) => invoiceForm.setValue("printLanguageCode" as any, value)}
+              onValueChange={(value) => {
+                invoiceForm.setValue("printLanguageCode" as any, value);
+                // Recalculate totalAmountInWords with the new language
+                const total = parseFloat(invoiceForm.getValues("totalAmount") || "0") || 0;
+                if (total > 0) {
+                  invoiceForm.setValue("totalAmountInWords", amountToWords(total, value));
+                }
+              }}
             >
               <SelectTrigger className="w-full" data-testid="select-print-language">
                 <SelectValue placeholder="Selecteer taal..." />

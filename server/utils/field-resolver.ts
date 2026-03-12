@@ -418,6 +418,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
       paymentConditions: quotation.paymentConditions,
       deliveryConditions: quotation.deliveryConditions,
       notes: quotation.notes,
+      printLanguageCode: (quotation as any).printLanguageCode || null,
     },
     customer: customerData,
     project: projectData,
