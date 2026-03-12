@@ -1,6 +1,6 @@
 # Overview
 
-This project is a full-stack web application designed as a comprehensive business management system for small to medium businesses. It centralizes the management of inventory, customers, suppliers, projects, quotations, invoices, purchase orders, work orders, and packing lists. Key capabilities include a business analytics dashboard, reporting features, a robust Text Snippets Management System for reusable content, and a PDF Database for archiving printed documents with explicit user consent. A core achievement is 100% form consistency across all business forms, ensuring a professional and uniform user experience. The business vision is to provide a single, integrated platform that streamlines operations and enhances productivity for SMEs, offering significant market potential by consolidating disparate business functions into one intuitive system.
+This project is a full-stack web application serving as a comprehensive business management system for small to medium businesses. It centralizes the management of inventory, customers, suppliers, projects, quotations, invoices, purchase orders, work orders, and packing lists. Key capabilities include business analytics, reporting, a robust Text Snippets Management System for reusable content, and a PDF Database for archiving printed documents with user consent. The system achieves 100% form consistency across all business forms, ensuring a professional and uniform user experience. The business vision is to provide a single, integrated platform to streamline operations and enhance SME productivity.
 
 # User Preferences
 
@@ -9,183 +9,60 @@ Preferred communication style: Simple, everyday language.
 # System Architecture
 
 ## Frontend Architecture
-The frontend is built with **React 18** and **TypeScript**, following a component-based architecture. It uses **Wouter** for routing, **shadcn/ui** components with **Radix UI** primitives for UI, and **Tailwind CSS** with CSS custom properties for styling, featuring an orange theme. **React Query** manages server state, and **React Hook Form** with **Zod** validation handles form processing. The standardized **LayoutForm2** component ensures type-safe and consistent form handling across all application forms. **Vite** is used for fast development and optimized builds.
+The frontend is built with React 18 and TypeScript, using Wouter for routing, shadcn/ui components with Radix UI primitives, and Tailwind CSS for styling with an orange theme. React Query manages server state, and React Hook Form with Zod validation handles form processing. A standardized LayoutForm2 component ensures type-safe and consistent form handling. Vite is used for development and builds.
 
 ### UI/UX Decisions
-- **Orange Theme**: Consistent orange theme for headers, titles, and interactive elements.
-- **Form Consistency**: 100% form consistency achieved through the **LayoutForm2** component, ensuring unified visual and behavioral patterns across all forms.
-- **Tab-Based Forms**: All forms utilize a modern tab-based navigation interface for enhanced user experience, dedicated URLs, and browser history integration, replacing previous dialog/modal systems.
+- **Orange Theme**: Consistent orange theme for headers and interactive elements.
+- **Form Consistency**: Achieved via the LayoutForm2 component, providing unified visual and behavioral patterns.
+- **Tab-Based Forms**: All forms use modern tab-based navigation with dedicated URLs and browser history integration.
 - **Two-Column Layouts**: Professional two-column grid layouts with 130px label columns for all forms.
 - **Change Tracking**: Modified fields are highlighted with an orange border.
-- **DataTableLayout Standardization**: All data tables (`customers`, `suppliers`, `quotations`, `inventory`, `text-snippets`, `sales-orders`) adhere to a standard, clean layout without problematic border wrappers.
-- **Custom Card+Table System**: Specialized layouts for `projects`, `packing-lists`, `invoices`, `purchase-orders`, and `work-orders` which include header images and custom card components.
-- **Safe Delete Pattern**: All table/page files use `useEntityDelete` hook (`client/src/hooks/useEntityDelete.ts`) for consistent delete behavior. Row deletes show `SafeDeleteDialog`, bulk deletes handle 409 conflicts via `UsageConflictDialog`. Key entities (customers, suppliers, inventory) have backend usage-check endpoints (`GET /api/:entity/:id/check-usages`) that hard-block deletion when in use. Inline form deletes (InvoiceFormLayout line items, layout-designer layouts) also use `SafeDeleteDialog` directly. Zero `window.confirm()` calls remain anywhere in the codebase.
-- **Print Sort Order**: Quotations and invoices support configurable item sort order for printing (`printSortOrder` field). Options: `position`, `position_high_low`, `price_high_low`, `price_low_high`, `alpha_az`, `alpha_za`. Applied in `server/utils/field-resolver.ts`.
-- **Work Order Line Items**: Work orders now have a `work_order_items` table with identical structure to `invoice_items`. The items table is shown below the work order form (after saving). Double-click a row or click "REGEL TOEVOEGEN" to open the line item form. Future feature: "push to invoice" button to copy work order items to a new invoice.
-- **Shared Line Item Types**: `shared/line-item-types.ts` is the single source of truth for line item types (`standard`, `unique`, `text`, `charges`). Both `InvoiceLineItemFormLayout.tsx` and `WorkOrderLineItemFormLayout.tsx` import from this central config. Adding a 5th type here automatically makes it available in all forms. Future entities (quotations, projects) should also import from this config.
-
-### Table Styling Standards
-Use the helper functions from `DataTableLayout.tsx` for consistent column styling:
-
-| Column Type | Helper Function | Styling | Default Width |
-|-------------|-----------------|---------|---------------|
-| Position/Line No. | `createPositionColumn()` | `font-mono text-xs` | 70px |
-| ID/Code | `createIdColumn()` | `font-mono text-xs` | 120px |
-| Currency | `createCurrencyColumn()` | Right-aligned, € prefix | 120px |
-| Numeric | `createNumericColumn()` | Right-aligned | 100px |
-
-**Column Order Convention**: checkbox → position → ID → description → numeric values → actions
-
-**Usage Example**:
-```typescript
-import { createPositionColumn, createIdColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
-
-const columns = [
-  createPositionColumn(),           // Pos. column (010, 020, etc.)
-  createIdColumn('id', 'Line ID'),  // ID column
-  { key: 'description', label: 'Description', ... },
-  createCurrencyColumn('unitPrice', 'Unit Price'),
-  createCurrencyColumn('lineTotal', 'Line Total'),
-];
-```
+- **DataTableLayout Standardization**: All data tables adhere to a standard, clean layout.
+- **Custom Card+Table System**: Specialized layouts for `projects`, `packing-lists`, `invoices`, `purchase-orders`, and `work-orders` with header images and custom card components.
+- **Safe Delete Pattern**: Consistent deletion behavior across the application using `useEntityDelete` hook and `SafeDeleteDialog`, eliminating `window.confirm()` calls. Backend usage checks prevent deletion of key entities if in use.
+- **Print Sort Order**: Quotations and invoices support configurable item sort order for printing (e.g., `position`, `price_high_low`, `alpha_az`).
+- **Work Order Line Items**: Work orders include a `work_order_items` table with structure identical to `invoice_items`.
+- **Shared Line Item Types**: `shared/line-item-types.ts` is the single source of truth for line item types (`standard`, `unique`, `text`, `charges`), integrated across relevant forms.
 
 ### Technical Implementations
-- **LayoutForm2**: A central, configurable React component that provides visual consistency, change tracking, tab-based section management, type safety, and seamless validation integration for all business forms.
-- **FormToolbar + useFormToolbar**: Standardized toolbar with 6 icon buttons (Save, Add New, Delete, Print, Previous/Next, Export to Excel). The `useFormToolbar` hook auto-wires all functions based on entity type using a central config registry in `client/src/hooks/use-form-toolbar.ts`. All forms use this hook instead of manual actionButtons.
-- **PrintLayoutDialog**: When the Print toolbar button is clicked, a dialog shows available layouts filtered by documentType. User selects a layout and the PDF opens in a new tab.
-- **Standardized Routing**: Over 22+ form routes with consistent `create/edit` patterns and lazy loading using React Suspense. Generic master data routing for scalability.
-- **Helper Functions**: Standardized helper functions (`createFieldRow`, `createFieldsRow`, `createSectionHeaderRow`) for consistent form section configuration.
-- **Type Safety**: Extensive use of TypeScript with generic types for robust and maintainable code, especially with **Drizzle ORM** and **Zod** validation.
-
-### Form Toolbar Pattern
-**IMPORTANT**: All forms use `useFormToolbar` hook for the standard toolbar:
-
-```typescript
-import { useFormToolbar } from "@/hooks/use-form-toolbar";
-
-const toolbar = useFormToolbar({
-  entityType: "customer",       // matches key in ENTITY_CONFIGS
-  entityId: customerId,         // current record ID (undefined for new)
-  onSave: form.handleSubmit(onSubmit),  // form save handler
-  onClose: onSave,              // close/navigate back handler
-  saveDisabled: mutation.isPending,
-  saveLoading: mutation.isPending,
-});
-
-// Pass to LayoutForm2:
-<LayoutForm2 toolbar={toolbar} ... />
-```
-
-**Entity Config Registry** (`use-form-toolbar.ts`): Defines API paths, form types, labels, and feature flags (supportsNavigation, supportsDelete, supportsAddNew) per entity type. Sub-entities like line items have these flags disabled.
-
-**Auto-wired toolbar functions**:
-- **Save**: Triggers form submission
-- **Add New**: Opens new form tab via `open-form-tab` event
-- **Delete**: DELETE API call with confirmation, closes tab on success
-- **Print**: Opens PrintLayoutDialog filtered by documentType
-- **Previous/Next**: Fetches entity list, navigates to adjacent records
-- **Export**: Placeholder (disabled)
+- **LayoutForm2**: A central, configurable React component ensuring visual consistency, change tracking, tab-based sections, type safety, and validation for all business forms.
+- **FormToolbar + useFormToolbar**: Standardized toolbar with Save, Add New, Delete, Print, Previous/Next, Export buttons, auto-wired via `useFormToolbar` hook and an entity configuration registry.
+- **PrintLayoutDialog**: Handles selection and display of document layouts for printing.
+- **Standardized Routing**: Consistent `create/edit` patterns and lazy loading for over 22 form routes.
+- **Helper Functions**: Standardized functions (`createFieldRow`, `createFieldsRow`, `createSectionHeaderRow`) for consistent form section configuration.
+- **Type Safety**: Extensive TypeScript usage with generic types, Drizzle ORM, and Zod validation.
 
 ### Standard Form Layout Pattern
-**IMPORTANT**: LayoutForm2 automatically handles layout distribution:
-
-**Automatic Layout Rules**:
-1. **Large fields (textarea, custom) → Right column**: Automatically placed on the right side
-2. **Small fields (text, number, select, date, checkbox) → Left column**: Automatically placed on the left side
-3. **Consistent spacing**: All forms use `gap-[20px]` between rows and `gap-8` between columns
-4. **No manual configuration needed**: Just use `createFieldRow()` for each field
-
-**Standard Field Dimensions**:
-- **Input/Select height**: `h-10` = 40px
-- **Textarea min-height**: `min-h-[100px]` = 100px (2 × field height + gap = 2 × 40px + 20px)
-- **Vertical gap**: `gap-[20px]` = 20px between rows
-- **Horizontal gap**: `gap-8` = 32px between columns
-- **Label width**: 130px
-
-```typescript
-// Standard form sections pattern - just list your fields
-const formSections: FormSection2<FormData>[] = [
-  {
-    id: 'general',
-    label: 'General',
-    rows: [
-      createFieldRow(formFields[0]), // text field → goes left
-      createFieldRow(formFields[1]), // select field → goes left
-      createFieldRow(formFields[2]), // textarea → automatically goes right
-      // ... etc
-    ]
-  }
-];
-```
-
-**Manual Two-Column Layout** (optional - for explicit control):
-```typescript
-rows: [
-  {
-    type: 'two-column' as const,
-    leftColumn: [field1, field2, field3],  // Explicit left column
-    rightColumn: [largeField1, largeField2] // Explicit right column
-  }
-]
-```
-
-**Column-First Layout Rule** (STANDARD - applies to ALL forms via LayoutForm2):
-Fill the left column completely before using the right column. The grid always shows two columns (right column is empty if not needed).
-- **Positions 1-6**: Left column (filled first)
-- **Positions 7-12**: Right column (only used when left is full)
-- **Textarea fields**: Automatically placed in right column
-- **Grid always visible**: Right column stays empty but grid structure remains
-
-Example: Address form with 5 fields → all 5 go in left column, right column empty
-```typescript
-rows: [
-  createFieldRow(field1),  // → position 1 (left)
-  createFieldRow(field2),  // → position 2 (left)
-  createFieldRow(field3),  // → position 3 (left)
-  createFieldRow(field4),  // → position 4 (left)
-  createFieldRow(field5),  // → position 5 (left, right column stays empty)
-]
-```
-Reference: `AddressFormLayout.tsx` for column-first implementation.
-
-**Key Rules**:
-1. Use `createFieldRow()` for each field - LayoutForm2 handles the rest
-2. Fill left column first - only use right column when left is full or for large fields
-3. Textareas automatically go to the right column
-4. Reference: `InvoiceLineItemFormLayout.tsx`, `InvoiceFormLayout.tsx`, and `AddressFormLayout.tsx` for examples
+LayoutForm2 automatically distributes fields into a two-column grid:
+- Large fields (textarea, custom) go to the right column.
+- Small fields (text, number, select, date, checkbox) go to the left column.
+- Consistent `gap-[20px]` between rows and `gap-8` between columns.
+- Standard field dimensions: Input/Select height `h-10`, Textarea `min-h-[100px]`, Label width 130px.
+- The left column is filled completely before using the right column, which remains empty if not needed.
+- Manual two-column layout is available for explicit control.
 
 ### Feature Specifications
-- **Comprehensive Form Coverage**: Supports 11 business forms (Customer, Supplier, Quotation, Inventory, Project, Work Order, Purchase Order, Packing List, Invoice, Sales Order, Text Snippet) and 6 master data forms (Units of Measure, Payment Terms, Incoterms, VAT Rates, Cities, Statuses).
-- **Quick-Add Functionality**: "Quick Add" links on data table pages to open full tab-based forms for new entries.
-- **Real-time Validation**: Integrated with `react-hook-form` and `Zod` for real-time form validation.
+- **Comprehensive Form Coverage**: Supports 11 business forms and 6 master data forms.
+- **Quick-Add Functionality**: "Quick Add" links on data table pages to open full tab-based forms.
+- **Real-time Validation**: Integrated with `react-hook-form` and `Zod`.
 
 ## Backend Architecture
-The backend uses **Node.js with Express.js** in a RESTful API pattern, implemented with TypeScript. It features a middleware-based architecture for request handling, hot reload with `tsx` for development, and `esbuild` for fast production builds.
+The backend uses Node.js with Express.js in a RESTful API pattern, implemented with TypeScript. It features a middleware-based architecture, hot reload with `tsx` for development, and `esbuild` for production builds.
 
 ## Data Storage
-**PostgreSQL** is the primary database, managed with **Drizzle ORM** for type-safe operations. **Drizzle Kit** handles schema management and migrations. **Neon Database** provides serverless PostgreSQL hosting. **Drizzle-Zod** is used for runtime type validation, and database sequences generate unique, concurrent numbers for all business entities (e.g., DEB-0001, Q-2025-001).
+PostgreSQL is the primary database, managed with Drizzle ORM for type-safe operations, and Drizzle Kit for schema management and migrations. Neon Database provides serverless PostgreSQL hosting. Drizzle-Zod is used for runtime type validation, and database sequences generate unique, concurrent numbers for business entities.
 
 ### Text Snippets Management System
-- **Text Snippets Library**: Stores reusable content with multi-language and category support in a `text_snippets` table.
-- **Document Snapshots**: Snippet content is snapshotted when used in documents to ensure historical integrity.
-- **Usage Tracking**: A `text_snippet_usages` table tracks snippet applications.
-- **Integration**: Document item tables support various `lineType` values (`standard`, `unique`, `text`, `charges`) and track `sourceSnippetId` and `sourceSnippetVersion`.
+A `text_snippets` table stores reusable content with multi-language and category support. Snippet content is snapshotted when used in documents for historical integrity, and a `text_snippet_usages` table tracks applications. Document item tables support various `lineType` values and track `sourceSnippetId` and `sourceSnippetVersion`.
 
 ## Layout Designer System
 A comprehensive document layout management system for creating customizable templates (quotations, invoices, packing lists) with a section-first workflow and visual designer interface.
-
 ### Key Features
-- **Section-Based Workflow**: Create named sections with print rules (first page, odd pages, even pages), dimensions, and styling before adding blocks
-- **Block Types**: 
-  - Basic Elements: Text, Image, Data Field (database-driven)
-  - Document Blocks: Company Header, Date Block, Document Title, Page Number
-  - Structured: Line Items Table, Totals Summary, Footer Block
-- **Data Field Integration**: Select allowed database tables per layout; Data Field blocks can reference specific fields from quotations, customers, projects, etc.
-- **Visual Designer**: Drag & drop interface with section stacking, grid alignment, and real-time preview
-- **Database Architecture**: 5-table system (`document_layouts`, `layout_sections`, `layout_blocks`, `layout_elements`, `document_layout_fields`)
-
-### Design References
-- **BoldReports-inspired interface**: See `attached_assets/image_1761509060465.png` for professional report designer reference showing component library, properties panel, table configuration, formula editor, and design analyzer
+- **Section-Based Workflow**: Create named sections with print rules, dimensions, and styling.
+- **Block Types**: Includes Basic Elements (Text, Image, Data Field), Document Blocks (Company Header, Date Block, Document Title, Page Number), and Structured Blocks (Line Items Table, Totals Summary, Footer Block).
+- **Data Field Integration**: Data Field blocks can reference specific fields from selected database tables.
+- **Visual Designer**: Drag & drop interface with section stacking, grid alignment, and real-time preview.
+- **Database Architecture**: A 5-table system (`document_layouts`, `layout_sections`, `layout_blocks`, `layout_elements`, `document_layout_fields`) underpins the system.
 
 # External Dependencies
 
