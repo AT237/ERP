@@ -55,6 +55,7 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: [`/api/masterdata/${endpoint}`],
+    refetchOnMount: 'always',
     queryFn: async () => {
       const response = await fetch(`/api/masterdata/${endpoint}`);
       if (!response.ok) throw new Error('Failed to fetch');

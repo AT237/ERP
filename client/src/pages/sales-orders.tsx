@@ -105,6 +105,7 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
   // Data fetching
   const { data: salesOrders = [], isLoading: salesOrdersLoading } = useQuery<SalesOrder[]>({
     queryKey: ["/api/sales-orders"],
+    refetchOnMount: 'always',
     staleTime: 30000,
     gcTime: 300000,
   });

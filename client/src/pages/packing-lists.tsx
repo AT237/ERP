@@ -77,6 +77,7 @@ export default function PackingLists() {
   // Optimized data fetching with stable loading state
   const { data: packingLists = [], isLoading: packingLoading } = useQuery<PackingList[]>({
     queryKey: ["/api/packing-lists"],
+    refetchOnMount: 'always',
     staleTime: 30000,
     gcTime: 300000,
   });

@@ -120,6 +120,7 @@ export default function Projects() {
   // Optimized data fetching with stable loading state
   const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+    refetchOnMount: 'always',
     staleTime: 30000,
     gcTime: 300000,
   });

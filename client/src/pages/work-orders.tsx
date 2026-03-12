@@ -144,6 +144,7 @@ export default function WorkOrders() {
 
   const { data: workOrders = [], isLoading } = useQuery<WorkOrder[]>({
     queryKey: ["/api/work-orders"],
+    refetchOnMount: 'always',
   });
 
   const { data: projects = [] } = useQuery<Project[]>({

@@ -42,6 +42,7 @@ export default function TextSnippets() {
   // Data fetching
   const { data: textSnippets = [], isLoading } = useQuery<TextSnippet[]>({
     queryKey: ["/api/text-snippets"],
+    refetchOnMount: 'always',
     staleTime: 30000,
     gcTime: 300000,
   });

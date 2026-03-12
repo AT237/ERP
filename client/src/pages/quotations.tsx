@@ -19,8 +19,9 @@ export default function Quotations({}: QuotationsProps) {
   // Optimized data fetching with stable loading state
   const { data: quotations = [], isLoading: quotationsLoading } = useQuery<Quotation[]>({
     queryKey: ["/api/quotations"],
-    staleTime: 30000, // Prevent refetch for 30 seconds
-    gcTime: 300000, // Keep in cache for 5 minutes
+    refetchOnMount: 'always',
+    staleTime: 30000,
+    gcTime: 300000,
   });
 
   const { data: customers = [], isLoading: customersLoading } = useQuery<Customer[]>({

@@ -47,6 +47,7 @@ export default function Inventory() {
   // Data fetching
   const { data: items = [], isLoading } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory"],
+    refetchOnMount: 'always',
   });
 
   const del = useEntityDelete<InventoryItem>({

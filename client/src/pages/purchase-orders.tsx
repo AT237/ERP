@@ -110,6 +110,7 @@ export default function PurchaseOrders() {
   // Optimized data fetching with stable loading state
   const { data: purchaseOrders = [], isLoading: ordersLoading } = useQuery<PurchaseOrder[]>({
     queryKey: ["/api/purchase-orders"],
+    refetchOnMount: 'always',
     staleTime: 30000,
     gcTime: 300000,
   });

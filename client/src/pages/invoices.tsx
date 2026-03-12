@@ -33,6 +33,7 @@ export default function Invoices({}: InvoicesProps) {
 
   const { data: invoices = [], isLoading: invoicesLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
+    refetchOnMount: 'always',
     staleTime: 30000,
     gcTime: 300000,
   });
