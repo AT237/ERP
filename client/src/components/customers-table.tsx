@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, Building, Mail, Phone, CopyPlus } from "lucide-react";
@@ -143,7 +143,20 @@ export default function CustomersTable() {
   // Data fetching - use extended endpoint for related data
   const { data: customers = [], isLoading } = useQuery<ExtendedCustomer[]>({
     queryKey: ["/api/customers/extended"],
+    refetchOnMount: 'always',
   });
+
+  // Refresh table when a new customer is created from a form tab
+  useEffect(() => {
+    const handleEntityCreated = (e: CustomEvent) => {
+      if (e.detail?.entityType === 'customer') {
+        queryClient.invalidateQueries({ queryKey: ["/api/customers/extended"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      }
+    };
+    window.addEventListener('entity-created', handleEntityCreated as EventListener);
+    return () => window.removeEventListener('entity-created', handleEntityCreated as EventListener);
+  }, []);
 
   const handleEdit = (customer: Customer) => {
     window.dispatchEvent(new CustomEvent('open-form-tab', {
