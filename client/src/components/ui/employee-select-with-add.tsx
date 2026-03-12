@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, RefreshCw, ExternalLink } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, ExternalLink } from "lucide-react";
+import { RefreshIconButton } from "@/components/ui/refresh-icon-button";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -68,14 +69,7 @@ export function EmployeeSelectWithAdd({
                 {selectedEmployee ? displayName(selectedEmployee) : placeholder}
               </span>
               {value && selectedEmployee && (
-                <RefreshCw
-                  className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
-                  }}
-                />
+                <RefreshIconButton queryKeys={["/api/employees"]} className="ml-auto" />
               )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>

@@ -204,16 +204,7 @@ export function InventorySelect({
         </Popover>
       </div>
       {value && selectedItem && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-10 w-8 shrink-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-          title="Ververs artikelenlijst"
-          onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/inventory"] })}
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
+        <RefreshIconButton queryKeys={["/api/inventory"]} title="Ververs artikelenlijst" />
       )}
     </div>
   );
