@@ -403,7 +403,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
     entityId: lineItemId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
-    saveDisabled: !hasUnsavedChanges,
+    saveDisabled: !form.formState.isDirty && !hasUnsavedChanges,
     saveLoading: createMutation.isPending || updateMutation.isPending,
     extraQueryKeysToInvalidate: workOrderId ? [["/api/work-orders", workOrderId, "items"]] : [],
     navigationListQueryKey: workOrderId ? ["/api/work-orders", workOrderId, "items"] : undefined,

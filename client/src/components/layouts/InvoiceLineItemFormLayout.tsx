@@ -562,7 +562,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     entityId: lineItemId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
-    saveDisabled: !hasUnsavedChanges,
+    saveDisabled: !form.formState.isDirty && !hasUnsavedChanges,
     saveLoading: createMutation.isPending || updateMutation.isPending,
     extraQueryKeysToInvalidate: invoiceId ? [["/api/invoices", invoiceId, "items"], ["/api/invoices", invoiceId]] : [],
     navigationListQueryKey: invoiceId ? ["/api/invoices", invoiceId, "items"] : undefined,
