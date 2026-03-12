@@ -207,6 +207,17 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsDelete: true,
     supportsAddNew: false,
   },
+  work_order_line_item: {
+    apiPath: "/api/work-order-items",
+    formType: "work-order-line-item",
+    label: "Work Order Line",
+    labelPlural: "Work Order Lines",
+    listQueryKey: "/api/work-order-items",
+    documentType: "work_order_line_item",
+    supportsNavigation: true,
+    supportsDelete: true,
+    supportsAddNew: false,
+  },
   "masterdata-payment-terms": {
     apiPath: "/api/masterdata/payment-terms",
     formType: "masterdata-payment-terms",

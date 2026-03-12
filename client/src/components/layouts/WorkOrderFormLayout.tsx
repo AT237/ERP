@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 
@@ -18,17 +19,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertWorkOrderSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { ClipboardList, Calendar, User, AlertTriangle, RefreshCw } from "lucide-react";
+import { ClipboardList, Calendar, User, AlertTriangle, RefreshCw, Plus, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
-import type { WorkOrder, InsertWorkOrder } from "@shared/schema";
+import type { WorkOrder, InsertWorkOrder, WorkOrderItem } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from './LayoutForm2';
+import { DataTableLayout, createPositionColumn, createCurrencyColumn } from './DataTableLayout';
+import { useDataTable } from "@/hooks/useDataTable";
 
 // Form schema for work order data
 const workOrderFormSchema = insertWorkOrderSchema.extend({
@@ -55,6 +58,8 @@ interface WorkOrderFormLayoutProps {
 export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrderFormLayoutProps) {
   const [activeSection, setActiveSection] = useState("basic");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [, navigate] = useLocation();
 
   // Change tracking state
   const [originalValues, setOriginalValues] = useState<FormFieldValues>({});

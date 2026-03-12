@@ -369,6 +369,28 @@ function Router() {
             );
           }}
         </Route>
+
+        <Route path="/work-orders/:workOrderId/items/new">
+          {(params) => {
+            const WorkOrderLineItemForm = React.lazy(() => import('./pages/work-order-line-item-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <WorkOrderLineItemForm onSave={() => window.history.back()} workOrderId={params.workOrderId} />
+              </Suspense>
+            );
+          }}
+        </Route>
+
+        <Route path="/work-orders/:workOrderId/items/:itemId">
+          {(params) => {
+            const WorkOrderLineItemForm = React.lazy(() => import('./pages/work-order-line-item-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <WorkOrderLineItemForm onSave={() => window.history.back()} workOrderId={params.workOrderId} lineItemId={params.itemId} />
+              </Suspense>
+            );
+          }}
+        </Route>
         
         <Route path="/purchase-order-form" component={() => {
           const PurchaseOrderForm = React.lazy(() => import('./pages/purchase-order-form'));
