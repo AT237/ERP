@@ -712,6 +712,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       notes: invoice.notes,
       paymentTerms: paymentTermsLabel,
       workOrderNumbers: workOrderNumbersList,
+      printLanguageCode: (invoice as any).printLanguageCode || null,
     },
     customer: customerData,
     project: projectData,
@@ -733,17 +734,20 @@ export function resolveFieldValue(data: QuotationPrintData, fieldKey: string): a
   const parts = fieldKey.split('.');
 
   // Virtual computed fields: {tableName}.totalAmountInWords
-  // Uses stored value from DB when available; falls back to computing with customer's language.
+  // Always recalculates using printLanguageCode (takes priority over stored value).
   if (parts.length === 2 && parts[1] === 'totalAmountInWords') {
     const tableData: any = (data as any)[parts[0]];
-    // Use stored value if present (invoice has it saved from the form)
-    if (tableData?.totalAmountInWords) return tableData.totalAmountInWords;
-    // Fall back to computing from totalAmount with customer's language
     const totalAmount = tableData?.totalAmount ?? (data as any).invoice?.totalAmount ?? (data as any).quotation?.totalAmount;
     if (totalAmount !== undefined && totalAmount !== null) {
-      const lang = (data as any).customer?.languageCode || 'nl';
+      // printLanguageCode takes priority; fall back to customer language, then 'nl'
+      const printLang = tableData?.printLanguageCode
+        ?? (data as any).invoice?.printLanguageCode
+        ?? (data as any).quotation?.printLanguageCode;
+      const lang = printLang || (data as any).customer?.languageCode || 'nl';
       return amountToWords(parseFloat(totalAmount || '0'), lang);
     }
+    // Only fall back to stored value if totalAmount is unavailable
+    if (tableData?.totalAmountInWords) return tableData.totalAmountInWords;
     return '';
   }
 

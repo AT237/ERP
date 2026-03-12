@@ -213,6 +213,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       vatRatePercent: "",
       notes: "",
       printSortOrder: "position",
+      printLanguageCode: "nl",
     },
   });
 
