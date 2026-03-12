@@ -67,6 +67,7 @@ export function CustomerSelect({
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<string | null>(null);
+  const [isRefreshingCustomer, setIsRefreshingCustomer] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -244,12 +245,19 @@ export function CustomerSelect({
                 >{selectedCustomer ? selectedCustomer.name : placeholder}</span>
                 {value && selectedCustomer && onRefreshCustomer && (
                   <RefreshCw
-                    className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
+                    className={cn(
+                      "ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer",
+                      isRefreshingCustomer && "animate-spin-once"
+                    )}
                     title="Klantgegevens synchroniseren met dit document"
+                    onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
+                      if (isRefreshingCustomer) return;
+                      setIsRefreshingCustomer(true);
                       onRefreshCustomer();
+                      setTimeout(() => setIsRefreshingCustomer(false), 700);
                     }}
                   />
                 )}
