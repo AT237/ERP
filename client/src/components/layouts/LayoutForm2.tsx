@@ -59,6 +59,7 @@ export interface FormField2<T extends FieldValues = FieldValues> {
   maxLength?: number;
   rows?: number; // For textarea
   disabled?: boolean;
+  prefix?: string;
   
   // Select options
   options?: Array<{ value: string; label: string }>;
@@ -283,26 +284,36 @@ function renderField<T extends FieldValues>(
     case 'decimal': {
       const rawValue = String(field.watch?.() ?? '');
       const displayValue = rawValue.replace('.', ',');
-      return (
+      const inputEl = (
         <Input
           {...baseProps}
           type="text"
           inputMode="decimal"
           value={displayValue}
+          className={field.prefix ? cn(baseProps.className, "rounded-l-none border-l-0") : baseProps.className}
           onChange={(e) => {
             const raw = e.target.value;
-            // Allow only digits, one comma, one dot, and minus sign
             if (/^-?[\d]*[,.]?[\d]*$/.test(raw)) {
               field.setValue?.(raw.replace(',', '.'));
             }
           }}
           onBlur={(e) => {
-            // On blur: normalize display (strip trailing dot/comma)
             const normalized = rawValue.replace(/[,.]$/, '');
             if (normalized !== rawValue) field.setValue?.(normalized);
           }}
         />
       );
+      if (field.prefix) {
+        return (
+          <div className="flex">
+            <span className="inline-flex items-center px-3 h-10 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm select-none">
+              {field.prefix}
+            </span>
+            {inputEl}
+          </div>
+        );
+      }
+      return inputEl;
     }
     
     case 'date':

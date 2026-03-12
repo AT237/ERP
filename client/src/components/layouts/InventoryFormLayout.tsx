@@ -983,6 +983,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
             type: "decimal",
             placeholder: "0,00",
             layout: "single",
+            prefix: "€",
             setValue: (value) => form.setValue("costPrice", value),
             watch: () => form.watch("costPrice"),
             validation: {
@@ -997,6 +998,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
             type: "decimal",
             placeholder: "0,00",
             layout: "single",
+            prefix: "€",
             setValue: (value) => form.setValue("unitPrice", value),
             watch: () => form.watch("unitPrice"),
             validation: {
