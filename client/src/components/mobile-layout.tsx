@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { 
   Menu, Settings, ChevronRight, Home, BarChart3, Plus, Trash2, Copy, Search, X
 } from "lucide-react";
@@ -94,6 +95,45 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
     window.addEventListener('open-form-tab', handleOpenFormTab as EventListener);
     return () => window.removeEventListener('open-form-tab', handleOpenFormTab as EventListener);
   }, [navigate]);
+
+  // Global: refresh main list when any entity is created
+  useEffect(() => {
+    const entityQueryMap: Record<string, string[]> = {
+      'customer':        ['/api/customers', '/api/customers/extended'],
+      'supplier':        ['/api/suppliers'],
+      'contact_person':  ['/api/customer-contacts'],
+      'employee':        ['/api/employees'],
+      'prospect':        ['/api/prospects'],
+      'email_template':  ['/api/email-templates'],
+      'inventory':       ['/api/inventory'],
+      'invoice':         ['/api/invoices'],
+      'quotation':       ['/api/quotations'],
+      'project':         ['/api/projects'],
+      'purchase-order':  ['/api/purchase-orders'],
+      'purchase_order':  ['/api/purchase-orders'],
+      'work-order':      ['/api/work-orders'],
+      'work_order':      ['/api/work-orders'],
+      'packing-list':    ['/api/packing-lists'],
+      'packing_list':    ['/api/packing-lists'],
+      'sales-order':     ['/api/sales-orders'],
+      'sales_order':     ['/api/sales-orders'],
+      'text_snippet':    ['/api/text-snippets'],
+      'address':         ['/api/addresses'],
+    };
+    const handleEntityCreated = (e: CustomEvent) => {
+      const { entityType } = e.detail || {};
+      if (!entityType) return;
+      const keys = entityQueryMap[entityType] || [];
+      keys.forEach(k => queryClient.invalidateQueries({ queryKey: [k] }));
+      // Also handle masterdata-* types
+      if (entityType?.startsWith('masterdata-')) {
+        const type = entityType.replace('masterdata-', '');
+        queryClient.invalidateQueries({ queryKey: [`/api/masterdata/${type}`] });
+      }
+    };
+    window.addEventListener('entity-created', handleEntityCreated as EventListener);
+    return () => window.removeEventListener('entity-created', handleEntityCreated as EventListener);
+  }, []);
 
   // Fetch company logo from database
   const { data: companyLogo } = useQuery<{ imageData: string } | null>({

@@ -124,6 +124,7 @@ export default function ContactPersonsTable() {
   // Fetch contact persons data
   const { data: contacts = [], isLoading } = useQuery<CustomerContact[]>({
     queryKey: ["/api/customer-contacts"],
+    refetchOnMount: 'always',
   });
 
   const handleToggleAllRows = () => {

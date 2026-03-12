@@ -175,6 +175,7 @@ export default function ProspectsTable() {
   // Fetch prospects data
   const { data: prospects = [], isLoading } = useQuery<Prospect[]>({
     queryKey: ["/api/prospects"],
+    refetchOnMount: 'always',
   });
 
   const handleToggleAllRows = () => {

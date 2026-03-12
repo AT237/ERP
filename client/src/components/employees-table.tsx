@@ -109,6 +109,7 @@ export default function EmployeesTable() {
 
   const { data: employeesList = [], isLoading } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
+    refetchOnMount: 'always',
   });
 
   const handleToggleAllRows = () => {

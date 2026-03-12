@@ -114,6 +114,7 @@ export default function SupplierTable() {
   // Data fetching
   const { data: suppliers = [], isLoading } = useQuery<Supplier[]>({
     queryKey: ['/api/suppliers'],
+    refetchOnMount: 'always',
   });
 
   const handleSupplierDoubleClick = (supplier: Supplier) => {

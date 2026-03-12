@@ -65,6 +65,7 @@ const defaultColumns: ColumnConfig[] = [
 export default function EmailTemplatesTable() {
   const { data: templates = [], isLoading } = useQuery<EmailTemplate[]>({
     queryKey: ["/api/email-templates"],
+    refetchOnMount: 'always',
     staleTime: 30000,
     gcTime: 300000,
   });
