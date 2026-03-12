@@ -431,6 +431,32 @@ export const workOrders = pgTable("work_orders", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Work order line items (identical structure to invoice_items for future "push to invoice")
+export const workOrderItems = pgTable("work_order_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  workOrderId: varchar("work_order_id").references(() => workOrders.id, { onDelete: 'cascade' }).notNull(),
+  itemId: varchar("item_id").references(() => inventoryItems.id),
+  description: text("description").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"),
+  unit: text("unit"),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
+  lineType: text("line_type").default("standard"),
+  position: integer("position").default(0),
+  positionNo: text("position_no"),
+  workDate: timestamp("work_date"),
+  technicianNames: text("technician_names"),
+  technicianIds: text("technician_ids"),
+  descriptionInternal: text("description_internal"),
+  discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
+  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id),
+  sourceSnippetVersion: integer("source_snippet_version"),
+});
+
+export const insertWorkOrderItemSchema = createInsertSchema(workOrderItems).omit({ id: true });
+export type WorkOrderItem = typeof workOrderItems.$inferSelect;
+export type InsertWorkOrderItem = z.infer<typeof insertWorkOrderItemSchema>;
+
 // Invoice Work Orders junction table (many-to-many: invoice ↔ work orders)
 export const invoiceWorkOrders = pgTable("invoice_work_orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -822,10 +848,22 @@ export const salesOrderItemsRelations = relations(salesOrderItems, ({ one }) => 
   }),
 }));
 
-export const workOrdersRelations = relations(workOrders, ({ one }) => ({
+export const workOrdersRelations = relations(workOrders, ({ one, many }) => ({
   project: one(projects, {
     fields: [workOrders.projectId],
     references: [projects.id],
+  }),
+  items: many(workOrderItems),
+}));
+
+export const workOrderItemsRelations = relations(workOrderItems, ({ one }) => ({
+  workOrder: one(workOrders, {
+    fields: [workOrderItems.workOrderId],
+    references: [workOrders.id],
+  }),
+  inventoryItem: one(inventoryItems, {
+    fields: [workOrderItems.itemId],
+    references: [inventoryItems.id],
   }),
 }));
 
