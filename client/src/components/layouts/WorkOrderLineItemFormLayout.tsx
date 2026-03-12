@@ -403,11 +403,19 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
     { label: 'Totaal', value: `€${lineTotalValue || '0.00'}` },
   ];
 
+  const handleClose = useCallback(() => {
+    if (!lineItemId) {
+      const key = buildFormPersistenceKey({ formType: "work-order-line-item", entityId: undefined, scope: workOrderId });
+      localStorage.removeItem(key);
+    }
+    onSave();
+  }, [lineItemId, workOrderId, onSave]);
+
   const toolbar = useFormToolbar({
     entityType: "work_order_line_item",
     entityId: lineItemId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
-    onClose: onSave,
+    onClose: handleClose,
     saveDisabled: !form.formState.isDirty && !hasUnsavedChanges,
     saveLoading: createMutation.isPending || updateMutation.isPending,
     extraQueryKeysToInvalidate: workOrderId ? [["/api/work-orders", workOrderId, "items"]] : [],

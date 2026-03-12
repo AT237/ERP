@@ -559,11 +559,19 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     },
   ];
 
+  const handleClose = useCallback(() => {
+    if (!lineItemId) {
+      const key = buildFormPersistenceKey({ formType: "invoice-line-item", entityId: undefined, scope: invoiceId });
+      localStorage.removeItem(key);
+    }
+    onSave();
+  }, [lineItemId, invoiceId, onSave]);
+
   const toolbar = useFormToolbar({
     entityType: "invoice_line_item",
     entityId: lineItemId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
-    onClose: onSave,
+    onClose: handleClose,
     saveDisabled: !form.formState.isDirty && !hasUnsavedChanges,
     saveLoading: createMutation.isPending || updateMutation.isPending,
     extraQueryKeysToInvalidate: invoiceId ? [["/api/invoices", invoiceId, "items"], ["/api/invoices", invoiceId]] : [],
