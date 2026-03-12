@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, ExternalLink } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, ExternalLink, RefreshCw } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -58,6 +59,16 @@ export function InventorySelect({
           <span className="truncate">
             {selectedItem ? getLabel(selectedItem) : placeholder}
           </span>
+          {value && selectedItem && (
+            <RefreshCw
+              className="ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+              }}
+            />
+          )}
           <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
