@@ -270,10 +270,12 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
     const prev = prevLineTypeRef.current;
     prevLineTypeRef.current = lineTypeValue;
     if (lineTypeValue === 'text') {
-      form.setValue("unit" as any, "");
+      if (prev && prev !== 'text') form.setValue("unit" as any, "");
     } else if (lineTypeValue === 'charges') {
-      form.setValue("unit" as any, "hrs");
-      if (prev && prev !== 'charges') form.setValue("description", "");
+      if (prev && prev !== 'charges') {
+        form.setValue("unit" as any, "hrs");
+        form.setValue("description", "");
+      }
     } else {
       const currentUnit = form.getValues("unit" as any);
       if (!currentUnit) form.setValue("unit" as any, "pcs");

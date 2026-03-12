@@ -334,13 +334,12 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     prevLineTypeRef.current = lineTypeValue;
 
     if (lineTypeValue === 'text') {
-      form.setValue("unit" as any, "");
+      if (prev && prev !== 'text') form.setValue("unit" as any, "");
     } else if (lineTypeValue === 'charges') {
-      // Get unit from selected rate if available
-      const rateOpt = customerRateOptions.find(o => o.rateId === customerRateIdValue);
-      form.setValue("unit" as any, rateOpt?.unit || "hrs");
-      // Clear description when user actively switches to charges
+      // Only auto-set unit and description when user actively switches TO charges
       if (prev && prev !== 'charges') {
+        const rateOpt = customerRateOptions.find(o => o.rateId === customerRateIdValue);
+        form.setValue("unit" as any, rateOpt?.unit || "hrs");
         form.setValue("description", "");
       }
     } else {
