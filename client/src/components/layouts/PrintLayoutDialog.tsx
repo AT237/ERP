@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Printer, FileText, Check, Archive } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { DocumentLayout } from "@shared/schema";
 
 interface PrintLayoutDialogProps {
@@ -49,6 +49,7 @@ export function PrintLayoutDialog({
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/pdf-archive"] });
       toast({
         title: "Opgeslagen in PDF database",
         description: "Het document is opgeslagen in de PDF database.",
