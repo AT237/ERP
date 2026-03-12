@@ -1,6 +1,6 @@
 import {
   users, customers, suppliers, prospects, inventoryItems, projects, quotations, quotationItems,
-  invoices, invoiceItems, invoiceWorkOrders, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders,
+  invoices, invoiceItems, invoiceWorkOrders, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders, workOrderItems,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
   unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, ratesAndCharges, incoterms, vatRates, cities, statuses, companyProfiles, textSnippets, textSnippetUsages,
   documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields, sectionTemplates, customerRates, technicians,
@@ -10,7 +10,7 @@ import {
   type QuotationItem, type InsertQuotationItem, type Invoice, type InsertInvoice,
   type InvoiceItem, type InsertInvoiceItem, type PurchaseOrder, type InsertPurchaseOrder,
   type PurchaseOrderItem, type InsertPurchaseOrderItem, type SalesOrder, type InsertSalesOrder,
-  type SalesOrderItem, type InsertSalesOrderItem, type WorkOrder, type InsertWorkOrder,
+  type SalesOrderItem, type InsertSalesOrderItem, type WorkOrder, type InsertWorkOrder, type WorkOrderItem, type InsertWorkOrderItem,
   type PackingList, type InsertPackingList, type PackingListItem, type InsertPackingListItem,
   type UserPreferences, type InsertUserPreferences, type CustomerContact, type InsertCustomerContact,
   type Address, type InsertAddress, type Country, type InsertCountry, type Language, type InsertLanguage, 
@@ -154,6 +154,11 @@ export interface IStorage {
   deleteInvoiceItem(id: string): Promise<void>;
   getInvoiceWorkOrderIds(invoiceId: string): Promise<string[]>;
   setInvoiceWorkOrders(invoiceId: string, workOrderIds: string[]): Promise<void>;
+  getWorkOrderItems(workOrderId: string): Promise<WorkOrderItem[]>;
+  getWorkOrderItem(id: string): Promise<WorkOrderItem | undefined>;
+  addWorkOrderItem(item: InsertWorkOrderItem): Promise<WorkOrderItem>;
+  updateWorkOrderItem(id: string, item: Partial<InsertWorkOrderItem>): Promise<WorkOrderItem>;
+  deleteWorkOrderItem(id: string): Promise<void>;
 
   // Purchase Order methods
   getPurchaseOrders(): Promise<PurchaseOrder[]>;
@@ -964,6 +969,30 @@ export class DatabaseStorage implements IStorage {
 
   async deleteInvoiceItem(id: string): Promise<void> {
     await db.delete(invoiceItems).where(eq(invoiceItems.id, id));
+  }
+
+  async getWorkOrderItems(workOrderId: string): Promise<WorkOrderItem[]> {
+    return await db.select().from(workOrderItems)
+      .where(eq(workOrderItems.workOrderId, workOrderId))
+      .orderBy(asc(workOrderItems.position));
+  }
+
+  async getWorkOrderItem(id: string): Promise<WorkOrderItem | undefined> {
+    const [item] = await db.select().from(workOrderItems).where(eq(workOrderItems.id, id));
+    return item || undefined;
+  }
+
+  async addWorkOrderItem(item: InsertWorkOrderItem): Promise<WorkOrderItem> {
+    const [newItem] = await db.insert(workOrderItems).values(item).returning();
+    return newItem;
+  }
+
+  async updateWorkOrderItem(id: string, item: Partial<InsertWorkOrderItem>): Promise<WorkOrderItem> {
+    return await safeUpdate(workOrderItems, item, id);
+  }
+
+  async deleteWorkOrderItem(id: string): Promise<void> {
+    await db.delete(workOrderItems).where(eq(workOrderItems.id, id));
   }
 
   async getInvoiceWorkOrderIds(invoiceId: string): Promise<string[]> {

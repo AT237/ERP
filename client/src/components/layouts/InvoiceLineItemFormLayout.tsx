@@ -33,6 +33,7 @@ import type { InvoiceItem, InsertInvoiceItem, TextSnippet, Invoice, CustomerRate
 import { z } from "zod";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { LINE_ITEM_TYPES } from "@shared/line-item-types";
 
 const lineItemFormSchema = insertInvoiceItemSchema.extend({
   unitPrice: z.string().min(1, "Prijs per eenheid is verplicht"),
@@ -568,12 +569,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     navigationParentId: invoiceId,
   });
 
-  const lineTypeOptions = [
-    { value: 'standard', label: 'Standard Item' },
-    { value: 'unique', label: 'Unique Item' },
-    { value: 'text', label: 'Text' },
-    { value: 'charges', label: 'Charges' },
-  ];
+  const lineTypeOptions = LINE_ITEM_TYPES.map(t => ({ value: t.value, label: t.label }));
 
   // ─── Left column fields (always visible) ───────────────────────────────────
 

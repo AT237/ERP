@@ -40,7 +40,7 @@ import {
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
   insertInvoiceSchema, insertInvoiceItemSchema, insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema, insertSalesOrderSchema, insertSalesOrderItemSchema,
-  insertWorkOrderSchema, insertPackingListSchema,
+  insertWorkOrderSchema, insertWorkOrderItemSchema, insertPackingListSchema,
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, 
   insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertRateAndChargeSchema, insertIncotermSchema,
@@ -1725,6 +1725,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting work order:", error);
       res.status(500).json({ message: "Failed to delete work order" });
+    }
+  });
+
+  // Work Order Item routes
+  app.get("/api/work-orders/:id/items", async (req, res) => {
+    try {
+      const items = await storage.getWorkOrderItems(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching work order items:", error);
+      res.status(500).json({ message: "Failed to fetch work order items" });
+    }
+  });
+
+  app.post("/api/work-orders/:id/items", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ['workDate']);
+      const itemData = insertWorkOrderItemSchema.parse(coerceQuantity({
+        ...body,
+        workOrderId: req.params.id
+      }));
+      const item = await storage.addWorkOrderItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error adding work order item:", error);
+      res.status(400).json({ message: "Failed to add work order item" });
+    }
+  });
+
+  app.get("/api/work-order-items/:id", async (req, res) => {
+    try {
+      const item = await storage.getWorkOrderItem(req.params.id);
+      if (!item) return res.status(404).json({ message: "Work order item not found" });
+      res.json(item);
+    } catch (error) {
+      console.error("Error fetching work order item:", error);
+      res.status(500).json({ message: "Failed to fetch work order item" });
+    }
+  });
+
+  app.put("/api/work-order-items/:id", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ['workDate']);
+      const itemData = insertWorkOrderItemSchema.partial().parse(coerceQuantity(body));
+      const item = await storage.updateWorkOrderItem(req.params.id, itemData);
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating work order item:", error);
+      res.status(400).json({ message: "Failed to update work order item" });
+    }
+  });
+
+  app.delete("/api/work-order-items/:id", async (req, res) => {
+    try {
+      await storage.deleteWorkOrderItem(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting work order item:", error);
+      res.status(500).json({ message: "Failed to delete work order item" });
     }
   });
 
