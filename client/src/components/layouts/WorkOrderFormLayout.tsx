@@ -139,6 +139,65 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     enabled: !!workOrderId,
   });
 
+  // Work order line items
+  const { data: workOrderItemsData = [] } = useQuery<WorkOrderItem[]>({
+    queryKey: ["/api/work-orders", currentWorkOrderId, "items"],
+    enabled: !!currentWorkOrderId,
+  });
+
+  const itemColumns = useMemo(() => [
+    createPositionColumn(),
+    {
+      key: 'lineType',
+      label: 'Type',
+      visible: true,
+      width: 100,
+      filterable: false,
+      sortable: false,
+    },
+    {
+      key: 'description',
+      label: 'Omschrijving',
+      visible: true,
+      width: 280,
+      filterable: false,
+      sortable: false,
+    },
+    {
+      key: 'quantity',
+      label: 'Aantal',
+      visible: true,
+      width: 80,
+      filterable: false,
+      sortable: false,
+      render: (val: any) => val != null ? parseFloat(String(val)).toString() : '',
+    },
+    {
+      key: 'unit',
+      label: 'Eenheid',
+      visible: true,
+      width: 80,
+      filterable: false,
+      sortable: false,
+    },
+    createCurrencyColumn('unitPrice', 'Prijs/eenh.'),
+    createCurrencyColumn('lineTotal', 'Totaal'),
+  ], []);
+
+  const itemTableState = useDataTable({
+    defaultColumns: itemColumns,
+    tableKey: 'work-order-items',
+  });
+
+  const handleBulkDeleteItems = async () => {
+    const selectedIds = itemTableState.selectedRows;
+    await Promise.all(selectedIds.map(id => apiRequest("DELETE", `/api/work-order-items/${id}`)));
+    queryClient.invalidateQueries({ queryKey: ["/api/work-orders", currentWorkOrderId, "items"] });
+    itemTableState.setSelectedRows([]);
+    setIsBulkDeleteOpen(false);
+    toast({ title: "Succes", description: `${selectedIds.length} regel(s) verwijderd` });
+  };
+
   // Load all projects so we can filter by customer
   const { data: allProjects = [] } = useQuery<any[]>({
     queryKey: ["/api/projects"],
@@ -597,35 +656,105 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
   };
 
   return (
-    <LayoutForm2
-      sections={createFormSections()}
-      activeSection={activeSection}
-      onSectionChange={setActiveSection}
-      form={form}
-      onSubmit={onSubmit}
-      toolbar={toolbar}
-      headerFields={createHeaderFields()}
-      documentType="work_order"
-      entityId={workOrderId}
-      isLoading={isLoadingWorkOrder}
-      changeTracking={{
-        enabled: true,
-        suppressTracking: false,
-        modifiedFieldClassName: 'ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950',
-        onChangesDetected: (hasChanges, modifiedFields) => {
-          setHasUnsavedChanges(hasChanges);
-          setModifiedFields(modifiedFields);
+    <div>
+      <LayoutForm2
+        sections={createFormSections()}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        form={form}
+        onSubmit={onSubmit}
+        toolbar={toolbar}
+        headerFields={createHeaderFields()}
+        documentType="work_order"
+        entityId={workOrderId}
+        isLoading={isLoadingWorkOrder}
+        changeTracking={{
+          enabled: true,
+          suppressTracking: false,
+          modifiedFieldClassName: 'ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950',
+          onChangesDetected: (hasChanges, modifiedFields) => {
+            setHasUnsavedChanges(hasChanges);
+            setModifiedFields(modifiedFields);
+          }
+        }}
+        originalValues={originalValues}
+        validationErrorDialog={
+          <ValidationErrorDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            errors={validErrors}
+            onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+          />
         }
-      }}
-      originalValues={originalValues}
-      validationErrorDialog={
-        <ValidationErrorDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          errors={validErrors}
-          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
-        />
-      }
-    />
+      />
+      {isEditing && (
+        <div className="px-6 py-4 pb-10 bg-white ml-[15px] mr-[15px]">
+          <DataTableLayout
+            data={workOrderItemsData}
+            isLoading={false}
+            columns={itemTableState.columns}
+            setColumns={itemTableState.setColumns}
+            searchTerm={itemTableState.searchTerm}
+            setSearchTerm={itemTableState.setSearchTerm}
+            filters={itemTableState.filters}
+            setFilters={itemTableState.setFilters}
+            onAddFilter={itemTableState.addFilter}
+            onUpdateFilter={itemTableState.updateFilter}
+            onRemoveFilter={itemTableState.removeFilter}
+            sortConfig={itemTableState.sortConfig}
+            onSort={itemTableState.handleSort}
+            selectedRows={itemTableState.selectedRows}
+            setSelectedRows={itemTableState.setSelectedRows}
+            onToggleRowSelection={itemTableState.toggleRowSelection}
+            onToggleAllRows={() => {
+              const allIds = workOrderItemsData.map(item => item.id);
+              itemTableState.toggleAllRows(allIds);
+            }}
+            getRowId={(item: WorkOrderItem) => item.id}
+            entityName="Werkbon regel"
+            entityNamePlural="Werkbon regels"
+            applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
+            applySorting={itemTableState.applySorting}
+            compact={true}
+            onRowDoubleClick={(item: WorkOrderItem) => {
+              if (currentWorkOrderId) {
+                navigate(`/work-orders/${currentWorkOrderId}/items/${item.id}`);
+              }
+            }}
+            headerActions={[
+              {
+                key: 'add-item',
+                label: 'REGEL TOEVOEGEN',
+                icon: <Plus className="h-4 w-4" />,
+                onClick: () => {
+                  if (currentWorkOrderId) {
+                    navigate(`/work-orders/${currentWorkOrderId}/items/new`);
+                  }
+                },
+                variant: 'default' as const
+              }
+            ]}
+            deleteConfirmDialog={{
+              isOpen: isBulkDeleteOpen,
+              onOpenChange: setIsBulkDeleteOpen,
+              onConfirm: handleBulkDeleteItems,
+              itemCount: itemTableState.selectedRows.length,
+            }}
+            rowActions={(item: WorkOrderItem) => [
+              {
+                key: 'edit',
+                label: 'Bewerken',
+                icon: <FileText className="h-4 w-4" />,
+                onClick: () => {
+                  if (currentWorkOrderId) {
+                    navigate(`/work-orders/${currentWorkOrderId}/items/${item.id}`);
+                  }
+                },
+              },
+            ]}
+          />
+        </div>
+      )}
+    </div>
   );
 }
