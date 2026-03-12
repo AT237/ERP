@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -253,6 +253,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const { data: fetchedInvoiceItems = [] } = useQuery<InvoiceItem[]>({
     queryKey: ["/api/invoices", currentInvoiceId, "items"],
     enabled: !!currentInvoiceId,
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
   });
 
   const { data: allWorkOrders = [] } = useQuery<any[]>({
@@ -333,8 +335,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     }
   }, [invoiceWorkOrderIds]);
 
-  useEffect(() => {
-    const subtotal = invoiceItems.reduce((sum, item) => {
+  const recalculateTotals = useCallback((items: typeof invoiceItems) => {
+    const subtotal = items.reduce((sum, item) => {
       return sum + (parseFloat(item.lineTotal || "0") || 0);
     }, 0);
     invoiceForm.setValue("subtotal", subtotal.toFixed(2));
@@ -351,7 +353,17 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     }
     const lang = watchedPrintLanguageCode || customerLanguageCode || 'nl';
     invoiceForm.setValue("totalAmountInWords", amountToWords(total, lang));
-  }, [invoiceItems, vatRatePercent, customerLanguageCode, watchedPrintLanguageCode]);
+  }, [vatRatePercent, customerLanguageCode, watchedPrintLanguageCode, invoiceForm]);
+
+  useEffect(() => {
+    recalculateTotals(invoiceItems);
+  }, [invoiceItems, vatRatePercent]);
+
+  useEffect(() => {
+    const lang = watchedPrintLanguageCode || customerLanguageCode || 'nl';
+    const total = parseFloat(invoiceForm.getValues("totalAmount") || "0") || 0;
+    invoiceForm.setValue("totalAmountInWords", amountToWords(total, lang));
+  }, [customerLanguageCode, watchedPrintLanguageCode]);
 
   const calculateDueDate = (invoiceDateStr: string, pDaysId: string) => {
     if (!invoiceDateStr || !pDaysId || paymentDaysList.length === 0) return;
