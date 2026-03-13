@@ -42,8 +42,7 @@ export function VatRateSelectWithAdd({
     : placeholder;
 
   return (
-    <div className="flex items-center gap-1">
-      <div className="relative flex-1 min-w-0">
+    <div className="relative flex-1 min-w-0">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -173,7 +172,6 @@ export function VatRateSelectWithAdd({
         {value && selectedVatRate && (
           <RefreshIconButton queryKeys={["/api/masterdata/vat-rates"]} className="absolute right-9 top-1/2 -translate-y-1/2 z-10" title="Ververs BTW-tarieven" />
         )}
-      </div>
     </div>
   );
 }

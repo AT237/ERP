@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronsUpDown, Plus, ExternalLink } from "lucide-react";
+import { RefreshIconButton } from "@/components/ui/refresh-icon-button";
 import { Button } from "@/components/ui/button";
 import {
   Popover, PopoverContent, PopoverTrigger,
@@ -87,9 +88,8 @@ export function EntitySelect({
   };
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
-      <div className="flex-1 min-w-0">
-        <Popover open={open} onOpenChange={setOpen}>
+    <div className={cn("relative flex-1 min-w-0", className)}>
+      <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
               type="button"
@@ -187,7 +187,9 @@ export function EntitySelect({
             </Command>
           </PopoverContent>
         </Popover>
-      </div>
+      {value && selected && (
+        <RefreshIconButton queryKeys={[`/api/masterdata/${endpoint}`]} className="absolute right-9 top-1/2 -translate-y-1/2 z-10" title="Ververs lijst" />
+      )}
     </div>
   );
 }

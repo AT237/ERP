@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronsUpDown, Plus, ExternalLink } from "lucide-react";
+import { RefreshIconButton } from "@/components/ui/refresh-icon-button";
 import { Button } from "@/components/ui/button";
 import { 
   Popover, PopoverContent, PopoverTrigger 
@@ -44,9 +45,8 @@ export function PaymentDaySelectWithAdd({
     : placeholder;
 
   return (
-    <div className="flex items-center gap-1">
-      <div className="flex-1 min-w-0">
-        <Popover open={open} onOpenChange={setOpen}>
+    <div className="relative flex-1 min-w-0">
+      <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -177,7 +177,9 @@ export function PaymentDaySelectWithAdd({
             </Command>
           </PopoverContent>
         </Popover>
-      </div>
+      {value && selectedPaymentDay && (
+        <RefreshIconButton queryKeys={["/api/masterdata/payment-days"]} className="absolute right-9 top-1/2 -translate-y-1/2 z-10" title="Ververs betalingsdagen" />
+      )}
     </div>
   );
 }

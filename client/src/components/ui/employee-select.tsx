@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { RefreshIconButton } from "@/components/ui/refresh-icon-button";
 import { Button } from "@/components/ui/button";
 import {
   Popover, PopoverContent, PopoverTrigger
@@ -40,6 +41,7 @@ export function EmployeeSelect({
     : null;
 
   return (
+    <div className="relative flex-1 min-w-0">
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
@@ -105,5 +107,9 @@ export function EmployeeSelect({
         </Command>
       </PopoverContent>
     </Popover>
+    {value && selectedEmployee && (
+      <RefreshIconButton queryKeys={["/api/employees"]} className="absolute right-9 top-1/2 -translate-y-1/2 z-10" title="Ververs medewerkers" />
+    )}
+    </div>
   );
 }

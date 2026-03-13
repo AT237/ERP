@@ -67,8 +67,7 @@ export function AddressSelectWithAdd({
   const selectedAddress = addresses.find(address => address.id === value);
 
   return (
-    <div className="flex items-center gap-1">
-      <div className="relative flex-1 min-w-0">
+    <div className="relative flex-1 min-w-0">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -196,7 +195,6 @@ export function AddressSelectWithAdd({
         {value && selectedAddress && (
           <RefreshIconButton queryKeys={["/api/addresses"]} className="absolute right-9 top-1/2 -translate-y-1/2 z-10" title="Ververs adressen" />
         )}
-      </div>
     </div>
   );
 }

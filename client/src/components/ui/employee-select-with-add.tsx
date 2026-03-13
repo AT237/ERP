@@ -43,8 +43,7 @@ export function EmployeeSelectWithAdd({
     : employees;
 
   return (
-    <div className="flex items-center gap-1">
-      <div className="relative flex-1 min-w-0">
+    <div className="relative flex-1 min-w-0">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -177,7 +176,6 @@ export function EmployeeSelectWithAdd({
         {value && selectedEmployee && (
           <RefreshIconButton queryKeys={["/api/employees"]} className="absolute right-9 top-1/2 -translate-y-1/2 z-10" title="Ververs medewerkers" />
         )}
-      </div>
     </div>
   );
 }

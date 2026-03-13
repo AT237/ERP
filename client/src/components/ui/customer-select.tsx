@@ -210,8 +210,7 @@ export function CustomerSelect({
 
   return (
     <>
-      <div className="flex items-center gap-1">
-        <div className="relative flex-1 min-w-0">
+      <div className="relative flex-1 min-w-0">
           <Popover open={open} onOpenChange={(isOpen) => {
             setOpen(isOpen);
             if (isOpen && onOpen) {
@@ -367,7 +366,6 @@ export function CustomerSelect({
               title="Klantgegevens synchroniseren met dit document"
             />
           )}
-        </div>
       </div>
 
       {/* Add Customer Dialog */}
