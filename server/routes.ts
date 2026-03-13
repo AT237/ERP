@@ -1263,7 +1263,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/quotations/:id", async (req, res) => {
     try {
-      await storage.deleteQuotation(req.params.id);
+      const id = req.params.id;
+
+      const usages: { location: string; id: string; label: string }[] = [];
+
+      const linkedInvoices = await db.select({ id: invoices.id, num: invoices.invoiceNumber })
+        .from(invoices).where(eq(invoices.quotationId, id));
+      for (const inv of linkedInvoices) {
+        usages.push({ location: "Facturen", id: inv.id, label: inv.num });
+      }
+
+      const linkedProforma = await db.select({ id: proformaInvoices.id, num: proformaInvoices.proformaNumber })
+        .from(proformaInvoices).where(eq(proformaInvoices.quotationId, id));
+      for (const pf of linkedProforma) {
+        usages.push({ location: "Proforma facturen", id: pf.id, label: pf.num });
+      }
+
+      if (usages.length > 0) {
+        return res.status(409).json({ message: "Quotation is in use and cannot be deleted", usages });
+      }
+
+      await storage.deleteQuotation(id);
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting quotation:", error);
