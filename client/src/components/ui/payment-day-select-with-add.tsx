@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronsUpDown, Plus, ExternalLink } from "lucide-react";
-import { RefreshIconButton } from "@/components/ui/refresh-icon-button";
 import { Button } from "@/components/ui/button";
 import { 
   Popover, PopoverContent, PopoverTrigger 
@@ -68,9 +67,6 @@ export function PaymentDaySelectWithAdd({
                   }));
                 }}
               >{displayName}</span>
-              {value && selectedPaymentDay && (
-                <RefreshIconButton queryKeys={["/api/masterdata/payment-days"]} className="ml-auto" />
-              )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
