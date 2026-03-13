@@ -1723,7 +1723,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const headerFields: InfoField[] = [
     {
       label: 'Quotation Number',
-      value: currentQuotationId ? existingQuotation?.quotationNumber || '...' : nextQuotationNumber
+      value: currentQuotationId ? existingQuotation?.quotationNumber || '...' : (quotationForm.watch("quotationNumber") || nextQuotationNumber || '...')
     },
     {
       label: 'Customer',
