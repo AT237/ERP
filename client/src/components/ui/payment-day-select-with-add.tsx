@@ -68,6 +68,9 @@ export function PaymentDaySelectWithAdd({
                   }));
                 }}
               >{displayName}</span>
+              {value && selectedPaymentDay && (
+                <RefreshIconButton queryKeys={["/api/masterdata/payment-days"]} className="ml-auto" />
+              )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -179,9 +182,6 @@ export function PaymentDaySelectWithAdd({
           </PopoverContent>
         </Popover>
       </div>
-      {value && selectedPaymentDay && (
-        <RefreshIconButton queryKeys={["/api/masterdata/payment-days"]} />
-      )}
     </div>
   );
 }

@@ -69,6 +69,9 @@ export function LanguageSelectWithAdd({
                   }));
                 }}
               >{selectedLanguage ? selectedLanguage.name : placeholder}</span>
+              {value && selectedLanguage && (
+                <RefreshIconButton queryKeys={["/api/languages"]} className="ml-auto" />
+              )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -175,9 +178,6 @@ export function LanguageSelectWithAdd({
           </PopoverContent>
         </Popover>
       </div>
-      {value && selectedLanguage && (
-        <RefreshIconButton queryKeys={["/api/languages"]} />
-      )}
     </div>
   );
 }

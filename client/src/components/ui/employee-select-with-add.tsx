@@ -68,6 +68,9 @@ export function EmployeeSelectWithAdd({
               >
                 {selectedEmployee ? displayName(selectedEmployee) : placeholder}
               </span>
+              {value && selectedEmployee && (
+                <RefreshIconButton queryKeys={["/api/employees"]} className="ml-auto" />
+              )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -175,9 +178,6 @@ export function EmployeeSelectWithAdd({
           </PopoverContent>
         </Popover>
       </div>
-      {value && selectedEmployee && (
-        <RefreshIconButton queryKeys={["/api/employees"]} />
-      )}
     </div>
   );
 }

@@ -20,11 +20,13 @@ export function RefreshIconButton({
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
   };
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    e.nativeEvent.stopImmediatePropagation();
     if (spinning) return;
     setSpinning(true);
     queryKeys.forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
