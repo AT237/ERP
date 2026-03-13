@@ -1198,17 +1198,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quotationData = insertQuotationSchema.parse(body);
       const quotation = await storage.createQuotation(quotationData);
       res.status(201).json(quotation);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating quotation:", error);
-      if (error instanceof Error) {
-        res.status(400).json({ 
-          message: "Failed to create quotation", 
-          error: error.message,
-          details: error.toString()
-        });
-      } else {
-        res.status(400).json({ message: "Failed to create quotation", error: "Unknown error" });
+      if (error?.code === '23505' || error?.message?.includes('unique')) {
+        return res.status(400).json({ message: "Dit offertenummer bestaat al. Kies een ander nummer.", error: "duplicate_number" });
       }
+      const message = error instanceof Error ? error.message : "Failed to create quotation";
+      res.status(400).json({ message });
     }
   });
 
@@ -1236,9 +1232,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quotationData = insertQuotationSchema.partial().parse(body);
       const quotation = await storage.updateQuotation(req.params.id, quotationData);
       res.json(quotation);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating quotation:", error);
-      res.status(400).json({ message: "Failed to update quotation" });
+      if (error?.code === '23505' || error?.message?.includes('unique')) {
+        return res.status(400).json({ message: "Dit offertenummer bestaat al. Kies een ander nummer.", error: "duplicate_number" });
+      }
+      const message = error instanceof Error ? error.message : "Failed to update quotation";
+      res.status(400).json({ message });
     }
   });
 

@@ -57,6 +57,7 @@ const quotationFormSchema = insertQuotationSchema.omit({
   taxAmount: true, 
   totalAmount: true,
 }).extend({
+  quotationNumber: z.string().min(1, "Offertenummer is verplicht"),
   subtotal: z.string().min(1, "Subtotal is required"),
   taxAmount: z.string().optional(),
   totalAmount: z.string().min(1, "Total amount is required"),
@@ -557,7 +558,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           quotationNumber: data.quotationNumber || nextQuotationNumber,
         }),
       });
-      if (!response.ok) throw new Error('Failed to create quotation');
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || body.message || 'Failed to create quotation');
+      }
       return response.json();
     },
     onSuccess: (savedQuotation: any) => {
@@ -568,11 +572,11 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       });
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Error creating quotation:', error);
       toast({
-        title: "Error",
-        description: "Failed to create quotation",
+        title: "Fout bij aanmaken",
+        description: error.message || "Failed to create quotation",
         variant: "destructive",
       });
     },
@@ -595,7 +599,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(processedData),
       });
-      if (!response.ok) throw new Error('Failed to update quotation');
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || body.message || 'Failed to update quotation');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -605,11 +612,11 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       });
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Error updating quotation:', error);
       toast({
-        title: "Error",
-        description: "Failed to update quotation",
+        title: "Fout bij opslaan",
+        description: error.message || "Failed to update quotation",
         variant: "destructive",
       });
     },
