@@ -244,26 +244,26 @@ export function CustomerSelect({
                   }}
                 >{selectedCustomer ? selectedCustomer.name : placeholder}</span>
                 {value && selectedCustomer && onRefreshCustomer && (
-                  <RefreshCw
-                    className={cn(
-                      "ml-auto h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer",
-                      isRefreshingCustomer && "animate-spin-once"
-                    )}
-                    title="Klantgegevens synchroniseren met dit document"
-                    onPointerDown={(e) => {
-                      e.stopPropagation();
-                      e.nativeEvent.stopImmediatePropagation();
-                    }}
-                    onClick={(e) => {
+                  <span
+                    className="ml-auto inline-flex items-center"
+                    onPointerDownCapture={(e) => e.stopPropagation()}
+                    onClickCapture={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      e.nativeEvent.stopImmediatePropagation();
                       if (isRefreshingCustomer) return;
                       setIsRefreshingCustomer(true);
                       onRefreshCustomer();
                       setTimeout(() => setIsRefreshingCustomer(false), 700);
                     }}
-                  />
+                  >
+                    <RefreshCw
+                      className={cn(
+                        "h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer",
+                        isRefreshingCustomer && "animate-spin-once"
+                      )}
+                      title="Klantgegevens synchroniseren met dit document"
+                    />
+                  </span>
                 )}
                 <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
               </Button>
