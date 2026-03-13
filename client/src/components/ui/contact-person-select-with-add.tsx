@@ -67,7 +67,7 @@ export function ContactPersonSelectWithAdd({
 
   return (
     <div className="flex items-center gap-1">
-      <div className="flex-1 min-w-0">
+      <div className="relative flex-1 min-w-0">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button

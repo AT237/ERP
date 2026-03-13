@@ -7,26 +7,23 @@ interface RefreshIconButtonProps {
   queryKeys: string[];
   className?: string;
   title?: string;
-  size?: "sm" | "default";
 }
 
 export function RefreshIconButton({
   queryKeys,
   className,
   title = "Ververs",
-  size = "default",
 }: RefreshIconButtonProps) {
   const [spinning, setSpinning] = useState(false);
 
   return (
     <span
-      className="inline-flex items-center"
-      onPointerDownCapture={(e) => {
-        e.stopPropagation();
-      }}
-      onClickCapture={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
+      className={cn(
+        "inline-flex items-center bg-background rounded-sm cursor-pointer",
+        className
+      )}
+      title={title}
+      onClick={() => {
         if (spinning) return;
         setSpinning(true);
         queryKeys.forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
@@ -35,12 +32,9 @@ export function RefreshIconButton({
     >
       <RefreshCw
         className={cn(
-          "shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer",
-          size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4",
-          spinning ? "animate-spin-once" : "",
-          className
+          "h-4 w-4 text-orange-600 hover:text-orange-700",
+          spinning && "animate-spin-once"
         )}
-        title={title}
       />
     </span>
   );
