@@ -229,7 +229,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const quotationForm = useForm<QuotationFormData>({
     resolver: zodResolver(quotationFormSchema),
     defaultValues: {
-      quotationNumber: "Auto-generated",
+      quotationNumber: "",
       customerId: "",
       projectId: "",
       description: "",
@@ -1297,36 +1297,73 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         id: "general",
         label: "General",
         rows: [
+          {
+            type: 'two-column' as const,
+            leftColumn: [
+              {
+                key: "quotationNumber",
+                label: "Number",
+                type: "custom" as const,
+                customComponent: (
+                  <div className="flex gap-1 items-center">
+                    <Input
+                      {...quotationForm.register("quotationNumber")}
+                      className={`h-10 text-xs flex-1 ${quotationForm.formState.errors.quotationNumber ? 'border-red-500' : ''}`}
+                      placeholder="Q-2026-001"
+                      data-testid="input-quotation-number"
+                    />
+                    {!currentQuotationId && (
+                      <button
+                        type="button"
+                        title="Nieuw beschikbaar nummer ophalen"
+                        onClick={async () => {
+                          const result = await refetchNextNumber();
+                          if (result.data?.number) {
+                            quotationForm.setValue("quotationNumber", result.data.number);
+                          }
+                        }}
+                        className="h-10 w-10 flex items-center justify-center rounded border border-input bg-background hover:bg-orange-50 hover:border-orange-400 transition-colors flex-shrink-0"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
+                ),
+                validation: { isRequired: true },
+                testId: "input-quotation-number"
+              }
+            ],
+            rightColumn: [
+              {
+                key: "customerId",
+                label: "Customer",
+                type: "custom" as const,
+                customComponent: (
+                  <CustomerSelect
+                    value={quotationForm.watch("customerId")}
+                    onValueChange={(value) => quotationForm.setValue("customerId", value)}
+                    placeholder="Select customer..."
+                    testId="select-customer"
+                    onOpen={() => setShouldLoadCustomers(true)}
+                    customers={customers.map(c => ({ 
+                      id: c.id, 
+                      customerNumber: c.customerNumber || '', 
+                      name: c.name, 
+                      email: c.generalEmail || undefined, 
+                      phone: c.phone || undefined 
+                    }))}
+                    onRefreshCustomer={handleRefreshCustomer}
+                  />
+                ),
+                validation: {
+                  error: quotationForm.formState.errors.customerId?.message,
+                  isRequired: true
+                },
+                testId: "field-customer"
+              }
+            ]
+          },
           createFieldsRow([
-            // Positie 1-2: Customer (full width)
-            {
-              key: "customerId",
-              label: "Customer",
-              type: "custom",
-              layout: "single",
-              customComponent: (
-                <CustomerSelect
-                  value={quotationForm.watch("customerId")}
-                  onValueChange={(value) => quotationForm.setValue("customerId", value)}
-                  placeholder="Select customer..."
-                  testId="select-customer"
-                  onOpen={() => setShouldLoadCustomers(true)}
-                  customers={customers.map(c => ({ 
-                    id: c.id, 
-                    customerNumber: c.customerNumber || '', 
-                    name: c.name, 
-                    email: c.generalEmail || undefined, 
-                    phone: c.phone || undefined 
-                  }))}
-                  onRefreshCustomer={handleRefreshCustomer}
-                />
-              ),
-              validation: {
-                error: quotationForm.formState.errors.customerId?.message,
-                isRequired: true
-              },
-              testId: "field-customer"
-            },
             // Positie 2: Project
             {
               key: "projectId",
