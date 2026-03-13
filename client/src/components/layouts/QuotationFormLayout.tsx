@@ -28,7 +28,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationSchema, insertQuotationItemSchema } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, Printer, Search, ChevronsUpDown, CopyPlus } from "lucide-react";
+import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, Printer, Search, ChevronsUpDown, CopyPlus, RefreshCw } from "lucide-react";
 import { CustomerSelect } from "@/components/ui/customer-select";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, createNumericColumn } from '@/components/layouts/DataTableLayout';
@@ -98,7 +98,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [, navigate] = useLocation();
   const [quotationItems, setQuotationItems] = useState<QuotationItem[]>([]);
   const [memos, setMemos] = useState<Memo[]>([]);
-  const [nextQuotationNumber, setNextQuotationNumber] = useState<string>("Q-2025-001");
+  const [nextQuotationNumber, setNextQuotationNumber] = useState<string>("");
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string>("");
   const [currentPDF, setCurrentPDF] = useState<jsPDF | null>(null);
@@ -199,10 +199,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const existingQuotationItems = quotationDetails?.items || [];
   const quotationCustomer = quotationDetails?.customer;
 
-  // Fetch all quotations to calculate next number for new quotations
-  const { data: allQuotations = [] } = useQuery<Quotation[]>({
-    queryKey: ["/api/quotations"],
-    enabled: !currentQuotationId, // Only fetch when creating new quotation
+  // Fetch next quotation number from server
+  const { data: nextNumberData, refetch: refetchNextNumber } = useQuery<{ number: string }>({
+    queryKey: ["/api/quotations/next-number"],
+    enabled: !currentQuotationId,
   });
 
   // Helper function to convert yyyy-MM-dd to dd-mm-yyyy
@@ -393,27 +393,15 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     quotationForm.setValue('totalAmount', totalAmount.toFixed(2));
   }, [quotationItems, quotationForm]);
 
-  // Calculate next quotation number for new quotations
+  // Set quotation number from API when creating a new quotation
   useEffect(() => {
-    if (!currentQuotationId && allQuotations.length >= 0) {
-      const currentYear = new Date().getFullYear();
-      
-      // Filter quotations for current year and find the highest number
-      const currentYearQuotations = allQuotations
-        .filter(q => q.quotationNumber && q.quotationNumber.startsWith(`Q-${currentYear}`))
-        .map(q => {
-          const match = q.quotationNumber?.match(/Q-(\d{4})-(\d{3})/);
-          return match ? parseInt(match[2]) : 0;
-        })
-        .filter(num => !isNaN(num));
-      
-      const lastNumber = currentYearQuotations.length > 0 ? Math.max(...currentYearQuotations) : 0;
-      const nextNumber = lastNumber + 1;
-      const newQuotationNumber = `Q-${currentYear}-${nextNumber.toString().padStart(3, '0')}`;
-      
-      setNextQuotationNumber(newQuotationNumber);
+    if (!currentQuotationId && nextNumberData?.number) {
+      setNextQuotationNumber(nextNumberData.number);
+      if (!quotationForm.getValues("quotationNumber")) {
+        quotationForm.setValue("quotationNumber", nextNumberData.number);
+      }
     }
-  }, [allQuotations, currentQuotationId]);
+  }, [nextNumberData, currentQuotationId]);
 
   // Load existing quotation data when editing
   useEffect(() => {
@@ -566,7 +554,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
-          quotationNumber: nextQuotationNumber,
+          quotationNumber: data.quotationNumber || nextQuotationNumber,
         }),
       });
       if (!response.ok) throw new Error('Failed to create quotation');
@@ -973,7 +961,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     // Quotation title (centered)
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    const quotationNumber = quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber");
+    const quotationNumber = quotationForm.watch("quotationNumber") || nextQuotationNumber;
     const titleWidth = doc.getTextWidth(`QUOTATION ${quotationNumber}`);
     doc.text(`QUOTATION ${quotationNumber}`, (pageWidth - titleWidth) / 2, yPos);
     
@@ -1180,7 +1168,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         setCurrentPDF(pdf);
       }
       
-      const quotationNumber = quotationForm.watch("quotationNumber") === "Auto-generated" ? nextQuotationNumber : quotationForm.watch("quotationNumber");
+      const quotationNumber = quotationForm.watch("quotationNumber") || nextQuotationNumber;
       const filename = `quotation-${quotationNumber}.pdf`;
       pdf.save(filename);
       toast({
