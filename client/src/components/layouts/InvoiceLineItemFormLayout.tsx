@@ -752,6 +752,11 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       <InventorySelect
         value={form.watch("itemId" as any) || ""}
         onValueChange={(val) => { form.setValue("itemId" as any, val); setHasUnsavedChanges(true); }}
+        onItemRefreshed={(freshItem) => {
+          const price = freshItem.sellingPrice || freshItem.unitPrice;
+          if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
+          if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
+        }}
         placeholder="Artikel zoeken..."
         testId="select-inventory-item"
       />
@@ -767,6 +772,11 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         <InventorySelect
           value={form.watch("itemId" as any) || ""}
           onValueChange={(val) => { form.setValue("itemId" as any, val); setHasUnsavedChanges(true); }}
+          onItemRefreshed={(freshItem) => {
+            const price = freshItem.sellingPrice || freshItem.unitPrice;
+            if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
+            if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
+          }}
           placeholder="Artikel zoeken in catalogus..."
           testId="select-inventory-item"
         />
