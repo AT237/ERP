@@ -67,9 +67,6 @@ export function RateSelectWithAdd({
                   }));
                 }}
               >{displayName}</span>
-              {value && selectedRate && (
-                <RefreshIconButton queryKeys={["/api/masterdata/rates-and-charges"]} className="ml-auto" />
-              )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -175,6 +172,9 @@ export function RateSelectWithAdd({
             </Command>
           </PopoverContent>
         </Popover>
+        {value && selectedRate && (
+          <RefreshIconButton queryKeys={["/api/masterdata/rates-and-charges"]} className="absolute right-9 top-1/2 -translate-y-1/2 z-10" title="Ververs tarieven" />
+        )}
       </div>
     </div>
   );

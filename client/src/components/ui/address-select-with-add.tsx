@@ -90,9 +90,6 @@ export function AddressSelectWithAdd({
                   }));
                 }}
               >{selectedAddress ? formatAddress(selectedAddress) : placeholder}</span>
-              {value && selectedAddress && (
-                <RefreshIconButton queryKeys={["/api/addresses"]} className="ml-auto" />
-              )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -196,6 +193,9 @@ export function AddressSelectWithAdd({
             </Command>
           </PopoverContent>
         </Popover>
+        {value && selectedAddress && (
+          <RefreshIconButton queryKeys={["/api/addresses"]} className="absolute right-9 top-1/2 -translate-y-1/2 z-10" title="Ververs adressen" />
+        )}
       </div>
     </div>
   );

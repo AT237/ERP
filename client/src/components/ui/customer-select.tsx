@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Plus, X, RefreshCw, ExternalLink } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, X, ExternalLink } from "lucide-react";
+import { RefreshIconButton } from "@/components/ui/refresh-icon-button";
 import { Button } from "@/components/ui/button";
 import { 
   Popover, PopoverContent, PopoverTrigger 
@@ -67,7 +68,6 @@ export function CustomerSelect({
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<string | null>(null);
-  const [isRefreshingCustomer, setIsRefreshingCustomer] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -211,7 +211,7 @@ export function CustomerSelect({
   return (
     <>
       <div className="flex items-center gap-1">
-        <div className="flex-1 min-w-0">
+        <div className="relative flex-1 min-w-0">
           <Popover open={open} onOpenChange={(isOpen) => {
             setOpen(isOpen);
             if (isOpen && onOpen) {
@@ -243,28 +243,6 @@ export function CustomerSelect({
                     }));
                   }}
                 >{selectedCustomer ? selectedCustomer.name : placeholder}</span>
-                {value && selectedCustomer && onRefreshCustomer && (
-                  <span
-                    className="ml-auto inline-flex items-center"
-                    onPointerDownCapture={(e) => e.stopPropagation()}
-                    onClickCapture={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      if (isRefreshingCustomer) return;
-                      setIsRefreshingCustomer(true);
-                      onRefreshCustomer();
-                      setTimeout(() => setIsRefreshingCustomer(false), 700);
-                    }}
-                  >
-                    <RefreshCw
-                      className={cn(
-                        "h-4 w-4 shrink-0 text-orange-600 hover:text-orange-700 cursor-pointer",
-                        isRefreshingCustomer && "animate-spin-once"
-                      )}
-                      title="Klantgegevens synchroniseren met dit document"
-                    />
-                  </span>
-                )}
                 <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
@@ -382,6 +360,13 @@ export function CustomerSelect({
               </Command>
             </PopoverContent>
           </Popover>
+          {value && selectedCustomer && onRefreshCustomer && (
+            <RefreshIconButton
+              onRefresh={onRefreshCustomer}
+              className="absolute right-9 top-1/2 -translate-y-1/2 z-10"
+              title="Klantgegevens synchroniseren met dit document"
+            />
+          )}
         </div>
       </div>
 

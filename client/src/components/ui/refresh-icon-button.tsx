@@ -4,13 +4,15 @@ import { queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 
 interface RefreshIconButtonProps {
-  queryKeys: string[];
+  queryKeys?: string[];
+  onRefresh?: () => void;
   className?: string;
   title?: string;
 }
 
 export function RefreshIconButton({
   queryKeys,
+  onRefresh,
   className,
   title = "Ververs",
 }: RefreshIconButtonProps) {
@@ -26,7 +28,11 @@ export function RefreshIconButton({
       onClick={() => {
         if (spinning) return;
         setSpinning(true);
-        queryKeys.forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
+        if (onRefresh) {
+          onRefresh();
+        } else if (queryKeys) {
+          queryKeys.forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
+        }
         setTimeout(() => setSpinning(false), 700);
       }}
     >

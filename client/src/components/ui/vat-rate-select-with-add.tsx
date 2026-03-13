@@ -65,9 +65,6 @@ export function VatRateSelectWithAdd({
                   }));
                 }}
               >{displayName}</span>
-              {value && selectedVatRate && (
-                <RefreshIconButton queryKeys={["/api/masterdata/vat-rates"]} className="ml-auto" />
-              )}
               <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -173,6 +170,9 @@ export function VatRateSelectWithAdd({
             </Command>
           </PopoverContent>
         </Popover>
+        {value && selectedVatRate && (
+          <RefreshIconButton queryKeys={["/api/masterdata/vat-rates"]} className="absolute right-9 top-1/2 -translate-y-1/2 z-10" title="Ververs BTW-tarieven" />
+        )}
       </div>
     </div>
   );
