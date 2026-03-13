@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,7 +89,6 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   
-  const [, navigate] = useLocation();
   const { toast } = useToast();
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
     description: { label: "Omschrijving" },
@@ -428,12 +426,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         }
       }));
       
-      // Navigate to edit URL of the new item (avoids 404 from history.back to unknown route)
-      if (invoiceId && newLineItem?.id) {
-        navigate(`/invoices/${invoiceId}/items/${newLineItem.id}`);
-      } else {
-        onSave();
-      }
+      onSave();
     },
     onError: (error: Error) => {
       toast({
