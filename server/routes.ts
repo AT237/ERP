@@ -1265,18 +1265,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = req.params.id;
 
-      const usages: { location: string; id: string; label: string }[] = [];
+      const usages: { location: string; count: number; examples: string[] }[] = [];
 
       const linkedInvoices = await db.select({ id: invoices.id, num: invoices.invoiceNumber })
         .from(invoices).where(eq(invoices.quotationId, id));
-      for (const inv of linkedInvoices) {
-        usages.push({ location: "Facturen", id: inv.id, label: inv.num });
+      if (linkedInvoices.length > 0) {
+        usages.push({ location: "Facturen", count: linkedInvoices.length, examples: linkedInvoices.slice(0, 3).map(i => i.num) });
       }
 
       const linkedProforma = await db.select({ id: proformaInvoices.id, num: proformaInvoices.proformaNumber })
         .from(proformaInvoices).where(eq(proformaInvoices.quotationId, id));
-      for (const pf of linkedProforma) {
-        usages.push({ location: "Proforma facturen", id: pf.id, label: pf.num });
+      if (linkedProforma.length > 0) {
+        usages.push({ location: "Proforma facturen", count: linkedProforma.length, examples: linkedProforma.slice(0, 3).map(p => p.num) });
       }
 
       if (usages.length > 0) {
