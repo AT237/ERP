@@ -437,7 +437,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
   const fieldLineType: FormField2<LineItemFormData> = {
     key: 'lineType', label: 'Line Type', type: 'select',
     options: lineTypeOptions,
-    setValue: (value: string) => form.setValue('lineType', value),
+    setValue: (value: string) => { form.setValue('lineType', value); setHasUnsavedChanges(true); },
     watch: () => form.watch('lineType'),
     validation: { isRequired: true, error: form.formState.errors.lineType?.message },
     testId: 'select-line-type',
@@ -502,7 +502,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
   const fieldUnitPrice: FormField2<LineItemFormData> = {
     key: 'unitPrice', label: 'Prijs per eenheid', type: 'decimal',
     placeholder: '0,00',
-    setValue: (value) => form.setValue('unitPrice', value),
+    setValue: (value) => { form.setValue('unitPrice', value); setHasUnsavedChanges(true); },
     watch: () => form.watch('unitPrice'),
     validation: { isRequired: true, error: form.formState.errors.unitPrice?.message },
     testId: 'input-unit-price',
@@ -527,7 +527,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
   const fieldDiscount: FormField2<LineItemFormData> = {
     key: 'discountPercent', label: 'Korting %', type: 'decimal',
     placeholder: '0,00',
-    setValue: (value) => form.setValue('discountPercent', value),
+    setValue: (value) => { form.setValue('discountPercent', value); setHasUnsavedChanges(true); },
     watch: () => form.watch('discountPercent'),
     validation: { error: form.formState.errors.discountPercent?.message },
     testId: 'input-discount-percent',
