@@ -1024,6 +1024,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/projects/:id/related-records", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const [quotationsRes, quotationRequestsRes, invoicesRes, proformaRes, workOrdersRes, packingListsRes] = await Promise.all([
+        pool.query(
+          `SELECT q.id, q.quotation_number as number, q.status, q.quotation_date as date, q.total_amount as amount, c.name as customer_name
+           FROM quotations q LEFT JOIN customers c ON q.customer_id = c.id
+           WHERE q.project_id = $1 ORDER BY q.quotation_date DESC`, [id]
+        ),
+        pool.query(
+          `SELECT qr.id, qr.request_number as number, qr.status, qr.request_date as date, NULL as amount, c.name as customer_name
+           FROM quotation_requests qr LEFT JOIN customers c ON qr.customer_id = c.id
+           WHERE qr.project_id = $1 ORDER BY qr.request_date DESC`, [id]
+        ),
+        pool.query(
+          `SELECT inv.id, inv.invoice_number as number, inv.status, inv.invoice_date as date, inv.total_amount as amount, c.name as customer_name
+           FROM invoices inv LEFT JOIN customers c ON inv.customer_id = c.id
+           WHERE inv.project_id = $1 ORDER BY inv.invoice_date DESC`, [id]
+        ),
+        pool.query(
+          `SELECT pi.id, pi.proforma_number as number, pi.status, pi.created_at as date, pi.total_amount as amount, c.name as customer_name
+           FROM proforma_invoices pi LEFT JOIN customers c ON pi.customer_id = c.id
+           WHERE pi.project_id = $1 ORDER BY pi.created_at DESC`, [id]
+        ),
+        pool.query(
+          `SELECT wo.id, wo.order_number as number, wo.status, wo.created_at as date, NULL as amount, wo.title as description
+           FROM work_orders wo WHERE wo.project_id = $1 ORDER BY wo.created_at DESC`, [id]
+        ),
+        pool.query(
+          `SELECT pl.id, pl.packing_number as number, pl.status, pl.created_at as date, NULL as amount, c.name as customer_name
+           FROM packing_lists pl LEFT JOIN customers c ON pl.customer_id = c.id
+           WHERE pl.project_id = $1 ORDER BY pl.created_at DESC`, [id]
+        ),
+      ]);
+      res.json({
+        quotations: quotationsRes.rows,
+        quotationRequests: quotationRequestsRes.rows,
+        invoices: invoicesRes.rows,
+        proformaInvoices: proformaRes.rows,
+        workOrders: workOrdersRes.rows,
+        packingLists: packingListsRes.rows,
+      });
+    } catch (error) {
+      console.error("Error fetching project related records:", error);
+      res.status(500).json({ message: "Failed to fetch related records" });
+    }
+  });
+
   // Quotation routes
   app.get("/api/quotations", async (req, res) => {
     try {
