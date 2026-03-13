@@ -1073,6 +1073,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Quotation routes
+  app.get("/api/quotations/next-number", async (req, res) => {
+    try {
+      const currentYear = new Date().getFullYear();
+      const pattern = `^Q-${currentYear}-[0-9]{3}$`;
+      const rows = await db.execute(
+        sql`SELECT quotation_number FROM quotations WHERE quotation_number ~ ${pattern} ORDER BY quotation_number`
+      );
+      const used = new Set((rows.rows as any[]).map((r: any) => r.quotation_number as string));
+      let next = 1;
+      while (used.has(`Q-${currentYear}-${String(next).padStart(3, '0')}`)) {
+        next++;
+      }
+      res.json({ number: `Q-${currentYear}-${String(next).padStart(3, '0')}` });
+    } catch (error) {
+      console.error("Error generating next quotation number:", error);
+      res.status(500).json({ message: "Failed to generate next quotation number" });
+    }
+  });
+
   app.get("/api/quotations", async (req, res) => {
     try {
       const quotations = await storage.getQuotations();
