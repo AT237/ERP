@@ -1,6 +1,14 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { hashPassword, verifyPassword } from "./auth";
+
+declare module "express-session" {
+  interface SessionData {
+    userId: string;
+    username: string;
+  }
+}
 
 function parseDateFields(body: Record<string, any>, fields: string[]): Record<string, any> {
   const result = { ...body };
