@@ -1,4 +1,4 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, verifyPassword } from "./auth";
@@ -64,7 +64,7 @@ import {
   tasks, insertTaskSchema,
   serialNumbers, insertSerialNumberSchema
 } from "@shared/schema";
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { eq, sql } from 'drizzle-orm';
 import { db, pool, checkDatabaseStatus } from './db';
 
@@ -111,7 +111,70 @@ async function buildCustomerSnapshot(customerId: string): Promise<string | null>
   }
 }
 
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (req.session?.userId) return next();
+  res.status(401).json({ message: "Not authenticated" });
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth routes (public - no login required)
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      if (!username || !password) {
+        return res.status(400).json({ message: "Gebruikersnaam en wachtwoord zijn verplicht" });
+      }
+      const user = await storage.getUserByUsername(username.trim());
+      if (!user || !verifyPassword(password, user.password)) {
+        return res.status(401).json({ message: "Gebruikersnaam of wachtwoord onjuist" });
+      }
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      res.json({ id: user.id, username: user.username, role: user.role });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Inloggen mislukt" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy(() => {
+      res.json({ message: "Logged out" });
+    });
+  });
+
+  app.get("/api/auth/me", (req, res) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    res.json({ id: req.session.userId, username: req.session.username });
+  });
+
+  app.post("/api/auth/change-password", requireAuth, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Huidig en nieuw wachtwoord zijn verplicht" });
+      }
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "Nieuw wachtwoord moet minimaal 6 tekens zijn" });
+      }
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || !verifyPassword(currentPassword, user.password)) {
+        return res.status(401).json({ message: "Huidig wachtwoord onjuist" });
+      }
+      const { users } = await import("@shared/schema");
+      await db.update(users).set({ password: hashPassword(newPassword) }).where(eq(users.id, user.id));
+      res.json({ message: "Wachtwoord succesvol gewijzigd" });
+    } catch (error) {
+      console.error("Change password error:", error);
+      res.status(500).json({ message: "Wachtwoord wijzigen mislukt" });
+    }
+  });
+
+  // Protect all other /api routes
+  app.use("/api", requireAuth);
+
   // Dashboard routes
   app.get("/api/dashboard/stats", async (req, res) => {
     try {

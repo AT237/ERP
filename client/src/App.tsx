@@ -1,10 +1,11 @@
 import React, { Suspense } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { DebugPanel } from "@/components/DebugPanel";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import LoginPage from "@/pages/login";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Customers from "@/pages/customers";
@@ -545,6 +546,33 @@ function Router() {
 
 const PrintPreviewPage = React.lazy(() => import('./pages/print-preview'));
 
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["/api/auth/me"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/me");
+      if (!res.ok) return null;
+      return res.json();
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-gray-400 text-sm">Laden...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -558,7 +586,9 @@ function App() {
             </Suspense>
           </Route>
           <Route>
-            <Router />
+            <AuthGuard>
+              <Router />
+            </AuthGuard>
           </Route>
         </Switch>
       </TooltipProvider>
