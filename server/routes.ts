@@ -163,8 +163,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user || !verifyPassword(currentPassword, user.password)) {
         return res.status(401).json({ message: "Huidig wachtwoord onjuist" });
       }
-      const { users } = await import("@shared/schema");
-      await db.update(users).set({ password: hashPassword(newPassword) }).where(eq(users.id, user.id));
+      const { users: usersTable } = await import("@shared/schema");
+      await db.update(usersTable).set({ password: hashPassword(newPassword) }).where(eq(usersTable.id, user.id));
       res.json({ message: "Wachtwoord succesvol gewijzigd" });
     } catch (error) {
       console.error("Change password error:", error);

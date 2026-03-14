@@ -77,6 +77,14 @@ async function ensureDefaultUser() {
         role: "admin",
       });
       log("Default admin user created (username: admin, password: admin123)");
+    } else if (!existing.password.includes(":")) {
+      // Migrate plaintext password to hashed version
+      const { db } = await import("./db");
+      const { users } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const plain = existing.password;
+      await db.update(users).set({ password: hashPassword(plain) }).where(eq(users.username, "admin"));
+      log("Admin password migrated to secure hashed format");
     }
   } catch (err: any) {
     log(`Could not ensure default user: ${err.message}`);

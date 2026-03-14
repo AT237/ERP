@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
-import { X, Menu, PanelRightClose } from "lucide-react";
+import { X, Menu, PanelRightClose, LogOut } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -88,8 +88,25 @@ interface Tab {
 
 export default function Layout({ children }: LayoutProps) {
   const [location, navigate] = useLocation();
-  const userId = "admin"; // TODO: Get from auth context
   const isMobile = useIsMobile();
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["/api/auth/me"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/me");
+      if (!res.ok) return null;
+      return res.json() as Promise<{ id: string; username: string }>;
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+  const userId = currentUser?.id ?? "admin";
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    queryClient.clear();
+    window.location.href = "/";
+  };
 
   // Fetch company logo from database (ID starting with "cad")
   const { data: companyLogo } = useQuery<{ imageData: string } | null>({
@@ -1469,16 +1486,25 @@ export default function Layout({ children }: LayoutProps) {
         )}
         
         {/* User Info */}
-        <div className="text-right">
-          <div className="text-sm md:text-lg font-semibold text-foreground" data-testid="user-name">
-            Admin Gebruiker
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <div className="text-sm md:text-lg font-semibold text-foreground" data-testid="user-name">
+              {currentUser?.username ?? "Gebruiker"}
+            </div>
+            <div className="text-xs md:text-sm text-muted-foreground hidden md:block" data-testid="current-date">
+              {formatDate(getCurrentTime())}
+            </div>
+            <div className="text-xs md:text-sm font-mono text-muted-foreground" data-testid="current-time">
+              {formatTime(getCurrentTime())}
+            </div>
           </div>
-          <div className="text-xs md:text-sm text-muted-foreground hidden md:block" data-testid="current-date">
-            {formatDate(getCurrentTime())}
-          </div>
-          <div className="text-xs md:text-sm font-mono text-muted-foreground" data-testid="current-time">
-            {formatTime(getCurrentTime())}
-          </div>
+          <button
+            onClick={handleLogout}
+            title="Uitloggen"
+            className="p-2 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </div>
       {/* Main Content Area */}
