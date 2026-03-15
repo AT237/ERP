@@ -116,9 +116,51 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   res.status(401).json({ message: "Not authenticated" });
 }
 
+// Brute-force protection: track failed login attempts per IP
+const loginAttempts = new Map<string, { count: number; blockedUntil: number }>();
+const MAX_ATTEMPTS = 5;
+const BLOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+function getClientIp(req: Request): string {
+  return (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.socket.remoteAddress || "unknown";
+}
+
+function checkLoginRateLimit(ip: string): { blocked: boolean; minutesLeft?: number } {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (entry && entry.blockedUntil > now) {
+    const minutesLeft = Math.ceil((entry.blockedUntil - now) / 60000);
+    return { blocked: true, minutesLeft };
+  }
+  return { blocked: false };
+}
+
+function recordFailedLogin(ip: string) {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip) || { count: 0, blockedUntil: 0 };
+  if (entry.blockedUntil < now) entry.count = 0; // reset if old block expired
+  entry.count += 1;
+  if (entry.count >= MAX_ATTEMPTS) {
+    entry.blockedUntil = now + BLOCK_DURATION_MS;
+  }
+  loginAttempts.set(ip, entry);
+}
+
+function clearLoginAttempts(ip: string) {
+  loginAttempts.delete(ip);
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes (public - no login required)
   app.post("/api/auth/login", async (req, res) => {
+    const ip = getClientIp(req);
+    const rateLimit = checkLoginRateLimit(ip);
+    if (rateLimit.blocked) {
+      return res.status(429).json({
+        message: `Te veel mislukte pogingen. Probeer het over ${rateLimit.minutesLeft} minuten opnieuw.`,
+      });
+    }
+
     try {
       const { username, password } = req.body;
       if (!username || !password) {
@@ -126,8 +168,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const user = await storage.getUserByUsername(username.trim());
       if (!user || !verifyPassword(password, user.password)) {
-        return res.status(401).json({ message: "Gebruikersnaam of wachtwoord onjuist" });
+        recordFailedLogin(ip);
+        const entry = loginAttempts.get(ip);
+        const attemptsLeft = MAX_ATTEMPTS - (entry?.count ?? 0);
+        const msg = attemptsLeft > 0
+          ? `Gebruikersnaam of wachtwoord onjuist. Nog ${attemptsLeft} poging${attemptsLeft === 1 ? "" : "en"} voor blokkering.`
+          : `Te veel mislukte pogingen. Account geblokkeerd voor 15 minuten.`;
+        return res.status(401).json({ message: msg });
       }
+      clearLoginAttempts(ip);
       req.session.userId = user.id;
       req.session.username = user.username;
       res.json({ id: user.id, username: user.username, role: user.role });
