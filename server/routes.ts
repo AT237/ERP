@@ -116,18 +116,14 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   res.status(401).json({ message: "Not authenticated" });
 }
 
-// Brute-force protection: track failed login attempts per IP
+// Brute-force protection: track failed login attempts per username
 const loginAttempts = new Map<string, { count: number; blockedUntil: number }>();
 const MAX_ATTEMPTS = 5;
 const BLOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
-function getClientIp(req: Request): string {
-  return (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.socket.remoteAddress || "unknown";
-}
-
-function checkLoginRateLimit(ip: string): { blocked: boolean; minutesLeft?: number } {
+function checkLoginRateLimit(username: string): { blocked: boolean; minutesLeft?: number } {
   const now = Date.now();
-  const entry = loginAttempts.get(ip);
+  const entry = loginAttempts.get(username);
   if (entry && entry.blockedUntil > now) {
     const minutesLeft = Math.ceil((entry.blockedUntil - now) / 60000);
     return { blocked: true, minutesLeft };
@@ -135,19 +131,16 @@ function checkLoginRateLimit(ip: string): { blocked: boolean; minutesLeft?: numb
   return { blocked: false };
 }
 
-function recordFailedLogin(ip: string) {
+function recordFailedLogin(username: string) {
   const now = Date.now();
-  const entry = loginAttempts.get(ip) || { count: 0, blockedUntil: 0 };
-  if (entry.blockedUntil < now) entry.count = 0; // reset if old block expired
-  entry.count += 1;
-  if (entry.count >= MAX_ATTEMPTS) {
-    entry.blockedUntil = now + BLOCK_DURATION_MS;
-  }
-  loginAttempts.set(ip, entry);
+  const existing = loginAttempts.get(username);
+  const count = existing && existing.blockedUntil > now ? existing.count + 1 : 1;
+  const blockedUntil = count >= MAX_ATTEMPTS ? now + BLOCK_DURATION_MS : 0;
+  loginAttempts.set(username, { count, blockedUntil });
 }
 
-function clearLoginAttempts(ip: string) {
-  loginAttempts.delete(ip);
+function clearLoginAttempts(username: string) {
+  loginAttempts.delete(username);
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
