@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { LayoutForm2, buildFormPersistenceKey, type FormSection2, type FormField2, createFieldRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
@@ -622,7 +623,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
     switch (lineTypeValue) {
       case 'charges': return [fieldTechnician, fieldWorkDate, fieldDescription, fieldQuantity, fieldUnitPrice, fieldUnit];
       case 'unique':  return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice];
-      case 'standard': return [fieldDescriptionWithLookup, fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount];
+      case 'standard': return [fieldDescriptionWithLookup, fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount, fieldDiscountedPrice];
       case 'text':    return [fieldTextContent];
       default:        return [];
     }
