@@ -332,10 +332,17 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
       }));
       
           },
-    onError: () => {
+    onError: async (error: any) => {
+      let message = "Failed to create work order";
+      try {
+        if (error?.response) {
+          const data = await error.response.json().catch(() => null);
+          if (data?.message) message = data.message;
+        }
+      } catch {}
       toast({
         title: "Error",
-        description: "Failed to create work order",
+        description: message,
         variant: "destructive",
       });
     },
@@ -360,10 +367,17 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         description: "Work order updated successfully",
       });
           },
-    onError: () => {
+    onError: async (error: any) => {
+      let message = "Failed to update work order";
+      try {
+        if (error?.response) {
+          const data = await error.response.json().catch(() => null);
+          if (data?.message) message = data.message;
+        }
+      } catch {}
       toast({
         title: "Error",
-        description: "Failed to update work order",
+        description: message,
         variant: "destructive",
       });
     },

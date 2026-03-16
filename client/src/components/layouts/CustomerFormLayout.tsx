@@ -32,7 +32,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Users, User, Building, CreditCard, FileText, AlertTriangle, Plus, Trash2, Mail, ExternalLink } from "lucide-react";
+import { Save, ArrowLeft, Users, User, Building, CreditCard, FileText, AlertTriangle, Plus, Trash2, Mail, ExternalLink, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import type { Customer, InsertCustomer, Country, EmailTemplate } from "@shared/schema";
@@ -46,6 +46,7 @@ function formatIban(value: string | null | undefined): string {
 
 // Base form schema for customer data - include all fields from insertCustomerSchema
 const baseCustomerFormSchema = insertCustomerSchema.extend({
+  customerNumber: z.string().optional(),
   paymentTerms: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined), // Keep for backward compatibility
   paymentDaysId: z.string().optional(),
   rateId: z.string().optional().nullable(),
@@ -292,6 +293,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
     resolver: zodResolver(customerFormSchema as any),
     mode: 'onBlur', // Validate on blur for better UX
     defaultValues: {
+      customerNumber: "",
       name: "",
       kvkNummer: "",
       countryCode: "",
@@ -395,6 +397,18 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
   const { data: ratesAndCharges } = useQuery<Array<{ id: string; code: string; name: string; rate: string; unit: string | null; description: string | null }>>({
     queryKey: ["/api/masterdata/rates-and-charges"],
   });
+
+  const { data: nextNumberData, refetch: refetchNextNumber } = useQuery<{ number: string }>({
+    queryKey: ["/api/customers/next-number"],
+    enabled: !isEditing,
+    staleTime: 0,
+  });
+
+  useEffect(() => {
+    if (!isEditing && nextNumberData?.number && !form.getValues("customerNumber")) {
+      form.setValue("customerNumber", nextNumberData.number);
+    }
+  }, [nextNumberData, isEditing]);
 
   interface CustomerRateEntry {
     id?: string;
@@ -508,6 +522,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
     
     if (customer) {
       const formData = {
+        customerNumber: (customer as any).customerNumber || "",
         name: customer.name || "",
         kvkNummer: customer.kvkNummer || "",
         countryCode: customer.countryCode || "",
@@ -541,6 +556,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       setHasUnsavedChanges(false);
     } else if (!isEditing) {
       const emptyFormData = {
+        customerNumber: "",
         name: "",
         kvkNummer: "",
         countryCode: "",
@@ -670,10 +686,17 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       }));
       
           },
-    onError: () => {
+    onError: async (error: any) => {
+      let message = "Kan klant niet toevoegen";
+      try {
+        if (error?.response) {
+          const data = await error.response.json().catch(() => null);
+          if (data?.message) message = data.message;
+        }
+      } catch {}
       toast({
         title: "Fout",
-        description: "Kan klant niet toevoegen",
+        description: message,
         variant: "destructive",
       });
     },
@@ -708,10 +731,17 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
         description: "Klant bijgewerkt",
       });
           },
-    onError: () => {
+    onError: async (error: any) => {
+      let message = "Kan klant niet bijwerken";
+      try {
+        if (error?.response) {
+          const data = await error.response.json().catch(() => null);
+          if (data?.message) message = data.message;
+        }
+      } catch {}
       toast({
         title: "Fout",
-        description: "Kan klant niet bijwerken",
+        description: message,
         variant: "destructive",
       });
     },
@@ -719,17 +749,13 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
 
   // Form handlers
   const onSubmit = (data: any) => {
-    console.log("💾 Form submission data before transformation:", data);
-    
-    // Transform the data to match expected types
     const transformedData = {
       ...data,
-      // Ensure paymentTerms is a number (schema should handle this, but be explicit)
       paymentTerms: typeof data.paymentTerms === 'string' ? parseInt(data.paymentTerms, 10) : data.paymentTerms,
     };
-    
-    console.log("💾 Form submission data after transformation:", transformedData);
-    console.log("💾 paymentTerms type:", typeof transformedData.paymentTerms, "value:", transformedData.paymentTerms);
+    if (data.customerNumber) {
+      transformedData.customerNumber = data.customerNumber;
+    }
     
     if (isEditing) {
       updateMutation.mutate(transformedData);
@@ -816,6 +842,38 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       icon: <Building className="h-4 w-4" />,
       rows: [
         createFieldsRow([
+          // Positie 0: Klantnummer
+          {
+            key: "customerNumber" as any,
+            label: "Customer Number",
+            type: "custom",
+            customComponent: (
+              <div className="flex gap-1 items-center">
+                <Input
+                  {...form.register("customerNumber")}
+                  className={`h-10 text-xs flex-1 ${modifiedFields.has("customerNumber") ? 'ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950' : ''}`}
+                  placeholder="DEB-0001"
+                  data-testid="input-customer-number"
+                />
+                {!isEditing && (
+                  <button
+                    type="button"
+                    title="Nieuw beschikbaar nummer ophalen"
+                    onClick={async () => {
+                      const result = await refetchNextNumber();
+                      if (result.data?.number) {
+                        form.setValue("customerNumber", result.data.number);
+                      }
+                    }}
+                    className="h-10 w-10 flex items-center justify-center rounded border border-input bg-background hover:bg-orange-50 hover:border-orange-400 transition-colors flex-shrink-0"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+            ),
+            testId: "input-customer-number",
+          } as FormField2<CustomerFormData>,
           // Positie 1: Bedrijfsnaam
           {
             key: "name",

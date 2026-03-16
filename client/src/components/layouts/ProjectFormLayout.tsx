@@ -379,9 +379,34 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
         createFieldRow({
           key: "projectNumber" as any,
           label: "Project Number",
-          type: "display",
-          displayValue: isEditing && project ? (project as any).projectNumber || '' : '(auto-generated)',
-          testId: "display-project-number",
+          type: "custom",
+          customComponent: (
+            <div className="flex gap-1 items-center">
+              <Input
+                {...form.register("projectNumber")}
+                className={`h-10 text-xs flex-1 ${modifiedFields.has("projectNumber") ? 'ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950' : ''}`}
+                placeholder="PR-0001"
+                data-testid="input-project-number"
+              />
+              {!isEditing && (
+                <button
+                  type="button"
+                  title="Nieuw beschikbaar nummer ophalen"
+                  onClick={async () => {
+                    const result = await refetchNextNumber();
+                    if (result.data?.number) {
+                      form.setValue("projectNumber", result.data.number);
+                    }
+                  }}
+                  className="h-10 w-10 flex items-center justify-center rounded border border-input bg-background hover:bg-orange-50 hover:border-orange-400 transition-colors flex-shrink-0"
+                >
+                  <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              )}
+            </div>
+          ),
+          testId: "input-project-number",
+          isModified: modifiedFields.has("projectNumber"),
         } as any),
         createFieldRow({
           key: "name",
