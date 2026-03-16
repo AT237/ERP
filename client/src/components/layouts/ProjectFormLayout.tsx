@@ -16,7 +16,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProjectSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { FolderOpen, Calendar, DollarSign, Image, Truck, List } from "lucide-react";
+import { FolderOpen, Calendar, DollarSign, Image, Truck, List, RefreshCw } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { ProjectRelatedRecords } from "@/components/ui/project-related-records";
 import { AttachmentsGallery } from "@/components/ui/attachments-gallery";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +32,7 @@ import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow,
 
 // Form schema for project data
 const projectFormSchema = insertProjectSchema.extend({
+  projectNumber: z.string().optional(),
   totalValue: z.string().optional(),
   progress: z.string().optional(),
   startDate: z.string().optional(),
@@ -76,6 +78,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     resolver: zodResolver(projectFormSchema),
     mode: 'onBlur',
     defaultValues: {
+      projectNumber: "",
       name: "",
       description: "",
       customerId: "",
@@ -150,6 +153,18 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     staleTime: 10 * 60 * 1000,
   });
 
+  const { data: nextNumberData, refetch: refetchNextNumber } = useQuery<{ number: string }>({
+    queryKey: ["/api/projects/next-number"],
+    enabled: !isEditing,
+    staleTime: 0,
+  });
+
+  useEffect(() => {
+    if (!isEditing && nextNumberData?.number && !form.getValues("projectNumber")) {
+      form.setValue("projectNumber", nextNumberData.number);
+    }
+  }, [nextNumberData, isEditing]);
+
   // Load invoiced total for this project
   const { data: invoicedTotalData } = useQuery<{ total: string }>({
     queryKey: ["/api/projects", projectId, "invoiced-total"],
@@ -160,6 +175,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
   useEffect(() => {
     if (project) {
       const formData = {
+        projectNumber: (project as any).projectNumber || "",
         name: project.name || "",
         description: project.description || "",
         customerId: project.customerId || "",
@@ -206,6 +222,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
   }, [checkScheduled, originalValues, checkForChanges]);
 
   // Watch for changes in form values and update change tracking (throttled)
+  const projectNumberValue = form.watch("projectNumber");
   const nameValue = form.watch("name");
   const descriptionValue = form.watch("description");
   const customerIdValue = form.watch("customerId");
@@ -223,7 +240,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
 
   useEffect(() => {
     scheduleChangeCheck();
-  }, [nameValue, descriptionValue, customerIdValue, statusValue, startDateValue, endDateValue, totalValueValue, progressValue, incotermIdValue, insuranceCoveredValue, modeOfShipmentValue, deliveryTimeValue, portOfLoadingValue, finalDestinationValue, scheduleChangeCheck]);
+  }, [projectNumberValue, nameValue, descriptionValue, customerIdValue, statusValue, startDateValue, endDateValue, totalValueValue, progressValue, incotermIdValue, insuranceCoveredValue, modeOfShipmentValue, deliveryTimeValue, portOfLoadingValue, finalDestinationValue, scheduleChangeCheck]);
 
   // Communicate unsaved changes status to parent Layout
   useEffect(() => {
@@ -263,10 +280,17 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       }));
       
           },
-    onError: () => {
+    onError: async (error: any) => {
+      let message = "Failed to create project";
+      try {
+        if (error?.response) {
+          const data = await error.response.json().catch(() => null);
+          if (data?.message) message = data.message;
+        }
+      } catch {}
       toast({
         title: "Error",
-        description: "Failed to create project",
+        description: message,
         variant: "destructive",
       });
     },
@@ -292,10 +316,17 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
         description: "Project updated successfully",
       });
           },
-    onError: () => {
+    onError: async (error: any) => {
+      let message = "Failed to update project";
+      try {
+        if (error?.response) {
+          const data = await error.response.json().catch(() => null);
+          if (data?.message) message = data.message;
+        }
+      } catch {}
       toast({
         title: "Error",
-        description: "Failed to update project",
+        description: message,
         variant: "destructive",
       });
     },
@@ -303,13 +334,16 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
 
   // Form handlers
   const onSubmit = (data: FormData) => {
-    const transformedData: InsertProject = {
+    const transformedData: any = {
       ...data,
       totalValue: data.totalValue || undefined,
       progress: data.progress ? parseInt(data.progress) : 0,
       startDate: data.startDate ? toStorageDate(data.startDate) : undefined,
       endDate: data.endDate ? toStorageDate(data.endDate) : undefined,
     };
+    if (data.projectNumber) {
+      transformedData.projectNumber = data.projectNumber;
+    }
     
     if (isEditing) {
       updateMutation.mutate(transformedData);

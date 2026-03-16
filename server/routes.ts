@@ -1972,9 +1972,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orderData = insertWorkOrderSchema.partial().parse(body);
       const order = await storage.updateWorkOrder(req.params.id, orderData);
       res.json(order);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating work order:", error);
-      res.status(400).json({ message: "Failed to update work order" });
+      if (error?.code === '23505' && error?.constraint?.includes('order_number')) {
+        res.status(409).json({ message: `Werkordernummer "${req.body.orderNumber}" is al in gebruik. Kies een ander nummer.` });
+      } else {
+        res.status(400).json({ message: "Failed to update work order" });
+      }
     }
   });
 
