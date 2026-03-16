@@ -116,6 +116,14 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   res.status(401).json({ message: "Not authenticated" });
 }
 
+function getClientIp(req: Request): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return (Array.isArray(forwarded) ? forwarded[0] : forwarded).split(',')[0].trim();
+  }
+  return req.socket?.remoteAddress ?? req.ip ?? 'unknown';
+}
+
 // Brute-force protection: track failed login attempts per username
 const loginAttempts = new Map<string, { count: number; blockedUntil: number }>();
 const MAX_ATTEMPTS = 5;
