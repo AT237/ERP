@@ -77,8 +77,23 @@ async function seedProductionDatabase() {
       return;
     }
     log("Production database is empty, importing seed data...");
-    const seedPath = join(import.meta.dirname, "seed-data.sql");
-    const sql = readFileSync(seedPath, "utf-8");
+    const possiblePaths = [
+      join(import.meta.dirname, "seed-data.sql"),
+      join(process.cwd(), "server", "seed-data.sql"),
+      join(process.cwd(), "dist", "seed-data.sql"),
+    ];
+    let sql = "";
+    for (const p of possiblePaths) {
+      try {
+        sql = readFileSync(p, "utf-8");
+        log(`Seed file found at: ${p}`);
+        break;
+      } catch { }
+    }
+    if (!sql) {
+      log("Seed file not found in any location");
+      return;
+    }
     const statements = sql.split("\n").filter(line => line.startsWith("INSERT INTO"));
     let imported = 0;
     for (const stmt of statements) {
