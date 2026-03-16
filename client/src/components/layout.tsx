@@ -361,8 +361,12 @@ export default function Layout({ children }: LayoutProps) {
     setActiveTabId(pageInfo.id);
   }, [location, children]);
 
-  // Get current time only when needed, no interval
-  const getCurrentTime = () => new Date();
+  const [currentTime, setCurrentTime] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('nl-NL', {
@@ -1476,26 +1480,30 @@ export default function Layout({ children }: LayoutProps) {
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Top Logo Bar */}
       <div className="bg-white border-b border-border px-4 md:px-6 py-2 md:py-4 flex items-center justify-between">
-        {companyLogo?.imageData && (
-          <img 
-            src={companyLogo.imageData} 
-            alt="ATE Solutions B.V." 
-            className="h-8 md:h-16 w-auto object-contain"
-            data-testid="top-logo-bar"
-          />
-        )}
+        <div className="flex items-center">
+          {companyLogo?.imageData ? (
+            <img 
+              src={companyLogo.imageData} 
+              alt="ATE Solutions B.V." 
+              className="h-8 md:h-16 w-auto object-contain"
+              data-testid="top-logo-bar"
+            />
+          ) : (
+            <span className="text-lg md:text-2xl font-bold text-foreground">ATE Solutions B.V.</span>
+          )}
+        </div>
         
         {/* User Info */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto">
           <div className="text-right">
             <div className="text-sm md:text-lg font-semibold text-foreground" data-testid="user-name">
               {currentUser?.username ?? "Gebruiker"}
             </div>
             <div className="text-xs md:text-sm text-muted-foreground hidden md:block" data-testid="current-date">
-              {formatDate(getCurrentTime())}
+              {formatDate(currentTime)}
             </div>
             <div className="text-xs md:text-sm font-mono text-muted-foreground" data-testid="current-time">
-              {formatTime(getCurrentTime())}
+              {formatTime(currentTime)}
             </div>
           </div>
           <button
