@@ -710,6 +710,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     key: 'unitPrice',
     label: 'Prijs per eenheid',
     type: 'decimal',
+    prefix: '€',
     placeholder: '0,00',
     setValue: (value) => { form.setValue('unitPrice', value); setHasUnsavedChanges(true); },
     watch: () => form.watch('unitPrice'),
@@ -812,8 +813,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     label: 'Prijs na korting',
     type: 'custom',
     customComponent: (
-      <div className="mt-1 px-3 py-2 rounded-md border bg-muted/50 text-sm font-mono" data-testid="discounted-unit-price">
-        {discountedUnitPrice ? `€ ${discountedUnitPrice}` : '—'}
+      <div className="mt-1 px-3 py-2 rounded-md border bg-muted/50 text-sm" data-testid="discounted-unit-price">
+        {discountedUnitPrice ? `€ ${discountedUnitPrice.replace('.', ',')}` : '—'}
       </div>
     ),
   };
