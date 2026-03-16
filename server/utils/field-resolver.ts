@@ -633,10 +633,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     }
   }
 
-  // Load units of measure for code→name lookup (case-insensitive)
   const uomList = await db.select({ code: unitsOfMeasure.code, name: unitsOfMeasure.name }).from(unitsOfMeasure);
-  const uomMap: Record<string, string> = Object.fromEntries(uomList.map(u => [u.code, u.name]));
-  const uomMapLower: Record<string, string> = Object.fromEntries(uomList.map(u => [u.code.toLowerCase(), u.name]));
 
   // Load invoice items
   const rawItems = await db.query.invoiceItems.findMany({
@@ -650,7 +647,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     description: item.description,
     descriptionInternal: item.descriptionInternal || null,
     quantity: parseFloat(String(item.quantity || 0)),
-    unit: item.unit ? (uomMap[item.unit] || uomMapLower[item.unit.toLowerCase()] || item.unit) : "",
+    unit: item.unit || "",
     unitPrice: item.unitPrice || "0.00",
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",

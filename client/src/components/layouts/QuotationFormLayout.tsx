@@ -274,7 +274,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       category: "General",
       image: "",
       isComposite: false,
-      unit: "pcs",
+      unit: "Pcs.",
       status: "active",
     },
   });

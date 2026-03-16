@@ -103,7 +103,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       invoiceId: invoiceId || "",
       description: "",
       quantity: 1,
-      unit: "pcs",
+      unit: "Pcs.",
       unitPrice: "0.00",
       lineTotal: "0.00",
       lineType: "",
@@ -352,7 +352,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     } else {
       // 'standard' or 'unique' → default to pcs if unit is empty
       const currentUnit = form.getValues("unit" as any);
-      if (!currentUnit) form.setValue("unit" as any, "pcs");
+      if (!currentUnit) form.setValue("unit" as any, "Pcs.");
     }
   }, [lineTypeValue]);
 

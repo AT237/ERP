@@ -102,7 +102,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
       workOrderId: workOrderId || "",
       description: "",
       quantity: 1,
-      unit: "pcs",
+      unit: "Pcs.",
       unitPrice: "0.00",
       lineTotal: "0.00",
       lineType: "",
@@ -288,7 +288,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
       }
     } else {
       const currentUnit = form.getValues("unit" as any);
-      if (!currentUnit) form.setValue("unit" as any, "pcs");
+      if (!currentUnit) form.setValue("unit" as any, "Pcs.");
     }
   }, [lineTypeValue]);
 
