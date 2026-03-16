@@ -94,6 +94,7 @@ async function ensureDefaultUser() {
 const PgSession = connectPgSimple(session);
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
