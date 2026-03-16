@@ -547,12 +547,9 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
     key: 'discountedUnitPrice' as any,
     label: 'Prijs na korting',
     type: 'custom',
-    render: () => (
-      <div>
-        <Label className="text-xs text-muted-foreground">Prijs na korting</Label>
-        <div className="mt-1 px-3 py-2 rounded-md border bg-muted/50 text-sm font-mono" data-testid="discounted-unit-price">
-          {discountedUnitPrice ? `€ ${discountedUnitPrice}` : '—'}
-        </div>
+    customComponent: (
+      <div className="mt-1 px-3 py-2 rounded-md border bg-muted/50 text-sm font-mono" data-testid="discounted-unit-price">
+        {discountedUnitPrice ? `€ ${discountedUnitPrice}` : '—'}
       </div>
     ),
   };
