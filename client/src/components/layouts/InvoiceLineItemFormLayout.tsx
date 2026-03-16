@@ -316,13 +316,27 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     return snippets;
   }, [textSnippets, searchedSnippets, snippetSearchTerm, selectedSnippetCategory]);
 
+  const prevDiscountRef = useRef<string>(form.getValues("discountPercent") || "0");
+
   useEffect(() => {
     const quantity = form.getValues("quantity");
     const unitPrice = parseFloat(form.getValues("unitPrice")) || 0;
     const discount = parseFloat(form.getValues("discountPercent") || "0") || 0;
-    const discountedPrice = unitPrice * (1 - discount / 100);
-    const lineTotal = (quantity * discountedPrice).toFixed(2);
-    form.setValue("lineTotal", lineTotal);
+    const prevDiscount = parseFloat(prevDiscountRef.current || "0") || 0;
+
+    if (discount !== prevDiscount && discount > 0) {
+      const discountedPrice = unitPrice * (1 - discount / 100);
+      const newUnitPrice = discountedPrice.toFixed(2);
+      form.setValue("unitPrice", newUnitPrice);
+      form.setValue("discountPercent", "0");
+      prevDiscountRef.current = "0";
+      const lineTotal = (quantity * discountedPrice).toFixed(2);
+      form.setValue("lineTotal", lineTotal);
+    } else {
+      prevDiscountRef.current = form.getValues("discountPercent") || "0";
+      const lineTotal = (quantity * unitPrice).toFixed(2);
+      form.setValue("lineTotal", lineTotal);
+    }
   }, [quantityValue, unitPriceValue, discountPercentValue, form]);
 
   // Auto-fill unit and clear description when lineType changes
