@@ -257,25 +257,21 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
     return snippets.filter(s => s.isActive);
   }, [textSnippets, searchedSnippets, snippetSearchTerm, selectedSnippetCategory]);
 
-  const prevDiscountRef = useRef<string>(form.getValues("discountPercent") || "0");
+  const discountedUnitPrice = useMemo(() => {
+    const unitPrice = parseFloat(unitPriceValue || "0") || 0;
+    const discount = parseFloat(discountPercentValue || "0") || 0;
+    if (discount > 0) {
+      return (unitPrice * (1 - discount / 100)).toFixed(2);
+    }
+    return null;
+  }, [unitPriceValue, discountPercentValue]);
 
   useEffect(() => {
     const quantity = form.getValues("quantity");
     const unitPrice = parseFloat(form.getValues("unitPrice")) || 0;
     const discount = parseFloat(form.getValues("discountPercent") || "0") || 0;
-    const prevDiscount = parseFloat(prevDiscountRef.current || "0") || 0;
-
-    if (discount !== prevDiscount && discount > 0) {
-      const discountedPrice = unitPrice * (1 - discount / 100);
-      const newUnitPrice = discountedPrice.toFixed(2);
-      form.setValue("unitPrice", newUnitPrice);
-      form.setValue("discountPercent", "0");
-      prevDiscountRef.current = "0";
-      form.setValue("lineTotal", (quantity * discountedPrice).toFixed(2));
-    } else {
-      prevDiscountRef.current = form.getValues("discountPercent") || "0";
-      form.setValue("lineTotal", (quantity * unitPrice).toFixed(2));
-    }
+    const discountedPrice = unitPrice * (1 - discount / 100);
+    form.setValue("lineTotal", (quantity * discountedPrice).toFixed(2));
   }, [quantityValue, unitPriceValue, discountPercentValue, form]);
 
   useEffect(() => {
@@ -544,6 +540,20 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
     watch: () => form.watch('discountPercent'),
     validation: { error: form.formState.errors.discountPercent?.message },
     testId: 'input-discount-percent',
+  };
+
+  const fieldDiscountedPrice: FormField2<LineItemFormData> = {
+    key: 'discountedUnitPrice' as any,
+    label: 'Prijs na korting',
+    type: 'custom',
+    render: () => (
+      <div>
+        <Label className="text-xs text-muted-foreground">Prijs na korting</Label>
+        <div className="mt-1 px-3 py-2 rounded-md border bg-muted/50 text-sm font-mono" data-testid="discounted-unit-price">
+          {discountedUnitPrice ? `€ ${discountedUnitPrice}` : '—'}
+        </div>
+      </div>
+    ),
   };
 
   const fieldDescriptionWithLookup: FormField2<LineItemFormData> = {
