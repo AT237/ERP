@@ -94,7 +94,9 @@ async function seedProductionDatabase() {
       log("Seed file not found in any location");
       return;
     }
-    const statements = sql.split("\n").filter(line => line.startsWith("INSERT INTO"));
+    const statements = sql.split("\n").filter(line => 
+      line.startsWith("INSERT INTO") || line.startsWith("SELECT pg_catalog.setval") || line.startsWith("SELECT setval")
+    );
     let imported = 0;
     for (const stmt of statements) {
       try {
@@ -107,6 +109,37 @@ async function seedProductionDatabase() {
     log(`Seed complete: ${imported} records imported`);
   } catch (err: any) {
     log(`Seed error: ${err.message}`);
+  }
+}
+
+async function syncSequences() {
+  try {
+    const sequenceMap: Record<string, { table: string; column: string }> = {
+      'project_number_seq': { table: 'projects', column: 'project_number' },
+      'invoice_number_seq': { table: 'invoices', column: 'invoice_number' },
+      'quotation_number_seq': { table: 'quotations', column: 'quotation_number' },
+      'work_order_number_seq': { table: 'work_orders', column: 'work_order_number' },
+      'customer_number_seq': { table: 'customers', column: 'customer_number' },
+    };
+    for (const [seqName, { table, column }] of Object.entries(sequenceMap)) {
+      try {
+        const maxResult = await pool.query(
+          `SELECT COALESCE(MAX(REGEXP_REPLACE(${column}, '[^0-9]', '', 'g')::int), 0) as max_num FROM ${table}`
+        );
+        const maxNum = maxResult.rows[0].max_num;
+        if (maxNum > 0) {
+          const seqResult = await pool.query(`SELECT last_value, is_called FROM ${seqName}`);
+          const currentVal = seqResult.rows[0].is_called ? seqResult.rows[0].last_value : 0;
+          if (currentVal < maxNum) {
+            await pool.query(`SELECT setval('${seqName}', $1, true)`, [maxNum]);
+            log(`Sequence ${seqName} synced: ${currentVal} → ${maxNum}`);
+          }
+        }
+      } catch {
+      }
+    }
+  } catch (err: any) {
+    log(`Sequence sync warning: ${err.message}`);
   }
 }
 
@@ -186,6 +219,7 @@ app.use((req, res, next) => {
 
 (async () => {
   await seedProductionDatabase();
+  await syncSequences();
   await ensureDefaultUser();
 
   const server = await registerRoutes(app);
