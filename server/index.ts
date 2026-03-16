@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { readFileSync } from "fs";
+import { join } from "path";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
@@ -64,6 +66,33 @@ function scheduleDailyBackup() {
     }, msUntilNext);
   };
   scheduleNext();
+}
+
+async function seedProductionDatabase() {
+  try {
+    const result = await pool.query("SELECT COUNT(*) as count FROM customers");
+    const count = parseInt(result.rows[0].count, 10);
+    if (count > 0) {
+      log("Production database already has data, skipping seed");
+      return;
+    }
+    log("Production database is empty, importing seed data...");
+    const seedPath = join(import.meta.dirname, "seed-data.sql");
+    const sql = readFileSync(seedPath, "utf-8");
+    const statements = sql.split("\n").filter(line => line.startsWith("INSERT INTO"));
+    let imported = 0;
+    for (const stmt of statements) {
+      try {
+        await pool.query(stmt);
+        imported++;
+      } catch (err: any) {
+        log(`Seed warning: ${err.message?.substring(0, 100)}`);
+      }
+    }
+    log(`Seed complete: ${imported} records imported`);
+  } catch (err: any) {
+    log(`Seed error: ${err.message}`);
+  }
 }
 
 async function ensureDefaultUser() {
@@ -141,6 +170,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await seedProductionDatabase();
   await ensureDefaultUser();
 
   const server = await registerRoutes(app);
