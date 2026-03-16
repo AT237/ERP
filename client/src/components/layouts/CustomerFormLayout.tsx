@@ -686,12 +686,14 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
       }));
       
           },
-    onError: async (error: any) => {
+    onError: (error: any) => {
       let message = "Kan klant niet toevoegen";
       try {
-        if (error?.response) {
-          const data = await error.response.json().catch(() => null);
-          if (data?.message) message = data.message;
+        const errMsg = error?.message || "";
+        const jsonStart = errMsg.indexOf('{');
+        if (jsonStart >= 0) {
+          const parsed = JSON.parse(errMsg.slice(jsonStart));
+          if (parsed?.message) message = parsed.message;
         }
       } catch {}
       toast({
