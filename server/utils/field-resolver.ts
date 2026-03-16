@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, unitsOfMeasure, workOrders, invoiceWorkOrders, vatRates } from "../../shared/schema";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, workOrders, invoiceWorkOrders, vatRates } from "../../shared/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 
 function formatIban(value: string | null): string | null {
@@ -632,8 +632,6 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       paymentTermsLabel = paymentDay.name_en || paymentDay.name_nl;
     }
   }
-
-  const uomList = await db.select({ code: unitsOfMeasure.code, name: unitsOfMeasure.name }).from(unitsOfMeasure);
 
   // Load invoice items
   const rawItems = await db.query.invoiceItems.findMany({
