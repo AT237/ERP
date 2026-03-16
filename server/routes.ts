@@ -346,11 +346,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/customers/next-number", async (req, res) => {
+    try {
+      const rows = await db.execute(
+        sql`SELECT customer_number FROM customers WHERE customer_number ~ '^DEB-[0-9]{4}$' ORDER BY customer_number`
+      );
+      const used = new Set((rows.rows as any[]).map((r: any) => r.customer_number as string));
+      let next = 1;
+      while (used.has(`DEB-${String(next).padStart(4, '0')}`)) {
+        next++;
+      }
+      res.json({ number: `DEB-${String(next).padStart(4, '0')}` });
+    } catch (error) {
+      console.error("Error generating next customer number:", error);
+      res.status(500).json({ message: "Failed to generate next customer number" });
+    }
+  });
+
   app.post("/api/customers", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['lastContactDate', 'conversionDate']);
       const customerData = insertCustomerSchema.parse(body);
-      // Convert empty strings to null for nullable foreign key fields
       const cleanedData = {
         ...customerData,
         addressId: customerData.addressId === '' ? null : customerData.addressId,
@@ -363,9 +379,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       const customer = await storage.createCustomer(cleanedData);
       res.status(201).json(customer);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating customer:", error);
-      res.status(400).json({ message: "Failed to create customer" });
+      if (error?.code === '23505' && error?.constraint?.includes('customer_number')) {
+        res.status(409).json({ message: `Klantnummer "${req.body.customerNumber}" is al in gebruik. Kies een ander nummer.` });
+      } else {
+        res.status(400).json({ message: "Failed to create customer" });
+      }
     }
   });
 
@@ -386,9 +406,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       const customer = await storage.updateCustomer(req.params.id, cleanedData);
       res.json(customer);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating customer:", error);
-      res.status(400).json({ message: "Failed to update customer" });
+      if (error?.code === '23505' && error?.constraint?.includes('customer_number')) {
+        res.status(409).json({ message: `Klantnummer "${req.body.customerNumber}" is al in gebruik. Kies een ander nummer.` });
+      } else {
+        res.status(400).json({ message: "Failed to update customer" });
+      }
     }
   });
 
@@ -1105,18 +1129,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/projects/next-number", async (req, res) => {
+    try {
+      const rows = await db.execute(
+        sql`SELECT project_number FROM projects WHERE project_number ~ '^PR-[0-9]{4}$' ORDER BY project_number`
+      );
+      const used = new Set((rows.rows as any[]).map((r: any) => r.project_number as string));
+      let next = 1;
+      while (used.has(`PR-${String(next).padStart(4, '0')}`)) {
+        next++;
+      }
+      res.json({ number: `PR-${String(next).padStart(4, '0')}` });
+    } catch (error) {
+      console.error("Error generating next project number:", error);
+      res.status(500).json({ message: "Failed to generate next project number" });
+    }
+  });
+
   app.post("/api/projects", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['startDate', 'endDate']);
-      // Convert empty string FK fields to null to avoid FK constraint violations
       const nullableFields = ['incotermId', 'customerId', 'statusId'];
       nullableFields.forEach(f => { if (body[f] === '') body[f] = null; });
       const projectData = insertProjectSchema.parse(body);
       const project = await storage.createProject(projectData);
       res.status(201).json(project);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating project:", error);
-      res.status(400).json({ message: "Failed to create project" });
+      if (error?.code === '23505' && error?.constraint?.includes('project_number')) {
+        res.status(409).json({ message: `Projectnummer "${req.body.projectNumber}" is al in gebruik. Kies een ander nummer.` });
+      } else {
+        res.status(400).json({ message: "Failed to create project" });
+      }
     }
   });
 
@@ -1129,9 +1173,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectData = insertProjectSchema.partial().parse(body);
       const project = await storage.updateProject(req.params.id, projectData);
       res.json(project);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating project:", error);
-      res.status(400).json({ message: "Failed to update project" });
+      if (error?.code === '23505' && error?.constraint?.includes('project_number')) {
+        res.status(409).json({ message: `Projectnummer "${req.body.projectNumber}" is al in gebruik. Kies een ander nummer.` });
+      } else {
+        res.status(400).json({ message: "Failed to update project" });
+      }
     }
   });
 
@@ -1908,9 +1956,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orderData = insertWorkOrderSchema.parse(body);
       const order = await storage.createWorkOrder(orderData);
       res.status(201).json(order);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating work order:", error);
-      res.status(400).json({ message: "Failed to create work order" });
+      if (error?.code === '23505' && error?.constraint?.includes('order_number')) {
+        res.status(409).json({ message: `Werkordernummer "${req.body.orderNumber}" is al in gebruik. Kies een ander nummer.` });
+      } else {
+        res.status(400).json({ message: "Failed to create work order" });
+      }
     }
   });
 
