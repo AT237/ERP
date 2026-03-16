@@ -730,8 +730,21 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       // Verzamel alle velden uit alle rijen van deze sectie
       const allFields: FormField2<T>[] = [];
       
-      // Check if this section uses explicit two-column layout
+      // Check if this section has mixed row types (two-column + fields/custom)
       const hasTwoColumnLayout = section.rows.some(row => row.type === 'two-column');
+      const hasOtherRows = section.rows.some(row => row.type !== 'two-column');
+      
+      if (hasTwoColumnLayout && hasOtherRows) {
+        return {
+          id: section.id,
+          label: section.label,
+          content: (
+            <div className="space-y-[20px] pt-[10px]">
+              {section.rows.map((row, idx) => renderRow(row, idx))}
+            </div>
+          )
+        };
+      }
       
       if (hasTwoColumnLayout) {
         const twoColRow = section.rows.find(row => row.type === 'two-column');
