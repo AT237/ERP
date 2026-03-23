@@ -83,7 +83,7 @@ export default function MasterDataFormLayout({ type, id, onSave }: MasterDataFor
         if (field.type === 'number') {
           acc[field.name] = 0;
         } else if (field.type === 'select' && field.options?.every(o => o.value === 'true' || o.value === 'false')) {
-          acc[field.name] = false;
+          acc[field.name] = field.name === 'isActive' ? true : false;
         } else {
           acc[field.name] = '';
         }

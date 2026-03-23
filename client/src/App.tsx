@@ -579,7 +579,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <DebugPanel />
+        {import.meta.env.DEV && <DebugPanel />}
         <Switch>
           <Route path="/print/:documentType/:entityId">
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Laden…</div>}>
