@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict RY0vMUOcZmjwfPFwkc0fF3Urje6kIS5DixbBBVyVB9nCpybPZ7TASZqoawoXlz9
+\restrict tJf8386JqhXEnPQ9iujbiQ4dy9KTH1V8dnS7uhIFCTEGDLAUuberAPHIarISd7W
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -3362,10 +3362,12 @@ bffa71e4-59b0-47a4-9d35-59992507a495	\N	\N	\N	2026-03-02 18:55:11.019526	2026-03
 --
 
 COPY public.user_sessions (sid, sess, expire) FROM stdin;
+5i5NJctrq8HC1_-gTeQhs_P114zWYyGi	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:54:21.727Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:54:22
 oypZfvgkL_zW8_gElfJoYHlAoOn9Krxy	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:45:11.462Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:45:12
-yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:49:49
 HA9sx8HgSCwNfLzZ25Rs-zot8Jz-5Xmc	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:49:50.966Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:49:52
 oEmieC_lXuDng36uYwBtCrmu_Lvml_oH	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-23T10:41:41.532Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 09:11:01
+yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:54:14
+brOBMLpZ3lvlr-61KcpCFD9Ju20B-_Rd	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:54:15.680Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:54:16
 \.
 
 
@@ -4708,5 +4710,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict RY0vMUOcZmjwfPFwkc0fF3Urje6kIS5DixbBBVyVB9nCpybPZ7TASZqoawoXlz9
+\unrestrict tJf8386JqhXEnPQ9iujbiQ4dy9KTH1V8dnS7uhIFCTEGDLAUuberAPHIarISd7W
 
