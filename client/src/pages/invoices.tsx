@@ -105,19 +105,21 @@ export default function Invoices({}: InvoicesProps) {
       filterable: true, 
       sortable: true,
       renderCell: (value: string) => {
-        const getStatusVariant = (status: string) => {
+        const getStatusStyle = (status: string): { bg: string; text: string; border: string } => {
           switch (status) {
-            case "paid": return "default";
-            case "pending": return "secondary";
-            case "overdue": return "destructive";
-            case "cancelled": return "outline";
-            default: return "secondary";
+            case "concept": return { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300" };
+            case "sent": case "pending": return { bg: "bg-green-100", text: "text-green-600", border: "border-green-300" };
+            case "paid": return { bg: "bg-green-200", text: "text-green-800", border: "border-green-500" };
+            case "overdue": return { bg: "bg-red-100", text: "text-red-700", border: "border-red-300" };
+            case "cancelled": return { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-300" };
+            default: return { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300" };
           }
         };
+        const style = getStatusStyle(value || "concept");
         return (
-          <Badge variant={getStatusVariant(value || "pending")}>
-            {value || 'pending'}
-          </Badge>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${style.bg} ${style.text} ${style.border}`}>
+            {value || 'concept'}
+          </span>
         );
       }
     },

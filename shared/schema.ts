@@ -316,6 +316,7 @@ export const invoices = pgTable("invoices", {
   printLanguageCode: text("print_language_code").default("nl"),
   printProjectNo: boolean("print_project_no").default(true),
   printPaymentConditions: boolean("print_payment_conditions").default(true),
+  incotermId: varchar("incoterm_id").references(() => incoterms.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

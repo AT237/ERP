@@ -738,7 +738,7 @@ export class DatabaseStorage implements IStorage {
       validUntilDate = quoteDate;
     }
     
-    const [newQuotation] = await db.insert(quotations).values({
+    const insertValues: any = {
       customerId: quotation.customerId,
       projectId: quotation.projectId,
       status: quotation.status || "draft",
@@ -755,7 +755,11 @@ export class DatabaseStorage implements IStorage {
       incoTerms: quotation.incoTerms,
       paymentConditions: quotation.paymentConditions,
       deliveryConditions: quotation.deliveryConditions
-    }).returning();
+    };
+    if (quotation.quotationNumber) {
+      insertValues.quotationNumber = quotation.quotationNumber;
+    }
+    const [newQuotation] = await db.insert(quotations).values(insertValues).returning();
     return newQuotation;
   }
 

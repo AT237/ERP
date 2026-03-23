@@ -62,19 +62,20 @@ const defaultColumns: ColumnConfig[] = [
     filterable: true, 
     sortable: true,
     renderCell: (value: string, row: WorkOrder) => {
-      const getStatusVariant = (status: string) => {
+      const getStatusStyle = (status: string): { bg: string; text: string; border: string } => {
         switch (status) {
-          case "completed": return "default";
-          case "in-progress": return "secondary";
-          case "pending": return "outline";
-          case "cancelled": return "destructive";
-          default: return "outline";
+          case "completed": return { bg: "bg-green-100", text: "text-green-700", border: "border-green-300" };
+          case "in-progress": return { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-300" };
+          case "pending": return { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300" };
+          case "cancelled": return { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-300" };
+          default: return { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300" };
         }
       };
+      const style = getStatusStyle(value || "pending");
       return (
-        <Badge variant={getStatusVariant(value || "pending")} data-testid={`badge-status-${row.id}`}>
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${style.bg} ${style.text} ${style.border}`} data-testid={`badge-status-${row.id}`}>
           {value || "pending"}
-        </Badge>
+        </span>
       );
     }
   },

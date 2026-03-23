@@ -94,11 +94,24 @@ export default function Quotations({}: QuotationsProps) {
       width: 100, 
       filterable: true, 
       sortable: true,
-      renderCell: (value: string) => (
-        <Badge variant={value === 'draft' ? 'secondary' : value === 'sent' ? 'default' : 'outline'}>
-          {value || 'draft'}
-        </Badge>
-      )
+      renderCell: (value: string) => {
+        const getStatusStyle = (status: string): { bg: string; text: string; border: string } => {
+          switch (status) {
+            case "draft": return { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300" };
+            case "sent": return { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-300" };
+            case "accepted": case "approved": return { bg: "bg-green-100", text: "text-green-700", border: "border-green-300" };
+            case "rejected": case "declined": return { bg: "bg-red-100", text: "text-red-700", border: "border-red-300" };
+            case "expired": return { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-300" };
+            default: return { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300" };
+          }
+        };
+        const style = getStatusStyle(value || "draft");
+        return (
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${style.bg} ${style.text} ${style.border}`}>
+            {value || 'draft'}
+          </span>
+        );
+      }
     },
     { 
       key: 'revisionNumber', 

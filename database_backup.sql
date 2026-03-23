@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ViY5g8dnlTcN0fAuEHIRrUWFqexoUXYzuxvKfpD17dUweQUFy3oWDxLJYcBObsg
+\restrict Nh250NjK7vibuHifsRWWTSrMdsWiFDVBPnGjmpf4K1zBPQz43LmfX4VEI16TB1I
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -767,7 +767,8 @@ CREATE TABLE public.invoices (
     print_payment_conditions boolean DEFAULT true,
     total_amount_in_words text,
     vat_rate_percent numeric(5,2),
-    customer_snapshot text
+    customer_snapshot text,
+    incoterm_id character varying
 );
 
 
@@ -1935,13 +1936,13 @@ e3a74c62-cd85-420d-8f96-b5973a4e5034	03ad8c0d-2665-41b1-9b18-e3d45be6c636	636406
 -- Data for Name: invoices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.invoices (id, invoice_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, paid_amount, notes, created_at, payment_days_id, invoice_date, description, print_sort_order, print_language_code, print_project_no, print_payment_conditions, total_amount_in_words, vat_rate_percent, customer_snapshot) FROM stdin;
-27607917-b85f-4490-83cd-93855019ae17	CI-2026-004	26188fba-4c83-451c-b8c1-6cc9a75e9606	\N	44d871db-266d-4dea-b5fb-7f1c8800729d	concept	2026-03-21 23:00:00	0.00	0.00	0.00	0.00		2026-03-08 20:32:33.409936	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-07 23:00:00		position	nl	t	t	Nul euro	\N	\N
-ffbe3534-a529-432b-9aeb-62e44938f12e	CI-2026-005	be4ed3fa-64c3-48f7-81df-fa362f9bd1fe	\N	a618178f-37e5-4d97-96ac-d2366c17cdd0	sent	2026-03-22 23:00:00	14962.50	3142.13	18104.63	0.00		2026-03-08 21:55:19.950962	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-08 23:00:00	Installation cost 	position	en	t	t	Eighteen thousand one hundred four euro and sixty-three cents	21.00	\N
-03ad8c0d-2665-41b1-9b18-e3d45be6c636	CI-2026-002	84d6a39c-c26b-4ecf-84b6-b8ee09f0f3b9	\N	93f5083a-370b-4a66-a44a-de1108fd8539	pending	2026-03-22 23:00:00	635.20	133.39	768.59	0.00		2026-02-10 15:31:46.937416	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-08 23:00:00	Bowl cutter	position	en	t	t	Seven hundred sixty-eight euro and fifty-nine cents	21.00	{"name":"Tomassen worstmakerij","customerNumber":"DEB-0012","email":"info@abc.com","generalEmail":"","invoiceEmail":"","phone":"","mobile":"","btwNummer":null,"taxId":"","kvkNummer":"","bankAccount":"","countryCode":"NL","languageCode":"nl","memo":"","invoiceNotes":"","address":{"street":"Horsterweg","houseNumber":"213","postalCode":"3853 JC","city":"Ermelo","country":""}}
-68cbea2a-bba5-454f-97b2-090b5cda2ba7	CI-2026-003	fb7fd86f-9540-4480-893a-88d284d90db2	\N	\N	pending	2026-04-11 22:00:00	50.40	10.58	60.98	0.00		2026-03-09 11:08:30.312186	a8fab9a1-b836-4ce3-8922-69b626084abd	2026-03-12 23:00:00	Fuses	position	nl	t	t	Zestig euro en achtennegentig cent	21.00	\N
-52676213-2666-46ab-8d3e-0ef4d4c23153	CI-2026-001	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	db43039e-cb89-460a-9308-2453f5bad5d0	sent	2026-03-15 23:00:00	3048.40	640.16	3688.56	0.00		2025-09-16 14:20:11.218727	333d11d7-4ad5-44eb-aa85-c4330918c602	2026-03-08 23:00:00	Consulting fees P1-2026	position_low_high	nl	t	t	Three thousand six hundred eighty-eight euro and fifty-six cents	21.00	\N
-adfd3e97-5748-4e17-8e0f-803536f8b41c	CI-2026-006	1a027fa9-76e0-439b-9feb-8cbb7d30f0e6	\N	\N	pending	2026-03-24 23:00:00	0.00	0.00	0.00	0.00		2026-03-11 20:38:05.40728	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-10 23:00:00		position	nl	t	t	Nul euro	21.00	\N
+COPY public.invoices (id, invoice_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, paid_amount, notes, created_at, payment_days_id, invoice_date, description, print_sort_order, print_language_code, print_project_no, print_payment_conditions, total_amount_in_words, vat_rate_percent, customer_snapshot, incoterm_id) FROM stdin;
+27607917-b85f-4490-83cd-93855019ae17	CI-2026-004	26188fba-4c83-451c-b8c1-6cc9a75e9606	\N	44d871db-266d-4dea-b5fb-7f1c8800729d	concept	2026-03-21 23:00:00	0.00	0.00	0.00	0.00		2026-03-08 20:32:33.409936	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-07 23:00:00		position	nl	t	t	Nul euro	\N	\N	\N
+ffbe3534-a529-432b-9aeb-62e44938f12e	CI-2026-005	be4ed3fa-64c3-48f7-81df-fa362f9bd1fe	\N	a618178f-37e5-4d97-96ac-d2366c17cdd0	sent	2026-03-22 23:00:00	14962.50	3142.13	18104.63	0.00		2026-03-08 21:55:19.950962	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-08 23:00:00	Installation cost 	position	en	t	t	Eighteen thousand one hundred four euro and sixty-three cents	21.00	\N	\N
+03ad8c0d-2665-41b1-9b18-e3d45be6c636	CI-2026-002	84d6a39c-c26b-4ecf-84b6-b8ee09f0f3b9	\N	93f5083a-370b-4a66-a44a-de1108fd8539	pending	2026-03-22 23:00:00	635.20	133.39	768.59	0.00		2026-02-10 15:31:46.937416	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-08 23:00:00	Bowl cutter	position	en	t	t	Seven hundred sixty-eight euro and fifty-nine cents	21.00	{"name":"Tomassen worstmakerij","customerNumber":"DEB-0012","email":"info@abc.com","generalEmail":"","invoiceEmail":"","phone":"","mobile":"","btwNummer":null,"taxId":"","kvkNummer":"","bankAccount":"","countryCode":"NL","languageCode":"nl","memo":"","invoiceNotes":"","address":{"street":"Horsterweg","houseNumber":"213","postalCode":"3853 JC","city":"Ermelo","country":""}}	\N
+68cbea2a-bba5-454f-97b2-090b5cda2ba7	CI-2026-003	fb7fd86f-9540-4480-893a-88d284d90db2	\N	\N	pending	2026-04-11 22:00:00	50.40	10.58	60.98	0.00		2026-03-09 11:08:30.312186	a8fab9a1-b836-4ce3-8922-69b626084abd	2026-03-12 23:00:00	Fuses	position	nl	t	t	Zestig euro en achtennegentig cent	21.00	\N	\N
+52676213-2666-46ab-8d3e-0ef4d4c23153	CI-2026-001	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	db43039e-cb89-460a-9308-2453f5bad5d0	sent	2026-03-15 23:00:00	3048.40	640.16	3688.56	0.00		2025-09-16 14:20:11.218727	333d11d7-4ad5-44eb-aa85-c4330918c602	2026-03-08 23:00:00	Consulting fees P1-2026	position_low_high	nl	t	t	Three thousand six hundred eighty-eight euro and fifty-six cents	21.00	\N	\N
+adfd3e97-5748-4e17-8e0f-803536f8b41c	CI-2026-006	1a027fa9-76e0-439b-9feb-8cbb7d30f0e6	\N	\N	pending	2026-03-24 23:00:00	0.00	0.00	0.00	0.00		2026-03-11 20:38:05.40728	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-10 23:00:00		position	nl	t	t	Nul euro	21.00	\N	\N
 \.
 
 
@@ -4312,6 +4313,14 @@ ALTER TABLE ONLY public.invoices
 
 
 --
+-- Name: invoices invoices_incoterm_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.invoices
+    ADD CONSTRAINT invoices_incoterm_id_fkey FOREIGN KEY (incoterm_id) REFERENCES public.incoterms(id);
+
+
+--
 -- Name: invoices invoices_payment_days_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4651,5 +4660,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ViY5g8dnlTcN0fAuEHIRrUWFqexoUXYzuxvKfpD17dUweQUFy3oWDxLJYcBObsg
+\unrestrict Nh250NjK7vibuHifsRWWTSrMdsWiFDVBPnGjmpf4K1zBPQz43LmfX4VEI16TB1I
 

@@ -44,6 +44,7 @@ const invoiceFormSchema = insertInvoiceSchema.omit({
   dueDate: z.string().optional(),
   invoiceDate: z.string().optional(),
   paymentDaysId: z.string().optional(),
+  incotermId: z.string().optional(),
 });
 
 const invoiceItemFormSchema = insertInvoiceItemSchema.extend({
@@ -214,6 +215,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       notes: "",
       printSortOrder: "position",
       printLanguageCode: "nl",
+      incotermId: "",
     },
   });
 
@@ -247,6 +249,11 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
 
   const { data: vatRates = [] } = useQuery<VatRate[]>({
     queryKey: ["/api/masterdata/vat-rates"],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: incotermsList = [] } = useQuery<any[]>({
+    queryKey: ["/api/masterdata/incoterms"],
     staleTime: 5 * 60 * 1000,
   });
 
@@ -301,6 +308,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         notes: invoice.notes || "",
         printSortOrder: (invoice as any).printSortOrder || "position",
         printLanguageCode: (invoice as any).printLanguageCode || "nl",
+        incotermId: (invoice as any).incotermId || "",
       } as any);
     }
   }, [invoice]);
@@ -613,6 +621,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       invoiceDate: data.invoiceDate ? toStorageDate(data.invoiceDate) : undefined,
       paymentDaysId: data.paymentDaysId || null,
       projectId: data.projectId || null,
+      incotermId: data.incotermId || null,
     };
 
     if (isEditing) {
@@ -811,6 +820,15 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                 error: invoiceForm.formState.errors.dueDate?.message
               },
               testId: "input-due-date"
+            },
+            {
+              key: "incotermId",
+              label: "Incoterm",
+              type: "select",
+              options: incotermsList.map((i: any) => ({ value: i.id, label: `${i.code} - ${i.description || ''}`.trim() })),
+              setValue: (value: string) => invoiceForm.setValue("incotermId", value),
+              watch: () => invoiceForm.watch("incotermId"),
+              testId: "select-incoterm"
             },
             {
               key: "status",

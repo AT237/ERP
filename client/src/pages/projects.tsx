@@ -51,11 +51,23 @@ const defaultColumns: ColumnConfig[] = [
     width: 120, 
     filterable: true, 
     sortable: true,
-    renderCell: (value: string, row: Project) => (
-      <Badge variant={value === 'Active' ? 'default' : value === 'Completed' ? 'secondary' : 'outline'} data-testid={`badge-status-${row.id}`}>
-        {value || 'Unknown'}
-      </Badge>
-    )
+    renderCell: (value: string, row: Project) => {
+      const getStatusStyle = (status: string): { bg: string; text: string; border: string } => {
+        switch (status) {
+          case "Active": return { bg: "bg-green-100", text: "text-green-700", border: "border-green-300" };
+          case "Completed": return { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-300" };
+          case "On Hold": return { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300" };
+          case "Cancelled": return { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-300" };
+          default: return { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300" };
+        }
+      };
+      const style = getStatusStyle(value || "Active");
+      return (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${style.bg} ${style.text} ${style.border}`} data-testid={`badge-status-${row.id}`}>
+          {value || 'Unknown'}
+        </span>
+      );
+    }
   },
   { 
     key: 'progress', 
