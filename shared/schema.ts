@@ -327,10 +327,11 @@ export const invoiceItems = pgTable("invoice_items", {
   invoiceId: varchar("invoice_id").references(() => invoices.id).notNull(),
   itemId: varchar("item_id").references(() => inventoryItems.id),
   description: text("description").notNull(),
-  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"), // decimal for e.g. 0.75 hours
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"),
   unit: text("unit"),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }).default("0.00"),
   lineType: text("line_type").default("standard"),
   position: integer("position").default(0),
   positionNo: text("position_no"),

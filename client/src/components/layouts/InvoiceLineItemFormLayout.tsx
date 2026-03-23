@@ -117,6 +117,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       workDate: undefined,
       customerRateId: "",
       technicianNames: "",
+      costPrice: "0.00",
       hsCode: "",
       countryOfOrigin: "",
     },
@@ -175,6 +176,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       if (unit) form.setValue("unit" as any, unit);
       const price = selectedInventoryItem.sellingPrice || selectedInventoryItem.unitPrice;
       if (price) form.setValue("unitPrice", Number(price).toFixed(2));
+      if (selectedInventoryItem.costPrice) form.setValue("costPrice", Number(selectedInventoryItem.costPrice).toFixed(2));
       setHasUnsavedChanges(true);
     }
   }, [selectedInventoryItem, itemIdValue, form]);
@@ -259,6 +261,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         customerRateId: (lineItem as any).customerRateId || "",
         technicianNames: (lineItem as any).technicianNames || "",
         technicianIds: (lineItem as any).technicianIds || "",
+        costPrice: (lineItem as any).costPrice?.toString() || "0.00",
         hsCode: (lineItem as any).hsCode || "",
         countryOfOrigin: (lineItem as any).countryOfOrigin || "",
       };
@@ -764,6 +767,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
           if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
           if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
           if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
+          if (freshItem.costPrice) { form.setValue("costPrice", Number(freshItem.costPrice).toFixed(2)); }
         }}
         placeholder="Artikel zoeken..."
         testId="select-inventory-item"
@@ -785,6 +789,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
             if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
             if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
             if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
+            if (freshItem.costPrice) { form.setValue("costPrice", Number(freshItem.costPrice).toFixed(2)); }
           }}
           placeholder="Artikel zoeken in catalogus..."
           testId="select-inventory-item"

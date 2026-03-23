@@ -367,6 +367,21 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     recalculateTotals(invoiceItems);
   }, [invoiceItems, vatRatePercent]);
 
+  const totalCost = React.useMemo(() => {
+    return invoiceItems.reduce((sum, item) => {
+      const qty = parseFloat(String(item.quantity || "0")) || 0;
+      const cost = parseFloat(String((item as any).costPrice || "0")) || 0;
+      return sum + (qty * cost);
+    }, 0);
+  }, [invoiceItems]);
+
+  const totalMargin = React.useMemo(() => {
+    const subtotal = invoiceItems.reduce((sum, item) => {
+      return sum + (parseFloat(item.lineTotal || "0") || 0);
+    }, 0);
+    return subtotal - totalCost;
+  }, [invoiceItems, totalCost]);
+
   useEffect(() => {
     const lang = watchedPrintLanguageCode || customerLanguageCode || 'nl';
     const total = parseFloat(invoiceForm.getValues("totalAmount") || "0") || 0;
@@ -505,7 +520,38 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       sortable: false
     },
     createCurrencyColumn('unitPrice', 'Unit Price'),
+    createCurrencyColumn('costPrice', 'Cost Price', 100),
+    {
+      key: 'costPriceTotal',
+      label: 'Line Cost',
+      visible: true,
+      width: 100,
+      filterable: false,
+      sortable: true,
+      renderCell: (_value: any, row: any) => {
+        const qty = parseFloat(row.quantity || "0") || 0;
+        const cost = parseFloat(row.costPrice || "0") || 0;
+        const total = qty * cost;
+        return <span className="text-right w-full block">{`€ ${total.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>;
+      }
+    },
     createCurrencyColumn('lineTotal', 'Line Total'),
+    {
+      key: 'margin',
+      label: 'Margin',
+      visible: true,
+      width: 100,
+      filterable: false,
+      sortable: true,
+      renderCell: (_value: any, row: any) => {
+        const lineTotal = parseFloat(row.lineTotal || "0") || 0;
+        const qty = parseFloat(row.quantity || "0") || 0;
+        const cost = parseFloat(row.costPrice || "0") || 0;
+        const lineCost = qty * cost;
+        const margin = lineTotal - lineCost;
+        return <span className={`text-right w-full block ${margin < 0 ? 'text-red-600 font-medium' : ''}`}>{`€ ${margin.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>;
+      }
+    },
   ], []);
 
   const itemTableState = useDataTable({
@@ -923,6 +969,20 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           type: "display",
           displayValue: `€ ${invoiceForm.watch("subtotal") || "0.00"}`,
           testId: "display-subtotal"
+        } as any),
+        createFieldRow({
+          key: "totalCost" as any,
+          label: "Total Cost",
+          type: "display",
+          displayValue: `€ ${totalCost.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          testId: "display-total-cost"
+        } as any),
+        createFieldRow({
+          key: "totalMargin" as any,
+          label: "Margin",
+          type: "display",
+          displayValue: `€ ${totalMargin.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          testId: "display-total-margin"
         } as any),
         createFieldRow({
           key: "taxAmount" as any,
