@@ -217,8 +217,27 @@ app.use((req, res, next) => {
   next();
 });
 
+async function ensureBrandsTable() {
+  try {
+    const { sql } = await import("drizzle-orm");
+    const { db } = await import("./db");
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS brands (
+      id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+      code TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      description TEXT,
+      is_active BOOLEAN DEFAULT true,
+      sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT now()
+    )`);
+  } catch (err: any) {
+    log(`Could not ensure brands table: ${err.message}`);
+  }
+}
+
 (async () => {
   await seedProductionDatabase();
+  await ensureBrandsTable();
   await syncSequences();
   await ensureDefaultUser();
 
