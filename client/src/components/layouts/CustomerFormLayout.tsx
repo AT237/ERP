@@ -63,13 +63,10 @@ const baseCustomerFormSchema = insertCustomerSchema.extend({
 
 // Create dynamic schema based on country requirements
 const createCustomerFormSchema = (countryRequirements?: { requiresBtw?: boolean; requiresAreaCode?: boolean }) => {
-  // Start with base schema, but override specific fields based on requirements
   const schemaFields = {
     ...baseCustomerFormSchema.shape,
     taxId: z.string().optional().nullable(),
-    areaCode: countryRequirements?.requiresAreaCode
-      ? z.string().min(1, "Area code is verplicht voor dit land")
-      : z.string().optional(),
+    areaCode: z.string().optional(),
   };
   
   return z.object(schemaFields);

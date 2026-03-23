@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Y2qsPSGGtj9y3ioJIo2uf8zfdbGVZkA8FrK1F6epZKRsvbJGj2LjV6cijTIH1c5
+\restrict StD4RUyZ7g6kA3j9i9tyRyQUdzvwNRt2xTlmJtBsi7aafCFm8oi3F7rZu5Pj3q6
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -685,7 +685,7 @@ CREATE TABLE public.inventory_items (
     status text DEFAULT 'active'::text,
     created_at timestamp without time zone DEFAULT now(),
     cost_price numeric(10,2) DEFAULT '0'::numeric,
-    margin numeric(5,2) DEFAULT '0'::numeric,
+    margin numeric(10,2) DEFAULT '0'::numeric,
     image text,
     is_composite boolean DEFAULT false,
     brand text,
@@ -4651,5 +4651,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Y2qsPSGGtj9y3ioJIo2uf8zfdbGVZkA8FrK1F6epZKRsvbJGj2LjV6cijTIH1c5
+\unrestrict StD4RUyZ7g6kA3j9i9tyRyQUdzvwNRt2xTlmJtBsi7aafCFm8oi3F7rZu5Pj3q6
 

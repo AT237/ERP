@@ -570,45 +570,53 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
   const lastSalePriceRef = useRef<'unitPrice' | 'margin'>('unitPrice');
   const isCalculating = useRef(false);
 
-  // Bidirectional calculation:
-  // - unitPrice changed (or costPrice with unitPrice leading) → recalculate margin
-  // - margin changed (or costPrice with margin leading)       → recalculate unitPrice
+  const calcTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     const subscription = form.watch((values, { name }) => {
       if (isCalculating.current) return;
-      const costPrice = parseFloat(String(values.costPrice || "0").replace(',', '.'));
-      if (!costPrice || costPrice <= 0) return;
+      if (name === 'unitPrice') lastSalePriceRef.current = 'unitPrice';
+      else if (name === 'margin') lastSalePriceRef.current = 'margin';
 
-      isCalculating.current = true;
-      try {
-        const leading = name === 'unitPrice' ? 'unitPrice'
-          : name === 'margin'     ? 'margin'
-          : lastSalePriceRef.current; // costPrice changed — use whichever was last edited
+      if (name !== 'unitPrice' && name !== 'margin' && name !== 'costPrice') return;
 
-        if (leading === 'unitPrice') {
-          const unitPrice = parseFloat(String(values.unitPrice || "0").replace(',', '.'));
-          if (unitPrice > 0) {
-            const newMargin = ((unitPrice - costPrice) / costPrice * 100).toFixed(2);
-            if (newMargin !== String(values.margin)) {
-              form.setValue("margin", newMargin, { shouldDirty: false, shouldValidate: false });
+      if (calcTimerRef.current) clearTimeout(calcTimerRef.current);
+      calcTimerRef.current = setTimeout(() => {
+        if (isCalculating.current) return;
+        const costPrice = parseFloat(String(values.costPrice || "0").replace(',', '.'));
+        if (!costPrice || costPrice <= 0) return;
+
+        isCalculating.current = true;
+        try {
+          const leading = name === 'unitPrice' ? 'unitPrice'
+            : name === 'margin'     ? 'margin'
+            : lastSalePriceRef.current;
+
+          if (leading === 'unitPrice') {
+            const unitPrice = parseFloat(String(values.unitPrice || "0").replace(',', '.'));
+            if (unitPrice > 0) {
+              const newMargin = ((unitPrice - costPrice) / costPrice * 100).toFixed(2);
+              if (newMargin !== String(values.margin)) {
+                form.setValue("margin", newMargin, { shouldDirty: false, shouldValidate: false });
+              }
+            }
+          } else {
+            const margin = parseFloat(String(values.margin || "0").replace(',', '.'));
+            const newUnitPrice = (costPrice * (1 + margin / 100)).toFixed(2);
+            if (newUnitPrice !== String(values.unitPrice)) {
+              form.setValue("unitPrice", newUnitPrice, { shouldDirty: false, shouldValidate: false });
             }
           }
-        } else {
-          const margin = parseFloat(String(values.margin || "0").replace(',', '.'));
-          const newUnitPrice = (costPrice * (1 + margin / 100)).toFixed(2);
-          if (newUnitPrice !== String(values.unitPrice)) {
-            form.setValue("unitPrice", newUnitPrice, { shouldDirty: false, shouldValidate: false });
-          }
+        } finally {
+          isCalculating.current = false;
         }
-
-        if (name === 'unitPrice') lastSalePriceRef.current = 'unitPrice';
-        else if (name === 'margin') lastSalePriceRef.current = 'margin';
-      } finally {
-        isCalculating.current = false;
-      }
+      }, 500);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (calcTimerRef.current) clearTimeout(calcTimerRef.current);
+    };
   }, [form]);
 
   // Communicate unsaved changes status to parent Layout
