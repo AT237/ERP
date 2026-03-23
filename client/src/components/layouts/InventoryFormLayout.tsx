@@ -976,36 +976,39 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
           } as FormField2<InventoryFormData>
         ]),
 
-        createFieldRow({
-          key: "unit",
-          label: "Eenheid",
-          type: "custom",
-          customComponent: (
-            <EntitySelect
-              endpoint="units-of-measure"
-              formType="masterdata-units-of-measure"
-              labelField="name"
-              secondaryField="code"
-              value={form.watch("unit") || ""}
-              onValueChange={(val) => form.setValue("unit", val)}
-              placeholder="Selecteer eenheid..."
-              testId="select-inventory-unit"
-            />
-          ),
-          testId: "select-inventory-unit"
-        } as FormField2<InventoryFormData>),
-
-        createFieldRow({
-          key: "hsCode",
-          label: "HS Code",
-          type: "text",
-          placeholder: "Bijv. 8471.30.00",
-          register: form.register("hsCode"),
-          validation: {
-            error: form.formState.errors.hsCode?.message
-          },
-          testId: "input-inventory-hs-code"
-        } as FormField2<InventoryFormData>),
+        createFieldsRow([
+          {
+            key: "unit",
+            label: "Eenheid",
+            type: "custom",
+            layout: "single",
+            customComponent: (
+              <EntitySelect
+                endpoint="units-of-measure"
+                formType="masterdata-units-of-measure"
+                labelField="name"
+                secondaryField="code"
+                value={form.watch("unit") || ""}
+                onValueChange={(val) => form.setValue("unit", val)}
+                placeholder="Selecteer eenheid..."
+                testId="select-inventory-unit"
+              />
+            ),
+            testId: "select-inventory-unit"
+          } as FormField2<InventoryFormData>,
+          {
+            key: "hsCode",
+            label: "HS Code",
+            type: "text",
+            layout: "single",
+            placeholder: "Bijv. 8471.30.00",
+            register: form.register("hsCode"),
+            validation: {
+              error: form.formState.errors.hsCode?.message
+            },
+            testId: "input-inventory-hs-code"
+          } as FormField2<InventoryFormData>
+        ]),
 
         createFieldRow({
           key: "description",
