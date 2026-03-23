@@ -23,6 +23,11 @@ The frontend is built with React 18 and TypeScript, using Wouter for routing, sh
 - **Print Sort Order**: Quotations and invoices support configurable item sort order for printing (e.g., `position`, `price_high_low`, `alpha_az`).
 - **Work Order Line Items**: Work orders include a `work_order_items` table with structure identical to `invoice_items`.
 - **Shared Line Item Types**: `shared/line-item-types.ts` is the single source of truth for line item types (`standard`, `unique`, `text`, `charges`), integrated across relevant forms.
+- **Status Colors**: All list pages (invoices, quotations, work orders, projects) use colored status badges with consistent color coding (green=active/completed, orange=draft/planning, blue=sent/in-progress, red=overdue/rejected, gray=cancelled).
+- **Ctrl+S Save**: All LayoutForm2-based forms support Ctrl+S (Cmd+S on Mac) keyboard shortcut to save, using the toolbar's onSave handler when available.
+- **INCOTERM on Invoice**: Invoices have an `incoterm_id` field referencing the incoterms master data table.
+- **DebugPanel**: Only rendered in development mode (`import.meta.env.DEV`), hidden in production builds.
+- **MasterData isActive Default**: New master data entries default `isActive` to `true` (Ja).
 
 ### Technical Implementations
 - **LayoutForm2**: A central, configurable React component ensuring visual consistency, change tracking, tab-based sections, type safety, and validation for all business forms.
