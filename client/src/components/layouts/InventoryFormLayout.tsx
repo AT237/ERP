@@ -1011,6 +1011,32 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
               },
               testId: "input-inventory-hs-code"
             } as FormField2<InventoryFormData>,
+            {
+              key: "isComposite",
+              label: "Assembly",
+              type: "custom",
+              customComponent: (
+                <label className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-all select-none",
+                  watchedIsComposite
+                    ? "bg-orange-50 border-orange-300 text-orange-800"
+                    : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300"
+                )}>
+                  <input
+                    type="checkbox"
+                    {...form.register("isComposite")}
+                    className="rounded border-gray-300 accent-orange-500 h-4 w-4"
+                    data-testid="checkbox-inventory-is-composite"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">Dit artikel bestaat uit meerdere onderdelen</span>
+                    {watchedIsComposite && (
+                      <p className="text-xs text-orange-600 mt-0.5">↓ Beheer de onderdelen in de tabel hieronder</p>
+                    )}
+                  </div>
+                </label>
+              ),
+            } as FormField2<InventoryFormData>,
           ]
         ),
         createCustomRow(imageUploadComponent, "border-t pt-4")
@@ -1135,33 +1161,6 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         ]),
 
         createFieldsRow([
-          {
-            key: "isComposite",
-            label: "Is Composite Item",
-            type: "custom",
-            customComponent: (
-              <label className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-all select-none",
-                watchedIsComposite
-                  ? "bg-orange-50 border-orange-300 text-orange-800"
-                  : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300"
-              )}>
-                <input
-                  type="checkbox"
-                  {...form.register("isComposite")}
-                  className="rounded border-gray-300 accent-orange-500 h-4 w-4"
-                  data-testid="checkbox-inventory-is-composite"
-                />
-                <div>
-                  <span className="text-sm font-medium">Dit artikel bestaat uit meerdere onderdelen</span>
-                  {watchedIsComposite && (
-                    <p className="text-xs text-orange-600 mt-0.5">↓ Beheer de onderdelen in de tabel hieronder</p>
-                  )}
-                </div>
-              </label>
-            ),
-            layout: "single"
-          } as FormField2<InventoryFormData>,
           {
             key: "status",
             label: "Status",
