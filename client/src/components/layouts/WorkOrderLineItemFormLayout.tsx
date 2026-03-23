@@ -116,6 +116,8 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
       workDate: undefined,
       technicianNames: "",
       technicianIds: "",
+      hsCode: "",
+      countryOfOrigin: "",
     },
   });
 
@@ -214,6 +216,8 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
         workDate: (lineItem as any).workDate || undefined,
         technicianNames: (lineItem as any).technicianNames || "",
         technicianIds: (lineItem as any).technicianIds || "",
+        hsCode: (lineItem as any).hsCode || "",
+        countryOfOrigin: (lineItem as any).countryOfOrigin || "",
       };
 
       if ((lineItem as any).workDate) setSelectedDate(new Date((lineItem as any).workDate));
@@ -630,11 +634,44 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
   const leftFields = [fieldPosNo, fieldLineType, fieldDescriptionInternal, fieldLineTotal];
   const rightFields = getRightColumnFields();
 
+  const deliveryFields = [
+    {
+      key: 'hsCode',
+      label: 'HS Code',
+      type: 'text',
+      placeholder: 'Bijv. 8471.30.00',
+      register: form.register('hsCode'),
+      validation: {
+        error: form.formState.errors.hsCode?.message
+      },
+      testId: 'input-hs-code'
+    } as FormField2<LineItemFormData>,
+    {
+      key: 'countryOfOrigin',
+      label: 'Land van herkomst',
+      type: 'text',
+      placeholder: 'Bijv. Nederland',
+      register: form.register('countryOfOrigin'),
+      validation: {
+        error: form.formState.errors.countryOfOrigin?.message
+      },
+      testId: 'input-country-of-origin'
+    } as FormField2<LineItemFormData>,
+  ];
+
   const formSections: FormSection2<LineItemFormData>[] = [
     {
       id: 'general',
       label: 'General',
       rows: [createTwoColumnRow(leftFields, rightFields)],
+    },
+    {
+      id: 'delivery',
+      label: 'Levering',
+      rows: [
+        createFieldRow(deliveryFields[0]),
+        createFieldRow(deliveryFields[1]),
+      ]
     },
   ];
 

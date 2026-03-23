@@ -117,6 +117,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       workDate: undefined,
       customerRateId: "",
       technicianNames: "",
+      hsCode: "",
+      countryOfOrigin: "",
     },
   });
 
@@ -257,6 +259,8 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         customerRateId: (lineItem as any).customerRateId || "",
         technicianNames: (lineItem as any).technicianNames || "",
         technicianIds: (lineItem as any).technicianIds || "",
+        hsCode: (lineItem as any).hsCode || "",
+        countryOfOrigin: (lineItem as any).countryOfOrigin || "",
       };
       
       if ((lineItem as any).workDate) {
@@ -866,6 +870,31 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const leftFields = [fieldPosNo, fieldLineType, fieldDescriptionInternal, fieldLineTotal];
   const rightFields = getRightColumnFields();
 
+  const deliveryFields = [
+    {
+      key: 'hsCode',
+      label: 'HS Code',
+      type: 'text',
+      placeholder: 'Bijv. 8471.30.00',
+      register: form.register('hsCode'),
+      validation: {
+        error: form.formState.errors.hsCode?.message
+      },
+      testId: 'input-hs-code'
+    } as FormField2<LineItemFormData>,
+    {
+      key: 'countryOfOrigin',
+      label: 'Land van herkomst',
+      type: 'text',
+      placeholder: 'Bijv. Nederland',
+      register: form.register('countryOfOrigin'),
+      validation: {
+        error: form.formState.errors.countryOfOrigin?.message
+      },
+      testId: 'input-country-of-origin'
+    } as FormField2<LineItemFormData>,
+  ];
+
   const formSections: FormSection2<LineItemFormData>[] = [
     {
       id: 'general',
@@ -873,6 +902,14 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       rows: [
         createTwoColumnRow(leftFields, rightFields),
       ],
+    },
+    {
+      id: 'delivery',
+      label: 'Levering',
+      rows: [
+        createFieldRow(deliveryFields[0]),
+        createFieldRow(deliveryFields[1]),
+      ]
     },
   ];
 
