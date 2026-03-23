@@ -341,6 +341,8 @@ export const invoiceItems = pgTable("invoice_items", {
   discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
   sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id),
   sourceSnippetVersion: integer("source_snippet_version"),
+  hsCode: text("hs_code"),
+  countryOfOrigin: text("country_of_origin"),
 });
 
 // Proforma invoices table
@@ -452,6 +454,8 @@ export const workOrderItems = pgTable("work_order_items", {
   discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
   sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id),
   sourceSnippetVersion: integer("source_snippet_version"),
+  hsCode: text("hs_code"),
+  countryOfOrigin: text("country_of_origin"),
 });
 
 export const insertWorkOrderItemSchema = createInsertSchema(workOrderItems).omit({ id: true });

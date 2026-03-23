@@ -217,6 +217,19 @@ app.use((req, res, next) => {
   next();
 });
 
+async function ensureLineItemColumns() {
+  try {
+    const { sql } = await import("drizzle-orm");
+    const { db } = await import("./db");
+    await db.execute(sql`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS hs_code TEXT`);
+    await db.execute(sql`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS country_of_origin TEXT`);
+    await db.execute(sql`ALTER TABLE work_order_items ADD COLUMN IF NOT EXISTS hs_code TEXT`);
+    await db.execute(sql`ALTER TABLE work_order_items ADD COLUMN IF NOT EXISTS country_of_origin TEXT`);
+  } catch (err: any) {
+    log(`Could not ensure line item columns: ${err.message}`);
+  }
+}
+
 async function ensureBrandsTable() {
   try {
     const { sql } = await import("drizzle-orm");
@@ -273,6 +286,7 @@ async function ensureBrandsTable() {
 (async () => {
   await seedProductionDatabase();
   await ensureBrandsTable();
+  await ensureLineItemColumns();
   await syncSequences();
   await ensureDefaultUser();
 
