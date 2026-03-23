@@ -230,22 +230,40 @@ async function ensureBrandsTable() {
       sort_order INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT now()
     )`);
-    const existingBrands = await db.execute(sql`SELECT code FROM brands LIMIT 1`);
-    const hasBrands = (existingBrands.rows || existingBrands).length > 0;
-    if (!hasBrands) {
-      const distinctBrands = await db.execute(
-        sql`SELECT DISTINCT brand FROM inventory_items WHERE brand IS NOT NULL AND brand != '' AND brand NOT LIKE 'BRD-%'`
-      );
-      const rows = (distinctBrands.rows || distinctBrands) as any[];
+    const unmigrated = await db.execute(
+      sql`SELECT DISTINCT brand FROM inventory_items WHERE brand IS NOT NULL AND brand != '' AND brand NOT LIKE 'BRD-%'`
+    );
+    const rows = (unmigrated.rows || unmigrated) as any[];
+    if (rows.length > 0) {
+      const maxCodeResult = await db.execute(sql`SELECT code FROM brands ORDER BY code DESC LIMIT 1`);
+      const maxRows = (maxCodeResult.rows || maxCodeResult) as any[];
       let codeNum = 1;
+      if (maxRows.length > 0) {
+        const match = maxRows[0].code.match(/^BRD-(\d+)$/);
+        if (match) codeNum = parseInt(match[1], 10) + 1;
+      }
       for (const row of rows) {
         const brandName = row.brand;
-        const code = `BRD-${String(codeNum).padStart(4, "0")}`;
-        await db.execute(sql`INSERT INTO brands (code, name, is_active) VALUES (${code}, ${brandName}, true) ON CONFLICT (code) DO NOTHING`);
+        const existing = await db.execute(sql`SELECT code FROM brands WHERE name = ${brandName} LIMIT 1`);
+        const existingRows = (existing.rows || existing) as any[];
+        let code: string;
+        if (existingRows.length > 0) {
+          code = existingRows[0].code;
+        } else {
+          code = `BRD-${String(codeNum).padStart(4, "0")}`;
+          await db.execute(sql`INSERT INTO brands (code, name, is_active) VALUES (${code}, ${brandName}, true)`);
+          codeNum++;
+        }
         await db.execute(sql`UPDATE inventory_items SET brand = ${code} WHERE brand = ${brandName}`);
-        codeNum++;
       }
-      if (rows.length > 0) log(`Migrated ${rows.length} brands from inventory items`);
+      log(`Migrated ${rows.length} brand value(s) from inventory items`);
+    }
+    const remaining = await db.execute(
+      sql`SELECT COUNT(*) as cnt FROM inventory_items WHERE brand IS NOT NULL AND brand != '' AND brand NOT LIKE 'BRD-%'`
+    );
+    const remainingCount = parseInt(((remaining.rows || remaining) as any[])[0]?.cnt || "0", 10);
+    if (remainingCount > 0) {
+      log(`WARNING: ${remainingCount} inventory items still have unmigrated brand values`);
     }
   } catch (err: any) {
     log(`Could not ensure brands table: ${err.message}`);
