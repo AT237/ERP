@@ -111,8 +111,8 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, sele
   }
 
   return (
-    <tr className={cn("border-b border-slate-100 hover:bg-slate-50 group", selected && "bg-orange-50/50")}>
-      <td className="px-3 py-2 w-10">
+    <tr className={cn("border-b border-gray-100 hover:bg-slate-50 group", selected && "bg-orange-50/50")} style={{ height: '32px', lineHeight: '1.2' }}>
+      <td className="p-2 border-r border-gray-100" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
         <input
           type="checkbox"
           className="rounded border-gray-300 accent-orange-500 h-4 w-4"
@@ -120,7 +120,7 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, sele
           onChange={() => onToggleSelect?.()}
         />
       </td>
-      <td className="px-3 py-2 w-24">
+      <td className="p-2 border-r border-gray-100 w-24">
         <Badge variant="outline" className={cn(
           "text-xs font-medium",
           isStandard
@@ -131,7 +131,7 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, sele
         </Badge>
       </td>
 
-      <td className="px-3 py-2">
+      <td className="p-2 border-r border-gray-100">
         {editing ? (
           isStandard ? (
             <Select value={selectedItemId} onValueChange={setSelectedItemId}>
@@ -167,7 +167,7 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, sele
         )}
       </td>
 
-      <td className="px-3 py-2 w-28">
+      <td className="p-2 border-r border-gray-100 w-24">
         {editing ? (
           <Input value={qty} onChange={e => setQty(e.target.value)} className="h-8 text-sm text-right" type="number" min="0" step="0.001" />
         ) : (
@@ -175,7 +175,7 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, sele
         )}
       </td>
 
-      <td className="px-3 py-2 w-28">
+      <td className="p-2 border-r border-gray-100 w-28">
         {editing && !isStandard ? (
           <Input value={uniqueUnit} onChange={e => setUniqueUnit(e.target.value)} placeholder="stuk, m², kg..." className="h-8 text-sm" />
         ) : (
@@ -185,7 +185,7 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, sele
         )}
       </td>
 
-      <td className="px-3 py-2 w-28">
+      <td className="p-2 border-r border-gray-100 w-28">
         {editing ? (
           <Input value={unitPrice} onChange={e => setUnitPrice(e.target.value)} className="h-8 text-sm text-right" type="number" min="0" step="0.01" />
         ) : (
@@ -193,13 +193,13 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, sele
         )}
       </td>
 
-      <td className="px-3 py-2 w-28">
+      <td className="p-2 border-r border-gray-100 w-28">
         <span className="text-sm text-right block font-mono font-medium">
           € {(editing ? lineTotal : (parseFloat(component.quantity ?? "0") * parseFloat(component.unitPrice ?? "0"))).toFixed(2)}
         </span>
       </td>
 
-      <td className="px-3 py-2">
+      <td className="p-2 border-r border-gray-100">
         {editing ? (
           <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optionele notitie..." className="h-8 text-sm" />
         ) : (
@@ -207,7 +207,7 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, sele
         )}
       </td>
 
-      <td className="px-3 py-2 w-20 text-right">
+      <td className="p-2 w-20 text-right">
         {editing ? (
           <div className="flex items-center gap-1 justify-end">
             <button
@@ -473,7 +473,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-8 text-slate-400 gap-2">
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -481,13 +481,13 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
           </div>
         ) : components.length === 0 && pendingRows.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
-            <p className="text-sm text-slate-500">Nog geen onderdelen</p>
+            <p className="text-sm text-orange-500">Nog geen onderdelen</p>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-3 py-2 w-10">
+              <tr className="bg-orange-50 dark:bg-orange-900/20">
+                <th className="p-2 w-12 border-r border-orange-200/50" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
                   <input
                     type="checkbox"
                     className="rounded border-gray-300 accent-orange-500 h-4 w-4"
@@ -501,14 +501,14 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
                     }}
                   />
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-24">Type</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Artikel / Naam</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Hoev.</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Eenheid</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Inkoopprijs</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Regeltotaal</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Notities</th>
-                <th className="px-3 py-2 w-20" />
+                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-24">Type</th>
+                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50">Artikel / Naam</th>
+                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-24">Hoev.</th>
+                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Eenheid</th>
+                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Inkoopprijs</th>
+                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Regeltotaal</th>
+                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50">Notities</th>
+                <th className="p-2 w-20" />
               </tr>
             </thead>
             <tbody>
