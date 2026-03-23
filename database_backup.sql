@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 9xdxaBf8lIyv2U4orhloegaQACp1KmtFFqZnR4IlqZK7eLDoPBfce2Mdi7Y8RNI
+\restrict pVOgdapACaowIBn5EYeEHMO1XDFfcfS4okFONwYGzdxwB5VqYuyNWcb04CsIhO2
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -741,7 +741,8 @@ CREATE TABLE public.invoice_items (
     description_internal text,
     discount_percent numeric(5,2) DEFAULT 0,
     hs_code text,
-    country_of_origin text
+    country_of_origin text,
+    cost_price numeric(10,2) DEFAULT 0.00
 );
 
 
@@ -1942,19 +1943,19 @@ d05dc48f-7885-44bf-a62c-0e9c0dbb20b5	Contactor 95Amps, 45KW, 230Vac, 1M,1B, scre
 -- Data for Name: invoice_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.invoice_items (id, invoice_id, item_id, description, quantity, unit_price, line_total, line_type, "position", source_snippet_id, source_snippet_version, position_no, work_date, customer_rate_id, technician_names, technician_ids, unit, description_internal, discount_percent, hs_code, country_of_origin) FROM stdin;
-74dbbbf5-0ae1-4d8c-b44a-24c1d843ea52	03ad8c0d-2665-41b1-9b18-e3d45be6c636	087cb4a9-411c-4616-ae1d-364d523c3121	Relay 2M, 2B, 230Vac coil	1.000	58.10	58.10	standard	1	\N	\N	030	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N
-3d4b45d4-7a93-48b4-b0d6-79c835a00a6e	68cbea2a-bba5-454f-97b2-090b5cda2ba7	3112b2de-71a4-420c-9d31-32e2fba8423f	Fuse DII, 10Amp, 500V, 	40.000	1.40	44.80	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	20.00	\N	\N
-338fedb1-bd1c-4dcc-95cf-008aea140cdd	68cbea2a-bba5-454f-97b2-090b5cda2ba7	42d5c11b-2a65-4be1-9fb0-b61061ad7213	Fuse DII, 20Amp, 500V, 	40.000	0.88	31.68	standard	1	\N	\N	020	\N	\N	\N	\N	Pcs.	\N	10.00	\N	\N
-36b2d9cf-b9c4-4d09-a321-be33b54cb532	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Miscellaneous	1.000	545.72	545.72	unique	1	\N	\N	050	\N	\N	\N	\N	set	\N	0.00	\N	\N
-defa1ba4-4cd8-4b19-83aa-6ea79c0b5986	adfd3e97-5748-4e17-8e0f-803536f8b41c	ef3dac6c-0743-49ee-88e8-2b805e8268a8	Terminal clamp grey 35mm², Din rail, screw, W16mm, 1000V	4.000	6.97	27.88	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N
-ddb98628-a394-4f47-a1a9-383b68a3a903	03ad8c0d-2665-41b1-9b18-e3d45be6c636	d05dc48f-7885-44bf-a62c-0e9c0dbb20b5	Contactor 95Amps, 45KW, 230Vac, 1M,1B, screwclamp	1.000	400.00	400.00	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N
-ac56a6b9-b71e-4235-81a2-1e2f1b2cf78a	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1.000	715.05	715.05	charges	1	\N	\N	030	2026-01-21 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N
-c47be150-9ed1-49e0-aea6-5f4514fcd839	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		0.750	715.05	536.29	charges	1	\N	\N	040	2026-01-22 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N
-99ef9406-91e4-4942-a0eb-c987b078cada	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		0.750	715.05	536.29	charges	1	\N	\N	010	2026-01-19 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N
-daec7990-9721-403a-88ff-ebaec9cdc00b	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1.000	715.05	715.05	charges	1	\N	\N	020	2026-01-20 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N
-8afc0260-43c0-4e43-81bf-1fe6807b7d8d	03ad8c0d-2665-41b1-9b18-e3d45be6c636	\N	Advise for frequency drive and trouble shoooting interface relais	2.000	117.60	235.20	charges	1	\N	\N	020	2025-12-31 23:00:00	1a8080f8-ad17-4f7c-8204-2546b2ad79b7	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	hrs	\N	0.00	\N	\N
-cc90ff43-78f5-4c3e-b204-d2eafe776a3d	ffbe3534-a529-432b-9aeb-62e44938f12e	\N	Project installation, details in WO-0014 V1.9	17.500	855.00	14962.50	charges	1	\N	\N	010	\N	2864a474-5bd0-49cd-bba3-b8221fe3360b	\N	\N	Days	\N	0.00	\N	\N
+COPY public.invoice_items (id, invoice_id, item_id, description, quantity, unit_price, line_total, line_type, "position", source_snippet_id, source_snippet_version, position_no, work_date, customer_rate_id, technician_names, technician_ids, unit, description_internal, discount_percent, hs_code, country_of_origin, cost_price) FROM stdin;
+74dbbbf5-0ae1-4d8c-b44a-24c1d843ea52	03ad8c0d-2665-41b1-9b18-e3d45be6c636	087cb4a9-411c-4616-ae1d-364d523c3121	Relay 2M, 2B, 230Vac coil	1.000	58.10	58.10	standard	1	\N	\N	030	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N	0.00
+3d4b45d4-7a93-48b4-b0d6-79c835a00a6e	68cbea2a-bba5-454f-97b2-090b5cda2ba7	3112b2de-71a4-420c-9d31-32e2fba8423f	Fuse DII, 10Amp, 500V, 	40.000	1.40	44.80	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	20.00	\N	\N	0.00
+338fedb1-bd1c-4dcc-95cf-008aea140cdd	68cbea2a-bba5-454f-97b2-090b5cda2ba7	42d5c11b-2a65-4be1-9fb0-b61061ad7213	Fuse DII, 20Amp, 500V, 	40.000	0.88	31.68	standard	1	\N	\N	020	\N	\N	\N	\N	Pcs.	\N	10.00	\N	\N	0.00
+36b2d9cf-b9c4-4d09-a321-be33b54cb532	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Miscellaneous	1.000	545.72	545.72	unique	1	\N	\N	050	\N	\N	\N	\N	set	\N	0.00	\N	\N	0.00
+defa1ba4-4cd8-4b19-83aa-6ea79c0b5986	adfd3e97-5748-4e17-8e0f-803536f8b41c	ef3dac6c-0743-49ee-88e8-2b805e8268a8	Terminal clamp grey 35mm², Din rail, screw, W16mm, 1000V	4.000	6.97	27.88	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N	0.00
+ddb98628-a394-4f47-a1a9-383b68a3a903	03ad8c0d-2665-41b1-9b18-e3d45be6c636	d05dc48f-7885-44bf-a62c-0e9c0dbb20b5	Contactor 95Amps, 45KW, 230Vac, 1M,1B, screwclamp	1.000	400.00	400.00	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N	0.00
+ac56a6b9-b71e-4235-81a2-1e2f1b2cf78a	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1.000	715.05	715.05	charges	1	\N	\N	030	2026-01-21 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00
+c47be150-9ed1-49e0-aea6-5f4514fcd839	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		0.750	715.05	536.29	charges	1	\N	\N	040	2026-01-22 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00
+99ef9406-91e4-4942-a0eb-c987b078cada	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		0.750	715.05	536.29	charges	1	\N	\N	010	2026-01-19 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00
+daec7990-9721-403a-88ff-ebaec9cdc00b	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1.000	715.05	715.05	charges	1	\N	\N	020	2026-01-20 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00
+8afc0260-43c0-4e43-81bf-1fe6807b7d8d	03ad8c0d-2665-41b1-9b18-e3d45be6c636	\N	Advise for frequency drive and trouble shoooting interface relais	2.000	117.60	235.20	charges	1	\N	\N	020	2025-12-31 23:00:00	1a8080f8-ad17-4f7c-8204-2546b2ad79b7	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	hrs	\N	0.00	\N	\N	0.00
+cc90ff43-78f5-4c3e-b204-d2eafe776a3d	ffbe3534-a529-432b-9aeb-62e44938f12e	\N	Project installation, details in WO-0014 V1.9	17.500	855.00	14962.50	charges	1	\N	\N	010	\N	2864a474-5bd0-49cd-bba3-b8221fe3360b	\N	\N	Days	\N	0.00	\N	\N	0.00
 \.
 
 
@@ -3377,7 +3378,7 @@ HA9sx8HgSCwNfLzZ25Rs-zot8Jz-5Xmc	{"cookie":{"originalMaxAge":604800000,"expires"
 oEmieC_lXuDng36uYwBtCrmu_Lvml_oH	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-23T10:41:41.532Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 09:11:01
 brOBMLpZ3lvlr-61KcpCFD9Ju20B-_Rd	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:54:15.680Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:54:16
 66kYKTeLVvLxBGlMp-Qssl-W6tsmNEBE	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T13:33:21.594Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 13:33:22
-yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 15:51:15
+yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 15:54:34
 \.
 
 
@@ -4720,5 +4721,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 9xdxaBf8lIyv2U4orhloegaQACp1KmtFFqZnR4IlqZK7eLDoPBfce2Mdi7Y8RNI
+\unrestrict pVOgdapACaowIBn5EYeEHMO1XDFfcfS4okFONwYGzdxwB5VqYuyNWcb04CsIhO2
 
