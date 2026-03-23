@@ -47,6 +47,7 @@ interface PendingRow {
   componentItemId: string;
   componentName: string;
   quantity: string;
+  unitPrice: string;
   componentUnit: string;
   notes: string;
 }
@@ -63,6 +64,7 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted }: Co
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [qty, setQty] = useState(component.quantity ?? "1");
+  const [unitPrice, setUnitPrice] = useState(component.unitPrice ?? "0");
   const [notes, setNotes] = useState(component.notes ?? "");
   const [selectedItemId, setSelectedItemId] = useState(component.componentItemId ?? "");
   const [uniqueName, setUniqueName] = useState(component.componentName ?? "");

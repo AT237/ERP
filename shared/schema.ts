@@ -192,6 +192,7 @@ export const inventoryComponents = pgTable("inventory_components", {
   componentName: text("component_name"), // used for unique items
   componentUnit: text("component_unit"), // used for unique items
   quantity: decimal("quantity", { precision: 10, scale: 3 }).notNull().default("1"),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0"),
   notes: text("notes"),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
