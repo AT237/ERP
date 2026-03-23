@@ -32,14 +32,6 @@ const defaultColumns: ColumnConfig[] = [
     filterable: true,
     sortable: false,
   },
-  {
-    key: "isActiveLabel",
-    label: "Actief",
-    visible: true,
-    width: 80,
-    filterable: false,
-    sortable: true,
-  },
 ];
 
 // ── helpers ─────────────────────────────────────────────────────────────────
@@ -57,17 +49,12 @@ function openTab(id?: string) {
 
 // ── main page ───────────────────────────────────────────────────────────────
 
-type EnrichedCategory = InventoryCategory & { isActiveLabel: string };
-
 export default function MasterDataCategories() {
   const { data: records = [], isLoading } = useQuery<InventoryCategory[]>({
     queryKey: ["/api/masterdata/inventory-categories"],
   });
 
-  const enriched: EnrichedCategory[] = records.map(r => ({
-    ...r,
-    isActiveLabel: r.isActive ? "Ja" : "Nee",
-  }));
+  const enriched = records;
 
   const tableState = useDataTable({
     defaultColumns,
