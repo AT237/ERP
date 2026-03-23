@@ -477,6 +477,17 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
     }
   }, [formPersistenceKey, clearSavedData, onFormPersistenceClear]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        form.handleSubmit(onSubmit)();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [form, onSubmit]);
+
   // Auto-focus first input when opening a new form (entityId is undefined)
   const formContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
