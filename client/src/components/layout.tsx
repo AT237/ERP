@@ -3,7 +3,7 @@ import { X, Menu, PanelRightClose, LogOut } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import Sidebar from "./sidebar";
+import Sidebar, { defaultNavigation } from "./sidebar";
 import MobileLayout from "./mobile-layout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -208,8 +208,15 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'dev-futures', name: 'Feature Wishes' };
       case '/welcome':
         return { id: 'welcome', name: 'Welcome' };
-      default:
+      default: {
+        for (const group of defaultNavigation) {
+          if (group.items) {
+            const match = group.items.find((item: any) => item.href === path);
+            if (match) return { id: match.id, name: match.name };
+          }
+        }
         return { id: 'page', name: 'Page' };
+      }
     }
   };
 
