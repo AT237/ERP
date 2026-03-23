@@ -230,6 +230,23 @@ async function ensureBrandsTable() {
       sort_order INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT now()
     )`);
+    const existingBrands = await db.execute(sql`SELECT code FROM brands LIMIT 1`);
+    const hasBrands = (existingBrands.rows || existingBrands).length > 0;
+    if (!hasBrands) {
+      const distinctBrands = await db.execute(
+        sql`SELECT DISTINCT brand FROM inventory_items WHERE brand IS NOT NULL AND brand != '' AND brand NOT LIKE 'BRD-%'`
+      );
+      const rows = (distinctBrands.rows || distinctBrands) as any[];
+      let codeNum = 1;
+      for (const row of rows) {
+        const brandName = row.brand;
+        const code = `BRD-${String(codeNum).padStart(4, "0")}`;
+        await db.execute(sql`INSERT INTO brands (code, name, is_active) VALUES (${code}, ${brandName}, true) ON CONFLICT (code) DO NOTHING`);
+        await db.execute(sql`UPDATE inventory_items SET brand = ${code} WHERE brand = ${brandName}`);
+        codeNum++;
+      }
+      if (rows.length > 0) log(`Migrated ${rows.length} brands from inventory items`);
+    }
   } catch (err: any) {
     log(`Could not ensure brands table: ${err.message}`);
   }

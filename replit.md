@@ -28,6 +28,7 @@ The frontend is built with React 18 and TypeScript, using Wouter for routing, sh
 - **INCOTERM on Invoice**: Invoices have an `incoterm_id` field referencing the incoterms master data table.
 - **DebugPanel**: Only rendered in development mode (`import.meta.env.DEV`), hidden in production builds.
 - **MasterData isActive Default**: New master data entries default `isActive` to `true` (Ja).
+- **Brands (Merken)**: Central `brands` table with code/name/description/isActive. CRUD via `/api/masterdata/brands`. Inventory form uses `EntitySelect` for brand selection (stores brand code). Migrated from free-text to master data. Auto-migration on startup creates table and converts existing inventory brand names to codes.
 
 ### Technical Implementations
 - **LayoutForm2**: A central, configurable React component ensuring visual consistency, change tracking, tab-based sections, type safety, and validation for all business forms.
@@ -47,7 +48,7 @@ LayoutForm2 automatically distributes fields into a two-column grid:
 - Manual two-column layout is available for explicit control.
 
 ### Feature Specifications
-- **Comprehensive Form Coverage**: Supports 11 business forms and 6 master data forms.
+- **Comprehensive Form Coverage**: Supports 11 business forms and 7 master data forms (including Brands).
 - **Quick-Add Functionality**: "Quick Add" links on data table pages to open full tab-based forms.
 - **Real-time Validation**: Integrated with `react-hook-form` and `Zod`.
 
