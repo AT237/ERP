@@ -64,6 +64,7 @@ export const defaultNavigation = [
     collapsible: true,
     items: [
       { id: "stock", name: "Stock Management", href: "/inventory", icon: Package },
+      { id: "brands", name: "Brands", href: "/master-data/brands", icon: Award },
       { id: "purchase-orders", name: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart }
     ]
   },
@@ -115,7 +116,6 @@ export const defaultNavigation = [
       { id: "cities", name: "Cities", href: "/master-data/cities", icon: MapPin },
       { id: "statuses", name: "Statuses", href: "/master-data/statuses", icon: Tag },
       { id: "categories", name: "Categories", href: "/master-data/categories", icon: FolderOpen },
-      { id: "brands", name: "Brands", href: "/master-data/brands", icon: Award },
       { id: "pictograms", name: "Pictograms", href: "/master-data/pictograms", icon: FileCheck }
     ]
   },
