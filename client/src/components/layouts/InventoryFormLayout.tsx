@@ -271,14 +271,19 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
     ...pendingRows.map(r => (parseFloat(r.quantity) || 0) * (parseFloat(r.unitPrice) || 0)),
   ].reduce((sum, v) => sum + v, 0);
 
+  const onCostPriceChangedRef = useRef(onCostPriceChanged);
+  onCostPriceChangedRef.current = onCostPriceChanged;
+  const prevTotalRef = useRef<number | null>(null);
+
   useEffect(() => {
-    if (onCostPriceChanged) {
-      const savedTotal = components
-        .map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0")))
-        .reduce((sum, v) => sum + v, 0);
-      onCostPriceChanged(savedTotal);
+    const savedTotal = components
+      .map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0")))
+      .reduce((sum, v) => sum + v, 0);
+    if (prevTotalRef.current !== savedTotal) {
+      prevTotalRef.current = savedTotal;
+      onCostPriceChangedRef.current?.(savedTotal);
     }
-  }, [components, onCostPriceChanged]);
+  }, [components]);
 
   function addRow(type: "standard" | "unique") {
     setPendingRows(prev => [...prev, {
