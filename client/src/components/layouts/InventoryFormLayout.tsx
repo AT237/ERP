@@ -257,7 +257,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
   ].reduce((sum, v) => sum + v, 0);
 
   useEffect(() => {
-    if (onCostPriceChanged && components.length > 0) {
+    if (onCostPriceChanged) {
       const savedTotal = components
         .map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0")))
         .reduce((sum, v) => sum + v, 0);
