@@ -975,6 +975,25 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         ]),
 
         createFieldRow({
+          key: "unit",
+          label: "Eenheid",
+          type: "custom",
+          customComponent: (
+            <EntitySelect
+              endpoint="units-of-measure"
+              formType="masterdata-units-of-measure"
+              labelField="name"
+              secondaryField="code"
+              value={form.watch("unit") || ""}
+              onValueChange={(val) => form.setValue("unit", val)}
+              placeholder="Selecteer eenheid..."
+              testId="select-inventory-unit"
+            />
+          ),
+          testId: "select-inventory-unit"
+        } as FormField2<InventoryFormData>),
+
+        createFieldRow({
           key: "description",
           label: "Description",
           type: "textarea",
@@ -1042,39 +1061,17 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       id: "inventory",
       label: "Inventory Management",
       rows: [
-        createFieldsRow([
-          {
+        createFieldRow({
             key: "currentStock",
             label: "Current Stock",
             type: "number",
             placeholder: "0",
-            layout: "single",
             register: form.register("currentStock", { valueAsNumber: true }),
             validation: {
               error: form.formState.errors.currentStock?.message
             },
             testId: "input-inventory-current-stock"
-          } as FormField2<InventoryFormData>,
-          {
-            key: "unit",
-            label: "Unit",
-            type: "select",
-            options: [
-              { value: "pcs", label: "Pieces" },
-              { value: "kg", label: "Kilograms" },
-              { value: "m", label: "Meters" },
-              { value: "l", label: "Liters" },
-              { value: "box", label: "Boxes" }
-            ],
-            layout: "single",
-            setValue: (value) => form.setValue("unit", value),
-            watch: () => form.watch("unit"),
-            validation: {
-              error: form.formState.errors.unit?.message
-            },
-            testId: "select-inventory-unit"
-          } as FormField2<InventoryFormData>
-        ]),
+          } as FormField2<InventoryFormData>),
 
         createFieldsRow([
           {
