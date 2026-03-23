@@ -96,8 +96,6 @@ export default function Invoices({}: InvoicesProps) {
       renderCell: (value: string) => value ? format(new Date(value), 'dd-MM-yyyy') : ''
     },
     createCurrencyColumn('totalAmount', 'Total Amount'),
-    createCurrencyColumn('totalCost', 'Total Cost'),
-    createCurrencyColumn('totalMargin', 'Margin'),
     createCurrencyColumn('paidAmount', 'Paid Amount'),
     { 
       key: 'status', 
@@ -131,7 +129,8 @@ export default function Invoices({}: InvoicesProps) {
 
   const tableState = useDataTable({ 
     defaultColumns,
-    tableKey: 'invoices'
+    tableKey: 'invoices',
+    data: enrichedInvoices,
   });
 
   const del = useEntityDelete<Invoice>({

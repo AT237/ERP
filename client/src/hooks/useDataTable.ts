@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { 
   ColumnFilter, 
   ColumnConfig, 
@@ -6,10 +6,91 @@ import {
   FilterType 
 } from '@/components/layouts/DataTableLayout';
 
+const HIDDEN_KEYS = new Set([
+  'id',
+  'createdAt',
+  'updatedAt',
+]);
+
+const HIDDEN_SUFFIXES = ['Id', 'Ids'];
+
+function shouldAutoHide(key: string): boolean {
+  if (HIDDEN_KEYS.has(key)) return true;
+  for (const suffix of HIDDEN_SUFFIXES) {
+    if (key.endsWith(suffix) && key !== suffix) return true;
+  }
+  return false;
+}
+
+function camelToLabel(key: string): string {
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, s => s.toUpperCase())
+    .trim();
+}
+
+function detectColumnType(value: any): 'currency' | 'date' | 'text' {
+  if (value == null || value === '') return 'text';
+  if (value instanceof Date) return 'date';
+  if (typeof value === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}/.test(value) && !isNaN(Date.parse(value))) return 'date';
+    if (/^-?\d+\.\d{2}$/.test(value)) return 'currency';
+  }
+  return 'text';
+}
+
+export function autoDiscoverColumns(
+  data: any[],
+  manualColumns: ColumnConfig[]
+): ColumnConfig[] {
+  if (!data || data.length === 0) return manualColumns;
+
+  const manualKeys = new Set(manualColumns.map(c => c.key));
+  const sample = data[0];
+  const discovered: ColumnConfig[] = [];
+
+  for (const key of Object.keys(sample)) {
+    if (manualKeys.has(key)) continue;
+    const value = sample[key];
+    if (typeof value === 'object' && value !== null && !(value instanceof Date)) continue;
+
+    const colType = detectColumnType(value);
+    const col: ColumnConfig = {
+      key,
+      label: camelToLabel(key),
+      visible: !shouldAutoHide(key),
+      width: colType === 'currency' ? 120 : colType === 'date' ? 120 : 150,
+      filterable: true,
+      sortable: true,
+    };
+
+    if (colType === 'currency') {
+      col.renderCell = (v: any) => {
+        const num = parseFloat(String(v || '0')) || 0;
+        return (
+          `€\u00A0${num.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        );
+      };
+    } else if (colType === 'date') {
+      col.renderCell = (v: any) => {
+        if (!v) return '';
+        const d = new Date(v);
+        if (isNaN(d.getTime())) return String(v);
+        return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+      };
+    }
+
+    discovered.push(col);
+  }
+
+  return [...manualColumns, ...discovered];
+}
+
 export interface UseDataTableProps {
   defaultColumns: ColumnConfig[];
   defaultSort?: SortConfig;
   tableKey?: string;
+  data?: any[];
 }
 
 function loadColumnsFromStorage(tableKey: string, defaultColumns: ColumnConfig[]): ColumnConfig[] {
@@ -53,14 +134,31 @@ function saveColumnsToStorage(tableKey: string, columns: ColumnConfig[]) {
   } catch {}
 }
 
-export function useDataTable({ defaultColumns, defaultSort, tableKey }: UseDataTableProps) {
-  // Initialize columns synchronously from localStorage (preserves renderCell from defaultColumns)
+export function useDataTable({ defaultColumns, defaultSort, tableKey, data }: UseDataTableProps) {
   const [columns, setColumnsState] = useState<ColumnConfig[]>(() => {
     if (!tableKey) return defaultColumns;
     return loadColumnsFromStorage(tableKey, defaultColumns);
   });
 
-  // setColumns saves to localStorage automatically
+  const discoveredKeysRef = useRef<string>('');
+
+  useEffect(() => {
+    if (!data || data.length === 0) return;
+    const allColumns = autoDiscoverColumns(data, defaultColumns);
+    const newKeys = allColumns.map(c => c.key).sort().join(',');
+    if (newKeys === discoveredKeysRef.current) return;
+    discoveredKeysRef.current = newKeys;
+
+    setColumnsState(prev => {
+      const existingKeys = new Set(prev.map(c => c.key));
+      const brandNew = allColumns.filter(c => !existingKeys.has(c.key));
+      if (brandNew.length === 0) return prev;
+      const merged = [...prev, ...brandNew];
+      if (tableKey) saveColumnsToStorage(tableKey, merged);
+      return merged;
+    });
+  }, [data, defaultColumns, tableKey]);
+
   const setColumns = useCallback((newColumns: ColumnConfig[] | ((prev: ColumnConfig[]) => ColumnConfig[])) => {
     setColumnsState(prevColumns => {
       const updated = typeof newColumns === 'function' ? newColumns(prevColumns) : newColumns;
