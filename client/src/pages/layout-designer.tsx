@@ -2342,7 +2342,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                 </tr>
               </thead>
               <tbody>
-                {availableTables.map((table) => (
+                {enrichedAvailableTables.map((table) => (
                   <tr 
                     key={table.name}
                     className={`border-b cursor-pointer hover:bg-gray-50 ${
@@ -2375,7 +2375,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
 
           <DialogFooter>
             <div className="text-sm text-muted-foreground mr-auto">
-              {allowedTables.length} van {availableTables.length} geselecteerd
+              {allowedTables.length} van {enrichedAvailableTables.length} geselecteerd
             </div>
             <Button variant="outline" onClick={() => setShowTableSelectorDialog(false)}>
               Sluiten
@@ -3008,7 +3008,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                   sectionId={sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedChildBlock.parentGroupId))?.id}
                   sections={sections}
                   allowedTables={allowedTables}
-                  availableTables={availableTables}
+                  availableTables={enrichedAvailableTables}
                   onUpdateProperty={(sectionId, _blockId, property, value) => {
                     updateChildBlockProperty(sectionId, selectedChildBlock.parentGroupId, selectedChildBlock.block.id, property, value);
                   }}
@@ -3021,7 +3021,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                 sectionId={sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id}
                 sections={sections}
                 allowedTables={allowedTables}
-                availableTables={availableTables}
+                availableTables={enrichedAvailableTables}
                 onUpdateProperty={updateBlockProperty}
                 onMoveBlock={moveBlockToSection}
                 onAddToGroup={handleAddBlockToGroup}
