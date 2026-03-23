@@ -319,7 +319,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
   }
 
   return (
-    <div className="mx-6 mb-6 mt-0">
+    <div className="px-6 mb-6 mt-0 w-full overflow-hidden">
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         {/* panel header */}
         <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
