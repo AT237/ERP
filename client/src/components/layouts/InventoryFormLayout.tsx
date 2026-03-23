@@ -976,25 +976,38 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
           } as FormField2<InventoryFormData>
         ]),
 
+        createFieldRow({
+          key: "unit",
+          label: "Eenheid",
+          type: "custom",
+          customComponent: (
+            <EntitySelect
+              endpoint="units-of-measure"
+              formType="masterdata-units-of-measure"
+              labelField="name"
+              secondaryField="code"
+              value={form.watch("unit") || ""}
+              onValueChange={(val) => form.setValue("unit", val)}
+              placeholder="Selecteer eenheid..."
+              testId="select-inventory-unit"
+            />
+          ),
+          testId: "select-inventory-unit"
+        } as FormField2<InventoryFormData>),
+
         createFieldsRow([
           {
-            key: "unit",
-            label: "Eenheid",
-            type: "custom",
+            key: "description",
+            label: "Description",
+            type: "textarea",
             layout: "single",
-            customComponent: (
-              <EntitySelect
-                endpoint="units-of-measure"
-                formType="masterdata-units-of-measure"
-                labelField="name"
-                secondaryField="code"
-                value={form.watch("unit") || ""}
-                onValueChange={(val) => form.setValue("unit", val)}
-                placeholder="Selecteer eenheid..."
-                testId="select-inventory-unit"
-              />
-            ),
-            testId: "select-inventory-unit"
+            placeholder: "Enter product description",
+            rows: 3,
+            register: form.register("description"),
+            validation: {
+              error: form.formState.errors.description?.message
+            },
+            testId: "input-inventory-description"
           } as FormField2<InventoryFormData>,
           {
             key: "hsCode",
@@ -1009,19 +1022,6 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
             testId: "input-inventory-hs-code"
           } as FormField2<InventoryFormData>
         ]),
-
-        createFieldRow({
-          key: "description",
-          label: "Description",
-          type: "textarea",
-          placeholder: "Enter product description",
-          rows: 3,
-          register: form.register("description"),
-          validation: {
-            error: form.formState.errors.description?.message
-          },
-          testId: "input-inventory-description"
-        } as FormField2<InventoryFormData>),
 
         createCustomRow(imageUploadComponent, "border-t pt-4")
       ]
