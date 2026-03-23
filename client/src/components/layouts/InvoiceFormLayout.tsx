@@ -520,6 +520,34 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       sortable: false
     },
     createCurrencyColumn('unitPrice', 'Unit Price'),
+    {
+      key: 'discountPercent',
+      label: 'Disc. %',
+      visible: true,
+      width: 70,
+      filterable: false,
+      sortable: true,
+      align: 'right' as const,
+      renderCell: (value: any) => {
+        const disc = parseFloat(String(value || "0")) || 0;
+        return disc > 0 ? `${disc}%` : '';
+      }
+    },
+    {
+      key: 'netUnitPrice',
+      label: 'Net Price',
+      visible: true,
+      width: 100,
+      filterable: false,
+      sortable: true,
+      align: 'right' as const,
+      renderCell: (_value: any, row: any) => {
+        const unitPrice = parseFloat(row.unitPrice || "0") || 0;
+        const discount = parseFloat(row.discountPercent || "0") || 0;
+        const net = discount > 0 ? unitPrice * (1 - discount / 100) : unitPrice;
+        return `€\u00A0${net.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+    },
     createCurrencyColumn('costPrice', 'Cost Price', 100),
     {
       key: 'costPriceTotal',
