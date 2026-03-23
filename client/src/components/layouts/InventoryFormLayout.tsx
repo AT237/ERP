@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import type { InventoryItem, InsertInventoryItem, InventoryComponent } from "@shared/schema";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
@@ -320,43 +322,36 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
 
   return (
     <div className="px-6 mb-6 mt-0 w-full overflow-hidden">
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-        {/* panel header */}
-        <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
-              <Layers className="h-4 w-4 text-orange-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-800 text-sm">Samengestelde onderdelen</h3>
-              <p className="text-xs text-slate-400">
-                {isLoading ? "Laden…" : `${components.length} onderdeel${components.length !== 1 ? "en" : ""}`}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+      {/* Toolbar */}
+      <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 flex items-center gap-1 w-fit mb-3">
+        <span className="text-xs font-medium text-gray-500 px-2">
+          Onderdelen {!isLoading && `(${components.length})`}
+        </span>
+        <Separator orientation="vertical" className="h-6 mx-1" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button
+              variant="ghost"
               size="sm"
-              variant="outline"
-              onClick={() => addRow("standard")}
-              className="h-8 text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+              className="h-8 w-8 p-0 ring-1 ring-orange-400 text-orange-600"
+              title="Onderdeel toevoegen"
             >
-              <Plus className="h-3.5 w-3.5 mr-1" />
+              <Plus className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => addRow("standard")} className="text-xs">
               Standaard artikel
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => addRow("unique")}
-              className="h-8 text-xs border-purple-200 text-purple-700 hover:bg-purple-50"
-            >
-              <Plus className="h-3.5 w-3.5 mr-1" />
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => addRow("unique")} className="text-xs">
               Uniek artikel
-            </Button>
-          </div>
-        </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-        {/* table */}
+      {/* Table */}
+      <div className="bg-white border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-8 text-slate-400 gap-2">
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -364,21 +359,19 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
           </div>
         ) : components.length === 0 && pendingRows.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
-            <Layers className="h-10 w-10 text-slate-200" />
-            <p className="text-sm font-medium text-slate-500">Nog geen onderdelen</p>
-            <p className="text-xs">Klik op "Standaard artikel" of "Uniek artikel" om te beginnen.</p>
+            <p className="text-sm text-slate-500">Nog geen onderdelen</p>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-24">Type</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Artikel / Naam</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide w-28">Hoev.</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-28">Eenheid</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide w-28">Inkoopprijs</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide w-28">Regeltotaal</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Notities</th>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-24">Type</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Artikel / Naam</th>
+                <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Hoev.</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Eenheid</th>
+                <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Inkoopprijs</th>
+                <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Regeltotaal</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Notities</th>
                 <th className="px-3 py-2 w-20" />
               </tr>
             </thead>
