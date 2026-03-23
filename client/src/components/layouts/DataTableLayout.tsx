@@ -90,7 +90,8 @@ export type ColumnConfig = {
   filterable: boolean;
   sortable: boolean;
   renderCell?: (value: any, row: any) => ReactNode;
-  fullCell?: boolean; // bypasses all padding/wrappers — renderCell fills the entire cell
+  fullCell?: boolean;
+  align?: 'left' | 'right' | 'center';
 };
 
 // ============================================================================
@@ -130,12 +131,11 @@ const createCurrencyColumn = (key: string, label: string, width = 120): ColumnCo
   width,
   filterable: true,
   sortable: true,
+  align: 'right',
   renderCell: (value: string) => (
-    <span className="text-right w-full block">
-      {value != null && value !== '' && value !== '0'
-        ? `€\u00A0${parseFloat(String(value)).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : '€\u00A00,00'}
-    </span>
+    value != null && value !== '' && value !== '0'
+      ? `€\u00A0${parseFloat(String(value)).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : '€\u00A00,00'
   )
 });
 
@@ -147,10 +147,9 @@ const createNumericColumn = (key: string, label: string, width = 100): ColumnCon
   width,
   filterable: true,
   sortable: true,
+  align: 'right',
   renderCell: (value: any) => (
-    <span className="text-right w-full block">
-      {value != null && value !== '' ? parseFloat(String(value)).toLocaleString('nl-NL') : '0'}
-    </span>
+    value != null && value !== '' ? parseFloat(String(value)).toLocaleString('nl-NL') : '0'
   )
 });
 
@@ -1065,10 +1064,9 @@ export function DataTableLayout<T = any>({
                                 }
                               </div>
                             ) : (
-                              /* Content area with consistent left margin matching header */
                               <div className="flex items-center">
                                 <div className="w-6 flex-shrink-0"></div>
-                                <div className="flex-1 min-w-0 truncate">
+                                <div className={`flex-1 min-w-0 truncate ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : ''}`}>
                                   {column.renderCell 
                                     ? column.renderCell(row[column.key as keyof T], row)
                                     : String(row[column.key as keyof T] || '-')

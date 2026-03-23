@@ -65,11 +65,10 @@ export function autoDiscoverColumns(
     };
 
     if (colType === 'currency') {
+      col.align = 'right';
       col.renderCell = (v: any) => {
         const num = parseFloat(String(v || '0')) || 0;
-        return (
-          `€\u00A0${num.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        );
+        return `€\u00A0${num.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       };
     } else if (colType === 'date') {
       col.renderCell = (v: any) => {
@@ -129,6 +128,7 @@ function saveColumnsToStorage(tableKey: string, columns: ColumnConfig[]) {
       width: col.width,
       visible: col.visible,
       order: i,
+      ...(col.align ? { align: col.align } : {}),
     }));
     localStorage.setItem(`table-columns-${tableKey}`, JSON.stringify(toSave));
   } catch {}
