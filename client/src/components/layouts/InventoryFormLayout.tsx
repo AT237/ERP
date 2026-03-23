@@ -1088,18 +1088,10 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
             {
               key: "isComposite",
               label: "Assembly",
-              type: "custom",
-              customComponent: (
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    {...form.register("isComposite")}
-                    className="rounded border-gray-300 accent-orange-500 h-4 w-4"
-                    data-testid="checkbox-inventory-is-composite"
-                  />
-                  <span className="text-sm font-medium text-slate-700">Assembly</span>
-                </label>
-              ),
+              type: "checkbox",
+              setValue: (value) => form.setValue("isComposite", value),
+              watch: () => form.watch("isComposite"),
+              testId: "checkbox-inventory-is-composite",
             } as FormField2<InventoryFormData>,
           ]
         ),
