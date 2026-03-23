@@ -30,14 +30,6 @@ const defaultColumns: ColumnConfig[] = [
     filterable: true,
     sortable: false,
   },
-  {
-    key: "isActiveLabel",
-    label: "Actief",
-    visible: true,
-    width: 80,
-    filterable: false,
-    sortable: true,
-  },
 ];
 
 function openTab(id?: string) {
@@ -51,17 +43,12 @@ function openTab(id?: string) {
   }));
 }
 
-type EnrichedBrand = Brand & { isActiveLabel: string };
-
 export default function MasterDataBrands() {
   const { data: records = [], isLoading } = useQuery<Brand[]>({
     queryKey: ["/api/masterdata/brands"],
   });
 
-  const enriched: EnrichedBrand[] = records.map(r => ({
-    ...r,
-    isActiveLabel: r.isActive ? "Ja" : "Nee",
-  }));
+  const enriched = records;
 
   const tableState = useDataTable({
     defaultColumns,
@@ -69,7 +56,7 @@ export default function MasterDataBrands() {
     tableKey: "masterdata-brands",
   });
 
-  const del = useEntityDelete<EnrichedBrand>({
+  const del = useEntityDelete<Brand>({
     endpoint: "/api/masterdata/brands",
     queryKeys: ["/api/masterdata/brands"],
     entityLabel: "Merk",
@@ -87,7 +74,7 @@ export default function MasterDataBrands() {
         data={enriched}
         isLoading={isLoading}
         tableKey="masterdata-brands"
-        getRowId={(r: EnrichedBrand) => r.id}
+        getRowId={(r: Brand) => r.id}
 
         columns={tableState.columns}
         setColumns={tableState.setColumns}
@@ -131,7 +118,7 @@ export default function MasterDataBrands() {
           },
         ]}
 
-        rowActions={(r: EnrichedBrand) => [
+        rowActions={(r: Brand) => [
           {
             key: "edit",
             label: "Bewerken",
@@ -148,7 +135,7 @@ export default function MasterDataBrands() {
           },
         ]}
 
-        onRowDoubleClick={(r: EnrichedBrand) => openTab(r.id)}
+        onRowDoubleClick={(r: Brand) => openTab(r.id)}
       />
 
       {del.renderDeleteDialogs()}

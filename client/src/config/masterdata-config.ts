@@ -396,8 +396,6 @@ MASTERDATA_CONFIG['brands'] = {
     { name: "code", label: "Code", type: "auto-code", required: true, nextCodeEndpoint: "/api/masterdata/brands/next-code" },
     { name: "name", label: "Naam", type: "text", required: true },
     { name: "description", label: "Omschrijving", type: "textarea" },
-    { name: "isActive", label: "Actief", type: "select", options: [{ value: "true", label: "Ja" }, { value: "false", label: "Nee" }] },
-    { name: "sortOrder", label: "Sorteervolgorde", type: "number" },
   ],
   sections: [
     {
@@ -407,8 +405,6 @@ MASTERDATA_CONFIG['brands'] = {
         { name: "code", label: "Code", type: "auto-code", required: true, nextCodeEndpoint: "/api/masterdata/brands/next-code" },
         { name: "name", label: "Naam", type: "text", required: true },
         { name: "description", label: "Omschrijving", type: "textarea" },
-        { name: "isActive", label: "Actief", type: "select", options: [{ value: "true", label: "Ja" }, { value: "false", label: "Nee" }] },
-        { name: "sortOrder", label: "Sorteervolgorde", type: "number" },
       ]
     }
   ],
