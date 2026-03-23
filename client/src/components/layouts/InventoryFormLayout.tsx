@@ -231,9 +231,10 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted }: Co
 
 interface CompositeComponentsPanelProps {
   parentItemId: string;
+  onCostPriceChanged?: (total: number) => void;
 }
 
-function CompositeComponentsPanel({ parentItemId }: CompositeComponentsPanelProps) {
+function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: CompositeComponentsPanelProps) {
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -249,6 +250,20 @@ function CompositeComponentsPanel({ parentItemId }: CompositeComponentsPanelProp
   });
 
   const [pendingRows, setPendingRows] = useState<PendingRow[]>([]);
+
+  const totalCostPrice = [
+    ...components.map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0"))),
+    ...pendingRows.map(r => (parseFloat(r.quantity) || 0) * (parseFloat(r.unitPrice) || 0)),
+  ].reduce((sum, v) => sum + v, 0);
+
+  useEffect(() => {
+    if (onCostPriceChanged && components.length > 0) {
+      const savedTotal = components
+        .map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0")))
+        .reduce((sum, v) => sum + v, 0);
+      onCostPriceChanged(savedTotal);
+    }
+  }, [components, onCostPriceChanged]);
 
   function addRow(type: "standard" | "unique") {
     setPendingRows(prev => [...prev, {
@@ -393,7 +408,14 @@ function CompositeComponentsPanel({ parentItemId }: CompositeComponentsPanelProp
                   </td>
                   <td className="px-3 py-2">
                     {row.componentType === "standard" ? (
-                      <Select value={row.componentItemId} onValueChange={v => updatePending(row.tempId, "componentItemId", v)}>
+                      <Select value={row.componentItemId} onValueChange={v => {
+                        const selectedItem = allInventoryItems.find(i => i.id === v);
+                        setPendingRows(prev => prev.map(r => r.tempId === row.tempId ? {
+                          ...r,
+                          componentItemId: v,
+                          unitPrice: selectedItem?.costPrice ?? r.unitPrice,
+                        } : r));
+                      }}>
                         <SelectTrigger className="h-8 text-sm w-full bg-white">
                           <SelectValue placeholder="Selecteer artikel..." />
                         </SelectTrigger>
