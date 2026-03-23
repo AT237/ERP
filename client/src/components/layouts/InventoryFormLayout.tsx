@@ -1400,7 +1400,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         <CompositeComponentsPanel
           parentItemId={currentInventoryId}
           onCostPriceChanged={(total) => {
-            form.setValue("costPrice", total.toFixed(2));
+            form.setValue("costPrice", total.toFixed(2), { shouldDirty: true, shouldValidate: true });
           }}
         />
       )}
