@@ -41,6 +41,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/dashboard" component={Dashboard} />
+        <Route path="/welcome" component={Dashboard} />
         <Route path="/task-overview" component={TaskOverview} />
         <Route path="/serial-numbers" component={SerialNumbers} />
         <Route path="/customers" component={Customers} />

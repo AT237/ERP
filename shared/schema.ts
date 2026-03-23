@@ -169,7 +169,7 @@ export const inventoryItems = pgTable("inventory_items", {
   unit: text("unit").default("pcs"),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
   costPrice: decimal("cost_price", { precision: 10, scale: 2 }).default('0'),
-  margin: decimal("margin", { precision: 5, scale: 2 }).default('0'), // percentage
+  margin: decimal("margin", { precision: 10, scale: 2 }).default('0'), // percentage
   brand: text("brand"),
   manufacturerPartNumber: text("manufacturer_part_number"),
   image: text("image"), // URL or file path for product image
