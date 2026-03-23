@@ -727,6 +727,73 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     { name: 'image', label: 'Afbeelding', fields: ['name', 'description', 'url', 'category', 'width', 'height'] },
   ];
 
+  const isInvoiceLayoutType = localDocumentType === 'invoice' || localDocumentType === 'proforma';
+  const { data: sampleInvoices } = useQuery<any[]>({
+    queryKey: ['/api/invoices'],
+    enabled: isInvoiceLayoutType,
+  });
+  const { data: sampleQuotations } = useQuery<any[]>({
+    queryKey: ['/api/quotations'],
+    enabled: !isInvoiceLayoutType && !!localDocumentType,
+  });
+  const sampleDocId = isInvoiceLayoutType ? sampleInvoices?.[0]?.id : sampleQuotations?.[0]?.id;
+  const { data: samplePrintData } = useQuery<any>({
+    queryKey: [isInvoiceLayoutType ? '/api/invoices' : '/api/quotations', sampleDocId, 'print-data'],
+    queryFn: async () => {
+      if (!sampleDocId) return null;
+      const endpoint = isInvoiceLayoutType
+        ? `/api/invoices/${sampleDocId}/print-data`
+        : `/api/quotations/${sampleDocId}/print-data`;
+      const response = await fetch(endpoint);
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!sampleDocId,
+  });
+
+  const enrichedAvailableTables = useMemo(() => {
+    if (!samplePrintData) return availableTables;
+    const tablesCopy = availableTables.map(t => ({ ...t, fields: [...t.fields] }));
+    const discoverFields = (obj: any): string[] => {
+      if (!obj || typeof obj !== 'object') return [];
+      return Object.keys(obj).filter(k => k !== 'id' && !k.endsWith('Id') && !k.endsWith('Ids'));
+    };
+    const discoverNested = (obj: any): string[] => {
+      if (!obj || typeof obj !== 'object') return [];
+      const result: string[] = [];
+      for (const [key, val] of Object.entries(obj)) {
+        if (key === 'id' || key.endsWith('Id') || key.endsWith('Ids')) continue;
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          for (const subKey of Object.keys(val)) {
+            result.push(`${key}.${subKey}`);
+          }
+        } else {
+          result.push(key);
+        }
+      }
+      return result;
+    };
+    const mergeFields = (tableName: string, newFields: string[]) => {
+      const table = tablesCopy.find(t => t.name === tableName);
+      if (table) {
+        for (const f of newFields) {
+          if (!table.fields.includes(f)) table.fields.push(f);
+        }
+      }
+    };
+    for (const [key, value] of Object.entries(samplePrintData)) {
+      if (Array.isArray(value) && value.length > 0) {
+        const sampleItem = value[0];
+        const fields = discoverFields(sampleItem);
+        mergeFields(key, fields);
+      } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const fields = discoverNested(value);
+        mergeFields(key, fields);
+      }
+    }
+    return tablesCopy;
+  }, [samplePrintData, availableTables]);
+
   // Load existing sections for this layout
   const { data: existingSections } = useQuery<any[]>({
     queryKey: [`/api/layout-sections?layoutId=${layout?.id}`],
@@ -2258,10 +2325,10 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                   <th className="text-left py-2 px-3 w-10">
                     <input
                       type="checkbox"
-                      checked={allowedTables.length === availableTables.length}
+                      checked={allowedTables.length === enrichedAvailableTables.length}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setAllowedTables(availableTables.map(t => t.name));
+                          setAllowedTables(enrichedAvailableTables.map(t => t.name));
                         } else {
                           setAllowedTables([]);
                         }
@@ -3237,6 +3304,49 @@ export function PreviewView({ layout }: { layout: any }) {
 
   const printData = isInvoiceLayout ? invoicePrintData : quotationPrintData;
   const isPrintDataLoading = isInvoiceLayout ? isInvoiceLoading : isQuotationLoading;
+
+  const enrichedAvailableTables = useMemo(() => {
+    if (!printData) return availableTables;
+    const tablesCopy = availableTables.map(t => ({ ...t, fields: [...t.fields] }));
+    const discoverFields = (obj: any): string[] => {
+      if (!obj || typeof obj !== 'object') return [];
+      return Object.keys(obj).filter(k => k !== 'id' && !k.endsWith('Id') && !k.endsWith('Ids'));
+    };
+    const discoverNested = (obj: any, prefix: string): string[] => {
+      if (!obj || typeof obj !== 'object') return [];
+      const result: string[] = [];
+      for (const [key, val] of Object.entries(obj)) {
+        if (key === 'id' || key.endsWith('Id') || key.endsWith('Ids')) continue;
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          for (const subKey of Object.keys(val)) {
+            result.push(`${key}.${subKey}`);
+          }
+        } else {
+          result.push(key);
+        }
+      }
+      return result;
+    };
+    const mergeFields = (tableName: string, newFields: string[]) => {
+      const table = tablesCopy.find(t => t.name === tableName);
+      if (table) {
+        for (const f of newFields) {
+          if (!table.fields.includes(f)) table.fields.push(f);
+        }
+      }
+    };
+    for (const [key, value] of Object.entries(printData)) {
+      if (Array.isArray(value) && value.length > 0) {
+        const sampleItem = value[0];
+        const fields = discoverFields(sampleItem);
+        mergeFields(key, fields);
+      } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const fields = discoverNested(value, key);
+        mergeFields(key, fields);
+      }
+    }
+    return tablesCopy;
+  }, [printData, availableTables]);
 
   const { data: sections = [] } = useQuery<any[]>({
     queryKey: [`/api/layout-sections?layoutId=${layout?.id}`],
