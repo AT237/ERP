@@ -496,6 +496,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       image4: "",
       brand: "",
       manufacturerPartNumber: "",
+      hsCode: "",
     },
   });
 
@@ -547,6 +548,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         image4: (inventoryItem as any).image4 || "",
         brand: (inventoryItem as any).brand || "",
         manufacturerPartNumber: (inventoryItem as any).manufacturerPartNumber || "",
+        hsCode: (inventoryItem as any).hsCode || "",
       };
       
       form.reset(formData);
@@ -991,6 +993,18 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
             />
           ),
           testId: "select-inventory-unit"
+        } as FormField2<InventoryFormData>),
+
+        createFieldRow({
+          key: "hsCode",
+          label: "HS Code",
+          type: "text",
+          placeholder: "Bijv. 8471.30.00",
+          register: form.register("hsCode"),
+          validation: {
+            error: form.formState.errors.hsCode?.message
+          },
+          testId: "input-inventory-hs-code"
         } as FormField2<InventoryFormData>),
 
         createFieldRow({

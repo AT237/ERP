@@ -570,6 +570,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
             const price = freshItem.sellingPrice || freshItem.unitPrice;
             if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
             if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
+            if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
           }}
           placeholder="Artikel zoeken in catalogus..."
           testId="select-inventory-item"
