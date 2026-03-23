@@ -527,8 +527,8 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
               {/* pending (new) rows */}
               {pendingRows.map(row => (
                 <tr key={row.tempId} className="border-b border-orange-100 bg-orange-50/40">
-                  <td className="px-3 py-2 w-10" />
-                  <td className="px-3 py-2 w-24">
+                  <td className="p-2 border-r border-gray-100" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }} />
+                  <td className="p-2 border-r border-gray-100 w-24">
                     <Badge variant="outline" className={cn(
                       "text-xs font-medium",
                       row.componentType === "standard"
@@ -538,7 +538,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
                       {row.componentType === "standard" ? "Standaard" : "Uniek"}
                     </Badge>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="p-2 border-r border-gray-100">
                     {row.componentType === "standard" ? (
                       <Select value={row.componentItemId} onValueChange={v => {
                         const selectedItem = allInventoryItems.find(i => i.id === v);
@@ -570,7 +570,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
                       />
                     )}
                   </td>
-                  <td className="px-3 py-2 w-28">
+                  <td className="p-2 border-r border-gray-100 w-24">
                     <Input
                       value={row.quantity}
                       onChange={e => updatePending(row.tempId, "quantity", e.target.value)}
@@ -578,7 +578,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
                       className="h-8 text-sm text-right bg-white"
                     />
                   </td>
-                  <td className="px-3 py-2 w-28">
+                  <td className="p-2 border-r border-gray-100 w-28">
                     {row.componentType === "unique" ? (
                       <Input
                         value={row.componentUnit}
@@ -590,7 +590,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
                       <span className="text-sm text-slate-400 italic">auto</span>
                     )}
                   </td>
-                  <td className="px-3 py-2 w-28">
+                  <td className="p-2 border-r border-gray-100 w-28">
                     <Input
                       value={row.unitPrice}
                       onChange={e => updatePending(row.tempId, "unitPrice", e.target.value)}
@@ -599,12 +599,12 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
                       placeholder="0.00"
                     />
                   </td>
-                  <td className="px-3 py-2 w-28">
+                  <td className="p-2 border-r border-gray-100 w-28">
                     <span className="text-sm text-right block font-mono font-medium">
                       € {((parseFloat(row.quantity) || 0) * (parseFloat(row.unitPrice) || 0)).toFixed(2)}
                     </span>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="p-2 border-r border-gray-100">
                     <Input
                       value={row.notes}
                       onChange={e => updatePending(row.tempId, "notes", e.target.value)}
@@ -612,7 +612,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
                       className="h-8 text-sm bg-white"
                     />
                   </td>
-                  <td className="px-3 py-2 w-20">
+                  <td className="p-2 w-20">
                     <div className="flex items-center gap-1 justify-end">
                       <button
                         onClick={() => savePending(row)}
