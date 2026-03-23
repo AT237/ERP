@@ -52,7 +52,7 @@ import {
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, 
   insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertRateAndChargeSchema, insertIncotermSchema,
-  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema, insertInventoryCategorySchema, inventoryCategories, inventoryComponents, insertInventoryComponentSchema,
+  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema, insertInventoryCategorySchema, inventoryCategories, insertBrandSchema, brands, inventoryComponents, insertInventoryComponentSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
   insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema, insertEmployeeSchema,
@@ -2229,6 +2229,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete inventory category" });
+    }
+  });
+
+  // Master Data routes - Brands
+  app.get("/api/masterdata/brands/next-code", async (req, res) => {
+    try {
+      const existing = await db.select({ code: brands.code }).from(brands);
+      const usedNumbers = new Set<number>();
+      for (const { code } of existing) {
+        const match = code.match(/^BRD-(\d+)$/);
+        if (match) usedNumbers.add(parseInt(match[1], 10));
+      }
+      let next = 1;
+      while (usedNumbers.has(next)) next++;
+      res.json({ code: `BRD-${String(next).padStart(4, "0")}` });
+    } catch (error) {
+      console.error("Error generating next brand code:", error);
+      res.status(500).json({ message: "Failed to generate next code" });
+    }
+  });
+
+  app.get("/api/masterdata/brands", async (req, res) => {
+    try {
+      const allBrands = await db.select().from(brands).orderBy(brands.sortOrder, brands.name);
+      res.json(allBrands);
+    } catch (error) {
+      console.error("Error fetching brands:", error);
+      res.status(500).json({ message: "Failed to fetch brands" });
+    }
+  });
+
+  app.post("/api/masterdata/brands", async (req, res) => {
+    try {
+      const data = insertBrandSchema.parse(req.body);
+      const [brand] = await db.insert(brands).values(data).returning();
+      res.json(brand);
+    } catch (error: any) {
+      if (error?.code === "23505") {
+        return res.status(409).json({ message: "A brand with this code already exists" });
+      }
+      res.status(400).json({ message: "Failed to create brand" });
+    }
+  });
+
+  app.get("/api/masterdata/brands/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const [brand] = await db.select().from(brands).where(eq(brands.id, id));
+      if (!brand) return res.status(404).json({ message: "Brand not found" });
+      res.json(brand);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch brand" });
+    }
+  });
+
+  app.put("/api/masterdata/brands/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const data = insertBrandSchema.partial().parse(req.body);
+      const [brand] = await db.update(brands).set(data).where(eq(brands.id, id)).returning();
+      if (!brand) return res.status(404).json({ message: "Brand not found" });
+      res.json(brand);
+    } catch (error: any) {
+      if (error?.code === "23505") {
+        return res.status(409).json({ message: "A brand with this code already exists" });
+      }
+      res.status(500).json({ message: "Failed to update brand" });
+    }
+  });
+
+  app.delete("/api/masterdata/brands/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await db.delete(brands).where(eq(brands.id, id));
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete brand" });
     }
   });
 

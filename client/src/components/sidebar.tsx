@@ -23,7 +23,7 @@ import {
   BarChart3, Building, Users, Truck, Package, FileText, 
   Receipt, FolderOpen, ClipboardList, ShoppingCart, Box, UserPlus, Contact, UserCheck,
   ChevronDown, ChevronUp, FileCheck, CreditCard, CheckSquare, GripVertical, Settings, Save, MoreVertical, Search, ChevronsDown, ChevronsUp,
-  Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen, Layout, Image, Archive, Mail, ListTodo, Hash
+  Ruler, Calendar, Plane, Percent, MapPin, Tag, BookOpen, Layout, Image, Archive, Mail, ListTodo, Hash, Award
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -115,6 +115,7 @@ export const defaultNavigation = [
       { id: "cities", name: "Cities", href: "/master-data/cities", icon: MapPin },
       { id: "statuses", name: "Statuses", href: "/master-data/statuses", icon: Tag },
       { id: "categories", name: "Categories", href: "/master-data/categories", icon: FolderOpen },
+      { id: "brands", name: "Brands", href: "/master-data/brands", icon: Award },
       { id: "pictograms", name: "Pictograms", href: "/master-data/pictograms", icon: FileCheck }
     ]
   },

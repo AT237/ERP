@@ -169,6 +169,14 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        <Route path="/master-data/brands" component={() => {
+          const BrandsPage = React.lazy(() => import("./pages/masterdata-brands.tsx"));
+          return (
+            <React.Suspense fallback={<div className="p-6">Laden...</div>}>
+              <BrandsPage />
+            </React.Suspense>
+          );
+        }} />
         <Route path="/master-data/company-details" component={() => {
           const CompanyDetailsPage = React.lazy(() => import('./pages/company-details.tsx'));
           return (

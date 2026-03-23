@@ -9,7 +9,8 @@ import {
   insertCitySchema,
   insertStatusSchema,
   insertImageSchema,
-  insertInventoryCategorySchema
+  insertInventoryCategorySchema,
+  insertBrandSchema
 } from "@shared/schema";
 
 export interface MasterDataField {
@@ -372,6 +373,38 @@ MASTERDATA_CONFIG['inventory-categories'] = {
       label: "Algemeen",
       fields: [
         { name: "code", label: "Code", type: "auto-code", required: true, nextCodeEndpoint: "/api/masterdata/inventory-categories/next-code" },
+        { name: "name", label: "Naam", type: "text", required: true },
+        { name: "description", label: "Omschrijving", type: "textarea" },
+        { name: "isActive", label: "Actief", type: "select", options: [{ value: "true", label: "Ja" }, { value: "false", label: "Nee" }] },
+        { name: "sortOrder", label: "Sorteervolgorde", type: "number" },
+      ]
+    }
+  ],
+  columns: [
+    { key: "code", label: "Code" },
+    { key: "name", label: "Naam" },
+    { key: "description", label: "Omschrijving" },
+  ]
+};
+
+MASTERDATA_CONFIG['brands'] = {
+  title: "Brands",
+  singularTitle: "Brand",
+  endpoint: "brands",
+  schema: insertBrandSchema,
+  fields: [
+    { name: "code", label: "Code", type: "auto-code", required: true, nextCodeEndpoint: "/api/masterdata/brands/next-code" },
+    { name: "name", label: "Naam", type: "text", required: true },
+    { name: "description", label: "Omschrijving", type: "textarea" },
+    { name: "isActive", label: "Actief", type: "select", options: [{ value: "true", label: "Ja" }, { value: "false", label: "Nee" }] },
+    { name: "sortOrder", label: "Sorteervolgorde", type: "number" },
+  ],
+  sections: [
+    {
+      id: "general",
+      label: "Algemeen",
+      fields: [
+        { name: "code", label: "Code", type: "auto-code", required: true, nextCodeEndpoint: "/api/masterdata/brands/next-code" },
         { name: "name", label: "Naam", type: "text", required: true },
         { name: "description", label: "Omschrijving", type: "textarea" },
         { name: "isActive", label: "Actief", type: "select", options: [{ value: "true", label: "Ja" }, { value: "false", label: "Nee" }] },

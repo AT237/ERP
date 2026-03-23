@@ -947,11 +947,21 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
           {
             key: "brand",
             label: "Merk",
-            type: "text",
+            type: "custom",
             layout: "single",
-            placeholder: "Bijv. Bosch, Siemens...",
-            register: form.register("brand" as any),
-            testId: "input-inventory-brand"
+            customComponent: (
+              <EntitySelect
+                endpoint="brands"
+                formType="masterdata-brands"
+                labelField="name"
+                secondaryField="code"
+                value={form.watch("brand" as any) || ""}
+                onValueChange={(val) => form.setValue("brand" as any, val)}
+                placeholder="Selecteer merk..."
+                testId="select-inventory-brand"
+              />
+            ),
+            testId: "select-inventory-brand"
           } as FormField2<InventoryFormData>,
           {
             key: "manufacturerPartNumber",

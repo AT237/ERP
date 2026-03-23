@@ -605,6 +605,20 @@ export const insertInventoryCategorySchema = createInsertSchema(inventoryCategor
 export type InsertInventoryCategory = z.infer<typeof insertInventoryCategorySchema>;
 export type InventoryCategory = typeof inventoryCategories.$inferSelect;
 
+export const brands = pgTable("brands", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertBrandSchema = createInsertSchema(brands).omit({ id: true, createdAt: true });
+export type InsertBrand = z.infer<typeof insertBrandSchema>;
+export type Brand = typeof brands.$inferSelect;
+
 export const vatRates = pgTable("vat_rates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   code: text("code").notNull().unique(),

@@ -200,6 +200,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'statuses', name: 'Statuses' };
       case '/master-data/pictograms':
         return { id: 'pictograms', name: 'Pictograms' };
+      case '/master-data/brands':
+        return { id: 'brands', name: 'Brands' };
       case '/style-guide':
         return { id: 'design-system', name: 'Design System' };
       case '/dev-futures':
@@ -613,6 +615,8 @@ export default function Layout({ children }: LayoutProps) {
         return '/master-data/cities';
       case 'statuses':
         return '/master-data/statuses';
+      case 'brands':
+        return '/master-data/brands';
       default:
         return '/dashboard';
     }
