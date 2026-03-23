@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInventoryItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Package, Image, Plus, Trash2, Check, X, Layers, AlertCircle, Loader2, Search, CopyPlus } from "lucide-react";
+import { Package, Image, Plus, Trash2, Check, X, Layers, AlertCircle, Loader2, Search, CopyPlus, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
@@ -264,7 +264,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
   const [pendingRows, setPendingRows] = useState<PendingRow[]>([]);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<"all" | "standard" | "unique">("all");
 
   const totalCostPrice = [
     ...components.map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0"))),
@@ -373,15 +373,17 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
     setSelectedRows(prev => prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]);
   }
 
-  const filteredComponents = searchTerm
-    ? components.filter(c => {
-        const linked = allInventoryItems.find(i => i.id === c.componentItemId);
-        const name = c.componentType === "standard" ? (linked?.name ?? "") : (c.componentName ?? "");
-        const sku = linked?.sku ?? "";
-        const term = searchTerm.toLowerCase();
-        return name.toLowerCase().includes(term) || sku.toLowerCase().includes(term);
-      })
-    : components;
+  const filteredComponents = components.filter(c => {
+    if (typeFilter !== "all" && c.componentType !== typeFilter) return false;
+    if (searchTerm) {
+      const linked = allInventoryItems.find(i => i.id === c.componentItemId);
+      const name = c.componentType === "standard" ? (linked?.name ?? "") : (c.componentName ?? "");
+      const sku = linked?.sku ?? "";
+      const term = searchTerm.toLowerCase();
+      if (!name.toLowerCase().includes(term) && !sku.toLowerCase().includes(term)) return false;
+    }
+    return true;
+  });
 
   const hasSelection = selectedRows.length > 0;
   const hasSingleSelection = selectedRows.length === 1;
@@ -390,30 +392,44 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
     <div className="px-6 mb-6 mt-0 w-full overflow-hidden">
       {/* Toolbar */}
       <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 flex items-center gap-1 mb-3">
-        {showSearch ? (
-          <div className="relative">
-            <Input
-              placeholder="Zoek onderdeel..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 h-8 text-sm w-48"
-              autoFocus
-              onBlur={() => { if (!searchTerm) setShowSearch(false); }}
-            />
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-orange-500" size={14} />
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 ring-1 ring-orange-400 text-orange-600"
-            onClick={() => setShowSearch(true)}
-            title="Zoeken"
-          >
-            <Search className="h-4 w-4" />
-          </Button>
-        )}
+        <div className="relative">
+          <Input
+            placeholder="Search components..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8 h-8 text-sm w-64"
+          />
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-orange-500" size={14} />
+        </div>
+
         <Separator orientation="vertical" className="h-6 mx-1" />
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-8 w-8 p-0 ${typeFilter !== "all" ? 'ring-1 ring-orange-400 text-orange-600' : 'ring-1 ring-orange-400 text-orange-600'}`}
+              title="Filter"
+            >
+              <Filter className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setTypeFilter("all")} className={cn("text-xs", typeFilter === "all" && "font-bold")}>
+              Alle types
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTypeFilter("standard")} className={cn("text-xs", typeFilter === "standard" && "font-bold")}>
+              Standaard
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTypeFilter("unique")} className={cn("text-xs", typeFilter === "unique" && "font-bold")}>
+              Uniek
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
