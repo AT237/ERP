@@ -244,9 +244,10 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, sele
 interface CompositeComponentsPanelProps {
   parentItemId: string;
   onCostPriceChanged?: (total: number) => void;
+  onCompositeChanged?: (isComposite: boolean) => void;
 }
 
-function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: CompositeComponentsPanelProps) {
+function CompositeComponentsPanel({ parentItemId, onCostPriceChanged, onCompositeChanged }: CompositeComponentsPanelProps) {
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -273,7 +274,10 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
 
   const onCostPriceChangedRef = useRef(onCostPriceChanged);
   onCostPriceChangedRef.current = onCostPriceChanged;
+  const onCompositeChangedRef = useRef(onCompositeChanged);
+  onCompositeChangedRef.current = onCompositeChanged;
   const prevTotalRef = useRef<number | null>(null);
+  const prevIsCompositeRef = useRef<boolean | null>(null);
 
   useEffect(() => {
     const savedTotal = components
@@ -282,6 +286,11 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
     if (prevTotalRef.current !== savedTotal) {
       prevTotalRef.current = savedTotal;
       onCostPriceChangedRef.current?.(savedTotal);
+    }
+    const hasComponents = components.length > 0;
+    if (prevIsCompositeRef.current !== hasComponents) {
+      prevIsCompositeRef.current = hasComponents;
+      onCompositeChangedRef.current?.(hasComponents);
     }
   }, [components]);
 
@@ -1400,6 +1409,9 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
           parentItemId={currentInventoryId}
           onCostPriceChanged={(total) => {
             form.setValue("costPrice", total.toFixed(2), { shouldDirty: true, shouldValidate: true });
+          }}
+          onCompositeChanged={(isComposite) => {
+            form.setValue("isComposite", isComposite, { shouldDirty: true });
           }}
         />
       )}
