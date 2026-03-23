@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInventoryItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Package, Image, Plus, Trash2, Check, X, Layers, AlertCircle, Loader2 } from "lucide-react";
+import { Package, Image, Plus, Trash2, Check, X, Layers, AlertCircle, Loader2, Search, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
@@ -59,9 +59,11 @@ interface ComponentRowProps {
   inventoryItems: InventoryItem[];
   parentItemId: string;
   onDeleted: () => void;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }
 
-function ComponentRow({ component, inventoryItems, parentItemId, onDeleted }: ComponentRowProps) {
+function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, selected, onToggleSelect }: ComponentRowProps) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
@@ -109,7 +111,15 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted }: Co
   }
 
   return (
-    <tr className="border-b border-slate-100 hover:bg-slate-50 group">
+    <tr className={cn("border-b border-slate-100 hover:bg-slate-50 group", selected && "bg-orange-50/50")}>
+      <td className="px-3 py-2 w-10">
+        <input
+          type="checkbox"
+          className="rounded border-gray-300 accent-orange-500 h-4 w-4"
+          checked={!!selected}
+          onChange={() => onToggleSelect?.()}
+        />
+      </td>
       <td className="px-3 py-2 w-24">
         <Badge variant="outline" className={cn(
           "text-xs font-medium",
@@ -252,6 +262,9 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
   });
 
   const [pendingRows, setPendingRows] = useState<PendingRow[]>([]);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
 
   const totalCostPrice = [
     ...components.map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0"))),
@@ -308,6 +321,42 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
     setPendingRows(prev => prev.map(r => r.tempId === tempId ? { ...r, [field]: value } : r));
   }
 
+  const deleteManyMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      for (const id of ids) {
+        await apiRequest("DELETE", `/api/inventory/${parentItemId}/components/${id}`);
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/inventory", parentItemId, "components"] });
+      setSelectedRows([]);
+    },
+    onError: (e: any) => toast({ title: "Fout", description: e.message, variant: "destructive" }),
+  });
+
+  const duplicateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const comp = components.find(c => c.id === id);
+      if (!comp) return;
+      const payload: Record<string, any> = {
+        componentType: comp.componentType,
+        quantity: comp.quantity,
+        unitPrice: comp.unitPrice || "0",
+        notes: comp.notes || null,
+        sortOrder: components.length,
+        componentItemId: comp.componentItemId || null,
+        componentName: comp.componentName || null,
+        componentUnit: comp.componentUnit || null,
+      };
+      return apiRequest("POST", `/api/inventory/${parentItemId}/components`, payload);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/inventory", parentItemId, "components"] });
+      setSelectedRows([]);
+    },
+    onError: (e: any) => toast({ title: "Fout", description: e.message, variant: "destructive" }),
+  });
+
   function savePending(row: PendingRow) {
     if (row.componentType === "standard" && !row.componentItemId) {
       toast({ title: "Selecteer een artikel", variant: "destructive" });
@@ -320,10 +369,51 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
     createMutation.mutate(row);
   }
 
+  function toggleRowSelection(id: string) {
+    setSelectedRows(prev => prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]);
+  }
+
+  const filteredComponents = searchTerm
+    ? components.filter(c => {
+        const linked = allInventoryItems.find(i => i.id === c.componentItemId);
+        const name = c.componentType === "standard" ? (linked?.name ?? "") : (c.componentName ?? "");
+        const sku = linked?.sku ?? "";
+        const term = searchTerm.toLowerCase();
+        return name.toLowerCase().includes(term) || sku.toLowerCase().includes(term);
+      })
+    : components;
+
+  const hasSelection = selectedRows.length > 0;
+  const hasSingleSelection = selectedRows.length === 1;
+
   return (
     <div className="px-6 mb-6 mt-0 w-full overflow-hidden">
       {/* Toolbar */}
       <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 flex items-center gap-1 mb-3">
+        {showSearch ? (
+          <div className="relative">
+            <Input
+              placeholder="Zoek onderdeel..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8 h-8 text-sm w-48"
+              autoFocus
+              onBlur={() => { if (!searchTerm) setShowSearch(false); }}
+            />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-orange-500" size={14} />
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 ring-1 ring-orange-400 text-orange-600"
+            onClick={() => setShowSearch(true)}
+            title="Zoeken"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+        )}
+        <Separator orientation="vertical" className="h-6 mx-1" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -344,6 +434,26 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`h-8 w-8 p-0 ${hasSingleSelection ? 'ring-1 ring-orange-400 text-orange-600' : 'opacity-30'}`}
+          onClick={() => { if (hasSingleSelection) duplicateMutation.mutate(selectedRows[0]); }}
+          disabled={!hasSingleSelection || duplicateMutation.isPending}
+          title="Dupliceren"
+        >
+          <CopyPlus className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`h-8 w-8 p-0 ${hasSelection ? 'ring-1 ring-orange-400 text-orange-600' : 'opacity-30'}`}
+          onClick={() => { if (hasSelection) deleteManyMutation.mutate(selectedRows); }}
+          disabled={!hasSelection || deleteManyMutation.isPending}
+          title="Verwijderen"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Table */}
@@ -361,6 +471,20 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="px-3 py-2 w-10">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300 accent-orange-500 h-4 w-4"
+                    checked={filteredComponents.length > 0 && selectedRows.length === filteredComponents.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedRows(filteredComponents.map(c => c.id));
+                      } else {
+                        setSelectedRows([]);
+                      }
+                    }}
+                  />
+                </th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-24">Type</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Artikel / Naam</th>
                 <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Hoev.</th>
@@ -372,19 +496,22 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
               </tr>
             </thead>
             <tbody>
-              {components.map(c => (
+              {filteredComponents.map(c => (
                 <ComponentRow
                   key={c.id}
                   component={c}
                   inventoryItems={allInventoryItems}
                   parentItemId={parentItemId}
                   onDeleted={() => {}}
+                  selected={selectedRows.includes(c.id)}
+                  onToggleSelect={() => toggleRowSelection(c.id)}
                 />
               ))}
 
               {/* pending (new) rows */}
               {pendingRows.map(row => (
                 <tr key={row.tempId} className="border-b border-orange-100 bg-orange-50/40">
+                  <td className="px-3 py-2 w-10" />
                   <td className="px-3 py-2 w-24">
                     <Badge variant="outline" className={cn(
                       "text-xs font-medium",
@@ -494,7 +621,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
             {(components.length > 0 || pendingRows.length > 0) && (
               <tfoot>
                 <tr className="border-t-2 border-slate-200 bg-slate-50">
-                  <td colSpan={5} className="px-3 py-2.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                  <td colSpan={6} className="px-3 py-2.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wide">
                     Totaal kostprijs
                   </td>
                   <td className="px-3 py-2.5 w-28">
