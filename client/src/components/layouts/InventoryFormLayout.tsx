@@ -389,7 +389,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
   const hasSingleSelection = selectedRows.length === 1;
 
   return (
-    <div className="px-6 mb-6 mt-0 w-full overflow-hidden">
+    <div className="px-10 mb-6 mt-0 w-full overflow-hidden">
       {/* Toolbar */}
       <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 flex items-center gap-1 mb-3">
         <div className="relative">
