@@ -26,6 +26,7 @@ import {
   createFieldsRow, 
   createSectionHeaderRow,
   createCustomRow,
+  createTwoColumnRow,
   type ChangeTrackingConfig 
 } from './LayoutForm2';
 import type { InfoField } from './InfoHeaderLayout';
@@ -897,132 +898,121 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       label: "General Information",
       icon: <Package className="h-4 w-4" />,
       rows: [
-        createFieldsRow([
-          {
-            key: "sku",
-            label: "Artikelcode (SKU)",
-            type: "text",
-            placeholder: "Voer artikelcode in",
-            layout: "single",
-            register: form.register("sku"),
-            validation: {
-              error: form.formState.errors.sku?.message,
-              isRequired: true
-            },
-            testId: "input-inventory-sku"
-          } as FormField2<InventoryFormData>,
-          {
-            key: "category",
-            label: "Categorie",
-            type: "custom",
-            layout: "single",
-            customComponent: (
-              <EntitySelect
-                endpoint="inventory-categories"
-                formType="masterdata-inventory-categories"
-                labelField="name"
-                secondaryField="code"
-                value={categoryValue || ""}
-                onValueChange={(val) => { form.setValue("category", val); setHasUnsavedChanges(true); }}
-                placeholder="Selecteer categorie..."
-                testId="select-inventory-category"
-              />
-            ),
-            testId: "select-inventory-category"
-          } as FormField2<InventoryFormData>
-        ]),
-        
-        createFieldRow({
-          key: "name",
-          label: "Product Name",
-          type: "text",
-          placeholder: "Enter product name",
-          register: form.register("name"),
-          validation: {
-            error: form.formState.errors.name?.message,
-            isRequired: true
-          },
-          testId: "input-inventory-name"
-        } as FormField2<InventoryFormData>),
-
-        createFieldsRow([
-          {
-            key: "brand",
-            label: "Merk",
-            type: "custom",
-            layout: "single",
-            customComponent: (
-              <EntitySelect
-                endpoint="brands"
-                formType="masterdata-brands"
-                labelField="name"
-                secondaryField="code"
-                value={form.watch("brand" as any) || ""}
-                onValueChange={(val) => form.setValue("brand" as any, val)}
-                placeholder="Selecteer merk..."
-                testId="select-inventory-brand"
-              />
-            ),
-            testId: "select-inventory-brand"
-          } as FormField2<InventoryFormData>,
-          {
-            key: "manufacturerPartNumber",
-            label: "Fabrikant type nr.",
-            type: "text",
-            layout: "single",
-            placeholder: "Bijv. MPN-12345",
-            register: form.register("manufacturerPartNumber" as any),
-            testId: "input-inventory-manufacturer-part-number"
-          } as FormField2<InventoryFormData>
-        ]),
-
-        createFieldRow({
-          key: "unit",
-          label: "Eenheid",
-          type: "custom",
-          customComponent: (
-            <EntitySelect
-              endpoint="units-of-measure"
-              formType="masterdata-units-of-measure"
-              labelField="name"
-              secondaryField="code"
-              value={form.watch("unit") || ""}
-              onValueChange={(val) => form.setValue("unit", val)}
-              placeholder="Selecteer eenheid..."
-              testId="select-inventory-unit"
-            />
-          ),
-          testId: "select-inventory-unit"
-        } as FormField2<InventoryFormData>),
-
-        createFieldsRow([
-          {
-            key: "description",
-            label: "Description",
-            type: "textarea",
-            layout: "single",
-            placeholder: "Enter product description",
-            rows: 3,
-            register: form.register("description"),
-            validation: {
-              error: form.formState.errors.description?.message
-            },
-            testId: "input-inventory-description"
-          } as FormField2<InventoryFormData>,
-          {
-            key: "hsCode",
-            label: "HS Code",
-            type: "text",
-            layout: "single",
-            placeholder: "Bijv. 8471.30.00",
-            register: form.register("hsCode"),
-            validation: {
-              error: form.formState.errors.hsCode?.message
-            },
-            testId: "input-inventory-hs-code"
-          } as FormField2<InventoryFormData>
-        ]),
-
+        createTwoColumnRow(
+          [
+            {
+              key: "sku",
+              label: "Artikelcode (SKU)",
+              type: "text",
+              placeholder: "Voer artikelcode in",
+              register: form.register("sku"),
+              validation: {
+                error: form.formState.errors.sku?.message,
+                isRequired: true
+              },
+              testId: "input-inventory-sku"
+            } as FormField2<InventoryFormData>,
+            {
+              key: "category",
+              label: "Categorie",
+              type: "custom",
+              customComponent: (
+                <EntitySelect
+                  endpoint="inventory-categories"
+                  formType="masterdata-inventory-categories"
+                  labelField="name"
+                  secondaryField="code"
+                  value={categoryValue || ""}
+                  onValueChange={(val) => { form.setValue("category", val); setHasUnsavedChanges(true); }}
+                  placeholder="Selecteer categorie..."
+                  testId="select-inventory-category"
+                />
+              ),
+              testId: "select-inventory-category"
+            } as FormField2<InventoryFormData>,
+            {
+              key: "name",
+              label: "Product Name",
+              type: "text",
+              placeholder: "Enter product name",
+              register: form.register("name"),
+              validation: {
+                error: form.formState.errors.name?.message,
+                isRequired: true
+              },
+              testId: "input-inventory-name"
+            } as FormField2<InventoryFormData>,
+            {
+              key: "brand",
+              label: "Merk",
+              type: "custom",
+              customComponent: (
+                <EntitySelect
+                  endpoint="brands"
+                  formType="masterdata-brands"
+                  labelField="name"
+                  secondaryField="code"
+                  value={form.watch("brand" as any) || ""}
+                  onValueChange={(val) => form.setValue("brand" as any, val)}
+                  placeholder="Selecteer merk..."
+                  testId="select-inventory-brand"
+                />
+              ),
+              testId: "select-inventory-brand"
+            } as FormField2<InventoryFormData>,
+            {
+              key: "manufacturerPartNumber",
+              label: "Fabrikant type nr.",
+              type: "text",
+              placeholder: "Bijv. MPN-12345",
+              register: form.register("manufacturerPartNumber" as any),
+              testId: "input-inventory-manufacturer-part-number"
+            } as FormField2<InventoryFormData>,
+            {
+              key: "unit",
+              label: "Eenheid",
+              type: "custom",
+              customComponent: (
+                <EntitySelect
+                  endpoint="units-of-measure"
+                  formType="masterdata-units-of-measure"
+                  labelField="name"
+                  secondaryField="code"
+                  value={form.watch("unit") || ""}
+                  onValueChange={(val) => form.setValue("unit", val)}
+                  placeholder="Selecteer eenheid..."
+                  testId="select-inventory-unit"
+                />
+              ),
+              testId: "select-inventory-unit"
+            } as FormField2<InventoryFormData>,
+          ],
+          [
+            {
+              key: "description",
+              label: "Description",
+              type: "textarea",
+              placeholder: "Enter product description",
+              rows: 3,
+              register: form.register("description"),
+              validation: {
+                error: form.formState.errors.description?.message
+              },
+              testId: "input-inventory-description"
+            } as FormField2<InventoryFormData>,
+            {
+              key: "hsCode",
+              label: "HS Code",
+              type: "text",
+              placeholder: "Bijv. 8471.30.00",
+              register: form.register("hsCode"),
+              validation: {
+                error: form.formState.errors.hsCode?.message
+              },
+              testId: "input-inventory-hs-code"
+            } as FormField2<InventoryFormData>,
+          ]
+        ),
         createCustomRow(imageUploadComponent, "border-t pt-4")
       ]
     },
