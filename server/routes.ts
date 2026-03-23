@@ -1526,10 +1526,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const invoiceList = await storage.getInvoices();
       const customerList = await storage.getCustomers();
       const customerMap = new Map(customerList.map(c => [c.id, c.name]));
-      const result = invoiceList.map(inv => ({
-        ...inv,
-        customerName: customerMap.get(inv.customerId) || null,
-      }));
+      const allItems = await Promise.all(
+        invoiceList.map(inv => storage.getInvoiceItems(inv.id))
+      );
+      const result = invoiceList.map((inv, idx) => {
+        const items = allItems[idx] || [];
+        const totalCost = items.reduce((sum, item) => {
+          const qty = parseFloat(String(item.quantity || "0")) || 0;
+          const cost = parseFloat(String((item as any).costPrice || "0")) || 0;
+          return sum + (qty * cost);
+        }, 0);
+        const subtotal = parseFloat(String(inv.subtotal || "0")) || 0;
+        const totalMargin = subtotal - totalCost;
+        return {
+          ...inv,
+          customerName: customerMap.get(inv.customerId) || null,
+          totalCost: totalCost.toFixed(2),
+          totalMargin: totalMargin.toFixed(2),
+        };
+      });
       res.json(result);
     } catch (error) {
       console.error("Error fetching invoices:", error);
