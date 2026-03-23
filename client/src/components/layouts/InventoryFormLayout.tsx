@@ -395,6 +395,8 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
 
   return (
     <div className="px-10 mb-6 mt-0 w-full overflow-hidden">
+      {/* Section Title */}
+      <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-3">Assembly</h3>
       {/* Toolbar */}
       <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 flex items-center gap-1 mb-3">
         <div className="relative">
@@ -713,7 +715,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
   });
 
   const categoryValue = form.watch("category");
-  const watchedIsComposite = form.watch("isComposite");
+
 
   // Load inventory item data if editing
   const { data: inventoryItem, isLoading: isLoadingInventory } = useQuery<InventoryItem>({
@@ -1222,14 +1224,6 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
               },
               testId: "input-inventory-hs-code"
             } as FormField2<InventoryFormData>,
-            {
-              key: "isComposite",
-              label: "Assembly",
-              type: "checkbox",
-              setValue: (value) => form.setValue("isComposite", value),
-              watch: () => form.watch("isComposite"),
-              testId: "checkbox-inventory-is-composite",
-            } as FormField2<InventoryFormData>,
           ]
         ),
         createCustomRow(imageUploadComponent, "border-t pt-4")
@@ -1401,24 +1395,13 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         }
       />
 
-      {watchedIsComposite && currentInventoryId && (
+      {currentInventoryId && (
         <CompositeComponentsPanel
           parentItemId={currentInventoryId}
           onCostPriceChanged={(total) => {
             form.setValue("costPrice", total.toFixed(2), { shouldDirty: true, shouldValidate: true });
           }}
         />
-      )}
-
-      {watchedIsComposite && !currentInventoryId && (
-        <div className="mx-6 mb-6 mt-0">
-          <div className="flex items-center gap-3 px-5 py-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-700">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            <p className="text-sm font-medium">
-              Sla het artikel eerst op om onderdelen toe te voegen.
-            </p>
-          </div>
-        </div>
       )}
     </>
   );
