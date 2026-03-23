@@ -93,9 +93,12 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted }: Co
   const linkedItem = inventoryItems.find(i => i.id === component.componentItemId);
   const isStandard = component.componentType === "standard";
 
+  const lineTotal = (parseFloat(qty) || 0) * (parseFloat(unitPrice) || 0);
+
   function saveRow() {
     patchMutation.mutate({
       quantity: qty,
+      unitPrice,
       notes,
       ...(isStandard
         ? { componentItemId: selectedItemId }
@@ -170,6 +173,20 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted }: Co
         )}
       </td>
 
+      <td className="px-3 py-2 w-28">
+        {editing ? (
+          <Input value={unitPrice} onChange={e => setUnitPrice(e.target.value)} className="h-8 text-sm text-right" type="number" min="0" step="0.01" />
+        ) : (
+          <span className="text-sm text-right block font-mono">€ {parseFloat(component.unitPrice ?? "0").toFixed(2)}</span>
+        )}
+      </td>
+
+      <td className="px-3 py-2 w-28">
+        <span className="text-sm text-right block font-mono font-medium">
+          € {(editing ? lineTotal : (parseFloat(component.quantity ?? "0") * parseFloat(component.unitPrice ?? "0"))).toFixed(2)}
+        </span>
+      </td>
+
       <td className="px-3 py-2">
         {editing ? (
           <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optionele notitie..." className="h-8 text-sm" />
@@ -240,6 +257,7 @@ function CompositeComponentsPanel({ parentItemId }: CompositeComponentsPanelProp
       componentItemId: "",
       componentName: "",
       quantity: "1",
+      unitPrice: "0",
       componentUnit: "",
       notes: "",
     }]);
@@ -250,6 +268,7 @@ function CompositeComponentsPanel({ parentItemId }: CompositeComponentsPanelProp
       const payload: Record<string, any> = {
         componentType: row.componentType,
         quantity: row.quantity,
+        unitPrice: row.unitPrice || "0",
         notes: row.notes || null,
         sortOrder: components.length + pendingRows.indexOf(row),
       };
@@ -342,6 +361,8 @@ function CompositeComponentsPanel({ parentItemId }: CompositeComponentsPanelProp
                 <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Artikel / Naam</th>
                 <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide w-28">Hoev.</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-28">Eenheid</th>
+                <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide w-28">Inkoopprijs</th>
+                <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide w-28">Regeltotaal</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Notities</th>
                 <th className="px-3 py-2 w-20" />
               </tr>
@@ -415,6 +436,20 @@ function CompositeComponentsPanel({ parentItemId }: CompositeComponentsPanelProp
                       <span className="text-sm text-slate-400 italic">auto</span>
                     )}
                   </td>
+                  <td className="px-3 py-2 w-28">
+                    <Input
+                      value={row.unitPrice}
+                      onChange={e => updatePending(row.tempId, "unitPrice", e.target.value)}
+                      type="number" min="0" step="0.01"
+                      className="h-8 text-sm text-right bg-white"
+                      placeholder="0.00"
+                    />
+                  </td>
+                  <td className="px-3 py-2 w-28">
+                    <span className="text-sm text-right block font-mono font-medium">
+                      € {((parseFloat(row.quantity) || 0) * (parseFloat(row.unitPrice) || 0)).toFixed(2)}
+                    </span>
+                  </td>
                   <td className="px-3 py-2">
                     <Input
                       value={row.notes}
@@ -445,6 +480,21 @@ function CompositeComponentsPanel({ parentItemId }: CompositeComponentsPanelProp
                 </tr>
               ))}
             </tbody>
+            {(components.length > 0 || pendingRows.length > 0) && (
+              <tfoot>
+                <tr className="border-t-2 border-slate-200 bg-slate-50">
+                  <td colSpan={5} className="px-3 py-2.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                    Totaal kostprijs
+                  </td>
+                  <td className="px-3 py-2.5 w-28">
+                    <span className="text-sm text-right block font-mono font-bold text-orange-700">
+                      € {totalCostPrice.toFixed(2)}
+                    </span>
+                  </td>
+                  <td colSpan={2} />
+                </tr>
+              </tfoot>
+            )}
           </table>
         )}
       </div>
