@@ -647,6 +647,11 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     quantity: parseFloat(String(item.quantity || 0)),
     unit: item.unit || "",
     unitPrice: item.unitPrice || "0.00",
+    netUnitPrice: (() => {
+      const up = parseFloat(String(item.unitPrice || "0"));
+      const disc = parseFloat(String(item.discountPercent || "0"));
+      return disc > 0 ? (up * (1 - disc / 100)).toFixed(2) : (up).toFixed(2);
+    })(),
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",
     discountPercent: item.discountPercent || null,

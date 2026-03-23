@@ -373,7 +373,7 @@ const mmToPx = (mm: number): number => Math.round(mm * MM_TO_PX);
 const FIELD_LABELS: Record<string, string> = {
   positionNo: 'Pos. Nr.', lineType: 'Regeltype', description: 'Omschrijving',
   descriptionInternal: 'Interne omschrijving', quantity: 'Aantal', unit: 'Eenheid',
-  unitPrice: 'Prijs per eenheid', lineTotal: 'Regel totaal', discountPercent: 'Korting %',
+  unitPrice: 'Prijs per eenheid', lineTotal: 'Regel totaal', discountPercent: 'Korting %', netUnitPrice: 'Netto prijs (na korting)',
   workDate: 'Werkdatum', technicianNames: 'Techniciennamen', technicianIds: 'Techniciën IDs',
   customerRateId: 'Tarief ID', itemId: 'Artikel ID', sourceSnippetId: 'Snippet ID',
   sourceSnippetVersion: 'Snippet versie', deliveryDate: 'Leverdatum', hsCode: 'HS Code',
@@ -685,7 +685,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     { name: 'quotation', label: 'Offerte', fields: ['quotationNumber', 'quotationDate', 'validUntil', 'validityDays', 'description', 'revisionNumber', 'status', 'isBudgetQuotation', 'subtotal', 'taxAmount', 'totalAmount', 'totalAmountInWords', 'incoTerms', 'paymentConditions', 'deliveryConditions', 'notes'] },
     { name: 'quotationItems', label: 'Offerte Regels', fields: ['positionNo', 'lineType', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal', 'itemId', 'sourceSnippetId', 'deliveryDate', 'hsCode', 'countryOfOrigin'] },
     { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'invoiceDate', 'dueDate', 'description', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'totalAmountInWords', 'paidAmount', 'vatRatePercent', 'notes', 'paymentTerms', 'workOrderNumbers'] },
-    { name: 'invoiceItems', label: 'Factuur Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'unit', 'unitPrice', 'lineTotal', 'discountPercent', 'workDate', 'technicianNames', 'technicianIds', 'customerRateId', 'itemId', 'sourceSnippetId', 'sourceSnippetVersion'] },
+    { name: 'invoiceItems', label: 'Factuur Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'unit', 'unitPrice', 'discountPercent', 'netUnitPrice', 'lineTotal', 'workDate', 'technicianNames', 'technicianIds', 'customerRateId', 'itemId', 'sourceSnippetId', 'sourceSnippetVersion'] },
     { name: 'proformaInvoice', label: 'Proforma Factuur', fields: ['invoiceNumber', 'status', 'dueDate', 'subtotal', 'taxAmount', 'totalAmount'] },
     { name: 'purchaseOrder', label: 'Inkooporder', fields: ['orderNumber', 'orderDate', 'expectedDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
     { name: 'purchaseOrderItems', label: 'Inkooporder Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
