@@ -127,7 +127,7 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted }: Co
                 <SelectValue placeholder="Selecteer artikel..." />
               </SelectTrigger>
               <SelectContent>
-                {inventoryItems.map(item => (
+                {inventoryItems.filter(item => item.id).map(item => (
                   <SelectItem key={item.id} value={item.id}>
                     <span className="font-mono text-xs text-slate-500 mr-2">{item.sku}</span>
                     {item.name}
@@ -420,7 +420,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged }: Composit
                           <SelectValue placeholder="Selecteer artikel..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {allInventoryItems.map(item => (
+                          {allInventoryItems.filter(item => item.id).map(item => (
                             <SelectItem key={item.id} value={item.id}>
                               <span className="font-mono text-xs text-slate-500 mr-2">{item.sku}</span>
                               {item.name}
