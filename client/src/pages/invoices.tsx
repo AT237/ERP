@@ -1,11 +1,12 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Eye, Printer, Mail } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Printer, Mail, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { PrintLayoutDialog } from "@/components/layouts/PrintLayoutDialog";
 import { InvoiceEmailPanel } from "@/components/layouts/InvoiceEmailPanel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -181,6 +182,24 @@ export default function Invoices({}: InvoicesProps) {
     }
   }, [toast]);
 
+  const handleDuplicateInvoice = React.useCallback(async (invoice: Invoice) => {
+    try {
+      const response = await apiRequest("POST", `/api/invoices/${invoice.id}/duplicate`);
+      const copy = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      toast({ title: "Factuur gedupliceerd", description: `Kopie aangemaakt: ${copy.invoiceNumber}` });
+      const formInfo = {
+        id: `edit-invoice-${copy.id}`,
+        name: `Edit ${copy.invoiceNumber}`,
+        formType: 'invoice',
+        parentId: copy.id
+      };
+      window.dispatchEvent(new CustomEvent('open-form-tab', { detail: formInfo }));
+    } catch {
+      toast({ title: "Fout", description: "Dupliceren mislukt.", variant: "destructive" });
+    }
+  }, [toast]);
+
   const handleViewInvoice = React.useCallback((invoice: Invoice) => {
     const formInfo = {
       id: `view-invoice-${invoice.id}`,
@@ -257,13 +276,20 @@ export default function Invoices({}: InvoicesProps) {
               disabled: !selectedInvoice,
             },
             {
+              key: 'duplicate',
+              label: 'Dupliceren',
+              icon: <CopyPlus className="h-4 w-4" />,
+              onClick: () => selectedInvoice && handleDuplicateInvoice(selectedInvoice),
+              disabled: !selectedInvoice,
+            },
+            {
               key: 'add',
               label: 'Add Invoice',
               icon: <Plus className="h-4 w-4" />,
               onClick: handleAddInvoice,
             },
           ];
-        }, [handleAddInvoice, tableState.selectedRows, enrichedInvoices, handlePrintInvoice, handleEmailInvoice])}
+        }, [handleAddInvoice, handleDuplicateInvoice, tableState.selectedRows, enrichedInvoices, handlePrintInvoice, handleEmailInvoice])}
         rowActions={React.useCallback((invoice: Invoice) => [
           {
             key: 'view',
@@ -294,13 +320,20 @@ export default function Invoices({}: InvoicesProps) {
             variant: 'outline' as const
           },
           {
+            key: 'duplicate',
+            label: 'Dupliceren',
+            icon: <CopyPlus className="h-4 w-4" />,
+            onClick: () => handleDuplicateInvoice(invoice),
+            variant: 'outline' as const
+          },
+          {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
             onClick: () => del.handleDeleteRow(invoice),
             variant: 'destructive' as const
           }
-        ], [handleViewInvoice, handleEditInvoice, handlePrintInvoice, handleEmailInvoice, del.handleDeleteRow])}
+        ], [handleViewInvoice, handleEditInvoice, handlePrintInvoice, handleEmailInvoice, handleDuplicateInvoice, del.handleDeleteRow])}
       />
       {del.renderDeleteDialogs()}
       <PrintLayoutDialog

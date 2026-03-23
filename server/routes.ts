@@ -1612,6 +1612,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return body;
   }
 
+  app.post("/api/invoices/:id/duplicate", async (req, res) => {
+    try {
+      const original = await storage.getInvoice(req.params.id);
+      if (!original) return res.status(404).json({ message: "Invoice not found" });
+
+      const items = await storage.getInvoiceItems(req.params.id);
+
+      const { id: _id, createdAt: _c, invoiceNumber: _n, ...rest } = original as any;
+      const copy = await storage.createInvoice({
+        ...rest,
+        description: `${original.description || ''} (kopie)`.trim(),
+        status: 'concept',
+      });
+
+      for (const item of items) {
+        const { id: _iid, invoiceId: _invId, ...itemRest } = item as any;
+        await storage.addInvoiceItem({
+          ...itemRest,
+          invoiceId: copy.id,
+        });
+      }
+
+      res.status(201).json(copy);
+    } catch (error) {
+      console.error("Error duplicating invoice:", error);
+      res.status(500).json({ message: "Failed to duplicate invoice" });
+    }
+  });
+
   app.post("/api/invoices", async (req, res) => {
     try {
       const body = sanitizeInvoiceBody(parseDateFields(req.body, ['invoiceDate', 'dueDate']));
