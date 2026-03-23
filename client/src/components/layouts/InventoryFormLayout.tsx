@@ -1283,7 +1283,12 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       />
 
       {watchedIsComposite && currentInventoryId && (
-        <CompositeComponentsPanel parentItemId={currentInventoryId} />
+        <CompositeComponentsPanel
+          parentItemId={currentInventoryId}
+          onCostPriceChanged={(total) => {
+            form.setValue("costPrice", total.toFixed(2));
+          }}
+        />
       )}
 
       {watchedIsComposite && !currentInventoryId && (
