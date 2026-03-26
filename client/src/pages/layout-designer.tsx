@@ -3305,49 +3305,6 @@ export function PreviewView({ layout }: { layout: any }) {
   const printData = isInvoiceLayout ? invoicePrintData : quotationPrintData;
   const isPrintDataLoading = isInvoiceLayout ? isInvoiceLoading : isQuotationLoading;
 
-  const enrichedAvailableTables = useMemo(() => {
-    if (!printData) return availableTables;
-    const tablesCopy = availableTables.map(t => ({ ...t, fields: [...t.fields] }));
-    const discoverFields = (obj: any): string[] => {
-      if (!obj || typeof obj !== 'object') return [];
-      return Object.keys(obj).filter(k => k !== 'id' && !k.endsWith('Id') && !k.endsWith('Ids'));
-    };
-    const discoverNested = (obj: any, prefix: string): string[] => {
-      if (!obj || typeof obj !== 'object') return [];
-      const result: string[] = [];
-      for (const [key, val] of Object.entries(obj)) {
-        if (key === 'id' || key.endsWith('Id') || key.endsWith('Ids')) continue;
-        if (val && typeof val === 'object' && !Array.isArray(val)) {
-          for (const subKey of Object.keys(val)) {
-            result.push(`${key}.${subKey}`);
-          }
-        } else {
-          result.push(key);
-        }
-      }
-      return result;
-    };
-    const mergeFields = (tableName: string, newFields: string[]) => {
-      const table = tablesCopy.find(t => t.name === tableName);
-      if (table) {
-        for (const f of newFields) {
-          if (!table.fields.includes(f)) table.fields.push(f);
-        }
-      }
-    };
-    for (const [key, value] of Object.entries(printData)) {
-      if (Array.isArray(value) && value.length > 0) {
-        const sampleItem = value[0];
-        const fields = discoverFields(sampleItem);
-        mergeFields(key, fields);
-      } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-        const fields = discoverNested(value, key);
-        mergeFields(key, fields);
-      }
-    }
-    return tablesCopy;
-  }, [printData, availableTables]);
-
   const { data: sections = [] } = useQuery<any[]>({
     queryKey: [`/api/layout-sections?layoutId=${layout?.id}`],
     enabled: !!layout?.id,
