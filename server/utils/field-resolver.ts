@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, workOrders, invoiceWorkOrders, vatRates } from "../../shared/schema";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, workOrders, invoiceWorkOrders, vatRates, incoterms } from "../../shared/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 
 function formatIban(value: string | null): string | null {
@@ -687,6 +687,17 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     workOrderNumbersList = wos.map(wo => wo.orderNumber).join(', ');
   }
 
+  // Load incoterm
+  let incotermLabel: string | null = null;
+  if ((invoice as any).incotermId) {
+    const incoterm = await db.query.incoterms.findFirst({
+      where: eq(incoterms.id, (invoice as any).incotermId),
+    });
+    if (incoterm) {
+      incotermLabel = `${incoterm.code} - ${incoterm.name}`;
+    }
+  }
+
   // Load VAT rate from customer's vatRateId (always from live customer, not snapshot)
   let vatRateData = null;
   const invoiceCustomerVatRateId = customer?.vatRateId ?? (await db.query.customers.findFirst({ where: eq(customers.id, invoice.customerId) }))?.vatRateId;
@@ -714,6 +725,9 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       paymentTerms: paymentTermsLabel,
       workOrderNumbers: workOrderNumbersList,
       printLanguageCode: (invoice as any).printLanguageCode || null,
+      incoTerms: incotermLabel,
+      printProjectNo: (invoice as any).printProjectNo ?? true,
+      printPaymentConditions: (invoice as any).printPaymentConditions ?? true,
     },
     customer: customerData,
     project: projectData,
