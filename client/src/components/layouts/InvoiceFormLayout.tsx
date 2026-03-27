@@ -744,7 +744,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           enabledWhen: (r) => !!r.lineType,
           options: inventoryItems.map(item => ({ 
             value: item.id, 
-            label: `${item.itemCode || ''} - ${item.description || item.name || ''}`.trim()
+            label: `${item.sku || ''} - ${item.description || item.name || ''}`.trim()
           })),
           onSelect: (val) => {
             const item = inventoryItems.find(i => i.id === val);
@@ -752,8 +752,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
             return {
               itemId: item.id,
               description: item.description || item.name || '',
-              unitPrice: item.salesPrice || '0.00',
-              costPrice: item.purchasePrice || '0.00',
+              unitPrice: item.unitPrice || '0.00',
+              costPrice: item.costPrice || '0.00',
               unit: item.unit || 'stk',
             };
           },
@@ -814,7 +814,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId, "items"] });
       },
     };
-  }, [currentInvoiceId, invoiceItems]);
+  }, [currentInvoiceId, invoiceItems, inventoryItems]);
 
   const handleSaveInvoice = (data: InvoiceFormData) => {
     const submitData: any = {

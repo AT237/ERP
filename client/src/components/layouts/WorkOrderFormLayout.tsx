@@ -145,6 +145,11 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     enabled: !!currentWorkOrderId,
   });
 
+  const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
+    queryKey: ["/api/inventory"],
+    staleTime: 5 * 60 * 1000,
+  });
+
   const itemColumns = useMemo(() => [
     createPositionColumn(),
     {
@@ -443,7 +448,26 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
           { value: 'text', label: 'Tekst' },
           { value: 'charges', label: 'Toeslagen' },
         ]},
-        { key: 'description', fieldType: 'text', placeholder: 'Omschrijving', enabledWhen: (r) => !!r.lineType },
+        { key: 'description', 
+          fieldType: 'searchable-select', 
+          placeholder: 'Zoek artikel...', 
+          enabledWhen: (r) => !!r.lineType,
+          options: inventoryItems.map(item => ({ 
+            value: item.id, 
+            label: `${item.sku || ''} - ${item.description || item.name || ''}`.trim()
+          })),
+          onSelect: (val) => {
+            const item = inventoryItems.find(i => i.id === val);
+            if (!item) return {};
+            return {
+              itemId: item.id,
+              description: item.description || item.name || '',
+              unitPrice: item.unitPrice || '0.00',
+              costPrice: item.costPrice || '0.00',
+              unit: item.unit || 'stk',
+            };
+          },
+        },
         { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
         { key: 'unit', fieldType: 'text', defaultValue: 'stk', placeholder: 'Eenheid', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
         { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
@@ -489,7 +513,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         queryClient.invalidateQueries({ queryKey: ["/api/work-orders", currentWorkOrderId, "items"] });
       },
     };
-  }, [currentWorkOrderId, workOrderItemsData]);
+  }, [currentWorkOrderId, workOrderItemsData, inventoryItems]);
 
   // Project select — filtered by selected customer
   const renderProjectSelect = () => (

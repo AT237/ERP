@@ -164,13 +164,9 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     refetchOnWindowFocus: false,
   });
 
-  // Lazy load inventory only when needed  
-  const [shouldLoadInventory, setShouldLoadInventory] = useState(false);
   const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory"],
-    enabled: shouldLoadInventory,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Lazy load projects only when needed
@@ -748,7 +744,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           enabledWhen: (r) => !!r.lineType,
           options: inventoryItems.map(item => ({ 
             value: item.id, 
-            label: `${item.itemCode || ''} - ${item.description || item.name || ''}`.trim()
+            label: `${item.sku || ''} - ${item.description || item.name || ''}`.trim()
           })),
           onSelect: (val) => {
             const item = inventoryItems.find(i => i.id === val);
@@ -756,8 +752,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             return {
               itemId: item.id,
               description: item.description || item.name || '',
-              unitPrice: item.salesPrice || '0.00',
-              costPrice: item.purchasePrice || '0.00',
+              unitPrice: item.unitPrice || '0.00',
+              costPrice: item.costPrice || '0.00',
               unit: item.unit || 'stk',
             };
           },
@@ -809,7 +805,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "items"] });
       },
     };
-  }, [currentQuotationId, quotationItems]);
+  }, [currentQuotationId, quotationItems, inventoryItems]);
 
   // Memo functionality
   const handleAddMemo = () => {
