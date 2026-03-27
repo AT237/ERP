@@ -66,13 +66,15 @@ interface WorkOrderMultiSelectProps {
   selectedIds: string[];
   onToggle: (id: string) => void;
   projectId?: string;
+  customerId?: string;
+  customerProjectIds?: string[];
   search: string;
   onSearchChange: (v: string) => void;
   dropdownOpen: boolean;
   onDropdownOpenChange: (v: boolean) => void;
 }
 
-function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId, search, onSearchChange, dropdownOpen, onDropdownOpenChange }: WorkOrderMultiSelectProps) {
+function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId, customerId, customerProjectIds = [], search, onSearchChange, dropdownOpen, onDropdownOpenChange }: WorkOrderMultiSelectProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const filtered = allWorkOrders.filter((wo: any) =>
@@ -80,14 +82,38 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
     wo.title?.toLowerCase().includes(search.toLowerCase()) ||
     wo.orderNumber?.toLowerCase().includes(search.toLowerCase())
   );
+
   const projectWOs = filtered.filter((wo: any) => projectId && wo.projectId === projectId);
-  const otherWOs = filtered.filter((wo: any) => !projectId || wo.projectId !== projectId);
+  const customerWOs = filtered.filter((wo: any) => {
+    if (projectId && wo.projectId === projectId) return false;
+    if (!customerId) return false;
+    return customerProjectIds.includes(wo.projectId);
+  });
+  const otherWOs = filtered.filter((wo: any) => {
+    if (projectId && wo.projectId === projectId) return false;
+    if (customerId && customerProjectIds.includes(wo.projectId)) return false;
+    return true;
+  });
+
+  const renderRow = (wo: any) => (
+    <button key={wo.id} type="button" onMouseDown={e => { e.preventDefault(); onToggle(wo.id); }}
+      className={`w-full px-3 py-2 text-left text-xs flex items-center gap-2 hover:bg-orange-50 ${selectedIds.includes(wo.id) ? 'bg-orange-100' : ''}`}>
+      <span className={`w-3.5 h-3.5 flex-shrink-0 rounded border flex items-center justify-center ${selectedIds.includes(wo.id) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
+        {selectedIds.includes(wo.id) && <span className="text-white text-[8px] font-bold">✓</span>}
+      </span>
+      <span className="font-mono text-orange-600 text-[11px]">{wo.orderNumber}</span>
+      <span className="truncate">{wo.title}</span>
+    </button>
+  );
+
+  const renderGroupHeader = (label: string, bgClass: string) => (
+    <div className={`px-3 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b ${bgClass}`}>{label}</div>
+  );
 
   return (
     <div className="relative">
-      {/* Tag input container — chips + search input all in one box */}
       <div
-        className={`min-h-[40px] w-full flex flex-wrap items-center gap-1 px-3 py-1.5 border rounded-md bg-background cursor-text transition-colors ${dropdownOpen ? 'border-orange-400 ring-1 ring-orange-400' : 'border-input hover:border-orange-300'}`}
+        className={`min-h-[40px] w-full flex flex-wrap items-center gap-1.5 px-3 py-1.5 border rounded-md bg-background cursor-text transition-colors ${dropdownOpen ? 'border-orange-400 ring-1 ring-orange-400' : 'border-input hover:border-orange-300'}`}
         onClick={() => { inputRef.current?.focus(); onDropdownOpenChange(true); }}
       >
         {selectedIds.map(woId => {
@@ -95,7 +121,7 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
           return (
             <span
               key={woId}
-              className="inline-flex items-center gap-1 pl-2.5 pr-1 py-1 bg-orange-500 text-white text-xs rounded-full select-none cursor-pointer"
+              className="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 border border-orange-400 text-orange-600 text-xs rounded-md select-none cursor-pointer bg-white hover:bg-orange-50"
               onDoubleClick={e => {
                 e.stopPropagation();
                 window.dispatchEvent(new CustomEvent('open-form-tab', {
@@ -113,7 +139,7 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
               <button
                 type="button"
                 onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onToggle(woId); }}
-                className="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full hover:bg-orange-700 text-white font-bold text-xs leading-none"
+                className="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full hover:bg-orange-200 text-orange-500 font-bold text-xs leading-none"
               >×</button>
             </span>
           );
@@ -130,37 +156,24 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
         />
       </div>
 
-      {/* Dropdown */}
       {dropdownOpen && (
         <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-52 overflow-y-auto">
           {projectWOs.length > 0 && (
             <>
-              <div className="px-3 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b bg-orange-50">Van dit project</div>
-              {projectWOs.map((wo: any) => (
-                <button key={wo.id} type="button" onMouseDown={e => { e.preventDefault(); onToggle(wo.id); }}
-                  className={`w-full px-3 py-2 text-left text-xs flex items-center gap-2 hover:bg-orange-50 ${selectedIds.includes(wo.id) ? 'bg-orange-100' : ''}`}>
-                  <span className={`w-3.5 h-3.5 flex-shrink-0 rounded border flex items-center justify-center ${selectedIds.includes(wo.id) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
-                    {selectedIds.includes(wo.id) && <span className="text-white text-[8px] font-bold">✓</span>}
-                  </span>
-                  <span className="font-mono text-orange-600 text-[11px]">{wo.orderNumber}</span>
-                  <span className="truncate">{wo.title}</span>
-                </button>
-              ))}
+              {renderGroupHeader("Van dit project", "bg-orange-50")}
+              {projectWOs.map(renderRow)}
+            </>
+          )}
+          {customerWOs.length > 0 && (
+            <>
+              {renderGroupHeader("Van deze klant", "bg-blue-50")}
+              {customerWOs.map(renderRow)}
             </>
           )}
           {otherWOs.length > 0 && (
             <>
-              {projectWOs.length > 0 && <div className="px-3 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b bg-muted/30">Overige work orders</div>}
-              {otherWOs.map((wo: any) => (
-                <button key={wo.id} type="button" onMouseDown={e => { e.preventDefault(); onToggle(wo.id); }}
-                  className={`w-full px-3 py-2 text-left text-xs flex items-center gap-2 hover:bg-orange-50 ${selectedIds.includes(wo.id) ? 'bg-orange-100' : ''}`}>
-                  <span className={`w-3.5 h-3.5 flex-shrink-0 rounded border flex items-center justify-center ${selectedIds.includes(wo.id) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
-                    {selectedIds.includes(wo.id) && <span className="text-white text-[8px] font-bold">✓</span>}
-                  </span>
-                  <span className="font-mono text-[11px] text-muted-foreground">{wo.orderNumber}</span>
-                  <span className="truncate">{wo.title}</span>
-                </button>
-              ))}
+              {(projectWOs.length > 0 || customerWOs.length > 0) && renderGroupHeader("Overige work orders", "bg-muted/30")}
+              {otherWOs.map(renderRow)}
             </>
           )}
           {filtered.length === 0 && (
@@ -266,6 +279,11 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
 
   const { data: allWorkOrders = [] } = useQuery<any[]>({
     queryKey: ["/api/work-orders"],
+  });
+
+  const { data: allProjects = [] } = useQuery<any[]>({
+    queryKey: ["/api/projects"],
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: invoiceWorkOrderIds = [] } = useQuery<string[]>({
@@ -769,6 +787,15 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   });
 
   const currentProjectId = invoiceForm.watch("projectId");
+  const currentCustomerId = invoiceForm.watch("customerId");
+
+  const customerProjectIds = React.useMemo(() => {
+    if (!currentCustomerId) return [];
+    return (allProjects as any[])
+      .filter((p: any) => p.customerId === currentCustomerId)
+      .map((p: any) => p.id);
+  }, [allProjects, currentCustomerId]);
+
   const mismatchedWOs = selectedWorkOrderIds.filter(woId => {
     const wo = (allWorkOrders as any[]).find((w: any) => w.id === woId);
     return currentProjectId && wo && wo.projectId !== currentProjectId;
@@ -949,6 +976,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                 selectedIds={selectedWorkOrderIds}
                 onToggle={(woId) => setSelectedWorkOrderIds(prev => prev.includes(woId) ? prev.filter(id => id !== woId) : [...prev, woId])}
                 projectId={currentProjectId || undefined}
+                customerId={currentCustomerId || undefined}
+                customerProjectIds={customerProjectIds}
                 search={woSearch}
                 onSearchChange={setWoSearch}
                 dropdownOpen={woDropdownOpen}
