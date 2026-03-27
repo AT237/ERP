@@ -2155,6 +2155,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/packing-list-items/:id", async (req, res) => {
+    try {
+      const itemData = insertPackingListItemSchema.partial().parse(req.body);
+      const item = await storage.updatePackingListItem(req.params.id, itemData);
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating packing list item:", error);
+      res.status(400).json({ message: "Failed to update packing list item" });
+    }
+  });
+
+  app.delete("/api/packing-list-items/:id", async (req, res) => {
+    try {
+      await storage.deletePackingListItem(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting packing list item:", error);
+      res.status(500).json({ message: "Failed to delete packing list item" });
+    }
+  });
+
   app.put("/api/packing-lists/:id", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['packingDate', 'shipDate']);
