@@ -167,21 +167,25 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
           />
         </div>
         <div className="max-h-[250px] overflow-y-auto">
-          {projectWOs.length > 0 && (
+          {projectId && (
             <>
-              {renderGroupHeader("Van dit project", "bg-orange-50")}
-              {projectWOs.map(renderRow)}
+              {renderGroupHeader("Gerelateerd aan project", "bg-orange-50")}
+              {projectWOs.length > 0
+                ? projectWOs.map(renderRow)
+                : <div className="px-3 py-2 text-xs text-muted-foreground italic">Geen work orders voor dit project</div>}
             </>
           )}
-          {customerWOs.length > 0 && (
+          {customerId && (
             <>
-              {renderGroupHeader("Van deze klant", "bg-blue-50")}
-              {customerWOs.map(renderRow)}
+              {renderGroupHeader("Gerelateerd aan klant", "bg-blue-50")}
+              {customerWOs.length > 0
+                ? customerWOs.map(renderRow)
+                : <div className="px-3 py-2 text-xs text-muted-foreground italic">Geen work orders voor deze klant</div>}
             </>
           )}
           {otherWOs.length > 0 && (
             <>
-              {(projectWOs.length > 0 || customerWOs.length > 0) && renderGroupHeader("Overige work orders", "bg-muted/30")}
+              {(projectId || customerId) && renderGroupHeader("Overige work orders", "bg-muted/30")}
               {otherWOs.map(renderRow)}
             </>
           )}
