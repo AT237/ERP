@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,14 +15,18 @@ import {
 import { SelectWithAdd } from "@/components/ui/select-with-add";
 import { QuickAddCustomer, QuickAddProject } from "@/components/quick-add-forms";
 import { Textarea } from "@/components/ui/textarea";
+import { CustomerSelect } from "@/components/ui/customer-select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertPackingListSchema } from "@shared/schema";
+import { insertPackingListSchema, insertPackingListItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Box, Package, Truck } from "lucide-react";
+import { Box, Package, Truck, Plus, Trash2, FileText, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { PackingList, InsertPackingList, Customer, Invoice, Project } from "@shared/schema";
+import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
+import { DataTableLayout, createIdColumn, createNumericColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
+import { useDataTable } from '@/hooks/useDataTable';
+import type { PackingList, PackingListItem, InsertPackingList, InsertPackingListItem, Customer, Invoice, Project, InventoryItem } from "@shared/schema";
 import { z } from "zod";
 import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow } from './LayoutForm2';
 
@@ -31,7 +36,6 @@ const formSchema = insertPackingListSchema.extend({
 
 type FormData = z.infer<typeof formSchema>;
 
-// Use a flexible type for form data to handle dynamic validation
 type FormFieldValues = {
   [key: string]: any;
 };
@@ -39,17 +43,17 @@ type FormFieldValues = {
 interface PackingListFormLayoutProps {
   onSave: () => void;
   packingListId?: string;
-  parentId?: string; // ID of the parent tab that opened this form
+  parentId?: string;
 }
 
 export function PackingListFormLayout({ onSave, packingListId, parentId }: PackingListFormLayoutProps) {
   const [activeSection, setActiveSection] = useState("basic");
-  
-  // Change tracking state
+  const [, navigate] = useLocation();
   const [originalValues, setOriginalValues] = useState<FormFieldValues>({});
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [suppressTracking, setSuppressTracking] = useState(true);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   
   const { toast } = useToast();
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
@@ -77,7 +81,6 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     },
   });
 
-  // Change tracking helpers
   const compareValues = (original: any, current: any) => {
     const isEmpty = (v: any) => v === null || v === undefined || v === "";
     if (isEmpty(original) && isEmpty(current)) return true;
@@ -90,28 +93,21 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     const currentValues = form.getValues();
     const modifiedFieldsSet = new Set<string>();
     let hasChanges = false;
-
-    // Compare each field with original values
     Object.keys(originalValues).forEach(fieldName => {
       const originalValue = originalValues[fieldName];
       const currentValue = currentValues[fieldName as keyof typeof currentValues];
-      
       if (!compareValues(originalValue, currentValue)) {
         modifiedFieldsSet.add(fieldName);
         hasChanges = true;
       }
     });
-
     setModifiedFields(modifiedFieldsSet);
     setHasUnsavedChanges(hasChanges);
-    
     return hasChanges;
   };
 
-  // Get CSS class for field based on whether it's modified
   const getFieldClassName = (fieldName: string, baseClassName: string = "") => {
     if (suppressTracking) return baseClassName;
-    
     const isModified = modifiedFields.has(fieldName);
     if (isModified) {
       return `${baseClassName} ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950`.trim();
@@ -119,13 +115,11 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     return baseClassName;
   };
 
-  // Load packing list data if editing
   const { data: packingList, isLoading: isLoadingPackingList } = useQuery<PackingList>({
     queryKey: ["/api/packing-lists", packingListId],
     enabled: !!packingListId,
   });
 
-  // Data queries
   const { data: customers } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
   });
@@ -138,10 +132,42 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     queryKey: ["/api/projects"],
   });
 
-  // Update form when packing list data loads and store original values for change tracking
+  const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
+    queryKey: ["/api/inventory"],
+  });
+
+  const { data: packingListItems = [] } = useQuery<PackingListItem[]>({
+    queryKey: ["/api/packing-lists", currentPackingListId, "items"],
+    enabled: !!currentPackingListId,
+  });
+
+  const itemColumns = useMemo(() => [
+    createIdColumn('id', 'ID'),
+    {
+      key: 'itemId',
+      label: 'Stock item',
+      visible: true,
+      forceVisible: true,
+      width: 250,
+      filterable: true,
+      sortable: true,
+      renderCell: (value: any) => {
+        if (!value) return <span className="text-gray-400">—</span>;
+        const item = inventoryItems.find((i: any) => i.id === value);
+        return <span>{item ? `${item.sku || ''} - ${item.name || ''}`.trim() : value}</span>;
+      }
+    },
+    createNumericColumn('quantity', 'Aantal'),
+    createNumericColumn('packedQuantity', 'Ingepakt'),
+  ], [inventoryItems]);
+
+  const itemTableState = useDataTable({
+    defaultColumns: itemColumns,
+    tableKey: 'packing-list-items',
+  });
+
   useEffect(() => {
     setSuppressTracking(true);
-    
     if (packingList) {
       const formData = {
         packingNumber: packingList.packingNumber || "",
@@ -156,30 +182,22 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         dimensions: packingList.dimensions || "",
         notes: packingList.notes || "",
       };
-      
       form.reset(formData);
-      
-      // Store original values for change tracking
       setOriginalValues(formData);
       setModifiedFields(new Set());
       setHasUnsavedChanges(false);
     } else {
-      // For new packing list, store default values as original
       const defaultFormData = form.getValues();
       setOriginalValues(defaultFormData);
       setModifiedFields(new Set());
       setHasUnsavedChanges(false);
     }
-    
-    // Re-enable tracking after form is stable
     setTimeout(() => setSuppressTracking(false), 100);
   }, [packingList, form]);
 
-  // Throttled change checking - only when tracking is enabled
   const [checkScheduled, setCheckScheduled] = useState(false);
   const scheduleChangeCheck = useCallback(() => {
     if (suppressTracking || checkScheduled) return;
-    
     setCheckScheduled(true);
     setTimeout(() => {
       if (!suppressTracking && Object.keys(originalValues).length > 0) {
@@ -189,7 +207,6 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     }, 200);
   }, [suppressTracking, checkScheduled, originalValues, checkForChanges]);
 
-  // Watch for changes in specific form values and update change tracking (throttled)
   const packingNumberValue = form.watch("packingNumber");
   const customerIdValue = form.watch("customerId");
   const invoiceIdValue = form.watch("invoiceId");
@@ -206,7 +223,6 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     scheduleChangeCheck();
   }, [packingNumberValue, customerIdValue, invoiceIdValue, projectIdValue, statusValue, shippingAddressValue, shippingMethodValue, trackingNumberValue, weightValue, dimensionsValue, notesValue, scheduleChangeCheck]);
 
-  // Communicate unsaved changes status to parent Layout
   useEffect(() => {
     const tabId = packingListId ? `edit-packing-list-${packingListId}` : 'new-packing-list';
     window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
@@ -214,7 +230,6 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     }));
   }, [hasUnsavedChanges, packingListId]);
 
-  // Mutations
   const createMutation = useMutation({
     mutationFn: async (data: InsertPackingList) => {
       const response = await apiRequest("POST", "/api/packing-lists", data);
@@ -228,27 +243,13 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId: 'new-packing-list', hasUnsavedChanges: false }
       }));
-      toast({
-        title: "Success",
-        description: "Packing list created successfully",
-      });
-      
-      // Dispatch scoped entity-created event
+      toast({ title: "Paklijst aangemaakt" });
       window.dispatchEvent(new CustomEvent('entity-created', {
-        detail: {
-          entityType: 'packing-list',
-          entity: newPackingList,
-          parentId: parentId // Scope to originating component
-        }
+        detail: { entityType: 'packing-list', entity: newPackingList, parentId }
       }));
-      
-          },
+    },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create packing list",
-        variant: "destructive",
-      });
+      toast({ title: "Aanmaken mislukt", variant: "destructive" });
     },
   });
 
@@ -266,21 +267,13 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId, hasUnsavedChanges: false }
       }));
-      toast({
-        title: "Success",
-        description: "Packing list updated successfully",
-      });
-          },
+      toast({ title: "Paklijst bijgewerkt" });
+    },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update packing list",
-        variant: "destructive",
-      });
+      toast({ title: "Bijwerken mislukt", variant: "destructive" });
     },
   });
 
-  // Form handlers
   const onSubmit = (data: FormData) => {
     const submitData: InsertPackingList = {
       ...data,
@@ -288,7 +281,6 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
       invoiceId: data.invoiceId || undefined,
       projectId: data.projectId || undefined,
     };
-
     if (isEditing) {
       updateMutation.mutate(submitData);
     } else {
@@ -296,28 +288,71 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     }
   };
 
-  // Custom select components
+  const handleBulkDeleteItems = async () => {
+    const selectedIds = itemTableState.selectedRows;
+    await Promise.all(selectedIds.map(id => apiRequest("DELETE", `/api/packing-list-items/${id}`)));
+    queryClient.invalidateQueries({ queryKey: ["/api/packing-lists", currentPackingListId, "items"] });
+    itemTableState.setSelectedRows([]);
+    setIsBulkDeleteOpen(false);
+    toast({ title: `${selectedIds.length} item(s) verwijderd` });
+  };
+
+  const packingListDirectInput: DirectInputConfig | undefined = useMemo(() => {
+    if (!currentPackingListId) return undefined;
+    return {
+      columns: [
+        { key: 'itemId', 
+          fieldType: 'searchable-select', 
+          placeholder: 'Zoek artikel...', 
+          options: inventoryItems.map(item => ({ 
+            value: item.id, 
+            label: `${item.sku || ''} - ${item.name || ''}`.trim()
+          })),
+          onSelect: (val) => {
+            const item = inventoryItems.find(i => i.id === val);
+            if (!item) return {};
+            return { itemId: item.id };
+          },
+        },
+        { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal' },
+        { key: 'packedQuantity', fieldType: 'number', defaultValue: '0', placeholder: 'Ingepakt' },
+      ],
+      defaults: {
+        itemId: '',
+        quantity: '1',
+        packedQuantity: '0',
+      },
+      onSave: async (rowData) => {
+        if (!rowData.itemId) {
+          toast({ title: "Selecteer een artikel", variant: "destructive" });
+          return;
+        }
+        await apiRequest("POST", `/api/packing-lists/${currentPackingListId}/items`, {
+          packingListId: currentPackingListId,
+          itemId: rowData.itemId,
+          quantity: parseInt(rowData.quantity || '1') || 1,
+          packedQuantity: parseInt(rowData.packedQuantity || '0') || 0,
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/packing-lists", currentPackingListId, "items"] });
+        toast({ title: "Item toegevoegd" });
+      },
+      onUpdate: async (rowId, rowData) => {
+        await apiRequest("PUT", `/api/packing-list-items/${rowId}`, {
+          itemId: rowData.itemId,
+          quantity: parseInt(rowData.quantity || '1') || 1,
+          packedQuantity: parseInt(rowData.packedQuantity || '0') || 0,
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/packing-lists", currentPackingListId, "items"] });
+        toast({ title: "Item bijgewerkt" });
+      },
+    };
+  }, [currentPackingListId, inventoryItems, toast]);
+
   const renderCustomerSelect = () => (
-    <SelectWithAdd
+    <CustomerSelect
       value={form.watch("customerId") || ""}
       onValueChange={(value) => form.setValue("customerId", value)}
-      placeholder="Select customer"
-      addFormTitle="Add New Customer"
-      testId="select-customer"
-      addFormContent={
-        <QuickAddCustomer 
-          onSuccess={(customerId) => {
-            form.setValue("customerId", customerId);
-          }}
-        />
-      }
-    >
-      {customers?.map((customer) => (
-        <SelectItem key={customer.id} value={customer.id}>
-          {customer.name}
-        </SelectItem>
-      ))}
-    </SelectWithAdd>
+    />
   );
 
   const renderInvoiceSelect = () => (
@@ -325,8 +360,8 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
       value={form.watch("invoiceId") || ""} 
       onValueChange={(value) => form.setValue("invoiceId", value)}
     >
-      <SelectTrigger data-testid="select-invoice">
-        <SelectValue placeholder="Select invoice" />
+      <SelectTrigger className={getFieldClassName("invoiceId", "h-10 text-xs")}>
+        <SelectValue placeholder="Selecteer factuur" />
       </SelectTrigger>
       <SelectContent>
         {invoices?.map((invoice) => (
@@ -339,41 +374,35 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
   );
 
   const renderProjectSelect = () => (
-    <SelectWithAdd
-      value={form.watch("projectId") || ""}
+    <Select 
+      value={form.watch("projectId") || ""} 
       onValueChange={(value) => form.setValue("projectId", value)}
-      placeholder="Select project"
-      addFormTitle="Add New Project"
-      testId="select-project"
-      addFormContent={
-        <QuickAddProject 
-          onSuccess={(projectId) => {
-            form.setValue("projectId", projectId);
-          }}
-        />
-      }
     >
-      {projects?.map((project) => (
-        <SelectItem key={project.id} value={project.id}>
-          {project.name}
-        </SelectItem>
-      ))}
-    </SelectWithAdd>
+      <SelectTrigger className={getFieldClassName("projectId", "h-10 text-xs")}>
+        <SelectValue placeholder="Selecteer project" />
+      </SelectTrigger>
+      <SelectContent>
+        {projects?.map((project) => (
+          <SelectItem key={project.id} value={project.id}>
+            {project.projectNumber} - {project.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 
-  // Create form sections
   const createFormSections = (): FormSection2<FormData>[] => [
     {
       id: "basic",
-      label: "Basic Info",
+      label: "Basis",
       icon: <Box className="h-4 w-4" />,
       rows: [
         createFieldsRow([
           {
             key: "packingNumber",
-            label: "Packing Number",
+            label: "Paklijst nr.",
             type: "text",
-            placeholder: "PL-2024-0001",
+            placeholder: "PL-0001",
             register: form.register("packingNumber"),
             validation: {
               error: form.formState.errors.packingNumber?.message,
@@ -387,10 +416,10 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
             label: "Status",
             type: "select",
             options: [
-              { value: "pending", label: "Pending" },
-              { value: "packed", label: "Packed" },
-              { value: "shipped", label: "Shipped" },
-              { value: "delivered", label: "Delivered" }
+              { value: "pending", label: "In afwachting" },
+              { value: "packed", label: "Ingepakt" },
+              { value: "shipped", label: "Verzonden" },
+              { value: "delivered", label: "Afgeleverd" }
             ],
             setValue: (value) => form.setValue("status", value),
             watch: () => form.watch("status"),
@@ -400,7 +429,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         ]),
         createFieldRow({
           key: "customerId",
-          label: "Customer",
+          label: "Klant",
           type: "custom",
           customComponent: renderCustomerSelect(),
           validation: {
@@ -413,13 +442,13 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     },
     {
       id: "relations",
-      label: "Relations",
+      label: "Relaties",
       icon: <Package className="h-4 w-4" />,
       rows: [
         createFieldsRow([
           {
             key: "invoiceId",
-            label: "Invoice (Optional)",
+            label: "Factuur",
             type: "custom",
             customComponent: renderInvoiceSelect(),
             testId: "select-invoice",
@@ -427,7 +456,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
           } as FormField2<FormData>,
           {
             key: "projectId",
-            label: "Project (Optional)",
+            label: "Project",
             type: "custom",
             customComponent: renderProjectSelect(),
             testId: "select-project",
@@ -438,14 +467,14 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     },
     {
       id: "shipping",
-      label: "Shipping",
+      label: "Verzending",
       icon: <Truck className="h-4 w-4" />,
       rows: [
         createFieldRow({
           key: "shippingAddress",
-          label: "Shipping Address",
+          label: "Verzendadres",
           type: "textarea",
-          placeholder: "Enter shipping address...",
+          placeholder: "Verzendadres...",
           register: form.register("shippingAddress"),
           testId: "textarea-shipping-address",
           rows: 3
@@ -453,14 +482,14 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         createFieldsRow([
           {
             key: "shippingMethod",
-            label: "Shipping Method",
+            label: "Verzendmethode",
             type: "select",
             options: [
-              { value: "standard", label: "Standard Shipping" },
-              { value: "express", label: "Express Shipping" },
+              { value: "standard", label: "Standaard" },
+              { value: "express", label: "Express" },
               { value: "overnight", label: "Overnight" },
-              { value: "freight", label: "Freight" },
-              { value: "pickup", label: "Customer Pickup" }
+              { value: "freight", label: "Vracht" },
+              { value: "pickup", label: "Afhalen" }
             ],
             setValue: (value) => form.setValue("shippingMethod", value),
             watch: () => form.watch("shippingMethod"),
@@ -469,9 +498,9 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
           } as FormField2<FormData>,
           {
             key: "trackingNumber",
-            label: "Tracking Number",
+            label: "Trackingnummer",
             type: "text",
-            placeholder: "Tracking number",
+            placeholder: "Trackingnummer",
             register: form.register("trackingNumber"),
             testId: "input-tracking-number",
             width: "50%"
@@ -487,7 +516,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         createFieldsRow([
           {
             key: "weight",
-            label: "Weight (kg)",
+            label: "Gewicht (kg)",
             type: "number",
             placeholder: "0.00",
             register: form.register("weight"),
@@ -496,9 +525,9 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
           } as FormField2<FormData>,
           {
             key: "dimensions",
-            label: "Dimensions",
+            label: "Afmetingen",
             type: "text",
-            placeholder: "L x W x H",
+            placeholder: "L x B x H",
             register: form.register("dimensions"),
             testId: "input-dimensions",
             width: "50%"
@@ -506,9 +535,9 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         ]),
         createFieldRow({
           key: "notes",
-          label: "Notes",
+          label: "Opmerkingen",
           type: "textarea",
-          placeholder: "Additional notes...",
+          placeholder: "Opmerkingen...",
           register: form.register("notes"),
           testId: "textarea-notes",
           rows: 3
@@ -526,75 +555,84 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     saveLoading: createMutation.isPending || updateMutation.isPending,
   });
 
-  // Convert LayoutForm2 sections to BaseFormLayout tabs
-  const tabs = createFormSections().map(section => ({
-    id: section.id,
-    label: section.label,
-    content: (
-      <div className="space-y-6 p-6">
-        {section.rows.map((row, rowIndex) => (
-          <div key={rowIndex} className="space-y-4">
-            {row.fields?.map((field, fieldIndex) => (
-              <div key={fieldIndex} className={`${field.width === "50%" ? "grid grid-cols-2 gap-4" : ""}`}>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    {field.label}
-                    {field.validation?.isRequired && <span className="text-red-600 ml-1">*</span>}
-                  </label>
-                  {field.type === "custom" ? (
-                    field.customComponent
-                  ) : field.type === "select" ? (
-                    <Select 
-                      value={field.watch ? field.watch() : ""}
-                      onValueChange={field.setValue}
-                    >
-                      <SelectTrigger data-testid={field.testId}>
-                        <SelectValue placeholder={field.placeholder} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {field.options?.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : field.type === "textarea" ? (
-                    <Textarea
-                      {...(field.register || {})}
-                      placeholder={field.placeholder}
-                      rows={field.rows || 3}
-                      data-testid={field.testId}
-                    />
-                  ) : (
-                    <Input
-                      {...(field.register || {})}
-                      type={field.type}
-                      placeholder={field.placeholder}
-                      data-testid={field.testId}
-                    />
-                  )}
-                  {field.validation?.error && (
-                    <p className="text-sm text-red-600">{field.validation.error}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-    )
-  }));
-
-  // Create header fields for BaseFormLayout
   const headerFields: InfoField[] = [
     { 
-      label: "Packing Number", 
-      value: isEditing ? (packingList?.packingNumber || "-") : "New Packing List"
+      label: "Paklijst", 
+      value: isEditing ? (packingList?.packingNumber || "-") : "Nieuwe paklijst"
     },
     { 
       label: "Status", 
       value: isEditing ? (packingList?.status || "pending") : "pending"
+    },
+  ];
+
+  const formContent = (
+    <LayoutForm2
+      sections={createFormSections()}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      modifiedFields={modifiedFields}
+      form={form}
+      entityId={currentPackingListId}
+      isLoading={isLoadingPackingList}
+    />
+  );
+
+  const itemsContent = (
+    <div className="px-6 py-4 bg-white ml-[15px] mr-[15px]">
+      <DataTableLayout
+        data={packingListItems}
+        isLoading={false}
+        columns={itemTableState.columns}
+        setColumns={itemTableState.setColumns}
+        searchTerm={itemTableState.searchTerm}
+        setSearchTerm={itemTableState.setSearchTerm}
+        filters={itemTableState.filters}
+        setFilters={itemTableState.setFilters}
+        onAddFilter={itemTableState.addFilter}
+        onUpdateFilter={itemTableState.updateFilter}
+        onRemoveFilter={itemTableState.removeFilter}
+        sortConfig={itemTableState.sortConfig}
+        onSort={itemTableState.handleSort}
+        selectedRows={itemTableState.selectedRows}
+        setSelectedRows={itemTableState.setSelectedRows}
+        onToggleRowSelection={itemTableState.toggleRowSelection}
+        onToggleAllRows={() => {
+          const allIds = packingListItems.map(item => item.id);
+          itemTableState.toggleAllRows(allIds);
+        }}
+        getRowId={(item: PackingListItem) => item.id}
+        entityName="Paklijst item"
+        entityNamePlural="Paklijst items"
+        applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
+        applySorting={itemTableState.applySorting}
+        compact={true}
+        directInput={packingListDirectInput}
+        deleteConfirmDialog={{
+          isOpen: isBulkDeleteOpen,
+          onOpenChange: setIsBulkDeleteOpen,
+          onConfirm: handleBulkDeleteItems,
+          itemCount: itemTableState.selectedRows.length,
+          entityName: "paklijst items",
+        }}
+      />
+    </div>
+  );
+
+  const tabs = [
+    {
+      id: "form",
+      label: "Formulier",
+      content: formContent,
+    },
+    {
+      id: "items",
+      label: `Items (${packingListItems.length})`,
+      content: currentPackingListId ? itemsContent : (
+        <div className="text-center py-8 text-gray-500 text-sm">
+          Sla de paklijst eerst op om items toe te voegen.
+        </div>
+      ),
     },
   ];
 
@@ -603,8 +641,14 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
       headerFields={headerFields}
       toolbar={toolbar}
       tabs={tabs}
-      activeTab={activeSection}
-      onTabChange={setActiveSection}
+      activeTab={activeSection === "items" ? "items" : "form"}
+      onTabChange={(tabId) => {
+        if (tabId === "items") {
+          setActiveSection("items");
+        } else {
+          setActiveSection("basic");
+        }
+      }}
       isLoading={isLoadingPackingList || createMutation.isPending || updateMutation.isPending}
       validationErrorDialog={
         <ValidationErrorDialog
