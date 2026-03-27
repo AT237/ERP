@@ -245,15 +245,15 @@ export interface DataTableLayoutProps<T = any> {
   compact?: boolean; // Removes header padding for embedded use
 }
 
-const filterOptions = [
-  { value: 'contains', label: 'Contains' },
-  { value: 'not_contains', label: 'Does not contain' },
-  { value: 'equals', label: 'Equals' },
-  { value: 'not_equals', label: 'Does not equal' },
-  { value: 'greater_than', label: 'Greater than' },
-  { value: 'less_than', label: 'Less than' },
-  { value: 'starts_with', label: 'Starts with' },
-  { value: 'ends_with', label: 'Ends with' },
+const filterOptions: { value: FilterType; label: string }[] = [
+  { value: 'contains', label: 'Bevat' },
+  { value: 'not_contains', label: 'Bevat niet' },
+  { value: 'starts_with', label: 'Begint met' },
+  { value: 'ends_with', label: 'Eindigt met' },
+  { value: 'equals', label: 'Is gelijk aan' },
+  { value: 'not_equals', label: 'Is niet gelijk aan' },
+  { value: 'greater_than', label: 'Groter dan' },
+  { value: 'less_than', label: 'Kleiner dan' },
 ];
 
 // Draggable Column Header Component
@@ -899,14 +899,23 @@ export function DataTableLayout<T = any>({
             <div className="flex flex-wrap gap-1">
               {filters.map((filter, index) => (
                 <div key={index} className="flex items-center gap-1 bg-muted px-2 py-1 rounded text-xs">
-                  <span className="font-medium">
+                  <span className="font-medium whitespace-nowrap">
                     {columns.find(col => col.key === filter.column)?.label}
                   </span>
+                  <select
+                    value={filter.type}
+                    onChange={(e) => onUpdateFilter(index, { ...filter, type: e.target.value as FilterType })}
+                    className="h-6 text-xs bg-transparent border border-gray-300 rounded px-1 outline-none focus:border-orange-400 cursor-pointer"
+                  >
+                    {filterOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
                   <Input
-                    placeholder="Value"
+                    placeholder="Waarde..."
                     value={filter.value}
                     onChange={(e) => onUpdateFilter(index, { ...filter, value: e.target.value })}
-                    className="w-20 h-6 text-xs border-0 p-1"
+                    className="w-24 h-6 text-xs border-0 p-1"
                   />
                   <Button
                     variant="ghost"
