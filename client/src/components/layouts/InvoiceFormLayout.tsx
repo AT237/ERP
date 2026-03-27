@@ -752,10 +752,10 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           { value: 'text', label: 'Tekst' },
           { value: 'charges', label: 'Toeslagen' },
         ]},
-        { key: 'description', 
+        { key: 'itemId', 
           fieldType: 'searchable-select', 
           placeholder: 'Zoek artikel...', 
-          enabledWhen: (r) => !!r.lineType,
+          enabledWhen: (r) => !!r.lineType && r.lineType !== 'text',
           options: inventoryItems.map(item => ({ 
             value: item.id, 
             label: `${item.sku || ''} - ${item.description || item.name || ''}`.trim()
@@ -772,6 +772,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
             };
           },
         },
+        { key: 'description', fieldType: 'text', placeholder: 'Description', enabledWhen: (r) => !!r.lineType },
         { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
         { key: 'unit', fieldType: 'text', defaultValue: 'stk', placeholder: 'Eenheid', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
         { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
