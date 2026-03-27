@@ -724,7 +724,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const quotationDirectInput = React.useMemo<DirectInputConfig | undefined>(() => {
     if (!currentQuotationId) return undefined;
     const nextPosition = quotationItems.length > 0
-      ? Math.max(...quotationItems.map(i => parseInt(String(i.position || '0'), 10) || 0)) + 10
+      ? Math.max(...quotationItems.map(i => parseInt(String(i.positionNo || i.position || '0'), 10) || 0)) + 10
       : 10;
     return {
       columns: [
@@ -741,7 +741,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         { key: 'costPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Kostprijs' },
       ],
       defaults: {
-        position: String(nextPosition).padStart(3, '0'),
+        positionNo: String(nextPosition).padStart(3, '0'),
+        position: nextPosition,
         lineType: 'standard',
         quantity: '1',
         unit: 'stk',
@@ -753,7 +754,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         const price = parseFloat(rowData.unitPrice || '0') || 0;
         const lineTotal = (qty * price).toFixed(2);
         const np = quotationItems.length > 0
-          ? Math.max(...quotationItems.map(i => parseInt(String(i.position || '0'), 10) || 0)) + 10
+          ? Math.max(...quotationItems.map(i => parseInt(String(i.positionNo || i.position || '0'), 10) || 0)) + 10
           : 10;
         const itemData = {
           quotationId: currentQuotationId!,
@@ -764,7 +765,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           unitPrice: String(price),
           lineTotal,
           costPrice: rowData.costPrice || '0.00',
-          position: String(np).padStart(3, '0'),
+          position: np,
+          positionNo: String(np).padStart(3, '0'),
         };
         const response = await apiRequest("POST", `/api/quotations/${currentQuotationId}/items`, itemData);
         const newItem = await response.json();

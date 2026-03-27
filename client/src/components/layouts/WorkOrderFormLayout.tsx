@@ -430,7 +430,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     />
   );
 
-  const workOrderDirectInput = React.useMemo<DirectInputConfig | undefined>(() => {
+  const workOrderDirectInput = useMemo((): DirectInputConfig | undefined => {
     if (!currentWorkOrderId) return undefined;
     const nextPosition = workOrderItemsData.length > 0
       ? Math.max(...workOrderItemsData.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
@@ -809,6 +809,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
                 variant: 'default' as const
               }
             ]}
+            directInput={workOrderDirectInput}
             deleteConfirmDialog={{
               isOpen: isBulkDeleteOpen,
               onOpenChange: setIsBulkDeleteOpen,
