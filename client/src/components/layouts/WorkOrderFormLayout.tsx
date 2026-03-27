@@ -30,7 +30,7 @@ import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from './LayoutForm2';
-import { DataTableLayout, createPositionColumn, createCurrencyColumn } from './DataTableLayout';
+import { DataTableLayout, createPositionColumn, createCurrencyColumn, type DirectInputConfig } from './DataTableLayout';
 import { useDataTable } from "@/hooks/useDataTable";
 
 // Form schema for work order data
@@ -429,6 +429,67 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
       parentId={currentWorkOrderId || 'new-work-order'}
     />
   );
+
+  const workOrderDirectInput = React.useMemo<DirectInputConfig | undefined>(() => {
+    if (!currentWorkOrderId) return undefined;
+    const nextPosition = workOrderItemsData.length > 0
+      ? Math.max(...workOrderItemsData.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
+      : 10;
+    return {
+      columns: [
+        { key: 'lineType', fieldType: 'select', defaultValue: 'standard', options: [
+          { value: 'standard', label: 'Standaard' },
+          { value: 'unique', label: 'Uniek' },
+          { value: 'text', label: 'Tekst' },
+          { value: 'charges', label: 'Toeslagen' },
+        ]},
+        { key: 'description', fieldType: 'text', placeholder: 'Omschrijving' },
+        { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal' },
+        { key: 'unit', fieldType: 'text', defaultValue: 'stk', placeholder: 'Eenheid' },
+        { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs' },
+        { key: 'costPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Kostprijs' },
+      ],
+      defaults: {
+        positionNo: String(nextPosition).padStart(3, '0'),
+        position: nextPosition,
+        lineType: 'standard',
+        quantity: '1',
+        unit: 'stk',
+        unitPrice: '0.00',
+        costPrice: '0.00',
+      },
+      onSave: async (rowData) => {
+        const qty = parseFloat(rowData.quantity || '1') || 1;
+        const price = parseFloat(rowData.unitPrice || '0') || 0;
+        const lineTotal = (qty * price).toFixed(2);
+        const np = workOrderItemsData.length > 0
+          ? Math.max(...workOrderItemsData.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
+          : 10;
+        const itemData = {
+          workOrderId: currentWorkOrderId!,
+          lineType: rowData.lineType || 'standard',
+          description: rowData.description || '',
+          quantity: String(qty),
+          unit: rowData.unit || 'stk',
+          unitPrice: String(price),
+          lineTotal,
+          costPrice: rowData.costPrice || '0.00',
+          position: np,
+          positionNo: String(np).padStart(3, '0'),
+        };
+        await apiRequest("POST", `/api/work-orders/${currentWorkOrderId}/items`, itemData);
+        queryClient.invalidateQueries({ queryKey: ["/api/work-orders", currentWorkOrderId, "items"] });
+      },
+      onUpdate: async (rowId, rowData) => {
+        const qty = parseFloat(rowData.quantity || '0') || 0;
+        const price = parseFloat(rowData.unitPrice || '0') || 0;
+        const lineTotal = (qty * price).toFixed(2);
+        const updateData: any = { ...rowData, lineTotal };
+        await apiRequest("PUT", `/api/work-order-items/${rowId}`, updateData);
+        queryClient.invalidateQueries({ queryKey: ["/api/work-orders", currentWorkOrderId, "items"] });
+      },
+    };
+  }, [currentWorkOrderId, workOrderItemsData]);
 
   // Project select — filtered by selected customer
   const renderProjectSelect = () => (

@@ -31,7 +31,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, Printer, Search, ChevronsUpDown, CopyPlus, RefreshCw } from "lucide-react";
 import { CustomerSelect } from "@/components/ui/customer-select";
 import { useToast } from "@/hooks/use-toast";
-import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, createNumericColumn } from '@/components/layouts/DataTableLayout';
+import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, createNumericColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { QuotationPrintDialog } from "@/components/print/QuotationPrintDialog";
 import { useDataTable } from '@/hooks/useDataTable';
 import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem, Project } from "@shared/schema";
@@ -720,6 +720,67 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       toast({ title: "Error", description: "Failed to duplicate line item", variant: "destructive" });
     }
   };
+
+  const quotationDirectInput = React.useMemo<DirectInputConfig | undefined>(() => {
+    if (!currentQuotationId) return undefined;
+    const nextPosition = quotationItems.length > 0
+      ? Math.max(...quotationItems.map(i => parseInt(String(i.position || '0'), 10) || 0)) + 10
+      : 10;
+    return {
+      columns: [
+        { key: 'lineType', fieldType: 'select', defaultValue: 'standard', options: [
+          { value: 'standard', label: 'Standaard' },
+          { value: 'unique', label: 'Uniek' },
+          { value: 'text', label: 'Tekst' },
+          { value: 'charges', label: 'Toeslagen' },
+        ]},
+        { key: 'description', fieldType: 'text', placeholder: 'Omschrijving' },
+        { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal' },
+        { key: 'unit', fieldType: 'text', defaultValue: 'stk', placeholder: 'Eenheid' },
+        { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs' },
+        { key: 'costPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Kostprijs' },
+      ],
+      defaults: {
+        position: String(nextPosition).padStart(3, '0'),
+        lineType: 'standard',
+        quantity: '1',
+        unit: 'stk',
+        unitPrice: '0.00',
+        costPrice: '0.00',
+      },
+      onSave: async (rowData) => {
+        const qty = parseFloat(rowData.quantity || '1') || 1;
+        const price = parseFloat(rowData.unitPrice || '0') || 0;
+        const lineTotal = (qty * price).toFixed(2);
+        const np = quotationItems.length > 0
+          ? Math.max(...quotationItems.map(i => parseInt(String(i.position || '0'), 10) || 0)) + 10
+          : 10;
+        const itemData = {
+          quotationId: currentQuotationId!,
+          lineType: rowData.lineType || 'standard',
+          description: rowData.description || '',
+          quantity: String(qty),
+          unit: rowData.unit || 'stk',
+          unitPrice: String(price),
+          lineTotal,
+          costPrice: rowData.costPrice || '0.00',
+          position: String(np).padStart(3, '0'),
+        };
+        const response = await apiRequest("POST", `/api/quotations/${currentQuotationId}/items`, itemData);
+        const newItem = await response.json();
+        setQuotationItems(prev => [...prev, newItem]);
+        queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "items"] });
+      },
+      onUpdate: async (rowId, rowData) => {
+        const qty = parseFloat(rowData.quantity || '0') || 0;
+        const price = parseFloat(rowData.unitPrice || '0') || 0;
+        const lineTotal = (qty * price).toFixed(2);
+        const updateData: any = { ...rowData, lineTotal };
+        await apiRequest("PUT", `/api/quotation-items/${rowId}`, updateData);
+        queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "items"] });
+      },
+    };
+  }, [currentQuotationId, quotationItems]);
 
   // Memo functionality
   const handleAddMemo = () => {
@@ -1823,6 +1884,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             }
           ]}
           onDuplicate={handleDuplicateItem}
+          directInput={quotationDirectInput}
           rowActions={(item: QuotationItem) => [
             {
               key: 'edit',
