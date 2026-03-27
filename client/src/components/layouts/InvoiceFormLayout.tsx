@@ -23,7 +23,7 @@ import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, VatRate } from "@shared/schema";
+import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, VatRate, InventoryItem } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { amountToWords } from "@/utils/field-resolver";
@@ -265,6 +265,10 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     queryKey: ["/api/customers"],
   });
 
+  const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
+    queryKey: ["/api/inventory"],
+    staleTime: 5 * 60 * 1000,
+  });
 
   const { data: paymentDaysList = [] } = useQuery<PaymentDay[]>({
     queryKey: ["/api/masterdata/payment-days"],
@@ -734,7 +738,26 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           { value: 'text', label: 'Tekst' },
           { value: 'charges', label: 'Toeslagen' },
         ]},
-        { key: 'description', fieldType: 'text', placeholder: 'Omschrijving', enabledWhen: (r) => !!r.lineType },
+        { key: 'description', 
+          fieldType: 'searchable-select', 
+          placeholder: 'Zoek artikel...', 
+          enabledWhen: (r) => !!r.lineType,
+          options: inventoryItems.map(item => ({ 
+            value: item.id, 
+            label: `${item.itemCode || ''} - ${item.description || item.name || ''}`.trim()
+          })),
+          onSelect: (val) => {
+            const item = inventoryItems.find(i => i.id === val);
+            if (!item) return {};
+            return {
+              itemId: item.id,
+              description: item.description || item.name || '',
+              unitPrice: item.salesPrice || '0.00',
+              costPrice: item.purchasePrice || '0.00',
+              unit: item.unit || 'stk',
+            };
+          },
+        },
         { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
         { key: 'unit', fieldType: 'text', defaultValue: 'stk', placeholder: 'Eenheid', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
         { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },

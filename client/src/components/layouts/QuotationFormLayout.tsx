@@ -742,7 +742,26 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           { value: 'text', label: 'Tekst' },
           { value: 'charges', label: 'Toeslagen' },
         ]},
-        { key: 'description', fieldType: 'text', placeholder: 'Omschrijving', enabledWhen: (r) => !!r.lineType },
+        { key: 'description', 
+          fieldType: 'searchable-select', 
+          placeholder: 'Zoek artikel...', 
+          enabledWhen: (r) => !!r.lineType,
+          options: inventoryItems.map(item => ({ 
+            value: item.id, 
+            label: `${item.itemCode || ''} - ${item.description || item.name || ''}`.trim()
+          })),
+          onSelect: (val) => {
+            const item = inventoryItems.find(i => i.id === val);
+            if (!item) return {};
+            return {
+              itemId: item.id,
+              description: item.description || item.name || '',
+              unitPrice: item.salesPrice || '0.00',
+              costPrice: item.purchasePrice || '0.00',
+              unit: item.unit || 'stk',
+            };
+          },
+        },
         { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
         { key: 'unit', fieldType: 'text', defaultValue: 'stk', placeholder: 'Eenheid', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
         { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },

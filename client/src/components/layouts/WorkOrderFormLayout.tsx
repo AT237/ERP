@@ -25,7 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
-import type { WorkOrder, InsertWorkOrder, WorkOrderItem } from "@shared/schema";
+import type { WorkOrder, InsertWorkOrder, WorkOrderItem, InventoryItem } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { DatePicker } from "@/components/ui/date-picker";
