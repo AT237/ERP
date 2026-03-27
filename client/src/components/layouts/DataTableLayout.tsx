@@ -52,6 +52,7 @@ import {
   ChevronsUpDown,
   Columns3,
   FileSpreadsheet,
+  Sigma,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -75,6 +76,10 @@ import {
 } from '@dnd-kit/utilities';
 
 export type FilterType = 'contains' | 'not_contains' | 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'starts_with' | 'ends_with';
+
+export type SummaryType = 'none' | 'count' | 'sum' | 'average' | 'min' | 'max';
+
+export type SummaryConfig = Record<string, SummaryType>;
 
 export type ColumnFilter = {
   column: string;
@@ -352,6 +357,51 @@ export function DataTableLayout<T = any>({
   compact = false,
 }: DataTableLayoutProps<T>) {
   
+  const [showSummary, setShowSummary] = useState<boolean>(() => {
+    if (!tableKey) return false;
+    try {
+      const stored = localStorage.getItem(`table-summary-show-${tableKey}`);
+      return stored === 'true';
+    } catch {}
+    return false;
+  });
+
+  const [summaryConfig, setSummaryConfig] = useState<SummaryConfig>(() => {
+    if (!tableKey) return {};
+    try {
+      const stored = localStorage.getItem(`table-summary-config-${tableKey}`);
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return {};
+  });
+
+  const toggleShowSummary = useCallback(() => {
+    setShowSummary(prev => {
+      const next = !prev;
+      if (tableKey) {
+        try { localStorage.setItem(`table-summary-show-${tableKey}`, String(next)); } catch {}
+      }
+      return next;
+    });
+  }, [tableKey]);
+
+  const setSummaryType = useCallback((columnKey: string, type: SummaryType) => {
+    setSummaryConfig(prev => {
+      const next = { ...prev, [columnKey]: type };
+      if (type === 'none') delete next[columnKey];
+      if (tableKey) {
+        try {
+          if (Object.keys(next).length > 0) {
+            localStorage.setItem(`table-summary-config-${tableKey}`, JSON.stringify(next));
+          } else {
+            localStorage.removeItem(`table-summary-config-${tableKey}`);
+          }
+        } catch {}
+      }
+      return next;
+    });
+  }, [tableKey]);
+
   const sortedDataRef = useRef<T[]>([]);
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -634,6 +684,49 @@ export function DataTableLayout<T = any>({
   const filteredData = applyFiltersAndSearch(data, searchTerm, filters);
   const sortedData = applySorting(filteredData, sortConfig);
   sortedDataRef.current = sortedData;
+
+  const summaryValues = useMemo(() => {
+    if (!showSummary || Object.keys(summaryConfig).length === 0) return {};
+    const result: Record<string, string> = {};
+    for (const [colKey, type] of Object.entries(summaryConfig)) {
+      if (type === 'none') continue;
+      const values = sortedData
+        .map(row => {
+          const raw = row[colKey as keyof T];
+          if (raw == null || raw === '') return null;
+          const n = parseFloat(String(raw).replace(/[€\s]/g, '').replace(',', '.'));
+          return isNaN(n) ? null : n;
+        })
+        .filter((v): v is number => v !== null);
+
+      if (type === 'count') {
+        result[colKey] = String(sortedData.filter(row => {
+          const v = row[colKey as keyof T];
+          return v != null && v !== '';
+        }).length);
+      } else if (values.length === 0) {
+        result[colKey] = '-';
+      } else if (type === 'sum') {
+        result[colKey] = values.reduce((a, b) => a + b, 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      } else if (type === 'average') {
+        result[colKey] = (values.reduce((a, b) => a + b, 0) / values.length).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      } else if (type === 'min') {
+        result[colKey] = Math.min(...values).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      } else if (type === 'max') {
+        result[colKey] = Math.max(...values).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+    }
+    return result;
+  }, [showSummary, summaryConfig, sortedData]);
+
+  const summaryTypeLabels: Record<SummaryType, string> = {
+    none: 'Geen',
+    count: 'Aantal',
+    sum: 'Totaal',
+    average: 'Gemiddelde',
+    min: 'Minimum',
+    max: 'Maximum',
+  };
 
   // Mobile detection
   const isMobile = useIsMobile();
