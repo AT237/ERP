@@ -17,6 +17,7 @@ export default function PrintPreviewPage() {
   const entityId = params?.entityId ?? "";
   const searchParams = new URLSearchParams(search);
   const layoutId = searchParams.get("layoutId") ?? "";
+  const isDraft = searchParams.get("draft") === "true";
 
   const [fitScale, setFitScale] = useState(1);
   const [userZoom, setUserZoom] = useState(1);
@@ -163,6 +164,17 @@ export default function PrintPreviewPage() {
             box-shadow: none !important;
             margin: 0 !important;
           }
+          .draft-watermark {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 9999 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
         }
       `}</style>
 
@@ -220,8 +232,42 @@ export default function PrintPreviewPage() {
               transform: `scale(${totalScale})`,
               transformOrigin: "top left",
               fontFamily: "Arial, Helvetica, sans-serif",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
+            {isDraft && (
+              <div
+                className="draft-watermark"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  pointerEvents: "none",
+                  zIndex: 10,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "120px",
+                    fontWeight: 700,
+                    color: "rgba(0, 0, 0, 0.06)",
+                    transform: "rotate(-45deg)",
+                    userSelect: "none",
+                    letterSpacing: "16px",
+                    textTransform: "uppercase",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  CONCEPT
+                </span>
+              </div>
+            )}
             <LayoutPreview
               layout={layout}
               sections={sections}

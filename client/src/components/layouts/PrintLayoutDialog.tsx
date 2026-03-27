@@ -80,7 +80,10 @@ export function PrintLayoutDialog({
 
   const handlePrintOnly = () => {
     if (!selectedLayoutId) return;
-    openPdf();
+    window.open(
+      `/print/${documentType}/${entityId}?layoutId=${selectedLayoutId}&draft=true`,
+      "_blank"
+    );
     onOpenChange(false);
   };
 
