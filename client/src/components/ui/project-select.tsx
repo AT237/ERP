@@ -12,6 +12,50 @@ import {
 import { cn } from "@/lib/utils";
 import type { Project } from "@shared/schema";
 
+function ProjectCommandItem({ project, isSelected, onSelect, onEdit, testId }: {
+  project: { id: string; projectNumber: string; name: string };
+  isSelected: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+  testId: string;
+}) {
+  return (
+    <CommandItem
+      value={project.id}
+      onSelect={onSelect}
+      className="flex items-center justify-between"
+    >
+      <div className="flex items-center">
+        <Check
+          className={cn(
+            "mr-2 h-4 w-4",
+            isSelected ? "opacity-100" : "opacity-0"
+          )}
+        />
+        <div>
+          <div className="font-medium">
+            {project.projectNumber ? `${project.projectNumber} - ${project.name}` : project.name}
+          </div>
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onEdit();
+        }}
+        data-testid={testId}
+      >
+        <ExternalLink className="h-3 w-3" />
+      </Button>
+    </CommandItem>
+  );
+}
+
 interface ProjectSelectProps {
   value?: string;
   onValueChange?: (value: string) => void;

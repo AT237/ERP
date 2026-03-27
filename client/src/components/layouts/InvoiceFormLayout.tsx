@@ -936,6 +936,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                   onValueChange={(value) => invoiceForm.setValue("projectId", value || "")}
                   placeholder="Selecteer project..."
                   testId="select-invoice-project"
+                  customerId={invoiceForm.watch("customerId") || undefined}
                 />
               ),
             },
