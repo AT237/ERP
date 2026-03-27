@@ -368,9 +368,9 @@ function DirectInputSearchSelect({
 
   const filtered = useMemo(() => {
     if (!diCol.options) return [];
-    if (!search) return diCol.options.slice(0, 50);
+    if (!search) return diCol.options.slice(0, 100);
     const lower = search.toLowerCase();
-    return diCol.options.filter(o => o.label.toLowerCase().includes(lower)).slice(0, 50);
+    return diCol.options.filter(o => o.label.toLowerCase().includes(lower)).slice(0, 100);
   }, [diCol.options, search]);
 
   useEffect(() => {
@@ -406,7 +406,8 @@ function DirectInputSearchSelect({
   useEffect(() => {
     if (isOpen && inputElRef.current) {
       const rect = inputElRef.current.getBoundingClientRect();
-      setDropdownPos({ top: rect.bottom + 2, left: rect.left });
+      const dropdownHeight = 320;
+      setDropdownPos({ top: rect.top - dropdownHeight - 2, left: rect.left });
     }
   }, [isOpen]);
 
@@ -464,7 +465,7 @@ function DirectInputSearchSelect({
       {isOpen && dropdownPos && filtered.length > 0 && createPortal(
         <div 
           ref={listRef} 
-          className="fixed w-[350px] max-h-56 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl"
+          className="fixed w-[350px] max-h-[300px] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl"
           style={{ top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
         >
           {filtered.map((opt, idx) => (
