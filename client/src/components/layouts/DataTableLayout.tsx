@@ -53,6 +53,7 @@ import {
   Columns3,
   FileSpreadsheet,
   Sigma,
+  PenLine,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -80,6 +81,23 @@ export type FilterType = 'contains' | 'not_contains' | 'equals' | 'not_equals' |
 export type SummaryType = 'none' | 'count' | 'sum' | 'average' | 'min' | 'max';
 
 export type SummaryConfig = Record<string, SummaryType>;
+
+export type DirectInputFieldType = 'text' | 'number' | 'currency' | 'select';
+
+export type DirectInputColumn = {
+  key: string;
+  fieldType: DirectInputFieldType;
+  options?: { value: string; label: string }[];
+  defaultValue?: any;
+  placeholder?: string;
+};
+
+export type DirectInputConfig = {
+  columns: DirectInputColumn[];
+  onSave: (rowData: Record<string, any>) => Promise<void>;
+  onUpdate?: (rowId: string, rowData: Record<string, any>) => Promise<void>;
+  defaults?: Record<string, any>;
+};
 
 export type ColumnFilter = {
   column: string;
@@ -248,6 +266,9 @@ export interface DataTableLayoutProps<T = any> {
   
   // Layout options
   compact?: boolean; // Removes header padding for embedded use
+  
+  // Direct input mode
+  directInput?: DirectInputConfig;
 }
 
 const filterOptions: { value: FilterType; label: string }[] = [
@@ -355,8 +376,97 @@ export function DataTableLayout<T = any>({
   onDuplicate,
   onExport,
   compact = false,
+  directInput,
 }: DataTableLayoutProps<T>) {
   
+  const [directInputMode, setDirectInputMode] = useState<boolean>(false);
+  const [directInputRow, setDirectInputRow] = useState<Record<string, any>>({});
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [editingRowData, setEditingRowData] = useState<Record<string, any>>({});
+  const [directInputSaving, setDirectInputSaving] = useState(false);
+  const directInputRefs = useRef<Record<string, HTMLInputElement | HTMLSelectElement | null>>({});
+
+  const initDirectInputRow = useCallback(() => {
+    if (!directInput) return {};
+    const row: Record<string, any> = {};
+    for (const col of directInput.columns) {
+      row[col.key] = col.defaultValue ?? (directInput.defaults?.[col.key] ?? '');
+    }
+    return row;
+  }, [directInput]);
+
+  const handleDirectInputSave = useCallback(async () => {
+    if (!directInput || directInputSaving) return;
+    const hasData = directInput.columns.some(col => {
+      const val = directInputRow[col.key];
+      return val !== '' && val !== undefined && val !== null && val !== (col.defaultValue ?? '');
+    });
+    if (!hasData) return;
+    setDirectInputSaving(true);
+    try {
+      await directInput.onSave(directInputRow);
+      setDirectInputRow(initDirectInputRow());
+      setTimeout(() => {
+        const firstCol = directInput.columns[0];
+        if (firstCol) directInputRefs.current[firstCol.key]?.focus();
+      }, 100);
+    } catch {}
+    setDirectInputSaving(false);
+  }, [directInput, directInputRow, directInputSaving, initDirectInputRow]);
+
+  const handleEditRowSave = useCallback(async () => {
+    if (!directInput?.onUpdate || !editingRowId || directInputSaving) return;
+    setDirectInputSaving(true);
+    try {
+      await directInput.onUpdate(editingRowId, editingRowData);
+      setEditingRowId(null);
+      setEditingRowData({});
+    } catch {}
+    setDirectInputSaving(false);
+  }, [directInput, editingRowId, editingRowData, directInputSaving]);
+
+  const handleDirectInputKeyDown = useCallback((e: React.KeyboardEvent, colIndex: number, isNewRow: boolean) => {
+    if (!directInput) return;
+    const cols = directInput.columns;
+    if (e.key === 'Tab' && !e.shiftKey && colIndex === cols.length - 1) {
+      e.preventDefault();
+      if (isNewRow) {
+        handleDirectInputSave();
+      } else {
+        handleEditRowSave();
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (isNewRow) {
+        handleDirectInputSave();
+      } else {
+        handleEditRowSave();
+      }
+    } else if (e.key === 'Escape') {
+      if (!isNewRow) {
+        setEditingRowId(null);
+        setEditingRowData({});
+      }
+    }
+  }, [directInput, handleDirectInputSave, handleEditRowSave]);
+
+  const startEditingRow = useCallback((row: T) => {
+    if (!directInput?.onUpdate || !directInputMode) return;
+    const rowId = getRowId(row);
+    const rowData: Record<string, any> = {};
+    for (const col of directInput.columns) {
+      rowData[col.key] = (row as any)[col.key] ?? '';
+    }
+    setEditingRowId(rowId);
+    setEditingRowData(rowData);
+  }, [directInput, directInputMode, getRowId]);
+
+  useEffect(() => {
+    if (directInputMode && directInput) {
+      setDirectInputRow(initDirectInputRow());
+    }
+  }, [directInputMode, directInput, initDirectInputRow]);
+
   const [showSummary, setShowSummary] = useState<boolean>(() => {
     if (!tableKey) return false;
     try {
@@ -995,6 +1105,24 @@ export function DataTableLayout<T = any>({
               >
                 <Sigma className="h-4 w-4" />
               </Button>
+
+              {/* Direct Input toggle */}
+              {directInput && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-8 w-8 p-0 ${directInputMode ? 'bg-orange-500 text-white hover:bg-orange-600' : 'opacity-30 hover:opacity-60'}`}
+                  onClick={() => {
+                    setDirectInputMode(prev => !prev);
+                    setEditingRowId(null);
+                    setEditingRowData({});
+                  }}
+                  title={directInputMode ? 'Direct input uitschakelen' : 'Direct input inschakelen'}
+                  data-testid="button-direct-input"
+                >
+                  <PenLine className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           )}
         </div>
