@@ -123,6 +123,14 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const itemTableState = useDataTable({ 
     defaultColumns: [
       createPositionColumn(),
+      {
+        key: 'lineType',
+        label: 'Type',
+        visible: true,
+        width: 100,
+        filterable: true,
+        sortable: true,
+      },
       createIdColumn('id', 'Line ID'),
       { 
         key: 'description', 

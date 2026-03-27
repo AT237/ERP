@@ -500,6 +500,14 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const itemColumns = React.useMemo(() => [
     createPositionColumn(),
     {
+      key: 'lineType',
+      label: 'Type',
+      visible: true,
+      width: 100,
+      filterable: true,
+      sortable: true,
+    },
+    {
       key: 'workDate',
       label: 'Date',
       visible: true,
