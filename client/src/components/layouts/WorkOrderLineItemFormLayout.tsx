@@ -90,7 +90,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
-    description: { label: "Omschrijving" },
+    description: { label: "Stock item" },
     unitPrice: { label: "Eenheidsprijs" },
   });
   const isEditing = !!lineItemId;
@@ -559,22 +559,28 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
     ),
   };
 
+  const fieldStockItem: FormField2<LineItemFormData> = {
+    key: 'itemId', label: 'Stock item', type: 'custom',
+    customComponent: (
+      <InventorySelect
+        value={form.watch("itemId" as any) || ""}
+        onValueChange={(val) => { form.setValue("itemId" as any, val); setHasUnsavedChanges(true); }}
+        onItemRefreshed={(freshItem) => {
+          const price = freshItem.sellingPrice || freshItem.unitPrice;
+          if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
+          if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
+          if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
+        }}
+        placeholder="Artikel zoeken in catalogus..."
+        testId="select-inventory-item"
+      />
+    ),
+  };
+
   const fieldDescriptionWithLookup: FormField2<LineItemFormData> = {
     key: 'description', label: 'Omschrijving', type: 'custom',
     customComponent: (
       <div className="space-y-2">
-        <InventorySelect
-          value={form.watch("itemId" as any) || ""}
-          onValueChange={(val) => { form.setValue("itemId" as any, val); setHasUnsavedChanges(true); }}
-          onItemRefreshed={(freshItem) => {
-            const price = freshItem.sellingPrice || freshItem.unitPrice;
-            if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
-            if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
-            if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
-          }}
-          placeholder="Artikel zoeken in catalogus..."
-          testId="select-inventory-item"
-        />
         <textarea
           {...form.register('description')}
           placeholder="Omschrijving (zichtbaar op werkbon)..."
@@ -626,7 +632,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
     switch (lineTypeValue) {
       case 'charges': return [fieldTechnician, fieldWorkDate, fieldDescription, fieldQuantity, fieldUnitPrice, fieldUnit];
       case 'unique':  return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice];
-      case 'standard': return [fieldDescriptionWithLookup, fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount, fieldDiscountedPrice];
+      case 'standard': return [fieldStockItem, fieldDescriptionWithLookup, fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount, fieldDiscountedPrice];
       case 'text':    return [fieldTextContent];
       default:        return [];
     }
