@@ -403,13 +403,32 @@ function DirectInputSearchSelect({
     }
   }, [highlightIdx, isOpen]);
 
-  useEffect(() => {
-    if (isOpen && inputElRef.current) {
+  const updateDropdownPos = useCallback(() => {
+    if (inputElRef.current) {
       const rect = inputElRef.current.getBoundingClientRect();
-      const dropdownHeight = 320;
-      setDropdownPos({ top: rect.top - dropdownHeight - 2, left: rect.left });
+      const dropdownHeight = 300;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+        setDropdownPos({ top: rect.bottom + 2, left: rect.left });
+      } else {
+        setDropdownPos({ top: rect.top - dropdownHeight - 2, left: rect.left });
+      }
     }
-  }, [isOpen]);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      updateDropdownPos();
+      const onScroll = () => updateDropdownPos();
+      window.addEventListener('scroll', onScroll, true);
+      window.addEventListener('resize', onScroll);
+      return () => {
+        window.removeEventListener('scroll', onScroll, true);
+        window.removeEventListener('resize', onScroll);
+      };
+    }
+  }, [isOpen, updateDropdownPos]);
 
   const selectItem = (opt: { value: string; label: string }) => {
     setSelectedLabel(opt.label);
