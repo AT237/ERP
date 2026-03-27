@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
-import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
+import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, VatRate } from "@shared/schema";
 import { z } from "zod";
@@ -713,6 +713,78 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     },
   });
 
+  const invoiceDirectInput = React.useMemo<DirectInputConfig | undefined>(() => {
+    if (!currentInvoiceId) return undefined;
+    const nextPosition = invoiceItems.length > 0
+      ? Math.max(...invoiceItems.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
+      : 10;
+    return {
+      columns: [
+        { key: 'lineType', fieldType: 'select', defaultValue: 'standard', options: [
+          { value: 'standard', label: 'Standaard' },
+          { value: 'unique', label: 'Uniek' },
+          { value: 'text', label: 'Tekst' },
+          { value: 'charges', label: 'Toeslagen' },
+        ]},
+        { key: 'description', fieldType: 'text', placeholder: 'Omschrijving' },
+        { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal' },
+        { key: 'unit', fieldType: 'text', defaultValue: 'stk', placeholder: 'Eenheid' },
+        { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs' },
+        { key: 'discountPercent', fieldType: 'number', defaultValue: '0', placeholder: 'Korting %' },
+        { key: 'costPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Kostprijs' },
+      ],
+      defaults: {
+        positionNo: String(nextPosition).padStart(3, '0'),
+        position: nextPosition,
+        lineType: 'standard',
+        quantity: '1',
+        unit: 'stk',
+        unitPrice: '0.00',
+        costPrice: '0.00',
+        discountPercent: '0',
+      },
+      onSave: async (rowData) => {
+        const qty = parseFloat(rowData.quantity || '1') || 1;
+        const price = parseFloat(rowData.unitPrice || '0') || 0;
+        const disc = parseFloat(rowData.discountPercent || '0') || 0;
+        const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
+        const lineTotal = (qty * netPrice).toFixed(2);
+        const np = invoiceItems.length > 0
+          ? Math.max(...invoiceItems.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
+          : 10;
+        const itemData = {
+          invoiceId: currentInvoiceId!,
+          lineType: rowData.lineType || 'standard',
+          description: rowData.description || '',
+          quantity: String(qty),
+          unit: rowData.unit || 'stk',
+          unitPrice: String(price),
+          lineTotal,
+          costPrice: rowData.costPrice || '0.00',
+          discountPercent: String(disc),
+          position: np,
+          positionNo: String(np).padStart(3, '0'),
+        };
+        await apiRequest("POST", `/api/invoices/${currentInvoiceId}/items`, itemData);
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId, "items"] });
+      },
+      onUpdate: async (rowId, rowData) => {
+        const qty = parseFloat(rowData.quantity || '0') || 0;
+        const price = parseFloat(rowData.unitPrice || '0') || 0;
+        const disc = parseFloat(rowData.discountPercent || '0') || 0;
+        const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
+        const lineTotal = (qty * netPrice).toFixed(2);
+        const updateData: any = {};
+        for (const [k, v] of Object.entries(rowData)) {
+          updateData[k] = v;
+        }
+        updateData.lineTotal = lineTotal;
+        await apiRequest("PUT", `/api/invoice-items/${rowId}`, updateData);
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId, "items"] });
+      },
+    };
+  }, [currentInvoiceId, invoiceItems]);
+
   const handleSaveInvoice = (data: InvoiceFormData) => {
     const submitData: any = {
       ...data,
@@ -1244,6 +1316,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
               itemCount: itemTableState.selectedRows.length,
             }}
             onDuplicate={handleDuplicateItem}
+            directInput={invoiceDirectInput}
             rowActions={(item: InvoiceItem) => [
               {
                 key: 'edit',

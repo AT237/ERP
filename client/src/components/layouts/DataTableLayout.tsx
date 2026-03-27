@@ -1258,7 +1258,7 @@ export function DataTableLayout<T = any>({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedData.length === 0 ? (
+                {sortedData.length === 0 && !directInputMode ? (
                   <TableRow>
                     <TableCell colSpan={currentVisibleColumns.length + 1} className="text-center py-4 text-xs text-orange-500">
                       No {entityNamePlural.toLowerCase()} found
@@ -1269,19 +1269,28 @@ export function DataTableLayout<T = any>({
                     const rowId = getRowId(row);
                     const isSelected = selectedRows.includes(rowId);
                     const isEven = index % 2 === 0;
+                    const isEditing = directInputMode && editingRowId === rowId;
+                    const diCol = (key: string) => directInput?.columns.find(c => c.key === key);
                     
                     return (
                       <TableRow 
                         key={rowId}
                         data-row-id={rowId}
                         className={`hover:bg-orange-100 dark:hover:bg-orange-800/30/30 text-sm font-normal font-sans cursor-pointer ${
-                          isSelected 
-                            ? 'bg-orange-50 dark:bg-orange-900/20' 
-                            : isEven 
-                              ? 'bg-white dark:bg-gray-950' 
-                              : 'bg-white dark:bg-gray-900/50'
+                          isEditing
+                            ? 'bg-orange-50 ring-1 ring-orange-300'
+                            : isSelected 
+                              ? 'bg-orange-50 dark:bg-orange-900/20' 
+                              : isEven 
+                                ? 'bg-white dark:bg-gray-950' 
+                                : 'bg-white dark:bg-gray-900/50'
                         }`}
                         style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
+                        onDoubleClick={() => {
+                          if (directInputMode && directInput?.onUpdate) {
+                            startEditingRow(row);
+                          }
+                        }}
                       >
                         <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ width: '48px', minWidth: '48px', maxWidth: '48px', height: '32px', lineHeight: '1.2' }}>
                           <div className="flex items-center justify-center h-4 w-4 mx-auto">
@@ -1293,35 +1302,109 @@ export function DataTableLayout<T = any>({
                             />
                           </div>
                         </TableCell>
-                        {currentVisibleColumns.map((column) => (
-                          <TableCell 
-                            key={column.key} 
-                            className={`border-r border-gray-100 dark:border-gray-700 ${column.fullCell ? 'p-0 overflow-hidden' : 'p-2 truncate'} ${column.key === currentVisibleColumns[0]?.key ? 'font-medium' : ''}`}
-                            style={{ width: `${column.width}px`, minWidth: `${column.width}px`, maxWidth: `${column.width}px`, lineHeight: '1.2' }}
-                          >
-                            {column.fullCell ? (
-                              <div className="w-full h-full flex items-center justify-center">
-                                {column.renderCell
-                                  ? column.renderCell(row[column.key as keyof T], row)
-                                  : String(row[column.key as keyof T] || '-')
-                                }
-                              </div>
-                            ) : (
-                              <div className="flex items-center">
-                                <div className="w-6 flex-shrink-0"></div>
-                                <div className={`flex-1 min-w-0 truncate ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : ''}`}>
-                                  {column.renderCell 
+                        {currentVisibleColumns.map((column, colIdx) => {
+                          const editableCol = isEditing ? diCol(column.key) : null;
+                          return (
+                            <TableCell 
+                              key={column.key} 
+                              className={`border-r border-gray-100 dark:border-gray-700 ${editableCol ? 'p-0' : column.fullCell ? 'p-0 overflow-hidden' : 'p-2 truncate'} ${column.key === currentVisibleColumns[0]?.key ? 'font-medium' : ''}`}
+                              style={{ width: `${column.width}px`, minWidth: `${column.width}px`, maxWidth: `${column.width}px`, lineHeight: '1.2' }}
+                            >
+                              {editableCol ? (
+                                editableCol.fieldType === 'select' ? (
+                                  <select
+                                    value={editingRowData[column.key] || ''}
+                                    onChange={(e) => setEditingRowData(prev => ({ ...prev, [column.key]: e.target.value }))}
+                                    onKeyDown={(e) => handleDirectInputKeyDown(e, directInput!.columns.indexOf(editableCol), false)}
+                                    className="w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-orange-400"
+                                  >
+                                    <option value="">-</option>
+                                    {editableCol.options?.map(opt => (
+                                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <input
+                                    type={editableCol.fieldType === 'number' || editableCol.fieldType === 'currency' ? 'number' : 'text'}
+                                    step={editableCol.fieldType === 'currency' ? '0.01' : editableCol.fieldType === 'number' ? '1' : undefined}
+                                    value={editingRowData[column.key] ?? ''}
+                                    onChange={(e) => setEditingRowData(prev => ({ ...prev, [column.key]: e.target.value }))}
+                                    onKeyDown={(e) => handleDirectInputKeyDown(e, directInput!.columns.indexOf(editableCol), false)}
+                                    className={`w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-orange-400 ${column.align === 'right' ? 'text-right' : ''}`}
+                                    placeholder={editableCol.placeholder}
+                                  />
+                                )
+                              ) : column.fullCell ? (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  {column.renderCell
                                     ? column.renderCell(row[column.key as keyof T], row)
                                     : String(row[column.key as keyof T] || '-')
                                   }
                                 </div>
-                              </div>
-                            )}
-                          </TableCell>
-                        ))}
+                              ) : (
+                                <div className="flex items-center">
+                                  <div className="w-6 flex-shrink-0"></div>
+                                  <div className={`flex-1 min-w-0 truncate ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : ''}`}>
+                                    {column.renderCell 
+                                      ? column.renderCell(row[column.key as keyof T], row)
+                                      : String(row[column.key as keyof T] || '-')
+                                    }
+                                  </div>
+                                </div>
+                              )}
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                     );
                   })
+                )}
+                {directInputMode && directInput && (
+                  <TableRow className="bg-green-50/50 dark:bg-green-900/10 border-t border-orange-200" style={{ height: '34px' }}>
+                    <TableCell className="p-1 border-r border-orange-200/50 text-center" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
+                      <Plus className="h-3 w-3 mx-auto text-green-500" />
+                    </TableCell>
+                    {currentVisibleColumns.map((column, colIdx) => {
+                      const diCol = directInput.columns.find(c => c.key === column.key);
+                      return (
+                        <TableCell
+                          key={column.key}
+                          className="border-r border-orange-200/50 p-0"
+                          style={{ width: `${column.width}px`, minWidth: `${column.width}px`, maxWidth: `${column.width}px` }}
+                        >
+                          {diCol ? (
+                            diCol.fieldType === 'select' ? (
+                              <select
+                                ref={(el) => { directInputRefs.current[column.key] = el; }}
+                                value={directInputRow[column.key] || ''}
+                                onChange={(e) => setDirectInputRow(prev => ({ ...prev, [column.key]: e.target.value }))}
+                                onKeyDown={(e) => handleDirectInputKeyDown(e, directInput.columns.indexOf(diCol), true)}
+                                className="w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-green-400"
+                              >
+                                <option value="">-</option>
+                                {diCol.options?.map(opt => (
+                                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                ref={(el) => { directInputRefs.current[column.key] = el as any; }}
+                                type={diCol.fieldType === 'number' || diCol.fieldType === 'currency' ? 'number' : 'text'}
+                                step={diCol.fieldType === 'currency' ? '0.01' : diCol.fieldType === 'number' ? '1' : undefined}
+                                value={directInputRow[column.key] ?? ''}
+                                onChange={(e) => setDirectInputRow(prev => ({ ...prev, [column.key]: e.target.value }))}
+                                onKeyDown={(e) => handleDirectInputKeyDown(e, directInput.columns.indexOf(diCol), true)}
+                                className={`w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-green-400 ${column.align === 'right' ? 'text-right' : ''}`}
+                                placeholder={diCol.placeholder || column.label}
+                              />
+                            )
+                          ) : (
+                            <span className="text-[10px] text-gray-300 px-2">—</span>
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
                 )}
               </TableBody>
               {showSummary && (
