@@ -134,7 +134,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       createIdColumn('id', 'Line ID'),
       { 
         key: 'description', 
-        label: 'Description', 
+        label: 'Stock item', 
         visible: true, 
         width: 300, 
         filterable: true, 

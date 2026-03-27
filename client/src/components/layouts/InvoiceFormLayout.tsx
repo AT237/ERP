@@ -534,7 +534,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     },
     {
       key: 'description',
-      label: 'Description',
+      label: 'Stock item',
       visible: true,
       width: 200,
       filterable: true,
