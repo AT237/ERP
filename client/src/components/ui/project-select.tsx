@@ -7,7 +7,7 @@ import {
   Popover, PopoverContent, PopoverTrigger 
 } from "@/components/ui/popover";
 import { 
-  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList 
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator 
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import type { Project } from "@shared/schema";
@@ -18,8 +18,9 @@ interface ProjectSelectProps {
   placeholder?: string;
   testId?: string;
   className?: string;
-  projects?: Array<{ id: string; projectNumber: string; name: string }>;
+  projects?: Array<{ id: string; projectNumber: string; name: string; customerId?: string | null }>;
   parentId?: string;
+  customerId?: string;
 }
 
 export function ProjectSelect({
@@ -29,7 +30,8 @@ export function ProjectSelect({
   testId = "select-project",
   className,
   projects: externalProjects,
-  parentId
+  parentId,
+  customerId,
 }: ProjectSelectProps) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -45,7 +47,16 @@ export function ProjectSelect({
     id: p.id,
     projectNumber: p.projectNumber || '',
     name: p.name,
+    customerId: p.customerId || null,
   }));
+
+  const customerProjects = customerId
+    ? projects.filter(p => p.customerId === customerId)
+    : [];
+  const otherProjects = customerId
+    ? projects.filter(p => p.customerId !== customerId)
+    : projects;
+  const hasGrouping = customerId && customerProjects.length > 0;
 
   useEffect(() => {
     const handleEntityCreated = (event: CustomEvent) => {
@@ -148,7 +159,7 @@ export function ProjectSelect({
                 </div>
               </div>
               <CommandList>
-                <CommandEmpty>No project found.</CommandEmpty>
+                <CommandEmpty>Geen project gevonden.</CommandEmpty>
                 <CommandGroup>
                   {value && (
                     <CommandItem
@@ -159,57 +170,45 @@ export function ProjectSelect({
                       }}
                       className="text-muted-foreground italic"
                     >
-                      — Clear selection —
+                      — Selectie wissen —
                     </CommandItem>
                   )}
-                  {projects.map((project) => (
-                    <CommandItem
-                      key={project.id}
-                      value={project.id}
-                      onSelect={() => {
-                        onValueChange?.(project.id);
-                        setOpen(false);
-                      }}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center">
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            value === project.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <div>
-                          <div className="font-medium">
-                            {project.projectNumber ? `${project.projectNumber} - ${project.name}` : project.name}
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const uniqueTabId = `project-edit-${project.id}-${Date.now()}`;
+                </CommandGroup>
+                {hasGrouping && (
+                  <CommandGroup heading="Projecten van deze klant">
+                    {customerProjects.map((project) => (
+                      <ProjectCommandItem
+                        key={project.id}
+                        project={project}
+                        isSelected={value === project.id}
+                        onSelect={() => { onValueChange?.(project.id); setOpen(false); }}
+                        onEdit={() => {
                           window.dispatchEvent(new CustomEvent('open-form-tab', {
-                            detail: {
-                              id: uniqueTabId,
-                              name: project.name || 'Edit Project',
-                              formType: 'project',
-                              entityId: project.id,
-                              parentId: parentId || testId
-                            }
+                            detail: { id: `project-edit-${project.id}-${Date.now()}`, name: project.name || 'Edit Project', formType: 'project', entityId: project.id, parentId: parentId || testId }
                           }));
                           setOpen(false);
                         }}
-                        data-testid={`${testId}-edit-${project.id}`}
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                      </Button>
-                    </CommandItem>
+                        testId={`${testId}-edit-${project.id}`}
+                      />
+                    ))}
+                  </CommandGroup>
+                )}
+                {hasGrouping && otherProjects.length > 0 && <CommandSeparator />}
+                <CommandGroup heading={hasGrouping ? "Overige projecten" : undefined}>
+                  {(hasGrouping ? otherProjects : projects).map((project) => (
+                    <ProjectCommandItem
+                      key={project.id}
+                      project={project}
+                      isSelected={value === project.id}
+                      onSelect={() => { onValueChange?.(project.id); setOpen(false); }}
+                      onEdit={() => {
+                        window.dispatchEvent(new CustomEvent('open-form-tab', {
+                          detail: { id: `project-edit-${project.id}-${Date.now()}`, name: project.name || 'Edit Project', formType: 'project', entityId: project.id, parentId: parentId || testId }
+                        }));
+                        setOpen(false);
+                      }}
+                      testId={`${testId}-edit-${project.id}`}
+                    />
                   ))}
                 </CommandGroup>
               </CommandList>
