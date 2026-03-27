@@ -374,7 +374,7 @@ const FIELD_LABELS: Record<string, string> = {
   positionNo: 'Pos. Nr.', lineType: 'Regeltype', description: 'Omschrijving',
   descriptionInternal: 'Interne omschrijving', quantity: 'Aantal', unit: 'Eenheid',
   unitPrice: 'Prijs per eenheid', lineTotal: 'Regel totaal', discountPercent: 'Korting %', netUnitPrice: 'Netto prijs (na korting)',
-  incoTerms: 'Incoterms', printProjectNo: 'Project nr. afdrukken', printPaymentConditions: 'Betalingscondities afdrukken',
+  printProjectNo: 'Project nr. afdrukken', printPaymentConditions: 'Betalingscondities afdrukken',
   workDate: 'Werkdatum', technicianNames: 'Techniciennamen', technicianIds: 'Techniciën IDs',
   customerRateId: 'Tarief ID', itemId: 'Artikel ID', sourceSnippetId: 'Snippet ID',
   sourceSnippetVersion: 'Snippet versie', deliveryDate: 'Leverdatum', hsCode: 'HS Code',
@@ -1759,7 +1759,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
           <TooltipProvider delayDuration={2000}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-500 hover:bg-orange-500 hover:text-white" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
+                <Button size="sm" variant="ghost" className={`h-8 w-8 p-0 ${saveLayoutMutation.isPending ? 'opacity-30' : 'ring-1 ring-orange-400 text-orange-600'}`} onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
                   <Save className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
