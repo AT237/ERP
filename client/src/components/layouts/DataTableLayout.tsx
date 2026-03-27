@@ -82,7 +82,7 @@ export type SummaryType = 'none' | 'count' | 'sum' | 'average' | 'min' | 'max';
 
 export type SummaryConfig = Record<string, SummaryType>;
 
-export type DirectInputFieldType = 'text' | 'number' | 'currency' | 'select';
+export type DirectInputFieldType = 'text' | 'number' | 'currency' | 'select' | 'searchable-select';
 
 export type DirectInputColumn = {
   key: string;
@@ -91,6 +91,7 @@ export type DirectInputColumn = {
   defaultValue?: any;
   placeholder?: string;
   enabledWhen?: (rowData: Record<string, any>) => boolean;
+  onSelect?: (value: string, option: { value: string; label: string }) => Record<string, any>;
 };
 
 export type DirectInputConfig = {
@@ -341,6 +342,94 @@ function DraggableColumnHeader({
         
       </div>
     </TableHead>
+  );
+}
+
+function DirectInputSearchSelect({ 
+  diCol, column, value, onSelect, inputRef, onKeyDown 
+}: { 
+  diCol: DirectInputColumn; 
+  column: ColumnConfig; 
+  value: string; 
+  onSelect: (val: string, opt: { value: string; label: string }) => void;
+  inputRef: (el: HTMLInputElement | null) => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+}) {
+  const [search, setSearch] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedLabel, setSelectedLabel] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const filtered = useMemo(() => {
+    if (!diCol.options) return [];
+    if (!search) return diCol.options.slice(0, 50);
+    const lower = search.toLowerCase();
+    return diCol.options.filter(o => o.label.toLowerCase().includes(lower)).slice(0, 50);
+  }, [diCol.options, search]);
+
+  useEffect(() => {
+    if (value && diCol.options) {
+      const opt = diCol.options.find(o => o.value === value);
+      if (opt) setSelectedLabel(opt.label);
+    } else {
+      setSelectedLabel('');
+    }
+  }, [value, diCol.options]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <input
+        ref={inputRef}
+        type="text"
+        value={isOpen ? search : (selectedLabel || '')}
+        onChange={(e) => { setSearch(e.target.value); setIsOpen(true); }}
+        onFocus={() => { setIsOpen(true); setSearch(''); }}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') { setIsOpen(false); return; }
+          if (e.key === 'Enter' && isOpen && filtered.length > 0) {
+            e.preventDefault();
+            const opt = filtered[0];
+            setSelectedLabel(opt.label);
+            setIsOpen(false);
+            onSelect(opt.value, opt);
+            return;
+          }
+          if (!isOpen) onKeyDown(e);
+        }}
+        className="w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-green-400"
+        placeholder={diCol.placeholder || column.label}
+      />
+      {isOpen && filtered.length > 0 && (
+        <div className="absolute z-50 left-0 top-full w-[300px] max-h-48 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
+          {filtered.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              className="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 dark:hover:bg-orange-900/30 cursor-pointer"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setSelectedLabel(opt.label);
+                setSearch('');
+                setIsOpen(false);
+                onSelect(opt.value, opt);
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1433,6 +1522,27 @@ export function DataTableLayout<T = any>({
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                   ))}
                                 </select>
+                              ) : diCol.fieldType === 'searchable-select' ? (
+                                <DirectInputSearchSelect
+                                  diCol={diCol}
+                                  column={column}
+                                  value={directInputRow[column.key] ?? ''}
+                                  onSelect={(val, opt) => {
+                                    const extra = diCol.onSelect ? diCol.onSelect(val, opt) : {};
+                                    setDirectInputRow(prev => ({ ...prev, [column.key]: val, ...extra }));
+                                    const diIdx = directInput.columns.indexOf(diCol);
+                                    const updatedRow = { ...directInputRow, [column.key]: val, ...extra };
+                                    for (let ni = diIdx + 1; ni < directInput.columns.length; ni++) {
+                                      const nc = directInput.columns[ni];
+                                      if (!nc.enabledWhen || nc.enabledWhen(updatedRow)) {
+                                        setTimeout(() => directInputRefs.current[nc.key]?.focus(), 50);
+                                        break;
+                                      }
+                                    }
+                                  }}
+                                  inputRef={(el) => { directInputRefs.current[column.key] = el as any; }}
+                                  onKeyDown={(e) => handleDirectInputKeyDown(e, directInput.columns.indexOf(diCol), true)}
+                                />
                               ) : (
                                 <input
                                   ref={(el) => { directInputRefs.current[column.key] = el as any; }}
