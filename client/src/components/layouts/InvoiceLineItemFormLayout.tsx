@@ -745,9 +745,9 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
 
   const fieldDescription: FormField2<LineItemFormData> = {
     key: 'description',
-    label: 'Omschrijving',
+    label: 'Description',
     type: 'textarea',
-    placeholder: 'Omschrijving (zichtbaar op factuur)',
+    placeholder: 'Description (zichtbaar op factuur)',
     rows: 3,
     register: form.register('description'),
     validation: { error: form.formState.errors.description?.message },
@@ -798,13 +798,13 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
 
   const fieldDescriptionWithLookup: FormField2<LineItemFormData> = {
     key: 'description',
-    label: 'Omschrijving',
+    label: 'Description',
     type: 'custom',
     customComponent: (
       <div className="space-y-2">
         <textarea
           {...form.register('description')}
-          placeholder="Omschrijving (zichtbaar op factuur)..."
+          placeholder="Description (zichtbaar op factuur)..."
           rows={3}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
           data-testid="textarea-description"

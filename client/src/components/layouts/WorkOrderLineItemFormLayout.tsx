@@ -578,12 +578,12 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
   };
 
   const fieldDescriptionWithLookup: FormField2<LineItemFormData> = {
-    key: 'description', label: 'Omschrijving', type: 'custom',
+    key: 'description', label: 'Description', type: 'custom',
     customComponent: (
       <div className="space-y-2">
         <textarea
           {...form.register('description')}
-          placeholder="Omschrijving (zichtbaar op werkbon)..."
+          placeholder="Description (zichtbaar op werkbon)..."
           rows={3}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
           data-testid="textarea-description"
@@ -596,8 +596,8 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
   };
 
   const fieldDescription: FormField2<LineItemFormData> = {
-    key: 'description', label: 'Omschrijving', type: 'textarea',
-    placeholder: 'Omschrijving (zichtbaar op werkbon)',
+    key: 'description', label: 'Description', type: 'textarea',
+    placeholder: 'Description (zichtbaar op werkbon)',
     rows: 3,
     register: form.register('description'),
     validation: { error: form.formState.errors.description?.message },
