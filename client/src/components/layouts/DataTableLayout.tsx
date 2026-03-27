@@ -359,7 +359,9 @@ function DirectInputSearchSelect({
   const [search, setSearch] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState('');
+  const [highlightIdx, setHighlightIdx] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
     if (!diCol.options) return [];
@@ -378,6 +380,10 @@ function DirectInputSearchSelect({
   }, [value, diCol.options]);
 
   useEffect(() => {
+    setHighlightIdx(0);
+  }, [filtered.length, search]);
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
@@ -387,47 +393,89 @@ function DirectInputSearchSelect({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (isOpen && listRef.current) {
+      const item = listRef.current.children[highlightIdx] as HTMLElement;
+      if (item) item.scrollIntoView({ block: 'nearest' });
+    }
+  }, [highlightIdx, isOpen]);
+
+  const selectItem = (opt: { value: string; label: string }) => {
+    setSelectedLabel(opt.label);
+    setSearch('');
+    setIsOpen(false);
+    onSelect(opt.value, opt);
+  };
+
   return (
     <div ref={containerRef} className="relative w-full">
-      <input
-        ref={inputRef}
-        type="text"
-        value={isOpen ? search : (selectedLabel || '')}
-        onChange={(e) => { setSearch(e.target.value); setIsOpen(true); }}
-        onFocus={() => { setIsOpen(true); setSearch(''); }}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') { setIsOpen(false); return; }
-          if (e.key === 'Enter' && isOpen && filtered.length > 0) {
+      <div className="flex items-center w-full">
+        <input
+          ref={inputRef}
+          type="text"
+          value={isOpen ? search : (selectedLabel || '')}
+          onChange={(e) => { setSearch(e.target.value); setIsOpen(true); }}
+          onFocus={() => { setIsOpen(true); setSearch(''); }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') { setIsOpen(false); return; }
+            if (e.key === 'ArrowDown' && isOpen) {
+              e.preventDefault();
+              setHighlightIdx(prev => Math.min(prev + 1, filtered.length - 1));
+              return;
+            }
+            if (e.key === 'ArrowUp' && isOpen) {
+              e.preventDefault();
+              setHighlightIdx(prev => Math.max(prev - 1, 0));
+              return;
+            }
+            if (e.key === 'Enter' && isOpen && filtered.length > 0) {
+              e.preventDefault();
+              selectItem(filtered[highlightIdx]);
+              return;
+            }
+            if (!isOpen) onKeyDown(e);
+          }}
+          className="w-full h-8 px-2 pr-6 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-green-400"
+          placeholder={diCol.placeholder || column.label}
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600"
+          onMouseDown={(e) => {
             e.preventDefault();
-            const opt = filtered[0];
-            setSelectedLabel(opt.label);
-            setIsOpen(false);
-            onSelect(opt.value, opt);
-            return;
-          }
-          if (!isOpen) onKeyDown(e);
-        }}
-        className="w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-green-400"
-        placeholder={diCol.placeholder || column.label}
-      />
+            setIsOpen(!isOpen);
+            setSearch('');
+          }}
+        >
+          <ChevronDown className="h-3.5 w-3.5" />
+        </button>
+      </div>
       {isOpen && filtered.length > 0 && (
-        <div className="absolute z-50 left-0 top-full w-[300px] max-h-48 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
-          {filtered.map(opt => (
+        <div ref={listRef} className="absolute z-50 left-0 top-full w-[350px] max-h-56 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl">
+          {filtered.map((opt, idx) => (
             <button
               key={opt.value}
               type="button"
-              className="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 dark:hover:bg-orange-900/30 cursor-pointer"
+              className={`w-full text-left px-3 py-2 text-xs cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${
+                idx === highlightIdx 
+                  ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200' 
+                  : 'hover:bg-orange-50 dark:hover:bg-orange-900/20'
+              }`}
               onMouseDown={(e) => {
                 e.preventDefault();
-                setSelectedLabel(opt.label);
-                setSearch('');
-                setIsOpen(false);
-                onSelect(opt.value, opt);
+                selectItem(opt);
               }}
+              onMouseEnter={() => setHighlightIdx(idx)}
             >
               {opt.label}
             </button>
           ))}
+        </div>
+      )}
+      {isOpen && filtered.length === 0 && search && (
+        <div className="absolute z-50 left-0 top-full w-[350px] bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl px-3 py-2 text-xs text-gray-400 italic">
+          Geen resultaten voor "{search}"
         </div>
       )}
     </div>
