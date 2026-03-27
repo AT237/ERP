@@ -111,7 +111,7 @@ function loadColumnsFromStorage(tableKey: string, defaultColumns: ColumnConfig[]
       return {
         ...defaultCol,
         width: saved.width ?? defaultCol.width,
-        visible: isNewDefault && defaultCol.visible ? true : (saved.visible ?? defaultCol.visible),
+        visible: defaultCol.forceVisible ? true : (isNewDefault && defaultCol.visible ? true : (saved.visible ?? defaultCol.visible)),
       };
     });
     const ordered = savedCols

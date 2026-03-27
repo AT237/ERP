@@ -117,6 +117,7 @@ export type ColumnConfig = {
   renderCell?: (value: any, row: any) => ReactNode;
   fullCell?: boolean;
   align?: 'left' | 'right' | 'center';
+  forceVisible?: boolean;
 };
 
 // ============================================================================
@@ -1440,6 +1441,18 @@ export function DataTableLayout<T = any>({
                                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                                     ))}
                                   </select>
+                                ) : editableCol.fieldType === 'searchable-select' ? (
+                                  <DirectInputSearchSelect
+                                    diCol={editableCol}
+                                    column={column}
+                                    value={editingRowData[column.key] || ''}
+                                    onSelect={(val, opt) => {
+                                      const extras = editableCol.onSelect?.(val, opt) || {};
+                                      setEditingRowData(prev => ({ ...prev, [column.key]: extras.description || opt.label, ...extras }));
+                                    }}
+                                    inputRef={() => {}}
+                                    onKeyDown={(e) => handleDirectInputKeyDown(e, directInput!.columns.indexOf(editableCol), false)}
+                                  />
                                 ) : (
                                   <input
                                     type={editableCol.fieldType === 'number' || editableCol.fieldType === 'currency' ? 'number' : 'text'}

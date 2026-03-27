@@ -136,6 +136,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         key: 'description', 
         label: 'Stock item', 
         visible: true, 
+        forceVisible: true,
         width: 300, 
         filterable: true, 
         sortable: true

@@ -164,6 +164,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
       key: 'description',
       label: 'Stock item',
       visible: true,
+      forceVisible: true,
       width: 280,
       filterable: false,
       sortable: false,
