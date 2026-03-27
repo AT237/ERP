@@ -16,10 +16,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProjectSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { FolderOpen, Calendar, DollarSign, Image, Truck, List, RefreshCw } from "lucide-react";
+import { FolderOpen, Calendar, DollarSign, Image, Truck, List, RefreshCw, Paperclip } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ProjectRelatedRecords } from "@/components/ui/project-related-records";
 import { AttachmentsGallery } from "@/components/ui/attachments-gallery";
+import { ProjectFilesTab } from "@/components/ui/project-files-tab";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
@@ -599,6 +600,19 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
           type: "custom" as const,
           customContent: (
             <AttachmentsGallery entityType="project" entityId={currentProjectId} />
+          ),
+        },
+      ],
+    },
+    {
+      id: "files",
+      label: "Files",
+      icon: <Paperclip className="h-4 w-4" />,
+      rows: [
+        {
+          type: "custom" as const,
+          customContent: (
+            <ProjectFilesTab projectId={currentProjectId} />
           ),
         },
       ],
