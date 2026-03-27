@@ -728,23 +728,23 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       : 10;
     return {
       columns: [
-        { key: 'lineType', fieldType: 'select', defaultValue: 'standard', options: [
+        { key: 'lineType', fieldType: 'select', defaultValue: '', options: [
           { value: 'standard', label: 'Standaard' },
           { value: 'unique', label: 'Uniek' },
           { value: 'text', label: 'Tekst' },
           { value: 'charges', label: 'Toeslagen' },
         ]},
-        { key: 'description', fieldType: 'text', placeholder: 'Omschrijving' },
-        { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal' },
-        { key: 'unit', fieldType: 'text', defaultValue: 'stk', placeholder: 'Eenheid' },
-        { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs' },
-        { key: 'discountPercent', fieldType: 'number', defaultValue: '0', placeholder: 'Korting %' },
-        { key: 'costPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Kostprijs' },
+        { key: 'description', fieldType: 'text', placeholder: 'Omschrijving', enabledWhen: (r) => !!r.lineType },
+        { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'unit', fieldType: 'text', defaultValue: 'stk', placeholder: 'Eenheid', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'discountPercent', fieldType: 'number', defaultValue: '0', placeholder: 'Korting %', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'costPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Kostprijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
       ],
       defaults: {
         positionNo: String(nextPosition).padStart(3, '0'),
         position: nextPosition,
-        lineType: 'standard',
+        lineType: '',
         quantity: '1',
         unit: 'stk',
         unitPrice: '0.00',

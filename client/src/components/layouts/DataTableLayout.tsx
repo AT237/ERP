@@ -90,6 +90,7 @@ export type DirectInputColumn = {
   options?: { value: string; label: string }[];
   defaultValue?: any;
   placeholder?: string;
+  enabledWhen?: (rowData: Record<string, any>) => boolean;
 };
 
 export type DirectInputConfig = {
@@ -428,12 +429,39 @@ export function DataTableLayout<T = any>({
   const handleDirectInputKeyDown = useCallback((e: React.KeyboardEvent, colIndex: number, isNewRow: boolean) => {
     if (!directInput) return;
     const cols = directInput.columns;
-    if (e.key === 'Tab' && !e.shiftKey && colIndex === cols.length - 1) {
-      e.preventDefault();
-      if (isNewRow) {
-        handleDirectInputSave();
+    const rowData = isNewRow ? directInputRow : editingRowData;
+    if (e.key === 'Tab' && !e.shiftKey) {
+      let nextIdx = colIndex + 1;
+      while (nextIdx < cols.length) {
+        const nextCol = cols[nextIdx];
+        if (!nextCol.enabledWhen || nextCol.enabledWhen(rowData)) {
+          break;
+        }
+        nextIdx++;
+      }
+      if (nextIdx >= cols.length) {
+        e.preventDefault();
+        if (isNewRow) {
+          handleDirectInputSave();
+        } else {
+          handleEditRowSave();
+        }
       } else {
-        handleEditRowSave();
+        e.preventDefault();
+        setTimeout(() => directInputRefs.current[cols[nextIdx].key]?.focus(), 0);
+      }
+    } else if (e.key === 'Tab' && e.shiftKey) {
+      let prevIdx = colIndex - 1;
+      while (prevIdx >= 0) {
+        const prevCol = cols[prevIdx];
+        if (!prevCol.enabledWhen || prevCol.enabledWhen(rowData)) {
+          break;
+        }
+        prevIdx--;
+      }
+      if (prevIdx >= 0) {
+        e.preventDefault();
+        setTimeout(() => directInputRefs.current[cols[prevIdx].key]?.focus(), 0);
       }
     } else if (e.key === 'Enter') {
       e.preventDefault();
@@ -448,7 +476,7 @@ export function DataTableLayout<T = any>({
         setEditingRowData({});
       }
     }
-  }, [directInput, handleDirectInputSave, handleEditRowSave]);
+  }, [directInput, directInputRow, editingRowData, handleDirectInputSave, handleEditRowSave]);
 
   const startEditingRow = useCallback((row: T) => {
     if (!directInput?.onUpdate || !directInputMode) return;
@@ -1360,43 +1388,65 @@ export function DataTableLayout<T = any>({
                   })
                 )}
                 {directInputMode && directInput && (
-                  <TableRow className="bg-green-50/50 dark:bg-green-900/10 border-t border-orange-200" style={{ height: '34px' }}>
-                    <TableCell className="p-1 border-r border-orange-200/50 text-center" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
+                  <TableRow className="border-t border-orange-200" style={{ height: '34px' }}>
+                    <TableCell className="p-1 border-r border-orange-200/50 text-center bg-green-50/50" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
                       <Plus className="h-3 w-3 mx-auto text-green-500" />
                     </TableCell>
                     {currentVisibleColumns.map((column, colIdx) => {
                       const diCol = directInput.columns.find(c => c.key === column.key);
+                      const isEnabled = diCol ? (!diCol.enabledWhen || diCol.enabledWhen(directInputRow)) : false;
+                      const cellBg = diCol
+                        ? (isEnabled ? 'bg-green-50 dark:bg-green-900/20' : 'bg-gray-50 dark:bg-gray-800/30')
+                        : '';
                       return (
                         <TableCell
                           key={column.key}
-                          className="border-r border-orange-200/50 p-0"
+                          className={`border-r border-orange-200/50 p-0 ${cellBg}`}
                           style={{ width: `${column.width}px`, minWidth: `${column.width}px`, maxWidth: `${column.width}px` }}
                         >
                           {diCol ? (
-                            diCol.fieldType === 'select' ? (
-                              <select
-                                ref={(el) => { directInputRefs.current[column.key] = el; }}
-                                value={directInputRow[column.key] || ''}
-                                onChange={(e) => setDirectInputRow(prev => ({ ...prev, [column.key]: e.target.value }))}
-                                onKeyDown={(e) => handleDirectInputKeyDown(e, directInput.columns.indexOf(diCol), true)}
-                                className="w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-green-400"
-                              >
-                                <option value="">-</option>
-                                {diCol.options?.map(opt => (
-                                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                              </select>
+                            isEnabled ? (
+                              diCol.fieldType === 'select' ? (
+                                <select
+                                  ref={(el) => { directInputRefs.current[column.key] = el; }}
+                                  value={directInputRow[column.key] || ''}
+                                  onChange={(e) => {
+                                    const newVal = e.target.value;
+                                    setDirectInputRow(prev => ({ ...prev, [column.key]: newVal }));
+                                    if (newVal) {
+                                      const diIdx = directInput.columns.indexOf(diCol);
+                                      const updatedRow = { ...directInputRow, [column.key]: newVal };
+                                      for (let ni = diIdx + 1; ni < directInput.columns.length; ni++) {
+                                        const nc = directInput.columns[ni];
+                                        if (!nc.enabledWhen || nc.enabledWhen(updatedRow)) {
+                                          setTimeout(() => directInputRefs.current[nc.key]?.focus(), 50);
+                                          break;
+                                        }
+                                      }
+                                    }
+                                  }}
+                                  onKeyDown={(e) => handleDirectInputKeyDown(e, directInput.columns.indexOf(diCol), true)}
+                                  className="w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-green-400"
+                                >
+                                  <option value="">-</option>
+                                  {diCol.options?.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  ref={(el) => { directInputRefs.current[column.key] = el as any; }}
+                                  type={diCol.fieldType === 'number' || diCol.fieldType === 'currency' ? 'number' : 'text'}
+                                  step={diCol.fieldType === 'currency' ? '0.01' : diCol.fieldType === 'number' ? '1' : undefined}
+                                  value={directInputRow[column.key] ?? ''}
+                                  onChange={(e) => setDirectInputRow(prev => ({ ...prev, [column.key]: e.target.value }))}
+                                  onKeyDown={(e) => handleDirectInputKeyDown(e, directInput.columns.indexOf(diCol), true)}
+                                  className={`w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-green-400 ${column.align === 'right' ? 'text-right' : ''}`}
+                                  placeholder={diCol.placeholder || column.label}
+                                />
+                              )
                             ) : (
-                              <input
-                                ref={(el) => { directInputRefs.current[column.key] = el as any; }}
-                                type={diCol.fieldType === 'number' || diCol.fieldType === 'currency' ? 'number' : 'text'}
-                                step={diCol.fieldType === 'currency' ? '0.01' : diCol.fieldType === 'number' ? '1' : undefined}
-                                value={directInputRow[column.key] ?? ''}
-                                onChange={(e) => setDirectInputRow(prev => ({ ...prev, [column.key]: e.target.value }))}
-                                onKeyDown={(e) => handleDirectInputKeyDown(e, directInput.columns.indexOf(diCol), true)}
-                                className={`w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-green-400 ${column.align === 'right' ? 'text-right' : ''}`}
-                                placeholder={diCol.placeholder || column.label}
-                              />
+                              <span className="text-[10px] text-gray-400 px-2 italic">—</span>
                             )
                           ) : (
                             <span className="text-[10px] text-gray-300 px-2">—</span>
