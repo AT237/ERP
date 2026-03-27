@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict yvlDWel6e8xMz5TG74RWnbaBV788gwDQxyt7ZmBtgw30Zxstm3Vjude6rthk6ai
+\restrict XcSBSj821g9O3fH02YfqphENof1yPdcSMsTNzvFMCvUQYWxGSCLQ5yOLdqDlCuu
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -1862,8 +1862,9 @@ COPY public.email_templates (id, name, template_type, subject, body, created_at,
 --
 
 COPY public.employees (id, first_name, last_name, date_of_birth, email, phone, mobile, title, created_at, employee_number, first_initial) FROM stdin;
-1f6910b8-96f8-49eb-bc08-e8de661488e6	Getayakal 	Tomassen	2001-01-23 23:00:00			[]		2026-02-25 12:15:18.381874	EM-0002	\N
-fb7a089a-ce13-460d-bc5f-a970a23cbac6	Aart	Tomassen	1989-02-13 23:00:00			[]	Manager	2026-02-24 11:44:04.372417	EM-0001	A.
+1f6910b8-96f8-49eb-bc08-e8de661488e6	Getayakal 	Tomassen	2001-01-23 23:00:00			[]		2026-02-25 12:15:18.381874	EM-0003	\N
+fb7a089a-ce13-460d-bc5f-a970a23cbac6	Aart	Tomassen	1989-02-13 23:00:00			[]	Manager	2026-02-24 11:44:04.372417	EM-0002	A.
+d73d9bfc-1c93-4807-8b44-b3714d8c9105	Admin	Admin	\N		\N	[]	Systeembeheerder	2026-03-27 10:03:31.251797	EM-0001	A.
 \.
 
 
@@ -3377,12 +3378,15 @@ bffa71e4-59b0-47a4-9d35-59992507a495	\N	\N	\N	2026-03-02 18:55:11.019526	2026-03
 COPY public.user_sessions (sid, sess, expire) FROM stdin;
 5i5NJctrq8HC1_-gTeQhs_P114zWYyGi	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:54:21.727Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:54:22
 oypZfvgkL_zW8_gElfJoYHlAoOn9Krxy	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:45:11.462Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:45:12
+MzJWnBVuaC5erqfSfjQ8izZaZSq-9k83	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:01:54.937Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:01:56
 G-hpK55bj_sJ0KetmjY_RDon7mSC8vNL	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T13:24:39.977Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 13:24:41
 HA9sx8HgSCwNfLzZ25Rs-zot8Jz-5Xmc	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:49:50.966Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:49:52
+DydfCmxnF9Y7M8cXrMNtollnPcwzY2Eh	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:02:00.267Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:02:41
+06tRqKlA-rfQ_GqAPUsO6r6LmD4Rv0Wf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:03:38.029Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:03:39
 oEmieC_lXuDng36uYwBtCrmu_Lvml_oH	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-23T10:41:41.532Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 09:11:01
+yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:03:39
 brOBMLpZ3lvlr-61KcpCFD9Ju20B-_Rd	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:54:15.680Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:54:16
 66kYKTeLVvLxBGlMp-Qssl-W6tsmNEBE	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T13:33:21.594Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 13:33:22
-yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:01:35
 \.
 
 
@@ -3455,7 +3459,7 @@ SELECT pg_catalog.setval('public.customer_number_seq', 21, true);
 -- Name: employee_number_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.employee_number_seq', 2, true);
+SELECT pg_catalog.setval('public.employee_number_seq', 3, true);
 
 
 --
@@ -4725,5 +4729,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict yvlDWel6e8xMz5TG74RWnbaBV788gwDQxyt7ZmBtgw30Zxstm3Vjude6rthk6ai
+\unrestrict XcSBSj821g9O3fH02YfqphENof1yPdcSMsTNzvFMCvUQYWxGSCLQ5yOLdqDlCuu
 

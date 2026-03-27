@@ -285,11 +285,44 @@ async function ensureBrandsTable() {
   }
 }
 
+async function ensureAdminEmployee() {
+  try {
+    const { rows: existing } = await pool.query(
+      `SELECT id, employee_number FROM employees WHERE first_name = 'Admin' AND last_name = 'Admin'`
+    );
+    if (existing.length > 0) return;
+
+    const { rows: allEmps } = await pool.query(
+      `SELECT id, employee_number FROM employees ORDER BY employee_number`
+    );
+
+    if (allEmps.length > 0) {
+      for (let i = allEmps.length - 1; i >= 0; i--) {
+        const emp = allEmps[i];
+        const currentNum = parseInt(emp.employee_number.replace('EM-', ''), 10);
+        const newNum = `EM-${String(currentNum + 1).padStart(4, '0')}`;
+        await pool.query(`UPDATE employees SET employee_number = $1 WHERE id = $2`, [newNum, emp.id]);
+      }
+    }
+
+    await pool.query(
+      `INSERT INTO employees (id, employee_number, first_name, first_initial, last_name, email, title)
+       VALUES (gen_random_uuid(), 'EM-0001', 'Admin', 'A.', 'Admin', '', 'Systeembeheerder')`
+    );
+
+    await pool.query(`SELECT setval('employee_number_seq', (SELECT COALESCE(MAX(CAST(REPLACE(employee_number, 'EM-', '') AS INTEGER)), 0) FROM employees))`);
+    log('Admin employee created as EM-0001, existing employees shifted');
+  } catch (err: any) {
+    log(`Could not ensure admin employee: ${err.message}`);
+  }
+}
+
 (async () => {
   await seedProductionDatabase();
   await ensureBrandsTable();
   await ensureLineItemColumns();
   await syncSequences();
+  await ensureAdminEmployee();
   await ensureDefaultUser();
 
   const server = await registerRoutes(app);
