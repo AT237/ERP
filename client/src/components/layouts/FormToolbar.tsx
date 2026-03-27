@@ -91,7 +91,7 @@ export function FormToolbar({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const buttonClass = "h-8 w-8 p-0";
   const iconClass = "h-4 w-4";
-  const activeClass = "ring-1 ring-orange-400 text-orange-600";
+  const activeClass = "bg-orange-500 text-white hover:bg-orange-600";
   const inactiveClass = "opacity-30";
 
   const handlePrintClick = () => {

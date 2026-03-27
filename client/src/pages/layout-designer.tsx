@@ -1759,7 +1759,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
           <TooltipProvider delayDuration={2000}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="sm" variant="ghost" className={`h-8 w-8 p-0 ${saveLayoutMutation.isPending ? 'opacity-30' : 'ring-1 ring-orange-400 text-orange-600'}`} onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
+                <Button size="sm" variant="ghost" className={`h-8 w-8 p-0 ${saveLayoutMutation.isPending ? 'opacity-30' : 'bg-orange-500 text-white hover:bg-orange-600'}`} onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
                   <Save className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
