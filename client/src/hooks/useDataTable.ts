@@ -100,22 +100,39 @@ function loadColumnsFromStorage(tableKey: string, defaultColumns: ColumnConfig[]
     // Support both plain array format and legacy { columns: [...] } format
     const savedCols: any[] = Array.isArray(parsed) ? parsed : (parsed?.columns ?? []);
     if (!savedCols.length) return defaultColumns;
-    // Merge: keep renderCell from defaultColumns, restore width/visible from storage
+    const defaultKeys = new Set(defaultColumns.map(c => c.key));
+    const prevDefaultsRaw = localStorage.getItem(`table-columns-defaults-${tableKey}`);
+    const prevDefaultKeys = new Set<string>(prevDefaultsRaw ? JSON.parse(prevDefaultsRaw) : []);
+    localStorage.setItem(`table-columns-defaults-${tableKey}`, JSON.stringify([...defaultKeys]));
     const merged = defaultColumns.map(defaultCol => {
       const saved = savedCols.find((c: any) => c.key === defaultCol.key);
       if (!saved) return defaultCol;
+      const isNewDefault = !prevDefaultKeys.has(defaultCol.key);
       return {
         ...defaultCol,
         width: saved.width ?? defaultCol.width,
-        visible: saved.visible ?? defaultCol.visible,
+        visible: isNewDefault && defaultCol.visible ? true : (saved.visible ?? defaultCol.visible),
       };
     });
-    // Restore column order from saved state
     const ordered = savedCols
       .map((s: any) => merged.find(col => col.key === s.key))
       .filter(Boolean) as ColumnConfig[];
     const newCols = merged.filter(col => !savedCols.some((s: any) => s.key === col.key));
-    return [...ordered, ...newCols];
+    const extraSaved = savedCols
+      .filter((s: any) => !defaultKeys.has(s.key))
+      .map((s: any) => {
+        const existing = ordered.find(o => o.key === s.key);
+        return existing || {
+          key: s.key,
+          label: camelToLabel(s.key),
+          visible: s.visible ?? false,
+          width: s.width ?? 150,
+          filterable: true,
+          sortable: true,
+        } as ColumnConfig;
+      })
+      .filter((s: any) => !ordered.some(o => o.key === s.key));
+    return [...ordered, ...newCols, ...extraSaved];
   } catch {
     return defaultColumns;
   }
