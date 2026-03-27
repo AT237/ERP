@@ -1449,13 +1449,13 @@ export function DataTableLayout<T = any>({
                         
                         {/* Resize Handle - always visible, drag to resize */}
                         <div 
-                          className="absolute top-0 bottom-0 w-4 cursor-col-resize z-10 touch-none group"
-                          style={{ right: '-8px' }}
+                          className="absolute top-0 bottom-0 w-3 cursor-col-resize z-20 touch-none group"
+                          style={{ right: '0px' }}
                           onMouseDown={(e) => handleMouseDown(e, column.key)}
                           onTouchStart={(e) => handleTouchStartResize(e, column.key)}
                           title="Sleep om kolombreedte aan te passen"
                         >
-                          <div className="absolute inset-x-[7px] top-[20%] bottom-[20%] w-[2px] bg-orange-300/60 group-hover:bg-orange-500 group-active:bg-orange-600 transition-colors rounded-full" />
+                          <div className="absolute right-0 top-[20%] bottom-[20%] w-[2px] bg-orange-300/60 group-hover:bg-orange-500 group-active:bg-orange-600 transition-colors rounded-full" />
                         </div>
                       </DraggableColumnHeader>
                     ))}

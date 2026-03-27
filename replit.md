@@ -17,7 +17,7 @@ The frontend is built with React 18 and TypeScript, using Wouter for routing, sh
 - **Tab-Based Forms**: All forms use modern tab-based navigation with dedicated URLs and browser history integration.
 - **Two-Column Layouts**: Professional two-column grid layouts with 130px label columns for all forms.
 - **Change Tracking**: Modified fields are highlighted with an orange border.
-- **DataTableLayout Standardization**: All data tables adhere to a standard, clean layout.
+- **DataTableLayout Standardization**: All data tables adhere to a standard, clean layout. See "Design System Table Style" section below for full specification.
 - **Custom Card+Table System**: Specialized layouts for `projects`, `packing-lists`, `invoices`, `purchase-orders`, and `work-orders` with header images and custom card components.
 - **Safe Delete Pattern**: Consistent deletion behavior across the application using `useEntityDelete` hook and `SafeDeleteDialog`, eliminating `window.confirm()` calls. Backend usage checks prevent deletion of key entities if in use.
 - **Print Sort Order**: Quotations and invoices support configurable item sort order for printing (e.g., `position`, `price_high_low`, `alpha_az`).
@@ -95,3 +95,39 @@ A comprehensive document layout management system for creating customizable temp
 - **Express.js**: Web application framework.
 - **tsx**: TypeScript execution for development.
 - **esbuild**: JavaScript bundler.
+
+## Design System Table Style
+All tables use the `DataTableLayout` component (`client/src/components/layouts/DataTableLayout.tsx`).
+
+### Table Structure
+- Layout: `tableLayout: 'fixed'`, width = sum of visible column widths + 48px (checkbox)
+- Container: `rounded-lg overflow-x-auto border-0`
+
+### Header
+- Background: `bg-orange-50` / `dark:bg-orange-900/20`
+- Checkbox column: 48px fixed, `border-r border-orange-200/50`
+- Column labels: `uppercase font-bold text-xs text-orange-600`, `whitespace-nowrap truncate`
+- Sort icons: `text-orange-500`, inactive `opacity-30`
+- Filter button: `h-4 w-4`, Filter icon `size=10 text-orange-500`
+
+### Rows
+- Height: 32px fixed (`height/minHeight/maxHeight`)
+- Font: `text-sm font-normal font-sans`, cells `text-xs`
+- Even: `bg-white` / `dark:bg-gray-950`
+- Odd: `bg-white` / `dark:bg-gray-900/50`
+- Hover: `hover:bg-orange-100` / `dark:hover:bg-orange-800/30`
+- Selected: `bg-orange-50` / `dark:bg-orange-900/20`
+- Editing: `bg-orange-50 ring-1 ring-orange-300`
+- Direct input row: `bg-green-50/80 border-2 border-green-400/50`
+
+### Column Resize
+- Handle: `absolute top-0 bottom-0 right-0 w-3 cursor-col-resize z-20`
+- Visual bar: `w-[2px] bg-orange-300/60`, hover `bg-orange-500`, active `bg-orange-600`
+- Min width: 50px, max auto-resize: 400px
+- Double-click: auto-fit to content
+
+### Toolbar
+- Active toggle: `bg-orange-500 text-white hover:bg-orange-600`
+- Search: `text-xs h-8`, icon `text-orange-400`
+- Filter pills: `bg-orange-100/80 text-orange-700 rounded-full`
+- Results count: `text-xs text-orange-500`
