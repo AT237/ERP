@@ -1,4 +1,5 @@
 import React, { useState, useEffect, ReactNode, useMemo, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -360,8 +361,10 @@ function DirectInputSearchSelect({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState('');
   const [highlightIdx, setHighlightIdx] = useState(0);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const inputElRef = useRef<HTMLInputElement | null>(null);
 
   const filtered = useMemo(() => {
     if (!diCol.options) return [];
@@ -399,6 +402,13 @@ function DirectInputSearchSelect({
       if (item) item.scrollIntoView({ block: 'nearest' });
     }
   }, [highlightIdx, isOpen]);
+
+  useEffect(() => {
+    if (isOpen && inputElRef.current) {
+      const rect = inputElRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 2, left: rect.left });
+    }
+  }, [isOpen]);
 
   const selectItem = (opt: { value: string; label: string }) => {
     setSelectedLabel(opt.label);
