@@ -421,7 +421,7 @@ function DirectInputSearchSelect({
     <div ref={containerRef} className="relative w-full">
       <div className="flex items-center w-full">
         <input
-          ref={inputRef}
+          ref={(el) => { inputElRef.current = el; inputRef(el); }}
           type="text"
           value={isOpen ? search : (selectedLabel || '')}
           onChange={(e) => { setSearch(e.target.value); setIsOpen(true); }}
@@ -461,8 +461,12 @@ function DirectInputSearchSelect({
           <ChevronDown className="h-3.5 w-3.5" />
         </button>
       </div>
-      {isOpen && filtered.length > 0 && (
-        <div ref={listRef} className="absolute z-50 left-0 top-full w-[350px] max-h-56 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl">
+      {isOpen && dropdownPos && filtered.length > 0 && createPortal(
+        <div 
+          ref={listRef} 
+          className="fixed w-[350px] max-h-56 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl"
+          style={{ top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
+        >
           {filtered.map((opt, idx) => (
             <button
               key={opt.value}
@@ -481,12 +485,17 @@ function DirectInputSearchSelect({
               {opt.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
-      {isOpen && filtered.length === 0 && search && (
-        <div className="absolute z-50 left-0 top-full w-[350px] bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl px-3 py-2 text-xs text-gray-400 italic">
+      {isOpen && dropdownPos && filtered.length === 0 && search && createPortal(
+        <div 
+          className="fixed w-[350px] bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl px-3 py-2 text-xs text-gray-400 italic"
+          style={{ top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
+        >
           Geen resultaten voor "{search}"
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
