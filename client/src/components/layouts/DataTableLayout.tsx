@@ -982,6 +982,19 @@ export function DataTableLayout<T = any>({
                   </DropdownMenu>
                 </>
               )}
+
+              {/* Summary/Totals toggle */}
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-8 w-8 p-0 ${showSummary ? 'bg-orange-500 text-white hover:bg-orange-600' : 'opacity-30 hover:opacity-60'}`}
+                onClick={toggleShowSummary}
+                title={showSummary ? 'Totalenrij verbergen' : 'Totalenrij tonen'}
+                data-testid="button-summary"
+              >
+                <Sigma className="h-4 w-4" />
+              </Button>
             </div>
           )}
         </div>
@@ -1183,6 +1196,54 @@ export function DataTableLayout<T = any>({
                   })
                 )}
               </TableBody>
+              {showSummary && (
+                <tfoot>
+                  <tr className="bg-orange-50 dark:bg-orange-900/30 border-t-2 border-orange-300">
+                    <td className="p-2 border-r border-orange-200/50 text-center" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
+                      <Sigma className="h-3 w-3 mx-auto text-orange-500" />
+                    </td>
+                    {currentVisibleColumns.map((column) => {
+                      const currentType = summaryConfig[column.key] || 'none';
+                      const hasValue = summaryValues[column.key] != null;
+                      return (
+                        <td
+                          key={column.key}
+                          className="border-r border-orange-200/50 p-0"
+                          style={{ width: `${column.width}px`, minWidth: `${column.width}px`, maxWidth: `${column.width}px` }}
+                        >
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="w-full h-8 px-2 text-xs flex items-center gap-1 hover:bg-orange-100 dark:hover:bg-orange-800/30 transition-colors cursor-pointer outline-none">
+                                {currentType !== 'none' ? (
+                                  <div className={`flex-1 min-w-0 ${column.align === 'right' ? 'text-right' : ''}`}>
+                                    <span className="text-[10px] text-orange-500 mr-1">{summaryTypeLabels[currentType]}:</span>
+                                    <span className="font-semibold text-orange-700 dark:text-orange-300">
+                                      {hasValue ? summaryValues[column.key] : '-'}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-gray-400 italic">klik...</span>
+                                )}
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="min-w-[140px]">
+                              {(Object.entries(summaryTypeLabels) as [SummaryType, string][]).map(([type, label]) => (
+                                <DropdownMenuItem
+                                  key={type}
+                                  onClick={() => setSummaryType(column.key, type)}
+                                  className={`text-xs ${currentType === type ? 'bg-orange-100 text-orange-700 font-medium' : ''}`}
+                                >
+                                  {label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tfoot>
+              )}
             </Table>
           </DndContext>
         </div>
