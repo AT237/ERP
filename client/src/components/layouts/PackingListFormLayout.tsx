@@ -4,31 +4,26 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BaseFormLayout } from './BaseFormLayout';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
-import type { InfoField } from './InfoHeaderLayout';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
-import { SelectWithAdd } from "@/components/ui/select-with-add";
-import { QuickAddCustomer, QuickAddProject } from "@/components/quick-add-forms";
-import { Textarea } from "@/components/ui/textarea";
 import { CustomerSelect } from "@/components/ui/customer-select";
+import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertPackingListSchema, insertPackingListItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Box, Package, Truck, Plus, Trash2, FileText, RefreshCw } from "lucide-react";
+import { Box, Package, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 import { DataTableLayout, createIdColumn, createNumericColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { PackingList, PackingListItem, InsertPackingList, InsertPackingListItem, Customer, Invoice, Project, InventoryItem } from "@shared/schema";
+import type { PackingList, PackingListItem, InsertPackingList, Customer, Invoice, Project, InventoryItem } from "@shared/schema";
 import { z } from "zod";
-import { LayoutForm2, FormSection2, FormField2, createFieldRow, createFieldsRow } from './LayoutForm2';
+import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createFieldsRow } from './LayoutForm2';
 
 const formSchema = insertPackingListSchema.extend({
   weight: z.string().optional(),
@@ -47,7 +42,7 @@ interface PackingListFormLayoutProps {
 }
 
 export function PackingListFormLayout({ onSave, packingListId, parentId }: PackingListFormLayoutProps) {
-  const [activeSection, setActiveSection] = useState("basic");
+  const [activeTab, setActiveTab] = useState("basic");
   const [, navigate] = useLocation();
   const [originalValues, setOriginalValues] = useState<FormFieldValues>({});
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
@@ -106,16 +101,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     return hasChanges;
   };
 
-  const getFieldClassName = (fieldName: string, baseClassName: string = "") => {
-    if (suppressTracking) return baseClassName;
-    const isModified = modifiedFields.has(fieldName);
-    if (isModified) {
-      return `${baseClassName} ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950`.trim();
-    }
-    return baseClassName;
-  };
-
-  const { data: packingList, isLoading: isLoadingPackingList } = useQuery<PackingList>({
+  const { data: packingList, isLoading: packingListLoading } = useQuery<PackingList>({
     queryKey: ["/api/packing-lists", packingListId],
     enabled: !!packingListId,
   });
@@ -145,10 +131,10 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     createIdColumn('id', 'ID'),
     {
       key: 'itemId',
-      label: 'Stock item',
+      label: 'Artikel',
       visible: true,
       forceVisible: true,
-      width: 250,
+      width: 300,
       filterable: true,
       sortable: true,
       renderCell: (value: any) => {
@@ -255,12 +241,12 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
 
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<InsertPackingList>) => {
-      const response = await apiRequest("PUT", `/api/packing-lists/${packingListId}`, data);
+      const response = await apiRequest("PUT", `/api/packing-lists/${currentPackingListId}`, data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/packing-lists"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/packing-lists", packingListId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/packing-lists", currentPackingListId] });
       setHasUnsavedChanges(false);
       setModifiedFields(new Set());
       const tabId = packingListId ? `edit-packing-list-${packingListId}` : 'new-packing-list';
@@ -348,50 +334,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     };
   }, [currentPackingListId, inventoryItems, toast]);
 
-  const renderCustomerSelect = () => (
-    <CustomerSelect
-      value={form.watch("customerId") || ""}
-      onValueChange={(value) => form.setValue("customerId", value)}
-    />
-  );
-
-  const renderInvoiceSelect = () => (
-    <Select 
-      value={form.watch("invoiceId") || ""} 
-      onValueChange={(value) => form.setValue("invoiceId", value)}
-    >
-      <SelectTrigger className={getFieldClassName("invoiceId", "h-10 text-xs")}>
-        <SelectValue placeholder="Selecteer factuur" />
-      </SelectTrigger>
-      <SelectContent>
-        {invoices?.map((invoice) => (
-          <SelectItem key={invoice.id} value={invoice.id}>
-            {invoice.invoiceNumber}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-
-  const renderProjectSelect = () => (
-    <Select 
-      value={form.watch("projectId") || ""} 
-      onValueChange={(value) => form.setValue("projectId", value)}
-    >
-      <SelectTrigger className={getFieldClassName("projectId", "h-10 text-xs")}>
-        <SelectValue placeholder="Selecteer project" />
-      </SelectTrigger>
-      <SelectContent>
-        {projects?.map((project) => (
-          <SelectItem key={project.id} value={project.id}>
-            {project.projectNumber} - {project.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-
-  const createFormSections = (): FormSection2<FormData>[] => [
+  const formSections: FormSection2<FormData>[] = [
     {
       id: "basic",
       label: "Basis",
@@ -431,7 +374,12 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
           key: "customerId",
           label: "Klant",
           type: "custom",
-          customComponent: renderCustomerSelect(),
+          customComponent: (
+            <CustomerSelect
+              value={form.watch("customerId") || ""}
+              onValueChange={(value) => form.setValue("customerId", value)}
+            />
+          ),
           validation: {
             error: form.formState.errors.customerId?.message,
             isRequired: true
@@ -450,7 +398,23 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
             key: "invoiceId",
             label: "Factuur",
             type: "custom",
-            customComponent: renderInvoiceSelect(),
+            customComponent: (
+              <Select 
+                value={form.watch("invoiceId") || ""} 
+                onValueChange={(value) => form.setValue("invoiceId", value)}
+              >
+                <SelectTrigger className="h-10 text-xs">
+                  <SelectValue placeholder="Selecteer factuur" />
+                </SelectTrigger>
+                <SelectContent>
+                  {invoices?.map((invoice) => (
+                    <SelectItem key={invoice.id} value={invoice.id}>
+                      {invoice.invoiceNumber}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
             testId: "select-invoice",
             width: "50%"
           } as FormField2<FormData>,
@@ -458,7 +422,23 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
             key: "projectId",
             label: "Project",
             type: "custom",
-            customComponent: renderProjectSelect(),
+            customComponent: (
+              <Select 
+                value={form.watch("projectId") || ""} 
+                onValueChange={(value) => form.setValue("projectId", value)}
+              >
+                <SelectTrigger className="h-10 text-xs">
+                  <SelectValue placeholder="Selecteer project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects?.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.projectNumber} - {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
             testId: "select-project",
             width: "50%"
           } as FormField2<FormData>
@@ -548,116 +528,72 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
 
   const toolbar = useFormToolbar({
     entityType: "packing_list",
-    entityId: packingListId,
+    entityId: currentPackingListId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
   });
 
-  const headerFields: InfoField[] = [
-    { 
-      label: "Paklijst", 
-      value: isEditing ? (packingList?.packingNumber || "-") : "Nieuwe paklijst"
-    },
-    { 
-      label: "Status", 
-      value: isEditing ? (packingList?.status || "pending") : "pending"
-    },
-  ];
-
-  const formContent = (
-    <LayoutForm2
-      sections={createFormSections()}
-      activeSection={activeSection}
-      onSectionChange={setActiveSection}
-      modifiedFields={modifiedFields}
-      form={form}
-      entityId={currentPackingListId}
-      isLoading={isLoadingPackingList}
-    />
-  );
-
-  const itemsContent = (
-    <div className="px-6 py-4 bg-white ml-[15px] mr-[15px]">
-      <DataTableLayout
-        data={packingListItems}
-        isLoading={false}
-        columns={itemTableState.columns}
-        setColumns={itemTableState.setColumns}
-        searchTerm={itemTableState.searchTerm}
-        setSearchTerm={itemTableState.setSearchTerm}
-        filters={itemTableState.filters}
-        setFilters={itemTableState.setFilters}
-        onAddFilter={itemTableState.addFilter}
-        onUpdateFilter={itemTableState.updateFilter}
-        onRemoveFilter={itemTableState.removeFilter}
-        sortConfig={itemTableState.sortConfig}
-        onSort={itemTableState.handleSort}
-        selectedRows={itemTableState.selectedRows}
-        setSelectedRows={itemTableState.setSelectedRows}
-        onToggleRowSelection={itemTableState.toggleRowSelection}
-        onToggleAllRows={() => {
-          const allIds = packingListItems.map(item => item.id);
-          itemTableState.toggleAllRows(allIds);
-        }}
-        getRowId={(item: PackingListItem) => item.id}
-        entityName="Paklijst item"
-        entityNamePlural="Paklijst items"
-        applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
-        applySorting={itemTableState.applySorting}
-        compact={true}
-        directInput={packingListDirectInput}
-        deleteConfirmDialog={{
-          isOpen: isBulkDeleteOpen,
-          onOpenChange: setIsBulkDeleteOpen,
-          onConfirm: handleBulkDeleteItems,
-          itemCount: itemTableState.selectedRows.length,
-          entityName: "paklijst items",
-        }}
+  return (
+    <div>
+      <LayoutForm2
+        sections={formSections}
+        activeSection={activeTab}
+        onSectionChange={setActiveTab}
+        form={form}
+        onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+        toolbar={toolbar}
+        documentType="packing-list"
+        entityId={currentPackingListId}
+        isLoading={packingListLoading}
+      />
+      {isEditing && (
+        <div className="px-6 py-4 pb-10 bg-white ml-[15px] mr-[15px]">
+          <DataTableLayout
+            data={packingListItems}
+            isLoading={false}
+            columns={itemTableState.columns}
+            setColumns={itemTableState.setColumns}
+            searchTerm={itemTableState.searchTerm}
+            setSearchTerm={itemTableState.setSearchTerm}
+            filters={itemTableState.filters}
+            setFilters={itemTableState.setFilters}
+            onAddFilter={itemTableState.addFilter}
+            onUpdateFilter={itemTableState.updateFilter}
+            onRemoveFilter={itemTableState.removeFilter}
+            sortConfig={itemTableState.sortConfig}
+            onSort={itemTableState.handleSort}
+            selectedRows={itemTableState.selectedRows}
+            setSelectedRows={itemTableState.setSelectedRows}
+            onToggleRowSelection={itemTableState.toggleRowSelection}
+            onToggleAllRows={() => {
+              const allIds = packingListItems.map(item => item.id);
+              itemTableState.toggleAllRows(allIds);
+            }}
+            getRowId={(item: PackingListItem) => item.id}
+            entityName="Paklijst item"
+            entityNamePlural="Paklijst items"
+            applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
+            applySorting={itemTableState.applySorting}
+            compact={true}
+            directInput={packingListDirectInput}
+            deleteConfirmDialog={{
+              isOpen: isBulkDeleteOpen,
+              onOpenChange: setIsBulkDeleteOpen,
+              onConfirm: handleBulkDeleteItems,
+              itemCount: itemTableState.selectedRows.length,
+              entityName: "paklijst items",
+            }}
+          />
+        </div>
+      )}
+      <ValidationErrorDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        errors={validErrors}
+        onShowFields={() => handleShowFields(setActiveTab, setActiveTab)}
       />
     </div>
-  );
-
-  const tabs = [
-    {
-      id: "form",
-      label: "Formulier",
-      content: formContent,
-    },
-    {
-      id: "items",
-      label: `Items (${packingListItems.length})`,
-      content: currentPackingListId ? itemsContent : (
-        <div className="text-center py-8 text-gray-500 text-sm">
-          Sla de paklijst eerst op om items toe te voegen.
-        </div>
-      ),
-    },
-  ];
-
-  return (
-    <BaseFormLayout
-      headerFields={headerFields}
-      toolbar={toolbar}
-      tabs={tabs}
-      activeTab={activeSection === "items" ? "items" : "form"}
-      onTabChange={(tabId) => {
-        if (tabId === "items") {
-          setActiveSection("items");
-        } else {
-          setActiveSection("basic");
-        }
-      }}
-      isLoading={isLoadingPackingList || createMutation.isPending || updateMutation.isPending}
-      validationErrorDialog={
-        <ValidationErrorDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          errors={validErrors}
-          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
-        />
-      }
-    />
   );
 }
