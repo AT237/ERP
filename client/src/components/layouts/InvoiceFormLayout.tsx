@@ -28,6 +28,7 @@ import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { amountToWords } from "@/utils/field-resolver";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { addDays } from "date-fns";
 
 const invoiceFormSchema = insertInvoiceSchema.omit({
@@ -68,14 +69,11 @@ interface WorkOrderMultiSelectProps {
   projectId?: string;
   customerId?: string;
   customerProjectIds?: string[];
-  search: string;
-  onSearchChange: (v: string) => void;
-  dropdownOpen: boolean;
-  onDropdownOpenChange: (v: boolean) => void;
 }
 
-function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId, customerId, customerProjectIds = [], search, onSearchChange, dropdownOpen, onDropdownOpenChange }: WorkOrderMultiSelectProps) {
-  const inputRef = React.useRef<HTMLInputElement>(null);
+function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId, customerId, customerProjectIds = [] }: WorkOrderMultiSelectProps) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
 
   const filtered = allWorkOrders.filter((wo: any) =>
     !search ||
@@ -96,7 +94,8 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
   });
 
   const renderRow = (wo: any) => (
-    <button key={wo.id} type="button" onMouseDown={e => { e.preventDefault(); onToggle(wo.id); }}
+    <button key={wo.id} type="button"
+      onClick={e => { e.preventDefault(); e.stopPropagation(); onToggle(wo.id); }}
       className={`w-full px-3 py-2 text-left text-xs flex items-center gap-2 hover:bg-orange-50 ${selectedIds.includes(wo.id) ? 'bg-orange-100' : ''}`}>
       <span className={`w-3.5 h-3.5 flex-shrink-0 rounded border flex items-center justify-center ${selectedIds.includes(wo.id) ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
         {selectedIds.includes(wo.id) && <span className="text-white text-[8px] font-bold">✓</span>}
@@ -111,53 +110,63 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
   );
 
   return (
-    <div className="relative">
-      <div
-        className={`min-h-[40px] w-full flex flex-wrap items-center gap-1.5 px-3 py-1.5 border rounded-md bg-background cursor-text transition-colors ${dropdownOpen ? 'border-orange-400 ring-1 ring-orange-400' : 'border-input hover:border-orange-300'}`}
-        onClick={() => { inputRef.current?.focus(); onDropdownOpenChange(true); }}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <div
+          className={`min-h-[40px] w-full flex flex-wrap items-center gap-1.5 px-3 py-1.5 border rounded-md bg-background cursor-pointer transition-colors ${open ? 'border-orange-400 ring-1 ring-orange-400' : 'border-input hover:border-orange-300'}`}
+        >
+          {selectedIds.map(woId => {
+            const wo = allWorkOrders.find((w: any) => w.id === woId);
+            return (
+              <span
+                key={woId}
+                className="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 border border-orange-400 text-orange-600 text-xs rounded-md select-none cursor-pointer bg-white hover:bg-orange-50"
+                onDoubleClick={e => {
+                  e.stopPropagation();
+                  setOpen(false);
+                  window.dispatchEvent(new CustomEvent('open-form-tab', {
+                    detail: {
+                      id: `edit-work-order-${woId}`,
+                      name: wo?.orderNumber || woId.slice(0, 8),
+                      formType: 'work-order',
+                      parentId: woId,
+                    }
+                  }));
+                }}
+                title={wo?.title ? `${wo.orderNumber} – ${wo.title}\nDubbelklik om te openen` : 'Dubbelklik om te openen'}
+              >
+                <span className="font-medium">{wo?.orderNumber || '...'}</span>
+                <button
+                  type="button"
+                  onClick={e => { e.preventDefault(); e.stopPropagation(); onToggle(woId); }}
+                  className="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full hover:bg-orange-200 text-orange-500 font-bold text-xs leading-none"
+                >×</button>
+              </span>
+            );
+          })}
+          {selectedIds.length === 0 && (
+            <span className="text-sm text-muted-foreground py-0.5">Klik om work orders toe te voegen...</span>
+          )}
+        </div>
+      </PopoverTrigger>
+      <PopoverContent
+        className="p-0 max-h-[300px] overflow-hidden"
+        align="start"
+        sideOffset={4}
+        style={{ width: 'var(--radix-popover-trigger-width)' }}
+        onOpenAutoFocus={e => e.preventDefault()}
       >
-        {selectedIds.map(woId => {
-          const wo = allWorkOrders.find((w: any) => w.id === woId);
-          return (
-            <span
-              key={woId}
-              className="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 border border-orange-400 text-orange-600 text-xs rounded-md select-none cursor-pointer bg-white hover:bg-orange-50"
-              onDoubleClick={e => {
-                e.stopPropagation();
-                window.dispatchEvent(new CustomEvent('open-form-tab', {
-                  detail: {
-                    id: `edit-work-order-${woId}`,
-                    name: wo?.orderNumber || woId.slice(0, 8),
-                    formType: 'work-order',
-                    parentId: woId,
-                  }
-                }));
-              }}
-              title={wo?.title ? `${wo.orderNumber} – ${wo.title}\nDubbelklik om te openen` : 'Dubbelklik om te openen'}
-            >
-              <span className="font-medium">{wo?.orderNumber || '...'}</span>
-              <button
-                type="button"
-                onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onToggle(woId); }}
-                className="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full hover:bg-orange-200 text-orange-500 font-bold text-xs leading-none"
-              >×</button>
-            </span>
-          );
-        })}
-        <input
-          ref={inputRef}
-          type="text"
-          value={search}
-          onChange={e => { onSearchChange(e.target.value); onDropdownOpenChange(true); }}
-          onFocus={() => onDropdownOpenChange(true)}
-          onBlur={() => setTimeout(() => onDropdownOpenChange(false), 150)}
-          placeholder={selectedIds.length === 0 ? 'Klik om work orders toe te voegen...' : ''}
-          className="flex-1 min-w-[140px] text-sm bg-transparent outline-none placeholder:text-muted-foreground py-0.5"
-        />
-      </div>
-
-      {dropdownOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-52 overflow-y-auto">
+        <div className="border-b px-3 py-2">
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Zoek work orders..."
+            className="w-full text-sm bg-transparent outline-none placeholder:text-muted-foreground"
+            autoFocus
+          />
+        </div>
+        <div className="max-h-[250px] overflow-y-auto">
           {projectWOs.length > 0 && (
             <>
               {renderGroupHeader("Van dit project", "bg-orange-50")}
@@ -180,8 +189,8 @@ function WorkOrderMultiSelect({ allWorkOrders, selectedIds, onToggle, projectId,
             <div className="px-3 py-3 text-xs text-muted-foreground text-center">Geen work orders gevonden</div>
           )}
         </div>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -194,8 +203,6 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const [vatRatePercent, setVatRatePercent] = useState<number>(0);
   const [customerLanguageCode, setCustomerLanguageCode] = useState<string>('nl');
   const [selectedWorkOrderIds, setSelectedWorkOrderIds] = useState<string[]>([]);
-  const [woSearch, setWoSearch] = useState('');
-  const [woDropdownOpen, setWoDropdownOpen] = useState(false);
   const { toast } = useToast();
   const { dialogOpen: validDialogOpen, setDialogOpen: setValidDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
     invoiceNumber: { label: "Factuurnummer" },
@@ -978,10 +985,6 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
                 projectId={currentProjectId || undefined}
                 customerId={currentCustomerId || undefined}
                 customerProjectIds={customerProjectIds}
-                search={woSearch}
-                onSearchChange={setWoSearch}
-                dropdownOpen={woDropdownOpen}
-                onDropdownOpenChange={setWoDropdownOpen}
               />,
             },
             {
