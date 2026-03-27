@@ -179,7 +179,30 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey, data }: Us
 
   // Search and filtering
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState<ColumnFilter[]>([]);
+  const [filters, setFiltersState] = useState<ColumnFilter[]>(() => {
+    if (!tableKey) return [];
+    try {
+      const stored = localStorage.getItem(`table-filters-${tableKey}`);
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return [];
+  });
+
+  const setFilters = useCallback((value: ColumnFilter[] | ((prev: ColumnFilter[]) => ColumnFilter[])) => {
+    setFiltersState(prev => {
+      const newValue = typeof value === 'function' ? value(prev) : value;
+      if (tableKey) {
+        try {
+          if (newValue.length > 0) {
+            localStorage.setItem(`table-filters-${tableKey}`, JSON.stringify(newValue));
+          } else {
+            localStorage.removeItem(`table-filters-${tableKey}`);
+          }
+        } catch {}
+      }
+      return newValue;
+    });
+  }, [tableKey]);
 
   // Sorting — persisted to localStorage
   const [sortConfig, setSortConfigState] = useState<SortConfig | null>(() => {
