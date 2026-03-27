@@ -533,10 +533,23 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       sortable: true
     },
     {
+      key: 'itemId',
+      label: 'Stock item',
+      visible: true,
+      forceVisible: true,
+      width: 200,
+      filterable: true,
+      sortable: true,
+      renderCell: (value: any) => {
+        if (!value) return <span className="text-gray-400">—</span>;
+        const item = inventoryItems.find((i: any) => i.id === value);
+        return <span>{item ? `${item.sku || ''} - ${item.name || ''}`.trim() : value}</span>;
+      }
+    },
+    {
       key: 'description',
       label: 'Description',
       visible: true,
-      forceVisible: true,
       width: 250,
       filterable: true,
       sortable: true
@@ -622,7 +635,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         return <span className={`text-right w-full block ${margin < 0 ? 'text-red-600 font-medium' : ''}`}>{`€ ${margin.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>;
       }
     },
-  ], []);
+  ], [inventoryItems]);
 
   const itemTableState = useDataTable({
     defaultColumns: itemColumns,

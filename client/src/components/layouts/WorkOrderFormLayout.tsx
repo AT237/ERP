@@ -161,10 +161,23 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
       sortable: false,
     },
     {
+      key: 'itemId',
+      label: 'Stock item',
+      visible: true,
+      forceVisible: true,
+      width: 200,
+      filterable: false,
+      sortable: false,
+      renderCell: (value: any) => {
+        if (!value) return <span className="text-gray-400">—</span>;
+        const item = inventoryItems.find((i: any) => i.id === value);
+        return <span>{item ? `${item.sku || ''} - ${item.name || ''}`.trim() : value}</span>;
+      }
+    },
+    {
       key: 'description',
       label: 'Description',
       visible: true,
-      forceVisible: true,
       width: 280,
       filterable: false,
       sortable: false,
@@ -188,7 +201,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     },
     createCurrencyColumn('unitPrice', 'Prijs/eenh.'),
     createCurrencyColumn('lineTotal', 'Totaal'),
-  ], []);
+  ], [inventoryItems]);
 
   const itemTableState = useDataTable({
     defaultColumns: itemColumns,

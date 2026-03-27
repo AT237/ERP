@@ -132,11 +132,24 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         sortable: true,
       },
       createIdColumn('id', 'Line ID'),
+      {
+        key: 'itemId',
+        label: 'Stock item',
+        visible: true,
+        forceVisible: true,
+        width: 200,
+        filterable: true,
+        sortable: true,
+        renderCell: (value: any) => {
+          if (!value) return <span className="text-gray-400">—</span>;
+          const item = inventoryItems.find((i: any) => i.id === value);
+          return <span>{item ? `${item.sku || ''} - ${item.name || ''}`.trim() : value}</span>;
+        }
+      },
       { 
         key: 'description', 
         label: 'Description', 
         visible: true, 
-        forceVisible: true,
         width: 300, 
         filterable: true, 
         sortable: true
