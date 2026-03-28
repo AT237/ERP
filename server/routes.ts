@@ -3547,7 +3547,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Document Layouts
   app.get("/api/layouts", async (req, res) => {
     try {
-      const documentType = req.query.documentType as string | undefined;
+      let documentType = req.query.documentType as string | undefined;
+      if (documentType) {
+        documentType = documentType.replace(/-/g, '_');
+      }
       const layouts = await storage.getDocumentLayouts(documentType);
       res.json(layouts);
     } catch (error) {
@@ -3571,7 +3574,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/layouts/default/:documentType", async (req, res) => {
     try {
-      const layout = await storage.getDefaultLayout(req.params.documentType);
+      const layout = await storage.getDefaultLayout(req.params.documentType.replace(/-/g, '_'));
       if (!layout) {
         return res.status(404).json({ message: "Default layout not found" });
       }
@@ -4075,7 +4078,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { packingLists: plTable } = await import('@shared/schema');
         const pl = await db.query.packingLists.findFirst({ where: eq(plTable.id, documentId) });
         if (pl) {
-          documentNumber = pl.listNumber;
+          documentNumber = pl.packingNumber;
           if ((pl as any).customerId) customerId = (pl as any).customerId;
           if ((pl as any).projectId) projectId = (pl as any).projectId;
         }

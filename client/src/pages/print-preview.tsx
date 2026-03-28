@@ -72,10 +72,14 @@ export default function PrintPreviewPage() {
     refetchOnMount: "always",
   });
 
-  const isInvoice = documentType === "invoice";
-  const printDataUrl = isInvoice
-    ? `/api/invoices/${entityId}/print-data`
-    : `/api/quotations/${entityId}/print-data`;
+  const printDataUrl = (() => {
+    switch (documentType) {
+      case "invoice": return `/api/invoices/${entityId}/print-data`;
+      case "packing-list": return `/api/packing-lists/${entityId}/print-data`;
+      case "work-order": return `/api/work-orders/${entityId}/print-data`;
+      default: return `/api/quotations/${entityId}/print-data`;
+    }
+  })();
 
   const { data: printData, isLoading: printDataLoading } = useQuery<any>({
     queryKey: [printDataUrl],
@@ -95,6 +99,8 @@ export default function PrintPreviewPage() {
     document.title =
       printData?.invoice?.invoiceNumber ||
       printData?.quotation?.quotationNumber ||
+      printData?.packingList?.packingNumber ||
+      printData?.workOrder?.workOrderNumber ||
       "Print Preview";
   }, [printData]);
 
