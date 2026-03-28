@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, CopyPlus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, type ColumnConfig } from "@/components/layouts/DataTableLayout";
 import { useDataTable } from "@/hooks/useDataTable";
 import { useEntityDelete } from "@/hooks/useEntityDelete";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { exportTableToCSV } from "@/lib/exportTable";
 import type { InventoryCategory } from "@shared/schema";
 
 // ── columns ────────────────────────────────────────────────────────────────

@@ -1,11 +1,14 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, ClipboardList, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, ClipboardList, Clock, Printer, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, type ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { PrintLayoutDialog } from "@/components/layouts/PrintLayoutDialog";
+import { exportTableToCSV } from "@/lib/exportTable";
 import type { WorkOrder, Project } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -202,7 +205,6 @@ export default function WorkOrders() {
   };
 
   const handleNewWorkOrder = () => {
-    // Dispatch event to open new work order form tab
     window.dispatchEvent(new CustomEvent('open-form-tab', {
       detail: {
         id: 'new-work-order',
@@ -212,11 +214,45 @@ export default function WorkOrders() {
     }));
   };
 
+  const handleDuplicateWorkOrder = React.useCallback(async (workOrder: WorkOrder) => {
+    try {
+      const res = await fetch(`/api/work-orders/${workOrder.id}`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      const { id, orderNumber, createdAt, updatedAt, ...duplicateData } = data;
+      const response = await apiRequest("POST", "/api/work-orders", {
+        ...duplicateData,
+        title: `${duplicateData.title || ''} (Copy)`,
+        status: 'pending',
+      });
+      const copy = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
+      toast({ title: "Werkbon gedupliceerd", description: `Kopie aangemaakt: ${copy.orderNumber}` });
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: `edit-work-order-${copy.id}`,
+          name: `${copy.orderNumber}`,
+          formType: 'work-order',
+          parentId: copy.id
+        }
+      }));
+    } catch {
+      toast({ title: "Fout", description: "Dupliceren mislukt.", variant: "destructive" });
+    }
+  }, [toast]);
+
+  const [printDialogOpen, setPrintDialogOpen] = React.useState(false);
+  const [printWorkOrderId, setPrintWorkOrderId] = React.useState<string | undefined>();
+
+  const handlePrintWorkOrder = React.useCallback((workOrder: WorkOrder) => {
+    setPrintWorkOrderId(workOrder.id);
+    setPrintDialogOpen(true);
+  }, []);
+
   const handleToggleAllRows = () => {
     const allRowIds = enhancedWorkOrders.map(order => order.id);
     tableState.toggleAllRows(allRowIds);
   };
-
 
   return (
     <div className="p-6">

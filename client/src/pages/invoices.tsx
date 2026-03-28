@@ -10,6 +10,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { PrintLayoutDialog } from "@/components/layouts/PrintLayoutDialog";
 import { InvoiceEmailPanel } from "@/components/layouts/InvoiceEmailPanel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { exportTableToCSV } from "@/lib/exportTable";
 import type { Invoice, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -256,6 +257,7 @@ export default function Invoices({}: InvoicesProps) {
         entityNamePlural="Invoices"
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        onExport={() => exportTableToCSV(enrichedInvoices, tableState.columns, 'facturen')}
         headerActions={React.useMemo(() => {
           const selectedInvoice = tableState.selectedRows.length === 1
             ? enrichedInvoices.find(inv => inv.id === tableState.selectedRows[0])

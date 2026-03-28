@@ -2,11 +2,13 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Edit, Trash2, FolderOpen, Calendar } from "lucide-react";
+import { Plus, Edit, Trash2, FolderOpen, Calendar, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, type ColumnConfig, createIdColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { exportTableToCSV } from "@/lib/exportTable";
 import type { Project, Customer } from "@shared/schema";
 import { format } from "date-fns";
 

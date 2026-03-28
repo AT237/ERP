@@ -7,6 +7,7 @@ import type { Customer } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { exportTableToCSV } from "@/lib/exportTable";
 
 interface ExtendedCustomer extends Customer {
   street?: string;

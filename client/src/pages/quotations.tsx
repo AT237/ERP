@@ -1,12 +1,14 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Eye, Printer } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Printer, Mail, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { PrintLayoutDialog } from "@/components/layouts/PrintLayoutDialog";
+import { exportTableToCSV } from "@/lib/exportTable";
 import type { Quotation, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -216,6 +218,33 @@ export default function Quotations({}: QuotationsProps) {
     setPrintDialogOpen(true);
   }, []);
 
+  const handleDuplicateQuotation = React.useCallback(async (quotation: Quotation) => {
+    try {
+      const res = await fetch(`/api/quotations/${quotation.id}`);
+      if (!res.ok) throw new Error('Failed to fetch quotation');
+      const data = await res.json();
+      const { id, quotationNumber, createdAt, updatedAt, ...duplicateData } = data;
+      const response = await apiRequest("POST", "/api/quotations", {
+        ...duplicateData,
+        quotationNumber: `${duplicateData.quotationNumber || ''}-COPY`,
+        status: 'draft',
+      });
+      const copy = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
+      toast({ title: "Offerte gedupliceerd", description: `Kopie aangemaakt: ${copy.quotationNumber}` });
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: `edit-quotation-${copy.id}`,
+          name: `Edit ${copy.quotationNumber}`,
+          formType: 'quotation',
+          parentId: copy.id
+        }
+      }));
+    } catch {
+      toast({ title: "Fout", description: "Dupliceren mislukt.", variant: "destructive" });
+    }
+  }, [toast]);
+
   return (
     <div className="p-6">
       <DataTableLayout
@@ -251,6 +280,8 @@ export default function Quotations({}: QuotationsProps) {
         entityNamePlural="Quotations"
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        onExport={() => exportTableToCSV(enrichedQuotations, tableState.columns, 'offertes')}
+        onDuplicate={handleDuplicateQuotation}
         headerActions={React.useMemo(() => {
           const selectedQuotation = tableState.selectedRows.length === 1
             ? enrichedQuotations.find(q => q.id === tableState.selectedRows[0])
@@ -264,13 +295,20 @@ export default function Quotations({}: QuotationsProps) {
               disabled: !selectedQuotation,
             },
             {
+              key: 'duplicate',
+              label: 'Dupliceren',
+              icon: <CopyPlus className="h-4 w-4" />,
+              onClick: () => selectedQuotation && handleDuplicateQuotation(selectedQuotation),
+              disabled: !selectedQuotation,
+            },
+            {
               key: 'add',
               label: 'Add Quotation',
               icon: <Plus className="h-4 w-4" />,
               onClick: handleAddQuotation,
             },
           ];
-        }, [handleAddQuotation, tableState.selectedRows, enrichedQuotations, handlePrintQuotation])}
+        }, [handleAddQuotation, handleDuplicateQuotation, tableState.selectedRows, enrichedQuotations, handlePrintQuotation])}
         rowActions={React.useCallback((quotation: Quotation) => [
           {
             key: 'view',
@@ -287,13 +325,27 @@ export default function Quotations({}: QuotationsProps) {
             variant: 'outline' as const
           },
           {
+            key: 'print',
+            label: 'Print',
+            icon: <Printer className="h-4 w-4" />,
+            onClick: () => handlePrintQuotation(quotation),
+            variant: 'outline' as const
+          },
+          {
+            key: 'duplicate',
+            label: 'Dupliceren',
+            icon: <CopyPlus className="h-4 w-4" />,
+            onClick: () => handleDuplicateQuotation(quotation),
+            variant: 'outline' as const
+          },
+          {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
             onClick: () => del.handleDeleteRow(quotation),
             variant: 'destructive' as const
           }
-        ], [handleViewQuotation, handleEditQuotation, del.handleDeleteRow])}
+        ], [handleViewQuotation, handleEditQuotation, handlePrintQuotation, handleDuplicateQuotation, del.handleDeleteRow])}
       />
       {del.renderDeleteDialogs()}
       <PrintLayoutDialog

@@ -5,6 +5,7 @@ import type { InventoryItem } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { exportTableToCSV } from "@/lib/exportTable";
 
 
 const defaultColumns: ColumnConfig[] = [
