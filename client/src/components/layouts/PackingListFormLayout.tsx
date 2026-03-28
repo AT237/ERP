@@ -17,7 +17,6 @@ import { insertPackingListSchema, insertPackingListItemSchema } from "@shared/sc
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Box, Package, Truck, RefreshCw } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn, createNumericColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
