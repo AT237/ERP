@@ -387,9 +387,10 @@ const FIELD_LABELS: Record<string, string> = {
   invoiceDate: 'Factuurdatum', dueDate: 'Vervaldatum', paidAmount: 'Betaald bedrag',
   orderNumber: 'Order nr.', orderDate: 'Orderdatum', expectedDate: 'Verwachte datum',
   expectedDeliveryDate: 'Verwachte levering', priority: 'Prioriteit', assignedTo: 'Toegewezen aan',
-  packingListNumber: 'Paklijst nr.', packingDate: 'Pakdatum', shippingMethod: 'Verzendmethode',
+  packingListNumber: 'Paklijst nr.', packingDate: 'Pakdatum', shipDate: 'Verzenddatum',
+  shippingMethod: 'Verzendmethode', shippingAddress: 'Verzendadres',
   trackingNumber: 'Track & Trace', totalWeight: 'Totaal gewicht', totalPackages: 'Totaal colli',
-  packageNumber: 'Collinummer', weight: 'Gewicht', workOrderNumber: 'Werkorder nr.',
+  packedQuantity: 'Ingepakt', packageNumber: 'Collinummer', weight: 'Gewicht', workOrderNumber: 'Werkorder nr.',
   requestNumber: 'Aanvraag nr.', requestDate: 'Aanvraagdatum', name: 'Naam',
   customerNumber: 'Klantnummer', kvkNummer: 'KvK nummer', generalEmail: 'Algemeen e-mail',
   email: 'E-mail', phone: 'Telefoon', mobile: 'Mobiel', contactPersonEmail: 'Contactpersoon e-mail',
@@ -693,8 +694,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     { name: 'salesOrder', label: 'Verkooporder', fields: ['orderNumber', 'orderDate', 'expectedDeliveryDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
     { name: 'salesOrderItems', label: 'Verkooporder Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
     { name: 'workOrders', label: 'Werkorders (gekoppeld)', fields: ['orderNumber', 'title', 'description', 'status', 'priority', 'assignedTo', 'startDate', 'dueDate', 'completedDate', 'estimatedHours', 'actualHours'] },
-    { name: 'packingList', label: 'Paklijst', fields: ['packingListNumber', 'packingDate', 'status', 'shippingMethod', 'trackingNumber', 'totalWeight', 'totalPackages', 'notes'] },
-    { name: 'packingListItems', label: 'Paklijst Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'weight', 'packageNumber'] },
+    { name: 'packingList', label: 'Paklijst', fields: ['packingListNumber', 'packingDate', 'shipDate', 'status', 'shippingMethod', 'shippingAddress', 'trackingNumber', 'totalWeight', 'totalPackages', 'notes'] },
+    { name: 'packingListItems', label: 'Paklijst Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'packedQuantity', 'unit', 'itemId', 'hsCode', 'countryOfOrigin'] },
     { name: 'quotationRequest', label: 'Offerte Aanvraag', fields: ['requestNumber', 'requestDate', 'status', 'description', 'notes'] },
     
     // Relations
@@ -3244,6 +3245,8 @@ function getDefaultConfig(blockType: string) {
 // Preview Component
 export function PreviewView({ layout }: { layout: any }) {
   const isInvoiceLayout = layout?.documentType === 'invoice';
+  const isPackingListLayout = layout?.documentType === 'packing_list';
+  const isWorkOrderLayout = layout?.documentType === 'work_order';
 
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
@@ -3258,7 +3261,10 @@ export function PreviewView({ layout }: { layout: any }) {
       });
       return;
     }
-    const documentType = isInvoiceLayout ? 'invoice' : 'quotation';
+    let documentType = 'quotation';
+    if (isInvoiceLayout) documentType = 'invoice';
+    else if (isPackingListLayout) documentType = 'packing-list';
+    else if (isWorkOrderLayout) documentType = 'work-order';
     const printWindow = window.open(`/print/${documentType}/${selectedDocumentId}?layoutId=${layout.id}`, '_blank');
     if (!printWindow) {
       toast({
@@ -3271,7 +3277,7 @@ export function PreviewView({ layout }: { layout: any }) {
 
   const { data: quotations = [] } = useQuery<any[]>({
     queryKey: ['/api/quotations'],
-    enabled: !isInvoiceLayout,
+    enabled: !isInvoiceLayout && !isPackingListLayout && !isWorkOrderLayout,
   });
 
   const { data: invoices = [] } = useQuery<any[]>({
@@ -3279,7 +3285,12 @@ export function PreviewView({ layout }: { layout: any }) {
     enabled: isInvoiceLayout,
   });
 
-  const documents = isInvoiceLayout ? invoices : quotations;
+  const { data: packingListsData = [] } = useQuery<any[]>({
+    queryKey: ['/api/packing-lists'],
+    enabled: isPackingListLayout,
+  });
+
+  const documents = isInvoiceLayout ? invoices : isPackingListLayout ? packingListsData : quotations;
 
   const { data: quotationPrintData, isLoading: isQuotationLoading } = useQuery({
     queryKey: ['/api/quotations', selectedDocumentId, 'print-data'],
@@ -3289,7 +3300,7 @@ export function PreviewView({ layout }: { layout: any }) {
       if (!response.ok) throw new Error('Failed to fetch quotation print data');
       return response.json();
     },
-    enabled: !!selectedDocumentId && !isInvoiceLayout,
+    enabled: !!selectedDocumentId && !isInvoiceLayout && !isPackingListLayout,
   });
 
   const { data: invoicePrintData, isLoading: isInvoiceLoading } = useQuery({
@@ -3303,8 +3314,19 @@ export function PreviewView({ layout }: { layout: any }) {
     enabled: !!selectedDocumentId && isInvoiceLayout,
   });
 
-  const printData = isInvoiceLayout ? invoicePrintData : quotationPrintData;
-  const isPrintDataLoading = isInvoiceLayout ? isInvoiceLoading : isQuotationLoading;
+  const { data: packingListPrintData, isLoading: isPackingListLoading } = useQuery({
+    queryKey: ['/api/packing-lists', selectedDocumentId, 'print-data'],
+    queryFn: async () => {
+      if (!selectedDocumentId) return null;
+      const response = await fetch(`/api/packing-lists/${selectedDocumentId}/print-data`);
+      if (!response.ok) throw new Error('Failed to fetch packing list print data');
+      return response.json();
+    },
+    enabled: !!selectedDocumentId && isPackingListLayout,
+  });
+
+  const printData = isInvoiceLayout ? invoicePrintData : isPackingListLayout ? packingListPrintData : quotationPrintData;
+  const isPrintDataLoading = isInvoiceLayout ? isInvoiceLoading : isPackingListLayout ? isPackingListLoading : isQuotationLoading;
 
   const { data: sections = [] } = useQuery<any[]>({
     queryKey: [`/api/layout-sections?layoutId=${layout?.id}`],
@@ -3326,12 +3348,14 @@ export function PreviewView({ layout }: { layout: any }) {
       {/* Left sidebar: document list */}
       <div className="w-64 flex-shrink-0 flex flex-col">
         <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
-          {isInvoiceLayout ? 'Facturen' : 'Offertes'}
+          {isInvoiceLayout ? 'Facturen' : isPackingListLayout ? 'Paklijsten' : 'Offertes'}
         </div>
         {documents.length === 0 ? (
           <div className="text-sm text-muted-foreground p-3 border rounded bg-muted/30">
             {isInvoiceLayout
               ? 'Geen facturen gevonden. Maak eerst een factuur aan.'
+              : isPackingListLayout
+              ? 'Geen paklijsten gevonden. Maak eerst een paklijst aan.'
               : 'Geen offertes gevonden. Maak eerst een offerte aan.'}
           </div>
         ) : (
@@ -3348,7 +3372,7 @@ export function PreviewView({ layout }: { layout: any }) {
                 data-testid={`document-item-${doc.id}`}
               >
                 <div className="font-medium text-sm">
-                  {isInvoiceLayout ? doc.invoiceNumber : doc.quotationNumber}
+                  {isInvoiceLayout ? doc.invoiceNumber : isPackingListLayout ? doc.packingNumber : doc.quotationNumber}
                 </div>
                 <div className="text-xs text-muted-foreground mt-0.5">
                   {doc.customerName || 'Geen klant'}
@@ -3775,10 +3799,10 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
     );
   }
 
-  // Convert printData to PrintData type
   const typedPrintData: PrintData = {
     quotation: printData.quotation || {},
     invoice: printData.invoice || {},
+    packingList: printData.packingList || {},
     customer: printData.customer || null,
     project: printData.project || null,
     company: printData.company || null,
