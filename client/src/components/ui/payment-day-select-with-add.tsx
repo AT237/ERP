@@ -128,9 +128,9 @@ export function PaymentDaySelectWithAdd({
                     return (
                       <CommandItem
                         key={paymentDay.id}
-                        value={paymentDay.id}
-                        onSelect={(currentValue) => {
-                          onValueChange?.(currentValue === value ? "" : currentValue);
+                        value={`${paymentDay.id} ${paymentDay.days} ${itemDesc || ''}`}
+                        onSelect={() => {
+                          onValueChange?.(paymentDay.id === value ? "" : paymentDay.id);
                           setOpen(false);
                         }}
                         className="flex items-center justify-between group"

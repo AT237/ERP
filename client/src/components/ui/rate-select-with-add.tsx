@@ -123,9 +123,9 @@ export function RateSelectWithAdd({
                   {rates.filter(rate => !excludeIds.includes(rate.id) || rate.id === value).map((rate) => (
                     <CommandItem
                       key={rate.id}
-                      value={rate.id}
-                      onSelect={(currentValue) => {
-                        onValueChange?.(currentValue === value ? "" : currentValue);
+                      value={`${rate.id} ${rate.code} ${rate.description || ''}`}
+                      onSelect={() => {
+                        onValueChange?.(rate.id === value ? "" : rate.id);
                         setOpen(false);
                       }}
                       className="flex items-center justify-between group"

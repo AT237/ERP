@@ -145,7 +145,7 @@ export function ContactPersonSelectWithAdd({
                   {contacts.map((contact) => (
                     <CommandItem
                       key={contact.id}
-                      value={contact.id}
+                      value={`${contact.id} ${formatContact(contact)}`}
                       onSelect={() => {
                         onValueChange?.(contact.id);
                         setOpen(false);

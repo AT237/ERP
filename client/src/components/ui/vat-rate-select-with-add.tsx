@@ -121,9 +121,9 @@ export function VatRateSelectWithAdd({
                   {vatRates.map((vatRate) => (
                     <CommandItem
                       key={vatRate.id}
-                      value={vatRate.id}
-                      onSelect={(currentValue) => {
-                        onValueChange?.(currentValue === value ? "" : currentValue);
+                      value={`${vatRate.id} ${vatRate.code} ${vatRate.description || ''} ${vatRate.percentage ?? ''}`}
+                      onSelect={() => {
+                        onValueChange?.(vatRate.id === value ? "" : vatRate.id);
                         setOpen(false);
                       }}
                       className="flex items-center justify-between group"

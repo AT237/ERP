@@ -124,7 +124,7 @@ export function EmployeeSelectWithAdd({
                   {filtered.map((emp) => (
                     <CommandItem
                       key={emp.id}
-                      value={emp.id}
+                      value={`${emp.id} ${emp.firstName || ''} ${emp.lastName || ''} ${emp.employeeNumber || ''}`}
                       onSelect={() => {
                         onValueChange?.(emp.id);
                         setOpen(false);

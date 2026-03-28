@@ -129,7 +129,7 @@ export function CountrySelectWithAdd({
                   {countries.map((country) => (
                     <CommandItem
                       key={country.id}
-                      value={country.code}
+                      value={`${country.code} ${country.name}`}
                       onSelect={() => {
                         console.log("🌍 Country selected:", { code: country.code, name: country.name, requirements: { btw: country.requiresBtw, areaCode: country.requiresAreaCode } });
                         onValueChange?.(country.code);

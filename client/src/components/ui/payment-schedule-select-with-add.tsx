@@ -126,9 +126,9 @@ export function PaymentScheduleSelectWithAdd({
                     return (
                       <CommandItem
                         key={term.id}
-                        value={term.id}
-                        onSelect={(currentValue) => {
-                          onValueChange?.(currentValue === value ? "" : currentValue);
+                        value={`${term.id} ${term.code || ''} ${description}`}
+                        onSelect={() => {
+                          onValueChange?.(term.id === value ? "" : term.id);
                           setOpen(false);
                         }}
                         className="flex items-center justify-between group"

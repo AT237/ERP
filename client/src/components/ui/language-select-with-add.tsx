@@ -125,9 +125,9 @@ export function LanguageSelectWithAdd({
                   {languages.map((language) => (
                     <CommandItem
                       key={language.id}
-                      value={language.code}
-                      onSelect={(currentValue) => {
-                        onValueChange?.(currentValue === value ? "" : currentValue);
+                      value={`${language.code} ${language.name}`}
+                      onSelect={() => {
+                        onValueChange?.(language.code === value ? "" : language.code);
                         setOpen(false);
                       }}
                       className="flex items-center justify-between group"

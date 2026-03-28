@@ -146,7 +146,7 @@ export function AddressSelectWithAdd({
                   {addresses.map((address) => (
                     <CommandItem
                       key={address.id}
-                      value={address.id}
+                      value={`${address.id} ${formatAddress(address)}`}
                       onSelect={() => {
                         onValueChange?.(address.id);
                         setOpen(false);
