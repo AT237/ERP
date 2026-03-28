@@ -28,8 +28,8 @@ import { z } from "zod";
 import { LINE_ITEM_TYPES } from "@shared/line-item-types";
 
 const packingListItemFormSchema = insertPackingListItemSchema.extend({
-  unitPrice: z.string().min(1, "Prijs per eenheid is verplicht"),
-  lineTotal: z.string().min(1, "Regel totaal is verplicht"),
+  unitPrice: z.string().optional(),
+  lineTotal: z.string().optional(),
   quantity: z.number().min(0, "Aantal kan niet negatief zijn"),
   unit: z.string().optional(),
   position: z.number().min(1, "Positie is verplicht").optional(),
@@ -205,10 +205,6 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
 
   const lineTypeValue = form.watch("lineType");
   const prevLineTypeRef = useRef<string>("");
-  const quantityValue = form.watch("quantity");
-  const unitPriceValue = form.watch("unitPrice");
-  const discountPercentValue = form.watch("discountPercent");
-  const lineTotalValue = form.watch("lineTotal");
 
   const SNIPPET_CATEGORIES = [
     { value: "all", label: "Alle categorieën" },
@@ -348,7 +344,6 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
 
   const headerFields: InfoField[] = [
     { label: 'Type', value: lineTypeValue || 'standard' },
-    { label: 'Totaal', value: `€${lineTotalValue || '0.00'}` },
   ];
 
   const handleClose = useCallback(() => {
@@ -569,19 +564,19 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
   const getRightColumnFields = (): FormField2<PackingListItemFormData>[] => {
     switch (lineTypeValue) {
       case 'unique':
-        return [fieldDescription, fieldQuantity, fieldPackedQuantity, fieldUnit, fieldUnitPrice];
+        return [fieldDescription, fieldQuantity, fieldPackedQuantity, fieldUnit];
       case 'standard':
-        return [fieldStockItem, fieldDescriptionWithLookup, fieldQuantity, fieldPackedQuantity, fieldUnit, fieldUnitPrice, fieldDiscount, fieldDiscountedPrice];
+        return [fieldStockItem, fieldDescriptionWithLookup, fieldQuantity, fieldPackedQuantity, fieldUnit];
       case 'text':
         return [fieldTextContent];
       case 'charges':
-        return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice];
+        return [fieldDescription, fieldQuantity, fieldUnit];
       default:
         return [];
     }
   };
 
-  const leftFields = [fieldPosNo, fieldLineType, fieldDescriptionInternal, fieldLineTotal];
+  const leftFields = [fieldPosNo, fieldLineType, fieldDescriptionInternal];
   const rightFields = getRightColumnFields();
 
   const deliveryFields = [
