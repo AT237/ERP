@@ -1220,7 +1220,7 @@ export function DataTableLayout<T = any>({
                   key={action.key}
                   variant="ghost"
                   size="sm"
-                  className={`h-8 w-8 p-0 ${action.disabled ? 'opacity-30' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
+                  className={`h-8 w-8 p-0 ${action.disabled ? 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
                   onClick={action.onClick}
                   disabled={action.disabled}
                   title={action.label}
@@ -1235,7 +1235,7 @@ export function DataTableLayout<T = any>({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`h-8 w-8 p-0 ${selectedRows.length === 0 ? 'opacity-30' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
+                  className={`h-8 w-8 p-0 ${selectedRows.length === 0 ? 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
                   onClick={() => deleteConfirmDialog.onOpenChange(true)}
                   disabled={selectedRows.length === 0}
                   title={`Delete${selectedRows.length > 0 ? ` (${selectedRows.length})` : ''}`}
@@ -1250,7 +1250,7 @@ export function DataTableLayout<T = any>({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`h-8 w-8 p-0 ${selectedRows.length !== 1 ? 'opacity-30' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
+                  className={`h-8 w-8 p-0 ${selectedRows.length !== 1 ? 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
                   disabled={selectedRows.length !== 1}
                   onClick={() => {
                     if (selectedRows.length === 1) {

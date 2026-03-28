@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, ClipboardList, Clock, Printer, CopyPlus } from "lucide-react";
+import { Plus, Edit, Trash2, ClipboardList, Clock, Printer, Mail, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, type ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
@@ -309,10 +309,10 @@ export default function WorkOrders() {
               disabled: !selectedWO,
             },
             {
-              key: 'duplicate',
-              label: 'Dupliceren',
-              icon: <CopyPlus className="h-4 w-4" />,
-              onClick: () => selectedWO && handleDuplicateWorkOrder(selectedWO),
+              key: 'email',
+              label: 'E-mail versturen',
+              icon: <Mail className="h-4 w-4" />,
+              onClick: () => {},
               disabled: !selectedWO,
             },
             {

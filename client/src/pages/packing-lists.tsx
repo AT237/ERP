@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Box, Truck, Package, Printer, CopyPlus } from "lucide-react";
+import { Plus, Edit, Trash2, Box, Truck, Package, Printer, Mail, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, type ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
@@ -261,10 +261,10 @@ export default function PackingLists() {
               disabled: !selectedPL,
             },
             {
-              key: 'duplicate',
-              label: 'Dupliceren',
-              icon: <CopyPlus className="h-4 w-4" />,
-              onClick: () => selectedPL && handleDuplicatePackingList(selectedPL),
+              key: 'email',
+              label: 'E-mail versturen',
+              icon: <Mail className="h-4 w-4" />,
+              onClick: () => {},
               disabled: !selectedPL,
             },
             {
@@ -275,7 +275,7 @@ export default function PackingLists() {
               variant: 'default' as const
             }
           ];
-        }, [handleNewPackingList, handleDuplicatePackingList, handlePrintPackingList, tableState.selectedRows, enhancedPackingLists])}
+        }, [handleNewPackingList, handlePrintPackingList, tableState.selectedRows, enhancedPackingLists])}
         
         rowActions={(row: PackingList) => [
           {

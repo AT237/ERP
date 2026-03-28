@@ -295,10 +295,10 @@ export default function Quotations({}: QuotationsProps) {
               disabled: !selectedQuotation,
             },
             {
-              key: 'duplicate',
-              label: 'Dupliceren',
-              icon: <CopyPlus className="h-4 w-4" />,
-              onClick: () => selectedQuotation && handleDuplicateQuotation(selectedQuotation),
+              key: 'email',
+              label: 'E-mail versturen',
+              icon: <Mail className="h-4 w-4" />,
+              onClick: () => {},
               disabled: !selectedQuotation,
             },
             {
@@ -308,7 +308,7 @@ export default function Quotations({}: QuotationsProps) {
               onClick: handleAddQuotation,
             },
           ];
-        }, [handleAddQuotation, handleDuplicateQuotation, tableState.selectedRows, enrichedQuotations, handlePrintQuotation])}
+        }, [handleAddQuotation, tableState.selectedRows, enrichedQuotations, handlePrintQuotation])}
         rowActions={React.useCallback((quotation: Quotation) => [
           {
             key: 'view',
