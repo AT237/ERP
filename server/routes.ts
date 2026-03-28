@@ -2219,7 +2219,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const body = { ...req.body, packingListId: req.params.id };
       if (typeof body.quantity === 'number') body.quantity = String(body.quantity);
       if (typeof body.packedQuantity === 'number') body.packedQuantity = String(body.packedQuantity);
-      if (typeof body.position === 'number') body.position = body.position;
       const itemData = insertPackingListItemSchema.parse(body);
       const item = await storage.addPackingListItem(itemData);
       res.status(201).json(item);
