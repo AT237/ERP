@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -115,7 +115,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
   });
 
   const selectedCustomerId = form.watch("customerId");
-  const { data: customerAddresses = [] } = useQuery<CustomerAddressWithAddress[]>({
+  const { data: customerAddresses = [], isError: customerAddressesError } = useQuery<CustomerAddressWithAddress[]>({
     queryKey: ["/api/customer-addresses", { customerId: selectedCustomerId }],
     queryFn: async () => {
       const res = await fetch(`/api/customer-addresses?customerId=${selectedCustomerId}`);
@@ -124,6 +124,14 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     },
     enabled: !!selectedCustomerId,
   });
+
+  const prevCustomerIdRef = useRef<string | null>(selectedCustomerId || null);
+  useEffect(() => {
+    if (prevCustomerIdRef.current !== null && prevCustomerIdRef.current !== selectedCustomerId) {
+      form.setValue("shippingAddress", "", { shouldDirty: true });
+    }
+    prevCustomerIdRef.current = selectedCustomerId || null;
+  }, [selectedCustomerId]);
 
   const { data: invoices } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
@@ -474,42 +482,62 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
               if (!addr) return "—";
               return [addr.street, addr.houseNumber, addr.postalCode, addr.city, addr.country].filter(Boolean).join(", ");
             };
+            const addressMap = new Map(customerAddresses.map(ca => [ca.id, ca]));
             const currentVal = form.watch("shippingAddress") || "";
+
+            if (customerAddressesError) {
+              return (
+                <div className="text-sm text-red-600 border border-red-200 rounded p-2">
+                  Kon adressen niet laden. Probeer de pagina te vernieuwen.
+                </div>
+              );
+            }
+
             return (
               <div className="space-y-2">
                 {customerAddresses.length > 0 ? (
-                  <Select
-                    value={currentVal || "__none__"}
-                    onValueChange={(v) => form.setValue("shippingAddress", v === "__none__" ? "" : v, { shouldDirty: true })}
-                  >
-                    <SelectTrigger className="h-9" data-testid="select-shipping-address">
-                      <SelectValue placeholder="Selecteer verzendadres..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">— Selecteer adres —</SelectItem>
-                      {customerAddresses.map((ca) => {
-                        const addrStr = formatAddr(ca.address);
-                        return (
-                          <SelectItem key={ca.id} value={addrStr}>
-                            {ca.label ? `${ca.label}: ${addrStr}` : addrStr}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
+                  <>
+                    <Select
+                      value={currentVal || "__none__"}
+                      onValueChange={(v) => {
+                        if (v === "__none__") {
+                          form.setValue("shippingAddress", "", { shouldDirty: true });
+                        } else {
+                          const ca = addressMap.get(v);
+                          const addrText = ca ? formatAddr(ca.address) : "";
+                          form.setValue("shippingAddress", addrText, { shouldDirty: true });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-9" data-testid="select-shipping-address">
+                        <SelectValue placeholder="Selecteer verzendadres..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— Selecteer adres —</SelectItem>
+                        {customerAddresses.map((ca) => {
+                          const addrStr = formatAddr(ca.address);
+                          return (
+                            <SelectItem key={ca.id} value={ca.id}>
+                              {ca.label ? `${ca.label}: ${addrStr}` : addrStr}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {currentVal && (
+                      <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 rounded p-2">
+                        {currentVal}
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <Textarea
                     {...form.register("shippingAddress")}
-                    placeholder={selectedCustomerId ? "Geen adressen gekoppeld aan deze klant. Voeg adressen toe bij de klant." : "Selecteer eerst een klant..."}
+                    placeholder={selectedCustomerId ? "Geen adressen gekoppeld aan deze klant. Typ handmatig of voeg adressen toe bij de klant." : "Selecteer eerst een klant..."}
                     className="min-h-[60px]"
                     data-testid="textarea-shipping-address"
                     rows={2}
                   />
-                )}
-                {customerAddresses.length > 0 && currentVal && (
-                  <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 rounded p-2">
-                    {currentVal}
-                  </div>
                 )}
               </div>
             );

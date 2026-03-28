@@ -22,7 +22,7 @@ export function CustomerAddressesTab({ customerId }: CustomerAddressesTabProps) 
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [label, setLabel] = useState<string>("");
 
-  const { data: customerAddresses = [], isLoading } = useQuery<CustomerAddressWithAddress[]>({
+  const { data: customerAddresses = [], isLoading, isError } = useQuery<CustomerAddressWithAddress[]>({
     queryKey: ["/api/customer-addresses", { customerId }],
     queryFn: async () => {
       const res = await fetch(`/api/customer-addresses?customerId=${customerId}`);
@@ -67,17 +67,26 @@ export function CustomerAddressesTab({ customerId }: CustomerAddressesTabProps) 
       queryClient.invalidateQueries({ queryKey: ["/api/customer-addresses", { customerId }] });
       toast({ title: "Adres ontkoppeld" });
     },
+    onError: () => {
+      toast({ title: "Fout", description: "Kon adres niet ontkoppelen", variant: "destructive" });
+    },
   });
 
   const setDefaultMutation = useMutation({
     mutationFn: async (id: string) => {
-      for (const ca of customerAddresses) {
-        await apiRequest("PATCH", `/api/customer-addresses/${ca.id}`, { isDefault: ca.id === id });
+      await apiRequest("PATCH", `/api/customer-addresses/${id}`, { isDefault: true });
+      const others = customerAddresses.filter(ca => ca.id !== id && ca.isDefault);
+      for (const ca of others) {
+        await apiRequest("PATCH", `/api/customer-addresses/${ca.id}`, { isDefault: false });
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customer-addresses", { customerId }] });
       toast({ title: "Standaard adres ingesteld" });
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customer-addresses", { customerId }] });
+      toast({ title: "Fout", description: "Kon standaard adres niet instellen", variant: "destructive" });
     },
   });
 
@@ -91,6 +100,14 @@ export function CustomerAddressesTab({ customerId }: CustomerAddressesTabProps) 
     return (
       <div className="text-sm text-muted-foreground p-4">
         Sla de klant eerst op om adressen toe te voegen.
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-sm text-red-600 border border-red-200 rounded-lg p-4">
+        Kon adressen niet laden. Probeer de pagina te vernieuwen.
       </div>
     );
   }
