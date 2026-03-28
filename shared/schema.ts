@@ -1380,3 +1380,27 @@ export const serialNumbers = pgTable("serial_numbers", {
 export const insertSerialNumberSchema = createInsertSchema(serialNumbers).omit({ id: true, createdAt: true });
 export type InsertSerialNumber = z.infer<typeof insertSerialNumberSchema>;
 export type SerialNumber = typeof serialNumbers.$inferSelect;
+
+export const customerAddresses = pgTable("customer_addresses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").references(() => customers.id).notNull(),
+  addressId: varchar("address_id").references(() => addresses.id).notNull(),
+  label: text("label"),
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertCustomerAddressSchema = createInsertSchema(customerAddresses).omit({ id: true, createdAt: true });
+export type InsertCustomerAddress = z.infer<typeof insertCustomerAddressSchema>;
+export type CustomerAddress = typeof customerAddresses.$inferSelect;
+
+export const customerAddressesRelations = relations(customerAddresses, ({ one }) => ({
+  customer: one(customers, {
+    fields: [customerAddresses.customerId],
+    references: [customers.id],
+  }),
+  address: one(addresses, {
+    fields: [customerAddresses.addressId],
+    references: [addresses.id],
+  }),
+}));
