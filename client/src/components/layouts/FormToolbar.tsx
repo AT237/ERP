@@ -48,6 +48,7 @@ export interface FormToolbarProps {
   entityId?: string;
   checkUsagesUrl?: string;
   entityName?: string;
+  entityNumber?: string;
   deleteConflict?: { name: string; usages: UsageLocation[] } | null;
   onClearDeleteConflict?: () => void;
 }
@@ -84,6 +85,7 @@ export function FormToolbar({
   entityId,
   checkUsagesUrl,
   entityName = "this record",
+  entityNumber,
   deleteConflict,
   onClearDeleteConflict,
 }: FormToolbarProps) {
@@ -104,6 +106,10 @@ export function FormToolbar({
 
   return (
     <>
+      {entityNumber && (
+        <span className="text-sm font-bold text-orange-600 mr-2 whitespace-nowrap">{entityNumber}</span>
+      )}
+      {entityNumber && <Separator orientation="vertical" className="h-6 mx-1" />}
       {showSave && (
         <Button
           variant="ghost"

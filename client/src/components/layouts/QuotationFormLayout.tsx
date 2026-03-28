@@ -1842,12 +1842,15 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   // State for print dialog
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
 
+  const quotationNumberDisplay = quotationForm.watch("quotationNumber");
+
   const toolbar = useFormToolbar({
     entityType: "quotation",
     entityId: currentQuotationId,
     onSave: quotationForm.handleSubmit(handleSaveQuotation, quotationOnInvalid),
     onClose: onSave,
     saveDisabled: createQuotationMutation.isPending || updateQuotationMutation.isPending,
+    entityNumber: quotationNumberDisplay || undefined,
     saveLoading: createQuotationMutation.isPending || updateQuotationMutation.isPending,
   });
 

@@ -744,6 +744,8 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     }
   ];
 
+  const workOrderNumberDisplay = form.watch("workOrderNumber");
+
   const toolbar = useFormToolbar({
     entityType: "work_order",
     entityId: currentWorkOrderId,
@@ -751,6 +753,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
+    entityNumber: workOrderNumberDisplay || undefined,
   });
 
   // Header fields for info display (when editing)

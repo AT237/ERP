@@ -323,6 +323,7 @@ export interface UseFormToolbarOptions {
   extraQueryKeysToInvalidate?: string[][];
   navigationListQueryKey?: string[];
   navigationParentId?: string;
+  entityNumber?: string;
 }
 
 export function useFormToolbar({
@@ -340,6 +341,7 @@ export function useFormToolbar({
   extraQueryKeysToInvalidate = [],
   navigationListQueryKey,
   navigationParentId,
+  entityNumber,
 }: UseFormToolbarOptions): FormToolbarProps & { deleteConflict: { name: string; usages: UsageLocation[] } | null; onClearDeleteConflict: () => void } {
   const { toast } = useToast();
   const config = ENTITY_CONFIGS[entityType];
@@ -533,6 +535,7 @@ export function useFormToolbar({
     entityId,
     checkUsagesUrl: config && entityId ? `${config.apiPath}/${entityId}/check-usages` : undefined,
     entityName: config?.label,
+    entityNumber,
     deleteConflict,
     onClearDeleteConflict: () => setDeleteConflict(null),
   };
