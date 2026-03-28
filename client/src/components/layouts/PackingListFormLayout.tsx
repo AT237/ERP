@@ -21,7 +21,11 @@ import { Box, Package, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn, createNumericColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { PackingList, PackingListItem, InsertPackingList, Customer, Invoice, Project, InventoryItem } from "@shared/schema";
+import type { PackingList, PackingListItem, InsertPackingList, Customer, Invoice, Project, InventoryItem, Address, CustomerAddress } from "@shared/schema";
+
+interface CustomerAddressWithAddress extends CustomerAddress {
+  address: Address | null;
+}
 import { z } from "zod";
 import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createFieldsRow } from './LayoutForm2';
 
@@ -108,6 +112,17 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
 
   const { data: customers } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
+  });
+
+  const selectedCustomerId = form.watch("customerId");
+  const { data: customerAddresses = [] } = useQuery<CustomerAddressWithAddress[]>({
+    queryKey: ["/api/customer-addresses", { customerId: selectedCustomerId }],
+    queryFn: async () => {
+      const res = await fetch(`/api/customer-addresses?customerId=${selectedCustomerId}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      return res.json();
+    },
+    enabled: !!selectedCustomerId,
   });
 
   const { data: invoices } = useQuery<Invoice[]>({
@@ -453,11 +468,53 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         createFieldRow({
           key: "shippingAddress",
           label: "Verzendadres",
-          type: "textarea",
-          placeholder: "Verzendadres...",
-          register: form.register("shippingAddress"),
-          testId: "textarea-shipping-address",
-          rows: 3
+          type: "custom",
+          customComponent: (() => {
+            const formatAddr = (addr: Address | null) => {
+              if (!addr) return "—";
+              return [addr.street, addr.houseNumber, addr.postalCode, addr.city, addr.country].filter(Boolean).join(", ");
+            };
+            const currentVal = form.watch("shippingAddress") || "";
+            return (
+              <div className="space-y-2">
+                {customerAddresses.length > 0 ? (
+                  <Select
+                    value={currentVal || "__none__"}
+                    onValueChange={(v) => form.setValue("shippingAddress", v === "__none__" ? "" : v, { shouldDirty: true })}
+                  >
+                    <SelectTrigger className="h-9" data-testid="select-shipping-address">
+                      <SelectValue placeholder="Selecteer verzendadres..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Selecteer adres —</SelectItem>
+                      {customerAddresses.map((ca) => {
+                        const addrStr = formatAddr(ca.address);
+                        return (
+                          <SelectItem key={ca.id} value={addrStr}>
+                            {ca.label ? `${ca.label}: ${addrStr}` : addrStr}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Textarea
+                    {...form.register("shippingAddress")}
+                    placeholder={selectedCustomerId ? "Geen adressen gekoppeld aan deze klant. Voeg adressen toe bij de klant." : "Selecteer eerst een klant..."}
+                    className="min-h-[60px]"
+                    data-testid="textarea-shipping-address"
+                    rows={2}
+                  />
+                )}
+                {customerAddresses.length > 0 && currentVal && (
+                  <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 rounded p-2">
+                    {currentVal}
+                  </div>
+                )}
+              </div>
+            );
+          })(),
+          testId: "select-shipping-address"
         } as FormField2<FormData>),
         createFieldsRow([
           {
