@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Address } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
+import { exportTableToCSV } from '@/lib/exportTable';
 
 const defaultColumns: ColumnConfig[] = [
   createIdColumn('id', 'Address ID'),
@@ -155,6 +156,7 @@ export default function Addresses() {
         getRowId={(row: Address) => row.id}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        onExport={() => exportTableToCSV(renderTableData(addresses), tableState.columns, 'adressen')}
         headerActions={[
           {
             key: 'add-address',

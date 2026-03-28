@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Hash } from "lucide-react";
+import { Plus, Edit, Trash2, Hash, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, type ColumnConfig, createIdColumn } from "@/components/layouts/DataTableLayout";
 import { useDataTable } from "@/hooks/useDataTable";
 import { useEntityDelete } from "@/hooks/useEntityDelete";
+import { exportTableToCSV } from '@/lib/exportTable';
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -413,6 +414,7 @@ export default function SerialNumbers() {
         entityName="Serienummer"
         entityNamePlural="Serienummers"
 
+        onExport={() => exportTableToCSV(enriched, tableState.columns, 'serienummers')}
         headerActions={[
           {
             key: "add",

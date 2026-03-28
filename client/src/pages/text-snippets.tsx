@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { exportTableToCSV } from '@/lib/exportTable';
 import type { TextSnippet } from "@shared/schema";
 
 // Available categories for text snippets
@@ -262,6 +263,11 @@ export default function TextSnippets() {
         getRowId={(row: TextSnippet) => row.id}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        onExport={() => exportTableToCSV(filteredData, tableState.columns, 'tekst-snippets')}
+        onDuplicate={(rows) => {
+          const snippet = filteredData.find(s => s.id === rows[0]);
+          if (snippet) handleDuplicate(snippet);
+        }}
         headerActions={[
           {
             key: 'add-snippet',

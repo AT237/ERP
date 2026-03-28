@@ -9,6 +9,7 @@ import { useDataTable } from '@/hooks/useDataTable';
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 import { UsageConflictDialog } from "@/components/ui/usage-conflict-dialog";
 import type { UsageLocation } from "@/components/ui/safe-delete-dialog";
+import { exportTableToCSV } from '@/lib/exportTable';
 
 interface MasterDataTableProps {
   title: string;
@@ -240,6 +241,7 @@ export default function MasterDataTable({ title, endpoint, schema, fields, colum
             variant: 'default' as const
           }
         ]}
+        onExport={() => exportTableToCSV(items, tableState.columns, endpoint)}
         onDuplicate={handleDuplicate}
         deleteConfirmDialog={{
           isOpen: isBulkDeleteOpen,

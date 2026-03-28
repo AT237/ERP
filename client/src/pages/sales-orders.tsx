@@ -1,11 +1,13 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { exportTableToCSV } from '@/lib/exportTable';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import type { SalesOrder, Customer } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -172,6 +174,14 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
     }
   };
 
+  const handleDuplicate = async (rows: string[]) => {
+    const order = enhancedSalesOrders.find(o => o.id === rows[0]);
+    if (!order) return;
+    const { id, orderNumber, createdAt, updatedAt, customerName, ...rest } = order as any;
+    await apiRequest('POST', '/api/sales-orders', { ...rest, orderNumber: `${orderNumber}-COPY` });
+    queryClient.invalidateQueries({ queryKey: ['/api/sales-orders'] });
+  };
+
   const handleRowDoubleClick = (salesOrder: SalesOrder) => {
     handleView(salesOrder);
   };
@@ -216,6 +226,8 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
         getRowId={(row: SalesOrder & { customerName?: string }) => row.id}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        onExport={() => exportTableToCSV(enhancedSalesOrders, tableState.columns, 'verkooporders')}
+        onDuplicate={handleDuplicate}
         headerActions={[
           {
             key: 'add-sales-order',
@@ -238,6 +250,13 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
             label: 'Edit',
             icon: <Edit className="h-4 w-4" />,
             onClick: () => handleEdit(row),
+            variant: 'outline' as const
+          },
+          {
+            key: 'duplicate',
+            label: 'Duplicate',
+            icon: <Copy className="h-4 w-4" />,
+            onClick: () => handleDuplicate([row.id]),
             variant: 'outline' as const
           },
           {

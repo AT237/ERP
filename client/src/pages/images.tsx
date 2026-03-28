@@ -6,6 +6,7 @@ import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layo
 import { useDataTable } from '@/hooks/useDataTable';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { exportTableToCSV } from '@/lib/exportTable';
 
 export default function Images() {
   const [, navigate] = useLocation();
@@ -175,6 +176,7 @@ export default function Images() {
         getRowId={(row: any) => row.id}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        onExport={() => exportTableToCSV(images, tableState.columns, 'afbeeldingen')}
         headerActions={[
           {
             key: 'add-image',

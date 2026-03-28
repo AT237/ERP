@@ -6,6 +6,7 @@ import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layo
 import { useDataTable } from '@/hooks/useDataTable';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { exportTableToCSV } from '@/lib/exportTable';
 
 export default function Pictograms() {
   const [, navigate] = useLocation();
@@ -182,6 +183,7 @@ export default function Pictograms() {
         getRowId={(row: any) => row.id}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        onExport={() => exportTableToCSV(pictograms, tableState.columns, 'pictogrammen')}
         headerActions={[
           {
             key: 'add-pictogram',

@@ -8,6 +8,7 @@ import type { PdfArchiveEntry } from "@shared/schema";
 import { DataTableLayout, ColumnConfig } from "@/components/layouts/DataTableLayout";
 import { useDataTable } from "@/hooks/useDataTable";
 import { useEntityDelete } from "@/hooks/useEntityDelete";
+import { exportTableToCSV } from '@/lib/exportTable';
 
 const DOC_TYPE_LABELS: Record<string, string> = {
   invoice: "Factuur",
@@ -194,6 +195,7 @@ export default function PdfArchivePage() {
           },
           itemCount: tableState.selectedRows.length,
         }}
+        onExport={() => exportTableToCSV(entries, tableState.columns, 'pdf-archief')}
         headerActions={[]}
         rowActions={(row: PdfArchiveEntry) => [
           {
