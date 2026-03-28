@@ -258,6 +258,7 @@ export default function Invoices({}: InvoicesProps) {
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
         onExport={() => exportTableToCSV(enrichedInvoices, tableState.columns, 'facturen')}
+        onDuplicate={handleDuplicateInvoice}
         headerActions={React.useMemo(() => {
           const selectedInvoice = tableState.selectedRows.length === 1
             ? enrichedInvoices.find(inv => inv.id === tableState.selectedRows[0])
@@ -278,20 +279,13 @@ export default function Invoices({}: InvoicesProps) {
               disabled: !selectedInvoice,
             },
             {
-              key: 'duplicate',
-              label: 'Dupliceren',
-              icon: <CopyPlus className="h-4 w-4" />,
-              onClick: () => selectedInvoice && handleDuplicateInvoice(selectedInvoice),
-              disabled: !selectedInvoice,
-            },
-            {
               key: 'add',
               label: 'Add Invoice',
               icon: <Plus className="h-4 w-4" />,
               onClick: handleAddInvoice,
             },
           ];
-        }, [handleAddInvoice, handleDuplicateInvoice, tableState.selectedRows, enrichedInvoices, handlePrintInvoice, handleEmailInvoice])}
+        }, [handleAddInvoice, tableState.selectedRows, enrichedInvoices, handlePrintInvoice, handleEmailInvoice])}
         rowActions={React.useCallback((invoice: Invoice) => [
           {
             key: 'view',

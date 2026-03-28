@@ -8,6 +8,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { exportTableToCSV } from "@/lib/exportTable";
 import type { InventoryCategory } from "@shared/schema";
 
+type EnrichedCategory = InventoryCategory;
+
 // ── columns ────────────────────────────────────────────────────────────────
 
 const defaultColumns: ColumnConfig[] = [
