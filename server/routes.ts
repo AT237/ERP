@@ -65,8 +65,10 @@ import {
   serialNumbers, insertSerialNumberSchema
 } from "@shared/schema";
 import { Request, Response, NextFunction } from 'express';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, inArray } from 'drizzle-orm';
 import { db, pool, checkDatabaseStatus } from './db';
+import * as schema from '@shared/schema';
+import { customerAddresses } from '@shared/schema';
 
 async function buildCustomerSnapshot(customerId: string): Promise<string | null> {
   try {
@@ -515,6 +517,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error searching customer contacts:", error);
       res.status(500).json({ message: "Failed to search customer contacts" });
+    }
+  });
+
+  // Customer addresses routes
+  app.get("/api/customer-addresses", async (req, res) => {
+    try {
+      const { customerId } = req.query;
+      if (customerId) {
+        const rows = await db.select().from(customerAddresses).where(eq(customerAddresses.customerId, customerId as string));
+        const addressIds = rows.map(r => r.addressId);
+        if (addressIds.length === 0) return res.json([]);
+        const addrs = await db.select().from(schema.addresses).where(inArray(schema.addresses.id, addressIds));
+        const result = rows.map(r => ({
+          ...r,
+          address: addrs.find(a => a.id === r.addressId) || null
+        }));
+        return res.json(result);
+      }
+      const rows = await db.select().from(customerAddresses);
+      res.json(rows);
+    } catch (error) {
+      console.error("Error fetching customer addresses:", error);
+      res.status(500).json({ message: "Failed to fetch customer addresses" });
+    }
+  });
+
+  app.post("/api/customer-addresses", async (req, res) => {
+    try {
+      const [row] = await db.insert(customerAddresses).values(req.body).returning();
+      res.status(201).json(row);
+    } catch (error) {
+      console.error("Error creating customer address:", error);
+      res.status(500).json({ message: "Failed to create customer address" });
+    }
+  });
+
+  app.delete("/api/customer-addresses/:id", async (req, res) => {
+    try {
+      await db.delete(customerAddresses).where(eq(customerAddresses.id, req.params.id));
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting customer address:", error);
+      res.status(500).json({ message: "Failed to delete customer address" });
+    }
+  });
+
+  app.patch("/api/customer-addresses/:id", async (req, res) => {
+    try {
+      const [row] = await db.update(customerAddresses).set(req.body).where(eq(customerAddresses.id, req.params.id)).returning();
+      res.json(row);
+    } catch (error) {
+      console.error("Error updating customer address:", error);
+      res.status(500).json({ message: "Failed to update customer address" });
     }
   });
 

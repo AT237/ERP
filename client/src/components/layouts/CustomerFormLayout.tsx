@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AddressSelectWithAdd } from "@/components/ui/address-select-with-add";
+import { CustomerAddressesTab } from "@/components/ui/customer-addresses-tab";
 import { ContactPersonSelectWithAdd } from "@/components/ui/contact-person-select-with-add";
 import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
 import { LanguageSelectWithAdd } from "@/components/ui/language-select-with-add";
@@ -35,7 +36,8 @@ import { queryClient } from "@/lib/queryClient";
 import { Save, ArrowLeft, Users, User, Building, CreditCard, FileText, AlertTriangle, Plus, Trash2, Mail, ExternalLink, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
-import type { Customer, InsertCustomer, Country, EmailTemplate } from "@shared/schema";
+import type { Customer, InsertCustomer, Country, EmailTemplate, Address, CustomerAddress } from "@shared/schema";
+import { MapPin } from "lucide-react";
 import { z } from "zod";
 
 function formatIban(value: string | null | undefined): string {
@@ -1241,6 +1243,23 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
                   </span>
                 )}
               </div>
+            </div>
+          )
+        }
+      ]
+    },
+    {
+      id: "addresses",
+      label: "Adressen",
+      icon: <MapPin className="h-4 w-4" />,
+      rows: [
+        {
+          type: 'custom',
+          customContent: currentCustomerId ? (
+            <CustomerAddressesTab customerId={currentCustomerId} />
+          ) : (
+            <div className="text-sm text-muted-foreground p-4">
+              Sla de klant eerst op om adressen toe te voegen.
             </div>
           )
         }
