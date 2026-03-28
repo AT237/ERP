@@ -1,12 +1,13 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, MapPin, Building } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Building, CopyPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Address } from "@shared/schema";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { exportTableToCSV } from '@/lib/exportTable';
+import { useEntityDelete } from '@/hooks/useEntityDelete';
 
 const defaultColumns: ColumnConfig[] = [
   createIdColumn('id', 'Address ID'),
@@ -57,25 +58,11 @@ export default function Addresses() {
     queryKey: ["/api/addresses"],
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/addresses/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/addresses"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({
-        title: "Success",
-        description: "Address deleted",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete address",
-        variant: "destructive",
-      });
-    },
+  const del = useEntityDelete<Address>({
+    endpoint: '/api/addresses',
+    queryKeys: ['/api/addresses', '/api/dashboard/stats'],
+    getName: (row) => `${row.street} ${row.houseNumber}, ${row.city}`,
+    entityLabel: 'Address',
   });
 
   const handleEdit = (address: Address) => {
@@ -96,9 +83,36 @@ export default function Addresses() {
     handleEdit(address);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this address?")) {
-      deleteMutation.mutate(id);
+  const handleDuplicate = async (address: Address) => {
+    try {
+      const res = await fetch(`/api/addresses/${address.id}`);
+      if (!res.ok) throw new Error('Failed to fetch address');
+      const data = await res.json();
+      const { id, createdAt, ...duplicateData } = data;
+      const response = await apiRequest("POST", "/api/addresses", {
+        ...duplicateData,
+        street: `${duplicateData.street || ''} (Copy)`,
+      });
+      const newAddress = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/addresses"] });
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: `edit-address-${newAddress.id}`,
+          name: `${newAddress.street} ${newAddress.houseNumber}, ${newAddress.city}`,
+          formType: 'address',
+          entityId: newAddress.id,
+        }
+      }));
+      toast({
+        title: "Success",
+        description: "Address duplicated",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to duplicate address",
+        variant: "destructive",
+      });
     }
   };
 
@@ -156,7 +170,17 @@ export default function Addresses() {
         getRowId={(row: Address) => row.id}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        deleteConfirmDialog={{
+          isOpen: del.isBulkDeleteOpen,
+          onOpenChange: del.setIsBulkDeleteOpen,
+          onConfirm: () => {
+            del.handleBulkDelete(tableState.selectedRows, addresses);
+            tableState.clearSelection();
+          },
+          itemCount: tableState.selectedRows.length
+        }}
         onExport={() => exportTableToCSV(renderTableData(addresses), tableState.columns, 'adressen')}
+        onDuplicate={handleDuplicate}
         headerActions={[
           {
             key: 'add-address',
@@ -175,14 +199,22 @@ export default function Addresses() {
             variant: 'outline' as const
           },
           {
+            key: 'duplicate',
+            label: 'Dupliceren',
+            icon: <CopyPlus className="h-4 w-4" />,
+            onClick: () => handleDuplicate(row),
+            variant: 'outline' as const
+          },
+          {
             key: 'delete',
             label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: () => handleDelete(row.id),
+            onClick: () => del.handleDeleteRow(row),
             variant: 'destructive' as const
           }
         ]}
       />
+      {del.renderDeleteDialogs()}
     </div>
   );
 }
