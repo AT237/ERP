@@ -667,6 +667,12 @@ export function DataTableLayout<T = any>({
   }, [directInput, directInputMode, getRowId]);
 
   useEffect(() => {
+    if (directInput && !directInputMode) {
+      setDirectInputMode(true);
+    }
+  }, [directInput]);
+
+  useEffect(() => {
     if (directInputMode && directInput) {
       setDirectInputRow(initDirectInputRow());
     }
