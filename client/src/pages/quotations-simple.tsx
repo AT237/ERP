@@ -39,16 +39,12 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   const columns: ColumnConfig[] = React.useMemo(() => [
     createIdColumn('quotationNumber', 'Quotation Number'),
     { 
-      key: 'customerId', 
+      key: 'customerName', 
       label: 'Customer', 
       visible: true, 
       width: 200, 
       filterable: true, 
       sortable: true,
-      renderCell: (value: string) => {
-        const customer = customers.find(c => c.id === value);
-        return customer?.name || 'Unknown';
-      }
     },
     { 
       key: 'description', 
