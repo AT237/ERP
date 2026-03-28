@@ -483,7 +483,9 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
               return [addr.street, addr.houseNumber, addr.postalCode, addr.city, addr.country].filter(Boolean).join(", ");
             };
             const addressMap = new Map(customerAddresses.map(ca => [ca.id, ca]));
+            const textToIdMap = new Map(customerAddresses.map(ca => [formatAddr(ca.address), ca.id]));
             const currentVal = form.watch("shippingAddress") || "";
+            const matchedId = textToIdMap.get(currentVal) || "";
 
             if (customerAddressesError) {
               return (
@@ -498,7 +500,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
                 {customerAddresses.length > 0 ? (
                   <>
                     <Select
-                      value={currentVal || "__none__"}
+                      value={matchedId || "__none__"}
                       onValueChange={(v) => {
                         if (v === "__none__") {
                           form.setValue("shippingAddress", "", { shouldDirty: true });
@@ -524,7 +526,12 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
                         })}
                       </SelectContent>
                     </Select>
-                    {currentVal && (
+                    {currentVal && !matchedId && (
+                      <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded p-2">
+                        Huidig adres (handmatig): {currentVal}
+                      </div>
+                    )}
+                    {currentVal && matchedId && (
                       <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 rounded p-2">
                         {currentVal}
                       </div>

@@ -29,6 +29,7 @@ The frontend is built with React 18 and TypeScript, using Wouter for routing, sh
 - **DebugPanel**: Only rendered in development mode (`import.meta.env.DEV`), hidden in production builds.
 - **MasterData isActive Default**: New master data entries default `isActive` to `true` (Ja).
 - **Brands (Merken)**: Central `brands` table with code/name/description/isActive. CRUD via `/api/masterdata/brands`. Inventory form uses `EntitySelect` for brand selection (stores brand code). Migrated from free-text to master data. Auto-migration on startup creates table and converts existing inventory brand names to codes.
+- **Customer Multi-Address**: Customers can have multiple linked addresses via `customer_addresses` junction table. "Adressen" tab in CustomerFormLayout allows adding/removing/setting default addresses. Packing list shipping address field becomes a dropdown of linked customer addresses when available, with fallback to manual text entry.
 - **Filter Persistence**: Table filters are persisted to localStorage per table via `table-filters-${tableKey}`. Filters are automatically restored when revisiting a table.
 - **Admin Employee**: EM-0001 is reserved for the Admin system account (created at startup via `ensureAdminEmployee`). Existing employees are shifted up by 1 in a transaction if Admin doesn't exist yet.
 
