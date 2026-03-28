@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, workOrders, invoiceWorkOrders, vatRates, incoterms } from "../../shared/schema";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, workOrders, invoiceWorkOrders, vatRates, incoterms, packingLists, packingListItems } from "../../shared/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 
 function formatIban(value: string | null): string | null {
@@ -735,6 +735,128 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     items: itemsData,
     workOrders: workOrdersData,
     vatRate: vatRateData,
+  };
+}
+
+export async function loadPackingListPrintData(packingListId: string): Promise<any | null> {
+  const packingList = await db.query.packingLists.findFirst({
+    where: eq(packingLists.id, packingListId),
+  });
+
+  if (!packingList) return null;
+
+  let customerData = null;
+  if (packingList.customerId) {
+    const customer = await db.query.customers.findFirst({
+      where: eq(customers.id, packingList.customerId),
+    });
+    if (customer) {
+      let addressData = null;
+      if (customer.addressId) {
+        const address = await db.query.addresses.findFirst({
+          where: eq(addresses.id, customer.addressId),
+        });
+        if (address) {
+          addressData = {
+            street: address.street,
+            houseNumber: address.houseNumber,
+            postalCode: address.postalCode,
+            city: address.city,
+            country: address.country,
+          };
+        }
+      }
+      customerData = {
+        name: customer.name,
+        customerNumber: customer.customerNumber,
+        email: customer.email,
+        generalEmail: customer.generalEmail ?? null,
+        phone: customer.phone,
+        mobile: customer.mobile ?? null,
+        taxId: customer.taxId ?? null,
+        kvkNummer: customer.kvkNummer ?? null,
+        bankAccount: formatIban(customer.bankAccount ?? null),
+        address: addressData,
+      };
+    }
+  }
+
+  let projectData = null;
+  if (packingList.projectId) {
+    const project = await db.query.projects.findFirst({
+      where: eq(projects.id, packingList.projectId),
+    });
+    if (project) {
+      projectData = {
+        name: project.name,
+        projectNumber: project.projectNumber,
+        description: project.description,
+      };
+    }
+  }
+
+  let companyData = null;
+  const companyProfile = await db.query.companyProfiles.findFirst({
+    where: eq(companyProfiles.isActive, true),
+  });
+  if (companyProfile) {
+    companyData = {
+      name: companyProfile.name,
+      logoUrl: companyProfile.logoUrl,
+      phone: companyProfile.phone,
+      email: companyProfile.email,
+      website: companyProfile.website,
+      address: {
+        street: companyProfile.street,
+        houseNumber: companyProfile.houseNumber,
+        postalCode: companyProfile.postalCode,
+        city: companyProfile.city,
+        country: companyProfile.country,
+      },
+      kvkNummer: companyProfile.kvkNummer,
+      btwNummer: companyProfile.btwNummer,
+      bankAccount: formatIban(companyProfile.bankAccount ?? null),
+      iban: formatIban(companyProfile.bankAccount ?? null),
+      bankName: companyProfile.bankName,
+    };
+  }
+
+  const rawItems = await db.query.packingListItems.findMany({
+    where: eq(packingListItems.packingListId, packingListId),
+    orderBy: [asc(packingListItems.position)],
+  });
+
+  const itemsData = rawItems.map((item: any, index: number) => ({
+    positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'),
+    lineType: item.lineType || 'standard',
+    description: item.description || '',
+    descriptionInternal: item.descriptionInternal || null,
+    quantity: parseFloat(String(item.quantity || 0)),
+    packedQuantity: parseFloat(String(item.packedQuantity || 0)),
+    unit: item.unit || '',
+    itemId: item.itemId || null,
+    hsCode: item.hsCode || null,
+    countryOfOrigin: item.countryOfOrigin || null,
+  }));
+
+  return {
+    packingList: {
+      packingListNumber: packingList.packingNumber,
+      packingNumber: packingList.packingNumber,
+      packingDate: packingList.packingDate,
+      shipDate: (packingList as any).shipDate || null,
+      status: packingList.status,
+      shippingMethod: packingList.shippingMethod || null,
+      shippingAddress: packingList.shippingAddress || null,
+      trackingNumber: packingList.trackingNumber || null,
+      totalWeight: (packingList as any).totalWeight || null,
+      totalPackages: (packingList as any).totalPackages || null,
+      notes: packingList.notes || null,
+    },
+    customer: customerData,
+    project: projectData,
+    company: companyData,
+    items: itemsData,
   };
 }
 

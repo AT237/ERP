@@ -42,7 +42,7 @@ function coerceQuantity(body: Record<string, any>): Record<string, any> {
   return body;
 }
 
-import { loadQuotationPrintData, loadInvoicePrintData } from "./utils/field-resolver";
+import { loadQuotationPrintData, loadInvoicePrintData, loadPackingListPrintData } from "./utils/field-resolver";
 import {
   insertCustomerSchema, insertSupplierSchema, insertProspectSchema, insertInventoryItemSchema,
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
@@ -1387,6 +1387,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching invoice print data:", error);
       res.status(500).json({ message: "Failed to fetch invoice print data" });
+    }
+  });
+
+  app.get("/api/packing-lists/:id/print-data", async (req, res) => {
+    try {
+      const printData = await loadPackingListPrintData(req.params.id);
+      if (!printData) {
+        return res.status(404).json({ message: "Packing list not found" });
+      }
+      res.json(printData);
+    } catch (error) {
+      console.error("Error fetching packing list print data:", error);
+      res.status(500).json({ message: "Failed to fetch packing list print data" });
     }
   });
 
