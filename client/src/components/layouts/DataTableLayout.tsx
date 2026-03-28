@@ -1216,55 +1216,44 @@ export function DataTableLayout<T = any>({
                 <Separator orientation="vertical" className="h-6 mx-1" />
               )}
               {headerActions.map((action) => (
-                <Button
+                <button
                   key={action.key}
-                  variant="ghost"
-                  size="sm"
-                  className={`h-8 w-8 p-0 ${action.disabled ? 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
-                  onClick={action.onClick}
-                  disabled={action.disabled}
+                  className={`inline-flex items-center justify-center rounded-md h-8 w-8 p-0 transition-colors [&_svg]:h-4 [&_svg]:w-4 ${action.disabled ? 'bg-gray-200 text-gray-400 dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600 cursor-pointer'}`}
+                  onClick={action.disabled ? undefined : action.onClick}
                   title={action.label}
                   data-testid={`button-${action.key}`}
                 >
                   {action.icon || <Plus className="h-4 w-4" />}
-                </Button>
+                </button>
               ))}
 
               {/* Delete */}
               {deleteConfirmDialog && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`h-8 w-8 p-0 ${selectedRows.length === 0 ? 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
-                  onClick={() => deleteConfirmDialog.onOpenChange(true)}
-                  disabled={selectedRows.length === 0}
+                <button
+                  className={`inline-flex items-center justify-center rounded-md h-8 w-8 p-0 transition-colors ${selectedRows.length === 0 ? 'bg-gray-200 text-gray-400 dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600 cursor-pointer'}`}
+                  onClick={selectedRows.length > 0 ? () => deleteConfirmDialog.onOpenChange(true) : undefined}
                   title={`Delete${selectedRows.length > 0 ? ` (${selectedRows.length})` : ''}`}
                   data-testid="button-delete-selected"
                 >
                   <Trash2 className="h-4 w-4" />
-                </Button>
+                </button>
               )}
 
               {/* Duplicate */}
               {onDuplicate && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`h-8 w-8 p-0 ${selectedRows.length !== 1 ? 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
-                  disabled={selectedRows.length !== 1}
-                  onClick={() => {
-                    if (selectedRows.length === 1) {
-                      const selectedItem = sortedData.find(item => getRowId(item) === selectedRows[0]);
-                      if (selectedItem) {
-                        onDuplicate(selectedItem);
-                      }
+                <button
+                  className={`inline-flex items-center justify-center rounded-md h-8 w-8 p-0 transition-colors ${selectedRows.length !== 1 ? 'bg-gray-200 text-gray-400 dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600 cursor-pointer'}`}
+                  onClick={selectedRows.length === 1 ? () => {
+                    const selectedItem = sortedData.find(item => getRowId(item) === selectedRows[0]);
+                    if (selectedItem) {
+                      onDuplicate(selectedItem);
                     }
-                  }}
+                  } : undefined}
                   title="Duplicate"
                   data-testid="button-duplicate"
                 >
                   <CopyPlus className="h-4 w-4" />
-                </Button>
+                </button>
               )}
 
               {/* Export */}
