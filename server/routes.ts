@@ -2151,6 +2151,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Packing List routes
+  app.get("/api/packing-lists/next-number", async (req, res) => {
+    try {
+      const pattern = `^PL-[0-9]{4}$`;
+      const rows = await db.execute(
+        sql`SELECT packing_number FROM packing_lists WHERE packing_number ~ ${pattern} ORDER BY packing_number`
+      );
+      const used = new Set((rows.rows as any[]).map((r: any) => r.packing_number as string));
+      let next = 1;
+      while (used.has(`PL-${String(next).padStart(4, '0')}`)) {
+        next++;
+      }
+      res.json({ number: `PL-${String(next).padStart(4, '0')}` });
+    } catch (error) {
+      console.error("Error generating next packing list number:", error);
+      res.status(500).json({ message: "Failed to generate next packing list number" });
+    }
+  });
+
   app.get("/api/packing-lists", async (req, res) => {
     try {
       const lists = await storage.getPackingLists();

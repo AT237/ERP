@@ -557,7 +557,7 @@ export function DataTableLayout<T = any>({
   directInput,
 }: DataTableLayoutProps<T>) {
   
-  const [directInputMode, setDirectInputMode] = useState<boolean>(false);
+  const [directInputMode, setDirectInputMode] = useState<boolean>(!!directInput);
   const [directInputRow, setDirectInputRow] = useState<Record<string, any>>({});
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editingRowData, setEditingRowData] = useState<Record<string, any>>({});

@@ -16,7 +16,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertPackingListSchema, insertPackingListItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Box, Package, Truck } from "lucide-react";
+import { Box, Package, Truck, RefreshCw } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn, createNumericColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
@@ -108,6 +109,17 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     queryKey: ["/api/packing-lists", packingListId],
     enabled: !!packingListId,
   });
+
+  const { data: nextNumberData, refetch: refetchNextNumber } = useQuery<{ number: string }>({
+    queryKey: ["/api/packing-lists/next-number"],
+    enabled: !isEditing,
+  });
+
+  useEffect(() => {
+    if (!isEditing && nextNumberData?.number && !form.getValues("packingNumber")) {
+      form.setValue("packingNumber", nextNumberData.number);
+    }
+  }, [nextNumberData, isEditing]);
 
   const { data: customers } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
@@ -366,9 +378,32 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
           {
             key: "packingNumber",
             label: "Paklijst nr.",
-            type: "text",
-            placeholder: "PL-0001",
-            register: form.register("packingNumber"),
+            type: "custom",
+            customComponent: (
+              <div className="flex gap-1 items-center">
+                <Input
+                  {...form.register("packingNumber")}
+                  className={`h-10 text-xs flex-1 ${form.formState.errors.packingNumber ? 'border-red-500' : ''}`}
+                  placeholder="PL-0001"
+                  data-testid="input-packing-number"
+                />
+                {!isEditing && (
+                  <button
+                    type="button"
+                    title="Nieuw beschikbaar nummer ophalen"
+                    onClick={async () => {
+                      const result = await refetchNextNumber();
+                      if (result.data?.number) {
+                        form.setValue("packingNumber", result.data.number);
+                      }
+                    }}
+                    className="h-10 w-10 flex items-center justify-center rounded border border-input bg-background hover:bg-orange-50 hover:border-orange-400 transition-colors flex-shrink-0"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+            ),
             validation: {
               error: form.formState.errors.packingNumber?.message,
               isRequired: true
