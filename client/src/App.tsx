@@ -477,6 +477,26 @@ function Router() {
             );
           }}
         </Route>
+        <Route path="/packing-lists/:packingListId/items/new">
+          {(params) => {
+            const PackingListItemForm = React.lazy(() => import('./pages/packing-list-item-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <PackingListItemForm onSave={() => window.history.back()} packingListId={params.packingListId} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        <Route path="/packing-lists/:packingListId/items/:itemId">
+          {(params) => {
+            const PackingListItemForm = React.lazy(() => import('./pages/packing-list-item-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <PackingListItemForm onSave={() => window.history.back()} packingListId={params.packingListId} itemId={params.itemId} />
+              </Suspense>
+            );
+          }}
+        </Route>
         
         <Route path="/invoice-form" component={() => {
           const InvoiceForm = React.lazy(() => import('./pages/invoice-form'));
