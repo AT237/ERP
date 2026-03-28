@@ -1268,6 +1268,22 @@ export default function Layout({ children }: LayoutProps) {
           </Suspense>
         );
       }
+
+      if (tab.formType === 'packing-list') {
+        const plId = tab.id.startsWith('edit-packing-list-') 
+          ? tab.parentId
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div></div>}>
+            <PackingListForm 
+              packingListId={plId}
+              parentId={tab.parentId}
+              onSave={() => {}} 
+            />
+          </Suspense>
+        );
+      }
       
       if (tab.formType === 'contact-person') {
         const contactPersonId = tab.id.startsWith('edit-contact-person-') 
