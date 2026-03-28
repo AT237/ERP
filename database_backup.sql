@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict sVkT9aSXClXbN6sCsCO2CrYEQBtXd93bgmNS1aHRAupzVHd9zeKXKEcOBgMz6Wu
+\restrict S0de7zmUhGQ6i72If6ya5F932kSOAyneo9ByjiXOmIaIbuiBReuM8Poh2gxsHLc
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -901,9 +901,21 @@ ALTER TABLE public.layout_sections OWNER TO postgres;
 CREATE TABLE public.packing_list_items (
     id character varying DEFAULT gen_random_uuid() NOT NULL,
     packing_list_id character varying NOT NULL,
-    item_id character varying NOT NULL,
-    quantity integer NOT NULL,
-    packed_quantity integer DEFAULT 0
+    item_id character varying,
+    quantity numeric(10,3) DEFAULT '0'::numeric NOT NULL,
+    packed_quantity numeric(10,3) DEFAULT '0'::numeric,
+    description text,
+    unit text,
+    unit_price numeric(10,2) DEFAULT 0.00,
+    line_total numeric(10,2) DEFAULT 0.00,
+    cost_price numeric(10,2) DEFAULT 0.00,
+    line_type text DEFAULT 'standard'::text,
+    "position" integer DEFAULT 0,
+    position_no text,
+    description_internal text,
+    discount_percent numeric(5,2) DEFAULT '0'::numeric,
+    hs_code text,
+    country_of_origin text
 );
 
 
@@ -2105,7 +2117,7 @@ b2ab6485-2190-4ac2-8dcd-04b9a7ebbf00	ba775d65-a8b3-485c-a8ae-6358e96b837e	footer
 -- Data for Name: packing_list_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.packing_list_items (id, packing_list_id, item_id, quantity, packed_quantity) FROM stdin;
+COPY public.packing_list_items (id, packing_list_id, item_id, quantity, packed_quantity, description, unit, unit_price, line_total, cost_price, line_type, "position", position_no, description_internal, discount_percent, hs_code, country_of_origin) FROM stdin;
 \.
 
 
@@ -3264,7 +3276,7 @@ d259ddcd-e75e-465a-9f8e-f4ff1a6df96e	\N	\N	\N	2026-02-23 10:03:54.505894	2026-02
 deaed565-e163-4094-b2a6-f912be4c7b74	\N	\N	\N	2026-02-23 10:10:43.288279	2026-02-23 10:10:43.288279	\N	\N
 ef2cb817-b635-4bb4-8ab4-9366bd75bc80	\N	\N	\N	2026-02-23 10:18:15.731732	2026-02-23 10:18:15.731732	\N	\N
 d89d943c-8acc-4f97-a10e-a3b5924c13f2	\N	\N	\N	2026-02-23 10:18:25.249937	2026-02-23 10:18:25.249937	\N	\N
-b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}, {"id": "task-overview", "href": "/task-overview", "icon": {}, "name": "Task Overview"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "brands", "href": "/master-data/brands", "icon": {}, "name": "Brands"}, {"id": "categories", "href": "/master-data/categories", "icon": {}, "name": "Categories"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "serial-numbers", "href": "/serial-numbers", "icon": {}, "name": "Serial Numbers"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}, {"id": "pdf-archive", "href": "/pdf-archive", "icon": {}, "name": "PDF Database"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "email-designer", "href": "/email-designer", "icon": {}, "name": "Email Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}]	{"Sales": false, "Tools": true, "Reports": true, "Overview": true, "Inventory": true, "Relations": false, "Operations": false, "Master Data": true, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-03-28 21:35:30.196644	layout-designer	page
+b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}, {"id": "task-overview", "href": "/task-overview", "icon": {}, "name": "Task Overview"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "brands", "href": "/master-data/brands", "icon": {}, "name": "Brands"}, {"id": "categories", "href": "/master-data/categories", "icon": {}, "name": "Categories"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "serial-numbers", "href": "/serial-numbers", "icon": {}, "name": "Serial Numbers"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}, {"id": "pdf-archive", "href": "/pdf-archive", "icon": {}, "name": "PDF Database"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "email-designer", "href": "/email-designer", "icon": {}, "name": "Email Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}]	{"Sales": false, "Tools": true, "Reports": true, "Overview": true, "Inventory": true, "Relations": false, "Operations": false, "Master Data": true, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-03-28 21:42:38.649455	layout-designer	page
 c627eaa0-22b9-477f-a97d-558eb254ec1a	\N	\N	\N	2026-02-23 10:35:39.86801	2026-02-23 10:35:39.86801	\N	\N
 edb58413-7021-4e1b-8592-fb495bb8940d	\N	\N	\N	2026-02-23 10:19:42.580459	2026-02-23 10:19:42.580459	\N	\N
 c3f161df-331a-4746-9f78-224cab856721	\N	\N	\N	2026-02-23 10:19:49.234351	2026-02-23 10:19:49.234351	\N	\N
@@ -3415,7 +3427,7 @@ PA3DwNha04cB0K8L_9gpEk09h3fue6uM	{"cookie":{"originalMaxAge":604800000,"expires"
 oEmieC_lXuDng36uYwBtCrmu_Lvml_oH	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-23T10:41:41.532Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 09:11:01
 brOBMLpZ3lvlr-61KcpCFD9Ju20B-_Rd	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:54:15.680Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:54:16
 66kYKTeLVvLxBGlMp-Qssl-W6tsmNEBE	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T13:33:21.594Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 13:33:22
-yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-04 21:38:15
+yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-04 21:43:10
 \.
 
 
@@ -4782,5 +4794,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict sVkT9aSXClXbN6sCsCO2CrYEQBtXd93bgmNS1aHRAupzVHd9zeKXKEcOBgMz6Wu
+\unrestrict S0de7zmUhGQ6i72If6ya5F932kSOAyneo9ByjiXOmIaIbuiBReuM8Poh2gxsHLc
 

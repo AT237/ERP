@@ -496,9 +496,21 @@ export const packingLists = pgTable("packing_lists", {
 export const packingListItems = pgTable("packing_list_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   packingListId: varchar("packing_list_id").references(() => packingLists.id).notNull(),
-  itemId: varchar("item_id").references(() => inventoryItems.id).notNull(),
-  quantity: integer("quantity").notNull(),
-  packedQuantity: integer("packed_quantity").default(0),
+  itemId: varchar("item_id").references(() => inventoryItems.id),
+  description: text("description"),
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"),
+  packedQuantity: decimal("packed_quantity", { precision: 10, scale: 3 }).default("0"),
+  unit: text("unit"),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineType: text("line_type").default("standard"),
+  position: integer("position").default(0),
+  positionNo: text("position_no"),
+  descriptionInternal: text("description_internal"),
+  discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
+  hsCode: text("hs_code"),
+  countryOfOrigin: text("country_of_origin"),
 });
 
 // Master Data tables
