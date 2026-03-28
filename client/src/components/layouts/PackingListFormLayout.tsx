@@ -592,8 +592,6 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     }
   ];
 
-  const packingNumberDisplay = form.watch("packingNumber");
-  
   const toolbar = useFormToolbar({
     entityType: "packing_list",
     entityId: currentPackingListId,
@@ -601,7 +599,6 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
-    entityNumber: packingNumberDisplay || undefined,
   });
 
   return (
