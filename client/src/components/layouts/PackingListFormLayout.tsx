@@ -11,7 +11,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { CustomerSelect } from "@/components/ui/customer-select";
-import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertPackingListSchema, insertPackingListItemSchema } from "@shared/schema";
@@ -115,7 +114,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
   });
 
   const selectedCustomerId = form.watch("customerId");
-  const { data: customerAddresses = [], isError: customerAddressesError } = useQuery<CustomerAddressWithAddress[]>({
+  const { data: customerAddresses = [] } = useQuery<CustomerAddressWithAddress[]>({
     queryKey: ["/api/customer-addresses", { customerId: selectedCustomerId }],
     queryFn: async () => {
       const res = await fetch(`/api/customer-addresses?customerId=${selectedCustomerId}`);
@@ -476,79 +475,20 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         createFieldRow({
           key: "shippingAddress",
           label: "Verzendadres",
-          type: "custom",
-          customComponent: (() => {
-            const formatAddr = (addr: Address | null) => {
-              if (!addr) return "—";
-              return [addr.street, addr.houseNumber, addr.postalCode, addr.city, addr.country].filter(Boolean).join(", ");
-            };
-            const addressMap = new Map(customerAddresses.map(ca => [ca.id, ca]));
-            const textToIdMap = new Map(customerAddresses.map(ca => [formatAddr(ca.address), ca.id]));
-            const currentVal = form.watch("shippingAddress") || "";
-            const matchedId = textToIdMap.get(currentVal) || "";
-
-            if (customerAddressesError) {
-              return (
-                <div className="text-sm text-red-600 border border-red-200 rounded p-2">
-                  Kon adressen niet laden. Probeer de pagina te vernieuwen.
-                </div>
-              );
-            }
-
-            return (
-              <div className="space-y-2">
-                {customerAddresses.length > 0 ? (
-                  <>
-                    <Select
-                      value={matchedId || "__none__"}
-                      onValueChange={(v) => {
-                        if (v === "__none__") {
-                          form.setValue("shippingAddress", "", { shouldDirty: true });
-                        } else {
-                          const ca = addressMap.get(v);
-                          const addrText = ca ? formatAddr(ca.address) : "";
-                          form.setValue("shippingAddress", addrText, { shouldDirty: true });
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="h-9" data-testid="select-shipping-address">
-                        <SelectValue placeholder="Selecteer verzendadres..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">— Selecteer adres —</SelectItem>
-                        {customerAddresses.map((ca) => {
-                          const addrStr = formatAddr(ca.address);
-                          return (
-                            <SelectItem key={ca.id} value={ca.id}>
-                              {ca.label ? `${ca.label}: ${addrStr}` : addrStr}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    {currentVal && !matchedId && (
-                      <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded p-2">
-                        Huidig adres (handmatig): {currentVal}
-                      </div>
-                    )}
-                    {currentVal && matchedId && (
-                      <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 rounded p-2">
-                        {currentVal}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <Textarea
-                    {...form.register("shippingAddress")}
-                    placeholder={selectedCustomerId ? "Geen adressen gekoppeld aan deze klant. Typ handmatig of voeg adressen toe bij de klant." : "Selecteer eerst een klant..."}
-                    className="min-h-[60px]"
-                    data-testid="textarea-shipping-address"
-                    rows={2}
-                  />
-                )}
-              </div>
-            );
-          })(),
+          type: "select",
+          options: [
+            { value: "", label: "— Selecteer verzendadres —" },
+            ...customerAddresses.map((ca) => {
+              const parts = ca.address ? [ca.address.street, ca.address.houseNumber, ca.address.postalCode, ca.address.city, ca.address.country].filter(Boolean).join(", ") : "—";
+              return {
+                value: parts,
+                label: ca.label ? `${ca.label}: ${parts}` : parts
+              };
+            })
+          ],
+          placeholder: selectedCustomerId ? "Selecteer verzendadres..." : "Selecteer eerst een klant...",
+          setValue: (value) => form.setValue("shippingAddress", value, { shouldDirty: true }),
+          watch: () => form.watch("shippingAddress"),
           testId: "select-shipping-address"
         } as FormField2<FormData>),
         createFieldsRow([
