@@ -8,6 +8,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { exportTableToCSV } from "@/lib/exportTable";
 
 // Default column configuration for suppliers
 const defaultColumns: ColumnConfig[] = [
@@ -129,11 +130,7 @@ export default function SupplierTable() {
 
   // Export functionality
   const handleExport = () => {
-    // Implement export to Excel functionality similar to customer table
-    toast({
-      title: "Export",
-      description: "Export functionality will be implemented",
-    });
+    exportTableToCSV(suppliers, dataTableState.columns, 'leveranciers');
   };
 
   const handleDuplicate = async (supplier: Supplier) => {

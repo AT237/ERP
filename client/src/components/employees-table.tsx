@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2, Phone, Mail } from "lucide-react";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { exportTableToCSV } from "@/lib/exportTable";
 
 const defaultColumns: ColumnConfig[] = [
   createIdColumn('employeeNumber', 'Employee ID'),
@@ -118,10 +119,7 @@ export default function EmployeesTable() {
   };
 
   const handleExport = () => {
-    toast({
-      title: "Export functionality",
-      description: "Export feature will be implemented here.",
-    });
+    exportTableToCSV(employeesList, dataTableState.columns, 'medewerkers');
   };
 
   const handleDuplicate = async (employee: Employee) => {

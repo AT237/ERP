@@ -180,6 +180,7 @@ export default function Inventory() {
           variant: 'default' as const
         }
       ]}
+      onExport={() => exportTableToCSV(renderTableData(items), tableState.columns, 'inventaris')}
       onDuplicate={handleDuplicate}
       rowActions={(row: InventoryItem) => [
         {

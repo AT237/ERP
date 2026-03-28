@@ -293,17 +293,37 @@ export default function WorkOrders() {
         }}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        onExport={() => exportTableToCSV(enhancedWorkOrders, tableState.columns, 'werkbonnen')}
+        onDuplicate={handleDuplicateWorkOrder}
         
-        // Actions
-        headerActions={[
-          {
-            key: 'add-work-order',
-            label: 'Add Work Order',
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleNewWorkOrder,
-            variant: 'default' as const
-          }
-        ]}
+        headerActions={React.useMemo(() => {
+          const selectedWO = tableState.selectedRows.length === 1
+            ? enhancedWorkOrders.find(w => w.id === tableState.selectedRows[0])
+            : undefined;
+          return [
+            {
+              key: 'print',
+              label: 'Afdrukken',
+              icon: <Printer className="h-4 w-4" />,
+              onClick: () => selectedWO && handlePrintWorkOrder(selectedWO),
+              disabled: !selectedWO,
+            },
+            {
+              key: 'duplicate',
+              label: 'Dupliceren',
+              icon: <CopyPlus className="h-4 w-4" />,
+              onClick: () => selectedWO && handleDuplicateWorkOrder(selectedWO),
+              disabled: !selectedWO,
+            },
+            {
+              key: 'add-work-order',
+              label: 'Add Work Order',
+              icon: <Plus className="h-4 w-4" />,
+              onClick: handleNewWorkOrder,
+              variant: 'default' as const
+            }
+          ];
+        }, [handleNewWorkOrder, handleDuplicateWorkOrder, handlePrintWorkOrder, tableState.selectedRows, enhancedWorkOrders])}
         
         rowActions={(row: WorkOrder) => [
           {
@@ -311,6 +331,20 @@ export default function WorkOrders() {
             label: 'Edit',
             icon: <Edit className="h-4 w-4" />,
             onClick: () => handleEdit(row),
+            variant: 'outline' as const
+          },
+          {
+            key: 'print',
+            label: 'Print',
+            icon: <Printer className="h-4 w-4" />,
+            onClick: () => handlePrintWorkOrder(row),
+            variant: 'outline' as const
+          },
+          {
+            key: 'duplicate',
+            label: 'Dupliceren',
+            icon: <CopyPlus className="h-4 w-4" />,
+            onClick: () => handleDuplicateWorkOrder(row),
             variant: 'outline' as const
           },
           {
@@ -322,14 +356,18 @@ export default function WorkOrders() {
           }
         ]}
         
-        // Events
         onRowDoubleClick={handleRowDoubleClick}
         
-        // Display options
         entityName="Work Order"
         entityNamePlural="Work Orders"
       />
       {del.renderDeleteDialogs()}
+      <PrintLayoutDialog
+        open={printDialogOpen}
+        onOpenChange={setPrintDialogOpen}
+        documentType="work-order"
+        entityId={printWorkOrderId}
+      />
     </div>
   );
 }

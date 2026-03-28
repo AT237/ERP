@@ -53,6 +53,7 @@ function openTab(id?: string) {
 // ── main page ───────────────────────────────────────────────────────────────
 
 export default function MasterDataCategories() {
+  const { toast } = useToast();
   const { data: records = [], isLoading } = useQuery<InventoryCategory[]>({
     queryKey: ["/api/masterdata/inventory-categories"],
   });
@@ -72,6 +73,23 @@ export default function MasterDataCategories() {
     checkUsages: false,
     getName: r => `${r.code} – ${r.name}`,
   });
+
+  const handleDuplicate = async (category: EnrichedCategory) => {
+    try {
+      const { id, createdAt, updatedAt, ...duplicateData } = category as any;
+      const response = await apiRequest("POST", "/api/masterdata/inventory-categories", {
+        ...duplicateData,
+        code: `${duplicateData.code || ''}-COPY`,
+        name: `${duplicateData.name || ''} (Copy)`,
+      });
+      const copy = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/masterdata/inventory-categories"] });
+      toast({ title: "Categorie gedupliceerd" });
+      openTab(copy.id);
+    } catch {
+      toast({ title: "Fout", description: "Dupliceren mislukt.", variant: "destructive" });
+    }
+  };
 
   const handleToggleAllRows = () => {
     tableState.toggleAllRows(enriched.map(r => r.id));
@@ -116,6 +134,8 @@ export default function MasterDataCategories() {
 
         entityName="Categorie"
         entityNamePlural="Categorieën"
+        onExport={() => exportTableToCSV(enriched, tableState.columns, 'categorieen')}
+        onDuplicate={handleDuplicate}
 
         headerActions={[
           {
@@ -133,6 +153,13 @@ export default function MasterDataCategories() {
             label: "Bewerken",
             icon: <Edit className="h-4 w-4" />,
             onClick: () => openTab(r.id),
+            variant: "outline" as const,
+          },
+          {
+            key: "duplicate",
+            label: "Dupliceren",
+            icon: <CopyPlus className="h-4 w-4" />,
+            onClick: () => handleDuplicate(r),
             variant: "outline" as const,
           },
           {

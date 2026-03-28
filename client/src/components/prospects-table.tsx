@@ -8,6 +8,7 @@ import { Plus, Edit, Trash2, Phone, Mail, Building, DollarSign } from "lucide-re
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { exportTableToCSV } from "@/lib/exportTable";
 
 // Default column configuration for prospects
 const defaultColumns: ColumnConfig[] = [
@@ -185,11 +186,7 @@ export default function ProspectsTable() {
 
   // Export functionality
   const handleExport = () => {
-    // Similar to supplier export functionality
-    toast({
-      title: "Export functionality",
-      description: "Export feature will be implemented here.",
-    });
+    exportTableToCSV(prospects, dataTableState.columns, 'prospects');
   };
 
   const handleDuplicate = async (prospect: Prospect) => {

@@ -8,6 +8,7 @@ import { Plus, Edit, Trash2, Phone, Mail } from "lucide-react";
 import { DataTableLayout, ColumnConfig, createIdColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useEntityDelete } from '@/hooks/useEntityDelete';
+import { exportTableToCSV } from "@/lib/exportTable";
 
 // Default column configuration for contact persons
 const defaultColumns: ColumnConfig[] = [
@@ -134,11 +135,7 @@ export default function ContactPersonsTable() {
 
   // Export functionality
   const handleExport = () => {
-    // Similar to supplier export functionality
-    toast({
-      title: "Export functionality",
-      description: "Export feature will be implemented here.",
-    });
+    exportTableToCSV(contacts, dataTableState.columns, 'contactpersonen');
   };
 
   const handleDuplicate = async (contact: CustomerContact) => {

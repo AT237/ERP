@@ -214,11 +214,37 @@ export default function Projects() {
     }));
   };
 
+  const handleDuplicateProject = React.useCallback(async (project: Project) => {
+    try {
+      const res = await fetch(`/api/projects/${project.id}`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      const { id, projectNumber, createdAt, updatedAt, ...duplicateData } = data;
+      const response = await apiRequest("POST", "/api/projects", {
+        ...duplicateData,
+        name: `${duplicateData.name || ''} (Copy)`,
+        status: 'planning',
+      });
+      const copy = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      toast({ title: "Project gedupliceerd", description: `Kopie aangemaakt: ${copy.projectNumber}` });
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: `edit-project-${copy.id}`,
+          name: `Edit ${copy.projectNumber}`,
+          formType: 'project',
+          projectId: copy.id
+        }
+      }));
+    } catch {
+      toast({ title: "Fout", description: "Dupliceren mislukt.", variant: "destructive" });
+    }
+  }, [toast]);
+
   const handleToggleAllRows = () => {
     const allRowIds = enhancedProjects.map(project => project.id);
     tableState.toggleAllRows(allRowIds);
   };
-
 
   return (
     <div className="p-6">
@@ -247,8 +273,9 @@ export default function Projects() {
         onSort={tableState.handleSort}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        onExport={() => exportTableToCSV(enhancedProjects, tableState.columns, 'projecten')}
+        onDuplicate={handleDuplicateProject}
         
-        // Row selection
         selectedRows={tableState.selectedRows}
         setSelectedRows={tableState.setSelectedRows}
         onToggleRowSelection={tableState.toggleRowSelection}
@@ -260,16 +287,27 @@ export default function Projects() {
           itemCount: tableState.selectedRows.length
         }}
         
-        // Actions
-        headerActions={[
-          {
-            key: 'add-project',
-            label: 'Add Project',
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleNewProject,
-            variant: 'default' as const
-          }
-        ]}
+        headerActions={React.useMemo(() => {
+          const selectedProject = tableState.selectedRows.length === 1
+            ? enhancedProjects.find(p => p.id === tableState.selectedRows[0])
+            : undefined;
+          return [
+            {
+              key: 'duplicate',
+              label: 'Dupliceren',
+              icon: <CopyPlus className="h-4 w-4" />,
+              onClick: () => selectedProject && handleDuplicateProject(selectedProject),
+              disabled: !selectedProject,
+            },
+            {
+              key: 'add-project',
+              label: 'Add Project',
+              icon: <Plus className="h-4 w-4" />,
+              onClick: handleNewProject,
+              variant: 'default' as const
+            }
+          ];
+        }, [handleNewProject, handleDuplicateProject, tableState.selectedRows, enhancedProjects])}
         
         rowActions={(row: Project) => [
           {
@@ -277,6 +315,13 @@ export default function Projects() {
             label: 'Edit',
             icon: <Edit className="h-4 w-4" />,
             onClick: () => handleEdit(row),
+            variant: 'outline' as const
+          },
+          {
+            key: 'duplicate',
+            label: 'Dupliceren',
+            icon: <CopyPlus className="h-4 w-4" />,
+            onClick: () => handleDuplicateProject(row),
             variant: 'outline' as const
           },
           {

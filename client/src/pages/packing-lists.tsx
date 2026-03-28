@@ -166,11 +166,45 @@ export default function PackingLists() {
     }));
   };
 
+  const handleDuplicatePackingList = React.useCallback(async (packingList: PackingList) => {
+    try {
+      const res = await fetch(`/api/packing-lists/${packingList.id}`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      const { id, packingNumber, createdAt, updatedAt, ...duplicateData } = data;
+      const response = await apiRequest("POST", "/api/packing-lists", {
+        ...duplicateData,
+        packingNumber: `${duplicateData.packingNumber || ''}-COPY`,
+        status: 'pending',
+      });
+      const copy = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/packing-lists"] });
+      toast({ title: "Paklijst gedupliceerd", description: `Kopie aangemaakt: ${copy.packingNumber}` });
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: `edit-packing-list-${copy.id}`,
+          name: `${copy.packingNumber}`,
+          formType: 'packing-list',
+          parentId: copy.id
+        }
+      }));
+    } catch {
+      toast({ title: "Fout", description: "Dupliceren mislukt.", variant: "destructive" });
+    }
+  }, [toast]);
+
+  const [printDialogOpen, setPrintDialogOpen] = React.useState(false);
+  const [printPackingListId, setPrintPackingListId] = React.useState<string | undefined>();
+
+  const handlePrintPackingList = React.useCallback((packingList: PackingList) => {
+    setPrintPackingListId(packingList.id);
+    setPrintDialogOpen(true);
+  }, []);
+
   const handleToggleAllRows = () => {
     const allRowIds = enhancedPackingLists.map(list => list.id);
     tableState.toggleAllRows(allRowIds);
   };
-
 
   return (
     <div className="p-6">
@@ -211,17 +245,37 @@ export default function PackingLists() {
         }}
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
+        onExport={() => exportTableToCSV(enhancedPackingLists, tableState.columns, 'paklijsten')}
+        onDuplicate={handleDuplicatePackingList}
         
-        // Actions
-        headerActions={[
-          {
-            key: 'add-packing-list',
-            label: 'Add Packing List',
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleNewPackingList,
-            variant: 'default' as const
-          }
-        ]}
+        headerActions={React.useMemo(() => {
+          const selectedPL = tableState.selectedRows.length === 1
+            ? enhancedPackingLists.find(p => p.id === tableState.selectedRows[0])
+            : undefined;
+          return [
+            {
+              key: 'print',
+              label: 'Afdrukken',
+              icon: <Printer className="h-4 w-4" />,
+              onClick: () => selectedPL && handlePrintPackingList(selectedPL),
+              disabled: !selectedPL,
+            },
+            {
+              key: 'duplicate',
+              label: 'Dupliceren',
+              icon: <CopyPlus className="h-4 w-4" />,
+              onClick: () => selectedPL && handleDuplicatePackingList(selectedPL),
+              disabled: !selectedPL,
+            },
+            {
+              key: 'add-packing-list',
+              label: 'Add Packing List',
+              icon: <Plus className="h-4 w-4" />,
+              onClick: handleNewPackingList,
+              variant: 'default' as const
+            }
+          ];
+        }, [handleNewPackingList, handleDuplicatePackingList, handlePrintPackingList, tableState.selectedRows, enhancedPackingLists])}
         
         rowActions={(row: PackingList) => [
           {
@@ -229,6 +283,20 @@ export default function PackingLists() {
             label: 'Edit',
             icon: <Edit className="h-4 w-4" />,
             onClick: () => handleEdit(row),
+            variant: 'outline' as const
+          },
+          {
+            key: 'print',
+            label: 'Print',
+            icon: <Printer className="h-4 w-4" />,
+            onClick: () => handlePrintPackingList(row),
+            variant: 'outline' as const
+          },
+          {
+            key: 'duplicate',
+            label: 'Dupliceren',
+            icon: <CopyPlus className="h-4 w-4" />,
+            onClick: () => handleDuplicatePackingList(row),
             variant: 'outline' as const
           },
           {
@@ -240,14 +308,18 @@ export default function PackingLists() {
           }
         ]}
         
-        // Events
         onRowDoubleClick={handleRowDoubleClick}
         
-        // Display options
         entityName="Packing List"
         entityNamePlural="Packing Lists"
       />
       {del.renderDeleteDialogs()}
+      <PrintLayoutDialog
+        open={printDialogOpen}
+        onOpenChange={setPrintDialogOpen}
+        documentType="packing-list"
+        entityId={printPackingListId}
+      />
     </div>
   );
 }

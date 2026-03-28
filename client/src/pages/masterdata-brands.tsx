@@ -47,6 +47,7 @@ function openTab(id?: string) {
 }
 
 export default function MasterDataBrands() {
+  const { toast } = useToast();
   const { data: records = [], isLoading } = useQuery<Brand[]>({
     queryKey: ["/api/masterdata/brands"],
   });
@@ -66,6 +67,23 @@ export default function MasterDataBrands() {
     checkUsages: false,
     getName: r => `${r.code} – ${r.name}`,
   });
+
+  const handleDuplicate = async (brand: Brand) => {
+    try {
+      const { id, createdAt, updatedAt, ...duplicateData } = brand as any;
+      const response = await apiRequest("POST", "/api/masterdata/brands", {
+        ...duplicateData,
+        code: `${duplicateData.code || ''}-COPY`,
+        name: `${duplicateData.name || ''} (Copy)`,
+      });
+      const copy = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/masterdata/brands"] });
+      toast({ title: "Merk gedupliceerd" });
+      openTab(copy.id);
+    } catch {
+      toast({ title: "Fout", description: "Dupliceren mislukt.", variant: "destructive" });
+    }
+  };
 
   const handleToggleAllRows = () => {
     tableState.toggleAllRows(enriched.map(r => r.id));
@@ -110,6 +128,8 @@ export default function MasterDataBrands() {
 
         entityName="Merk"
         entityNamePlural="Merken"
+        onExport={() => exportTableToCSV(enriched, tableState.columns, 'merken')}
+        onDuplicate={handleDuplicate}
 
         headerActions={[
           {
@@ -127,6 +147,13 @@ export default function MasterDataBrands() {
             label: "Bewerken",
             icon: <Edit className="h-4 w-4" />,
             onClick: () => openTab(r.id),
+            variant: "outline" as const,
+          },
+          {
+            key: "duplicate",
+            label: "Dupliceren",
+            icon: <CopyPlus className="h-4 w-4" />,
+            onClick: () => handleDuplicate(r),
             variant: "outline" as const,
           },
           {

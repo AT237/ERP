@@ -288,6 +288,7 @@ export default function CustomersTable() {
             variant: 'default' as const
           }
         ]}
+        onExport={() => exportTableToCSV(renderTableData(customers), tableState.columns, 'klanten')}
         onDuplicate={handleDuplicate}
         rowActions={(row: Customer) => [
           {
