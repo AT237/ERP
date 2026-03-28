@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, MapPin, Star } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AddressSelectWithAdd } from "@/components/ui/address-select-with-add";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Address, CustomerAddress } from "@shared/schema";
@@ -31,13 +31,6 @@ export function CustomerAddressesTab({ customerId }: CustomerAddressesTabProps) 
     },
     enabled: !!customerId,
   });
-
-  const { data: allAddresses = [] } = useQuery<Address[]>({
-    queryKey: ["/api/addresses"],
-  });
-
-  const linkedAddressIds = customerAddresses.map(ca => ca.addressId);
-  const availableAddresses = allAddresses.filter(a => !linkedAddressIds.includes(a.id));
 
   const addMutation = useMutation({
     mutationFn: async () => {
@@ -171,19 +164,12 @@ export function CustomerAddressesTab({ customerId }: CustomerAddressesTabProps) 
         <div className="grid grid-cols-[1fr_150px_auto] gap-2 items-end">
           <div>
             <Label className="text-xs mb-1 block">Adres</Label>
-            <Select value={selectedAddressId || "__none__"} onValueChange={(v) => setSelectedAddressId(v === "__none__" ? "" : v)}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="Selecteer een adres..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">— Selecteer adres —</SelectItem>
-                {availableAddresses.map((addr) => (
-                  <SelectItem key={addr.id} value={addr.id}>
-                    {formatAddress(addr)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <AddressSelectWithAdd
+              value={selectedAddressId}
+              onValueChange={setSelectedAddressId}
+              placeholder="Selecteer adres..."
+              testId="customer-address-select"
+            />
           </div>
           <div>
             <Label className="text-xs mb-1 block">Label</Label>
