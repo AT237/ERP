@@ -174,10 +174,8 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
     }
   };
 
-  const handleDuplicate = async (rows: string[]) => {
-    const order = enhancedSalesOrders.find(o => o.id === rows[0]);
-    if (!order) return;
-    const { id, orderNumber, createdAt, updatedAt, customerName, ...rest } = order as any;
+  const handleDuplicate = async (order: any) => {
+    const { id, orderNumber, createdAt, updatedAt, customerName, ...rest } = order;
     await apiRequest('POST', '/api/sales-orders', { ...rest, orderNumber: `${orderNumber}-COPY` });
     queryClient.invalidateQueries({ queryKey: ['/api/sales-orders'] });
   };
@@ -256,7 +254,7 @@ export default function SalesOrders({ onCreateNew }: SalesOrdersProps) {
             key: 'duplicate',
             label: 'Duplicate',
             icon: <Copy className="h-4 w-4" />,
-            onClick: () => handleDuplicate([row.id]),
+            onClick: () => handleDuplicate(row),
             variant: 'outline' as const
           },
           {

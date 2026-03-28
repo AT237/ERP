@@ -186,10 +186,8 @@ export default function PurchaseOrders() {
     window.dispatchEvent(event);
   };
 
-  const handleDuplicate = async (rows: string[]) => {
-    const order = enhancedPurchaseOrders.find(o => o.id === rows[0]);
-    if (!order) return;
-    const { id, orderNumber, createdAt, updatedAt, ...rest } = order as any;
+  const handleDuplicate = async (order: any) => {
+    const { id, orderNumber, createdAt, updatedAt, supplierName, ...rest } = order;
     await apiRequest('POST', '/api/purchase-orders', { ...rest, orderNumber: `${orderNumber}-COPY` });
     queryClient.invalidateQueries({ queryKey: ['/api/purchase-orders'] });
   };
@@ -264,7 +262,7 @@ export default function PurchaseOrders() {
             key: 'duplicate',
             label: 'Duplicate',
             icon: <Copy className="h-4 w-4" />,
-            onClick: () => handleDuplicate([row.id]),
+            onClick: () => handleDuplicate(row),
             variant: 'outline' as const
           },
           {

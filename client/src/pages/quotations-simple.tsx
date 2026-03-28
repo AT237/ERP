@@ -89,12 +89,11 @@ export default function Quotations({ onCreateNew }: QuotationsProps) {
   });
 
   const del = useEntityDelete<Quotation>({
-    entityName: 'quotation',
-    entityNamePlural: 'quotations',
-    apiEndpoint: '/api/quotations',
-    queryKey: '/api/quotations',
-    getItemId: (q) => q.id,
-    getItemName: (q) => q.quotationNumber || 'Quotation',
+    endpoint: '/api/quotations',
+    queryKeys: ['/api/quotations'],
+    getName: (q) => q.quotationNumber || 'Quotation',
+    entityLabel: 'Offerte',
+    checkUsages: false,
   });
 
   const openFormTab = (formInfo: {id: string, name: string, formType: string, parentId?: string}) => {

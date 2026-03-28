@@ -264,10 +264,7 @@ export default function TextSnippets() {
         applyFiltersAndSearch={tableState.applyFiltersAndSearch}
         applySorting={tableState.applySorting}
         onExport={() => exportTableToCSV(filteredData, tableState.columns, 'tekst-snippets')}
-        onDuplicate={(rows) => {
-          const snippet = filteredData.find(s => s.id === rows[0]);
-          if (snippet) handleDuplicate(snippet);
-        }}
+        onDuplicate={(row) => handleDuplicate(row as TextSnippet)}
         headerActions={[
           {
             key: 'add-snippet',
