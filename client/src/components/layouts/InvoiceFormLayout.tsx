@@ -906,8 +906,6 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     }));
   };
 
-  const invoiceNumberDisplay = invoiceForm.watch("invoiceNumber");
-
   const toolbar = useFormToolbar({
     entityType: "invoice",
     entityId: currentInvoiceId,
@@ -915,7 +913,6 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
-    entityNumber: invoiceNumberDisplay || undefined,
   });
 
   const currentProjectId = invoiceForm.watch("projectId");
