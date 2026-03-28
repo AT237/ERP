@@ -196,6 +196,7 @@ export interface IStorage {
   updatePackingList(id: string, list: Partial<InsertPackingList>): Promise<PackingList>;
   deletePackingList(id: string): Promise<void>;
   getPackingListItems(listId: string): Promise<PackingListItem[]>;
+  getPackingListItem(id: string): Promise<PackingListItem | undefined>;
   addPackingListItem(item: InsertPackingListItem): Promise<PackingListItem>;
   updatePackingListItem(id: string, item: Partial<InsertPackingListItem>): Promise<PackingListItem>;
   deletePackingListItem(id: string): Promise<void>;
@@ -1144,6 +1145,11 @@ export class DatabaseStorage implements IStorage {
 
   async getPackingListItems(listId: string): Promise<PackingListItem[]> {
     return await db.select().from(packingListItems).where(eq(packingListItems.packingListId, listId));
+  }
+
+  async getPackingListItem(id: string): Promise<PackingListItem | undefined> {
+    const [item] = await db.select().from(packingListItems).where(eq(packingListItems.id, id));
+    return item;
   }
 
   async addPackingListItem(item: InsertPackingListItem): Promise<PackingListItem> {

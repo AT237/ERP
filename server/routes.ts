@@ -2228,6 +2228,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/packing-list-items/:id", async (req, res) => {
+    try {
+      const item = await storage.getPackingListItem(req.params.id);
+      if (!item) return res.status(404).json({ message: "Packing list item not found" });
+      res.json(item);
+    } catch (error) {
+      console.error("Error fetching packing list item:", error);
+      res.status(500).json({ message: "Failed to fetch packing list item" });
+    }
+  });
+
   app.put("/api/packing-list-items/:id", async (req, res) => {
     try {
       const itemData = insertPackingListItemSchema.partial().parse(req.body);

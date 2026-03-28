@@ -644,12 +644,21 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
             applySorting={itemTableState.applySorting}
             compact={true}
             directInput={packingListDirectInput}
+            onRowDoubleClick={(item: PackingListItem) => {
+              if (currentPackingListId) {
+                navigate(`/packing-lists/${currentPackingListId}/items/${item.id}`);
+              }
+            }}
             headerActions={[
               {
                 key: 'add-item',
                 label: 'Regel toevoegen',
                 icon: <Plus className="h-4 w-4" />,
-                onClick: () => {},
+                onClick: () => {
+                  if (currentPackingListId) {
+                    navigate(`/packing-lists/${currentPackingListId}/items/new`);
+                  }
+                },
                 variant: 'default' as const
               }
             ]}
