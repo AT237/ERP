@@ -163,11 +163,25 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
   const itemColumns = useMemo(() => [
     createIdColumn('id', 'ID'),
     {
+      key: 'positionNo',
+      label: 'Pos.',
+      visible: true,
+      width: 60,
+      sortable: true,
+    },
+    {
+      key: 'lineType',
+      label: 'Type',
+      visible: true,
+      width: 90,
+      filterable: true,
+      sortable: true,
+    },
+    {
       key: 'itemId',
       label: 'Artikel',
       visible: true,
-      forceVisible: true,
-      width: 300,
+      width: 200,
       filterable: true,
       sortable: true,
       renderCell: (value: any) => {
@@ -176,8 +190,46 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         return <span>{item ? `${item.sku || ''} - ${item.name || ''}`.trim() : value}</span>;
       }
     },
+    {
+      key: 'description',
+      label: 'Omschrijving',
+      visible: true,
+      forceVisible: true,
+      width: 300,
+      filterable: true,
+      sortable: true,
+    },
     createNumericColumn('quantity', 'Aantal'),
     createNumericColumn('packedQuantity', 'Ingepakt'),
+    {
+      key: 'unit',
+      label: 'Eenheid',
+      visible: true,
+      width: 80,
+      filterable: true,
+      sortable: true,
+    },
+    {
+      key: 'descriptionInternal',
+      label: 'Interne omschr.',
+      visible: false,
+      width: 200,
+      filterable: true,
+    },
+    {
+      key: 'hsCode',
+      label: 'HS Code',
+      visible: false,
+      width: 120,
+      filterable: true,
+    },
+    {
+      key: 'countryOfOrigin',
+      label: 'Land v. herkomst',
+      visible: false,
+      width: 130,
+      filterable: true,
+    },
   ], [inventoryItems]);
 
   const itemTableState = useDataTable({
