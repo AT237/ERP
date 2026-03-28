@@ -557,6 +557,8 @@ export function DataTableLayout<T = any>({
   directInput,
 }: DataTableLayoutProps<T>) {
   
+  console.log('[DataTableLayout]', entityName, { hasOnExport: !!onExport, hasOnDuplicate: !!onDuplicate, headerActionsCount: headerActions.length, hasDeleteDialog: !!deleteConfirmDialog });
+
   const [directInputMode, setDirectInputMode] = useState<boolean>(false);
   const [directInputRow, setDirectInputRow] = useState<Record<string, any>>({});
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
