@@ -71,7 +71,6 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
   const { toast } = useToast();
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
     description: { label: "Omschrijving" },
-    unitPrice: { label: "Eenheidsprijs" },
   });
   const isEditing = !!lineItemId;
 
@@ -133,9 +132,6 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
       form.setValue("description", selectedInventoryItem.description || selectedInventoryItem.name || "");
       const unit = selectedInventoryItem.unit;
       if (unit) form.setValue("unit" as any, unit);
-      const price = selectedInventoryItem.sellingPrice || selectedInventoryItem.unitPrice;
-      if (price) form.setValue("unitPrice", Number(price).toFixed(2));
-      if (selectedInventoryItem.costPrice) form.setValue("costPrice", Number(selectedInventoryItem.costPrice).toFixed(2));
       if ((selectedInventoryItem as any).hsCode) form.setValue("hsCode" as any, (selectedInventoryItem as any).hsCode);
       setHasUnsavedChanges(true);
     }
@@ -224,24 +220,6 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
     snippets = snippets.filter(snippet => snippet.isActive);
     return snippets;
   }, [textSnippets, searchedSnippets, snippetSearchTerm, selectedSnippetCategory]);
-
-  const discountedUnitPrice = useMemo(() => {
-    const unitPrice = parseFloat(unitPriceValue || "0") || 0;
-    const discount = parseFloat(discountPercentValue || "0") || 0;
-    if (discount > 0) {
-      return (unitPrice * (1 - discount / 100)).toFixed(2);
-    }
-    return null;
-  }, [unitPriceValue, discountPercentValue]);
-
-  useEffect(() => {
-    const quantity = form.getValues("quantity");
-    const unitPrice = parseFloat(form.getValues("unitPrice")) || 0;
-    const discount = parseFloat(form.getValues("discountPercent") || "0") || 0;
-    const discountedPrice = unitPrice * (1 - discount / 100);
-    const lineTotal = (quantity * discountedPrice).toFixed(2);
-    form.setValue("lineTotal", lineTotal);
-  }, [quantityValue, unitPriceValue, discountPercentValue, form]);
 
   useEffect(() => {
     if (!lineTypeValue) return;
@@ -400,17 +378,6 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
     testId: 'textarea-description-internal',
   };
 
-  const fieldLineTotal: FormField2<PackingListItemFormData> = {
-    key: 'lineTotal',
-    label: 'Regel totaal',
-    type: 'text',
-    register: form.register('lineTotal'),
-    disabled: true,
-    className: 'bg-gray-50 dark:bg-gray-800',
-    validation: { error: form.formState.errors.lineTotal?.message },
-    testId: 'input-line-total',
-  };
-
   const fieldQuantity: FormField2<PackingListItemFormData> = {
     key: 'quantity',
     label: 'Aantal',
@@ -427,18 +394,6 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
     register: form.register('packedQuantity'),
     placeholder: '0',
     testId: 'input-packed-quantity',
-  };
-
-  const fieldUnitPrice: FormField2<PackingListItemFormData> = {
-    key: 'unitPrice',
-    label: 'Prijs per eenheid',
-    type: 'decimal',
-    prefix: '€',
-    placeholder: '0,00',
-    setValue: (value) => { form.setValue('unitPrice', value); setHasUnsavedChanges(true); },
-    watch: () => form.watch('unitPrice'),
-    validation: { isRequired: true, error: form.formState.errors.unitPrice?.message },
-    testId: 'input-unit-price',
   };
 
   const fieldUnit: FormField2<PackingListItemFormData> = {
@@ -479,11 +434,9 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
         value={form.watch("itemId" as any) || ""}
         onValueChange={(val) => { form.setValue("itemId" as any, val); setHasUnsavedChanges(true); }}
         onItemRefreshed={(freshItem) => {
-          const price = freshItem.sellingPrice || freshItem.unitPrice;
-          if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
           if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
           if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
-          if (freshItem.costPrice) { form.setValue("costPrice", Number(freshItem.costPrice).toFixed(2)); }
+          setHasUnsavedChanges(true);
         }}
         placeholder="Artikel zoeken in catalogus..."
         testId="select-inventory-item"
@@ -507,28 +460,6 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
         {form.formState.errors.description?.message && (
           <p className="text-sm text-destructive">{form.formState.errors.description.message}</p>
         )}
-      </div>
-    ),
-  };
-
-  const fieldDiscount: FormField2<PackingListItemFormData> = {
-    key: 'discountPercent',
-    label: 'Korting %',
-    type: 'decimal',
-    placeholder: '0,00',
-    setValue: (value) => { form.setValue('discountPercent', value); setHasUnsavedChanges(true); },
-    watch: () => form.watch('discountPercent'),
-    validation: { error: form.formState.errors.discountPercent?.message },
-    testId: 'input-discount-percent',
-  };
-
-  const fieldDiscountedPrice: FormField2<PackingListItemFormData> = {
-    key: 'discountedUnitPrice' as any,
-    label: 'Prijs na korting',
-    type: 'custom',
-    customComponent: (
-      <div className="mt-1 px-3 py-2 rounded-md border bg-muted/50 text-sm" data-testid="discounted-unit-price">
-        {discountedUnitPrice ? `€ ${discountedUnitPrice.replace('.', ',')}` : '—'}
       </div>
     ),
   };
