@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertPackingListSchema, insertPackingListItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Box, Package, Truck, RefreshCw } from "lucide-react";
+import { Box, Package, Truck, RefreshCw, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn, createNumericColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
@@ -647,6 +647,15 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
             applySorting={itemTableState.applySorting}
             compact={true}
             directInput={packingListDirectInput}
+            headerActions={[
+              {
+                key: 'add-item',
+                label: 'Regel toevoegen',
+                icon: <Plus className="h-4 w-4" />,
+                onClick: () => {},
+                variant: 'default' as const
+              }
+            ]}
             deleteConfirmDialog={{
               isOpen: isBulkDeleteOpen,
               onOpenChange: setIsBulkDeleteOpen,
