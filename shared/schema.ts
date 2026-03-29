@@ -511,6 +511,8 @@ export const packingListItems = pgTable("packing_list_items", {
   discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
   hsCode: text("hs_code"),
   countryOfOrigin: text("country_of_origin"),
+  weight: decimal("weight", { precision: 10, scale: 3 }).default("0"),
+  collieNumber: text("collie_number"),
 });
 
 // Master Data tables

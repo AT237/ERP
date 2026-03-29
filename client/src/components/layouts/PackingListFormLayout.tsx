@@ -230,6 +230,20 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
       width: 130,
       filterable: true,
     },
+    {
+      key: 'weight',
+      label: 'Gewicht',
+      visible: true,
+      width: 100,
+      filterable: true,
+    },
+    {
+      key: 'collieNumber',
+      label: 'Collie nr.',
+      visible: true,
+      width: 100,
+      filterable: true,
+    },
   ], [inventoryItems]);
 
   const itemTableState = useDataTable({
