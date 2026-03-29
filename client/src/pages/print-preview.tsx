@@ -13,7 +13,8 @@ export default function PrintPreviewPage() {
   const search = useSearch();
   const printRef = useRef<HTMLDivElement>(null);
 
-  const documentType = params?.documentType ?? "";
+  const rawDocumentType = params?.documentType ?? "";
+  const documentType = rawDocumentType.replace(/_/g, '-');
   const entityId = params?.entityId ?? "";
   const searchParams = new URLSearchParams(search);
   const layoutId = searchParams.get("layoutId") ?? "";
