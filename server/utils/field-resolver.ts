@@ -837,6 +837,8 @@ export async function loadPackingListPrintData(packingListId: string): Promise<a
     itemId: item.itemId || null,
     hsCode: item.hsCode || null,
     countryOfOrigin: item.countryOfOrigin || null,
+    weight: parseFloat(String(item.weight || 0)),
+    collieNumber: item.collieNumber || null,
   }));
 
   return {
