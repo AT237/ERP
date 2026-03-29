@@ -188,6 +188,7 @@ export default function PrintPreviewPage() {
         <div className="text-sm font-medium text-gray-700 truncate">
           {printData?.invoice?.invoiceNumber ||
             printData?.quotation?.quotationNumber ||
+            printData?.packingList?.packingNumber ||
             "Print Preview"}
         </div>
         <div className="flex items-center gap-1">

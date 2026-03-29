@@ -4,28 +4,12 @@
 export type PrintData = {
   quotation?: Record<string, any>;
   invoice?: Record<string, any>;
+  packingList?: Record<string, any>;
   customer: Record<string, any> | null;
   project: Record<string, any> | null;
   company: Record<string, any> | null;
   vatRate?: { code: string; percentage: string; description: string | null } | null;
-  items?: Array<{
-    positionNo: string;
-    description: string;
-    descriptionInternal?: string | null;
-    quantity: number;
-    unit?: string | null;
-    unitPrice: string;
-    lineTotal: string;
-    lineType: string;
-    discountPercent?: string | null;
-    workDate?: Date | null;
-    technicianNames?: string | null;
-    technicianIds?: string | null;
-    customerRateId?: string | null;
-    itemId?: string | null;
-    sourceSnippetId?: string | null;
-    sourceSnippetVersion?: number | null;
-  }>;
+  items?: Array<Record<string, any>>;
 };
 
 /**
@@ -236,6 +220,9 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
     'projects': 'project',
     'companies': 'company',
     'invoices': 'invoice',
+    'packingLists': 'packingList',
+    'packing_list': 'packingList',
+    'packing_lists': 'packingList',
   };
   if (tableAliases[tableName]) {
     tableName = tableAliases[tableName];
@@ -249,6 +236,9 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
       break;
     case 'invoice':
       data = printData.invoice;
+      break;
+    case 'packingList':
+      data = printData.packingList;
       break;
     case 'customer':
       data = printData.customer;
