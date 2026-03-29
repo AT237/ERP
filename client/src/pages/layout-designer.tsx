@@ -695,7 +695,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     { name: 'salesOrderItems', label: 'Verkooporder Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
     { name: 'workOrders', label: 'Werkorders (gekoppeld)', fields: ['orderNumber', 'title', 'description', 'status', 'priority', 'assignedTo', 'startDate', 'dueDate', 'completedDate', 'estimatedHours', 'actualHours'] },
     { name: 'packingList', label: 'Paklijst', fields: ['packingListNumber', 'packingDate', 'shipDate', 'status', 'shippingMethod', 'shippingAddress', 'trackingNumber', 'totalWeight', 'totalPackages', 'notes'] },
-    { name: 'packingListItems', label: 'Paklijst Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'packedQuantity', 'unit', 'itemId', 'hsCode', 'countryOfOrigin'] },
+    { name: 'packingListItems', label: 'Paklijst Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'packedQuantity', 'unit', 'itemId', 'hsCode', 'countryOfOrigin', 'weight', 'collieNumber'] },
     { name: 'quotationRequest', label: 'Offerte Aanvraag', fields: ['requestNumber', 'requestDate', 'status', 'description', 'notes'] },
     
     // Relations

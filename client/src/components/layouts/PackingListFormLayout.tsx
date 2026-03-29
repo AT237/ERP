@@ -401,11 +401,15 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         },
         { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal' },
         { key: 'packedQuantity', fieldType: 'number', defaultValue: '0', placeholder: 'Ingepakt' },
+        { key: 'weight', fieldType: 'number', defaultValue: '0', placeholder: 'Gewicht' },
+        { key: 'collieNumber', fieldType: 'text', defaultValue: '', placeholder: 'Collie nr.' },
       ],
       defaults: {
         itemId: '',
         quantity: '1',
         packedQuantity: '0',
+        weight: '0',
+        collieNumber: '',
       },
       onSave: async (rowData) => {
         if (!rowData.itemId) {
@@ -417,6 +421,8 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
           itemId: rowData.itemId,
           quantity: parseInt(rowData.quantity || '1') || 1,
           packedQuantity: parseInt(rowData.packedQuantity || '0') || 0,
+          weight: parseFloat(rowData.weight || '0') || 0,
+          collieNumber: rowData.collieNumber || '',
         });
         queryClient.invalidateQueries({ queryKey: ["/api/packing-lists", currentPackingListId, "items"] });
         toast({ title: "Item toegevoegd" });
@@ -426,6 +432,8 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
           itemId: rowData.itemId,
           quantity: parseInt(rowData.quantity || '1') || 1,
           packedQuantity: parseInt(rowData.packedQuantity || '0') || 0,
+          weight: parseFloat(rowData.weight || '0') || 0,
+          collieNumber: rowData.collieNumber || '',
         });
         queryClient.invalidateQueries({ queryKey: ["/api/packing-lists", currentPackingListId, "items"] });
         toast({ title: "Item bijgewerkt" });
