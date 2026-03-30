@@ -604,9 +604,6 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     mutationFn: async (data: QuotationFormData) => {
       const processedData = {
         ...data,
-        quotationDate: data.quotationDate ? toStorageDate(data.quotationDate) : new Date(),
-        validUntil: data.validUntil ? toStorageDate(data.validUntil) : undefined,
-        // Keep as strings as expected by backend schema
         subtotal: data.subtotal,
         taxAmount: data.taxAmount || "0",
         totalAmount: data.totalAmount,
