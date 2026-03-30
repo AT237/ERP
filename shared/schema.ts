@@ -257,22 +257,23 @@ export const quotations = pgTable("quotations", {
 export const quotationItems = pgTable("quotation_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   quotationId: varchar("quotation_id").references(() => quotations.id).notNull(),
-  itemId: varchar("item_id").references(() => inventoryItems.id), // Nullable for text lines
+  itemId: varchar("item_id").references(() => inventoryItems.id),
   description: text("description").notNull(),
-  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"), // 0 for text lines; decimal for e.g. 0.75 hours
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"),
   unit: text("unit"),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
-  lineType: text("line_type").default("standard"), // 'standard', 'unique', 'text', 'charges'
-  position: integer("position").default(0), // Order of items in document
-  positionNo: text("position_no"), // Formatted position number (e.g., "010", "020")
-  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id), // Link to text snippet
-  sourceSnippetVersion: integer("source_snippet_version"), // Version of snippet when used
-  // Delivery/sourcing fields
-  deliveryDate: timestamp("delivery_date"), // Expected delivery date
-  supplierId: varchar("supplier_id").references(() => suppliers.id), // Supplier for this item
-  hsCode: text("hs_code"), // Harmonized System code for customs
-  countryOfOrigin: text("country_of_origin"), // Country of origin for customs
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineType: text("line_type").default("standard"),
+  position: integer("position").default(0),
+  positionNo: text("position_no"),
+  discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
+  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id),
+  sourceSnippetVersion: integer("source_snippet_version"),
+  deliveryDate: timestamp("delivery_date"),
+  supplierId: varchar("supplier_id").references(() => suppliers.id),
+  hsCode: text("hs_code"),
+  countryOfOrigin: text("country_of_origin"),
 });
 
 // Quotation requests table
