@@ -380,11 +380,12 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
   const items = applyPrintSortOrder(rawItems, quotation.printSortOrder);
 
   const itemsData = items.map((item, index) => ({
-    positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'), // e.g., "010", "020"
+    positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'),
     description: item.description,
     quantity: parseFloat(String(item.quantity || 0)),
     unit: (item as any).unit || "",
     unitPrice: item.unitPrice || "0.00",
+    netUnitPrice: item.unitPrice || "0.00",
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",
   }));
