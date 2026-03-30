@@ -557,7 +557,7 @@ export function DataTableLayout<T = any>({
   directInput,
 }: DataTableLayoutProps<T>) {
   
-  const [directInputMode, setDirectInputMode] = useState<boolean>(!!directInput);
+  const [directInputMode, setDirectInputMode] = useState<boolean>(false);
   const [directInputRow, setDirectInputRow] = useState<Record<string, any>>({});
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editingRowData, setEditingRowData] = useState<Record<string, any>>({});
@@ -1311,7 +1311,7 @@ export function DataTableLayout<T = any>({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`h-8 w-8 p-0 ${directInputMode ? 'bg-orange-500 text-white hover:bg-orange-600' : 'opacity-30 hover:opacity-60'}`}
+                  className={`h-8 w-8 p-0 ${directInputMode ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-orange-500 hover:bg-orange-50 border border-orange-300'}`}
                   onClick={() => {
                     setDirectInputMode(prev => !prev);
                     setEditingRowId(null);
