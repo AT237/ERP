@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict jQU1p2g58fmsDvaIJFKruAUjmJi91mLglR3eN0qmFbDLPgFJaSyppn0bxoJmXh0
+\restrict OXrKUaTN1Qpwb8WhSHUdCWdviF7hAPVlh9tAPjGzFrwQ4S0ATo9gwniK4ysXSoY
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -1237,7 +1237,9 @@ CREATE TABLE public.quotation_items (
     supplier_id character varying,
     hs_code text,
     country_of_origin text,
-    unit text
+    unit text,
+    cost_price numeric(10,2) DEFAULT 0.00,
+    discount_percent numeric(5,2) DEFAULT '0'::numeric
 );
 
 
@@ -2272,11 +2274,11 @@ COPY public.purchase_orders (id, order_number, supplier_id, status, order_date, 
 -- Data for Name: quotation_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.quotation_items (id, quotation_id, item_id, description, quantity, unit_price, line_total, line_type, "position", source_snippet_id, source_snippet_version, position_no, delivery_date, supplier_id, hs_code, country_of_origin, unit) FROM stdin;
-c7dfae2f-9fba-48d7-a731-9265289d2626	test-quotation-1	\N	--- Project Header Text ---	0.000	0.00	0.00	text	0	\N	\N	010	\N	\N	\N	\N	\N
-8516fea2-da18-4945-ad9f-be215f4fb9c7	test-quotation-1	\N	Shipping and Handling Fee	1.000	15.00	15.00	charges	0	\N	\N	010	\N	\N	\N	\N	\N
-4483c986-d46c-4ec8-9fc7-6c8d9a8073fd	test-quotation-1	\N	Standard Product Item	2.000	25.00	50.00	standard	1	\N	\N	090	\N	\N	\N	\N	\N
-719c11f0-e795-4bba-88f4-e5d5c0419a96	test-quotation-1	\N	Custom Engineered Component	1.000	150.00	150.00	unique	1	\N	\N	011	\N	\N	\N	\N	\N
+COPY public.quotation_items (id, quotation_id, item_id, description, quantity, unit_price, line_total, line_type, "position", source_snippet_id, source_snippet_version, position_no, delivery_date, supplier_id, hs_code, country_of_origin, unit, cost_price, discount_percent) FROM stdin;
+c7dfae2f-9fba-48d7-a731-9265289d2626	test-quotation-1	\N	--- Project Header Text ---	0.000	0.00	0.00	text	0	\N	\N	010	\N	\N	\N	\N	\N	0.00	0.00
+8516fea2-da18-4945-ad9f-be215f4fb9c7	test-quotation-1	\N	Shipping and Handling Fee	1.000	15.00	15.00	charges	0	\N	\N	010	\N	\N	\N	\N	\N	0.00	0.00
+4483c986-d46c-4ec8-9fc7-6c8d9a8073fd	test-quotation-1	\N	Standard Product Item	2.000	25.00	50.00	standard	1	\N	\N	090	\N	\N	\N	\N	\N	0.00	0.00
+719c11f0-e795-4bba-88f4-e5d5c0419a96	test-quotation-1	\N	Custom Engineered Component	1.000	150.00	150.00	unique	1	\N	\N	011	\N	\N	\N	\N	\N	0.00	0.00
 \.
 
 
@@ -3443,7 +3445,7 @@ z9XOAqcVlYPxLe_4uJPtklTill04tHvO	{"cookie":{"originalMaxAge":604800000,"expires"
 HA9sx8HgSCwNfLzZ25Rs-zot8Jz-5Xmc	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:49:50.966Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:49:52
 DydfCmxnF9Y7M8cXrMNtollnPcwzY2Eh	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:02:00.267Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:02:41
 PA3DwNha04cB0K8L_9gpEk09h3fue6uM	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:05:01.379Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:05:02
-Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 13:08:57
+Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 13:11:06
 06tRqKlA-rfQ_GqAPUsO6r6LmD4Rv0Wf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:03:38.029Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:03:39
 brOBMLpZ3lvlr-61KcpCFD9Ju20B-_Rd	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:54:15.680Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 12:54:16
 66kYKTeLVvLxBGlMp-Qssl-W6tsmNEBE	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T13:33:21.594Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-03-30 13:33:22
@@ -4814,5 +4816,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict jQU1p2g58fmsDvaIJFKruAUjmJi91mLglR3eN0qmFbDLPgFJaSyppn0bxoJmXh0
+\unrestrict OXrKUaTN1Qpwb8WhSHUdCWdviF7hAPVlh9tAPjGzFrwQ4S0ATo9gwniK4ysXSoY
 
