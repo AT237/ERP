@@ -815,7 +815,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "items"] });
       },
     };
-  }, [currentQuotationId, quotationItems, inventoryItems]);
+  }, [currentQuotationId, quotationItems, inventoryItems, unitsOfMeasure]);
 
   // Memo functionality
   const handleAddMemo = () => {

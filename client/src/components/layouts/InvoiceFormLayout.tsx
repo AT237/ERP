@@ -791,7 +791,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         position: nextPosition,
         lineType: '',
         quantity: '1',
-        unit: 'stk',
+        unit: 'Pcs.',
         unitPrice: '0.00',
         costPrice: '0.00',
         discountPercent: '0',
@@ -836,7 +836,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId, "items"] });
       },
     };
-  }, [currentInvoiceId, invoiceItems, inventoryItems]);
+  }, [currentInvoiceId, invoiceItems, inventoryItems, unitsOfMeasure]);
 
   const handleSaveInvoice = (data: InvoiceFormData) => {
     const submitData: any = {

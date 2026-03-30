@@ -500,7 +500,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         position: nextPosition,
         lineType: '',
         quantity: '1',
-        unit: 'stk',
+        unit: 'Pcs.',
         unitPrice: '0.00',
         costPrice: '0.00',
       },
@@ -535,7 +535,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         queryClient.invalidateQueries({ queryKey: ["/api/work-orders", currentWorkOrderId, "items"] });
       },
     };
-  }, [currentWorkOrderId, workOrderItemsData, inventoryItems]);
+  }, [currentWorkOrderId, workOrderItemsData, inventoryItems, unitsOfMeasure]);
 
   // Project select — filtered by selected customer
   const renderProjectSelect = () => (
