@@ -164,6 +164,35 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         sortable: false
       },
       createCurrencyColumn('unitPrice', 'Unit Price'),
+      {
+        key: 'discountPercent',
+        label: 'Disc. %',
+        visible: true,
+        width: 70,
+        filterable: false,
+        sortable: true,
+        align: 'right' as const,
+        renderCell: (value: any) => {
+          const disc = parseFloat(String(value || "0")) || 0;
+          return disc > 0 ? `${disc}%` : '';
+        }
+      },
+      {
+        key: 'netUnitPrice',
+        label: 'Net Price',
+        visible: true,
+        width: 100,
+        filterable: false,
+        sortable: true,
+        align: 'right' as const,
+        renderCell: (_value: any, row: any) => {
+          const unitPrice = parseFloat(row.unitPrice || "0") || 0;
+          const discount = parseFloat(row.discountPercent || "0") || 0;
+          const net = discount > 0 ? unitPrice * (1 - discount / 100) : unitPrice;
+          return `€\u00A0${net.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+      },
+      createCurrencyColumn('costPrice', 'Cost Price', 100),
       createCurrencyColumn('lineTotal', 'Line Total'),
     ],
     tableKey: 'quotation-form-items'
@@ -771,6 +800,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           options: unitsOfMeasure.filter(u => u.isActive !== false).map(u => ({ value: u.code, label: u.code })),
         },
         { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'discountPercent', fieldType: 'number', defaultValue: '0', placeholder: 'Korting %', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
         { key: 'costPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Kostprijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
       ],
       defaults: {
@@ -781,11 +811,14 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         unit: 'Pcs.',
         unitPrice: '0.00',
         costPrice: '0.00',
+        discountPercent: '0',
       },
       onSave: async (rowData) => {
         const qty = parseFloat(rowData.quantity || '1') || 1;
         const price = parseFloat(rowData.unitPrice || '0') || 0;
-        const lineTotal = (qty * price).toFixed(2);
+        const disc = parseFloat(rowData.discountPercent || '0') || 0;
+        const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
+        const lineTotal = (qty * netPrice).toFixed(2);
         const np = quotationItems.length > 0
           ? Math.max(...quotationItems.map(i => parseInt(String(i.positionNo || i.position || '0'), 10) || 0)) + 10
           : 10;
@@ -798,6 +831,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           unitPrice: String(price),
           lineTotal,
           costPrice: rowData.costPrice || '0.00',
+          discountPercent: String(disc),
           position: np,
           positionNo: String(np).padStart(3, '0'),
         };
@@ -809,8 +843,10 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       onUpdate: async (rowId, rowData) => {
         const qty = parseFloat(rowData.quantity || '0') || 0;
         const price = parseFloat(rowData.unitPrice || '0') || 0;
-        const lineTotal = (qty * price).toFixed(2);
-        const updateData: any = { ...rowData, lineTotal };
+        const disc = parseFloat(rowData.discountPercent || '0') || 0;
+        const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
+        const lineTotal = (qty * netPrice).toFixed(2);
+        const updateData: any = { ...rowData, lineTotal, discountPercent: String(disc) };
         await apiRequest("PUT", `/api/quotation-items/${rowId}`, updateData);
         queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "items"] });
       },
