@@ -1431,9 +1431,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/quotations", async (req, res) => {
     try {
-      const body = parseDateFields(req.body, ['quotationDate', 'deliveryDate']);
-      const quotationData = insertQuotationSchema.parse(body);
-      const quotation = await storage.createQuotation(quotationData);
+      const quotationData = insertQuotationSchema.parse(req.body);
+      const body = parseDateFields(quotationData as any, ['quotationDate', 'deliveryDate']);
+      const quotation = await storage.createQuotation(body as any);
       res.status(201).json(quotation);
     } catch (error: any) {
       console.error("Error creating quotation:", error);
@@ -1465,9 +1465,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/quotations/:id", async (req, res) => {
     try {
-      const body = parseDateFields(req.body, ['quotationDate', 'deliveryDate']);
-      const quotationData = insertQuotationSchema.partial().parse(body);
-      const quotation = await storage.updateQuotation(req.params.id, quotationData);
+      const quotationData = insertQuotationSchema.partial().parse(req.body);
+      const body = parseDateFields(quotationData as any, ['quotationDate', 'deliveryDate']);
+      const quotation = await storage.updateQuotation(req.params.id, body as any);
       res.json(quotation);
     } catch (error: any) {
       console.error("Error updating quotation:", error);
