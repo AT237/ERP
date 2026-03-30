@@ -1503,7 +1503,8 @@ export function DataTableLayout<T = any>({
                           </div>
                         </TableCell>
                         {currentVisibleColumns.map((column, colIdx) => {
-                          const editableCol = isEditing ? diCol(column.key) : null;
+                          const rawEditableCol = isEditing ? diCol(column.key) : null;
+                          const editableCol = rawEditableCol && (!rawEditableCol.enabledWhen || rawEditableCol.enabledWhen(editingRowData)) ? rawEditableCol : null;
                           return (
                             <TableCell 
                               key={column.key} 
@@ -1580,7 +1581,7 @@ export function DataTableLayout<T = any>({
                       const diCol = directInput.columns.find(c => c.key === column.key);
                       const isEnabled = diCol ? (!diCol.enabledWhen || diCol.enabledWhen(directInputRow)) : false;
                       const cellBg = diCol
-                        ? (isEnabled ? 'bg-green-50 dark:bg-green-900/20' : 'bg-gray-50 dark:bg-gray-800/30')
+                        ? (isEnabled ? 'bg-green-50 dark:bg-green-900/20' : '')
                         : '';
                       return (
                         <TableCell
@@ -1650,9 +1651,7 @@ export function DataTableLayout<T = any>({
                                   placeholder={diCol.placeholder || column.label}
                                 />
                               )
-                            ) : (
-                              <span className="text-[10px] text-gray-400 px-2 italic">—</span>
-                            )
+                            ) : null
                           ) : (
                             <span className="text-[10px] text-gray-300 px-2">—</span>
                           )}
