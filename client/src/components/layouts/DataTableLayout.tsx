@@ -1517,9 +1517,9 @@ export function DataTableLayout<T = any>({
                                     value={editingRowData[column.key] || ''}
                                     onChange={(e) => setEditingRowData(prev => ({ ...prev, [column.key]: e.target.value }))}
                                     onKeyDown={(e) => handleDirectInputKeyDown(e, directInput!.columns.indexOf(editableCol), false)}
-                                    className="w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-orange-400"
+                                    className={`w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-orange-400 ${!editingRowData[column.key] ? 'text-gray-400' : ''}`}
                                   >
-                                    <option value="">-</option>
+                                    <option value="">{editableCol.placeholder || '—'}</option>
                                     {editableCol.options?.map(opt => (
                                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                                     ))}
@@ -1611,9 +1611,9 @@ export function DataTableLayout<T = any>({
                                     }
                                   }}
                                   onKeyDown={(e) => handleDirectInputKeyDown(e, directInput.columns.indexOf(diCol), true)}
-                                  className="w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-green-400"
+                                  className={`w-full h-8 px-2 text-xs bg-transparent border-0 outline-none focus:ring-1 focus:ring-green-400 ${!directInputRow[column.key] ? 'text-gray-400' : ''}`}
                                 >
-                                  <option value="">-</option>
+                                  <option value="">{diCol.placeholder || '—'}</option>
                                   {diCol.options?.map(opt => (
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                   ))}
