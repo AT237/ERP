@@ -568,18 +568,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
   const createQuotationMutation = useMutation({
     mutationFn: async (data: QuotationFormData) => {
-      const response = await fetch('/api/quotations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          quotationNumber: data.quotationNumber || nextQuotationNumber,
-        }),
-      });
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.error || body.message || 'Failed to create quotation');
-      }
+      const response = await apiRequest("POST", "/api/quotations", data);
       return response.json();
     },
     onSuccess: (savedQuotation: any) => {
@@ -591,33 +580,23 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
     },
     onError: (error: Error) => {
-      console.error('Error creating quotation:', error);
+      let description = "Failed to create quotation";
+      try {
+        const jsonStr = error.message.replace(/^\d+:\s*/, '');
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.message) description = parsed.message;
+      } catch {}
       toast({
         title: "Fout bij aanmaken",
-        description: error.message || "Failed to create quotation",
+        description,
         variant: "destructive",
       });
     },
   });
 
   const updateQuotationMutation = useMutation({
-    mutationFn: async (data: QuotationFormData) => {
-      const processedData = {
-        ...data,
-        subtotal: data.subtotal,
-        taxAmount: data.taxAmount || "0",
-        totalAmount: data.totalAmount,
-      };
-      
-      const response = await fetch(`/api/quotations/${currentQuotationId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(processedData),
-      });
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.error || body.message || 'Failed to update quotation');
-      }
+    mutationFn: async (data: Partial<QuotationFormData>) => {
+      const response = await apiRequest("PUT", `/api/quotations/${currentQuotationId}`, data);
       return response.json();
     },
     onSuccess: () => {
@@ -626,29 +605,41 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         description: "Quotation updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId] });
     },
     onError: (error: Error) => {
-      console.error('Error updating quotation:', error);
+      let description = "Failed to update quotation";
+      try {
+        const jsonStr = error.message.replace(/^\d+:\s*/, '');
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.message) description = parsed.message;
+      } catch {}
       toast({
         title: "Fout bij opslaan",
-        description: error.message || "Failed to update quotation",
+        description,
         variant: "destructive",
       });
     },
   });
 
   const handleSaveQuotation = (data: QuotationFormData) => {
-    // Convert dates from dd-mm-yyyy to yyyy-MM-dd for storage
-    const dataWithConvertedDates = {
+    const submitData: any = {
       ...data,
-      quotationDate: formatDateForStorage(data.quotationDate || ""),
-      validUntil: formatDateForStorage(data.validUntil || ""),
+      subtotal: data.subtotal,
+      taxAmount: data.taxAmount || "0",
+      totalAmount: data.totalAmount,
+      quotationDate: data.quotationDate ? toStorageDate(data.quotationDate) : undefined,
+      validUntil: data.validUntil ? toStorageDate(data.validUntil) : undefined,
+      projectId: data.projectId || null,
     };
-    
+
     if (currentQuotationId) {
-      updateQuotationMutation.mutate(dataWithConvertedDates);
+      updateQuotationMutation.mutate(submitData);
     } else {
-      createQuotationMutation.mutate(dataWithConvertedDates);
+      createQuotationMutation.mutate({
+        ...submitData,
+        quotationNumber: data.quotationNumber || nextQuotationNumber,
+      });
     }
   };
 

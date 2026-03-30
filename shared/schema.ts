@@ -980,8 +980,8 @@ export const insertProspectSchema = createInsertSchema(prospects).omit({ id: tru
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({ id: true, createdAt: true });
 export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, projectNumber: true, createdAt: true });
 export const insertQuotationSchema = createInsertSchema(quotations).omit({ id: true, createdAt: true }).extend({
-  quotationDate: z.string().optional(),
-  validUntil: z.string().optional(),
+  quotationDate: z.union([z.string(), z.date()]).optional(),
+  validUntil: z.union([z.string(), z.date()]).optional(),
   subtotal: z.string().optional(),
   taxAmount: z.string().optional(), 
   totalAmount: z.string().optional(),
