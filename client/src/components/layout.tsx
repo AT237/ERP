@@ -1123,7 +1123,7 @@ export default function Layout({ children }: LayoutProps) {
       if (tab.formType === 'quotation') {
         const quotationId = tab.id.startsWith('edit-quotation-') 
           ? tab.id.replace('edit-quotation-', '') 
-          : tab.parentId;
+          : undefined;
         
         return (
           <Suspense fallback={<div></div>}>
