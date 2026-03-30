@@ -34,7 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, createNumericColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { QuotationPrintDialog } from "@/components/print/QuotationPrintDialog";
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem, Project } from "@shared/schema";
+import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem, Project, UnitOfMeasure } from "@shared/schema";
 import { insertInventoryItemSchema } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
@@ -181,6 +181,11 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory"],
     staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: unitsOfMeasure = [] } = useQuery<UnitOfMeasure[]>({
+    queryKey: ["/api/masterdata/units-of-measure"],
+    staleTime: 10 * 60 * 1000,
   });
 
   // Lazy load projects only when needed
@@ -756,13 +761,15 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               description: item.description || item.name || '',
               unitPrice: item.unitPrice || '0.00',
               costPrice: item.costPrice || '0.00',
-              unit: item.unit || 'stk',
+              unit: item.unit || 'Pcs.',
             };
           },
         },
         { key: 'description', fieldType: 'text', placeholder: 'Description', enabledWhen: (r) => !!r.lineType },
         { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
-        { key: 'unit', fieldType: 'text', defaultValue: 'stk', placeholder: 'Eenheid', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'unit', fieldType: 'select', defaultValue: 'Pcs.', placeholder: 'Eenheid', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text',
+          options: unitsOfMeasure.filter(u => u.isActive !== false).map(u => ({ value: u.code, label: u.code })),
+        },
         { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
         { key: 'costPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Kostprijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
       ],
@@ -771,7 +778,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         position: nextPosition,
         lineType: '',
         quantity: '1',
-        unit: 'stk',
+        unit: 'Pcs.',
         unitPrice: '0.00',
         costPrice: '0.00',
       },
@@ -787,7 +794,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
           lineType: rowData.lineType || 'standard',
           description: rowData.description || '',
           quantity: String(qty),
-          unit: rowData.unit || 'stk',
+          unit: rowData.unit || 'Pcs.',
           unitPrice: String(price),
           lineTotal,
           costPrice: rowData.costPrice || '0.00',
