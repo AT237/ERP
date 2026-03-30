@@ -417,6 +417,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
       incoTerms: quotation.incoTerms,
       paymentConditions: quotation.paymentConditions,
       deliveryConditions: quotation.deliveryConditions,
+      vatRatePercent: vatRateData?.percentage ?? null,
       notes: quotation.notes,
       printLanguageCode: (quotation as any).printLanguageCode || null,
     },
