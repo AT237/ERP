@@ -141,7 +141,7 @@ export default function Layout({ children }: LayoutProps) {
     
     const invoiceItemEditMatch = path.match(/^\/invoices\/([^/]+)\/items\/([^/]+)$/);
     if (invoiceItemEditMatch) {
-      return { id: `invoice-line-${invoiceItemEditMatch[2]}`, name: 'Invoice Line' };
+      return { id: `invoice-line-${invoiceItemEditMatch[2]}`, name: 'Invoice Line', parentId: invoiceItemEditMatch[1] };
     }
     
     switch (path) {
@@ -355,7 +355,8 @@ export default function Layout({ children }: LayoutProps) {
         name: pageInfo.name,
         type: 'page',
         menuRoute: location,
-        content: children
+        content: children,
+        ...(pageInfo.parentId ? { parentId: pageInfo.parentId } : {}),
       };
       setTabs(prevTabs => [...prevTabs, newTab]);
     } else {
@@ -1126,6 +1127,56 @@ export default function Layout({ children }: LayoutProps) {
         return (
           <Suspense fallback={<div></div>}>
             <DevFuturesPage />
+          </Suspense>
+        );
+      }
+
+      // Handle route-based quotation line item tabs
+      const quotationLineNewMatch = tab.id.match(/^quotation-line-new-(.+)$/);
+      if (quotationLineNewMatch) {
+        return (
+          <Suspense fallback={<div></div>}>
+            <LineItemFormLayoutComponent
+              quotationId={quotationLineNewMatch[1]}
+              parentId={quotationLineNewMatch[1]}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+      if (tab.id.startsWith('quotation-line-') && !tab.id.startsWith('quotation-line-new-')) {
+        const lineItemId = tab.id.replace('quotation-line-', '');
+        return (
+          <Suspense fallback={<div></div>}>
+            <LineItemFormLayoutComponent
+              lineItemId={lineItemId}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+
+      // Handle route-based invoice line item tabs
+      const invoiceLineNewMatch = tab.id.match(/^invoice-line-new-(.+)$/);
+      if (invoiceLineNewMatch) {
+        return (
+          <Suspense fallback={<div></div>}>
+            <InvoiceLineItemForm
+              invoiceId={invoiceLineNewMatch[1]}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+      if (tab.id.startsWith('invoice-line-') && !tab.id.startsWith('invoice-line-new-')) {
+        const lineItemId = tab.id.replace('invoice-line-', '');
+        return (
+          <Suspense fallback={<div></div>}>
+            <InvoiceLineItemForm
+              invoiceId={tab.parentId || ''}
+              itemId={lineItemId}
+              onSave={() => {}}
+            />
           </Suspense>
         );
       }
