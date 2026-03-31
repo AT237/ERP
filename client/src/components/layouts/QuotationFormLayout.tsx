@@ -33,6 +33,7 @@ import { CustomerSelect } from "@/components/ui/customer-select";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, createNumericColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { QuotationPrintDialog } from "@/components/print/QuotationPrintDialog";
+import { amountToWords } from "@/utils/field-resolver";
 import { useDataTable } from '@/hooks/useDataTable';
 import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem, Project, UnitOfMeasure } from "@shared/schema";
 import { insertInventoryItemSchema } from "@shared/schema";
@@ -445,6 +446,21 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     quotationForm.setValue('taxAmount', taxAmount.toFixed(2));
     quotationForm.setValue('totalAmount', totalAmount.toFixed(2));
   }, [quotationItems, quotationForm]);
+
+  const totalCost = React.useMemo(() => {
+    return quotationItems.reduce((sum, item) => {
+      const qty = parseFloat(String(item.quantity || "0")) || 0;
+      const cost = parseFloat(String((item as any).costPrice || "0")) || 0;
+      return sum + (qty * cost);
+    }, 0);
+  }, [quotationItems]);
+
+  const totalMargin = React.useMemo(() => {
+    const subtotal = quotationItems.reduce((sum, item) => {
+      return sum + (parseFloat(item.lineTotal || "0") || 0);
+    }, 0);
+    return subtotal - totalCost;
+  }, [quotationItems, totalCost]);
 
   // Set quotation number from API when creating a new quotation
   useEffect(() => {
@@ -1729,45 +1745,51 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         ]
       },
       {
-        id: "financial",
-        label: "Financial",
+        id: "amounts",
+        label: "Amounts",
         rows: [
-          createSectionHeaderRow("Financial Summary", "mb-6"),
           createFieldRow({
-            key: "subtotal",
+            key: "subtotal" as any,
             label: "Subtotal",
             type: "display",
-            displayValue: (
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                <p className="text-2xl font-bold">€{quotationForm.watch("subtotal") || "0.00"}</p>
-              </div>
-            ),
-            testId: "text-subtotal"
-          }),
-          createFieldsRow([
-            {
-              key: "taxAmount",
-              label: "Tax (21%)",
-              type: "display",
-              displayValue: (
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                  <p className="text-2xl font-bold">€{quotationForm.watch("taxAmount") || "0.00"}</p>
-                </div>
-              ),
-              testId: "text-tax"
-            },
-            {
-              key: "totalAmount",
-              label: "Total",
-              type: "display",
-              displayValue: (
-                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200">
-                  <p className="text-2xl font-bold text-orange-800 dark:text-orange-200">€{quotationForm.watch("totalAmount") || "0.00"}</p>
-                </div>
-              ),
-              testId: "text-total"
-            }
-          ])
+            displayValue: `€ ${quotationForm.watch("subtotal") || "0.00"}`,
+            testId: "display-subtotal"
+          } as any),
+          createFieldRow({
+            key: "totalCost" as any,
+            label: "Total Cost",
+            type: "display",
+            displayValue: `€ ${totalCost.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            testId: "display-total-cost"
+          } as any),
+          createFieldRow({
+            key: "totalMargin" as any,
+            label: "Margin",
+            type: "display",
+            displayValue: `€ ${totalMargin.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            testId: "display-total-margin"
+          } as any),
+          createFieldRow({
+            key: "taxAmount" as any,
+            label: "VAT Amount (21%)",
+            type: "display",
+            displayValue: `€ ${quotationForm.watch("taxAmount") || "0.00"}`,
+            testId: "display-vat-amount"
+          } as any),
+          createFieldRow({
+            key: "totalAmount" as any,
+            label: "Total Amount",
+            type: "display",
+            displayValue: `€ ${quotationForm.watch("totalAmount") || "0.00"}`,
+            testId: "display-total-amount"
+          } as any),
+          createFieldRow({
+            key: "totalAmountInWords" as any,
+            label: "Bedrag in woorden",
+            type: "display",
+            displayValue: amountToWords(parseFloat(quotationForm.watch("totalAmount") || "0") || 0, "nl"),
+            testId: "display-total-amount-in-words"
+          } as any),
         ]
       },
       {
