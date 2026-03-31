@@ -363,7 +363,7 @@ export default function Layout({ children }: LayoutProps) {
       // Update existing tab content
       setTabs(prevTabs => 
         prevTabs.map(tab => 
-          tab.id === pageInfo.id ? { ...tab, content: children, menuRoute: location } : tab
+          tab.id === pageInfo.id ? { ...tab, content: children, menuRoute: location, ...(pageInfo.parentId ? { parentId: pageInfo.parentId } : {}) } : tab
         )
       );
     }

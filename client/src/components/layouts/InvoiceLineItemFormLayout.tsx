@@ -98,8 +98,10 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
 
   const [initialCleared] = useState(() => {
     if (!lineItemId) {
-      const key = buildFormPersistenceKey({ formType: "invoice-line-item", entityId: undefined, scope: invoiceId });
-      localStorage.removeItem(key);
+      try {
+        const key = buildFormPersistenceKey({ formType: "invoice-line-item", entityId: undefined, scope: invoiceId });
+        localStorage.removeItem(key);
+      } catch (e) {}
     }
     return true;
   });
