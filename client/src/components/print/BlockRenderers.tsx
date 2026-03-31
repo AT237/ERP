@@ -435,6 +435,8 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
   const showBorders = config.showBorders !== false;
   const zebraStriping = config.zebraStriping === true;
   const showUnit = config.showUnit === true;
+  const docData = printData.invoice || printData.quotation;
+  const showLineImages = docData?.printLineImages === true;
   
   // Format currency
   const formatCurrency = (value: string | number) => {
@@ -468,6 +470,7 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
           <thead>
             <tr className={showBorders ? "border-b border-gray-300" : ""}>
               <th className="py-1 px-1 text-left w-8 font-semibold">{headerLabels.position}</th>
+              {showLineImages && <th className="py-1 px-1 text-left w-14 font-semibold"></th>}
               <th className="py-1 px-1 text-left font-semibold">{headerLabels.description}</th>
               <th className="py-1 px-1 text-right w-14 font-semibold">{headerLabels.quantity}</th>
               {showUnit && <th className="py-1 px-1 text-left w-12 font-semibold">{headerLabels.unit}</th>}
@@ -487,6 +490,13 @@ export function LineItemsTableRenderer({ block, printData }: BlockRendererProps)
             return (
               <tr key={index} className={rowClass}>
                 <td className="py-1 px-1 text-gray-500">{item.positionNo}</td>
+                {showLineImages && (
+                  <td className="py-1 px-1 align-top">
+                    {item.lineImage && (
+                      <img src={item.lineImage} alt="" style={{ maxHeight: '28px', maxWidth: '48px', objectFit: 'contain' }} />
+                    )}
+                  </td>
+                )}
                 <td className={`py-1 px-1 ${isTextLine ? 'font-medium' : ''}`}>{item.description}</td>
                 <td className="py-1 px-1 text-right">{isTextLine ? '' : formatQuantity(item.quantity)}</td>
                 {showUnit && <td className="py-1 px-1 text-left text-gray-600">{isTextLine ? '' : (item.unit || '')}</td>}

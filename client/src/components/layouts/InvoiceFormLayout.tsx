@@ -346,6 +346,9 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         notes: invoice.notes || "",
         printSortOrder: (invoice as any).printSortOrder || "position",
         printLanguageCode: (invoice as any).printLanguageCode || "nl",
+        printProjectNo: (invoice as any).printProjectNo ?? true,
+        printPaymentConditions: (invoice as any).printPaymentConditions ?? true,
+        printLineImages: (invoice as any).printLineImages ?? false,
         incotermId: (invoice as any).incotermId || "",
       } as any);
     }

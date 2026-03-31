@@ -21,6 +21,7 @@ The frontend is built with React 18 and TypeScript, using Wouter for routing, sh
 - **Custom Card+Table System**: Specialized layouts for `projects`, `packing-lists`, `invoices`, `purchase-orders`, and `work-orders` with header images and custom card components.
 - **Safe Delete Pattern**: Consistent deletion behavior across the application using `useEntityDelete` hook and `SafeDeleteDialog`, eliminating `window.confirm()` calls. Backend usage checks prevent deletion of key entities if in use.
 - **Print Sort Order**: Quotations and invoices support configurable item sort order for printing (e.g., `position`, `price_high_low`, `alpha_az`).
+- **Line Item Images**: Each quotation/invoice line item has an optional `lineImage` field (base64 stored). Images can be uploaded manually or auto-populated from inventory items. A `printLineImages` boolean on quotations/invoices controls whether images appear in print output. The setting is available under "Afdrukinstellingen" (Print Settings) tab.
 - **Work Order Line Items**: Work orders include a `work_order_items` table with structure identical to `invoice_items`.
 - **Shared Line Item Types**: `shared/line-item-types.ts` is the single source of truth for line item types (`standard`, `unique`, `text`, `charges`), integrated across relevant forms.
 - **Status Colors**: All list pages (invoices, quotations, work orders, projects) use colored status badges with consistent color coding (green=active/completed, orange=draft/planning, blue=sent/in-progress, red=overdue/rejected, gray=cancelled).

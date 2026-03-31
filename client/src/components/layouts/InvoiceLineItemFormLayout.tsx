@@ -288,9 +288,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       setOriginalValues(formData);
       setHasUnsavedChanges(false);
       prevItemIdRef.current = lineItem.itemId || "";
-      if ((lineItem as any).lineImage) {
-        setLineImage((lineItem as any).lineImage);
-      }
+      setLineImage((lineItem as any).lineImage || null);
     } else {
       const defaultFormData = form.getValues();
       setOriginalValues(defaultFormData);

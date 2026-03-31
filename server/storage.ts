@@ -755,7 +755,12 @@ export class DatabaseStorage implements IStorage {
       notes: quotation.notes,
       incoTerms: quotation.incoTerms,
       paymentConditions: quotation.paymentConditions,
-      deliveryConditions: quotation.deliveryConditions
+      deliveryConditions: quotation.deliveryConditions,
+      printSortOrder: (quotation as any).printSortOrder || "position",
+      printProjectNo: (quotation as any).printProjectNo ?? true,
+      printPaymentConditions: (quotation as any).printPaymentConditions ?? true,
+      printLineImages: (quotation as any).printLineImages ?? false,
+      printLanguageCode: (quotation as any).printLanguageCode || "nl",
     };
     if (quotation.quotationNumber) {
       insertValues.quotationNumber = quotation.quotationNumber;

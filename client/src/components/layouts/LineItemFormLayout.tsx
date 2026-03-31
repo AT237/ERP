@@ -198,13 +198,12 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       form.reset(formData);
       setOriginalValues(formData);
       setHasUnsavedChanges(false);
-      if ((lineItem as any).lineImage) {
-        setLineImage((lineItem as any).lineImage);
-      }
+      setLineImage((lineItem as any).lineImage || null);
     } else {
       const defaultFormData = form.getValues();
       setOriginalValues(defaultFormData);
       setHasUnsavedChanges(false);
+      setLineImage(null);
     }
   }, [lineItem, form, quotationId]);
 
