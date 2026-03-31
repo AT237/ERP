@@ -71,6 +71,7 @@ const quotationFormSchema = insertQuotationSchema.omit({
   printSortOrder: z.string().optional(),
   printProjectNo: z.boolean().optional(),
   printPaymentConditions: z.boolean().optional(),
+  printLineImages: z.boolean().optional(),
   printLanguageCode: z.string().optional(),
 });
 
@@ -301,6 +302,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       paymentConditions: "",
       deliveryConditions: "",
       printSortOrder: "position",
+      printLineImages: false,
     },
   });
 
@@ -494,6 +496,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         paymentConditions: existingQuotation.paymentConditions || "",
         deliveryConditions: existingQuotation.deliveryConditions || "",
         printSortOrder: existingQuotation.printSortOrder || "position",
+        printLineImages: existingQuotation.printLineImages || false,
       });
       setQuotationItems(existingQuotationItems);
     }
@@ -1895,6 +1898,14 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             watch: () => quotationForm.watch("printPaymentConditions") ?? true,
             setValue: (checked) => quotationForm.setValue("printPaymentConditions", checked === true),
             testId: "checkbox-print-payment-conditions"
+          }),
+          createFieldRow({
+            key: "printLineImages",
+            label: "Regelafbeeldingen afdrukken",
+            type: "checkbox",
+            watch: () => quotationForm.watch("printLineImages") ?? false,
+            setValue: (checked) => quotationForm.setValue("printLineImages", checked === true),
+            testId: "checkbox-print-line-images"
           })
         ]
       }

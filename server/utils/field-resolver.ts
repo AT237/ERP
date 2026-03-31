@@ -388,6 +388,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
     netUnitPrice: item.unitPrice || "0.00",
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",
+    lineImage: (item as any).lineImage || null,
   }));
 
   // Load VAT rate from customer's vatRateId
@@ -421,6 +422,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
       vatRatePercent: vatRateData?.percentage ?? null,
       notes: quotation.notes,
       printLanguageCode: (quotation as any).printLanguageCode || null,
+      printLineImages: (quotation as any).printLineImages || false,
     },
     customer: customerData,
     project: projectData,
@@ -656,6 +658,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     })(),
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",
+    lineImage: (item as any).lineImage || null,
     discountPercent: item.discountPercent || null,
     workDate: item.workDate,
     technicianNames: item.technicianNames,
@@ -730,6 +733,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       incoTerms: incotermLabel,
       printProjectNo: (invoice as any).printProjectNo ?? true,
       printPaymentConditions: (invoice as any).printPaymentConditions ?? true,
+      printLineImages: (invoice as any).printLineImages || false,
     },
     customer: customerData,
     project: projectData,

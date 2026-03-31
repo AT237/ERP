@@ -25,7 +25,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInvoiceItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Package, FileText, Search, Library, Check, CalendarIcon, ChevronsUpDown, X } from "lucide-react";
+import { Save, ArrowLeft, Package, FileText, Search, Library, Check, CalendarIcon, ChevronsUpDown, X, ImagePlus } from "lucide-react";
 import { EmployeeSelectWithAdd } from "@/components/ui/employee-select-with-add";
 import { useToast } from "@/hooks/use-toast";
 import type { InvoiceItem, InsertInvoiceItem, TextSnippet, Invoice, CustomerRate, RateAndCharge, Employee } from "@shared/schema";
@@ -88,6 +88,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
+  const [lineImage, setLineImage] = useState<string | null>(null);
   
   const { toast } = useToast();
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
@@ -287,6 +288,9 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       setOriginalValues(formData);
       setHasUnsavedChanges(false);
       prevItemIdRef.current = lineItem.itemId || "";
+      if ((lineItem as any).lineImage) {
+        setLineImage((lineItem as any).lineImage);
+      }
     } else {
       const defaultFormData = form.getValues();
       setOriginalValues(defaultFormData);
@@ -389,6 +393,21 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     }
     setHasUnsavedChanges(true);
   };
+
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Afbeelding te groot", description: "Maximaal 2MB toegestaan", variant: "destructive" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLineImage(reader.result as string);
+      setHasUnsavedChanges(true);
+    };
+    reader.readAsDataURL(file);
+  }, [toast]);
 
   const handleDateChange = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -566,6 +585,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       customerRateId: data.customerRateId || undefined,
       technicianNames: techName || undefined,
       technicianIds: selectedEmployeeId || undefined,
+      lineImage: lineImage || null,
     };
     
     if (isEditing) {
@@ -788,6 +808,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
           if (freshItem.name && !form.getValues("descriptionInternal")) { form.setValue("descriptionInternal", freshItem.name); }
           if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
           if (freshItem.costPrice) { form.setValue("costPrice", Number(freshItem.costPrice).toFixed(2)); }
+          if ((freshItem as any).imageUrl) { setLineImage((freshItem as any).imageUrl); setHasUnsavedChanges(true); }
           const qty = form.getValues("quantity") || 1;
           if (price) { form.setValue("lineTotal", (qty * Number(price)).toFixed(2)); }
         }}
@@ -813,6 +834,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
           if (freshItem.name && !form.getValues("descriptionInternal")) { form.setValue("descriptionInternal", freshItem.name); }
           if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
           if (freshItem.costPrice) { form.setValue("costPrice", Number(freshItem.costPrice).toFixed(2)); }
+          if ((freshItem as any).imageUrl) { setLineImage((freshItem as any).imageUrl); setHasUnsavedChanges(true); }
           const qty = form.getValues("quantity") || 1;
           if (price) { form.setValue("lineTotal", (qty * Number(price)).toFixed(2)); }
         }}
@@ -936,12 +958,61 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     } as FormField2<LineItemFormData>,
   ];
 
+  const lineImageField: FormField2<LineItemFormData> = {
+    key: 'lineImage' as any,
+    label: 'Regelafbeelding',
+    type: 'custom',
+    customComponent: (
+      <div className="space-y-3">
+        {lineImage ? (
+          <div className="relative inline-block">
+            <img
+              src={lineImage}
+              alt="Regelafbeelding"
+              className="max-h-32 max-w-48 rounded border object-contain"
+            />
+            <button
+              type="button"
+              onClick={() => { setLineImage(null); setHasUnsavedChanges(true); }}
+              className="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-destructive-foreground shadow-sm hover:bg-destructive/90"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-input px-4 py-3 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
+              <ImagePlus className="h-4 w-4" />
+              {lineTypeValue === 'standard' ? 'Afbeelding uploaden of selecteer artikel' : 'Afbeelding uploaden'}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+            </label>
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Max. 2MB. Wordt getoond op de factuur als 'Regelafbeeldingen' is ingeschakeld bij Afdrukinstellingen.
+        </p>
+      </div>
+    ),
+  };
+
   const formSections: FormSection2<LineItemFormData>[] = [
     {
       id: 'general',
       label: 'General',
       rows: [
         createTwoColumnRow(leftFields, rightFields),
+      ],
+    },
+    {
+      id: 'image',
+      label: 'Afbeelding',
+      rows: [
+        createFieldRow(lineImageField),
       ],
     },
     {

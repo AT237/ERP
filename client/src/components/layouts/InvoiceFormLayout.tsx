@@ -1282,6 +1282,14 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           setValue: (checked) => invoiceForm.setValue("printPaymentConditions" as any, checked === true),
           testId: "checkbox-print-payment-conditions"
         }),
+        createFieldRow({
+          key: "printLineImages",
+          label: "Regelafbeeldingen afdrukken",
+          type: "checkbox",
+          watch: () => invoiceForm.watch("printLineImages" as any) || false,
+          setValue: (checked) => invoiceForm.setValue("printLineImages" as any, checked === true),
+          testId: "checkbox-print-line-images"
+        }),
       ]
     },
     {

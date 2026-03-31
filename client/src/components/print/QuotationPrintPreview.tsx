@@ -225,12 +225,46 @@ export function QuotationPrintPreview({ quotationId, onLoadingChange }: Quotatio
         </div>
       )}
 
-      {/* Line Items - Placeholder for now */}
+      {/* Line Items */}
       <div className="mb-6">
-        <h2 className="text-sm font-semibold mb-2">Artikelen</h2>
-        <p className="text-sm text-gray-500 italic">
-          Line items table will be rendered here
-        </p>
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b-2 border-gray-400">
+              <th className="py-2 text-left font-semibold" style={{ width: "8%" }}>Pos.</th>
+              {(printData as any).quotation?.printLineImages && <th className="py-2 text-left font-semibold" style={{ width: "10%" }}></th>}
+              <th className="py-2 text-left font-semibold">Omschrijving</th>
+              <th className="py-2 text-right font-semibold" style={{ width: "10%" }}>Aantal</th>
+              <th className="py-2 text-right font-semibold" style={{ width: "8%" }}>Eenheid</th>
+              <th className="py-2 text-right font-semibold" style={{ width: "14%" }}>Prijs</th>
+              <th className="py-2 text-right font-semibold" style={{ width: "14%" }}>Totaal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(printData as any).items?.map((item: any, index: number) => (
+              <tr key={index} className="border-b border-gray-200">
+                <td className="py-2 align-top">{item.positionNo}</td>
+                {(printData as any).quotation?.printLineImages && (
+                  <td className="py-2 align-top">
+                    {item.lineImage && (
+                      <img src={item.lineImage} alt="" className="max-h-12 max-w-16 object-contain" />
+                    )}
+                  </td>
+                )}
+                <td className="py-2 align-top whitespace-pre-wrap">{item.description}</td>
+                {item.lineType !== 'text' ? (
+                  <>
+                    <td className="py-2 text-right align-top">{item.quantity}</td>
+                    <td className="py-2 text-right align-top">{item.unit}</td>
+                    <td className="py-2 text-right align-top">{formatCurrency(item.unitPrice)}</td>
+                    <td className="py-2 text-right align-top">{formatCurrency(item.lineTotal)}</td>
+                  </>
+                ) : (
+                  <td colSpan={4}></td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Totals Section */}
