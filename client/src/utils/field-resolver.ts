@@ -614,8 +614,8 @@ export function blockHasContent(
   // New: hide this block whenever a specified field key has no value (works on any block type)
   if (block.config?.hideWhenFieldEmpty) {
     const value = resolveFieldValue(block.config.hideWhenFieldEmpty, printData);
-    if (value === null || value === undefined || String(value).trim() === '') {
-      return false; // Linked field is empty → hide this block
+    if (value === null || value === undefined || value === false || String(value).trim() === '') {
+      return false; // Linked field is empty/false → hide this block
     }
     // Linked field has a value; if hideWhenEmpty is not also set, block is visible
     if (!block.config?.hideWhenEmpty && !forceCheck) {
@@ -634,7 +634,7 @@ export function blockHasContent(
       if (!tableName || !fieldName) return false;
       const fieldKey = `${tableName}.${fieldName}`;
       const value = resolveFieldValue(fieldKey, printData);
-      return value !== null && value !== undefined && value !== '';
+      return value !== null && value !== undefined && value !== '' && value !== false;
     
     case 'Company Header':
       return !!printData.company;
