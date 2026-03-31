@@ -429,7 +429,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     saveDisabled: !form.formState.isDirty && !hasUnsavedChanges,
     saveLoading: createMutation.isPending || updateMutation.isPending,
     extraQueryKeysToInvalidate: quotationId ? [["/api/quotations", quotationId, "details"], ["/api/quotations", quotationId]] : [],
-    navigationListQueryKey: quotationId ? ["/api/quotations", quotationId, "details"] : undefined,
+    navigationListQueryKey: quotationId ? ["/api/quotations", quotationId, "items"] : undefined,
     navigationParentId: quotationId,
   });
 
