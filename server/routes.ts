@@ -10,6 +10,20 @@ declare module "express-session" {
   }
 }
 
+function handleRouteError(res: any, error: any, defaultMessage: string) {
+  if (error?.code === '23505') {
+    const constraint = error?.constraint || '';
+    res.status(409).json({ message: `Duplicaat: dit record bestaat al (${constraint})` });
+  } else if (error?.code === '23503') {
+    res.status(400).json({ message: `Referentiefout: een gekoppeld record bestaat niet of is verwijderd` });
+  } else if (error?.name === 'ZodError' && error?.issues) {
+    const fieldErrors = error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join('; ');
+    res.status(400).json({ message: `Validatiefout: ${fieldErrors}` });
+  } else {
+    res.status(400).json({ message: error?.message || defaultMessage });
+  }
+}
+
 function parseDateFields(body: Record<string, any>, fields: string[]): Record<string, any> {
   const result = { ...body };
   for (const field of fields) {
@@ -385,11 +399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error creating customer:", error);
       if (error?.code === '23505' && error?.constraint?.includes('customer_number')) {
         res.status(409).json({ message: `Klantnummer "${req.body.customerNumber}" is al in gebruik. Kies een ander nummer.` });
-      } else if (error?.name === 'ZodError' && error?.issues) {
-        const fieldErrors = error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join('; ');
-        res.status(400).json({ message: `Validatiefout: ${fieldErrors}` });
       } else {
-        res.status(400).json({ message: error?.message || "Kan klant niet toevoegen" });
+        handleRouteError(res, error, "Kan klant niet toevoegen");
       }
     }
   });
@@ -415,11 +426,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error updating customer:", error);
       if (error?.code === '23505' && error?.constraint?.includes('customer_number')) {
         res.status(409).json({ message: `Klantnummer "${req.body.customerNumber}" is al in gebruik. Kies een ander nummer.` });
-      } else if (error?.name === 'ZodError' && error?.issues) {
-        const fieldErrors = error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join('; ');
-        res.status(400).json({ message: `Validatiefout: ${fieldErrors}` });
       } else {
-        res.status(400).json({ message: error?.message || "Kan klant niet bijwerken" });
+        handleRouteError(res, error, "Kan klant niet bijwerken");
       }
     }
   });
@@ -444,11 +452,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error updating customer:", error);
       if (error?.code === '23505' && error?.constraint?.includes('customer_number')) {
         res.status(409).json({ message: `Klantnummer "${req.body.customerNumber}" is al in gebruik. Kies een ander nummer.` });
-      } else if (error?.name === 'ZodError' && error?.issues) {
-        const fieldErrors = error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join('; ');
-        res.status(400).json({ message: `Validatiefout: ${fieldErrors}` });
       } else {
-        res.status(400).json({ message: error?.message || "Kan klant niet bijwerken" });
+        handleRouteError(res, error, "Kan klant niet bijwerken");
       }
     }
   });
