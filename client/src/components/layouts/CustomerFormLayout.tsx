@@ -851,7 +851,7 @@ export function CustomerFormLayout({ onSave, customerId, parentId }: CustomerFor
           // Positie 0: Klantnummer
           {
             key: "customerNumber" as any,
-            label: "Customer Number",
+            label: "Klantnummer",
             type: "custom",
             customComponent: (
               <div className="flex gap-1 items-center">

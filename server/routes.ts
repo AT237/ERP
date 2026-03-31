@@ -349,19 +349,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/customers/:id", async (req, res) => {
-    try {
-      const customer = await storage.getCustomer(req.params.id);
-      if (!customer) {
-        return res.status(404).json({ message: "Customer not found" });
-      }
-      res.json(customer);
-    } catch (error) {
-      console.error("Error fetching customer:", error);
-      res.status(500).json({ message: "Failed to fetch customer" });
-    }
-  });
-
   app.get("/api/customers/next-number", async (req, res) => {
     try {
       const rows = await db.execute(
@@ -376,6 +363,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating next customer number:", error);
       res.status(500).json({ message: "Failed to generate next customer number" });
+    }
+  });
+
+  app.get("/api/customers/:id", async (req, res) => {
+    try {
+      const customer = await storage.getCustomer(req.params.id);
+      if (!customer) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+      res.json(customer);
+    } catch (error) {
+      console.error("Error fetching customer:", error);
+      res.status(500).json({ message: "Failed to fetch customer" });
     }
   });
 
