@@ -499,7 +499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(contact);
     } catch (error) {
       console.error("Error creating customer contact:", error);
-      res.status(400).json({ message: "Failed to create customer contact" });
+      handleRouteError(res, error, "Kan contactpersoon niet toevoegen");
     }
   });
 
@@ -510,7 +510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(contact);
     } catch (error) {
       console.error("Error updating customer contact:", error);
-      res.status(400).json({ message: "Failed to update customer contact" });
+      handleRouteError(res, error, "Kan contactpersoon niet bijwerken");
     }
   });
 
@@ -609,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(rate);
     } catch (error) {
       console.error("Error creating customer rate:", error);
-      res.status(400).json({ message: "Failed to create customer rate" });
+      handleRouteError(res, error, "Kan klanttarief niet toevoegen");
     }
   });
 
@@ -620,7 +620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(rate);
     } catch (error) {
       console.error("Error updating customer rate:", error);
-      res.status(400).json({ message: "Failed to update customer rate" });
+      handleRouteError(res, error, "Kan klanttarief niet bijwerken");
     }
   });
 
@@ -671,7 +671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(address);
     } catch (error) {
       console.error("Error creating address:", error);
-      res.status(400).json({ message: "Failed to create address" });
+      handleRouteError(res, error, "Kan adres niet toevoegen");
     }
   });
 
@@ -682,7 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(address);
     } catch (error) {
       console.error("Error updating address:", error);
-      res.status(400).json({ message: "Failed to update address" });
+      handleRouteError(res, error, "Kan adres niet bijwerken");
     }
   });
 
@@ -867,7 +867,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(supplier);
     } catch (error) {
       console.error("Error creating supplier:", error);
-      res.status(400).json({ message: "Failed to create supplier" });
+      handleRouteError(res, error, "Kan leverancier niet toevoegen");
     }
   });
 
@@ -878,7 +878,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(supplier);
     } catch (error) {
       console.error("Error updating supplier:", error);
-      res.status(400).json({ message: "Failed to update supplier" });
+      handleRouteError(res, error, "Kan leverancier niet bijwerken");
     }
   });
 
@@ -947,7 +947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(prospect);
     } catch (error) {
       console.error("Error creating prospect:", error);
-      res.status(400).json({ message: "Failed to create prospect" });
+      handleRouteError(res, error, "Kan prospect niet toevoegen");
     }
   });
 
@@ -958,7 +958,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(prospect);
     } catch (error) {
       console.error("Error updating prospect:", error);
-      res.status(400).json({ message: "Failed to update prospect" });
+      handleRouteError(res, error, "Kan prospect niet bijwerken");
     }
   });
 
@@ -1052,7 +1052,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(item);
     } catch (error) {
       console.error("Error creating inventory item:", error);
-      res.status(400).json({ message: "Failed to create inventory item" });
+      handleRouteError(res, error, "Kan artikel niet toevoegen");
     }
   });
 
@@ -1063,7 +1063,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(item);
     } catch (error) {
       console.error("Error updating inventory item:", error);
-      res.status(400).json({ message: "Failed to update inventory item" });
+      handleRouteError(res, error, "Kan artikel niet bijwerken");
     }
   });
 
@@ -1232,7 +1232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error?.code === '23505' && error?.constraint?.includes('project_number')) {
         res.status(409).json({ message: `Projectnummer "${req.body.projectNumber}" is al in gebruik. Kies een ander nummer.` });
       } else {
-        res.status(400).json({ message: "Failed to create project" });
+        handleRouteError(res, error, "Kan project niet aanmaken");
       }
     }
   });
@@ -1251,7 +1251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error?.code === '23505' && error?.constraint?.includes('project_number')) {
         res.status(409).json({ message: `Projectnummer "${req.body.projectNumber}" is al in gebruik. Kies een ander nummer.` });
       } else {
-        res.status(400).json({ message: "Failed to update project" });
+        handleRouteError(res, error, "Kan project niet bijwerken");
       }
     }
   });
@@ -1476,7 +1476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof Error && error.message.includes("Positienummer")) {
         res.status(409).json({ message: error.message });
       } else {
-        res.status(400).json({ message: "Failed to add quotation item" });
+        handleRouteError(res, error, "Kan offerteregel niet toevoegen");
       }
     }
   });
@@ -1520,7 +1520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof Error && error.message.includes("Positienummer")) {
         res.status(409).json({ message: error.message });
       } else {
-        res.status(400).json({ message: "Failed to update quotation item" });
+        handleRouteError(res, error, "Kan offerteregel niet bijwerken");
       }
     }
   });
@@ -1738,7 +1738,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error?.code === '23505' && error?.constraint?.includes('invoice_number')) {
         res.status(409).json({ message: `Factuurnummer "${req.body.invoiceNumber}" is al in gebruik. Kies een ander nummer.` });
       } else {
-        res.status(400).json({ message: "Failed to create invoice" });
+        handleRouteError(res, error, "Kan factuur niet aanmaken");
       }
     }
   });
@@ -1754,7 +1754,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(item);
     } catch (error) {
       console.error("Error adding invoice item:", error);
-      res.status(400).json({ message: "Failed to add invoice item" });
+      handleRouteError(res, error, "Kan factuurregel niet toevoegen");
     }
   });
 
@@ -1769,7 +1769,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error?.code === '23505' && error?.constraint?.includes('invoice_number')) {
         res.status(409).json({ message: `Factuurnummer "${req.body.invoiceNumber}" is al in gebruik. Kies een ander nummer.` });
       } else {
-        res.status(400).json({ message: "Failed to update invoice" });
+        handleRouteError(res, error, "Kan factuur niet bijwerken");
       }
     }
   });
@@ -1806,7 +1806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(item);
     } catch (error) {
       console.error("Error updating invoice item:", error);
-      res.status(400).json({ message: "Failed to update invoice item" });
+      handleRouteError(res, error, "Kan factuurregel niet bijwerken");
     }
   });
 
@@ -2091,7 +2091,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error?.code === '23505' && error?.constraint?.includes('order_number')) {
         res.status(409).json({ message: `Werkordernummer "${req.body.orderNumber}" is al in gebruik. Kies een ander nummer.` });
       } else {
-        res.status(400).json({ message: "Failed to create work order" });
+        handleRouteError(res, error, "Kan werkbon niet aanmaken");
       }
     }
   });
@@ -2107,7 +2107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error?.code === '23505' && error?.constraint?.includes('order_number')) {
         res.status(409).json({ message: `Werkordernummer "${req.body.orderNumber}" is al in gebruik. Kies een ander nummer.` });
       } else {
-        res.status(400).json({ message: "Failed to update work order" });
+        handleRouteError(res, error, "Kan werkbon niet bijwerken");
       }
     }
   });
@@ -2144,7 +2144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(item);
     } catch (error) {
       console.error("Error adding work order item:", error);
-      res.status(400).json({ message: "Failed to add work order item" });
+      handleRouteError(res, error, "Kan werkbonregel niet toevoegen");
     }
   });
 
@@ -2167,7 +2167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(item);
     } catch (error) {
       console.error("Error updating work order item:", error);
-      res.status(400).json({ message: "Failed to update work order item" });
+      handleRouteError(res, error, "Kan werkbonregel niet bijwerken");
     }
   });
 
@@ -2241,7 +2241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(list);
     } catch (error) {
       console.error("Error creating packing list:", error);
-      res.status(400).json({ message: "Failed to create packing list" });
+      handleRouteError(res, error, "Kan paklijst niet aanmaken");
     }
   });
 
@@ -2255,7 +2255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(item);
     } catch (error) {
       console.error("Error adding packing list item:", error);
-      res.status(400).json({ message: "Failed to add packing list item" });
+      handleRouteError(res, error, "Kan paklijstregel niet toevoegen");
     }
   });
 
@@ -2280,7 +2280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(item);
     } catch (error) {
       console.error("Error updating packing list item:", error);
-      res.status(400).json({ message: "Failed to update packing list item" });
+      handleRouteError(res, error, "Kan paklijstregel niet bijwerken");
     }
   });
 
@@ -2302,7 +2302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(list);
     } catch (error) {
       console.error("Error updating packing list:", error);
-      res.status(400).json({ message: "Failed to update packing list" });
+      handleRouteError(res, error, "Kan paklijst niet bijwerken");
     }
   });
 
