@@ -412,8 +412,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error updating customer:", error);
       if (error?.code === '23505' && error?.constraint?.includes('customer_number')) {
         res.status(409).json({ message: `Klantnummer "${req.body.customerNumber}" is al in gebruik. Kies een ander nummer.` });
+      } else if (error?.name === 'ZodError' && error?.issues) {
+        const fieldErrors = error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join('; ');
+        res.status(400).json({ message: `Validatiefout: ${fieldErrors}` });
       } else {
-        res.status(400).json({ message: "Failed to update customer" });
+        res.status(400).json({ message: error?.message || "Kan klant niet bijwerken" });
       }
     }
   });
