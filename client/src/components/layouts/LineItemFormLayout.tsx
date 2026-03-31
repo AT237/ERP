@@ -337,6 +337,9 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         title: "Succes",
         description: "Regel bijgewerkt",
       });
+      window.dispatchEvent(new CustomEvent('entity-updated', {
+        detail: { entityType: 'quotation-item', entityId: lineItemId, parentId: quotationId }
+      }));
       onSave();
     },
     onError: (error: Error) => {
