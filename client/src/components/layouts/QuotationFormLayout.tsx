@@ -499,6 +499,27 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   }, [existingQuotation, existingQuotationItems, quotationLoading]);
 
+  useEffect(() => {
+    const handleEntityCreated = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.entityType === 'quotation-item' && detail?.parentId === currentQuotationId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "details"] });
+      }
+    };
+    const handleEntityUpdated = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.entityType === 'quotation-item' && detail?.parentId === currentQuotationId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "details"] });
+      }
+    };
+    window.addEventListener('entity-created', handleEntityCreated);
+    window.addEventListener('entity-updated', handleEntityUpdated);
+    return () => {
+      window.removeEventListener('entity-created', handleEntityCreated);
+      window.removeEventListener('entity-updated', handleEntityUpdated);
+    };
+  }, [currentQuotationId]);
+
   // Set document title based on quotation data
   useEffect(() => {
     if (existingQuotation) {
