@@ -367,7 +367,21 @@ export default function Layout({ children }: LayoutProps) {
       );
     }
     
-    setActiveTabId(pageInfo.id);
+    // Open tab in the panel where the user last interacted
+    if (activePanelRef.current === 'right' && rightPanelTabIdsRef.current.size > 0) {
+      // If user is working in the right panel, open there
+      setRightPanelTabIds(prev => {
+        const next = new Set(prev);
+        next.add(pageInfo.id);
+        return next;
+      });
+      setRightPanelActiveTabId(pageInfo.id);
+    } else if (rightPanelTabIdsRef.current.has(pageInfo.id)) {
+      // Tab already exists in right panel, activate it there
+      setRightPanelActiveTabId(pageInfo.id);
+    } else {
+      setActiveTabId(pageInfo.id);
+    }
   }, [location, children]);
 
   const [currentTime, setCurrentTime] = useState(() => new Date());
