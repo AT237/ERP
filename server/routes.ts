@@ -383,7 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const body = parseDateFields(req.body, ['lastContactDate', 'conversionDate']);
       const customerData = insertCustomerSchema.parse(body);
-      const cleanedData = {
+      const cleanedData: any = {
         ...customerData,
         addressId: customerData.addressId === '' ? null : customerData.addressId,
         paymentDaysId: customerData.paymentDaysId === '' ? null : customerData.paymentDaysId,
@@ -393,6 +393,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vatRateId: (customerData as any).vatRateId === '' ? null : (customerData as any).vatRateId,
         rateId: (customerData as any).rateId === '' ? null : (customerData as any).rateId,
       };
+      if (body.customerNumber && typeof body.customerNumber === 'string' && body.customerNumber.trim()) {
+        cleanedData.customerNumber = body.customerNumber.trim();
+      }
       const customer = await storage.createCustomer(cleanedData);
       res.status(201).json(customer);
     } catch (error: any) {
@@ -409,8 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const body = parseDateFields(req.body, ['lastContactDate', 'conversionDate']);
       const customerData = insertCustomerSchema.partial().parse(body);
-      // Convert empty strings to null for nullable foreign key fields
-      const cleanedData = {
+      const cleanedData: any = {
         ...customerData,
         addressId: customerData.addressId === '' ? null : customerData.addressId,
         paymentDaysId: customerData.paymentDaysId === '' ? null : customerData.paymentDaysId,
@@ -420,6 +422,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vatRateId: (customerData as any).vatRateId === '' ? null : (customerData as any).vatRateId,
         rateId: (customerData as any).rateId === '' ? null : (customerData as any).rateId,
       };
+      if (body.customerNumber && typeof body.customerNumber === 'string' && body.customerNumber.trim()) {
+        cleanedData.customerNumber = body.customerNumber.trim();
+      }
       const customer = await storage.updateCustomer(req.params.id, cleanedData);
       res.json(customer);
     } catch (error: any) {
