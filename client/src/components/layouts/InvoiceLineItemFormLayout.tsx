@@ -96,6 +96,14 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   });
   const isEditing = !!lineItemId;
 
+  const [initialCleared] = useState(() => {
+    if (!lineItemId) {
+      const key = buildFormPersistenceKey({ formType: "invoice-line-item", entityId: undefined, scope: invoiceId });
+      localStorage.removeItem(key);
+    }
+    return true;
+  });
+
   const form = useForm<LineItemFormData>({
     resolver: zodResolver(lineItemFormSchema),
     mode: 'onBlur',
