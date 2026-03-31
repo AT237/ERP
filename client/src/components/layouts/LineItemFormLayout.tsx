@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createCustomRow } from './LayoutForm2';
+import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createCustomRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
@@ -26,8 +26,9 @@ import { useToast } from "@/hooks/use-toast";
 import type { QuotationItem, InsertQuotationItem, TextSnippet, Supplier } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDateString } from "@/lib/date-utils";
+import { EntitySelect } from "@/components/ui/entity-select";
+import { InventorySelect } from "@/components/ui/inventory-select";
 
-// Form schema for line item data
 const lineItemFormSchema = insertQuotationItemSchema.extend({
   unitPrice: z.string().min(1, "Prijs per eenheid is verplicht"),
   lineTotal: z.string().min(1, "Regel totaal is verplicht"),
@@ -37,15 +38,14 @@ const lineItemFormSchema = insertQuotationItemSchema.extend({
   positionNo: z.string().optional(),
   descriptionInternal: z.string().optional(),
   descriptionExternal: z.string().optional(),
+  discountPercent: z.string().optional(),
   sourceSnippetId: z.string().optional(),
   sourceSnippetVersion: z.number().optional(),
-  // Delivery fields
   deliveryDate: z.string().optional(),
   supplierId: z.string().optional(),
   hsCode: z.string().optional(),
   countryOfOrigin: z.string().optional(),
 }).refine((data) => {
-  // For standard and unique line types, quantity must be at least 1
   if ((data.lineType === 'standard' || data.lineType === 'unique') && data.quantity < 1) {
     return false;
   }
@@ -55,12 +55,12 @@ const lineItemFormSchema = insertQuotationItemSchema.extend({
   path: ["quantity"],
 });
 
-// Add virtual fields for internal tracking
 type LineItemFormData = z.infer<typeof lineItemFormSchema> & {
   position?: number;
   positionNo?: string;
   descriptionInternal?: string;
   descriptionExternal?: string;
+  discountPercent?: string;
   sourceSnippetId?: string;
   sourceSnippetVersion?: number;
   deliveryDate?: string;
@@ -73,17 +73,13 @@ interface LineItemFormLayoutProps {
   onSave: () => void;
   lineItemId?: string;
   quotationId?: string;
-  parentId?: string; // ID of the parent tab that opened this form
+  parentId?: string;
 }
 
 export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }: LineItemFormLayoutProps) {
   const [activeSection, setActiveSection] = useState("general");
-  
-  // Change tracking state
   const [originalValues, setOriginalValues] = useState<Partial<LineItemFormData>>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
-  // Snippet selection state
   const [showSnippetDialog, setShowSnippetDialog] = useState(false);
   const [snippetSearchTerm, setSnippetSearchTerm] = useState("");
   const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("all");
@@ -95,7 +91,6 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   });
   const isEditing = !!lineItemId;
 
-  // Form setup
   const form = useForm<LineItemFormData>({
     resolver: zodResolver(lineItemFormSchema),
     mode: 'onBlur',
@@ -103,15 +98,16 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       quotationId: quotationId || "",
       description: "",
       quantity: 1,
-      unit: "",
+      unit: "Pcs.",
       unitPrice: "0.00",
       lineTotal: "0.00",
-      lineType: "standard",
+      lineType: "",
       itemId: undefined,
       position: 1,
       positionNo: "",
       descriptionInternal: "",
       descriptionExternal: "",
+      discountPercent: "0",
       sourceSnippetId: undefined,
       sourceSnippetVersion: undefined,
       deliveryDate: undefined,
@@ -121,29 +117,24 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     },
   });
 
-  // Change tracking callback
   const handleChangesDetected = useCallback((hasChanges: boolean, modifiedFields: Set<string>) => {
     setHasUnsavedChanges(hasChanges);
   }, []);
 
-  // Load line item data if editing
   const { data: lineItem, isLoading: isLoadingLineItem } = useQuery<QuotationItem>({
     queryKey: ["/api/quotation-items", lineItemId],
     enabled: !!lineItemId,
   });
 
-  // Load existing quotation items to calculate next positionNo for new items
   const { data: quotationDetails } = useQuery<{ quotation: any; items: QuotationItem[]; customer: any }>({
     queryKey: ["/api/quotations", quotationId, "details"],
     enabled: !!quotationId && !isEditing,
   });
 
-  // Load suppliers for dropdown
   const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
   });
 
-  // Calculate next position number for new items
   useEffect(() => {
     if (!isEditing && quotationDetails?.items) {
       let maxNumber = 0;
@@ -161,14 +152,12 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     }
   }, [isEditing, quotationDetails, form]);
 
-  // Load text snippets for snippet library
   const { data: textSnippets = [], isLoading: isLoadingSnippets } = useQuery<TextSnippet[]>({
     queryKey: ["/api/text-snippets"],
     enabled: showSnippetDialog,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Search snippets when search term changes
   const { data: searchedSnippets = [], isLoading: isSearchingSnippets } = useQuery<TextSnippet[]>({
     queryKey: ["/api/text-snippets/search", snippetSearchTerm],
     queryFn: async () => {
@@ -178,28 +167,27 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       return response.json();
     },
     enabled: !!snippetSearchTerm.trim(),
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 1 * 60 * 1000,
   });
 
-  // Update form when line item data loads
   useEffect(() => {
     if (lineItem) {
       const formData: LineItemFormData = {
         quotationId: lineItem.quotationId || quotationId || "",
         description: lineItem.description || "",
         quantity: lineItem.quantity || 1,
-        unit: (lineItem as any).unit || "",
+        unit: (lineItem as any).unit || "Pcs.",
         unitPrice: lineItem.unitPrice?.toString() || "0.00",
         lineTotal: lineItem.lineTotal?.toString() || "0.00",
-        lineType: lineItem.lineType || "standard",
+        lineType: lineItem.lineType || "",
         itemId: lineItem.itemId || undefined,
-        position: 1, // Will be calculated based on quotation items
+        position: 1,
         positionNo: lineItem.positionNo || "",
         descriptionInternal: lineItem.description || "",
         descriptionExternal: lineItem.description || "",
+        discountPercent: (lineItem as any).discountPercent?.toString() || "0",
         sourceSnippetId: lineItem.sourceSnippetId || undefined,
         sourceSnippetVersion: lineItem.sourceSnippetVersion || undefined,
-        // Delivery fields
         deliveryDate: (lineItem as any).deliveryDate ? toDisplayDate((lineItem as any).deliveryDate) : undefined,
         supplierId: (lineItem as any).supplierId || undefined,
         hsCode: (lineItem as any).hsCode || "",
@@ -210,57 +198,59 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       setOriginalValues(formData);
       setHasUnsavedChanges(false);
     } else {
-      // For new line item, store default values as original
       const defaultFormData = form.getValues();
       setOriginalValues(defaultFormData);
       setHasUnsavedChanges(false);
     }
   }, [lineItem, form, quotationId]);
 
-  // Watch form values for calculations and change tracking
   const lineTypeValue = form.watch("lineType");
   const quantityValue = form.watch("quantity");
   const unitPriceValue = form.watch("unitPrice");
   const lineTotalValue = form.watch("lineTotal");
+  const discountPercentValue = form.watch("discountPercent");
 
-  // Available snippet categories
+  const discountedUnitPrice = useMemo(() => {
+    const price = parseFloat(unitPriceValue || "0");
+    const discount = parseFloat(discountPercentValue || "0");
+    if (discount > 0 && price > 0) {
+      return (price * (1 - discount / 100)).toFixed(2);
+    }
+    return null;
+  }, [unitPriceValue, discountPercentValue]);
+
   const SNIPPET_CATEGORIES = [
-    { value: "all", label: "All Categories" },
-    { value: "general", label: "General" },
-    { value: "header", label: "Header" },
-    { value: "footer", label: "Footer" },
+    { value: "all", label: "Alle categorieën" },
+    { value: "general", label: "Algemeen" },
+    { value: "header", label: "Kop" },
+    { value: "footer", label: "Voet" },
     { value: "disclaimer", label: "Disclaimer" },
-    { value: "terms", label: "Terms & Conditions" },
-    { value: "warranty", label: "Warranty" },
-    { value: "delivery", label: "Delivery" },
-    { value: "payment", label: "Payment" },
+    { value: "terms", label: "Voorwaarden" },
+    { value: "warranty", label: "Garantie" },
+    { value: "delivery", label: "Levering" },
+    { value: "payment", label: "Betaling" },
     { value: "contact", label: "Contact" },
-    { value: "signature", label: "Signature" },
+    { value: "signature", label: "Handtekening" },
   ];
 
-  // Filter snippets based on search and category
   const filteredSnippets = useMemo(() => {
     let snippets = snippetSearchTerm.trim() ? searchedSnippets : textSnippets;
-    
     if (selectedSnippetCategory && selectedSnippetCategory !== "all") {
       snippets = snippets.filter(snippet => snippet.category === selectedSnippetCategory);
     }
-    
-    // Only show active snippets
     snippets = snippets.filter(snippet => snippet.isActive);
-    
     return snippets;
   }, [textSnippets, searchedSnippets, snippetSearchTerm, selectedSnippetCategory]);
 
-  // Calculate line total when quantity or unit price changes
   useEffect(() => {
     const quantity = form.getValues("quantity");
     const unitPrice = parseFloat(form.getValues("unitPrice")) || 0;
-    const lineTotal = (quantity * unitPrice).toFixed(2);
+    const discount = parseFloat(form.getValues("discountPercent") || "0") || 0;
+    const effectivePrice = discount > 0 ? unitPrice * (1 - discount / 100) : unitPrice;
+    const lineTotal = (quantity * effectivePrice).toFixed(2);
     form.setValue("lineTotal", lineTotal);
-  }, [quantityValue, unitPriceValue, form]);
+  }, [quantityValue, unitPriceValue, discountPercentValue, form]);
 
-  // Communicate unsaved changes status to parent Layout
   useEffect(() => {
     const tabId = lineItemId ? `edit-line-item-${lineItemId}` : 'new-line-item';
     window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
@@ -268,7 +258,6 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     }));
   }, [hasUnsavedChanges, lineItemId]);
 
-  // Snippet usage tracking mutation
   const recordSnippetUsageMutation = useMutation({
     mutationFn: async (data: { snippetId: string; quotationId: string; usageType: string }) => {
       const response = await apiRequest("POST", `/api/text-snippets/${data.snippetId}/use`, {
@@ -280,11 +269,9 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     },
     onError: (error) => {
       console.warn("Failed to record snippet usage:", error);
-      // Non-blocking - don't show error to user
     },
   });
 
-  // Mutations
   const createMutation = useMutation({
     mutationFn: async (data: LineItemFormData) => {
       const response = await apiRequest("POST", "/api/quotation-items", data);
@@ -307,7 +294,6 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         description: "Regel toegevoegd",
       });
       
-      // Dispatch scoped entity-created event
       window.dispatchEvent(new CustomEvent('entity-created', {
         detail: {
           entityType: 'quotation-item',
@@ -361,31 +347,24 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     },
   });
 
-  // Snippet selection handlers
   const handleSelectSnippet = (snippet: TextSnippet) => {
-    console.log("📚 Selecting snippet:", snippet);
-    
-    // Create snapshot by copying snippet content to form
     form.setValue("descriptionExternal", snippet.body);
     form.setValue("sourceSnippetId", snippet.id);
     form.setValue("sourceSnippetVersion", snippet.version || undefined);
     
-    // Set lineType to text if not already
     if (form.getValues("lineType") !== "text") {
       form.setValue("lineType", "text");
     }
     
-    // Set quantity to 0 for text lines
     form.setValue("quantity", 0);
     form.setValue("unitPrice", "0.00");
     form.setValue("lineTotal", "0.00");
     
-    // Close dialog
     setShowSnippetDialog(false);
     setSnippetSearchTerm("");
     setSelectedSnippetCategory("");
+    setHasUnsavedChanges(true);
     
-    // Record usage asynchronously
     if (quotationId) {
       recordSnippetUsageMutation.mutate({
         snippetId: snippet.id,
@@ -411,19 +390,13 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     return category?.label || categoryValue;
   };
 
-  // Form handlers
   const onSubmit = (data: LineItemFormData) => {
-    console.log("💾 Line item form submission data:", data);
-    
-    // Transform the data to match expected types
     const transformedData = {
       ...data,
       quantity: Number(data.quantity),
-      // Use descriptionExternal as the main description if provided, otherwise descriptionInternal
       description: data.descriptionExternal || data.descriptionInternal || data.description,
       sourceSnippetId: data.sourceSnippetId || undefined,
       sourceSnippetVersion: data.sourceSnippetVersion || undefined,
-      // Delivery fields
       deliveryDate: data.deliveryDate ? (toStorageDateString(data.deliveryDate) || undefined) : undefined,
       supplierId: data.supplierId || undefined,
       hsCode: data.hsCode || undefined,
@@ -437,11 +410,10 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     }
   };
 
-  // Header info fields
   const headerFields: InfoField[] = [
     {
       label: 'Type',
-      value: lineTypeValue || 'standard'
+      value: lineTypeValue || '—'
     },
     {
       label: 'Totaal',
@@ -454,11 +426,13 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     entityId: lineItemId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: onSave,
-    saveDisabled: !hasUnsavedChanges,
+    saveDisabled: !form.formState.isDirty && !hasUnsavedChanges,
     saveLoading: createMutation.isPending || updateMutation.isPending,
+    extraQueryKeysToInvalidate: quotationId ? [["/api/quotations", quotationId, "details"], ["/api/quotations", quotationId]] : [],
+    navigationListQueryKey: quotationId ? ["/api/quotations", quotationId, "details"] : undefined,
+    navigationParentId: quotationId,
   });
 
-  // Line type options
   const lineTypeOptions = [
     { value: 'standard', label: 'Standaard artikel' },
     { value: 'unique', label: 'Uniek artikel' },
@@ -466,122 +440,173 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     { value: 'charges', label: 'Toeslag' },
   ];
 
-  // Form field definitions
-  const formFields: FormField2<LineItemFormData>[] = [
-    {
-      key: 'lineType',
-      label: 'Regeltype',
-      type: 'select',
-      options: lineTypeOptions,
-      setValue: (value: string) => form.setValue('lineType', value),
-      watch: () => form.watch('lineType'),
-      validation: {
-        isRequired: true,
-        error: form.formState.errors.lineType?.message
-      },
-      testId: 'select-line-type'
-    },
-    {
-      key: 'positionNo',
-      label: 'Pos. Nr.',
-      type: 'text',
-      register: form.register('positionNo'),
-      placeholder: 'bijv. 010',
-      validation: {
-        error: form.formState.errors.positionNo?.message
-      },
-      testId: 'input-position-no'
-    },
-    {
-      key: 'quantity',
-      label: 'Aantal',
-      type: 'number',
-      register: form.register('quantity', { valueAsNumber: true }),
-      validation: {
-        isRequired: true,
-        error: form.formState.errors.quantity?.message
-      },
-      testId: 'input-quantity'
-    },
-    {
-      key: 'unit',
-      label: 'Eenheid',
-      type: 'text',
-      register: form.register('unit'),
-      placeholder: 'bijv. pcs, kg, m²',
-      validation: {
-        error: form.formState.errors.unit?.message
-      },
-      testId: 'input-unit'
-    },
-    {
-      key: 'unitPrice',
-      label: 'Prijs per eenheid',
-      type: 'decimal',
-      placeholder: '0,00',
-      setValue: (value: string) => form.setValue('unitPrice', value),
-      watch: () => form.watch('unitPrice'),
-      validation: {
-        isRequired: true,
-        error: form.formState.errors.unitPrice?.message
-      },
-      testId: 'input-unit-price'
-    },
-    {
-      key: 'lineTotal',
-      label: 'Regel totaal',
-      type: 'text',
-      register: form.register('lineTotal'),
-      disabled: true,
-      className: 'bg-gray-50 dark:bg-gray-800',
-      validation: {
-        error: form.formState.errors.lineTotal?.message
-      },
-      testId: 'input-line-total'
-    },
-    {
-      key: 'descriptionInternal',
-      label: 'Beschrijving intern',
-      type: 'textarea',
-      placeholder: 'Interne beschrijving (niet zichtbaar op offerte)',
-      rows: 3,
-      register: form.register('descriptionInternal'),
-      validation: {
-        error: form.formState.errors.descriptionInternal?.message
-      },
-      testId: 'textarea-description-internal'
-    }
-  ];
+  const fieldPosNo: FormField2<LineItemFormData> = {
+    key: 'positionNo',
+    label: 'Pos. No.',
+    type: 'text',
+    register: form.register('positionNo'),
+    placeholder: 'bijv. 010',
+    validation: { error: form.formState.errors.positionNo?.message },
+    testId: 'input-position-no',
+  };
 
-  // Create custom description external field with snippet integration
-  const createDescriptionExternalField = (): FormField2<LineItemFormData> => ({
-    key: 'descriptionExternal',
-    label: 'Beschrijving extern',
+  const fieldLineType: FormField2<LineItemFormData> = {
+    key: 'lineType',
+    label: 'Line Type',
+    type: 'select',
+    options: lineTypeOptions,
+    setValue: (value: string) => { form.setValue('lineType', value); setHasUnsavedChanges(true); },
+    watch: () => form.watch('lineType'),
+    validation: { isRequired: true, error: form.formState.errors.lineType?.message },
+    testId: 'select-line-type',
+  };
+
+  const fieldDescriptionInternal: FormField2<LineItemFormData> = {
+    key: 'descriptionInternal',
+    label: 'Interne omschrijving',
+    type: 'textarea',
+    placeholder: 'Interne omschrijving (niet zichtbaar op offerte)',
+    rows: 3,
+    register: form.register('descriptionInternal'),
+    validation: { error: form.formState.errors.descriptionInternal?.message },
+    testId: 'textarea-description-internal',
+  };
+
+  const fieldLineTotal: FormField2<LineItemFormData> = {
+    key: 'lineTotal',
+    label: 'Regel totaal',
+    type: 'text',
+    register: form.register('lineTotal'),
+    disabled: true,
+    className: 'bg-gray-50 dark:bg-gray-800',
+    validation: { error: form.formState.errors.lineTotal?.message },
+    testId: 'input-line-total',
+  };
+
+  const fieldStockItem: FormField2<LineItemFormData> = {
+    key: 'itemId',
+    label: 'Stock item',
     type: 'custom',
-    labelExtra: form.watch("lineType") === "text" ? (
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={handleOpenSnippetLibrary}
-        className="text-xs h-6 px-2"
-        data-testid="button-from-library"
-      >
-        <Library className="h-3 w-3 mr-1" />
-        Uit bibliotheek
-      </Button>
-    ) : undefined,
-    validation: {
-      error: form.formState.errors.descriptionExternal?.message
-    },
+    customComponent: (
+      <InventorySelect
+        value={form.watch("itemId" as any) || ""}
+        onValueChange={(val) => { form.setValue("itemId" as any, val); setHasUnsavedChanges(true); }}
+        onItemRefreshed={(freshItem) => {
+          const price = freshItem.sellingPrice || freshItem.unitPrice;
+          if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
+          if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
+          if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
+        }}
+        placeholder="Artikel zoeken in catalogus..."
+        testId="select-inventory-item"
+      />
+    ),
+  };
+
+  const fieldDescription: FormField2<LineItemFormData> = {
+    key: 'descriptionExternal',
+    label: 'Description',
+    type: 'custom',
     customComponent: (
       <div className="space-y-2">
-        <Textarea
-          id="descriptionExternal"
-          {...form.register("descriptionExternal")}
-          placeholder={form.watch("lineType") === "text" ? "Tekst (gebruik \"Uit bibliotheek\" voor herbruikbare tekstblokken)" : "Externe beschrijving (zichtbaar op offerte)"}
-          className="min-h-[100px]"
+        <textarea
+          {...form.register('descriptionExternal')}
+          placeholder="Description (zichtbaar op offerte)..."
+          rows={3}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
           data-testid="textarea-description-external"
+        />
+        {form.formState.errors.descriptionExternal?.message && (
+          <p className="text-sm text-destructive">{form.formState.errors.descriptionExternal.message}</p>
+        )}
+      </div>
+    ),
+  };
+
+  const fieldQuantity: FormField2<LineItemFormData> = {
+    key: 'quantity',
+    label: 'Aantal',
+    type: 'number',
+    register: form.register('quantity', { valueAsNumber: true }),
+    validation: { isRequired: true, error: form.formState.errors.quantity?.message },
+    testId: 'input-quantity',
+  };
+
+  const fieldUnit: FormField2<LineItemFormData> = {
+    key: 'unit',
+    label: 'Eenheid',
+    type: 'custom',
+    customComponent: (
+      <EntitySelect
+        endpoint="units-of-measure"
+        formType="masterdata-units-of-measure"
+        labelField="name"
+        secondaryField="code"
+        value={form.watch("unit" as any) || ""}
+        onValueChange={(val) => { form.setValue("unit" as any, val); setHasUnsavedChanges(true); }}
+        placeholder="Selecteer eenheid..."
+        testId="select-unit"
+      />
+    ),
+  };
+
+  const fieldUnitPrice: FormField2<LineItemFormData> = {
+    key: 'unitPrice',
+    label: 'Prijs per eenheid',
+    type: 'decimal',
+    prefix: '€',
+    placeholder: '0,00',
+    setValue: (value: string) => { form.setValue('unitPrice', value); setHasUnsavedChanges(true); },
+    watch: () => form.watch('unitPrice'),
+    validation: { isRequired: true, error: form.formState.errors.unitPrice?.message },
+    testId: 'input-unit-price',
+  };
+
+  const fieldDiscount: FormField2<LineItemFormData> = {
+    key: 'discountPercent',
+    label: 'Korting %',
+    type: 'decimal',
+    placeholder: '0,00',
+    setValue: (value) => { form.setValue('discountPercent', value); setHasUnsavedChanges(true); },
+    watch: () => form.watch('discountPercent'),
+    validation: { error: form.formState.errors.discountPercent?.message },
+    testId: 'input-discount-percent',
+  };
+
+  const fieldDiscountedPrice: FormField2<LineItemFormData> = {
+    key: 'discountedUnitPrice' as any,
+    label: 'Prijs na korting',
+    type: 'custom',
+    customComponent: (
+      <div className="mt-1 px-3 py-2 rounded-md border bg-muted/50 text-sm" data-testid="discounted-unit-price">
+        {discountedUnitPrice ? `€ ${discountedUnitPrice.replace('.', ',')}` : '—'}
+      </div>
+    ),
+  };
+
+  const fieldTextContent: FormField2<LineItemFormData> = {
+    key: 'descriptionExternal',
+    label: 'Tekst',
+    type: 'custom',
+    customComponent: (
+      <div className="space-y-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleOpenSnippetLibrary}
+          className="flex items-center gap-2"
+          data-testid="button-open-snippet-library"
+        >
+          <Library className="h-4 w-4" />
+          Kies uit tekstbibliotheek
+        </Button>
+        <textarea
+          {...form.register('descriptionExternal')}
+          placeholder="Tekst inhoud (zichtbaar op offerte)..."
+          rows={6}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+          data-testid="textarea-text-content"
         />
         {form.watch("sourceSnippetId") && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -591,10 +616,26 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         )}
       </div>
     ),
-    testId: 'field-description-external'
-  });
+  };
 
-  // Delivery fields
+  const getRightColumnFields = (): FormField2<LineItemFormData>[] => {
+    switch (lineTypeValue) {
+      case 'charges':
+        return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice];
+      case 'unique':
+        return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice];
+      case 'standard':
+        return [fieldStockItem, fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount, fieldDiscountedPrice];
+      case 'text':
+        return [fieldTextContent];
+      default:
+        return [];
+    }
+  };
+
+  const leftFields = [fieldPosNo, fieldLineType, fieldDescriptionInternal, fieldLineTotal];
+  const rightFields = getRightColumnFields();
+
   const deliveryFields: FormField2<LineItemFormData>[] = [
     {
       key: 'deliveryDate',
@@ -638,7 +679,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       key: 'countryOfOrigin',
       label: 'Land van oorsprong',
       type: 'text',
-      placeholder: 'Bijv. Nederland, China',
+      placeholder: 'Bijv. Nederland',
       register: form.register('countryOfOrigin'),
       validation: {
         error: form.formState.errors.countryOfOrigin?.message
@@ -647,35 +688,26 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     }
   ];
 
-  // Form sections
   const formSections: FormSection2<LineItemFormData>[] = [
     {
       id: 'general',
-      label: 'Algemeen',
+      label: 'General',
       rows: [
-        createFieldRow(formFields[0]), // lineType
-        createFieldRow(formFields[1]), // positionNo
-        createFieldRow(formFields[2]), // quantity
-        createFieldRow(formFields[3]), // unitPrice
-        createFieldRow(formFields[4]), // lineTotal
-        createFieldRow(formFields[5]), // descriptionInternal
-        createFieldRow(createDescriptionExternalField()) // descriptionExternal with snippet integration
-      ]
+        createTwoColumnRow(leftFields, rightFields),
+      ],
     },
     {
       id: 'delivery',
       label: 'Levering',
       rows: [
-        createFieldRow(deliveryFields[0]), // deliveryDate
-        createFieldRow(deliveryFields[1]), // supplierId
-        createFieldRow(deliveryFields[2]), // hsCode
-        createFieldRow(deliveryFields[3]), // countryOfOrigin
+        createFieldRow(deliveryFields[0]),
+        createFieldRow(deliveryFields[1]),
+        createFieldRow(deliveryFields[2]),
+        createFieldRow(deliveryFields[3]),
       ]
     }
   ];
 
-
-  // Snippet Selection Dialog
   const snippetSelectionDialog = (
     <Dialog open={showSnippetDialog} onOpenChange={setShowSnippetDialog}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -690,7 +722,6 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Search and Category Filter */}
           <div className="flex gap-2">
             <div className="flex-1">
               <div className="relative">
@@ -721,7 +752,6 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
             </Select>
           </div>
 
-          {/* Snippets List */}
           <div className="border rounded-lg">
             {(isLoadingSnippets || isSearchingSnippets) ? (
               <div className="p-4 space-y-3">
