@@ -248,6 +248,7 @@ export const quotations = pgTable("quotations", {
   printSortOrder: text("print_sort_order").default("position"), // position, price_high_low, price_low_high, alpha_az, alpha_za, amount_high_low, amount_low_high
   printProjectNo: boolean("print_project_no").default(true),
   printPaymentConditions: boolean("print_payment_conditions").default(true),
+  printLineImages: boolean("print_line_images").default(false),
   printLanguageCode: text("print_language_code").references(() => languages.code).default("nl"),
   customerSnapshot: text("customer_snapshot"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -274,6 +275,7 @@ export const quotationItems = pgTable("quotation_items", {
   supplierId: varchar("supplier_id").references(() => suppliers.id),
   hsCode: text("hs_code"),
   countryOfOrigin: text("country_of_origin"),
+  lineImage: text("line_image"),
 });
 
 // Quotation requests table
@@ -318,6 +320,7 @@ export const invoices = pgTable("invoices", {
   printLanguageCode: text("print_language_code").default("nl"),
   printProjectNo: boolean("print_project_no").default(true),
   printPaymentConditions: boolean("print_payment_conditions").default(true),
+  printLineImages: boolean("print_line_images").default(false),
   incotermId: varchar("incoterm_id").references(() => incoterms.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -346,6 +349,7 @@ export const invoiceItems = pgTable("invoice_items", {
   sourceSnippetVersion: integer("source_snippet_version"),
   hsCode: text("hs_code"),
   countryOfOrigin: text("country_of_origin"),
+  lineImage: text("line_image"),
 });
 
 // Proforma invoices table
