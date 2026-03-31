@@ -56,6 +56,24 @@ function coerceQuantity(body: Record<string, any>): Record<string, any> {
   return body;
 }
 
+async function recalculateQuotationTotals(storage: any, quotationId: string) {
+  try {
+    const items = await storage.getQuotationItems(quotationId);
+    const subtotal = items.reduce((sum: number, item: any) => {
+      return sum + (parseFloat(item.lineTotal || "0") || 0);
+    }, 0);
+    const taxAmount = subtotal * 0.21;
+    const totalAmount = subtotal + taxAmount;
+    await storage.updateQuotation(quotationId, {
+      subtotal: subtotal.toFixed(2),
+      taxAmount: taxAmount.toFixed(2),
+      totalAmount: totalAmount.toFixed(2),
+    });
+  } catch (err) {
+    console.error("Error recalculating quotation totals:", err);
+  }
+}
+
 import { loadQuotationPrintData, loadInvoicePrintData, loadPackingListPrintData } from "./utils/field-resolver";
 import {
   insertCustomerSchema, insertSupplierSchema, insertProspectSchema, insertInventoryItemSchema,
@@ -1475,6 +1493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         quotationId: req.params.id
       }));
       const item = await storage.addQuotationItem(itemData);
+      await recalculateQuotationTotals(storage, req.params.id);
       res.status(201).json(item);
     } catch (error) {
       console.error("Error adding quotation item:", error);
@@ -1519,6 +1538,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const itemData = insertQuotationItemSchema.partial().parse(coerceQuantity(req.body));
       const item = await storage.updateQuotationItem(req.params.id, itemData);
+      if (item?.quotationId) {
+        await recalculateQuotationTotals(storage, item.quotationId);
+      }
       res.json(item);
     } catch (error) {
       console.error("Error updating quotation item:", error);
@@ -1532,7 +1554,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/quotation-items/:id", async (req, res) => {
     try {
+      const item = await storage.getQuotationItem(req.params.id);
+      const quotationId = item?.quotationId;
       await storage.deleteQuotationItem(req.params.id);
+      if (quotationId) {
+        await recalculateQuotationTotals(storage, quotationId);
+      }
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting quotation item:", error);
