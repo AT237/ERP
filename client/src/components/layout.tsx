@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { X, Menu, PanelRightClose, LogOut } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -235,8 +235,8 @@ export default function Layout({ children }: LayoutProps) {
   const [dragSource, setDragSource] = useState<'left' | 'right' | null>(null);
   const [showDropZone, setShowDropZone] = useState(false);
   const [showLeftDropZone, setShowLeftDropZone] = useState(false);
-  const leftPanelTabs = tabs.filter(t => !rightPanelTabIds.has(t.id));
-  const rightPanelTabs = tabs.filter(t => rightPanelTabIds.has(t.id));
+  const leftPanelTabs = useMemo(() => tabs.filter(t => !rightPanelTabIds.has(t.id)), [tabs, rightPanelTabIds]);
+  const rightPanelTabs = useMemo(() => tabs.filter(t => rightPanelTabIds.has(t.id)), [tabs, rightPanelTabIds]);
   const isSplitScreen = rightPanelTabs.length > 0;
   
   // Track which panel the user is interacting with (for opening tabs in correct panel)
@@ -1479,7 +1479,7 @@ export default function Layout({ children }: LayoutProps) {
     );
   };
 
-  const renderRightPanelContent = () => {
+  const rightPanelContentMemo = useMemo(() => {
     if (rightPanelTabs.length === 0) return null;
     return (
       <>
@@ -1494,7 +1494,7 @@ export default function Layout({ children }: LayoutProps) {
         ))}
       </>
     );
-  };
+  }, [rightPanelTabs, rightPanelActiveTabId]);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -1678,7 +1678,7 @@ export default function Layout({ children }: LayoutProps) {
                   </div>
                   <main className="flex-1 flex flex-col overflow-hidden border-2 border-orange-500 bg-white rounded-lg">
                     <div className="flex-1 overflow-auto">
-                      {renderRightPanelContent()}
+                      {rightPanelContentMemo}
                     </div>
                   </main>
                 </div>
