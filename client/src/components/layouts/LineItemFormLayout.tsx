@@ -274,7 +274,8 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
 
   const createMutation = useMutation({
     mutationFn: async (data: LineItemFormData) => {
-      const response = await apiRequest("POST", "/api/quotation-items", data);
+      const qId = data.quotationId || quotationId;
+      const response = await apiRequest("POST", `/api/quotations/${qId}/items`, data);
       return response.json();
     },
     onSuccess: (newLineItem) => {
