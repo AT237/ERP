@@ -423,10 +423,6 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const createMutation = useMutation({
     mutationFn: async (data: LineItemFormData) => {
       const response = await apiRequest("POST", `/api/invoices/${invoiceId}/items`, data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Cannot add line");
-      }
       return response.json();
     },
     onSuccess: (newLineItem) => {
@@ -455,9 +451,17 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       onSave();
     },
     onError: (error: Error) => {
+      let message = "Kan regel niet toevoegen";
+      try {
+        const jsonStart = error.message.indexOf('{');
+        if (jsonStart >= 0) {
+          const parsed = JSON.parse(error.message.slice(jsonStart));
+          if (parsed?.message) message = parsed.message;
+        }
+      } catch {}
       toast({
-        title: "Error",
-        description: error.message || "Cannot add line",
+        title: "Fout",
+        description: message,
         variant: "destructive",
       });
     },
@@ -466,10 +470,6 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const updateMutation = useMutation({
     mutationFn: async (data: LineItemFormData) => {
       const response = await apiRequest("PUT", `/api/invoice-items/${lineItemId}`, data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Cannot update line");
-      }
       return response.json();
     },
     onSuccess: () => {
@@ -489,9 +489,17 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       // Stay on the form after update — user closes tab manually with ×
     },
     onError: (error: Error) => {
+      let message = "Kan regel niet bijwerken";
+      try {
+        const jsonStart = error.message.indexOf('{');
+        if (jsonStart >= 0) {
+          const parsed = JSON.parse(error.message.slice(jsonStart));
+          if (parsed?.message) message = parsed.message;
+        }
+      } catch {}
       toast({
-        title: "Error",
-        description: error.message || "Cannot update line",
+        title: "Fout",
+        description: message,
         variant: "destructive",
       });
     },

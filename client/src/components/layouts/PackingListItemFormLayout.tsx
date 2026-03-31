@@ -258,10 +258,6 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
   const createMutation = useMutation({
     mutationFn: async (data: PackingListItemFormData) => {
       const response = await apiRequest("POST", `/api/packing-lists/${packingListId}/items`, data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Kan regel niet toevoegen");
-      }
       return response.json();
     },
     onSuccess: () => {
@@ -277,17 +273,21 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
       onSave();
     },
     onError: (error: Error) => {
-      toast({ title: "Fout", description: error.message, variant: "destructive" });
+      let message = "Kan regel niet toevoegen";
+      try {
+        const jsonStart = error.message.indexOf('{');
+        if (jsonStart >= 0) {
+          const parsed = JSON.parse(error.message.slice(jsonStart));
+          if (parsed?.message) message = parsed.message;
+        }
+      } catch {}
+      toast({ title: "Fout", description: message, variant: "destructive" });
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async (data: PackingListItemFormData) => {
       const response = await apiRequest("PUT", `/api/packing-list-items/${lineItemId}`, data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Kan regel niet bijwerken");
-      }
       return response.json();
     },
     onSuccess: () => {
@@ -298,7 +298,15 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
       toast({ title: "Regel bijgewerkt" });
     },
     onError: (error: Error) => {
-      toast({ title: "Fout", description: error.message, variant: "destructive" });
+      let message = "Kan regel niet bijwerken";
+      try {
+        const jsonStart = error.message.indexOf('{');
+        if (jsonStart >= 0) {
+          const parsed = JSON.parse(error.message.slice(jsonStart));
+          if (parsed?.message) message = parsed.message;
+        }
+      } catch {}
+      toast({ title: "Fout", description: message, variant: "destructive" });
     },
   });
 

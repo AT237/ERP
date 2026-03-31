@@ -320,16 +320,11 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
   const createMutation = useMutation({
     mutationFn: async (data: LineItemFormData) => {
       const response = await apiRequest("POST", `/api/work-orders/${workOrderId}/items`, data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Cannot add line");
-      }
       return response.json();
     },
     onSuccess: (newLineItem) => {
       queryClient.invalidateQueries({ queryKey: ["/api/work-orders", workOrderId, "items"] });
       setHasUnsavedChanges(false);
-      // Clear the "new" persistence key so data doesn't bleed into the next new item
       const newKey = buildFormPersistenceKey({ formType: "work-order-line-item", entityId: undefined, scope: workOrderId });
       localStorage.removeItem(newKey);
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
@@ -346,17 +341,21 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
       }
     },
     onError: (error: Error) => {
-      toast({ title: "Fout", description: error.message || "Cannot add line", variant: "destructive" });
+      let message = "Kan regel niet toevoegen";
+      try {
+        const jsonStart = error.message.indexOf('{');
+        if (jsonStart >= 0) {
+          const parsed = JSON.parse(error.message.slice(jsonStart));
+          if (parsed?.message) message = parsed.message;
+        }
+      } catch {}
+      toast({ title: "Fout", description: message, variant: "destructive" });
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async (data: LineItemFormData) => {
       const response = await apiRequest("PUT", `/api/work-order-items/${lineItemId}`, data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Cannot update line");
-      }
       return response.json();
     },
     onSuccess: () => {
@@ -369,7 +368,15 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
       toast({ title: "Succes", description: "Regel bijgewerkt" });
     },
     onError: (error: Error) => {
-      toast({ title: "Fout", description: error.message || "Cannot update line", variant: "destructive" });
+      let message = "Kan regel niet bijwerken";
+      try {
+        const jsonStart = error.message.indexOf('{');
+        if (jsonStart >= 0) {
+          const parsed = JSON.parse(error.message.slice(jsonStart));
+          if (parsed?.message) message = parsed.message;
+        }
+      } catch {}
+      toast({ title: "Fout", description: message, variant: "destructive" });
     },
   });
 

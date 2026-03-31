@@ -275,10 +275,6 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   const createMutation = useMutation({
     mutationFn: async (data: LineItemFormData) => {
       const response = await apiRequest("POST", "/api/quotation-items", data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Kan regel niet toevoegen");
-      }
       return response.json();
     },
     onSuccess: (newLineItem) => {
@@ -305,9 +301,17 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       onSave();
     },
     onError: (error: Error) => {
+      let message = "Kan regel niet toevoegen";
+      try {
+        const jsonStart = error.message.indexOf('{');
+        if (jsonStart >= 0) {
+          const parsed = JSON.parse(error.message.slice(jsonStart));
+          if (parsed?.message) message = parsed.message;
+        }
+      } catch {}
       toast({
         title: "Fout",
-        description: error.message || "Kan regel niet toevoegen",
+        description: message,
         variant: "destructive",
       });
     },
@@ -316,10 +320,6 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   const updateMutation = useMutation({
     mutationFn: async (data: LineItemFormData) => {
       const response = await apiRequest("PUT", `/api/quotation-items/${lineItemId}`, data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Kan regel niet bijwerken");
-      }
       return response.json();
     },
     onSuccess: () => {
@@ -339,9 +339,17 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       onSave();
     },
     onError: (error: Error) => {
+      let message = "Kan regel niet bijwerken";
+      try {
+        const jsonStart = error.message.indexOf('{');
+        if (jsonStart >= 0) {
+          const parsed = JSON.parse(error.message.slice(jsonStart));
+          if (parsed?.message) message = parsed.message;
+        }
+      } catch {}
       toast({
         title: "Fout",
-        description: error.message || "Kan regel niet bijwerken",
+        description: message,
         variant: "destructive",
       });
     },
