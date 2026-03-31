@@ -176,6 +176,7 @@ export function InventorySelect({
                     value={item.id}
                     onSelect={() => {
                       onValueChange?.(item.id);
+                      onItemRefreshed?.(item);
                       setOpen(false);
                     }}
                     onDoubleClick={(e) => {

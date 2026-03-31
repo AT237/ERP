@@ -443,6 +443,7 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
         onValueChange={(val) => { form.setValue("itemId" as any, val); setHasUnsavedChanges(true); }}
         onItemRefreshed={(freshItem) => {
           if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
+          if (freshItem.description) { form.setValue("description" as any, freshItem.description); }
           if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
           setHasUnsavedChanges(true);
         }}

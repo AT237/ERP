@@ -784,8 +784,12 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
           const price = freshItem.sellingPrice || freshItem.unitPrice;
           if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
           if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
+          if (freshItem.description) { form.setValue("descriptionExternal", freshItem.description); setHasUnsavedChanges(true); }
+          if (freshItem.name && !form.getValues("descriptionInternal")) { form.setValue("descriptionInternal", freshItem.name); }
           if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
           if (freshItem.costPrice) { form.setValue("costPrice", Number(freshItem.costPrice).toFixed(2)); }
+          const qty = form.getValues("quantity") || 1;
+          if (price) { form.setValue("lineTotal", (qty * Number(price)).toFixed(2)); }
         }}
         placeholder="Artikel zoeken..."
         testId="select-inventory-item"
@@ -805,8 +809,12 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
           const price = freshItem.sellingPrice || freshItem.unitPrice;
           if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
           if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
+          if (freshItem.description) { form.setValue("descriptionExternal", freshItem.description); setHasUnsavedChanges(true); }
+          if (freshItem.name && !form.getValues("descriptionInternal")) { form.setValue("descriptionInternal", freshItem.name); }
           if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
           if (freshItem.costPrice) { form.setValue("costPrice", Number(freshItem.costPrice).toFixed(2)); }
+          const qty = form.getValues("quantity") || 1;
+          if (price) { form.setValue("lineTotal", (qty * Number(price)).toFixed(2)); }
         }}
         placeholder="Artikel zoeken in catalogus..."
         testId="select-inventory-item"
