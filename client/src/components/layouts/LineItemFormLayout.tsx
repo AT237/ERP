@@ -198,6 +198,9 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       form.reset(formData);
       setOriginalValues(formData);
       setHasUnsavedChanges(false);
+      if ((lineItem as any).lineImage) {
+        setLineImage((lineItem as any).lineImage);
+      }
     } else {
       const defaultFormData = form.getValues();
       setOriginalValues(defaultFormData);
@@ -242,6 +245,21 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     snippets = snippets.filter(snippet => snippet.isActive);
     return snippets;
   }, [textSnippets, searchedSnippets, snippetSearchTerm, selectedSnippetCategory]);
+
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Afbeelding te groot", description: "Maximaal 2MB toegestaan", variant: "destructive" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLineImage(reader.result as string);
+      setHasUnsavedChanges(true);
+    };
+    reader.readAsDataURL(file);
+  }, [toast]);
 
   useEffect(() => {
     const quantity = form.getValues("quantity");
@@ -414,6 +432,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       supplierId: data.supplierId || undefined,
       hsCode: data.hsCode || undefined,
       countryOfOrigin: data.countryOfOrigin || undefined,
+      lineImage: lineImage || null,
     };
     
     if (isEditing) {
@@ -511,6 +530,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
           if (freshItem.description) { form.setValue("descriptionExternal", freshItem.description); setHasUnsavedChanges(true); }
           if (freshItem.name && !form.getValues("descriptionInternal")) { form.setValue("descriptionInternal", freshItem.name); }
           if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
+          if ((freshItem as any).imageUrl) { setLineImage((freshItem as any).imageUrl); setHasUnsavedChanges(true); }
           const qty = form.getValues("quantity") || 1;
           if (price) {
             form.setValue("lineTotal", (qty * Number(price)).toFixed(2));
