@@ -21,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Package, FileText, Search, Library, Check } from "lucide-react";
+import { Save, ArrowLeft, Package, FileText, Search, Library, Check, ImagePlus, X as XIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { QuotationItem, InsertQuotationItem, TextSnippet, Supplier } from "@shared/schema";
 import { z } from "zod";
@@ -83,6 +83,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   const [showSnippetDialog, setShowSnippetDialog] = useState(false);
   const [snippetSearchTerm, setSnippetSearchTerm] = useState("");
   const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("all");
+  const [lineImage, setLineImage] = useState<string | null>(null);
   
   const { toast } = useToast();
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict q8zC7cOKZiRR2vRvt0Pyq2afPUAbV4LYp3VhDMrmV4RXBTd2XjTh5903gUMXCiu
+\restrict 5VLXaddVGuB3F4YFnbinZGhevRxdVsXUysHJW4qxozX6P6HxoWm9wtBIzoatWNl
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -758,7 +758,8 @@ CREATE TABLE public.invoice_items (
     discount_percent numeric(5,2) DEFAULT 0,
     hs_code text,
     country_of_origin text,
-    cost_price numeric(10,2) DEFAULT 0.00
+    cost_price numeric(10,2) DEFAULT 0.00,
+    line_image text
 );
 
 
@@ -805,7 +806,8 @@ CREATE TABLE public.invoices (
     total_amount_in_words text,
     vat_rate_percent numeric(5,2),
     customer_snapshot text,
-    incoterm_id character varying
+    incoterm_id character varying,
+    print_line_images boolean DEFAULT false
 );
 
 
@@ -1239,7 +1241,8 @@ CREATE TABLE public.quotation_items (
     country_of_origin text,
     unit text,
     cost_price numeric(10,2) DEFAULT 0.00,
-    discount_percent numeric(5,2) DEFAULT '0'::numeric
+    discount_percent numeric(5,2) DEFAULT '0'::numeric,
+    line_image text
 );
 
 
@@ -1297,7 +1300,8 @@ CREATE TABLE public.quotations (
     print_project_no boolean DEFAULT true,
     print_payment_conditions boolean DEFAULT true,
     print_language_code text DEFAULT 'nl'::text,
-    customer_snapshot text
+    customer_snapshot text,
+    print_line_images boolean DEFAULT false
 );
 
 
@@ -1993,21 +1997,21 @@ d05dc48f-7885-44bf-a62c-0e9c0dbb20b5	Contactor 95Amps, 45KW, 230Vac, 1M,1B, scre
 -- Data for Name: invoice_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.invoice_items (id, invoice_id, item_id, description, quantity, unit_price, line_total, line_type, "position", source_snippet_id, source_snippet_version, position_no, work_date, customer_rate_id, technician_names, technician_ids, unit, description_internal, discount_percent, hs_code, country_of_origin, cost_price) FROM stdin;
-74dbbbf5-0ae1-4d8c-b44a-24c1d843ea52	03ad8c0d-2665-41b1-9b18-e3d45be6c636	087cb4a9-411c-4616-ae1d-364d523c3121	Relay 2M, 2B, 230Vac coil	1.000	58.10	58.10	standard	1	\N	\N	030	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N	0.00
-3d4b45d4-7a93-48b4-b0d6-79c835a00a6e	68cbea2a-bba5-454f-97b2-090b5cda2ba7	3112b2de-71a4-420c-9d31-32e2fba8423f	Fuse DII, 10Amp, 500V, 	40.000	1.40	44.80	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	20.00	\N	\N	0.00
-338fedb1-bd1c-4dcc-95cf-008aea140cdd	68cbea2a-bba5-454f-97b2-090b5cda2ba7	42d5c11b-2a65-4be1-9fb0-b61061ad7213	Fuse DII, 20Amp, 500V, 	40.000	0.88	31.68	standard	1	\N	\N	020	\N	\N	\N	\N	Pcs.	\N	10.00	\N	\N	0.00
-36b2d9cf-b9c4-4d09-a321-be33b54cb532	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Miscellaneous	1.000	545.72	545.72	unique	1	\N	\N	050	\N	\N	\N	\N	set	\N	0.00	\N	\N	0.00
-ddb98628-a394-4f47-a1a9-383b68a3a903	03ad8c0d-2665-41b1-9b18-e3d45be6c636	d05dc48f-7885-44bf-a62c-0e9c0dbb20b5	Contactor 95Amps, 45KW, 230Vac, 1M,1B, screwclamp	1.000	400.00	400.00	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N	0.00
-a5613588-b108-4918-85bd-51f63433f00d	4c68b8f0-967d-4d29-a6a8-87f259d509a8	ef3dac6c-0743-49ee-88e8-2b805e8268a8	Terminal clamp grey 35mm², Din rail, screw, W16mm, 1000V	4.000	6.97	27.88	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N	0.00
-defa1ba4-4cd8-4b19-83aa-6ea79c0b5986	adfd3e97-5748-4e17-8e0f-803536f8b41c	ef3dac6c-0743-49ee-88e8-2b805e8268a8	Terminal clamp grey 35mm², Din rail, screw, W16mm, 1000V	4.000	6.97	13.94	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	50.00			0.00
-5411e9bd-8d37-44fb-933a-695b95050355	4c68b8f0-967d-4d29-a6a8-87f259d509a8	\N	Test extra regel	20.000	50.00	1000.00	standard	20	\N	\N	020	\N	\N	\N	\N	stk	\N	0.00	\N	\N	0.00
-ac56a6b9-b71e-4235-81a2-1e2f1b2cf78a	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1.000	715.05	715.05	charges	1	\N	\N	030	2026-01-21 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00
-c47be150-9ed1-49e0-aea6-5f4514fcd839	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		0.750	715.05	536.29	charges	1	\N	\N	040	2026-01-22 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00
-99ef9406-91e4-4942-a0eb-c987b078cada	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		0.750	715.05	536.29	charges	1	\N	\N	010	2026-01-19 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00
-daec7990-9721-403a-88ff-ebaec9cdc00b	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1.000	715.05	715.05	charges	1	\N	\N	020	2026-01-20 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00
-8afc0260-43c0-4e43-81bf-1fe6807b7d8d	03ad8c0d-2665-41b1-9b18-e3d45be6c636	\N	Advise for frequency drive and trouble shoooting interface relais	2.000	117.60	235.20	charges	1	\N	\N	020	2025-12-31 23:00:00	1a8080f8-ad17-4f7c-8204-2546b2ad79b7	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	hrs	\N	0.00	\N	\N	0.00
-cc90ff43-78f5-4c3e-b204-d2eafe776a3d	ffbe3534-a529-432b-9aeb-62e44938f12e	\N	Project installation, details in WO-0014 V1.9	17.500	855.00	14962.50	charges	1	\N	\N	010	\N	2864a474-5bd0-49cd-bba3-b8221fe3360b	\N	\N	Days	\N	0.00	\N	\N	0.00
+COPY public.invoice_items (id, invoice_id, item_id, description, quantity, unit_price, line_total, line_type, "position", source_snippet_id, source_snippet_version, position_no, work_date, customer_rate_id, technician_names, technician_ids, unit, description_internal, discount_percent, hs_code, country_of_origin, cost_price, line_image) FROM stdin;
+74dbbbf5-0ae1-4d8c-b44a-24c1d843ea52	03ad8c0d-2665-41b1-9b18-e3d45be6c636	087cb4a9-411c-4616-ae1d-364d523c3121	Relay 2M, 2B, 230Vac coil	1.000	58.10	58.10	standard	1	\N	\N	030	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N	0.00	\N
+3d4b45d4-7a93-48b4-b0d6-79c835a00a6e	68cbea2a-bba5-454f-97b2-090b5cda2ba7	3112b2de-71a4-420c-9d31-32e2fba8423f	Fuse DII, 10Amp, 500V, 	40.000	1.40	44.80	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	20.00	\N	\N	0.00	\N
+338fedb1-bd1c-4dcc-95cf-008aea140cdd	68cbea2a-bba5-454f-97b2-090b5cda2ba7	42d5c11b-2a65-4be1-9fb0-b61061ad7213	Fuse DII, 20Amp, 500V, 	40.000	0.88	31.68	standard	1	\N	\N	020	\N	\N	\N	\N	Pcs.	\N	10.00	\N	\N	0.00	\N
+36b2d9cf-b9c4-4d09-a321-be33b54cb532	52676213-2666-46ab-8d3e-0ef4d4c23153	\N	Miscellaneous	1.000	545.72	545.72	unique	1	\N	\N	050	\N	\N	\N	\N	set	\N	0.00	\N	\N	0.00	\N
+ddb98628-a394-4f47-a1a9-383b68a3a903	03ad8c0d-2665-41b1-9b18-e3d45be6c636	d05dc48f-7885-44bf-a62c-0e9c0dbb20b5	Contactor 95Amps, 45KW, 230Vac, 1M,1B, screwclamp	1.000	400.00	400.00	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N	0.00	\N
+a5613588-b108-4918-85bd-51f63433f00d	4c68b8f0-967d-4d29-a6a8-87f259d509a8	ef3dac6c-0743-49ee-88e8-2b805e8268a8	Terminal clamp grey 35mm², Din rail, screw, W16mm, 1000V	4.000	6.97	27.88	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	0.00	\N	\N	0.00	\N
+defa1ba4-4cd8-4b19-83aa-6ea79c0b5986	adfd3e97-5748-4e17-8e0f-803536f8b41c	ef3dac6c-0743-49ee-88e8-2b805e8268a8	Terminal clamp grey 35mm², Din rail, screw, W16mm, 1000V	4.000	6.97	13.94	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	\N	50.00			0.00	\N
+5411e9bd-8d37-44fb-933a-695b95050355	4c68b8f0-967d-4d29-a6a8-87f259d509a8	\N	Test extra regel	20.000	50.00	1000.00	standard	20	\N	\N	020	\N	\N	\N	\N	stk	\N	0.00	\N	\N	0.00	\N
+ac56a6b9-b71e-4235-81a2-1e2f1b2cf78a	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1.000	715.05	715.05	charges	1	\N	\N	030	2026-01-21 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00	\N
+c47be150-9ed1-49e0-aea6-5f4514fcd839	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		0.750	715.05	536.29	charges	1	\N	\N	040	2026-01-22 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00	\N
+99ef9406-91e4-4942-a0eb-c987b078cada	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		0.750	715.05	536.29	charges	1	\N	\N	010	2026-01-19 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00	\N
+daec7990-9721-403a-88ff-ebaec9cdc00b	52676213-2666-46ab-8d3e-0ef4d4c23153	\N		1.000	715.05	715.05	charges	1	\N	\N	020	2026-01-20 23:00:00	83ae4b38-3d50-4a2c-bb88-8dcaa3b355f8	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	Days	\N	0.00	\N	\N	0.00	\N
+8afc0260-43c0-4e43-81bf-1fe6807b7d8d	03ad8c0d-2665-41b1-9b18-e3d45be6c636	\N	Advise for frequency drive and trouble shoooting interface relais	2.000	117.60	235.20	charges	1	\N	\N	020	2025-12-31 23:00:00	1a8080f8-ad17-4f7c-8204-2546b2ad79b7	A. Tomassen	fb7a089a-ce13-460d-bc5f-a970a23cbac6	hrs	\N	0.00	\N	\N	0.00	\N
+cc90ff43-78f5-4c3e-b204-d2eafe776a3d	ffbe3534-a529-432b-9aeb-62e44938f12e	\N	Project installation, details in WO-0014 V1.9	17.500	855.00	14962.50	charges	1	\N	\N	010	\N	2864a474-5bd0-49cd-bba3-b8221fe3360b	\N	\N	Days	\N	0.00	\N	\N	0.00	\N
 \.
 
 
@@ -2026,14 +2030,14 @@ a8649c05-b665-457b-8bcc-1b97b0b5eeea	ffbe3534-a529-432b-9aeb-62e44938f12e	34de48
 -- Data for Name: invoices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.invoices (id, invoice_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, paid_amount, notes, created_at, payment_days_id, invoice_date, description, print_sort_order, print_language_code, print_project_no, print_payment_conditions, total_amount_in_words, vat_rate_percent, customer_snapshot, incoterm_id) FROM stdin;
-27607917-b85f-4490-83cd-93855019ae17	CI-2026-004	26188fba-4c83-451c-b8c1-6cc9a75e9606	\N	44d871db-266d-4dea-b5fb-7f1c8800729d	concept	2026-03-21 23:00:00	0.00	0.00	0.00	0.00		2026-03-08 20:32:33.409936	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-07 23:00:00		position	nl	t	t	Nul euro	\N	\N	\N
-68cbea2a-bba5-454f-97b2-090b5cda2ba7	CI-2026-003	fb7fd86f-9540-4480-893a-88d284d90db2	\N	\N	pending	2026-04-11 22:00:00	50.40	10.58	60.98	0.00		2026-03-09 11:08:30.312186	a8fab9a1-b836-4ce3-8922-69b626084abd	2026-03-12 23:00:00	Fuses	position	nl	t	t	Zestig euro en achtennegentig cent	21.00	\N	\N
-adfd3e97-5748-4e17-8e0f-803536f8b41c	CI-2026-006	1a027fa9-76e0-439b-9feb-8cbb7d30f0e6	\N	\N	pending	2026-03-24 23:00:00	27.88	5.85	33.73	0.00		2026-03-11 20:38:05.40728	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-10 23:00:00		position	nl	t	t	Drieendertig euro en drieenzeventig cent	21.00	\N	\N
-03ad8c0d-2665-41b1-9b18-e3d45be6c636	CI-2026-002	84d6a39c-c26b-4ecf-84b6-b8ee09f0f3b9	\N	93f5083a-370b-4a66-a44a-de1108fd8539	pending	2026-03-22 23:00:00	693.30	145.59	838.89	0.00		2026-02-10 15:31:46.937416	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-08 23:00:00	Bowl cutter	position	en	t	t	Eight hundred thirty-eight euro and eighty-nine cents	21.00	{"name":"Tomassen worstmakerij","customerNumber":"DEB-0012","email":"info@abc.com","generalEmail":"","invoiceEmail":"","phone":"","mobile":"","btwNummer":null,"taxId":"","kvkNummer":"","bankAccount":"","countryCode":"NL","languageCode":"nl","memo":"","invoiceNotes":"","address":{"street":"Horsterweg","houseNumber":"213","postalCode":"3853 JC","city":"Ermelo","country":""}}	\N
-4c68b8f0-967d-4d29-a6a8-87f259d509a8	CI-2026-007	1a027fa9-76e0-439b-9feb-8cbb7d30f0e6	\N	\N	concept	2026-03-24 23:00:00	27.88	5.85	33.73	0.00		2026-03-23 20:40:58.388138	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-10 23:00:00	(kopie)	position	nl	t	t	Drieendertig euro en drieenzeventig cent	21.00	\N	\N
-52676213-2666-46ab-8d3e-0ef4d4c23153	CI-2026-001	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	db43039e-cb89-460a-9308-2453f5bad5d0	sent	2026-03-15 23:00:00	3048.40	640.16	3688.56	0.00		2025-09-16 14:20:11.218727	333d11d7-4ad5-44eb-aa85-c4330918c602	2026-03-08 23:00:00	Consulting fees P1-2026	position_low_high	nl	t	t	Drieduizend zeshonderdachtentachtig euro en zesenvijftig cent	21.00	\N	34be9161-bb52-49f0-b393-8479f2cc2cef
-ffbe3534-a529-432b-9aeb-62e44938f12e	CI-2026-005	be4ed3fa-64c3-48f7-81df-fa362f9bd1fe	\N	a618178f-37e5-4d97-96ac-d2366c17cdd0	sent	2026-03-22 23:00:00	14962.50	3142.13	18104.63	0.00		2026-03-08 21:55:19.950962	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-08 23:00:00	Installation cost 	position	en	t	t	Eighteen thousand one hundred four euro and sixty-three cents	21.00	\N	\N
+COPY public.invoices (id, invoice_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, paid_amount, notes, created_at, payment_days_id, invoice_date, description, print_sort_order, print_language_code, print_project_no, print_payment_conditions, total_amount_in_words, vat_rate_percent, customer_snapshot, incoterm_id, print_line_images) FROM stdin;
+27607917-b85f-4490-83cd-93855019ae17	CI-2026-004	26188fba-4c83-451c-b8c1-6cc9a75e9606	\N	44d871db-266d-4dea-b5fb-7f1c8800729d	concept	2026-03-21 23:00:00	0.00	0.00	0.00	0.00		2026-03-08 20:32:33.409936	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-07 23:00:00		position	nl	t	t	Nul euro	\N	\N	\N	f
+68cbea2a-bba5-454f-97b2-090b5cda2ba7	CI-2026-003	fb7fd86f-9540-4480-893a-88d284d90db2	\N	\N	pending	2026-04-11 22:00:00	50.40	10.58	60.98	0.00		2026-03-09 11:08:30.312186	a8fab9a1-b836-4ce3-8922-69b626084abd	2026-03-12 23:00:00	Fuses	position	nl	t	t	Zestig euro en achtennegentig cent	21.00	\N	\N	f
+adfd3e97-5748-4e17-8e0f-803536f8b41c	CI-2026-006	1a027fa9-76e0-439b-9feb-8cbb7d30f0e6	\N	\N	pending	2026-03-24 23:00:00	27.88	5.85	33.73	0.00		2026-03-11 20:38:05.40728	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-10 23:00:00		position	nl	t	t	Drieendertig euro en drieenzeventig cent	21.00	\N	\N	f
+03ad8c0d-2665-41b1-9b18-e3d45be6c636	CI-2026-002	84d6a39c-c26b-4ecf-84b6-b8ee09f0f3b9	\N	93f5083a-370b-4a66-a44a-de1108fd8539	pending	2026-03-22 23:00:00	693.30	145.59	838.89	0.00		2026-02-10 15:31:46.937416	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-08 23:00:00	Bowl cutter	position	en	t	t	Eight hundred thirty-eight euro and eighty-nine cents	21.00	{"name":"Tomassen worstmakerij","customerNumber":"DEB-0012","email":"info@abc.com","generalEmail":"","invoiceEmail":"","phone":"","mobile":"","btwNummer":null,"taxId":"","kvkNummer":"","bankAccount":"","countryCode":"NL","languageCode":"nl","memo":"","invoiceNotes":"","address":{"street":"Horsterweg","houseNumber":"213","postalCode":"3853 JC","city":"Ermelo","country":""}}	\N	f
+4c68b8f0-967d-4d29-a6a8-87f259d509a8	CI-2026-007	1a027fa9-76e0-439b-9feb-8cbb7d30f0e6	\N	\N	concept	2026-03-24 23:00:00	27.88	5.85	33.73	0.00		2026-03-23 20:40:58.388138	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-10 23:00:00	(kopie)	position	nl	t	t	Drieendertig euro en drieenzeventig cent	21.00	\N	\N	f
+52676213-2666-46ab-8d3e-0ef4d4c23153	CI-2026-001	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	db43039e-cb89-460a-9308-2453f5bad5d0	sent	2026-03-15 23:00:00	3048.40	640.16	3688.56	0.00		2025-09-16 14:20:11.218727	333d11d7-4ad5-44eb-aa85-c4330918c602	2026-03-08 23:00:00	Consulting fees P1-2026	position_low_high	nl	t	t	Drieduizend zeshonderdachtentachtig euro en zesenvijftig cent	21.00	\N	34be9161-bb52-49f0-b393-8479f2cc2cef	f
+ffbe3534-a529-432b-9aeb-62e44938f12e	CI-2026-005	be4ed3fa-64c3-48f7-81df-fa362f9bd1fe	\N	a618178f-37e5-4d97-96ac-d2366c17cdd0	sent	2026-03-22 23:00:00	14962.50	3142.13	18104.63	0.00		2026-03-08 21:55:19.950962	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-08 23:00:00	Installation cost 	position	en	t	t	Eighteen thousand one hundred four euro and sixty-three cents	21.00	\N	\N	f
 \.
 
 
@@ -2275,12 +2279,12 @@ COPY public.purchase_orders (id, order_number, supplier_id, status, order_date, 
 -- Data for Name: quotation_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.quotation_items (id, quotation_id, item_id, description, quantity, unit_price, line_total, line_type, "position", source_snippet_id, source_snippet_version, position_no, delivery_date, supplier_id, hs_code, country_of_origin, unit, cost_price, discount_percent) FROM stdin;
-c7dfae2f-9fba-48d7-a731-9265289d2626	test-quotation-1	\N	--- Project Header Text ---	0.000	0.00	0.00	text	0	\N	\N	010	\N	\N	\N	\N	\N	0.00	0.00
-8516fea2-da18-4945-ad9f-be215f4fb9c7	test-quotation-1	\N	Shipping and Handling Fee	1.000	15.00	15.00	charges	0	\N	\N	010	\N	\N	\N	\N	\N	0.00	0.00
-4483c986-d46c-4ec8-9fc7-6c8d9a8073fd	test-quotation-1	\N	Standard Product Item	2.000	25.00	50.00	standard	1	\N	\N	090	\N	\N	\N	\N	\N	0.00	0.00
-719c11f0-e795-4bba-88f4-e5d5c0419a96	test-quotation-1	\N	Custom Engineered Component	1.000	150.00	150.00	unique	1	\N	\N	011	\N	\N	\N	\N	\N	0.00	0.00
-ac3bebe5-2ecf-481f-8247-e8b425659111	9f279a89-56dd-463c-8fbd-58a6f4388ed6	1cb94395-d6de-4ed1-8437-4d7a4804b54b	Fuse DII, 35Amp, 500V, 	10.000	3.18	31.80	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	0.00	0.00
+COPY public.quotation_items (id, quotation_id, item_id, description, quantity, unit_price, line_total, line_type, "position", source_snippet_id, source_snippet_version, position_no, delivery_date, supplier_id, hs_code, country_of_origin, unit, cost_price, discount_percent, line_image) FROM stdin;
+c7dfae2f-9fba-48d7-a731-9265289d2626	test-quotation-1	\N	--- Project Header Text ---	0.000	0.00	0.00	text	0	\N	\N	010	\N	\N	\N	\N	\N	0.00	0.00	\N
+8516fea2-da18-4945-ad9f-be215f4fb9c7	test-quotation-1	\N	Shipping and Handling Fee	1.000	15.00	15.00	charges	0	\N	\N	010	\N	\N	\N	\N	\N	0.00	0.00	\N
+4483c986-d46c-4ec8-9fc7-6c8d9a8073fd	test-quotation-1	\N	Standard Product Item	2.000	25.00	50.00	standard	1	\N	\N	090	\N	\N	\N	\N	\N	0.00	0.00	\N
+719c11f0-e795-4bba-88f4-e5d5c0419a96	test-quotation-1	\N	Custom Engineered Component	1.000	150.00	150.00	unique	1	\N	\N	011	\N	\N	\N	\N	\N	0.00	0.00	\N
+ac3bebe5-2ecf-481f-8247-e8b425659111	9f279a89-56dd-463c-8fbd-58a6f4388ed6	1cb94395-d6de-4ed1-8437-4d7a4804b54b	Fuse DII, 35Amp, 500V, 	10.000	3.18	31.80	standard	1	\N	\N	010	\N	\N	\N	\N	Pcs.	0.00	0.00	\N
 \.
 
 
@@ -2296,37 +2300,37 @@ COPY public.quotation_requests (id, request_number, customer_id, project_id, sta
 -- Data for Name: quotations; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.quotations (id, quotation_number, customer_id, project_id, status, quotation_date, description, revision_number, valid_until, subtotal, tax_amount, total_amount, notes, inco_terms, payment_conditions, delivery_conditions, created_at, validity_days, is_budget_quotation, print_sort_order, print_project_no, print_payment_conditions, print_language_code, customer_snapshot) FROM stdin;
-13d2537c-3233-4473-9d81-abd9134a33ec	Q-2025-001	a476ef35-b76b-41de-80bc-0e19310508b4	\N	draft	2025-05-23 00:00:00	Ford Focus Electric	V1.0	2025-06-22 00:00:00	0.00	0.00	0.00					2025-09-10 13:00:01.6668	30	t	position	t	t	nl	\N
-bdd41ef8-a87a-4db8-a673-4c022b7a611b	Q-2025-002	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	draft	2025-09-12 00:00:00	test	V1.0	2025-09-26 00:00:00	0.00	0.00	0.00					2025-09-12 14:41:09.608161	14	f	position	t	t	nl	\N
-test-quotation-1	Q-TEST-001	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	draft	2025-09-16 00:00:00	Test Quotation for Type Column Testing	V1.0	2025-10-16 00:00:00	215.00	45.15	260.15					2025-09-16 11:24:08.732748	30	f	position	t	t	nl	\N
-8958851e-6fe8-45b4-ada0-9ff6904ad85a	Q-2023-001	d487e312-b8dd-4e68-9c0d-32a275388035	\N	sent	2023-01-01 00:00:00	Update Electrical installation Florensis Ethiopia PLC	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-b86c3c68-ea1b-499b-99ab-6c99d4445b58	Q-2023-002	1a027fa9-76e0-439b-9feb-8cbb7d30f0e6	\N	sent	2023-01-01 00:00:00	Control cabinet	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-8eec8298-0d2d-4946-8809-4f1e1e725661	Q-2023-003	cf73fd0d-1c7d-4fed-a131-7352a96422ea	\N	sent	2023-01-01 00:00:00	Water pump items	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-e9c6b2a1-5641-416b-9685-0ee01a6eda84	Q-2024-002	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	Solar project phase 1	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-237f4954-1a23-4023-bdaf-308997f61eb4	Q-2024-003	cf73fd0d-1c7d-4fed-a131-7352a96422ea	\N	sent	2024-01-01 00:00:00	Electrical system upgrade, future proof	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-17b60121-55c6-4e70-916f-7ce406c6c658	Q-2024-004	551523db-f536-462c-a12d-59e95bee641a	\N	sent	2024-01-01 00:00:00	MDB 2 with ATS 100KVA	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-a986c08b-2842-487b-9254-c8f8c9b65993	Q-2024-005	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	draft	2024-01-01 00:00:00	Pump system for canal to feed filter units	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-f5bbca12-e7a8-4239-981d-0227546ef133	Q-2024-006	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	Borehole pump setup 1 (6" borehole)	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-017dcc1b-b2c7-4c8b-8011-c69d7cdf3184	Q-2024-007	0e0da42b-8dc6-43cd-97bf-2b31a2dfa88c	\N	sent	2024-01-01 00:00:00	Update Electrical installation Florius	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-ca1fc805-84b6-403e-8deb-4446975d9f7e	Q-2024-008	5b349f27-7b01-41ef-a806-55300f0144b5	\N	sent	2024-01-01 00:00:00	Shoes and safety	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-656a0982-e80c-4317-8d12-e4521ce97fae	Q-2024-009	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	UPS system or stabilizer	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-23e3ce2a-191a-4230-bd22-236c1e8fe67c	Q-2024-010	a476ef35-b76b-41de-80bc-0e19310508b4	\N	sent	2024-01-01 00:00:00	LV distribution boards	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-a8e9ad93-9acf-47aa-8e05-e0430184436e	Q-2024-011	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	cancelled	2024-01-01 00:00:00	LED high bay system	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-fe2900cd-22ee-4670-b044-7c5f310ce6eb	Q-2024-012	39a306b0-5117-468f-99d4-0ca90af1b9bc	\N	sent	2024-01-01 00:00:00	Supply and Installation of Standby Generators 1250KVA X 4pcs	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-e17f2bc6-2982-4882-bccd-ae26995eba29	Q-2024-013	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	LED lights Adami Tulu, 2 gradings of 200M, 2 gradings of 300M	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-f1b3725a-bd8a-4f7b-9b21-3b97adfa6b64	Q-2024-014	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	Brackets	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-988588ed-d376-4d38-8c28-be678d2781cf	Q-2024-015	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	Protective earth and Neutral setup Hospital	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-afed30ee-9fd2-4e47-8155-68f48e34b915	Q-2024-016	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	draft	2024-01-01 00:00:00	Adami Tulu standard Main Distribution Panel	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-ceec66ed-7144-4904-8467-bf0b57235bf3	Q-2024-017	39a306b0-5117-468f-99d4-0ca90af1b9bc	\N	draft	2024-01-01 00:00:00	Supply and Installation of Standby Generators 650KVA X 8pcs	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-2066c942-c504-496c-ac12-732f7853c7fe	Q-2024-018	5b349f27-7b01-41ef-a806-55300f0144b5	\N	sent	2024-01-01 00:00:00	Back up generator 450KVA	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-c0cbaf81-f936-479b-b049-1ff0b04ea47b	Q-2024-019	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	draft	2024-01-01 00:00:00	MV equipment	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-e18362b2-a7fb-4c28-8357-776603251204	Q-2024-020	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	Megger fault location detector	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-cc3af0dd-f25f-4061-bc4b-b371273943a7	Q-2024-021	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	draft	2024-01-01 00:00:00	MDB hospital	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-7a1212a3-22d6-494d-bf50-174052c77095	Q-2024-022	edc1b103-6f73-4885-9620-932d53116201	\N	draft	2024-01-01 00:00:00	Utilities for new farm	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-47884455-1384-4bea-9122-715c2a121d8c	Q-2025-003	a476ef35-b76b-41de-80bc-0e19310508b4	\N	draft	2025-01-01 00:00:00	Connectors 800Amps	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N
-a0170147-28ce-450e-91fc-45e6e4f142db	Q-2026-001	26188fba-4c83-451c-b8c1-6cc9a75e9606	\N	draft	2026-03-29 22:00:00		V1.0	2026-04-28 22:00:00	0.00	0.00	0.00					2026-03-30 12:53:36.822071	30	f	position	t	t	nl	\N
-9f279a89-56dd-463c-8fbd-58a6f4388ed6	Q-2026-099	3e079b7d-2254-4732-bc20-0d0a7caf6a28	\N	draft	2026-03-30 22:00:00	PV and borehole pump	V1.0	2026-04-29 22:00:00	31.80	6.68	38.48					2026-03-31 19:40:53.533263	30	t	position	t	t	en	\N
+COPY public.quotations (id, quotation_number, customer_id, project_id, status, quotation_date, description, revision_number, valid_until, subtotal, tax_amount, total_amount, notes, inco_terms, payment_conditions, delivery_conditions, created_at, validity_days, is_budget_quotation, print_sort_order, print_project_no, print_payment_conditions, print_language_code, customer_snapshot, print_line_images) FROM stdin;
+13d2537c-3233-4473-9d81-abd9134a33ec	Q-2025-001	a476ef35-b76b-41de-80bc-0e19310508b4	\N	draft	2025-05-23 00:00:00	Ford Focus Electric	V1.0	2025-06-22 00:00:00	0.00	0.00	0.00					2025-09-10 13:00:01.6668	30	t	position	t	t	nl	\N	f
+bdd41ef8-a87a-4db8-a673-4c022b7a611b	Q-2025-002	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	draft	2025-09-12 00:00:00	test	V1.0	2025-09-26 00:00:00	0.00	0.00	0.00					2025-09-12 14:41:09.608161	14	f	position	t	t	nl	\N	f
+test-quotation-1	Q-TEST-001	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	draft	2025-09-16 00:00:00	Test Quotation for Type Column Testing	V1.0	2025-10-16 00:00:00	215.00	45.15	260.15					2025-09-16 11:24:08.732748	30	f	position	t	t	nl	\N	f
+8958851e-6fe8-45b4-ada0-9ff6904ad85a	Q-2023-001	d487e312-b8dd-4e68-9c0d-32a275388035	\N	sent	2023-01-01 00:00:00	Update Electrical installation Florensis Ethiopia PLC	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+b86c3c68-ea1b-499b-99ab-6c99d4445b58	Q-2023-002	1a027fa9-76e0-439b-9feb-8cbb7d30f0e6	\N	sent	2023-01-01 00:00:00	Control cabinet	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+8eec8298-0d2d-4946-8809-4f1e1e725661	Q-2023-003	cf73fd0d-1c7d-4fed-a131-7352a96422ea	\N	sent	2023-01-01 00:00:00	Water pump items	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+e9c6b2a1-5641-416b-9685-0ee01a6eda84	Q-2024-002	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	Solar project phase 1	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+237f4954-1a23-4023-bdaf-308997f61eb4	Q-2024-003	cf73fd0d-1c7d-4fed-a131-7352a96422ea	\N	sent	2024-01-01 00:00:00	Electrical system upgrade, future proof	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+17b60121-55c6-4e70-916f-7ce406c6c658	Q-2024-004	551523db-f536-462c-a12d-59e95bee641a	\N	sent	2024-01-01 00:00:00	MDB 2 with ATS 100KVA	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+a986c08b-2842-487b-9254-c8f8c9b65993	Q-2024-005	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	draft	2024-01-01 00:00:00	Pump system for canal to feed filter units	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+f5bbca12-e7a8-4239-981d-0227546ef133	Q-2024-006	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	Borehole pump setup 1 (6" borehole)	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+017dcc1b-b2c7-4c8b-8011-c69d7cdf3184	Q-2024-007	0e0da42b-8dc6-43cd-97bf-2b31a2dfa88c	\N	sent	2024-01-01 00:00:00	Update Electrical installation Florius	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+ca1fc805-84b6-403e-8deb-4446975d9f7e	Q-2024-008	5b349f27-7b01-41ef-a806-55300f0144b5	\N	sent	2024-01-01 00:00:00	Shoes and safety	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+656a0982-e80c-4317-8d12-e4521ce97fae	Q-2024-009	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	UPS system or stabilizer	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+23e3ce2a-191a-4230-bd22-236c1e8fe67c	Q-2024-010	a476ef35-b76b-41de-80bc-0e19310508b4	\N	sent	2024-01-01 00:00:00	LV distribution boards	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+a8e9ad93-9acf-47aa-8e05-e0430184436e	Q-2024-011	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	cancelled	2024-01-01 00:00:00	LED high bay system	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+fe2900cd-22ee-4670-b044-7c5f310ce6eb	Q-2024-012	39a306b0-5117-468f-99d4-0ca90af1b9bc	\N	sent	2024-01-01 00:00:00	Supply and Installation of Standby Generators 1250KVA X 4pcs	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+e17f2bc6-2982-4882-bccd-ae26995eba29	Q-2024-013	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	LED lights Adami Tulu, 2 gradings of 200M, 2 gradings of 300M	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+f1b3725a-bd8a-4f7b-9b21-3b97adfa6b64	Q-2024-014	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	Brackets	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+988588ed-d376-4d38-8c28-be678d2781cf	Q-2024-015	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	Protective earth and Neutral setup Hospital	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+afed30ee-9fd2-4e47-8155-68f48e34b915	Q-2024-016	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	draft	2024-01-01 00:00:00	Adami Tulu standard Main Distribution Panel	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+ceec66ed-7144-4904-8467-bf0b57235bf3	Q-2024-017	39a306b0-5117-468f-99d4-0ca90af1b9bc	\N	draft	2024-01-01 00:00:00	Supply and Installation of Standby Generators 650KVA X 8pcs	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+2066c942-c504-496c-ac12-732f7853c7fe	Q-2024-018	5b349f27-7b01-41ef-a806-55300f0144b5	\N	sent	2024-01-01 00:00:00	Back up generator 450KVA	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+c0cbaf81-f936-479b-b049-1ff0b04ea47b	Q-2024-019	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	draft	2024-01-01 00:00:00	MV equipment	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+e18362b2-a7fb-4c28-8357-776603251204	Q-2024-020	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	sent	2024-01-01 00:00:00	Megger fault location detector	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+cc3af0dd-f25f-4061-bc4b-b371273943a7	Q-2024-021	c1a06cc3-d874-4c6f-a235-8933113838d7	\N	draft	2024-01-01 00:00:00	MDB hospital	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+7a1212a3-22d6-494d-bf50-174052c77095	Q-2024-022	edc1b103-6f73-4885-9620-932d53116201	\N	draft	2024-01-01 00:00:00	Utilities for new farm	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+47884455-1384-4bea-9122-715c2a121d8c	Q-2025-003	a476ef35-b76b-41de-80bc-0e19310508b4	\N	draft	2025-01-01 00:00:00	Connectors 800Amps	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
+a0170147-28ce-450e-91fc-45e6e4f142db	Q-2026-001	26188fba-4c83-451c-b8c1-6cc9a75e9606	\N	draft	2026-03-29 22:00:00		V1.0	2026-04-28 22:00:00	0.00	0.00	0.00					2026-03-30 12:53:36.822071	30	f	position	t	t	nl	\N	f
+9f279a89-56dd-463c-8fbd-58a6f4388ed6	Q-2026-099	3e079b7d-2254-4732-bc20-0d0a7caf6a28	\N	draft	2026-03-30 22:00:00	PV and borehole pump	V1.0	2026-04-29 22:00:00	31.80	6.68	38.48					2026-03-31 19:40:53.533263	30	t	position	t	t	en	\N	f
 \.
 
 
@@ -3300,7 +3304,7 @@ d259ddcd-e75e-465a-9f8e-f4ff1a6df96e	\N	\N	\N	2026-02-23 10:03:54.505894	2026-02
 deaed565-e163-4094-b2a6-f912be4c7b74	\N	\N	\N	2026-02-23 10:10:43.288279	2026-02-23 10:10:43.288279	\N	\N
 ef2cb817-b635-4bb4-8ab4-9366bd75bc80	\N	\N	\N	2026-02-23 10:18:15.731732	2026-02-23 10:18:15.731732	\N	\N
 d89d943c-8acc-4f97-a10e-a3b5924c13f2	\N	\N	\N	2026-02-23 10:18:25.249937	2026-02-23 10:18:25.249937	\N	\N
-b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}, {"id": "task-overview", "href": "/task-overview", "icon": {}, "name": "Task Overview"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "brands", "href": "/master-data/brands", "icon": {}, "name": "Brands"}, {"id": "categories", "href": "/master-data/categories", "icon": {}, "name": "Categories"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "serial-numbers", "href": "/serial-numbers", "icon": {}, "name": "Serial Numbers"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}, {"id": "pdf-archive", "href": "/pdf-archive", "icon": {}, "name": "PDF Database"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "email-designer", "href": "/email-designer", "icon": {}, "name": "Email Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}]	{"Sales": false, "Tools": false, "Reports": true, "Overview": false, "Inventory": true, "Relations": false, "Operations": false, "Master Data": true, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-03-31 20:48:35.598587	layout-designer	page
+b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}, {"id": "task-overview", "href": "/task-overview", "icon": {}, "name": "Task Overview"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "brands", "href": "/master-data/brands", "icon": {}, "name": "Brands"}, {"id": "categories", "href": "/master-data/categories", "icon": {}, "name": "Categories"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "serial-numbers", "href": "/serial-numbers", "icon": {}, "name": "Serial Numbers"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}, {"id": "pdf-archive", "href": "/pdf-archive", "icon": {}, "name": "PDF Database"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "email-designer", "href": "/email-designer", "icon": {}, "name": "Email Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}]	{"Sales": false, "Tools": false, "Reports": true, "Overview": false, "Inventory": true, "Relations": false, "Operations": false, "Master Data": true, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-03-31 20:50:31.591449	layout-designer	page
 c627eaa0-22b9-477f-a97d-558eb254ec1a	\N	\N	\N	2026-02-23 10:35:39.86801	2026-02-23 10:35:39.86801	\N	\N
 edb58413-7021-4e1b-8592-fb495bb8940d	\N	\N	\N	2026-02-23 10:19:42.580459	2026-02-23 10:19:42.580459	\N	\N
 c3f161df-331a-4746-9f78-224cab856721	\N	\N	\N	2026-02-23 10:19:49.234351	2026-02-23 10:19:49.234351	\N	\N
@@ -3443,10 +3447,10 @@ COPY public.user_sessions (sid, sess, expire) FROM stdin;
 Y5hQ4asUMJvcyQnh4WQbD_iJS-ntWE19	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-07T19:39:12.696Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-07 19:39:13
 MzJWnBVuaC5erqfSfjQ8izZaZSq-9k83	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:01:54.937Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:01:56
 z9XOAqcVlYPxLe_4uJPtklTill04tHvO	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:59:08.399Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 13:05:07
+Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-07 20:50:32
 DydfCmxnF9Y7M8cXrMNtollnPcwzY2Eh	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:02:00.267Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:02:41
 PA3DwNha04cB0K8L_9gpEk09h3fue6uM	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:05:01.379Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:05:02
 06tRqKlA-rfQ_GqAPUsO6r6LmD4Rv0Wf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:03:38.029Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:03:39
-Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-07 20:48:47
 yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 11:32:05
 \.
 
@@ -4814,5 +4818,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict q8zC7cOKZiRR2vRvt0Pyq2afPUAbV4LYp3VhDMrmV4RXBTd2XjTh5903gUMXCiu
+\unrestrict 5VLXaddVGuB3F4YFnbinZGhevRxdVsXUysHJW4qxozX6P6HxoWm9wtBIzoatWNl
 
