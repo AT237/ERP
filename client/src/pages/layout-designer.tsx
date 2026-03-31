@@ -663,6 +663,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [alignmentGuides, setAlignmentGuides] = useState<{ type: 'h' | 'v'; position: number }[]>([]);
 
+  const multiDragStartPositions = useRef<Record<string, { x: number; y: number }>>({});
+
   // History for undo/redo (refs to avoid re-renders)
   const historyRef = useRef<any[][]>([]);
   const historyIndexRef = useRef<number>(-1);
@@ -1409,7 +1411,20 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     setIsDraggingBlock(true);
     setSelectedBlock(block);
     setSelectedSection(null);
-    pushHistory(sections); // push before drag starts (not on every move)
+    pushHistory(sections);
+
+    const section = sections.find(s => s.id === sectionId);
+    if (section && selectedBlockIds.length > 1 && selectedBlockIds.includes(block.id)) {
+      const positions: Record<string, { x: number; y: number }> = {};
+      for (const b of getSectionBlocks(section)) {
+        if (selectedBlockIds.includes(b.id)) {
+          positions[b.id] = { x: b.position?.x || 0, y: b.position?.y || 0 };
+        }
+      }
+      multiDragStartPositions.current = positions;
+    } else {
+      multiDragStartPositions.current = {};
+    }
   };
 
   const handleBlockDragMove = (e: React.MouseEvent, sectionElement: HTMLElement) => {
@@ -1525,8 +1540,33 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     newXMm = Math.max(0, Math.min(newXMm, 210 - blockWidth));
     newYMm = Math.max(0, newYMm);
     
-    // Update block position
-    updateBlockProperty(dragSectionId, dragBlockId, 'position', { x: newXMm, y: newYMm });
+    const startPositions = multiDragStartPositions.current;
+    if (Object.keys(startPositions).length > 1 && startPositions[dragBlockId]) {
+      const deltaX = newXMm - startPositions[dragBlockId].x;
+      const deltaY = newYMm - startPositions[dragBlockId].y;
+      const updatedSections = sections.map(s => {
+        if (s.id !== dragSectionId) return s;
+        const newBlocks = getSectionBlocks(s).map((b: any) => {
+          if (b.id === dragBlockId) {
+            return { ...b, position: { x: newXMm, y: newYMm } };
+          }
+          if (startPositions[b.id]) {
+            return {
+              ...b,
+              position: {
+                x: Math.max(0, startPositions[b.id].x + deltaX),
+                y: Math.max(0, startPositions[b.id].y + deltaY),
+              },
+            };
+          }
+          return b;
+        });
+        return applyBlocksToSection(s, newBlocks);
+      });
+      setSections(updatedSections);
+    } else {
+      updateBlockProperty(dragSectionId, dragBlockId, 'position', { x: newXMm, y: newYMm });
+    }
   };
 
   const handleBlockDragEnd = () => {
@@ -1561,6 +1601,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     setDragSectionId(null);
     setHoverSectionId(null);
     setAlignmentGuides([]);
+    multiDragStartPositions.current = {};
   };
 
   // --- lineTypeTemplates helpers ---
