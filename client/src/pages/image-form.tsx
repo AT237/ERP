@@ -77,6 +77,10 @@ export default function ImageForm({ imageId, onSave }: ImageFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!imageId && !formData.imageData) {
+      toast({ title: "Afbeelding verplicht", description: "Upload een afbeelding voordat u opslaat.", variant: "destructive" });
+      return;
+    }
     saveMutation.mutate(formData);
   };
 

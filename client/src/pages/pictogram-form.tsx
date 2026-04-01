@@ -88,6 +88,10 @@ export default function PictogramForm({ pictogramId, onSave }: PictogramFormProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!pictogramId && !formData.imageData) {
+      toast({ title: "Afbeelding verplicht", description: "Upload een afbeelding voordat u opslaat.", variant: "destructive" });
+      return;
+    }
     saveMutation.mutate(formData);
   };
 
