@@ -290,7 +290,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       projectId: "",
       description: "",
       revisionNumber: "V1.0",
-      status: "draft",
+      status: "concept",
       quotationDate: toDisplayDate(new Date()),
       validUntil: toDisplayDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30 days from now
       validityDays: 30,
@@ -1650,6 +1650,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               label: "Status",
               type: "select",
               options: [
+                { value: "concept", label: "Concept" },
                 { value: "draft", label: "Draft" },
                 { value: "sent", label: "Sent" },
                 { value: "accepted", label: "Accepted" },

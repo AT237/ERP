@@ -50,7 +50,7 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
     defaultValues: {
       orderNumber: "",
       supplierId: "",
-      status: "pending",
+      status: "concept",
       orderDate: toDisplayDate(new Date()),
       expectedDate: undefined,
       subtotal: "",
@@ -263,6 +263,7 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
               label: 'Status',
               type: 'select',
               options: [
+                { value: 'concept', label: 'Concept' },
                 { value: 'pending', label: 'Pending' },
                 { value: 'completed', label: 'Completed' },
                 { value: 'received', label: 'Received' },

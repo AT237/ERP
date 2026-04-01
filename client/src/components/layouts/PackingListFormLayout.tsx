@@ -69,7 +69,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
       customerId: "",
       invoiceId: "",
       projectId: "",
-      status: "pending",
+      status: "concept",
       shippingAddress: "",
       shippingMethod: "",
       trackingNumber: "",
@@ -489,6 +489,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
             label: "Status",
             type: "select",
             options: [
+              { value: "concept", label: "Concept" },
               { value: "pending", label: "In afwachting" },
               { value: "packed", label: "Ingepakt" },
               { value: "shipped", label: "Verzonden" },

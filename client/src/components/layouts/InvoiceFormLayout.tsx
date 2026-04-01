@@ -228,7 +228,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       projectId: "",
       description: "",
       paymentDaysId: "",
-      status: "pending",
+      status: "concept",
       dueDate: "",
       invoiceDate: toDisplayDate(new Date()),
       subtotal: "0.00",

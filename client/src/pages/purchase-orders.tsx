@@ -85,6 +85,7 @@ const defaultColumns: ColumnConfig[] = [
         switch (status) {
           case "completed": return "default";
           case "received": return "secondary";
+          case "concept": return "outline";
           case "pending": return "outline";
           case "cancelled": return "destructive";
           default: return "outline";

@@ -71,7 +71,7 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
     defaultValues: {
       orderNumber: "",
       customerId: "",
-      status: "pending",
+      status: "concept",
       orderDate: toDisplayDate(new Date()),
       expectedDeliveryDate: "",
       subtotal: "0.00",
@@ -352,12 +352,13 @@ export function SalesOrderFormLayout({ onSave, salesOrderId, parentId }: SalesOr
               <div>
                 <Select 
                   onValueChange={(value) => form.setValue("status", value)}
-                  value={form.watch("status") || "pending"}
+                  value={form.watch("status") || "concept"}
                 >
                   <SelectTrigger data-testid="select-status">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="concept">Concept</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="confirmed">Confirmed</SelectItem>
                     <SelectItem value="processing">Processing</SelectItem>

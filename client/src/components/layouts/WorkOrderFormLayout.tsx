@@ -83,7 +83,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
       title: "",
       description: "",
       assignedTo: "",
-      status: "pending",
+      status: "concept",
       priority: "medium",
       startDate: undefined,
       dueDate: undefined,
@@ -720,6 +720,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
             label: "Status",
             type: "select",
             options: [
+              { value: "concept", label: "Concept" },
               { value: "pending", label: "Pending" },
               { value: "in-progress", label: "In Progress" },
               { value: "completed", label: "Completed" },

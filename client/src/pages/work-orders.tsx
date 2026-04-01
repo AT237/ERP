@@ -67,6 +67,7 @@ const defaultColumns: ColumnConfig[] = [
     renderCell: (value: string, row: WorkOrder) => {
       const getStatusStyle = (status: string): { bg: string; text: string; border: string } => {
         switch (status) {
+          case "concept": return { bg: "bg-gray-100", text: "text-gray-600", border: "border-gray-300" };
           case "completed": return { bg: "bg-green-100", text: "text-green-700", border: "border-green-300" };
           case "in-progress": return { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-300" };
           case "pending": return { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300" };
@@ -74,10 +75,10 @@ const defaultColumns: ColumnConfig[] = [
           default: return { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300" };
         }
       };
-      const style = getStatusStyle(value || "pending");
+      const style = getStatusStyle(value || "concept");
       return (
         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${style.bg} ${style.text} ${style.border}`} data-testid={`badge-status-${row.id}`}>
-          {value || "pending"}
+          {value || "concept"}
         </span>
       );
     }

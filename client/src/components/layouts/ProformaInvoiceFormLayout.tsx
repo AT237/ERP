@@ -89,7 +89,7 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
       projectId: "",
       description: "",
       paymentDaysId: "",
-      status: "pending",
+      status: "concept",
       dueDate: "",
       invoiceDate: toDisplayDate(new Date()),
       subtotal: "0.00",
