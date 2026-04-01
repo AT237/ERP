@@ -359,13 +359,53 @@ export const proformaInvoices = pgTable("proforma_invoices", {
   customerId: varchar("customer_id").references(() => customers.id).notNull(),
   quotationId: varchar("quotation_id").references(() => quotations.id),
   projectId: varchar("project_id").references(() => projects.id),
+  description: text("description"),
+  paymentDaysId: varchar("payment_days_id").references(() => paymentDays.id),
   status: text("status").default("pending"),
+  invoiceDate: timestamp("invoice_date").defaultNow(),
   dueDate: timestamp("due_date"),
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
   taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0"),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  paidAmount: decimal("paid_amount", { precision: 10, scale: 2 }).default("0"),
   notes: text("notes"),
+  totalAmountInWords: text("total_amount_in_words"),
+  vatRatePercent: decimal("vat_rate_percent", { precision: 5, scale: 2 }),
+  customerSnapshot: text("customer_snapshot"),
+  printSortOrder: text("print_sort_order").default("position"),
+  printLanguageCode: text("print_language_code").default("nl"),
+  printProjectNo: boolean("print_project_no").default(true),
+  printPaymentConditions: boolean("print_payment_conditions").default(true),
+  printLineImages: boolean("print_line_images").default(false),
+  incotermId: varchar("incoterm_id").references(() => incoterms.id),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Proforma invoice items table
+export const proformaInvoiceItems = pgTable("proforma_invoice_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  proformaInvoiceId: varchar("proforma_invoice_id").references(() => proformaInvoices.id).notNull(),
+  itemId: varchar("item_id").references(() => inventoryItems.id),
+  description: text("description").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"),
+  unit: text("unit"),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineType: text("line_type").default("standard"),
+  position: integer("position").default(0),
+  positionNo: text("position_no"),
+  workDate: timestamp("work_date"),
+  customerRateId: varchar("customer_rate_id"),
+  technicianNames: text("technician_names"),
+  technicianIds: text("technician_ids"),
+  descriptionInternal: text("description_internal"),
+  discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
+  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id),
+  sourceSnippetVersion: integer("source_snippet_version"),
+  hsCode: text("hs_code"),
+  countryOfOrigin: text("country_of_origin"),
+  lineImage: text("line_image"),
 });
 
 // Purchase orders table
@@ -1001,6 +1041,7 @@ export const insertQuotationRequestSchema = createInsertSchema(quotationRequests
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({ id: true, createdAt: true });
 export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({ id: true });
 export const insertProformaInvoiceSchema = createInsertSchema(proformaInvoices).omit({ id: true, createdAt: true });
+export const insertProformaInvoiceItemSchema = createInsertSchema(proformaInvoiceItems).omit({ id: true });
 export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit({ id: true, createdAt: true });
 export const insertPurchaseOrderItemSchema = createInsertSchema(purchaseOrderItems).omit({ id: true });
 export const insertSalesOrderSchema = createInsertSchema(salesOrders).omit({ id: true, createdAt: true });
@@ -1072,6 +1113,8 @@ export type InvoiceItem = typeof invoiceItems.$inferSelect;
 export type InsertInvoiceItem = z.infer<typeof insertInvoiceItemSchema>;
 export type ProformaInvoice = typeof proformaInvoices.$inferSelect;
 export type InsertProformaInvoice = z.infer<typeof insertProformaInvoiceSchema>;
+export type ProformaInvoiceItem = typeof proformaInvoiceItems.$inferSelect;
+export type InsertProformaInvoiceItem = z.infer<typeof insertProformaInvoiceItemSchema>;
 export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
 export type InsertPurchaseOrder = z.infer<typeof insertPurchaseOrderSchema>;
 export type PurchaseOrderItem = typeof purchaseOrderItems.$inferSelect;
