@@ -1369,11 +1369,9 @@ export default function Layout({ children }: LayoutProps) {
       }
       
       if (tab.formType === 'invoice') {
-        const invoiceId = tab.id.startsWith('edit-invoice-') 
-          ? tab.parentId
-          : tab.id.startsWith('view-invoice-')
-          ? tab.parentId
-          : undefined;
+        const invoiceId = tab.entityId 
+          || (tab.id.startsWith('edit-invoice-') ? tab.parentId : undefined)
+          || (tab.id.startsWith('view-invoice-') ? tab.parentId : undefined);
         
         return (
           <Suspense fallback={<div></div>}>
@@ -1387,11 +1385,9 @@ export default function Layout({ children }: LayoutProps) {
       }
 
       if (tab.formType === 'proforma-invoice') {
-        const proformaInvoiceId = tab.id.startsWith('edit-proforma-invoice-') 
-          ? tab.parentId
-          : tab.id.startsWith('view-proforma-invoice-')
-          ? tab.parentId
-          : undefined;
+        const proformaInvoiceId = tab.entityId
+          || (tab.id.startsWith('edit-proforma-invoice-') ? tab.parentId : undefined)
+          || (tab.id.startsWith('view-proforma-invoice-') ? tab.parentId : undefined);
         
         return (
           <Suspense fallback={<div></div>}>
@@ -1404,10 +1400,24 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
 
+      if (tab.formType === 'sales-order') {
+        const salesOrderId = tab.entityId
+          || (tab.id.startsWith('edit-sales-order-') ? tab.parentId : undefined);
+        
+        return (
+          <Suspense fallback={<div></div>}>
+            <SalesOrderForm 
+              salesOrderId={salesOrderId}
+              parentId={tab.parentId}
+              onSave={() => {}} 
+            />
+          </Suspense>
+        );
+      }
+
       if (tab.formType === 'packing-list') {
-        const plId = tab.id.startsWith('edit-packing-list-') 
-          ? tab.parentId
-          : undefined;
+        const plId = tab.entityId
+          || (tab.id.startsWith('edit-packing-list-') ? tab.parentId : undefined);
         
         return (
           <Suspense fallback={<div></div>}>

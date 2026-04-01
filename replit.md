@@ -38,7 +38,8 @@ The frontend is built with React 18 and TypeScript, using Wouter for routing, sh
 
 ### Technical Implementations
 - **LayoutForm2**: A central, configurable React component ensuring visual consistency, change tracking, tab-based sections, type safety, and validation for all business forms.
-- **FormToolbar + useFormToolbar**: Standardized toolbar with Save, Add New, Delete, Print, Previous/Next, Export buttons, auto-wired via `useFormToolbar` hook and an entity configuration registry.
+- **FormToolbar + useFormToolbar**: Standardized toolbar with Save, Add New, Delete, Print, Previous/Next, Export buttons, auto-wired via `useFormToolbar` hook and an entity configuration registry. Supports `convertOptions` prop for "Omzetten naar" dropdown (used on quotations to convert to CI/PFI/VO).
+- **Quotation Conversion**: Quotations can be converted to Invoice (CI), Proforma Invoice (PFI), or Sales Order (VO) via toolbar dropdown. Backend endpoints: `POST /api/quotations/:id/convert-to-invoice`, `convert-to-proforma-invoice`, `convert-to-sales-order`. Copies all header data, line items (with custom prices), print settings, and document images. Opens the new document form automatically after conversion.
 - **PrintLayoutDialog**: Handles selection and display of document layouts for printing.
 - **Standardized Routing**: Consistent `create/edit` patterns and lazy loading for over 22 form routes.
 - **Helper Functions**: Standardized functions (`createFieldRow`, `createFieldsRow`, `createSectionHeaderRow`) for consistent form section configuration.
