@@ -231,7 +231,6 @@ export function QuotationPrintPreview({ quotationId, onLoadingChange }: Quotatio
           <thead>
             <tr className="border-b-2 border-gray-400">
               <th className="py-2 text-left font-semibold" style={{ width: "8%" }}>Pos.</th>
-              {(printData as any).quotation?.printLineImages && <th className="py-2 text-left font-semibold" style={{ width: "10%" }}></th>}
               <th className="py-2 text-left font-semibold">Omschrijving</th>
               <th className="py-2 text-right font-semibold" style={{ width: "10%" }}>Aantal</th>
               <th className="py-2 text-right font-semibold" style={{ width: "8%" }}>Eenheid</th>
@@ -243,14 +242,14 @@ export function QuotationPrintPreview({ quotationId, onLoadingChange }: Quotatio
             {(printData as any).items?.map((item: any, index: number) => (
               <tr key={index} className="border-b border-gray-200">
                 <td className="py-2 align-top">{item.positionNo}</td>
-                {(printData as any).quotation?.printLineImages && (
-                  <td className="py-2 align-top">
-                    {item.lineImage && (
-                      <img src={item.lineImage} alt="" className="max-h-12 max-w-16 object-contain" />
-                    )}
-                  </td>
-                )}
-                <td className="py-2 align-top whitespace-pre-wrap">{item.description}</td>
+                <td className="py-2 align-top">
+                  <div className="whitespace-pre-wrap">{item.description}</div>
+                  {(printData as any).quotation?.printLineImages && item.lineImage && (
+                    <div style={{ marginTop: '4px' }}>
+                      <img src={item.lineImage} alt="" style={{ maxHeight: '80px', maxWidth: '150px', objectFit: 'contain', display: 'block' }} />
+                    </div>
+                  )}
+                </td>
                 {item.lineType !== 'text' ? (
                   <>
                     <td className="py-2 text-right align-top">{item.quantity}</td>
