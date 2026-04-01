@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { amountToWords } from '@/utils/field-resolver';
 
 // Block Configuration Types
 export interface BlockPosition {
@@ -91,6 +92,7 @@ export interface TotalsSummaryConfig {
   inWordsLabel?: string; // e.g., "Amount in words:"
   totalLabelOffset?: number; // x-offset for total amount value
   inWordsOffset?: number; // x-offset for "amount in words" text
+  languageCode?: string; // e.g., "nl", "en"
 }
 
 export interface FooterBlockConfig {
@@ -408,7 +410,8 @@ export function renderTotalsSummary(
     totalLabel = 'Total:', 
     inWordsLabel = 'Amount in words:',
     totalLabelOffset = 25,
-    inWordsOffset = 0
+    inWordsOffset = 0,
+    languageCode = 'nl'
   } = config;
   let yPos = position.y;
   
@@ -444,7 +447,7 @@ export function renderTotalsSummary(
     doc.setFont(style?.fontFamily || 'helvetica', style?.fontStyle || 'normal');
     // Use style.fontSize or default to slightly smaller (8) for in-words emphasis
     doc.setFontSize(style?.fontSize ? style.fontSize - 1 : 8);
-    const inWords = numberToWords(totalAmount);
+    const inWords = amountToWords(totalAmount, languageCode);
     const inWordsText = `${inWordsLabel} ${inWords}`;
     
     // Handle alignment for in-words line

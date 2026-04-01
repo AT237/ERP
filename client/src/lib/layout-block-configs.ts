@@ -128,7 +128,8 @@ export function createTotalsSummaryConfig(
     totalLabel: options?.totalLabel || 'Total:',
     inWordsLabel: options?.inWordsLabel || 'Amount in words:',
     totalLabelOffset: options?.totalLabelOffset || 25,
-    inWordsOffset: options?.inWordsOffset || 80
+    inWordsOffset: options?.inWordsOffset || 80,
+    languageCode: options?.languageCode || 'nl'
   };
 }
 
