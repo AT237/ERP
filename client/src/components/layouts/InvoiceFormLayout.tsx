@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LayoutForm2, type FormSection2, createFieldsRow, createCustomRow, createFieldRow, createSectionHeaderRow } from './LayoutForm2';
 import { InvoiceEmailPanel } from "./InvoiceEmailPanel";
+import { DocumentImagesPanel } from "@/components/ui/document-images-panel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CustomerSelect } from "@/components/ui/customer-select";
@@ -1306,6 +1307,22 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
           ) : (
             <div className="text-center py-8 text-muted-foreground border rounded-lg bg-gray-50">
               <p className="text-sm">Sla de factuur eerst op om e-mail te kunnen versturen.</p>
+            </div>
+          ),
+        },
+      ],
+    },
+    {
+      id: "images",
+      label: "Afbeeldingen",
+      rows: [
+        {
+          type: "custom" as const,
+          customContent: currentInvoiceId ? (
+            <DocumentImagesPanel documentType="invoice" documentId={currentInvoiceId} />
+          ) : (
+            <div className="text-center py-8 text-muted-foreground border rounded-lg bg-gray-50">
+              <p className="text-sm">Sla de factuur eerst op om afbeeldingen te kunnen toevoegen.</p>
             </div>
           ),
         },
