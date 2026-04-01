@@ -9,8 +9,16 @@ import {
   ChevronLeft, 
   ChevronRight,
   FileSpreadsheet,
-  CopyPlus
+  CopyPlus,
+  ArrowRightLeft,
+  ChevronDown
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PrintLayoutDialog } from "./PrintLayoutDialog";
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 import { UsageConflictDialog } from "@/components/ui/usage-conflict-dialog";

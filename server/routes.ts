@@ -1622,6 +1622,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/quotations/:id/convert-to-invoice", async (req, res) => {
+    try {
+      const invoice = await storage.convertQuotationToInvoice(req.params.id);
+      res.status(201).json({
+        message: "Quotation successfully converted to invoice",
+        invoice: invoice,
+      });
+    } catch (error) {
+      console.error("Error converting quotation to invoice:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ message: "Failed to convert quotation to invoice", error: error.message });
+      } else {
+        res.status(400).json({ message: "Failed to convert quotation to invoice", error: "Unknown error" });
+      }
+    }
+  });
+
+  app.post("/api/quotations/:id/convert-to-proforma-invoice", async (req, res) => {
+    try {
+      const proformaInvoice = await storage.convertQuotationToProformaInvoice(req.params.id);
+      res.status(201).json({
+        message: "Quotation successfully converted to proforma invoice",
+        proformaInvoice: proformaInvoice,
+      });
+    } catch (error) {
+      console.error("Error converting quotation to proforma invoice:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ message: "Failed to convert quotation to proforma invoice", error: error.message });
+      } else {
+        res.status(400).json({ message: "Failed to convert quotation to proforma invoice", error: "Unknown error" });
+      }
+    }
+  });
+
   // Invoice routes
   app.get("/api/invoices/next-number", async (req, res) => {
     try {

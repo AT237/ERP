@@ -366,6 +366,8 @@ export interface IStorage {
 
   // Conversion methods
   convertQuotationToSalesOrder(quotationId: string): Promise<SalesOrder>;
+  convertQuotationToInvoice(quotationId: string): Promise<Invoice>;
+  convertQuotationToProformaInvoice(quotationId: string): Promise<ProformaInvoice>;
   convertSalesOrderToInvoice(salesOrderId: string): Promise<Invoice>;
 }
 
@@ -1709,6 +1711,138 @@ export class DatabaseStorage implements IStorage {
     }
 
     return salesOrder;
+  }
+
+  async convertQuotationToInvoice(quotationId: string): Promise<Invoice> {
+    const quotation = await this.getQuotation(quotationId);
+    if (!quotation) {
+      throw new Error('Quotation not found');
+    }
+
+    const quotationItems = await this.getQuotationItems(quotationId);
+    const images = await this.getDocumentImages('quotation', quotationId);
+
+    const invoiceData: InsertInvoice = {
+      customerId: quotation.customerId,
+      quotationId: quotation.id,
+      projectId: quotation.projectId || undefined,
+      description: quotation.description || undefined,
+      status: "concept",
+      subtotal: quotation.subtotal,
+      taxAmount: quotation.taxAmount,
+      totalAmount: quotation.totalAmount,
+      paidAmount: "0",
+      notes: quotation.notes || undefined,
+      customerSnapshot: quotation.customerSnapshot || undefined,
+      printSortOrder: quotation.printSortOrder || undefined,
+      printLanguageCode: quotation.printLanguageCode || undefined,
+      printProjectNo: quotation.printProjectNo ?? true,
+      printPaymentConditions: quotation.printPaymentConditions ?? true,
+      printLineImages: quotation.printLineImages ?? false,
+    };
+
+    const invoice = await this.createInvoice(invoiceData);
+
+    for (const item of quotationItems) {
+      const invoiceItem: InsertInvoiceItem = {
+        invoiceId: invoice.id,
+        itemId: item.itemId,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+        unitPrice: item.unitPrice,
+        lineTotal: item.lineTotal,
+        costPrice: item.costPrice,
+        lineType: item.lineType,
+        position: item.position,
+        positionNo: item.positionNo,
+        discountPercent: item.discountPercent,
+        sourceSnippetId: item.sourceSnippetId,
+        sourceSnippetVersion: item.sourceSnippetVersion,
+        hsCode: item.hsCode,
+        countryOfOrigin: item.countryOfOrigin,
+        lineImage: item.lineImage,
+      };
+      await this.addInvoiceItem(invoiceItem);
+    }
+
+    for (const img of images) {
+      await this.createDocumentImage({
+        documentType: 'invoice',
+        documentId: invoice.id,
+        imageData: img.imageData,
+        fileName: img.fileName,
+        sortOrder: img.sortOrder,
+      });
+    }
+
+    return invoice;
+  }
+
+  async convertQuotationToProformaInvoice(quotationId: string): Promise<ProformaInvoice> {
+    const quotation = await this.getQuotation(quotationId);
+    if (!quotation) {
+      throw new Error('Quotation not found');
+    }
+
+    const quotationItems = await this.getQuotationItems(quotationId);
+    const images = await this.getDocumentImages('quotation', quotationId);
+
+    const proformaData: InsertProformaInvoice = {
+      customerId: quotation.customerId,
+      quotationId: quotation.id,
+      projectId: quotation.projectId || undefined,
+      description: quotation.description || undefined,
+      status: "concept",
+      subtotal: quotation.subtotal,
+      taxAmount: quotation.taxAmount,
+      totalAmount: quotation.totalAmount,
+      paidAmount: "0",
+      notes: quotation.notes || undefined,
+      customerSnapshot: quotation.customerSnapshot || undefined,
+      printSortOrder: quotation.printSortOrder || undefined,
+      printLanguageCode: quotation.printLanguageCode || undefined,
+      printProjectNo: quotation.printProjectNo ?? true,
+      printPaymentConditions: quotation.printPaymentConditions ?? true,
+      printLineImages: quotation.printLineImages ?? false,
+    };
+
+    const proforma = await this.createProformaInvoice(proformaData);
+
+    for (const item of quotationItems) {
+      const proformaItem: InsertProformaInvoiceItem = {
+        proformaInvoiceId: proforma.id,
+        itemId: item.itemId,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+        unitPrice: item.unitPrice,
+        lineTotal: item.lineTotal,
+        costPrice: item.costPrice,
+        lineType: item.lineType,
+        position: item.position,
+        positionNo: item.positionNo,
+        discountPercent: item.discountPercent,
+        sourceSnippetId: item.sourceSnippetId,
+        sourceSnippetVersion: item.sourceSnippetVersion,
+        hsCode: item.hsCode,
+        countryOfOrigin: item.countryOfOrigin,
+        lineImage: item.lineImage,
+      };
+      await this.addProformaInvoiceItem(proformaItem);
+    }
+
+    for (const img of images) {
+      await this.createDocumentImage({
+        documentType: 'proforma-invoice',
+        documentId: proforma.id,
+        imageData: img.imageData,
+        fileName: img.fileName,
+        sortOrder: img.sortOrder,
+      });
+    }
+
+    return proforma;
   }
 
   async convertSalesOrderToInvoice(salesOrderId: string): Promise<Invoice> {
