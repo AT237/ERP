@@ -4595,7 +4595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/document-images", async (req, res) => {
     try {
       const parsed = insertDocumentImageSchema.parse(req.body);
-      if (!["quotation", "invoice"].includes(parsed.documentType)) {
+      if (!["quotation", "invoice", "proforma-invoice"].includes(parsed.documentType)) {
         return res.status(400).json({ message: "Invalid document type" });
       }
       if (parsed.imageData && parsed.imageData.length > 7 * 1024 * 1024) {

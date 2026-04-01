@@ -17,6 +17,7 @@ import Addresses from "@/pages/addresses";
 import Prospects from "@/pages/prospects";
 import Quotations from "@/pages/quotations";
 import Invoices from "@/pages/invoices";
+import ProformaInvoices from "@/pages/proforma-invoices";
 import Projects from "@/pages/projects";
 import WorkOrders from "@/pages/work-orders";
 import PurchaseOrders from "@/pages/purchase-orders";
@@ -53,6 +54,7 @@ function Router() {
         <Route path="/prospects" component={Prospects} />
         <Route path="/quotations" component={() => <Quotations />} />
         <Route path="/invoices" component={Invoices} />
+        <Route path="/proforma-invoices" component={ProformaInvoices} />
         <Route path="/projects" component={Projects} />
         <Route path="/work-orders" component={WorkOrders} />
         <Route path="/purchase-orders" component={PurchaseOrders} />
@@ -260,6 +262,28 @@ function Router() {
             return (
               <Suspense fallback={<div></div>}>
                 <InvoiceLineItemForm onSave={() => window.history.back()} invoiceId={params.invoiceId} itemId={params.itemId} />
+              </Suspense>
+            );
+          }}
+        </Route>
+
+        {/* Proforma Invoice Line Item Routes */}
+        <Route path="/proforma-invoices/:proformaInvoiceId/items/new">
+          {(params) => {
+            const ProformaInvoiceLineItemForm = React.lazy(() => import('./pages/proforma-invoice-line-item-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <ProformaInvoiceLineItemForm onSave={() => window.history.back()} proformaInvoiceId={params.proformaInvoiceId} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        <Route path="/proforma-invoices/:proformaInvoiceId/items/:itemId">
+          {(params) => {
+            const ProformaInvoiceLineItemForm = React.lazy(() => import('./pages/proforma-invoice-line-item-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <ProformaInvoiceLineItemForm onSave={() => window.history.back()} proformaInvoiceId={params.proformaInvoiceId} itemId={params.itemId} />
               </Suspense>
             );
           }}
@@ -512,6 +536,25 @@ function Router() {
             return (
               <Suspense fallback={<div></div>}>
                 <InvoiceForm onSave={() => window.history.back()} invoiceId={params.id} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        
+        <Route path="/proforma-invoice-form" component={() => {
+          const ProformaInvoiceForm = React.lazy(() => import('./pages/proforma-invoice-form'));
+          return (
+            <Suspense fallback={<div></div>}>
+              <ProformaInvoiceForm onSave={() => window.history.back()} />
+            </Suspense>
+          );
+        }} />
+        <Route path="/proforma-invoice-form/:id">
+          {(params) => {
+            const ProformaInvoiceForm = React.lazy(() => import('./pages/proforma-invoice-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <ProformaInvoiceForm onSave={() => window.history.back()} invoiceId={params.id} />
               </Suspense>
             );
           }}

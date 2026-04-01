@@ -42,6 +42,8 @@ const SalesOrderForm = lazy(() => import('@/pages/sales-order-form'));
 const PackingListForm = lazy(() => import('@/pages/packing-list-form'));
 const InvoiceForm = lazy(() => import('@/pages/invoice-form'));
 const InvoiceLineItemForm = lazy(() => import('@/pages/invoice-line-item-form'));
+const ProformaInvoiceForm = lazy(() => import('@/pages/proforma-invoice-form'));
+const ProformaInvoiceLineItemForm = lazy(() => import('@/pages/proforma-invoice-line-item-form'));
 const TextSnippetForm = lazy(() => import('@/pages/text-snippet-form'));
 const EmailTemplateForm = lazy(() => import('@/pages/email-template-form'));
 const ContactPersonForm = lazy(() => import('@/pages/contact-person-form'));
@@ -55,6 +57,7 @@ const DevFuturesPage = lazy(() => import('@/pages/dev-futures'));
 const DashboardPage = lazy(() => import('@/pages/dashboard'));
 const InventoryPage = lazy(() => import('@/pages/inventory'));
 const InvoicesPage = lazy(() => import('@/pages/invoices'));
+const ProformaInvoicesPage = lazy(() => import('@/pages/proforma-invoices'));
 const ProjectsPage = lazy(() => import('@/pages/projects'));
 const WorkOrdersPage = lazy(() => import('@/pages/work-orders'));
 const PurchaseOrdersPage = lazy(() => import('@/pages/purchase-orders'));
@@ -143,6 +146,17 @@ export default function Layout({ children }: LayoutProps) {
     if (invoiceItemEditMatch) {
       return { id: `invoice-line-${invoiceItemEditMatch[2]}`, name: 'Invoice Line', parentId: invoiceItemEditMatch[1] };
     }
+
+    // Check for proforma invoice line item routes
+    const proformaItemNewMatch = path.match(/^\/proforma-invoices\/([^/]+)\/items\/new$/);
+    if (proformaItemNewMatch) {
+      return { id: `proforma-invoice-line-new-${proformaItemNewMatch[1]}`, name: 'Proforma Regel' };
+    }
+    
+    const proformaItemEditMatch = path.match(/^\/proforma-invoices\/([^/]+)\/items\/([^/]+)$/);
+    if (proformaItemEditMatch) {
+      return { id: `proforma-invoice-line-${proformaItemEditMatch[2]}`, name: 'Proforma Regel', parentId: proformaItemEditMatch[1] };
+    }
     
     switch (path) {
       case '/':
@@ -162,6 +176,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'quotations', name: 'Quotations' };
       case '/invoices':
         return { id: 'invoices', name: 'Invoices' };
+      case '/proforma-invoices':
+        return { id: 'proforma-invoices', name: 'Proforma Invoices' };
       case '/projects':
         return { id: 'projects', name: 'Projects' };
       case '/work-orders':
@@ -603,6 +619,9 @@ export default function Layout({ children }: LayoutProps) {
         return '/quotations';
       case 'invoices':
         return '/invoices';
+      case 'proforma-invoices':
+      case 'proforma':
+        return '/proforma-invoices';
       case 'projects':
         return '/projects';
       case 'work-orders':
@@ -1019,6 +1038,14 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
 
+      if (tab.id === 'proforma-invoices' || tab.id === 'proforma') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <ProformaInvoicesPage />
+          </Suspense>
+        );
+      }
+
       if (tab.id === 'projects') {
         return (
           <Suspense fallback={<div></div>}>
@@ -1181,6 +1208,31 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
 
+      // Handle route-based proforma invoice line item tabs
+      const proformaLineNewMatch = tab.id.match(/^proforma-invoice-line-new-(.+)$/);
+      if (proformaLineNewMatch) {
+        return (
+          <Suspense fallback={<div></div>}>
+            <ProformaInvoiceLineItemForm
+              proformaInvoiceId={proformaLineNewMatch[1]}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+      if (tab.id.startsWith('proforma-invoice-line-') && !tab.id.startsWith('proforma-invoice-line-new-')) {
+        const lineItemId = tab.id.replace('proforma-invoice-line-', '');
+        return (
+          <Suspense fallback={<div></div>}>
+            <ProformaInvoiceLineItemForm
+              proformaInvoiceId={tab.parentId || ''}
+              itemId={lineItemId}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+
       return tab.content || children;
     }
     
@@ -1334,6 +1386,24 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
 
+      if (tab.formType === 'proforma-invoice') {
+        const proformaInvoiceId = tab.id.startsWith('edit-proforma-invoice-') 
+          ? tab.parentId
+          : tab.id.startsWith('view-proforma-invoice-')
+          ? tab.parentId
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div></div>}>
+            <ProformaInvoiceForm 
+              invoiceId={proformaInvoiceId}
+              parentId={tab.parentId}
+              onSave={() => {}} 
+            />
+          </Suspense>
+        );
+      }
+
       if (tab.formType === 'packing-list') {
         const plId = tab.id.startsWith('edit-packing-list-') 
           ? tab.parentId
@@ -1460,6 +1530,20 @@ export default function Layout({ children }: LayoutProps) {
           <Suspense fallback={<div></div>}>
             <InvoiceLineItemForm
               invoiceId={invoiceId!}
+              itemId={lineItemId}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+
+      if (tab.formType === 'proforma-invoice-line-item') {
+        const lineItemId = tab.entityId ?? tab.id.replace('proforma-invoice-line-item-edit-', '');
+        const proformaInvoiceId = tab.parentId;
+        return (
+          <Suspense fallback={<div></div>}>
+            <ProformaInvoiceLineItemForm
+              proformaInvoiceId={proformaInvoiceId!}
               itemId={lineItemId}
               onSave={() => {}}
             />
