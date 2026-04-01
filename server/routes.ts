@@ -1840,6 +1840,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/invoices/:id/convert-to-packing-list", async (req, res) => {
+    try {
+      const packingList = await storage.convertInvoiceToPackingList(req.params.id);
+      res.status(201).json({
+        message: "Invoice successfully converted to packing list",
+        packingList: packingList,
+      });
+    } catch (error) {
+      handleRouteError(res, error, "Failed to convert invoice to packing list");
+    }
+  });
+
   app.post("/api/invoices/:id/convert-to-quotation", async (req, res) => {
     try {
       const quotation = await storage.convertInvoiceToQuotation(req.params.id);

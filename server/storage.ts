@@ -370,6 +370,7 @@ export interface IStorage {
   convertQuotationToProformaInvoice(quotationId: string): Promise<ProformaInvoice>;
   convertSalesOrderToInvoice(salesOrderId: string): Promise<Invoice>;
   convertInvoiceToQuotation(invoiceId: string): Promise<Quotation>;
+  convertInvoiceToPackingList(invoiceId: string): Promise<PackingList>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1956,6 +1957,49 @@ export class DatabaseStorage implements IStorage {
     }
 
     return quotation;
+  }
+
+  async convertInvoiceToPackingList(invoiceId: string): Promise<PackingList> {
+    const invoice = await this.getInvoice(invoiceId);
+    if (!invoice) {
+      throw new Error('Invoice not found');
+    }
+
+    const invoiceItems = await this.getInvoiceItems(invoiceId);
+
+    const packingListData: InsertPackingList = {
+      invoiceId: invoice.id,
+      customerId: invoice.customerId,
+      projectId: (invoice as any).projectId || undefined,
+      status: "pending",
+      packingDate: new Date(),
+      purchaseOrder: (invoice as any).purchaseOrder || undefined,
+      notes: invoice.notes || undefined,
+    };
+
+    const packingList = await this.createPackingList(packingListData);
+
+    for (const item of invoiceItems) {
+      if (item.lineType === 'text') continue;
+      const plItem: InsertPackingListItem = {
+        packingListId: packingList.id,
+        itemId: item.itemId,
+        description: item.description,
+        quantity: item.quantity,
+        packedQuantity: "0",
+        unit: (item as any).unit,
+        unitPrice: item.unitPrice,
+        lineTotal: item.lineTotal,
+        costPrice: (item as any).costPrice,
+        lineType: item.lineType,
+        position: item.position,
+        positionNo: (item as any).positionNo,
+        discountPercent: (item as any).discountPercent,
+      };
+      await this.addPackingListItem(plItem);
+    }
+
+    return packingList;
   }
 
   // ===================================

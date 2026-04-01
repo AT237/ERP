@@ -936,6 +936,11 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         tabId = `edit-quotation-${entityId}`;
         tabName = `Offerte ${data.quotation.quotationNumber}`;
         formType = "quotation";
+      } else if (targetType === "packing-list") {
+        entityId = data.packingList.id;
+        tabId = `edit-packing-list-${entityId}`;
+        tabName = `Pakbon ${data.packingList.packingNumber}`;
+        formType = "packing-list";
       }
 
       toast({
@@ -944,6 +949,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       });
 
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/packing-lists"] });
 
       window.dispatchEvent(new CustomEvent('open-form-tab', {
         detail: { id: tabId, name: tabName, formType, entityId }
@@ -961,6 +967,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
 
   const convertOptions = currentInvoiceId ? [
     { label: "Maak Offerte (Q)", onClick: () => handleConvert("quotation") },
+    { label: "Maak Pakbon (PL)", onClick: () => handleConvert("packing-list") },
   ] : [];
 
   const toolbar = useFormToolbar({
