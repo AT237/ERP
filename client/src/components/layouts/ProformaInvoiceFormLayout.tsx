@@ -712,7 +712,7 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
                   <Input
                     {...invoiceForm.register("proformaNumber")}
                     className={`h-10 text-xs flex-1 ${invoiceForm.formState.errors.proformaNumber ? 'border-red-500' : ''}`}
-                    placeholder="PF-2026-001"
+                    placeholder="PFI-2026-001"
                     data-testid="input-proforma-number"
                   />
                   {!isEditing && (

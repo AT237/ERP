@@ -1859,16 +1859,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/proforma-invoices/next-number", async (req, res) => {
     try {
       const currentYear = new Date().getFullYear();
-      const pattern = `^PF-${currentYear}-[0-9]{3}$`;
+      const pattern = `^PFI-${currentYear}-[0-9]{3}$`;
       const rows = await db.execute(
         sql`SELECT proforma_number FROM proforma_invoices WHERE proforma_number ~ ${pattern} ORDER BY proforma_number`
       );
       const used = new Set((rows.rows as any[]).map((r: any) => r.proforma_number as string));
       let next = 1;
-      while (used.has(`PF-${currentYear}-${String(next).padStart(3, '0')}`)) {
+      while (used.has(`PFI-${currentYear}-${String(next).padStart(3, '0')}`)) {
         next++;
       }
-      res.json({ number: `PF-${currentYear}-${String(next).padStart(3, '0')}` });
+      res.json({ number: `PFI-${currentYear}-${String(next).padStart(3, '0')}` });
     } catch (error) {
       console.error("Error generating next proforma number:", error);
       res.status(500).json({ message: "Failed to generate next proforma number" });
