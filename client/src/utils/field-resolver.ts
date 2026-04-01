@@ -656,6 +656,10 @@ export function blockHasContent(
       return true; // Page numbers always have content
     
     case 'Image':
+      if (block.config?.dataField && itemContext) {
+        const fieldName = (block.config.dataField as string).replace(/^\{\{item\./, '').replace(/\}\}$/, '');
+        return !!(itemContext.item?.[fieldName]);
+      }
       return !!(
         block.config?.imagePath || 
         block.config?.imageUrl || 
