@@ -62,12 +62,9 @@ async function recalculateQuotationTotals(storage: any, quotationId: string) {
     const subtotal = items.reduce((sum: number, item: any) => {
       return sum + (parseFloat(item.lineTotal || "0") || 0);
     }, 0);
-    const taxAmount = subtotal * 0.21;
-    const totalAmount = subtotal + taxAmount;
     await storage.updateQuotation(quotationId, {
       subtotal: subtotal.toFixed(2),
-      taxAmount: taxAmount.toFixed(2),
-      totalAmount: totalAmount.toFixed(2),
+      totalAmount: subtotal.toFixed(2),
     });
   } catch (err) {
     console.error("Error recalculating quotation totals:", err);
