@@ -4800,7 +4800,7 @@ function SectionBlock({ block, sectionId, layerIndex, isSelected, isMultiSelecte
         /* Default text display for other block types */
         <div className="text-[9px] font-medium truncate pointer-events-none">
           {block.type === "Image" 
-            ? (block.config?.imageDescription || block.config?.alt || 'Select image...') 
+            ? (block.config?.dataField ? `📷 ${block.config?.imageDescription || 'Regelafbeelding'}` : (block.config?.imageDescription || block.config?.alt || 'Select image...')) 
             : block.type === "Text" 
               ? (block.config?.text || 'Tekst...') 
               : block.type === "Data Field" && block.config?.tableName && block.config?.fieldName
@@ -5094,32 +5094,90 @@ function BlockProperties({
 
           {/* Image Selection - for Image blocks */}
           {block.type === "Image" && (
-            <div>
-              <Label className="text-xs font-semibold">Afbeelding</Label>
-              <Select 
-                value={block.config?.imageId || ''}
-                onValueChange={(value) => {
-                  const selectedImage = images?.find(img => img.id === value);
-                  onUpdateProperty(sectionId, block.id, 'config', { 
-                    ...block.config, 
-                    imageId: value,
-                    src: selectedImage?.imageData || '',
-                    alt: selectedImage?.name || '',
-                    imageDescription: selectedImage?.name || 'Image'
-                  });
-                }}
-              >
-                <SelectTrigger id="image-select" className="h-8 text-xs mt-1">
-                  <SelectValue placeholder="Selecteer afbeelding..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {images?.map((img: any) => (
-                    <SelectItem key={img.id} value={img.id}>
-                      {img.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs font-semibold">Bron</Label>
+                <Select
+                  value={block.config?.dataField ? 'data' : 'static'}
+                  onValueChange={(value) => {
+                    if (value === 'data') {
+                      onUpdateProperty(sectionId, block.id, 'config', {
+                        ...block.config,
+                        dataField: '{{item.lineImage}}',
+                        src: null,
+                        imageId: null,
+                        imageDescription: 'Regelafbeelding',
+                      });
+                    } else {
+                      onUpdateProperty(sectionId, block.id, 'config', {
+                        ...block.config,
+                        dataField: null,
+                      });
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-xs mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="static">Vaste afbeelding</SelectItem>
+                    <SelectItem value="data">Dataveld (regelafbeelding)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {block.config?.dataField ? (
+                <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                  <div className="text-xs font-medium text-blue-800 mb-1">Dataveld</div>
+                  <Select
+                    value={block.config?.dataField || '{{item.lineImage}}'}
+                    onValueChange={(value) => {
+                      onUpdateProperty(sectionId, block.id, 'config', {
+                        ...block.config,
+                        dataField: value,
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="{{item.lineImage}}">Regelafbeelding</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-blue-600 mt-1">
+                    Toont de afbeelding uit het dataveld van elke regel.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <Label className="text-xs font-semibold">Afbeelding</Label>
+                  <Select 
+                    value={block.config?.imageId || ''}
+                    onValueChange={(value) => {
+                      const selectedImage = images?.find(img => img.id === value);
+                      onUpdateProperty(sectionId, block.id, 'config', { 
+                        ...block.config, 
+                        imageId: value,
+                        src: selectedImage?.imageData || '',
+                        alt: selectedImage?.name || '',
+                        imageDescription: selectedImage?.name || 'Image'
+                      });
+                    }}
+                  >
+                    <SelectTrigger id="image-select" className="h-8 text-xs mt-1">
+                      <SelectValue placeholder="Selecteer afbeelding..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {images?.map((img: any) => (
+                        <SelectItem key={img.id} value={img.id}>
+                          {img.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           )}
 

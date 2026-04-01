@@ -65,6 +65,7 @@ export const ITEM_FIELD_EXAMPLES = [
   { code: '{{item.unitPrice}}', label: 'Eenheidsprijs (auto €)' },
   { code: '{{item.lineTotal}}', label: 'Regeltotaal (auto €)' },
   { code: '{{item.lineType}}', label: 'Type regel' },
+  { code: '{{item.lineImage}}', label: 'Regelafbeelding' },
 ];
 
 // Function to replace text variables with actual values
@@ -382,16 +383,22 @@ function getAlignmentStyles(alignH?: string, alignV?: string): React.CSSProperti
 }
 
 // Image Block - logo or other images
-export function ImageBlockRenderer({ block, printData }: BlockRendererProps) {
-  const { src, alt = 'Image', fit = 'contain', alignH, alignV } = block.config || {};
+export function ImageBlockRenderer({ block, printData, itemContext }: BlockRendererProps) {
+  const { src, alt = 'Image', fit = 'contain', alignH, alignV, dataField } = block.config || {};
   
-  // Special handling for company logo
-  const imageSrc = src === 'company.logo' && printData.company?.logoUrl
-    ? printData.company.logoUrl
-    : src;
+  let imageSrc: string | null = null;
+
+  if (dataField && itemContext) {
+    const fieldName = dataField.replace(/^\{\{item\./, '').replace(/\}\}$/, '');
+    imageSrc = itemContext.item?.[fieldName] || null;
+  } else if (src === 'company.logo' && printData.company?.logoUrl) {
+    imageSrc = printData.company.logoUrl;
+  } else {
+    imageSrc = src || null;
+  }
 
   if (!imageSrc) {
-    return <div className="text-xs text-gray-400 italic">Geen afbeelding</div>;
+    return null;
   }
 
   const alignmentStyles = getAlignmentStyles(alignH, alignV);
