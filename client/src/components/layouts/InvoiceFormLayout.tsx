@@ -936,6 +936,11 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         tabId = `edit-quotation-${entityId}`;
         tabName = `Offerte ${data.quotation.quotationNumber}`;
         formType = "quotation";
+      } else if (targetType === "proforma-invoice") {
+        entityId = data.proformaInvoice.id;
+        tabId = `edit-proforma-invoice-${entityId}`;
+        tabName = `PFI ${data.proformaInvoice.proformaNumber}`;
+        formType = "proforma-invoice";
       } else if (targetType === "packing-list") {
         entityId = data.packingList.id;
         tabId = `edit-packing-list-${entityId}`;
@@ -949,6 +954,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       });
 
       queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/proforma-invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/packing-lists"] });
 
       window.dispatchEvent(new CustomEvent('open-form-tab', {
@@ -967,6 +973,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
 
   const convertOptions = currentInvoiceId ? [
     { label: "Maak Offerte (Q)", onClick: () => handleConvert("quotation") },
+    { label: "Maak Proforma (PFI)", onClick: () => handleConvert("proforma-invoice") },
     { label: "Maak Pakbon (PL)", onClick: () => handleConvert("packing-list") },
   ] : [];
 

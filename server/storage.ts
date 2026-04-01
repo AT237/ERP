@@ -371,6 +371,7 @@ export interface IStorage {
   convertSalesOrderToInvoice(salesOrderId: string): Promise<Invoice>;
   convertInvoiceToQuotation(invoiceId: string): Promise<Quotation>;
   convertInvoiceToPackingList(invoiceId: string): Promise<PackingList>;
+  convertInvoiceToProformaInvoice(invoiceId: string): Promise<ProformaInvoice>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2000,6 +2001,71 @@ export class DatabaseStorage implements IStorage {
     }
 
     return packingList;
+  }
+
+  async convertInvoiceToProformaInvoice(invoiceId: string): Promise<ProformaInvoice> {
+    const invoice = await this.getInvoice(invoiceId);
+    if (!invoice) {
+      throw new Error('Invoice not found');
+    }
+
+    const invoiceItems = await this.getInvoiceItems(invoiceId);
+    const images = await this.getDocumentImages('invoice', invoiceId);
+
+    const proformaData: InsertProformaInvoice = {
+      customerId: invoice.customerId,
+      projectId: (invoice as any).projectId || undefined,
+      description: (invoice as any).description || undefined,
+      status: "concept",
+      subtotal: invoice.subtotal,
+      taxAmount: invoice.taxAmount,
+      totalAmount: invoice.totalAmount,
+      paidAmount: "0",
+      notes: invoice.notes || undefined,
+      customerSnapshot: (invoice as any).customerSnapshot || undefined,
+      printSortOrder: (invoice as any).printSortOrder || undefined,
+      printLanguageCode: (invoice as any).printLanguageCode || undefined,
+      printProjectNo: (invoice as any).printProjectNo ?? true,
+      printPaymentConditions: (invoice as any).printPaymentConditions ?? true,
+      printLineImages: (invoice as any).printLineImages ?? false,
+    };
+
+    const proforma = await this.createProformaInvoice(proformaData);
+
+    for (const item of invoiceItems) {
+      const proformaItem: InsertProformaInvoiceItem = {
+        proformaInvoiceId: proforma.id,
+        itemId: item.itemId,
+        description: item.description,
+        quantity: item.quantity,
+        unit: (item as any).unit,
+        unitPrice: item.unitPrice,
+        lineTotal: item.lineTotal,
+        costPrice: (item as any).costPrice,
+        lineType: item.lineType,
+        position: item.position,
+        positionNo: (item as any).positionNo,
+        discountPercent: (item as any).discountPercent,
+        sourceSnippetId: item.sourceSnippetId,
+        sourceSnippetVersion: item.sourceSnippetVersion,
+        hsCode: (item as any).hsCode,
+        countryOfOrigin: (item as any).countryOfOrigin,
+        lineImage: (item as any).lineImage,
+      };
+      await this.addProformaInvoiceItem(proformaItem);
+    }
+
+    for (const img of images) {
+      await this.createDocumentImage({
+        documentType: 'proforma-invoice',
+        documentId: proforma.id,
+        imageData: img.imageData,
+        fileName: img.fileName,
+        sortOrder: img.sortOrder,
+      });
+    }
+
+    return proforma;
   }
 
   // ===================================

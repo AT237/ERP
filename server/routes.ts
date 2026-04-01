@@ -1840,6 +1840,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/invoices/:id/convert-to-proforma-invoice", async (req, res) => {
+    try {
+      const proformaInvoice = await storage.convertInvoiceToProformaInvoice(req.params.id);
+      res.status(201).json({
+        message: "Invoice successfully converted to proforma invoice",
+        proformaInvoice: proformaInvoice,
+      });
+    } catch (error) {
+      handleRouteError(res, error, "Failed to convert invoice to proforma invoice");
+    }
+  });
+
   app.post("/api/invoices/:id/convert-to-packing-list", async (req, res) => {
     try {
       const packingList = await storage.convertInvoiceToPackingList(req.params.id);
