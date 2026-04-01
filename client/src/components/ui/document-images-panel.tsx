@@ -60,6 +60,9 @@ export function DocumentImagesPanel({ documentType, documentId }: DocumentImages
       queryClient.invalidateQueries({ queryKey: ['/api/document-images', documentType, documentId] });
       toast({ title: "Afbeelding verwijderd" });
     },
+    onError: (error: Error) => {
+      toast({ title: "Fout bij verwijderen", description: error.message, variant: "destructive" });
+    },
   });
 
   const updateMutation = useMutation({
@@ -69,6 +72,9 @@ export function DocumentImagesPanel({ documentType, documentId }: DocumentImages
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/document-images', documentType, documentId] });
       setEditingId(null);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Fout bij opslaan", description: error.message, variant: "destructive" });
     },
   });
 

@@ -4372,6 +4372,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/document-images", async (req, res) => {
     try {
       const parsed = insertDocumentImageSchema.parse(req.body);
+      if (!["quotation", "invoice"].includes(parsed.documentType)) {
+        return res.status(400).json({ message: "Invalid document type" });
+      }
+      if (parsed.imageData && parsed.imageData.length > 7 * 1024 * 1024) {
+        return res.status(400).json({ message: "Image too large (max 5MB)" });
+      }
       const image = await storage.createDocumentImage(parsed);
       res.status(201).json(image);
     } catch (error: any) {
@@ -4382,7 +4388,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/document-images/:id", async (req, res) => {
     try {
       const { description, position } = req.body;
-      const image = await storage.updateDocumentImage(req.params.id, { description, position });
+      const updates: Record<string, any> = {};
+      if (typeof description === "string") updates.description = description;
+      if (typeof position === "number") updates.position = position;
+      const image = await storage.updateDocumentImage(req.params.id, updates);
       res.json(image);
     } catch (error: any) {
       handleRouteError(res, error, "Failed to update document image");
