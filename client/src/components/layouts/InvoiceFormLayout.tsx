@@ -1391,7 +1391,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         onSectionChange={setActiveTab}
         form={invoiceForm}
         onSubmit={handleSaveInvoice}
-        toolbar={toolbar}
+        toolbar={toolbarWithConvert}
         documentType="invoice"
         entityId={currentInvoiceId}
         isLoading={invoiceLoading}
