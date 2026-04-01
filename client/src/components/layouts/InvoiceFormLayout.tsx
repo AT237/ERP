@@ -917,6 +917,52 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     }));
   };
 
+  const [convertLoading, setConvertLoading] = useState(false);
+
+  const handleConvert = async (targetType: string) => {
+    if (!currentInvoiceId) return;
+    setConvertLoading(true);
+    try {
+      const response = await apiRequest("POST", `/api/invoices/${currentInvoiceId}/convert-to-${targetType}`);
+      const data = await response.json();
+
+      let tabId = "";
+      let tabName = "";
+      let formType = "";
+      let entityId = "";
+
+      if (targetType === "quotation") {
+        entityId = data.quotation.id;
+        tabId = `edit-quotation-${entityId}`;
+        tabName = `Offerte ${data.quotation.quotationNumber}`;
+        formType = "quotation";
+      }
+
+      toast({
+        title: "Omgezet",
+        description: `Factuur is omgezet naar ${tabName}`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations"] });
+
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: { id: tabId, name: tabName, formType, entityId }
+      }));
+    } catch (error) {
+      toast({
+        title: "Fout",
+        description: "Kon factuur niet omzetten. Probeer opnieuw.",
+        variant: "destructive",
+      });
+    } finally {
+      setConvertLoading(false);
+    }
+  };
+
+  const convertOptions = currentInvoiceId ? [
+    { label: "Maak Offerte (Q)", onClick: () => handleConvert("quotation") },
+  ] : [];
+
   const toolbar = useFormToolbar({
     entityType: "invoice",
     entityId: currentInvoiceId,
@@ -925,6 +971,13 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
   });
+
+  const toolbarWithConvert = {
+    ...toolbar,
+    convertOptions,
+    convertDisabled: !currentInvoiceId || convertLoading,
+    convertLoading,
+  };
 
   const currentProjectId = invoiceForm.watch("projectId");
   const currentCustomerId = invoiceForm.watch("customerId");

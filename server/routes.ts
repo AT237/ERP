@@ -1840,6 +1840,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/invoices/:id/convert-to-quotation", async (req, res) => {
+    try {
+      const quotation = await storage.convertInvoiceToQuotation(req.params.id);
+      res.status(201).json({
+        message: "Invoice successfully converted to quotation",
+        quotation: quotation,
+      });
+    } catch (error) {
+      handleRouteError(res, error, "Failed to convert invoice to quotation");
+    }
+  });
+
   app.delete("/api/invoices/:id", async (req, res) => {
     try {
       await storage.deleteInvoice(req.params.id);
