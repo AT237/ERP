@@ -459,7 +459,7 @@ export function ProformaInvoiceLineItemFormLayout({ onSave, lineItemId, proforma
       
       window.dispatchEvent(new CustomEvent('entity-created', {
         detail: {
-          entityType: 'invoice-item',
+          entityType: 'proforma-invoice-item',
           entity: newLineItem,
           parentId: parentId
         }
@@ -495,7 +495,7 @@ export function ProformaInvoiceLineItemFormLayout({ onSave, lineItemId, proforma
       queryClient.invalidateQueries({ queryKey: ["/api/proforma-invoices", proformaInvoiceId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/proforma-invoices", proformaInvoiceId] });
       setHasUnsavedChanges(false);
-      const tabId = lineItemId ? `invoice-line-${lineItemId}` : 'new-proforma-invoice-line-item';
+      const tabId = lineItemId ? `edit-proforma-invoice-line-item-${lineItemId}` : 'new-proforma-invoice-line-item';
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId, hasUnsavedChanges: false }
       }));
@@ -613,7 +613,7 @@ export function ProformaInvoiceLineItemFormLayout({ onSave, lineItemId, proforma
   }, [lineItemId, proformaInvoiceId, onSave]);
 
   const toolbar = useFormToolbar({
-    entityType: "invoice_line_item",
+    entityType: "proforma-invoice-line-item",
     entityId: lineItemId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: handleClose,
@@ -802,7 +802,7 @@ export function ProformaInvoiceLineItemFormLayout({ onSave, lineItemId, proforma
           const price = freshItem.sellingPrice || freshItem.unitPrice;
           if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
           if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
-          if (freshItem.description) { form.setValue("descriptionExternal", freshItem.description); setHasUnsavedChanges(true); }
+          if (freshItem.description) { form.setValue("description", freshItem.description); setHasUnsavedChanges(true); }
           if (freshItem.name && !form.getValues("descriptionInternal")) { form.setValue("descriptionInternal", freshItem.name); }
           if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
           if (freshItem.costPrice) { form.setValue("costPrice", Number(freshItem.costPrice).toFixed(2)); }
@@ -828,7 +828,7 @@ export function ProformaInvoiceLineItemFormLayout({ onSave, lineItemId, proforma
           const price = freshItem.sellingPrice || freshItem.unitPrice;
           if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
           if (freshItem.unit) { form.setValue("unit" as any, freshItem.unit); }
-          if (freshItem.description) { form.setValue("descriptionExternal", freshItem.description); setHasUnsavedChanges(true); }
+          if (freshItem.description) { form.setValue("description", freshItem.description); setHasUnsavedChanges(true); }
           if (freshItem.name && !form.getValues("descriptionInternal")) { form.setValue("descriptionInternal", freshItem.name); }
           if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
           if (freshItem.costPrice) { form.setValue("costPrice", Number(freshItem.costPrice).toFixed(2)); }
@@ -1150,7 +1150,7 @@ export function ProformaInvoiceLineItemFormLayout({ onSave, lineItemId, proforma
         onSubmit={onSubmit}
         toolbar={toolbar}
         infoFields={headerFields}
-        documentType="invoice_line_item"
+        documentType="proforma_invoice_line_item"
         entityId={lineItemId}
         persistence={{
           formType: "proforma-invoice-line-item",
