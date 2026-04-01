@@ -21,7 +21,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertQuotationItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Package, FileText, Search, Library, Check, ImagePlus, X as XIcon } from "lucide-react";
+import { Save, ArrowLeft, Package, FileText, Search, Library, Check } from "lucide-react";
+import { ImageUploadZone } from "@/components/ui/image-upload-zone";
 import { useToast } from "@/hooks/use-toast";
 import type { QuotationItem, InsertQuotationItem, TextSnippet, Supplier } from "@shared/schema";
 import { z } from "zod";
@@ -245,20 +246,10 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     return snippets;
   }, [textSnippets, searchedSnippets, snippetSearchTerm, selectedSnippetCategory]);
 
-  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: "Afbeelding te groot", description: "Maximaal 2MB toegestaan", variant: "destructive" });
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setLineImage(reader.result as string);
-      setHasUnsavedChanges(true);
-    };
-    reader.readAsDataURL(file);
-  }, [toast]);
+  const handleLineImageChange = useCallback((value: string | null) => {
+    setLineImage(value);
+    setHasUnsavedChanges(true);
+  }, []);
 
   useEffect(() => {
     const quantity = form.getValues("quantity");
@@ -731,40 +722,13 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     label: 'Regelafbeelding',
     type: 'custom',
     customComponent: (
-      <div className="space-y-3">
-        {lineImage ? (
-          <div className="relative inline-block">
-            <img
-              src={lineImage}
-              alt="Regelafbeelding"
-              className="max-h-32 max-w-48 rounded border object-contain"
-            />
-            <button
-              type="button"
-              onClick={() => { setLineImage(null); setHasUnsavedChanges(true); }}
-              className="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-destructive-foreground shadow-sm hover:bg-destructive/90"
-            >
-              <XIcon className="h-3 w-3" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-input px-4 py-3 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
-              <ImagePlus className="h-4 w-4" />
-              {lineTypeValue === 'standard' ? 'Afbeelding uploaden of selecteer artikel' : 'Afbeelding uploaden'}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-            </label>
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Max. 2MB. Wordt getoond op de offerte als 'Regelafbeeldingen' is ingeschakeld bij Afdrukinstellingen.
-        </p>
-      </div>
+      <ImageUploadZone
+        value={lineImage}
+        onChange={handleLineImageChange}
+        label="Regelafbeelding"
+        maxSizeMB={2}
+        hint="Klik of sleep een afbeelding · JPG, PNG, max 2MB"
+      />
     ),
   };
 

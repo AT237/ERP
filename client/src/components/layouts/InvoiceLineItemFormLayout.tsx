@@ -25,7 +25,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInvoiceItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Save, ArrowLeft, Package, FileText, Search, Library, Check, CalendarIcon, ChevronsUpDown, X, ImagePlus } from "lucide-react";
+import { Save, ArrowLeft, Package, FileText, Search, Library, Check, CalendarIcon, ChevronsUpDown, X } from "lucide-react";
+import { ImageUploadZone } from "@/components/ui/image-upload-zone";
 import { EmployeeSelectWithAdd } from "@/components/ui/employee-select-with-add";
 import { useToast } from "@/hooks/use-toast";
 import type { InvoiceItem, InsertInvoiceItem, TextSnippet, Invoice, CustomerRate, RateAndCharge, Employee } from "@shared/schema";
@@ -392,20 +393,10 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     setHasUnsavedChanges(true);
   };
 
-  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: "Afbeelding te groot", description: "Maximaal 2MB toegestaan", variant: "destructive" });
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setLineImage(reader.result as string);
-      setHasUnsavedChanges(true);
-    };
-    reader.readAsDataURL(file);
-  }, [toast]);
+  const handleLineImageChange = useCallback((value: string | null) => {
+    setLineImage(value);
+    setHasUnsavedChanges(true);
+  }, []);
 
   const handleDateChange = (date: Date | undefined) => {
     setSelectedDate(date);
