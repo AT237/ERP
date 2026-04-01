@@ -179,7 +179,8 @@ export function FormToolbar({
       )}
 
       {convertOptions && convertOptions.length > 0 && (
-        <div className="ml-auto flex items-center">
+        <>
+          <Separator orientation="vertical" className="h-6 mx-2" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -199,7 +200,7 @@ export function FormToolbar({
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="start">
               {convertOptions.map((option) => (
                 <DropdownMenuItem
                   key={option.label}
@@ -211,7 +212,7 @@ export function FormToolbar({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
+        </>
       )}
       
       {showDelete && (
