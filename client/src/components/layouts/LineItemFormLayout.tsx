@@ -529,7 +529,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
           if (freshItem.description) { form.setValue("descriptionExternal", freshItem.description); setHasUnsavedChanges(true); }
           if (freshItem.name && !form.getValues("descriptionInternal")) { form.setValue("descriptionInternal", freshItem.name); }
           if ((freshItem as any).hsCode) { form.setValue("hsCode" as any, (freshItem as any).hsCode); }
-          if ((freshItem as any).imageUrl) { setLineImage((freshItem as any).imageUrl); setHasUnsavedChanges(true); }
+          if (freshItem.image) { setLineImage(freshItem.image); setHasUnsavedChanges(true); }
           const qty = form.getValues("quantity") || 1;
           if (price) {
             form.setValue("lineTotal", (qty * Number(price)).toFixed(2));

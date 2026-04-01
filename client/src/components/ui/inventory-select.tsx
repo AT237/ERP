@@ -18,6 +18,10 @@ interface InventoryItem {
   sellingPrice?: string;
   brand?: string;
   manufacturerPartNumber?: string;
+  image?: string;
+  image2?: string;
+  image3?: string;
+  image4?: string;
 }
 
 interface InventorySelectProps {
