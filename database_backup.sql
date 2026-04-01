@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict sWakjURSwmtcWUHWQEFT8Gb7Xygd7erAQcxPBdCE3b84M8TZXIo3Z3e9IjLd2w7
+\restrict WN4prHhhkc1cCJpdVvBn6cQ3YhWWTdlu6S8vP2lLOrdXrjf1sWhaW0qd3YmPoKV
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -1090,6 +1090,39 @@ CREATE TABLE public.pictograms (
 ALTER TABLE public.pictograms OWNER TO postgres;
 
 --
+-- Name: proforma_invoice_items; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.proforma_invoice_items (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    proforma_invoice_id character varying NOT NULL,
+    item_id character varying,
+    description text NOT NULL,
+    quantity numeric(10,3) DEFAULT 0,
+    unit text,
+    unit_price numeric(10,2) DEFAULT 0.00,
+    line_total numeric(10,2) DEFAULT 0.00,
+    cost_price numeric(10,2) DEFAULT 0.00,
+    line_type text DEFAULT 'standard'::text,
+    "position" integer DEFAULT 0,
+    position_no text,
+    work_date timestamp without time zone,
+    customer_rate_id character varying,
+    technician_names text,
+    technician_ids text,
+    description_internal text,
+    discount_percent numeric(5,2) DEFAULT 0,
+    source_snippet_id character varying,
+    source_snippet_version integer,
+    hs_code text,
+    country_of_origin text,
+    line_image text
+);
+
+
+ALTER TABLE public.proforma_invoice_items OWNER TO postgres;
+
+--
 -- Name: proforma_invoices; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1105,7 +1138,20 @@ CREATE TABLE public.proforma_invoices (
     tax_amount numeric(10,2) DEFAULT '0'::numeric,
     total_amount numeric(10,2) NOT NULL,
     notes text,
-    created_at timestamp without time zone DEFAULT now()
+    created_at timestamp without time zone DEFAULT now(),
+    description text,
+    payment_days_id character varying,
+    invoice_date timestamp without time zone DEFAULT now(),
+    paid_amount numeric(10,2) DEFAULT 0,
+    total_amount_in_words text,
+    vat_rate_percent numeric(5,2),
+    customer_snapshot text,
+    print_sort_order text DEFAULT 'position'::text,
+    print_language_code text DEFAULT 'nl'::text,
+    print_project_no boolean DEFAULT true,
+    print_payment_conditions boolean DEFAULT true,
+    print_line_images boolean DEFAULT false,
+    incoterm_id character varying
 );
 
 
@@ -2239,10 +2285,18 @@ COPY public.pictograms (id, code, name, description, category, image_data, width
 
 
 --
+-- Data for Name: proforma_invoice_items; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.proforma_invoice_items (id, proforma_invoice_id, item_id, description, quantity, unit, unit_price, line_total, cost_price, line_type, "position", position_no, work_date, customer_rate_id, technician_names, technician_ids, description_internal, discount_percent, source_snippet_id, source_snippet_version, hs_code, country_of_origin, line_image) FROM stdin;
+\.
+
+
+--
 -- Data for Name: proforma_invoices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.proforma_invoices (id, proforma_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, notes, created_at) FROM stdin;
+COPY public.proforma_invoices (id, proforma_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, notes, created_at, description, payment_days_id, invoice_date, paid_amount, total_amount_in_words, vat_rate_percent, customer_snapshot, print_sort_order, print_language_code, print_project_no, print_payment_conditions, print_line_images, incoterm_id) FROM stdin;
 \.
 
 
@@ -3475,12 +3529,12 @@ X9gw_zOMQjpk7cd6h2EVqXqaYX7cvccO	{"cookie":{"originalMaxAge":604800000,"expires"
 MzJWnBVuaC5erqfSfjQ8izZaZSq-9k83	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:01:54.937Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:01:56
 z9XOAqcVlYPxLe_4uJPtklTill04tHvO	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:59:08.399Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 13:05:07
 O-eCAstFqc51FCzHxjc1uh1eRtsDkAVy	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:46.179Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:29:47
+Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:54:42
 DydfCmxnF9Y7M8cXrMNtollnPcwzY2Eh	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:02:00.267Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:02:41
 PA3DwNha04cB0K8L_9gpEk09h3fue6uM	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:05:01.379Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:05:02
 GdphYhrEI-DBCwvXuLNnfm6cyFod8fbZ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:31:44.747Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:31:45
 8JSTQcq_nrn4Yk9iJTfhNHmLiJHaeKXL	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:59.640Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:30:52
 06tRqKlA-rfQ_GqAPUsO6r6LmD4Rv0Wf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:03:38.029Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:03:39
-Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:52:40
 yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 11:32:05
 vOad41z3VWAgzwRSeTGrvBu0HTmLQDlS	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:43:20.347Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:43:21
 gxU7UMLOcpCMcD8mbTmLwnA20gbdJ27A	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:46:22.733Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:46:23
@@ -4006,6 +4060,14 @@ ALTER TABLE ONLY public.pictograms
 
 ALTER TABLE ONLY public.pictograms
     ADD CONSTRAINT pictograms_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: proforma_invoice_items proforma_invoice_items_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.proforma_invoice_items
+    ADD CONSTRAINT proforma_invoice_items_pkey PRIMARY KEY (id);
 
 
 --
@@ -4607,11 +4669,51 @@ ALTER TABLE ONLY public.packing_lists
 
 
 --
+-- Name: proforma_invoice_items proforma_invoice_items_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.proforma_invoice_items
+    ADD CONSTRAINT proforma_invoice_items_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.inventory_items(id);
+
+
+--
+-- Name: proforma_invoice_items proforma_invoice_items_proforma_invoice_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.proforma_invoice_items
+    ADD CONSTRAINT proforma_invoice_items_proforma_invoice_id_fkey FOREIGN KEY (proforma_invoice_id) REFERENCES public.proforma_invoices(id);
+
+
+--
+-- Name: proforma_invoice_items proforma_invoice_items_source_snippet_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.proforma_invoice_items
+    ADD CONSTRAINT proforma_invoice_items_source_snippet_id_fkey FOREIGN KEY (source_snippet_id) REFERENCES public.text_snippets(id);
+
+
+--
 -- Name: proforma_invoices proforma_invoices_customer_id_customers_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.proforma_invoices
     ADD CONSTRAINT proforma_invoices_customer_id_customers_id_fk FOREIGN KEY (customer_id) REFERENCES public.customers(id);
+
+
+--
+-- Name: proforma_invoices proforma_invoices_incoterm_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.proforma_invoices
+    ADD CONSTRAINT proforma_invoices_incoterm_id_fkey FOREIGN KEY (incoterm_id) REFERENCES public.incoterms(id);
+
+
+--
+-- Name: proforma_invoices proforma_invoices_payment_days_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.proforma_invoices
+    ADD CONSTRAINT proforma_invoices_payment_days_id_fkey FOREIGN KEY (payment_days_id) REFERENCES public.payment_days(id);
 
 
 --
@@ -4858,5 +4960,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict sWakjURSwmtcWUHWQEFT8Gb7Xygd7erAQcxPBdCE3b84M8TZXIo3Z3e9IjLd2w7
+\unrestrict WN4prHhhkc1cCJpdVvBn6cQ3YhWWTdlu6S8vP2lLOrdXrjf1sWhaW0qd3YmPoKV
 

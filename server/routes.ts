@@ -78,7 +78,9 @@ import { loadQuotationPrintData, loadInvoicePrintData, loadPackingListPrintData 
 import {
   insertCustomerSchema, insertSupplierSchema, insertProspectSchema, insertInventoryItemSchema,
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
-  insertInvoiceSchema, insertInvoiceItemSchema, insertPurchaseOrderSchema,
+  insertInvoiceSchema, insertInvoiceItemSchema,
+  insertProformaInvoiceSchema, insertProformaInvoiceItemSchema, proformaInvoiceItems,
+  insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema, insertSalesOrderSchema, insertSalesOrderItemSchema,
   insertWorkOrderSchema, insertWorkOrderItemSchema, insertPackingListSchema,
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
@@ -1850,6 +1852,227 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting invoice item:", error);
       res.status(500).json({ message: "Failed to delete invoice item" });
+    }
+  });
+
+  // Proforma Invoice routes
+  app.get("/api/proforma-invoices/next-number", async (req, res) => {
+    try {
+      const currentYear = new Date().getFullYear();
+      const pattern = `^PF-${currentYear}-[0-9]{3}$`;
+      const rows = await db.execute(
+        sql`SELECT proforma_number FROM proforma_invoices WHERE proforma_number ~ ${pattern} ORDER BY proforma_number`
+      );
+      const used = new Set((rows.rows as any[]).map((r: any) => r.proforma_number as string));
+      let next = 1;
+      while (used.has(`PF-${currentYear}-${String(next).padStart(3, '0')}`)) {
+        next++;
+      }
+      res.json({ number: `PF-${currentYear}-${String(next).padStart(3, '0')}` });
+    } catch (error) {
+      console.error("Error generating next proforma number:", error);
+      res.status(500).json({ message: "Failed to generate next proforma number" });
+    }
+  });
+
+  app.get("/api/proforma-invoices", async (req, res) => {
+    try {
+      const list = await storage.getProformaInvoices();
+      const customerList = await storage.getCustomers();
+      const customerMap = new Map(customerList.map(c => [c.id, c.name]));
+      const allItems = await Promise.all(
+        list.map(inv => storage.getProformaInvoiceItems(inv.id))
+      );
+      const result = list.map((inv, idx) => {
+        const items = allItems[idx] || [];
+        const totalCost = items.reduce((sum, item) => {
+          const qty = parseFloat(String(item.quantity || "0")) || 0;
+          const cost = parseFloat(String((item as any).costPrice || "0")) || 0;
+          return sum + (qty * cost);
+        }, 0);
+        const subtotal = parseFloat(String(inv.subtotal || "0")) || 0;
+        const totalMargin = subtotal - totalCost;
+        return {
+          ...inv,
+          customerName: customerMap.get(inv.customerId) || null,
+          totalCost: totalCost.toFixed(2),
+          totalMargin: totalMargin.toFixed(2),
+        };
+      });
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching proforma invoices:", error);
+      res.status(500).json({ message: "Failed to fetch proforma invoices" });
+    }
+  });
+
+  app.get("/api/proforma-invoices/:id", async (req, res) => {
+    try {
+      const invoice = await storage.getProformaInvoice(req.params.id);
+      if (!invoice) {
+        return res.status(404).json({ message: "Proforma invoice not found" });
+      }
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error fetching proforma invoice:", error);
+      res.status(500).json({ message: "Failed to fetch proforma invoice" });
+    }
+  });
+
+  app.get("/api/proforma-invoices/:id/items", async (req, res) => {
+    try {
+      const items = await storage.getProformaInvoiceItems(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching proforma invoice items:", error);
+      res.status(500).json({ message: "Failed to fetch proforma invoice items" });
+    }
+  });
+
+  function sanitizeProformaInvoiceBody(body: any) {
+    const nullableNumerics = ['vatRatePercent', 'taxAmount', 'paidAmount'];
+    nullableNumerics.forEach(f => { if (body[f] === '') body[f] = null; });
+    const requiredNumerics = ['subtotal', 'totalAmount'];
+    requiredNumerics.forEach(f => { if (body[f] === '' || body[f] == null) body[f] = '0'; });
+    const nullableFKs = ['customerId', 'projectId', 'paymentDaysId', 'incotermId'];
+    nullableFKs.forEach(f => { if (body[f] === '') body[f] = null; });
+    return body;
+  }
+
+  app.post("/api/proforma-invoices/:id/duplicate", async (req, res) => {
+    try {
+      const original = await storage.getProformaInvoice(req.params.id);
+      if (!original) return res.status(404).json({ message: "Proforma invoice not found" });
+
+      const items = await storage.getProformaInvoiceItems(req.params.id);
+
+      const { id: _id, createdAt: _c, proformaNumber: _n, ...rest } = original as any;
+      const copy = await storage.createProformaInvoice({
+        ...rest,
+        description: `${original.description || ''} (kopie)`.trim(),
+        status: 'concept',
+      });
+
+      for (const item of items) {
+        const { id: _iid, proformaInvoiceId: _piId, ...itemRest } = item as any;
+        await storage.addProformaInvoiceItem({
+          ...itemRest,
+          proformaInvoiceId: copy.id,
+        });
+      }
+
+      res.status(201).json(copy);
+    } catch (error) {
+      console.error("Error duplicating proforma invoice:", error);
+      res.status(500).json({ message: "Failed to duplicate proforma invoice" });
+    }
+  });
+
+  app.post("/api/proforma-invoices/:id/refresh-customer", async (req, res) => {
+    try {
+      const invoice = await storage.getProformaInvoice(req.params.id);
+      if (!invoice) return res.status(404).json({ message: "Proforma invoice not found" });
+      const customer = await storage.getCustomer(invoice.customerId);
+      if (!customer) return res.status(404).json({ message: "Customer not found" });
+      const snapshot = JSON.stringify(customer);
+      const updated = await storage.updateProformaInvoice(req.params.id, { customerSnapshot: snapshot });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error refreshing proforma customer:", error);
+      res.status(500).json({ message: "Failed to refresh customer data" });
+    }
+  });
+
+  app.post("/api/proforma-invoices", async (req, res) => {
+    try {
+      const body = sanitizeProformaInvoiceBody(parseDateFields(req.body, ['invoiceDate', 'dueDate']));
+      const invoiceData = insertProformaInvoiceSchema.parse(body);
+      const invoice = await storage.createProformaInvoice(invoiceData);
+      res.status(201).json(invoice);
+    } catch (error: any) {
+      console.error("Error creating proforma invoice:", error);
+      if (error?.code === '23505' && error?.constraint?.includes('proforma_number')) {
+        res.status(409).json({ message: `Proformanummer "${req.body.proformaNumber}" is al in gebruik.` });
+      } else {
+        handleRouteError(res, error, "Kan proforma factuur niet aanmaken");
+      }
+    }
+  });
+
+  app.post("/api/proforma-invoices/:id/items", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ['workDate']);
+      const itemData = insertProformaInvoiceItemSchema.parse(coerceQuantity({
+        ...body,
+        proformaInvoiceId: req.params.id
+      }));
+      const item = await storage.addProformaInvoiceItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error adding proforma invoice item:", error);
+      handleRouteError(res, error, "Kan proforma factuurregel niet toevoegen");
+    }
+  });
+
+  app.put("/api/proforma-invoices/:id", async (req, res) => {
+    try {
+      const body = sanitizeProformaInvoiceBody(parseDateFields(req.body, ['invoiceDate', 'dueDate']));
+      const invoiceData = insertProformaInvoiceSchema.partial().parse(body);
+      const invoice = await storage.updateProformaInvoice(req.params.id, invoiceData);
+      res.json(invoice);
+    } catch (error: any) {
+      console.error("Error updating proforma invoice:", error);
+      if (error?.code === '23505' && error?.constraint?.includes('proforma_number')) {
+        res.status(409).json({ message: `Proformanummer "${req.body.proformaNumber}" is al in gebruik.` });
+      } else {
+        handleRouteError(res, error, "Kan proforma factuur niet bijwerken");
+      }
+    }
+  });
+
+  app.delete("/api/proforma-invoices/:id", async (req, res) => {
+    try {
+      await storage.deleteProformaInvoice(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting proforma invoice:", error);
+      res.status(500).json({ message: "Failed to delete proforma invoice" });
+    }
+  });
+
+  // Proforma Invoice Item routes
+  app.get("/api/proforma-invoice-items/:id", async (req, res) => {
+    try {
+      const item = await storage.getProformaInvoiceItem(req.params.id);
+      if (!item) {
+        return res.status(404).json({ message: "Proforma invoice item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      console.error("Error fetching proforma invoice item:", error);
+      res.status(500).json({ message: "Failed to fetch proforma invoice item" });
+    }
+  });
+
+  app.put("/api/proforma-invoice-items/:id", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ['workDate']);
+      const itemData = insertProformaInvoiceItemSchema.partial().parse(coerceQuantity(body));
+      const item = await storage.updateProformaInvoiceItem(req.params.id, itemData);
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating proforma invoice item:", error);
+      handleRouteError(res, error, "Kan proforma factuurregel niet bijwerken");
+    }
+  });
+
+  app.delete("/api/proforma-invoice-items/:id", async (req, res) => {
+    try {
+      await storage.deleteProformaInvoiceItem(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting proforma invoice item:", error);
+      res.status(500).json({ message: "Failed to delete proforma invoice item" });
     }
   });
 

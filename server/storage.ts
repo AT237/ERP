@@ -28,7 +28,10 @@ import {
   type Technician, type InsertTechnician,
   employees, type Employee, type InsertEmployee,
   entityAttachments, type EntityAttachment, type InsertEntityAttachment,
-  documentImages, type DocumentImage, type InsertDocumentImage
+  documentImages, type DocumentImage, type InsertDocumentImage,
+  proformaInvoices, proformaInvoiceItems,
+  type ProformaInvoice, type InsertProformaInvoice,
+  type ProformaInvoiceItem, type InsertProformaInvoiceItem
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, sql, and, or, ilike } from "drizzle-orm";
@@ -155,6 +158,19 @@ export interface IStorage {
   deleteInvoiceItem(id: string): Promise<void>;
   getInvoiceWorkOrderIds(invoiceId: string): Promise<string[]>;
   setInvoiceWorkOrders(invoiceId: string, workOrderIds: string[]): Promise<void>;
+
+  // Proforma Invoice methods
+  getProformaInvoices(): Promise<ProformaInvoice[]>;
+  getProformaInvoice(id: string): Promise<ProformaInvoice | undefined>;
+  createProformaInvoice(invoice: InsertProformaInvoice): Promise<ProformaInvoice>;
+  updateProformaInvoice(id: string, invoice: Partial<InsertProformaInvoice>): Promise<ProformaInvoice>;
+  deleteProformaInvoice(id: string): Promise<void>;
+  getProformaInvoiceItems(proformaInvoiceId: string): Promise<ProformaInvoiceItem[]>;
+  getProformaInvoiceItem(id: string): Promise<ProformaInvoiceItem | undefined>;
+  addProformaInvoiceItem(item: InsertProformaInvoiceItem): Promise<ProformaInvoiceItem>;
+  updateProformaInvoiceItem(id: string, item: Partial<InsertProformaInvoiceItem>): Promise<ProformaInvoiceItem>;
+  deleteProformaInvoiceItem(id: string): Promise<void>;
+
   getWorkOrderItems(workOrderId: string): Promise<WorkOrderItem[]>;
   getWorkOrderItem(id: string): Promise<WorkOrderItem | undefined>;
   addWorkOrderItem(item: InsertWorkOrderItem): Promise<WorkOrderItem>;
@@ -987,6 +1003,54 @@ export class DatabaseStorage implements IStorage {
 
   async deleteInvoiceItem(id: string): Promise<void> {
     await db.delete(invoiceItems).where(eq(invoiceItems.id, id));
+  }
+
+  // Proforma Invoice methods
+  async getProformaInvoices(): Promise<ProformaInvoice[]> {
+    return await db.select().from(proformaInvoices).orderBy(desc(proformaInvoices.createdAt));
+  }
+
+  async getProformaInvoice(id: string): Promise<ProformaInvoice | undefined> {
+    const [invoice] = await db.select().from(proformaInvoices).where(eq(proformaInvoices.id, id));
+    return invoice || undefined;
+  }
+
+  async createProformaInvoice(invoice: InsertProformaInvoice): Promise<ProformaInvoice> {
+    const [newInvoice] = await db.insert(proformaInvoices).values(invoice).returning();
+    return newInvoice;
+  }
+
+  async updateProformaInvoice(id: string, invoice: Partial<InsertProformaInvoice>): Promise<ProformaInvoice> {
+    return await safeUpdate(proformaInvoices, invoice, id);
+  }
+
+  async deleteProformaInvoice(id: string): Promise<void> {
+    await db.delete(proformaInvoiceItems).where(eq(proformaInvoiceItems.proformaInvoiceId, id));
+    await db.delete(proformaInvoices).where(eq(proformaInvoices.id, id));
+  }
+
+  async getProformaInvoiceItems(proformaInvoiceId: string): Promise<ProformaInvoiceItem[]> {
+    return await db.select().from(proformaInvoiceItems)
+      .where(eq(proformaInvoiceItems.proformaInvoiceId, proformaInvoiceId))
+      .orderBy(asc(proformaInvoiceItems.position));
+  }
+
+  async getProformaInvoiceItem(id: string): Promise<ProformaInvoiceItem | undefined> {
+    const [item] = await db.select().from(proformaInvoiceItems).where(eq(proformaInvoiceItems.id, id));
+    return item || undefined;
+  }
+
+  async addProformaInvoiceItem(item: InsertProformaInvoiceItem): Promise<ProformaInvoiceItem> {
+    const [newItem] = await db.insert(proformaInvoiceItems).values(item).returning();
+    return newItem;
+  }
+
+  async updateProformaInvoiceItem(id: string, item: Partial<InsertProformaInvoiceItem>): Promise<ProformaInvoiceItem> {
+    return await safeUpdate(proformaInvoiceItems, item, id);
+  }
+
+  async deleteProformaInvoiceItem(id: string): Promise<void> {
+    await db.delete(proformaInvoiceItems).where(eq(proformaInvoiceItems.id, id));
   }
 
   async getWorkOrderItems(workOrderId: string): Promise<WorkOrderItem[]> {
