@@ -177,43 +177,6 @@ export function FormToolbar({
           <CopyPlus className={iconClass} />
         </Button>
       )}
-
-      {convertOptions && convertOptions.length > 0 && (
-        <>
-          <Separator orientation="vertical" className="h-6 mx-2" />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-8 px-4 gap-2 text-xs font-semibold rounded-md ${(convertDisabled || convertLoading) ? inactiveClass : "bg-orange-600 text-white hover:bg-orange-700"}`}
-                disabled={convertDisabled || convertLoading}
-                title="Omzetten naar"
-                data-testid="toolbar-convert"
-              >
-                {convertLoading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-                ) : (
-                  <ArrowRightLeft className={iconClass} />
-                )}
-                Omzetten naar
-                <ChevronDown className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {convertOptions.map((option) => (
-                <DropdownMenuItem
-                  key={option.label}
-                  onClick={option.onClick}
-                  disabled={option.disabled}
-                >
-                  {option.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </>
-      )}
       
       {showDelete && (
         <Button
@@ -291,6 +254,43 @@ export function FormToolbar({
           >
             <FileSpreadsheet className={iconClass} />
           </Button>
+        </>
+      )}
+
+      {convertOptions && convertOptions.length > 0 && (
+        <>
+          <Separator orientation="vertical" className="h-6 mx-3" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-8 px-4 gap-2 text-xs font-semibold rounded-md ${(convertDisabled || convertLoading) ? inactiveClass : "bg-orange-600 text-white hover:bg-orange-700"}`}
+                disabled={convertDisabled || convertLoading}
+                title="Omzetten naar"
+                data-testid="toolbar-convert"
+              >
+                {convertLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                ) : (
+                  <ArrowRightLeft className={iconClass} />
+                )}
+                Omzetten naar
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {convertOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option.label}
+                  onClick={option.onClick}
+                  disabled={option.disabled}
+                >
+                  {option.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </>
       )}
 
