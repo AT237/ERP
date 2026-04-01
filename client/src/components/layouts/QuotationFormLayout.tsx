@@ -1945,6 +1945,71 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   // State for print dialog
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
 
+  const [convertLoading, setConvertLoading] = useState(false);
+
+  const handleConvert = async (targetType: string) => {
+    if (!currentQuotationId) return;
+    setConvertLoading(true);
+    try {
+      const response = await apiRequest("POST", `/api/quotations/${currentQuotationId}/convert-to-${targetType}`);
+      const data = await response.json();
+      
+      let tabId = "";
+      let tabName = "";
+      let formType = "";
+      let entityId = "";
+
+      if (targetType === "invoice") {
+        entityId = data.invoice.id;
+        tabId = `edit-invoice-${entityId}`;
+        tabName = `Factuur ${data.invoice.invoiceNumber}`;
+        formType = "invoice";
+      } else if (targetType === "proforma-invoice") {
+        entityId = data.proformaInvoice.id;
+        tabId = `edit-proforma-invoice-${entityId}`;
+        tabName = `Proforma ${data.proformaInvoice.proformaNumber}`;
+        formType = "proforma-invoice";
+      } else if (targetType === "sales-order") {
+        entityId = data.salesOrder.id;
+        tabId = `edit-sales-order-${entityId}`;
+        tabName = `Verkooporder ${data.salesOrder.orderNumber}`;
+        formType = "sales-order";
+      }
+
+      toast({
+        title: "Omgezet",
+        description: `Offerte is omgezet naar ${tabName}`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/proforma-invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales-orders"] });
+
+      window.dispatchEvent(new CustomEvent('open-form-tab', {
+        detail: {
+          id: tabId,
+          name: tabName,
+          formType: formType,
+          entityId: entityId,
+        }
+      }));
+    } catch (error) {
+      toast({
+        title: "Fout",
+        description: "Kon offerte niet omzetten. Probeer opnieuw.",
+        variant: "destructive",
+      });
+    } finally {
+      setConvertLoading(false);
+    }
+  };
+
+  const convertOptions = currentQuotationId ? [
+    { label: "Maak Factuur (CI)", onClick: () => handleConvert("invoice") },
+    { label: "Maak Proforma Factuur (PFI)", onClick: () => handleConvert("proforma-invoice") },
+    { label: "Maak Verkooporder (VO)", onClick: () => handleConvert("sales-order") },
+  ] : [];
+
   const toolbar = useFormToolbar({
     entityType: "quotation",
     entityId: currentQuotationId,
@@ -1953,6 +2018,13 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     saveDisabled: createQuotationMutation.isPending || updateQuotationMutation.isPending,
     saveLoading: createQuotationMutation.isPending || updateQuotationMutation.isPending,
   });
+
+  const toolbarWithConvert = {
+    ...toolbar,
+    convertOptions,
+    convertDisabled: !currentQuotationId || convertLoading,
+    convertLoading,
+  };
 
   return (
     <div className="h-full">
@@ -1973,7 +2045,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         onSectionChange={setActiveTab}
         form={quotationForm}
         onSubmit={handleSaveQuotation}
-        toolbar={toolbar}
+        toolbar={toolbarWithConvert}
         documentType="quotation"
         entityId={currentQuotationId}
         isLoading={quotationLoading}

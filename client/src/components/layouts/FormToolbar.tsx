@@ -24,6 +24,12 @@ import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 import { UsageConflictDialog } from "@/components/ui/usage-conflict-dialog";
 import type { UsageLocation } from "@/components/ui/safe-delete-dialog";
 
+export interface ConvertOption {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
 export interface FormToolbarProps {
   onSave?: () => void;
   onAddNew?: () => void;
@@ -51,6 +57,10 @@ export interface FormToolbarProps {
   showPrint?: boolean;
   showNavigation?: boolean;
   showExport?: boolean;
+
+  convertOptions?: ConvertOption[];
+  convertDisabled?: boolean;
+  convertLoading?: boolean;
 
   documentType?: string;
   entityId?: string;
@@ -88,6 +98,10 @@ export function FormToolbar({
   showPrint = true,
   showNavigation = true,
   showExport = true,
+
+  convertOptions,
+  convertDisabled = false,
+  convertLoading = false,
 
   documentType,
   entityId,
@@ -162,6 +176,42 @@ export function FormToolbar({
         >
           <CopyPlus className={iconClass} />
         </Button>
+      )}
+
+      {convertOptions && convertOptions.length > 0 && (
+        <>
+          <Separator orientation="vertical" className="h-6 mx-1" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-8 px-2 gap-1 ${(convertDisabled || convertLoading) ? inactiveClass : activeClass}`}
+                disabled={convertDisabled || convertLoading}
+                title="Omzetten naar"
+                data-testid="toolbar-convert"
+              >
+                {convertLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                ) : (
+                  <ArrowRightLeft className={iconClass} />
+                )}
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {convertOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option.label}
+                  onClick={option.onClick}
+                  disabled={option.disabled}
+                >
+                  {option.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
       )}
       
       {showDelete && (
