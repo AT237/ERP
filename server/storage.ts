@@ -1692,7 +1692,8 @@ export class DatabaseStorage implements IStorage {
 
     const salesOrder = await this.createSalesOrder(salesOrderData);
 
-    // Copy all line items exactly, preserving text lines
+    await this.updateQuotation(quotationId, { status: "order" });
+
     for (const item of quotationItems) {
       const salesOrderItem: InsertSalesOrderItem = {
         salesOrderId: salesOrder.id,
@@ -1742,6 +1743,8 @@ export class DatabaseStorage implements IStorage {
     };
 
     const invoice = await this.createInvoice(invoiceData);
+
+    await this.updateQuotation(quotationId, { status: "invoiced" });
 
     for (const item of quotationItems) {
       const invoiceItem: InsertInvoiceItem = {
@@ -1808,6 +1811,8 @@ export class DatabaseStorage implements IStorage {
     };
 
     const proforma = await this.createProformaInvoice(proformaData);
+
+    await this.updateQuotation(quotationId, { status: "invoiced" });
 
     for (const item of quotationItems) {
       const proformaItem: InsertProformaInvoiceItem = {

@@ -179,14 +179,13 @@ export function FormToolbar({
       )}
 
       {convertOptions && convertOptions.length > 0 && (
-        <>
-          <Separator orientation="vertical" className="h-6 mx-1" />
+        <div className="ml-auto flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className={`h-8 px-2 gap-1 ${(convertDisabled || convertLoading) ? inactiveClass : activeClass}`}
+                className={`h-8 px-4 gap-2 text-xs font-semibold rounded-md ${(convertDisabled || convertLoading) ? inactiveClass : "bg-orange-600 text-white hover:bg-orange-700"}`}
                 disabled={convertDisabled || convertLoading}
                 title="Omzetten naar"
                 data-testid="toolbar-convert"
@@ -196,10 +195,11 @@ export function FormToolbar({
                 ) : (
                   <ArrowRightLeft className={iconClass} />
                 )}
+                Omzetten naar
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
+            <DropdownMenuContent align="end">
               {convertOptions.map((option) => (
                 <DropdownMenuItem
                   key={option.label}
@@ -211,7 +211,7 @@ export function FormToolbar({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </>
+        </div>
       )}
       
       {showDelete && (

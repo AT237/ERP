@@ -1655,7 +1655,9 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
                 { value: "sent", label: "Sent" },
                 { value: "accepted", label: "Accepted" },
                 { value: "rejected", label: "Rejected" },
-                { value: "expired", label: "Expired" }
+                { value: "expired", label: "Expired" },
+                { value: "order", label: "Order" },
+                { value: "invoiced", label: "Invoiced" }
               ],
               setValue: (value) => quotationForm.setValue("status", value),
               watch: () => quotationForm.watch("status"),
