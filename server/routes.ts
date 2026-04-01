@@ -94,7 +94,8 @@ import {
   pdfArchive, insertPdfArchiveSchema,
   emailTemplates, insertEmailTemplateSchema,
   tasks, insertTaskSchema,
-  serialNumbers, insertSerialNumberSchema
+  serialNumbers, insertSerialNumberSchema,
+  insertDocumentImageSchema
 } from "@shared/schema";
 import { Request, Response, NextFunction } from 'express';
 import { eq, sql, inArray } from 'drizzle-orm';
@@ -4355,6 +4356,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to delete serial number", error: error.message });
+    }
+  });
+
+  // Document Images
+  app.get("/api/document-images/:documentType/:documentId", async (req, res) => {
+    try {
+      const images = await storage.getDocumentImages(req.params.documentType, req.params.documentId);
+      res.json(images);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to fetch document images");
+    }
+  });
+
+  app.post("/api/document-images", async (req, res) => {
+    try {
+      const parsed = insertDocumentImageSchema.parse(req.body);
+      const image = await storage.createDocumentImage(parsed);
+      res.status(201).json(image);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to create document image");
+    }
+  });
+
+  app.put("/api/document-images/:id", async (req, res) => {
+    try {
+      const { description, position } = req.body;
+      const image = await storage.updateDocumentImage(req.params.id, { description, position });
+      res.json(image);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to update document image");
+    }
+  });
+
+  app.delete("/api/document-images/:id", async (req, res) => {
+    try {
+      await storage.deleteDocumentImage(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to delete document image");
     }
   });
 

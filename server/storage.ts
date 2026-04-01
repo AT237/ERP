@@ -27,7 +27,8 @@ import {
   type CustomerRate, type InsertCustomerRate,
   type Technician, type InsertTechnician,
   employees, type Employee, type InsertEmployee,
-  entityAttachments, type EntityAttachment, type InsertEntityAttachment
+  entityAttachments, type EntityAttachment, type InsertEntityAttachment,
+  documentImages, type DocumentImage, type InsertDocumentImage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, sql, and, or, ilike } from "drizzle-orm";
@@ -340,6 +341,12 @@ export interface IStorage {
   getSectionTemplate(id: string): Promise<SectionTemplate | undefined>;
   createSectionTemplate(template: InsertSectionTemplate): Promise<SectionTemplate>;
   deleteSectionTemplate(id: string): Promise<void>;
+
+  // Document Images
+  getDocumentImages(documentType: string, documentId: string): Promise<DocumentImage[]>;
+  createDocumentImage(image: InsertDocumentImage): Promise<DocumentImage>;
+  deleteDocumentImage(id: string): Promise<void>;
+  updateDocumentImage(id: string, data: Partial<InsertDocumentImage>): Promise<DocumentImage>;
 
   // Conversion methods
   convertQuotationToSalesOrder(quotationId: string): Promise<SalesOrder>;
@@ -1951,6 +1958,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEntityAttachment(id: string): Promise<void> {
     await db.delete(entityAttachments).where(eq(entityAttachments.id, id));
+  }
+
+  async getDocumentImages(documentType: string, documentId: string): Promise<DocumentImage[]> {
+    return await db.select().from(documentImages)
+      .where(and(eq(documentImages.documentType, documentType), eq(documentImages.documentId, documentId)))
+      .orderBy(asc(documentImages.position));
+  }
+
+  async createDocumentImage(image: InsertDocumentImage): Promise<DocumentImage> {
+    const [newImage] = await db.insert(documentImages).values(image).returning();
+    return newImage;
+  }
+
+  async deleteDocumentImage(id: string): Promise<void> {
+    await db.delete(documentImages).where(eq(documentImages.id, id));
+  }
+
+  async updateDocumentImage(id: string, data: Partial<InsertDocumentImage>): Promise<DocumentImage> {
+    return safeUpdate<DocumentImage>(documentImages, data, id);
   }
 }
 

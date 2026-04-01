@@ -12,6 +12,7 @@ import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { LayoutForm2, type FormSection2, type FormRow, type FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow, createCustomRow, type ChangeTrackingConfig } from './LayoutForm2';
+import { DocumentImagesPanel } from "@/components/ui/document-images-panel";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
@@ -1908,6 +1909,22 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             testId: "checkbox-print-line-images"
           })
         ]
+      },
+      {
+        id: "images",
+        label: "Afbeeldingen",
+        rows: [
+          {
+            type: "custom" as const,
+            customContent: currentQuotationId ? (
+              <DocumentImagesPanel documentType="quotation" documentId={currentQuotationId} />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground border rounded-lg bg-gray-50">
+                <p className="text-sm">Sla de offerte eerst op om afbeeldingen te kunnen toevoegen.</p>
+              </div>
+            ),
+          },
+        ],
       }
     ];
   };
