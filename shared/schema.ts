@@ -1427,3 +1427,18 @@ export const customerAddressesRelations = relations(customerAddresses, ({ one })
     references: [addresses.id],
   }),
 }));
+
+export const documentImages = pgTable("document_images", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  documentType: text("document_type").notNull(),
+  documentId: varchar("document_id").notNull(),
+  imageData: text("image_data").notNull(),
+  fileName: text("file_name"),
+  description: text("description"),
+  position: integer("position").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDocumentImageSchema = createInsertSchema(documentImages).omit({ id: true, createdAt: true });
+export type InsertDocumentImage = z.infer<typeof insertDocumentImageSchema>;
+export type DocumentImage = typeof documentImages.$inferSelect;
