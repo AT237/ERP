@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict cnTdlcj0h8Z5I8mpuetorv0vsVhbzpCHX3ov15i4PVDDAAeCqnDlK92GpBdutwa
+\restrict QBBSdyxiH6EGHBj9xtUDt5avCnvoYC0BDql8vB6oCHNcKt3QCax1rwuW5d00TSG
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -2385,7 +2385,6 @@ COPY public.quotation_requests (id, request_number, customer_id, project_id, sta
 COPY public.quotations (id, quotation_number, customer_id, project_id, status, quotation_date, description, revision_number, valid_until, subtotal, tax_amount, total_amount, notes, inco_terms, payment_conditions, delivery_conditions, created_at, validity_days, is_budget_quotation, print_sort_order, print_project_no, print_payment_conditions, print_language_code, customer_snapshot, print_line_images) FROM stdin;
 13d2537c-3233-4473-9d81-abd9134a33ec	Q-2025-001	a476ef35-b76b-41de-80bc-0e19310508b4	\N	draft	2025-05-23 00:00:00	Ford Focus Electric	V1.0	2025-06-22 00:00:00	0.00	0.00	0.00					2025-09-10 13:00:01.6668	30	t	position	t	t	nl	\N	f
 bdd41ef8-a87a-4db8-a673-4c022b7a611b	Q-2025-002	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	draft	2025-09-12 00:00:00	test	V1.0	2025-09-26 00:00:00	0.00	0.00	0.00					2025-09-12 14:41:09.608161	14	f	position	t	t	nl	\N	f
-test-quotation-1	Q-TEST-001	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	draft	2025-09-16 00:00:00	Test Quotation for Type Column Testing	V1.0	2025-10-16 00:00:00	215.00	45.15	260.15					2025-09-16 11:24:08.732748	30	f	position	t	t	nl	\N	f
 8958851e-6fe8-45b4-ada0-9ff6904ad85a	Q-2023-001	d487e312-b8dd-4e68-9c0d-32a275388035	\N	sent	2023-01-01 00:00:00	Update Electrical installation Florensis Ethiopia PLC	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
 b86c3c68-ea1b-499b-99ab-6c99d4445b58	Q-2023-002	1a027fa9-76e0-439b-9feb-8cbb7d30f0e6	\N	sent	2023-01-01 00:00:00	Control cabinet	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
 8eec8298-0d2d-4946-8809-4f1e1e725661	Q-2023-003	cf73fd0d-1c7d-4fed-a131-7352a96422ea	\N	sent	2023-01-01 00:00:00	Water pump items	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
@@ -2412,7 +2411,8 @@ cc3af0dd-f25f-4061-bc4b-b371273943a7	Q-2024-021	c1a06cc3-d874-4c6f-a235-89331138
 7a1212a3-22d6-494d-bf50-174052c77095	Q-2024-022	edc1b103-6f73-4885-9620-932d53116201	\N	draft	2024-01-01 00:00:00	Utilities for new farm	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
 47884455-1384-4bea-9122-715c2a121d8c	Q-2025-003	a476ef35-b76b-41de-80bc-0e19310508b4	\N	draft	2025-01-01 00:00:00	Connectors 800Amps	V1.0	\N	0.00	0.00	0.00	\N	\N	\N	\N	2026-03-09 20:16:35.669456	30	f	position	t	t	nl	\N	f
 a0170147-28ce-450e-91fc-45e6e4f142db	Q-2026-001	26188fba-4c83-451c-b8c1-6cc9a75e9606	\N	draft	2026-03-29 22:00:00		V1.0	2026-04-28 22:00:00	0.00	0.00	0.00					2026-03-30 12:53:36.822071	30	f	position	t	t	nl	\N	f
-9f279a89-56dd-463c-8fbd-58a6f4388ed6	Q-2026-099	3e079b7d-2254-4732-bc20-0d0a7caf6a28	\N	draft	2026-03-30 22:00:00	PV and borehole pump	V1.0	2026-04-29 22:00:00	117.60	24.70	142.30					2026-03-31 19:40:53.533263	30	t	position	t	t	en	\N	t
+test-quotation-1	Q-TEST-001	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	draft	2025-09-16 00:00:00	Test Quotation for Type Column Testing	V1.0	2025-10-16 00:00:00	215.00	45.15	215.00					2025-09-16 11:24:08.732748	30	f	position	t	t	nl	\N	f
+9f279a89-56dd-463c-8fbd-58a6f4388ed6	Q-2026-099	3e079b7d-2254-4732-bc20-0d0a7caf6a28	\N	draft	2026-03-30 22:00:00	PV and borehole pump	V1.0	2026-04-29 22:00:00	117.60	24.70	117.60					2026-03-31 19:40:53.533263	30	t	position	t	t	en	\N	t
 \.
 
 
@@ -3533,10 +3533,10 @@ z9XOAqcVlYPxLe_4uJPtklTill04tHvO	{"cookie":{"originalMaxAge":604800000,"expires"
 O-eCAstFqc51FCzHxjc1uh1eRtsDkAVy	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:46.179Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:29:47
 DydfCmxnF9Y7M8cXrMNtollnPcwzY2Eh	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:02:00.267Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:02:41
 PA3DwNha04cB0K8L_9gpEk09h3fue6uM	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:05:01.379Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:05:02
-Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 19:35:23
 GdphYhrEI-DBCwvXuLNnfm6cyFod8fbZ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:31:44.747Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:31:45
 8JSTQcq_nrn4Yk9iJTfhNHmLiJHaeKXL	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:59.640Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:30:52
 06tRqKlA-rfQ_GqAPUsO6r6LmD4Rv0Wf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:03:38.029Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:03:39
+Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 19:38:19
 yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 11:32:05
 vOad41z3VWAgzwRSeTGrvBu0HTmLQDlS	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:43:20.347Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:43:21
 gxU7UMLOcpCMcD8mbTmLwnA20gbdJ27A	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:46:22.733Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:46:23
@@ -4962,5 +4962,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict cnTdlcj0h8Z5I8mpuetorv0vsVhbzpCHX3ov15i4PVDDAAeCqnDlK92GpBdutwa
+\unrestrict QBBSdyxiH6EGHBj9xtUDt5avCnvoYC0BDql8vB6oCHNcKt3QCax1rwuW5d00TSG
 

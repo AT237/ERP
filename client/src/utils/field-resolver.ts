@@ -257,13 +257,13 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
       return null;
   }
 
-  // Virtual computed field: totalAmountInWords
-  // Uses stored value from DB when available; falls back to computing with customer's language.
   if (fieldPath.length === 1 && fieldPath[0] === 'totalAmountInWords') {
-    if ((data as any)?.totalAmountInWords) return (data as any).totalAmountInWords;
     const totalAmount = data?.totalAmount ?? printData.invoice?.totalAmount ?? printData.quotation?.totalAmount;
     const total = parseFloat(totalAmount || '0');
-    const lang = (printData.customer as any)?.languageCode || 'nl';
+    const printLang = (data as any)?.printLanguageCode
+      ?? printData.invoice?.printLanguageCode
+      ?? printData.quotation?.printLanguageCode;
+    const lang = printLang || (printData.customer as any)?.languageCode || 'nl';
     return amountToWords(total, lang);
   }
 

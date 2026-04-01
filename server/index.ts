@@ -112,6 +112,28 @@ async function seedProductionDatabase() {
   }
 }
 
+async function fixQuotationTotals() {
+  try {
+    const result = await pool.query(`
+      UPDATE quotations q SET
+        total_amount = sub.line_sum,
+        subtotal = sub.line_sum
+      FROM (
+        SELECT quotation_id, COALESCE(SUM(CAST(line_total AS numeric)), 0) as line_sum
+        FROM quotation_items
+        GROUP BY quotation_id
+      ) sub
+      WHERE q.id = sub.quotation_id
+        AND CAST(q.total_amount AS numeric) != sub.line_sum
+    `);
+    if (result.rowCount && result.rowCount > 0) {
+      log(`Fixed ${result.rowCount} quotation(s) with incorrect totals`);
+    }
+  } catch (err: any) {
+    log(`Quotation totals fix warning: ${err.message}`);
+  }
+}
+
 async function syncSequences() {
   try {
     const sequenceMap: Record<string, { table: string; column: string }> = {
@@ -330,6 +352,7 @@ async function ensureAdminEmployee() {
   await ensureBrandsTable();
   await ensureLineItemColumns();
   await syncSequences();
+  await fixQuotationTotals();
   await ensureAdminEmployee();
   await ensureDefaultUser();
 
