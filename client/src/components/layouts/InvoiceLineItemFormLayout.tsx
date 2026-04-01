@@ -952,40 +952,13 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     label: 'Regelafbeelding',
     type: 'custom',
     customComponent: (
-      <div className="space-y-3">
-        {lineImage ? (
-          <div className="relative inline-block">
-            <img
-              src={lineImage}
-              alt="Regelafbeelding"
-              className="max-h-32 max-w-48 rounded border object-contain"
-            />
-            <button
-              type="button"
-              onClick={() => { setLineImage(null); setHasUnsavedChanges(true); }}
-              className="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-destructive-foreground shadow-sm hover:bg-destructive/90"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-input px-4 py-3 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
-              <ImagePlus className="h-4 w-4" />
-              {lineTypeValue === 'standard' ? 'Afbeelding uploaden of selecteer artikel' : 'Afbeelding uploaden'}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-            </label>
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Max. 2MB. Wordt getoond op de factuur als 'Regelafbeeldingen' is ingeschakeld bij Afdrukinstellingen.
-        </p>
-      </div>
+      <ImageUploadZone
+        value={lineImage}
+        onChange={handleLineImageChange}
+        label="Regelafbeelding"
+        maxSizeMB={2}
+        hint="Klik of sleep een afbeelding · JPG, PNG, max 2MB"
+      />
     ),
   };
 

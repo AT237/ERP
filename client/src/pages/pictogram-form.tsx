@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ImageUploadZone } from "@/components/ui/image-upload-zone";
 
 interface PictogramFormProps {
   pictogramId?: string;
@@ -81,15 +82,8 @@ export default function PictogramForm({ pictogramId, onSave }: PictogramFormProp
     },
   });
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, imageData: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleImageChange = (value: string | null) => {
+    setFormData({ ...formData, imageData: value || "" });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -161,23 +155,14 @@ export default function PictogramForm({ pictogramId, onSave }: PictogramFormProp
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="image-upload">Image File *</Label>
-                <Input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  required={!pictogramId}
+                <Label>Image File *</Label>
+                <ImageUploadZone
+                  value={formData.imageData || null}
+                  onChange={handleImageChange}
+                  label="Pictogram"
+                  maxSizeMB={5}
+                  hint="Klik of sleep een afbeelding · JPG, PNG, max 5MB"
                 />
-                {formData.imageData && (
-                  <div className="mt-2 border rounded p-4 bg-gray-50">
-                    <img 
-                      src={formData.imageData} 
-                      alt="Preview" 
-                      className="max-h-60 mx-auto object-contain"
-                    />
-                  </div>
-                )}
               </div>
             </div>
 
