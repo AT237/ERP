@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict qXUxpzKN85Ha2DNCbg3LDN3v1ecjdcRTMARxTbGEWw7KV4HGqffLLSOrSoeyN2z
+\restrict nyvDmaD3S2OVge9EaCkD1dv5JzMHNyG4l6xODPeHCFdrP5Ouzgihhfr5ye3YmQO
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -674,7 +674,6 @@ CREATE TABLE public.incoterms (
     code text NOT NULL,
     name text NOT NULL,
     description text,
-    category text,
     is_active boolean DEFAULT true,
     created_at timestamp without time zone DEFAULT now()
 );
@@ -2017,8 +2016,8 @@ cadb1610-b2b0-4ab1-a3f1-569cec1a41ed	Bedrijfslogo	Het officiële bedrijfslogo	lo
 -- Data for Name: incoterms; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.incoterms (id, code, name, description, category, is_active, created_at) FROM stdin;
-34be9161-bb52-49f0-b393-8479f2cc2cef	EXW	Ex work(s)		EXW	t	2026-03-26 15:12:21.506281
+COPY public.incoterms (id, code, name, description, is_active, created_at) FROM stdin;
+34be9161-bb52-49f0-b393-8479f2cc2cef	EXW	Ex work(s)		t	2026-03-26 15:12:21.506281
 \.
 
 
@@ -3542,7 +3541,7 @@ PA3DwNha04cB0K8L_9gpEk09h3fue6uM	{"cookie":{"originalMaxAge":604800000,"expires"
 GdphYhrEI-DBCwvXuLNnfm6cyFod8fbZ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:31:44.747Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:31:45
 8JSTQcq_nrn4Yk9iJTfhNHmLiJHaeKXL	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:59.640Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:30:52
 06tRqKlA-rfQ_GqAPUsO6r6LmD4Rv0Wf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:03:38.029Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:03:39
-Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-09 14:19:34
+Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-09 14:20:33
 yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 11:32:05
 vOad41z3VWAgzwRSeTGrvBu0HTmLQDlS	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:43:20.347Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:43:21
 gxU7UMLOcpCMcD8mbTmLwnA20gbdJ27A	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:46:22.733Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:46:23
@@ -4968,5 +4967,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict qXUxpzKN85Ha2DNCbg3LDN3v1ecjdcRTMARxTbGEWw7KV4HGqffLLSOrSoeyN2z
+\unrestrict nyvDmaD3S2OVge9EaCkD1dv5JzMHNyG4l6xODPeHCFdrP5Ouzgihhfr5ye3YmQO
 
