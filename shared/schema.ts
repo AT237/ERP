@@ -654,7 +654,6 @@ export const incoterms = pgTable("incoterms", {
   code: text("code").notNull().unique(),
   name: text("name").notNull(),
   description: text("description"),
-  category: text("category"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

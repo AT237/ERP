@@ -213,29 +213,10 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
       { name: "code", label: "Code", type: "text", required: true },
       { name: "name", label: "Name", type: "text", required: true },
       { name: "description", label: "Description", type: "textarea" },
-      { 
-        name: "category", 
-        label: "Category", 
-        type: "select",
-        options: [
-          { value: "EXW", label: "EXW Group" },
-          { value: "FCA", label: "FCA Group" },
-          { value: "CPT", label: "CPT Group" },
-          { value: "CIP", label: "CIP Group" },
-          { value: "DAP", label: "DAP Group" },
-          { value: "DPU", label: "DPU Group" },
-          { value: "DDP", label: "DDP Group" },
-          { value: "FAS", label: "FAS Group" },
-          { value: "FOB", label: "FOB Group" },
-          { value: "CFR", label: "CFR Group" },
-          { value: "CIF", label: "CIF Group" }
-        ]
-      }
     ],
     columns: [
       { key: "code", label: "Code" },
       { key: "name", label: "Name" },
-      { key: "category", label: "Category" },
       { key: "description", label: "Description" }
     ]
   },
