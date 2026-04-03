@@ -263,94 +263,95 @@ export function PurchaseOrderFormLayout({ onSave, purchaseOrderId, parentId }: P
     return (units || []).map(u => ({ value: u.code || u.name, label: u.name }));
   }, [units]);
 
-  const poDirectInput = useMemo(() => ({
-    enabled: true,
-    fields: [
-      {
-        key: 'itemId',
-        type: 'searchable-select' as const,
-        placeholder: 'Search item...',
-        width: 250,
-        options: inventoryOptions,
-        onChange: (value: string, setValues: (vals: Record<string, any>) => void) => {
-          const item = inventoryItems?.find(i => i.id === value);
-          if (item) {
-            const qty = 1;
-            const price = Number(item.costPrice || item.sellingPrice || 0);
-            setValues({
-              itemId: value,
-              description: item.name,
-              quantity: String(qty),
-              unit: item.unit || '',
-              unitPrice: price.toFixed(2),
-              costPrice: item.costPrice ? String(item.costPrice) : '',
-              discountPercent: '0',
-              lineTotal: price.toFixed(2),
-              lineType: 'standard',
+  const poDirectInput = useMemo<DirectInputConfig | undefined>(() => {
+    if (!currentPurchaseOrderId) return undefined;
+    const nextPosition = poItemsList.length > 0
+      ? Math.max(...poItemsList.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
+      : 10;
+    return {
+      columns: [
+        { key: 'lineType', fieldType: 'select', defaultValue: 'standard', options: [
+          { value: 'standard', label: 'Standaard' },
+          { value: 'text', label: 'Tekst' },
+        ]},
+        { key: 'itemId',
+          fieldType: 'searchable-select',
+          placeholder: 'Zoek artikel...',
+          enabledWhen: (r) => !!r.lineType && r.lineType !== 'text',
+          options: inventoryOptions.map(o => ({ value: o.value, label: o.label })),
+          onSelect: (val) => {
+            const item = inventoryItems?.find(i => i.id === val);
+            if (!item) return {};
+            return {
+              itemId: item.id,
+              description: item.name || '',
+              unitPrice: item.costPrice || item.sellingPrice || '0.00',
+              costPrice: item.costPrice || '0.00',
+              unit: item.unit || 'Pcs.',
               hsCode: item.hsCode || '',
               countryOfOrigin: item.countryOfOrigin || '',
-            });
-          }
-        }
+            };
+          },
+        },
+        { key: 'description', fieldType: 'text', placeholder: 'Omschrijving', enabledWhen: (r) => !!r.lineType },
+        { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'unit', fieldType: 'select', defaultValue: 'Pcs.', placeholder: 'Eenheid', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text',
+          options: unitOptions,
+        },
+        { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'discountPercent', fieldType: 'number', defaultValue: '0', placeholder: 'Korting %', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'costPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Kostprijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+      ],
+      defaults: {
+        positionNo: String(nextPosition).padStart(3, '0'),
+        position: nextPosition,
+        lineType: 'standard',
+        quantity: '1',
+        unit: 'Pcs.',
+        unitPrice: '0.00',
+        costPrice: '0.00',
+        discountPercent: '0',
       },
-      { key: 'description', type: 'text' as const, placeholder: 'Description', width: 250, required: true },
-      { key: 'quantity', type: 'number' as const, placeholder: 'Qty', width: 80,
-        onChange: (value: string, setValues: (vals: Record<string, any>) => void, currentValues: Record<string, any>) => {
-          const qty = Number(value) || 0;
-          const price = Number(currentValues.unitPrice) || 0;
-          const disc = Number(currentValues.discountPercent) || 0;
-          const total = qty * price * (1 - disc / 100);
-          setValues({ quantity: value, lineTotal: total.toFixed(2) });
-        }
+      onSave: async (rowData) => {
+        const qty = parseFloat(rowData.quantity || '1') || 1;
+        const price = parseFloat(rowData.unitPrice || '0') || 0;
+        const disc = parseFloat(rowData.discountPercent || '0') || 0;
+        const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
+        const lineTotal = (qty * netPrice).toFixed(2);
+        const np = poItemsList.length > 0
+          ? Math.max(...poItemsList.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
+          : 10;
+        const itemData = {
+          purchaseOrderId: currentPurchaseOrderId!,
+          lineType: rowData.lineType || 'standard',
+          description: rowData.description || '',
+          quantity: String(qty),
+          unit: rowData.unit || 'Pcs.',
+          unitPrice: String(price),
+          lineTotal,
+          costPrice: rowData.costPrice || '0.00',
+          discountPercent: String(disc),
+          position: np,
+          positionNo: String(np).padStart(3, '0'),
+          itemId: rowData.itemId || undefined,
+          hsCode: rowData.hsCode || '',
+          countryOfOrigin: rowData.countryOfOrigin || '',
+        };
+        await apiRequest("POST", `/api/purchase-orders/${currentPurchaseOrderId}/items`, itemData);
+        queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders", currentPurchaseOrderId, "items"] });
       },
-      { key: 'unit', type: 'select' as const, placeholder: 'Unit', width: 80, options: unitOptions },
-      { key: 'unitPrice', type: 'number' as const, placeholder: 'Price', width: 100,
-        onChange: (value: string, setValues: (vals: Record<string, any>) => void, currentValues: Record<string, any>) => {
-          const qty = Number(currentValues.quantity) || 0;
-          const price = Number(value) || 0;
-          const disc = Number(currentValues.discountPercent) || 0;
-          const total = qty * price * (1 - disc / 100);
-          setValues({ unitPrice: value, lineTotal: total.toFixed(2) });
-        }
+      onUpdate: async (rowId, rowData) => {
+        const qty = parseFloat(rowData.quantity || '0') || 0;
+        const price = parseFloat(rowData.unitPrice || '0') || 0;
+        const disc = parseFloat(rowData.discountPercent || '0') || 0;
+        const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
+        const lineTotal = (qty * netPrice).toFixed(2);
+        const updateData: any = { ...rowData, lineTotal };
+        await apiRequest("PUT", `/api/purchase-order-items/${rowId}`, updateData);
+        queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders", currentPurchaseOrderId, "items"] });
       },
-      { key: 'discountPercent', type: 'number' as const, placeholder: '%', width: 60,
-        onChange: (value: string, setValues: (vals: Record<string, any>) => void, currentValues: Record<string, any>) => {
-          const qty = Number(currentValues.quantity) || 0;
-          const price = Number(currentValues.unitPrice) || 0;
-          const disc = Number(value) || 0;
-          const total = qty * price * (1 - disc / 100);
-          setValues({ discountPercent: value, lineTotal: total.toFixed(2) });
-        }
-      },
-      { key: 'lineTotal', type: 'number' as const, placeholder: 'Total', width: 100, readOnly: true },
-    ],
-    defaultValues: {
-      itemId: '',
-      description: '',
-      quantity: '1',
-      unit: '',
-      unitPrice: '0.00',
-      discountPercent: '0',
-      lineTotal: '0.00',
-      lineType: 'standard',
-      costPrice: '',
-      hsCode: '',
-      countryOfOrigin: '',
-      position: String((poItemsList.length + 1) * 10),
-      positionNo: '',
-    },
-    onAdd: async (values: Record<string, any>) => {
-      if (!currentPurchaseOrderId) return;
-      await addItemMutation.mutateAsync({
-        purchaseOrderId: currentPurchaseOrderId,
-        ...values,
-        position: Number(values.position) || (poItemsList.length + 1) * 10,
-      });
-    },
-    onUpdate: async (id: string, values: Record<string, any>) => {
-      await updateItemMutation.mutateAsync({ id, data: values });
-    },
-  }), [inventoryOptions, unitOptions, currentPurchaseOrderId, poItemsList.length, addItemMutation, updateItemMutation, inventoryItems]);
+    };
+  }, [currentPurchaseOrderId, poItemsList, inventoryOptions, unitOptions, inventoryItems]);
 
   const toolbar = useFormToolbar({
     entityType: "purchase_order",
