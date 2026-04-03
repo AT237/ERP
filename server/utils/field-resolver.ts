@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, workOrders, invoiceWorkOrders, vatRates, incoterms, packingLists, packingListItems } from "../../shared/schema";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, workOrders, invoiceWorkOrders, vatRates, incoterms, packingLists, packingListItems, proformaInvoices, proformaInvoiceItems } from "../../shared/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 
 function formatIban(value: string | null): string | null {
@@ -740,6 +740,170 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     company: companyData,
     items: itemsData,
     workOrders: workOrdersData,
+    vatRate: vatRateData,
+  };
+}
+
+export async function loadProformaInvoicePrintData(proformaInvoiceId: string): Promise<any | null> {
+  const invoice = await db.query.proformaInvoices.findFirst({
+    where: eq(proformaInvoices.id, proformaInvoiceId),
+  });
+  if (!invoice) return null;
+
+  let customerData = null;
+  if ((invoice as any).customerSnapshot) {
+    try {
+      const snap = JSON.parse((invoice as any).customerSnapshot);
+      if (snap.bankAccount) snap.bankAccount = formatIban(snap.bankAccount);
+      customerData = snap;
+    } catch { /* fall through */ }
+  }
+  const customer = customerData ? null : await db.query.customers.findFirst({
+    where: eq(customers.id, invoice.customerId),
+  });
+  if (customer) {
+    let addressData = null;
+    if (customer.addressId) {
+      const address = await db.query.addresses.findFirst({ where: eq(addresses.id, customer.addressId) });
+      if (address) {
+        addressData = { street: address.street, houseNumber: address.houseNumber, postalCode: address.postalCode, city: address.city, country: address.country };
+      }
+    }
+    customerData = {
+      name: customer.name, customerNumber: customer.customerNumber, email: customer.email,
+      generalEmail: customer.generalEmail ?? null, invoiceEmail: customer.invoiceEmail ?? null,
+      phone: customer.phone, mobile: customer.mobile ?? null, btwNummer: customer.btwNummer ?? null,
+      taxId: customer.taxId ?? null, kvkNummer: customer.kvkNummer ?? null,
+      bankAccount: formatIban(customer.bankAccount ?? null), countryCode: customer.countryCode ?? null,
+      languageCode: (customer as any).languageCode ?? null, memo: customer.memo ?? null,
+      invoiceNotes: customer.invoiceNotes ?? null, address: addressData,
+    };
+  }
+
+  let projectData = null;
+  if (invoice.projectId) {
+    const project = await db.query.projects.findFirst({ where: eq(projects.id, invoice.projectId) });
+    if (project) {
+      projectData = { name: project.name, projectNumber: project.projectNumber, description: project.description };
+    }
+  }
+
+  let companyData = null;
+  const companyProfile = await db.query.companyProfiles.findFirst({ where: eq(companyProfiles.isActive, true) });
+  if (companyProfile) {
+    companyData = {
+      name: companyProfile.name, logoUrl: companyProfile.logoUrl, phone: companyProfile.phone,
+      email: companyProfile.email, website: companyProfile.website,
+      address: { street: companyProfile.street, houseNumber: companyProfile.houseNumber, postalCode: companyProfile.postalCode, city: companyProfile.city, country: companyProfile.country },
+      kvkNummer: companyProfile.kvkNummer, btwNummer: companyProfile.btwNummer,
+      bankAccount: formatIban(companyProfile.bankAccount ?? null), iban: formatIban(companyProfile.bankAccount ?? null), bankName: companyProfile.bankName,
+    };
+  }
+
+  let paymentTermsLabel: string | null = null;
+  if (invoice.paymentDaysId) {
+    const paymentDay = await db.query.paymentDays.findFirst({ where: eq(paymentDays.id, invoice.paymentDaysId) });
+    if (paymentDay) paymentTermsLabel = paymentDay.name_en || paymentDay.name_nl;
+  }
+
+  const rawItems = await db.query.proformaInvoiceItems.findMany({
+    where: eq(proformaInvoiceItems.proformaInvoiceId, proformaInvoiceId),
+    orderBy: [asc(proformaInvoiceItems.position)],
+  });
+  const items = applyPrintSortOrder(rawItems, invoice.printSortOrder);
+
+  const itemsData = items.map((item, index) => ({
+    positionNo: item.positionNo || String((index + 1) * 10).padStart(3, '0'),
+    description: item.description,
+    descriptionInternal: item.descriptionInternal || null,
+    quantity: parseFloat(String(item.quantity || 0)),
+    unit: item.unit || "",
+    unitPrice: item.unitPrice || "0.00",
+    netUnitPrice: (() => {
+      const up = parseFloat(String(item.unitPrice || "0"));
+      const disc = parseFloat(String(item.discountPercent || "0"));
+      return disc > 0 ? (up * (1 - disc / 100)).toFixed(2) : (up).toFixed(2);
+    })(),
+    lineTotal: item.lineTotal || "0.00",
+    lineType: item.lineType || "standard",
+    lineImage: (item as any).lineImage || null,
+    discountPercent: item.discountPercent || null,
+    workDate: item.workDate,
+    technicianNames: item.technicianNames,
+    technicianIds: item.technicianIds || null,
+    customerRateId: item.customerRateId || null,
+    itemId: item.itemId || null,
+    sourceSnippetId: item.sourceSnippetId || null,
+    sourceSnippetVersion: item.sourceSnippetVersion || null,
+  }));
+
+  let incotermLabel: string | null = null;
+  if ((invoice as any).incotermId) {
+    const incoterm = await db.query.incoterms.findFirst({ where: eq(incoterms.id, (invoice as any).incotermId) });
+    if (incoterm) incotermLabel = `${incoterm.code} - ${incoterm.name}`;
+  }
+
+  let vatRateData = null;
+  const pfiCustomerVatRateId = customer?.vatRateId ?? (await db.query.customers.findFirst({ where: eq(customers.id, invoice.customerId) }))?.vatRateId;
+  if (pfiCustomerVatRateId) {
+    const vr = await db.query.vatRates.findFirst({ where: eq(vatRates.id, pfiCustomerVatRateId) });
+    if (vr) vatRateData = { code: vr.code, percentage: parseFloat(String(vr.rate)).toString(), description: vr.description ?? null };
+  }
+
+  return {
+    proformaInvoice: {
+      number: invoice.proformaNumber,
+      proformaNumber: invoice.proformaNumber,
+      invoiceNumber: invoice.proformaNumber,
+      date: invoice.invoiceDate,
+      invoiceDate: invoice.invoiceDate,
+      dueDate: invoice.dueDate,
+      description: invoice.description,
+      status: invoice.status,
+      subtotal: invoice.subtotal,
+      taxAmount: invoice.taxAmount,
+      totalAmount: invoice.totalAmount,
+      totalAmountInWords: invoice.totalAmountInWords || null,
+      paidAmount: invoice.paidAmount,
+      vatRatePercent: (invoice as any).vatRatePercent ? parseFloat(String((invoice as any).vatRatePercent)).toString() : null,
+      notes: invoice.notes,
+      paymentTerms: paymentTermsLabel,
+      printLanguageCode: (invoice as any).printLanguageCode || null,
+      incoTerms: incotermLabel,
+      printProjectNo: (invoice as any).printProjectNo ?? true,
+      printPaymentConditions: (invoice as any).printPaymentConditions ?? true,
+      printLineImages: (invoice as any).printLineImages || false,
+    },
+    invoice: {
+      number: invoice.proformaNumber,
+      proformaNumber: invoice.proformaNumber,
+      invoiceNumber: invoice.proformaNumber,
+      date: invoice.invoiceDate,
+      invoiceDate: invoice.invoiceDate,
+      dueDate: invoice.dueDate,
+      description: invoice.description,
+      status: invoice.status,
+      subtotal: invoice.subtotal,
+      taxAmount: invoice.taxAmount,
+      totalAmount: invoice.totalAmount,
+      totalAmountInWords: invoice.totalAmountInWords || null,
+      paidAmount: invoice.paidAmount,
+      vatRatePercent: (invoice as any).vatRatePercent ? parseFloat(String((invoice as any).vatRatePercent)).toString() : null,
+      notes: invoice.notes,
+      paymentTerms: paymentTermsLabel,
+      workOrderNumbers: '',
+      printLanguageCode: (invoice as any).printLanguageCode || null,
+      incoTerms: incotermLabel,
+      printProjectNo: (invoice as any).printProjectNo ?? true,
+      printPaymentConditions: (invoice as any).printPaymentConditions ?? true,
+      printLineImages: (invoice as any).printLineImages || false,
+    },
+    customer: customerData,
+    project: projectData,
+    company: companyData,
+    items: itemsData,
+    proformaInvoiceItems: itemsData,
+    invoiceItems: itemsData,
     vatRate: vatRateData,
   };
 }

@@ -71,7 +71,7 @@ async function recalculateQuotationTotals(storage: any, quotationId: string) {
   }
 }
 
-import { loadQuotationPrintData, loadInvoicePrintData, loadPackingListPrintData } from "./utils/field-resolver";
+import { loadQuotationPrintData, loadInvoicePrintData, loadProformaInvoicePrintData, loadPackingListPrintData } from "./utils/field-resolver";
 import {
   insertCustomerSchema, insertSupplierSchema, insertProspectSchema, insertInventoryItemSchema,
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
@@ -1512,6 +1512,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching invoice print data:", error);
       res.status(500).json({ message: "Failed to fetch invoice print data" });
+    }
+  });
+
+  app.get("/api/proforma-invoices/:id/print-data", async (req, res) => {
+    try {
+      const printData = await loadProformaInvoicePrintData(req.params.id);
+      if (!printData) {
+        return res.status(404).json({ message: "Proforma invoice not found" });
+      }
+      res.json(printData);
+    } catch (error) {
+      console.error("Error fetching proforma invoice print data:", error);
+      res.status(500).json({ message: "Failed to fetch proforma invoice print data" });
     }
   });
 
