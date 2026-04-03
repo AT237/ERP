@@ -219,18 +219,28 @@ export function ProformaInvoiceLineItemFormLayout({ onSave, lineItemId, proforma
 
   useEffect(() => {
     if (!isEditing && proformaDetails?.items) {
+      const usedNumbers = new Set<number>();
       let maxNumber = 0;
       for (const item of proformaDetails.items) {
         if ((item as any).positionNo) {
           const num = parseInt((item as any).positionNo, 10);
-          if (!isNaN(num) && num > maxNumber) {
-            maxNumber = num;
+          if (!isNaN(num)) {
+            usedNumbers.add(num);
+            if (num > maxNumber) maxNumber = num;
           }
         }
       }
-      const nextNumber = Math.ceil((maxNumber + 1) / 10) * 10;
+      let nextNumber = 10;
+      for (let n = 10; n <= maxNumber; n += 10) {
+        if (!usedNumbers.has(n)) {
+          nextNumber = n;
+          break;
+        }
+        nextNumber = n + 10;
+      }
       const nextPositionNo = nextNumber.toString().padStart(3, '0');
       form.setValue('positionNo', nextPositionNo);
+      setHasUnsavedChanges(false);
     }
   }, [isEditing, proformaDetails, form]);
 

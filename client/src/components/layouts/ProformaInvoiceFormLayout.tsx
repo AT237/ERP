@@ -519,9 +519,20 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
 
   const directInput = React.useMemo<DirectInputConfig | undefined>(() => {
     if (!currentInvoiceId) return undefined;
-    const nextPosition = lineItems.length > 0
-      ? Math.max(...lineItems.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
-      : 10;
+    const usedNumbers = new Set<number>();
+    let maxNumber = 0;
+    for (const item of lineItems) {
+      const num = parseInt(item.positionNo || '0', 10);
+      if (!isNaN(num) && num > 0) {
+        usedNumbers.add(num);
+        if (num > maxNumber) maxNumber = num;
+      }
+    }
+    let nextPosition = 10;
+    for (let n = 10; n <= maxNumber; n += 10) {
+      if (!usedNumbers.has(n)) { nextPosition = n; break; }
+      nextPosition = n + 10;
+    }
     return {
       columns: [
         { key: 'lineType', fieldType: 'select', defaultValue: '', options: [
