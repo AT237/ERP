@@ -50,25 +50,36 @@ interface PendingRow {
   componentName: string;
   quantity: string;
   unitPrice: string;
+  costPrice: string;
+  supplierId: string;
   componentUnit: string;
   notes: string;
+}
+
+interface SupplierOption {
+  id: string;
+  name: string;
+  supplierNumber: string;
 }
 
 interface ComponentRowProps {
   component: InventoryComponent;
   inventoryItems: InventoryItem[];
+  suppliers: SupplierOption[];
   parentItemId: string;
   onDeleted: () => void;
   selected?: boolean;
   onToggleSelect?: () => void;
 }
 
-function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, selected, onToggleSelect }: ComponentRowProps) {
+function ComponentRow({ component, inventoryItems, suppliers, parentItemId, onDeleted, selected, onToggleSelect }: ComponentRowProps) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [qty, setQty] = useState(component.quantity ?? "1");
   const [unitPrice, setUnitPrice] = useState(component.unitPrice ?? "0");
+  const [costPrice, setCostPrice] = useState(component.costPrice ?? "0");
+  const [supplierId, setSupplierId] = useState(component.supplierId ?? "");
   const [notes, setNotes] = useState(component.notes ?? "");
   const [selectedItemId, setSelectedItemId] = useState(component.componentItemId ?? "");
   const [uniqueName, setUniqueName] = useState(component.componentName ?? "");
@@ -103,6 +114,8 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, sele
     patchMutation.mutate({
       quantity: qty,
       unitPrice,
+      costPrice: costPrice || "0",
+      supplierId: supplierId || null,
       notes,
       ...(isStandard
         ? { componentItemId: selectedItemId }
@@ -199,6 +212,39 @@ function ComponentRow({ component, inventoryItems, parentItemId, onDeleted, sele
         </span>
       </td>
 
+      <td className="p-2 border-r border-gray-100 w-28">
+        {editing && !isStandard ? (
+          <Input value={costPrice} onChange={e => setCostPrice(e.target.value)} className="h-8 text-sm text-right" type="number" min="0" step="0.01" />
+        ) : (
+          <span className="text-sm text-right block font-mono">
+            {!isStandard ? `€ ${parseFloat(component.costPrice ?? "0").toFixed(2)}` : ""}
+          </span>
+        )}
+      </td>
+
+      <td className="p-2 border-r border-gray-100 w-36">
+        {editing && !isStandard ? (
+          <Select value={supplierId || "_none_"} onValueChange={v => setSupplierId(v === "_none_" ? "" : v)}>
+            <SelectTrigger className="h-8 text-sm w-full">
+              <SelectValue placeholder="Geen" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none_">Geen</SelectItem>
+              {suppliers.map(s => (
+                <SelectItem key={s.id} value={s.id}>
+                  <span className="font-mono text-xs text-slate-500 mr-1">{s.supplierNumber}</span>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <span className="text-sm text-slate-500">
+            {!isStandard && component.supplierId ? (suppliers.find(s => s.id === component.supplierId)?.name ?? "") : ""}
+          </span>
+        )}
+      </td>
+
       <td className="p-2 border-r border-gray-100">
         {editing ? (
           <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optionele notitie..." className="h-8 text-sm" />
@@ -262,6 +308,11 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged, onComposit
     staleTime: 30000,
   });
 
+  const { data: allSuppliers = [] } = useQuery<SupplierOption[]>({
+    queryKey: ["/api/suppliers"],
+    staleTime: 30000,
+  });
+
   const [pendingRows, setPendingRows] = useState<PendingRow[]>([]);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -302,6 +353,8 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged, onComposit
       componentName: "",
       quantity: "1",
       unitPrice: "0",
+      costPrice: "0",
+      supplierId: "",
       componentUnit: "",
       notes: "",
     }]);
