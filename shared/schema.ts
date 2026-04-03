@@ -202,6 +202,25 @@ export const insertInventoryComponentSchema = createInsertSchema(inventoryCompon
 export type InsertInventoryComponent = z.infer<typeof insertInventoryComponentSchema>;
 export type InventoryComponent = typeof inventoryComponents.$inferSelect;
 
+export const lineItemComponents = pgTable("line_item_components", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  parentLineItemId: varchar("parent_line_item_id").notNull(),
+  parentLineItemType: text("parent_line_item_type").notNull(),
+  componentType: text("component_type").notNull().default("standard"),
+  componentItemId: varchar("component_item_id").references(() => inventoryItems.id),
+  componentName: text("component_name"),
+  componentUnit: text("component_unit"),
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).notNull().default("1"),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0"),
+  notes: text("notes"),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertLineItemComponentSchema = createInsertSchema(lineItemComponents).omit({ id: true, createdAt: true });
+export type InsertLineItemComponent = z.infer<typeof insertLineItemComponentSchema>;
+export type LineItemComponent = typeof lineItemComponents.$inferSelect;
+
 // Projects table
 export const projects = pgTable("projects", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

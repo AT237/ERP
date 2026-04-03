@@ -84,7 +84,7 @@ import {
   insertPackingListItemSchema, insertUserPreferencesSchema, insertCustomerContactSchema,
   insertAddressSchema, insertCountrySchema, insertLanguageSchema, insertUnitOfMeasureSchema, 
   insertPaymentDaySchema, insertPaymentScheduleSchema, insertPaymentTermSchema, insertRateAndChargeSchema, insertIncotermSchema,
-  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema, insertInventoryCategorySchema, inventoryCategories, insertBrandSchema, brands, inventoryComponents, insertInventoryComponentSchema,
+  insertVatRateSchema, insertCitySchema, insertStatusSchema, insertImageSchema, insertCompanyProfileSchema, insertTextSnippetSchema, insertTextSnippetUsageSchema, insertInventoryCategorySchema, inventoryCategories, insertBrandSchema, brands, inventoryComponents, insertInventoryComponentSchema, lineItemComponents, insertLineItemComponentSchema,
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
   insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema, insertEmployeeSchema,
@@ -1184,6 +1184,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to delete component", error: error.message });
+    }
+  });
+
+  app.get("/api/line-item-components/:parentId", async (req, res) => {
+    try {
+      const components = await db.select().from(lineItemComponents)
+        .where(eq(lineItemComponents.parentLineItemId, req.params.parentId))
+        .orderBy(lineItemComponents.sortOrder, lineItemComponents.createdAt);
+      res.json(components);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to fetch line item components");
+    }
+  });
+
+  app.post("/api/line-item-components/:parentId", async (req, res) => {
+    try {
+      const body = { ...req.body, parentLineItemId: req.params.parentId };
+      const parsed = insertLineItemComponentSchema.safeParse(body);
+      if (!parsed.success) return res.status(400).json({ message: "Validation failed", errors: parsed.error.errors });
+      const [created] = await db.insert(lineItemComponents).values(parsed.data).returning();
+      res.status(201).json(created);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to create line item component");
+    }
+  });
+
+  app.patch("/api/line-item-components/:parentId/:componentId", async (req, res) => {
+    try {
+      const [updated] = await db.update(lineItemComponents)
+        .set(req.body)
+        .where(eq(lineItemComponents.id, req.params.componentId))
+        .returning();
+      if (!updated) return res.status(404).json({ message: "Component not found" });
+      res.json(updated);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to update line item component");
+    }
+  });
+
+  app.delete("/api/line-item-components/:parentId/:componentId", async (req, res) => {
+    try {
+      await db.delete(lineItemComponents).where(eq(lineItemComponents.id, req.params.componentId));
+      res.json({ success: true });
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to delete line item component");
     }
   });
 
