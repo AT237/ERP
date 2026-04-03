@@ -74,6 +74,17 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsDelete: true,
     supportsAddNew: true,
   },
+  quotation_request: {
+    apiPath: "/api/quotation-requests",
+    formType: "quotation-request",
+    label: "Quotation Request",
+    labelPlural: "Quotation Requests",
+    listQueryKey: "/api/quotation-requests",
+    documentType: "quotation_request",
+    supportsNavigation: true,
+    supportsDelete: true,
+    supportsAddNew: true,
+  },
   purchase_order: {
     apiPath: "/api/purchase-orders",
     formType: "purchase-order",
@@ -346,6 +357,7 @@ export interface UseFormToolbarOptions {
   navigationListQueryKey?: string[];
   navigationParentId?: string;
   entityNumber?: string;
+  convertOptions?: { label: string; onClick: () => void; disabled?: boolean }[];
 }
 
 export function useFormToolbar({
@@ -364,6 +376,7 @@ export function useFormToolbar({
   navigationListQueryKey,
   navigationParentId,
   entityNumber,
+  convertOptions,
 }: UseFormToolbarOptions): FormToolbarProps & { deleteConflict: { name: string; usages: UsageLocation[] } | null; onClearDeleteConflict: () => void } {
   const { toast } = useToast();
   const config = ENTITY_CONFIGS[entityType];
@@ -552,6 +565,8 @@ export function useFormToolbar({
 
     showExport,
     exportDisabled: true,
+
+    convertOptions,
 
     documentType: config?.documentType || entityType,
     entityId,

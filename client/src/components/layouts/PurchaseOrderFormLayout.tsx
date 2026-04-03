@@ -9,7 +9,7 @@ import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { LayoutForm2, createFieldRow, createSectionHeaderRow } from './LayoutForm2';
-import { DataTableLayout, ColumnConfig } from './DataTableLayout';
+import { DataTableLayout, ColumnConfig, type DirectInputConfig } from './DataTableLayout';
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 import { useDataTable } from '@/hooks/useDataTable';
 import { SelectWithAdd } from "@/components/ui/select-with-add";
