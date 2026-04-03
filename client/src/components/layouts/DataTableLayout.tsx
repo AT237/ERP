@@ -120,6 +120,7 @@ export type ColumnConfig = {
   align?: 'left' | 'right' | 'center';
   forceVisible?: boolean;
   getValue?: (row: any) => number | null;
+  isCurrency?: boolean;
 };
 
 // ============================================================================
@@ -160,6 +161,7 @@ const createCurrencyColumn = (key: string, label: string, width = 120): ColumnCo
   filterable: true,
   sortable: true,
   align: 'right',
+  isCurrency: true,
   renderCell: (value: string) => (
     value != null && value !== '' && value !== '0'
       ? `€\u00A0${parseFloat(String(value)).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
