@@ -769,9 +769,9 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         image2: (inventoryItem as any).image2 || "",
         image3: (inventoryItem as any).image3 || "",
         image4: (inventoryItem as any).image4 || "",
-        brand: (inventoryItem as any).brand || "",
-        manufacturerPartNumber: (inventoryItem as any).manufacturerPartNumber || "",
-        hsCode: (inventoryItem as any).hsCode || "",
+        brand: inventoryItem.brand || "",
+        manufacturerPartNumber: inventoryItem.manufacturerPartNumber || "",
+        hsCode: inventoryItem.hsCode || "",
       };
       
       form.reset(formData);
@@ -1174,8 +1174,8 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
                   formType="masterdata-brands"
                   labelField="name"
                   secondaryField="code"
-                  value={form.watch("brand" as any) || ""}
-                  onValueChange={(val) => form.setValue("brand" as any, val)}
+                  value={form.watch("brand") || ""}
+                  onValueChange={(val) => form.setValue("brand", val)}
                   placeholder="Selecteer merk..."
                   testId="select-inventory-brand"
                 />
@@ -1187,7 +1187,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
               label: "Fabrikant type nr.",
               type: "text",
               placeholder: "Bijv. MPN-12345",
-              register: form.register("manufacturerPartNumber" as any),
+              register: form.register("manufacturerPartNumber"),
               testId: "input-inventory-manufacturer-part-number"
             } as FormField2<InventoryFormData>,
             {

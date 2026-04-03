@@ -70,7 +70,7 @@ export default function MasterDataBrands() {
 
   const handleDuplicate = async (brand: Brand) => {
     try {
-      const { id, createdAt, updatedAt, ...duplicateData } = brand as any;
+      const { id, createdAt, ...duplicateData } = brand;
       const response = await apiRequest("POST", "/api/masterdata/brands", {
         ...duplicateData,
         code: `${duplicateData.code || ''}-COPY`,
