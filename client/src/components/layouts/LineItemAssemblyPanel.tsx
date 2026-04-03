@@ -666,7 +666,7 @@ export function LineItemAssemblyPanel({ parentLineItemId, parentLineItemType, on
                       € {totalCostPrice.toFixed(2)}
                     </span>
                   </td>
-                  <td colSpan={2} />
+                  <td colSpan={4} />
                 </tr>
               </tfoot>
             )}
