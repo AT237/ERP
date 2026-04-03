@@ -391,17 +391,10 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       return sum + (parseFloat(item.lineTotal || "0") || 0);
     }, 0);
     invoiceForm.setValue("subtotal", subtotal.toFixed(2));
-    let total: number;
-    if (vatRatePercent > 0) {
-      const taxAmount = subtotal * vatRatePercent / 100;
-      invoiceForm.setValue("taxAmount", taxAmount.toFixed(2));
-      total = subtotal + taxAmount;
-      invoiceForm.setValue("totalAmount", total.toFixed(2));
-    } else {
-      const taxAmount = parseFloat(invoiceForm.getValues("taxAmount") || "0") || 0;
-      total = subtotal + taxAmount;
-      invoiceForm.setValue("totalAmount", total.toFixed(2));
-    }
+    const taxAmount = subtotal * vatRatePercent / 100;
+    invoiceForm.setValue("taxAmount", taxAmount.toFixed(2));
+    const total = subtotal + taxAmount;
+    invoiceForm.setValue("totalAmount", total.toFixed(2));
     const lang = watchedPrintLanguageCode || customerLanguageCode || 'nl';
     invoiceForm.setValue("totalAmountInWords", amountToWords(total, lang));
   }, [vatRatePercent, customerLanguageCode, watchedPrintLanguageCode, invoiceForm]);
