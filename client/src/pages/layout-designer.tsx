@@ -35,6 +35,7 @@ import { useDataTable } from '@/hooks/useDataTable';
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   quotation: 'Quotation',
   invoice: 'Invoice',
+  proforma_invoice: 'Proforma Invoice',
   packing_list: 'Packing List',
   order_confirmation: 'Order Confirmation',
   quotation_request: 'Quotation Request',
@@ -691,7 +692,8 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     { name: 'quotationItems', label: 'Offerte Regels', fields: ['positionNo', 'lineType', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal', 'itemId', 'sourceSnippetId', 'deliveryDate', 'hsCode', 'countryOfOrigin'] },
     { name: 'invoice', label: 'Factuur', fields: ['invoiceNumber', 'invoiceDate', 'dueDate', 'description', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'totalAmountInWords', 'paidAmount', 'vatRatePercent', 'notes', 'paymentTerms', 'workOrderNumbers', 'incoTerms', 'printProjectNo', 'printPaymentConditions'] },
     { name: 'invoiceItems', label: 'Factuur Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'unit', 'unitPrice', 'discountPercent', 'netUnitPrice', 'lineTotal', 'workDate', 'technicianNames', 'technicianIds', 'customerRateId', 'itemId', 'sourceSnippetId', 'sourceSnippetVersion'] },
-    { name: 'proformaInvoice', label: 'Proforma Factuur', fields: ['invoiceNumber', 'status', 'dueDate', 'subtotal', 'taxAmount', 'totalAmount'] },
+    { name: 'proformaInvoice', label: 'Proforma Factuur', fields: ['proformaNumber', 'invoiceNumber', 'invoiceDate', 'dueDate', 'description', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'totalAmountInWords', 'paidAmount', 'vatRatePercent', 'notes', 'paymentTerms', 'incoTerms', 'printProjectNo', 'printPaymentConditions'] },
+    { name: 'proformaInvoiceItems', label: 'Proforma Factuur Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'unit', 'unitPrice', 'discountPercent', 'netUnitPrice', 'lineTotal', 'workDate', 'technicianNames', 'technicianIds', 'customerRateId', 'itemId', 'sourceSnippetId', 'sourceSnippetVersion'] },
     { name: 'purchaseOrder', label: 'Inkooporder', fields: ['orderNumber', 'orderDate', 'expectedDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
     { name: 'purchaseOrderItems', label: 'Inkooporder Regels', fields: ['positionNo', 'lineType', 'description', 'quantity', 'unit', 'unitPrice', 'discountPercent', 'lineTotal', 'costPrice', 'hsCode', 'countryOfOrigin', 'itemId'] },
     { name: 'salesOrder', label: 'Verkooporder', fields: ['orderNumber', 'orderDate', 'expectedDeliveryDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
@@ -733,24 +735,27 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     { name: 'image', label: 'Afbeelding', fields: ['name', 'description', 'url', 'category', 'width', 'height'] },
   ];
 
-  const isInvoiceLayoutType = localDocumentType === 'invoice' || localDocumentType === 'proforma';
+  const isInvoiceLayoutType = localDocumentType === 'invoice';
+  const isProformaLayoutType = localDocumentType === 'proforma_invoice';
   const { data: sampleInvoices } = useQuery<any[]>({
     queryKey: ['/api/invoices'],
     enabled: isInvoiceLayoutType,
   });
+  const { data: sampleProformaInvoices } = useQuery<any[]>({
+    queryKey: ['/api/proforma-invoices'],
+    enabled: isProformaLayoutType,
+  });
   const { data: sampleQuotations } = useQuery<any[]>({
     queryKey: ['/api/quotations'],
-    enabled: !isInvoiceLayoutType && !!localDocumentType,
+    enabled: !isInvoiceLayoutType && !isProformaLayoutType && !!localDocumentType,
   });
-  const sampleDocId = isInvoiceLayoutType ? sampleInvoices?.[0]?.id : sampleQuotations?.[0]?.id;
+  const sampleDocId = isInvoiceLayoutType ? sampleInvoices?.[0]?.id : isProformaLayoutType ? sampleProformaInvoices?.[0]?.id : sampleQuotations?.[0]?.id;
+  const samplePrintDataEndpoint = isInvoiceLayoutType ? 'invoices' : isProformaLayoutType ? 'proforma-invoices' : 'quotations';
   const { data: samplePrintData } = useQuery<any>({
-    queryKey: [isInvoiceLayoutType ? '/api/invoices' : '/api/quotations', sampleDocId, 'print-data'],
+    queryKey: [`/api/${samplePrintDataEndpoint}`, sampleDocId, 'print-data'],
     queryFn: async () => {
       if (!sampleDocId) return null;
-      const endpoint = isInvoiceLayoutType
-        ? `/api/invoices/${sampleDocId}/print-data`
-        : `/api/quotations/${sampleDocId}/print-data`;
-      const response = await fetch(endpoint);
+      const response = await fetch(`/api/${samplePrintDataEndpoint}/${sampleDocId}/print-data`);
       if (!response.ok) return null;
       return response.json();
     },
@@ -3288,6 +3293,7 @@ function getDefaultConfig(blockType: string) {
 // Preview Component
 export function PreviewView({ layout }: { layout: any }) {
   const isInvoiceLayout = layout?.documentType === 'invoice';
+  const isProformaInvoiceLayout = layout?.documentType === 'proforma_invoice';
   const isPackingListLayout = layout?.documentType === 'packing_list';
   const isWorkOrderLayout = layout?.documentType === 'work_order';
 
@@ -3306,6 +3312,7 @@ export function PreviewView({ layout }: { layout: any }) {
     }
     let documentType = 'quotation';
     if (isInvoiceLayout) documentType = 'invoice';
+    else if (isProformaInvoiceLayout) documentType = 'proforma-invoice';
     else if (isPackingListLayout) documentType = 'packing-list';
     else if (isWorkOrderLayout) documentType = 'work-order';
     const printWindow = window.open(`/print/${documentType}/${selectedDocumentId}?layoutId=${layout.id}`, '_blank');
@@ -3320,7 +3327,7 @@ export function PreviewView({ layout }: { layout: any }) {
 
   const { data: quotations = [] } = useQuery<any[]>({
     queryKey: ['/api/quotations'],
-    enabled: !isInvoiceLayout && !isPackingListLayout && !isWorkOrderLayout,
+    enabled: !isInvoiceLayout && !isProformaInvoiceLayout && !isPackingListLayout && !isWorkOrderLayout,
   });
 
   const { data: invoices = [] } = useQuery<any[]>({
@@ -3328,12 +3335,17 @@ export function PreviewView({ layout }: { layout: any }) {
     enabled: isInvoiceLayout,
   });
 
+  const { data: proformaInvoices = [] } = useQuery<any[]>({
+    queryKey: ['/api/proforma-invoices'],
+    enabled: isProformaInvoiceLayout,
+  });
+
   const { data: packingListsData = [] } = useQuery<any[]>({
     queryKey: ['/api/packing-lists'],
     enabled: isPackingListLayout,
   });
 
-  const documents = isInvoiceLayout ? invoices : isPackingListLayout ? packingListsData : quotations;
+  const documents = isInvoiceLayout ? invoices : isProformaInvoiceLayout ? proformaInvoices : isPackingListLayout ? packingListsData : quotations;
 
   const { data: quotationPrintData, isLoading: isQuotationLoading } = useQuery({
     queryKey: ['/api/quotations', selectedDocumentId, 'print-data'],
@@ -3343,7 +3355,7 @@ export function PreviewView({ layout }: { layout: any }) {
       if (!response.ok) throw new Error('Failed to fetch quotation print data');
       return response.json();
     },
-    enabled: !!selectedDocumentId && !isInvoiceLayout && !isPackingListLayout,
+    enabled: !!selectedDocumentId && !isInvoiceLayout && !isProformaInvoiceLayout && !isPackingListLayout,
   });
 
   const { data: invoicePrintData, isLoading: isInvoiceLoading } = useQuery({
@@ -3357,6 +3369,17 @@ export function PreviewView({ layout }: { layout: any }) {
     enabled: !!selectedDocumentId && isInvoiceLayout,
   });
 
+  const { data: proformaInvoicePrintData, isLoading: isProformaInvoiceLoading } = useQuery({
+    queryKey: ['/api/proforma-invoices', selectedDocumentId, 'print-data'],
+    queryFn: async () => {
+      if (!selectedDocumentId) return null;
+      const response = await fetch(`/api/proforma-invoices/${selectedDocumentId}/print-data`);
+      if (!response.ok) throw new Error('Failed to fetch proforma invoice print data');
+      return response.json();
+    },
+    enabled: !!selectedDocumentId && isProformaInvoiceLayout,
+  });
+
   const { data: packingListPrintData, isLoading: isPackingListLoading } = useQuery({
     queryKey: ['/api/packing-lists', selectedDocumentId, 'print-data'],
     queryFn: async () => {
@@ -3368,8 +3391,8 @@ export function PreviewView({ layout }: { layout: any }) {
     enabled: !!selectedDocumentId && isPackingListLayout,
   });
 
-  const printData = isInvoiceLayout ? invoicePrintData : isPackingListLayout ? packingListPrintData : quotationPrintData;
-  const isPrintDataLoading = isInvoiceLayout ? isInvoiceLoading : isPackingListLayout ? isPackingListLoading : isQuotationLoading;
+  const printData = isInvoiceLayout ? invoicePrintData : isProformaInvoiceLayout ? proformaInvoicePrintData : isPackingListLayout ? packingListPrintData : quotationPrintData;
+  const isPrintDataLoading = isInvoiceLayout ? isInvoiceLoading : isProformaInvoiceLayout ? isProformaInvoiceLoading : isPackingListLayout ? isPackingListLoading : isQuotationLoading;
 
   const { data: sections = [] } = useQuery<any[]>({
     queryKey: [`/api/layout-sections?layoutId=${layout?.id}`],
@@ -3391,12 +3414,14 @@ export function PreviewView({ layout }: { layout: any }) {
       {/* Left sidebar: document list */}
       <div className="w-64 flex-shrink-0 flex flex-col">
         <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
-          {isInvoiceLayout ? 'Facturen' : isPackingListLayout ? 'Paklijsten' : 'Offertes'}
+          {isInvoiceLayout ? 'Facturen' : isProformaInvoiceLayout ? 'Proforma Facturen' : isPackingListLayout ? 'Paklijsten' : 'Offertes'}
         </div>
         {documents.length === 0 ? (
           <div className="text-sm text-muted-foreground p-3 border rounded bg-muted/30">
             {isInvoiceLayout
               ? 'Geen facturen gevonden. Maak eerst een factuur aan.'
+              : isProformaInvoiceLayout
+              ? 'Geen proforma facturen gevonden. Maak eerst een proforma factuur aan.'
               : isPackingListLayout
               ? 'Geen paklijsten gevonden. Maak eerst een paklijst aan.'
               : 'Geen offertes gevonden. Maak eerst een offerte aan.'}
@@ -3415,7 +3440,7 @@ export function PreviewView({ layout }: { layout: any }) {
                 data-testid={`document-item-${doc.id}`}
               >
                 <div className="font-medium text-sm">
-                  {isInvoiceLayout ? doc.invoiceNumber : isPackingListLayout ? doc.packingNumber : doc.quotationNumber}
+                  {isInvoiceLayout ? doc.invoiceNumber : isProformaInvoiceLayout ? doc.proformaNumber : isPackingListLayout ? doc.packingNumber : doc.quotationNumber}
                 </div>
                 <div className="text-xs text-muted-foreground mt-0.5">
                   {doc.customerName || 'Geen klant'}
@@ -3460,7 +3485,7 @@ export function PreviewView({ layout }: { layout: any }) {
               <div className="text-center text-muted-foreground">
                 <div className="text-4xl mb-4">📄</div>
                 <div className="text-lg font-medium">
-                  {isInvoiceLayout ? 'Kies een factuur links' : 'Kies een offerte links'}
+                  {isInvoiceLayout ? 'Kies een factuur links' : isProformaInvoiceLayout ? 'Kies een proforma factuur links' : 'Kies een offerte links'}
                 </div>
               </div>
             </div>

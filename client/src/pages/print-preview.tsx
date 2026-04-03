@@ -76,6 +76,7 @@ export default function PrintPreviewPage() {
   const printDataUrl = (() => {
     switch (documentType) {
       case "invoice": return `/api/invoices/${entityId}/print-data`;
+      case "proforma-invoice": return `/api/proforma-invoices/${entityId}/print-data`;
       case "packing-list": return `/api/packing-lists/${entityId}/print-data`;
       case "work-order": return `/api/work-orders/${entityId}/print-data`;
       default: return `/api/quotations/${entityId}/print-data`;
