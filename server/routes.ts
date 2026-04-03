@@ -77,6 +77,7 @@ import {
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
   insertInvoiceSchema, insertInvoiceItemSchema,
   insertProformaInvoiceSchema, insertProformaInvoiceItemSchema, proformaInvoiceItems,
+  insertQuotationRequestSchema, insertQuotationRequestItemSchema,
   insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema, insertSalesOrderSchema, insertSalesOrderItemSchema,
   insertWorkOrderSchema, insertWorkOrderItemSchema, insertPackingListSchema,
@@ -1336,8 +1337,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
            WHERE q.project_id = $1 ORDER BY q.quotation_date DESC`, [id]
         ),
         pool.query(
-          `SELECT qr.id, qr.request_number as number, qr.status, qr.request_date as date, NULL as amount, c.name as customer_name
-           FROM quotation_requests qr LEFT JOIN customers c ON qr.customer_id = c.id
+          `SELECT qr.id, qr.request_number as number, qr.status, qr.request_date as date, qr.total_amount as amount, s.name as supplier_name
+           FROM quotation_requests qr LEFT JOIN suppliers s ON qr.supplier_id = s.id
            WHERE qr.project_id = $1 ORDER BY qr.request_date DESC`, [id]
         ),
         pool.query(
@@ -2177,6 +2178,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting proforma invoice item:", error);
       res.status(500).json({ message: "Failed to delete proforma invoice item" });
+    }
+  });
+
+  // Quotation Request routes
+  app.get("/api/quotation-requests", async (req, res) => {
+    try {
+      const requests = await storage.getQuotationRequests();
+      res.json(requests);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to fetch quotation requests");
+    }
+  });
+
+  app.get("/api/quotation-requests/:id", async (req, res) => {
+    try {
+      const qr = await storage.getQuotationRequest(req.params.id);
+      if (!qr) return res.status(404).json({ message: "Quotation request not found" });
+      res.json(qr);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to fetch quotation request");
+    }
+  });
+
+  app.post("/api/quotation-requests", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ['requestDate', 'dueDate']);
+      const data = insertQuotationRequestSchema.parse(body);
+      const qr = await storage.createQuotationRequest(data);
+      res.status(201).json(qr);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to create quotation request");
+    }
+  });
+
+  app.put("/api/quotation-requests/:id", async (req, res) => {
+    try {
+      const body = parseDateFields(req.body, ['requestDate', 'dueDate']);
+      const data = insertQuotationRequestSchema.partial().parse(body);
+      const qr = await storage.updateQuotationRequest(req.params.id, data);
+      res.json(qr);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to update quotation request");
+    }
+  });
+
+  app.delete("/api/quotation-requests/:id", async (req, res) => {
+    try {
+      await storage.deleteQuotationRequest(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      handleRouteError(res, error, "Failed to delete quotation request");
+    }
+  });
+
+  app.get("/api/quotation-requests/:id/items", async (req, res) => {
+    try {
+      const items = await storage.getQuotationRequestItems(req.params.id);
+      res.json(items);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to fetch quotation request items");
+    }
+  });
+
+  app.post("/api/quotation-requests/:id/items", async (req, res) => {
+    try {
+      const itemData = insertQuotationRequestItemSchema.parse({
+        ...req.body,
+        quotationRequestId: req.params.id
+      });
+      const item = await storage.addQuotationRequestItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to add quotation request item");
+    }
+  });
+
+  app.put("/api/quotation-request-items/:id", async (req, res) => {
+    try {
+      const data = insertQuotationRequestItemSchema.partial().parse(req.body);
+      const item = await storage.updateQuotationRequestItem(req.params.id, data);
+      res.json(item);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to update quotation request item");
+    }
+  });
+
+  app.delete("/api/quotation-request-items/:id", async (req, res) => {
+    try {
+      await storage.deleteQuotationRequestItem(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      handleRouteError(res, error, "Failed to delete quotation request item");
+    }
+  });
+
+  // Purchase Order item update/delete routes
+  app.put("/api/purchase-order-items/:id", async (req, res) => {
+    try {
+      const data = insertPurchaseOrderItemSchema.partial().parse(req.body);
+      const item = await storage.updatePurchaseOrderItem(req.params.id, data);
+      res.json(item);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to update purchase order item");
+    }
+  });
+
+  app.delete("/api/purchase-order-items/:id", async (req, res) => {
+    try {
+      await storage.deletePurchaseOrderItem(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      handleRouteError(res, error, "Failed to delete purchase order item");
     }
   });
 

@@ -4,10 +4,12 @@ import {
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
   unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, ratesAndCharges, incoterms, vatRates, cities, statuses, companyProfiles, textSnippets, textSnippetUsages,
   documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields, sectionTemplates, customerRates, technicians,
+  quotationRequests, quotationRequestItems,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type Prospect, type InsertProspect, type InventoryItem, type InsertInventoryItem,
   type Project, type InsertProject, type ProjectItem, type InsertProjectItem, type Quotation, type InsertQuotation,
-  type QuotationItem, type InsertQuotationItem, type Invoice, type InsertInvoice,
+  type QuotationItem, type InsertQuotationItem, type QuotationRequest, type InsertQuotationRequest,
+  type QuotationRequestItem, type InsertQuotationRequestItem, type Invoice, type InsertInvoice,
   type InvoiceItem, type InsertInvoiceItem, type PurchaseOrder, type InsertPurchaseOrder,
   type PurchaseOrderItem, type InsertPurchaseOrderItem, type SalesOrder, type InsertSalesOrder,
   type SalesOrderItem, type InsertSalesOrderItem, type WorkOrder, type InsertWorkOrder, type WorkOrderItem, type InsertWorkOrderItem,
@@ -1128,6 +1130,46 @@ export class DatabaseStorage implements IStorage {
         workOrderIds.map(woId => ({ invoiceId, workOrderId: woId }))
       );
     }
+  }
+
+  // Quotation Request methods
+  async getQuotationRequests(): Promise<QuotationRequest[]> {
+    return await db.select().from(quotationRequests).orderBy(desc(quotationRequests.createdAt));
+  }
+
+  async getQuotationRequest(id: string): Promise<QuotationRequest | undefined> {
+    const [qr] = await db.select().from(quotationRequests).where(eq(quotationRequests.id, id));
+    return qr || undefined;
+  }
+
+  async createQuotationRequest(data: InsertQuotationRequest): Promise<QuotationRequest> {
+    const [newQr] = await db.insert(quotationRequests).values(data).returning();
+    return newQr;
+  }
+
+  async updateQuotationRequest(id: string, data: Partial<InsertQuotationRequest>): Promise<QuotationRequest> {
+    return await safeUpdate(quotationRequests, data, id);
+  }
+
+  async deleteQuotationRequest(id: string): Promise<void> {
+    await db.delete(quotationRequests).where(eq(quotationRequests.id, id));
+  }
+
+  async getQuotationRequestItems(requestId: string): Promise<QuotationRequestItem[]> {
+    return await db.select().from(quotationRequestItems).where(eq(quotationRequestItems.quotationRequestId, requestId)).orderBy(quotationRequestItems.position);
+  }
+
+  async addQuotationRequestItem(item: InsertQuotationRequestItem): Promise<QuotationRequestItem> {
+    const [newItem] = await db.insert(quotationRequestItems).values(item).returning();
+    return newItem;
+  }
+
+  async updateQuotationRequestItem(id: string, item: Partial<InsertQuotationRequestItem>): Promise<QuotationRequestItem> {
+    return await safeUpdate(quotationRequestItems, item, id);
+  }
+
+  async deleteQuotationRequestItem(id: string): Promise<void> {
+    await db.delete(quotationRequestItems).where(eq(quotationRequestItems.id, id));
   }
 
   // Purchase Order methods

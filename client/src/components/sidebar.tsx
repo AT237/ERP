@@ -65,7 +65,15 @@ export const defaultNavigation = [
     items: [
       { id: "stock", name: "Stock Management", href: "/inventory", icon: Package },
       { id: "brands", name: "Brands", href: "/master-data/brands", icon: Award },
-      { id: "categories", name: "Categories", href: "/master-data/categories", icon: FolderOpen },
+      { id: "categories", name: "Categories", href: "/master-data/categories", icon: FolderOpen }
+    ]
+  },
+  {
+    id: "purchase",
+    name: "Purchase",
+    collapsible: true,
+    items: [
+      { id: "quotation-requests", name: "Quotation Requests", href: "/quotation-requests", icon: FileText },
       { id: "purchase-orders", name: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart }
     ]
   },
