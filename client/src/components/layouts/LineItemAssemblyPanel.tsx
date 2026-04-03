@@ -30,25 +30,36 @@ interface PendingRow {
   componentName: string;
   quantity: string;
   unitPrice: string;
+  costPrice: string;
+  supplierId: string;
   componentUnit: string;
   notes: string;
+}
+
+interface SupplierOption {
+  id: string;
+  name: string;
+  supplierNumber: string;
 }
 
 interface ComponentRowProps {
   component: LineItemComponent;
   inventoryItems: InventoryItem[];
+  suppliers: SupplierOption[];
   parentLineItemId: string;
   onDeleted: () => void;
   selected?: boolean;
   onToggleSelect?: () => void;
 }
 
-function ComponentRow({ component, inventoryItems, parentLineItemId, onDeleted, selected, onToggleSelect }: ComponentRowProps) {
+function ComponentRow({ component, inventoryItems, suppliers, parentLineItemId, onDeleted, selected, onToggleSelect }: ComponentRowProps) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [qty, setQty] = useState(component.quantity ?? "1");
   const [unitPrice, setUnitPrice] = useState(component.unitPrice ?? "0");
+  const [costPrice, setCostPrice] = useState(component.costPrice ?? "0");
+  const [supplierId, setSupplierId] = useState(component.supplierId ?? "");
   const [notes, setNotes] = useState(component.notes ?? "");
   const [selectedItemId, setSelectedItemId] = useState(component.componentItemId ?? "");
   const [uniqueName, setUniqueName] = useState(component.componentName ?? "");
@@ -82,6 +93,8 @@ function ComponentRow({ component, inventoryItems, parentLineItemId, onDeleted, 
     patchMutation.mutate({
       quantity: qty,
       unitPrice,
+      costPrice: costPrice || "0",
+      supplierId: supplierId || null,
       notes,
       ...(isStandard
         ? { componentItemId: selectedItemId }
@@ -167,6 +180,37 @@ function ComponentRow({ component, inventoryItems, parentLineItemId, onDeleted, 
           € {(editing ? lineTotal : (parseFloat(component.quantity ?? "0") * parseFloat(component.unitPrice ?? "0"))).toFixed(2)}
         </span>
       </td>
+      <td className="p-2 border-r border-gray-100 w-28">
+        {editing && !isStandard ? (
+          <Input value={costPrice} onChange={e => setCostPrice(e.target.value)} className="h-8 text-sm text-right" type="number" min="0" step="0.01" />
+        ) : (
+          <span className="text-sm text-right block font-mono">
+            {!isStandard ? `€ ${parseFloat(component.costPrice ?? "0").toFixed(2)}` : ""}
+          </span>
+        )}
+      </td>
+      <td className="p-2 border-r border-gray-100 w-36">
+        {editing && !isStandard ? (
+          <Select value={supplierId || "_none_"} onValueChange={v => setSupplierId(v === "_none_" ? "" : v)}>
+            <SelectTrigger className="h-8 text-sm w-full">
+              <SelectValue placeholder="Geen" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none_">Geen</SelectItem>
+              {suppliers.map(s => (
+                <SelectItem key={s.id} value={s.id}>
+                  <span className="font-mono text-xs text-slate-500 mr-1">{s.supplierNumber}</span>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <span className="text-sm text-slate-500">
+            {!isStandard && component.supplierId ? (suppliers.find(s => s.id === component.supplierId)?.name ?? "") : ""}
+          </span>
+        )}
+      </td>
       <td className="p-2 border-r border-gray-100">
         {editing ? (
           <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optionele notitie..." className="h-8 text-sm" />
@@ -220,6 +264,11 @@ export function LineItemAssemblyPanel({ parentLineItemId, parentLineItemType, on
     staleTime: 30000,
   });
 
+  const { data: allSuppliers = [] } = useQuery<SupplierOption[]>({
+    queryKey: ["/api/suppliers"],
+    staleTime: 30000,
+  });
+
   const [pendingRows, setPendingRows] = useState<PendingRow[]>([]);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -252,6 +301,8 @@ export function LineItemAssemblyPanel({ parentLineItemId, parentLineItemType, on
       componentName: "",
       quantity: "1",
       unitPrice: "0",
+      costPrice: "0",
+      supplierId: "",
       componentUnit: "",
       notes: "",
     }]);
@@ -264,6 +315,8 @@ export function LineItemAssemblyPanel({ parentLineItemId, parentLineItemType, on
         componentType: row.componentType,
         quantity: row.quantity,
         unitPrice: row.unitPrice || "0",
+        costPrice: row.costPrice || "0",
+        supplierId: row.supplierId || null,
         notes: row.notes || null,
         sortOrder: components.length + pendingRows.indexOf(row),
       };
@@ -308,6 +361,8 @@ export function LineItemAssemblyPanel({ parentLineItemId, parentLineItemType, on
         componentType: comp.componentType,
         quantity: comp.quantity,
         unitPrice: comp.unitPrice || "0",
+        costPrice: comp.costPrice || "0",
+        supplierId: comp.supplierId || null,
         notes: comp.notes || null,
         sortOrder: components.length,
         componentItemId: comp.componentItemId || null,
@@ -447,6 +502,8 @@ export function LineItemAssemblyPanel({ parentLineItemId, parentLineItemType, on
                 <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Eenheid</th>
                 <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Inkoopprijs</th>
                 <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Regeltotaal</th>
+                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Kostprijs</th>
+                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-36">Leverancier</th>
                 <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50">Notities</th>
                 <th className="p-2 w-20" />
               </tr>
@@ -457,6 +514,7 @@ export function LineItemAssemblyPanel({ parentLineItemId, parentLineItemType, on
                   key={c.id}
                   component={c}
                   inventoryItems={allInventoryItems}
+                  suppliers={allSuppliers}
                   parentLineItemId={parentLineItemId}
                   onDeleted={() => {}}
                   selected={selectedRows.includes(c.id)}
@@ -542,6 +600,39 @@ export function LineItemAssemblyPanel({ parentLineItemId, parentLineItemType, on
                     <span className="text-sm text-right block font-mono font-medium">
                       € {((parseFloat(row.quantity) || 0) * (parseFloat(row.unitPrice) || 0)).toFixed(2)}
                     </span>
+                  </td>
+                  <td className="p-2 border-r border-gray-100 w-28">
+                    {row.componentType === "unique" ? (
+                      <Input
+                        value={row.costPrice}
+                        onChange={e => updatePending(row.tempId, "costPrice", e.target.value)}
+                        type="number" min="0" step="0.01"
+                        className="h-8 text-sm text-right bg-white"
+                        placeholder="0.00"
+                      />
+                    ) : (
+                      <span className="text-sm text-slate-400 italic" />
+                    )}
+                  </td>
+                  <td className="p-2 border-r border-gray-100 w-36">
+                    {row.componentType === "unique" ? (
+                      <Select value={row.supplierId || "_none_"} onValueChange={v => updatePending(row.tempId, "supplierId", v === "_none_" ? "" : v)}>
+                        <SelectTrigger className="h-8 text-sm w-full bg-white">
+                          <SelectValue placeholder="Geen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none_">Geen</SelectItem>
+                          {allSuppliers.map(s => (
+                            <SelectItem key={s.id} value={s.id}>
+                              <span className="font-mono text-xs text-slate-500 mr-1">{s.supplierNumber}</span>
+                              {s.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-sm text-slate-400 italic" />
+                    )}
                   </td>
                   <td className="p-2 border-r border-gray-100">
                     <Input
