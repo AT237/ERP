@@ -98,7 +98,7 @@ import {
   insertDocumentImageSchema
 } from "@shared/schema";
 import { Request, Response, NextFunction } from 'express';
-import { eq, sql, inArray } from 'drizzle-orm';
+import { eq, and, sql, inArray } from 'drizzle-orm';
 import { db, pool, checkDatabaseStatus } from './db';
 import * as schema from '@shared/schema';
 import { customerAddresses } from '@shared/schema';
@@ -1214,7 +1214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const [updated] = await db.update(lineItemComponents)
         .set(req.body)
-        .where(eq(lineItemComponents.id, req.params.componentId))
+        .where(and(eq(lineItemComponents.id, req.params.componentId), eq(lineItemComponents.parentLineItemId, req.params.parentId)))
         .returning();
       if (!updated) return res.status(404).json({ message: "Component not found" });
       res.json(updated);
@@ -1225,7 +1225,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/line-item-components/:parentId/:componentId", async (req, res) => {
     try {
-      await db.delete(lineItemComponents).where(eq(lineItemComponents.id, req.params.componentId));
+      const result = await db.delete(lineItemComponents).where(and(eq(lineItemComponents.id, req.params.componentId), eq(lineItemComponents.parentLineItemId, req.params.parentId))).returning();
+      if (result.length === 0) return res.status(404).json({ message: "Component not found" });
       res.json({ success: true });
     } catch (error: any) {
       handleRouteError(res, error, "Failed to delete line item component");

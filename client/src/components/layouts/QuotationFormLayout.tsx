@@ -2134,7 +2134,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               onCostPriceChanged={(total) => {
                 const updateData: Record<string, any> = { costPrice: total.toFixed(2) };
                 apiRequest("PUT", `/api/quotation-items/${selectedUniqueItem.id}`, updateData).then(() => {
-                  queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "items"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "details"] });
                 });
               }}
             />
