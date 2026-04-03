@@ -366,6 +366,8 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged, onComposit
         componentType: row.componentType,
         quantity: row.quantity,
         unitPrice: row.unitPrice || "0",
+        costPrice: row.costPrice || "0",
+        supplierId: row.supplierId || null,
         notes: row.notes || null,
         sortOrder: components.length + pendingRows.indexOf(row),
       };
@@ -409,6 +411,8 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged, onComposit
         componentType: comp.componentType,
         quantity: comp.quantity,
         unitPrice: comp.unitPrice || "0",
+        costPrice: comp.costPrice || "0",
+        supplierId: comp.supplierId || null,
         notes: comp.notes || null,
         sortOrder: components.length,
         componentItemId: comp.componentItemId || null,
@@ -576,6 +580,8 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged, onComposit
                 <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Eenheid</th>
                 <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Inkoopprijs</th>
                 <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Regeltotaal</th>
+                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Kostprijs</th>
+                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-36">Leverancier</th>
                 <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50">Notities</th>
                 <th className="p-2 w-20" />
               </tr>
@@ -586,6 +592,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged, onComposit
                   key={c.id}
                   component={c}
                   inventoryItems={allInventoryItems}
+                  suppliers={allSuppliers}
                   parentItemId={parentItemId}
                   onDeleted={() => {}}
                   selected={selectedRows.includes(c.id)}
@@ -673,6 +680,39 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged, onComposit
                       € {((parseFloat(row.quantity) || 0) * (parseFloat(row.unitPrice) || 0)).toFixed(2)}
                     </span>
                   </td>
+                  <td className="p-2 border-r border-gray-100 w-28">
+                    {row.componentType === "unique" ? (
+                      <Input
+                        value={row.costPrice}
+                        onChange={e => updatePending(row.tempId, "costPrice", e.target.value)}
+                        type="number" min="0" step="0.01"
+                        className="h-8 text-sm text-right bg-white"
+                        placeholder="0.00"
+                      />
+                    ) : (
+                      <span className="text-sm text-slate-400 italic" />
+                    )}
+                  </td>
+                  <td className="p-2 border-r border-gray-100 w-36">
+                    {row.componentType === "unique" ? (
+                      <Select value={row.supplierId || "_none_"} onValueChange={v => updatePending(row.tempId, "supplierId", v === "_none_" ? "" : v)}>
+                        <SelectTrigger className="h-8 text-sm w-full bg-white">
+                          <SelectValue placeholder="Geen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none_">Geen</SelectItem>
+                          {allSuppliers.map(s => (
+                            <SelectItem key={s.id} value={s.id}>
+                              <span className="font-mono text-xs text-slate-500 mr-1">{s.supplierNumber}</span>
+                              {s.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-sm text-slate-400 italic" />
+                    )}
+                  </td>
                   <td className="p-2 border-r border-gray-100">
                     <Input
                       value={row.notes}
@@ -714,7 +754,7 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged, onComposit
                       € {totalCostPrice.toFixed(2)}
                     </span>
                   </td>
-                  <td colSpan={2} />
+                  <td colSpan={4} />
                 </tr>
               </tfoot>
             )}
