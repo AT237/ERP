@@ -718,7 +718,6 @@ export function DataTableLayout<T = any>({
   const setSummaryType = useCallback((columnKey: string, type: SummaryType) => {
     setSummaryConfig(prev => {
       const next = { ...prev, [columnKey]: type };
-      if (type === 'none') delete next[columnKey];
       if (tableKey) {
         try {
           if (Object.keys(next).length > 0) {
