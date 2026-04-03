@@ -37,6 +37,7 @@ const SupplierForm = lazy(() => import('@/pages/supplier-form'));
 const InventoryForm = lazy(() => import('@/pages/inventory-form'));
 const ProjectForm = lazy(() => import('@/pages/project-form'));
 const WorkOrderForm = lazy(() => import('@/pages/work-order-form'));
+const QuotationRequestForm = lazy(() => import('@/pages/quotation-request-form'));
 const PurchaseOrderForm = lazy(() => import('@/pages/purchase-order-form'));
 const SalesOrderForm = lazy(() => import('@/pages/sales-order-form'));
 const PackingListForm = lazy(() => import('@/pages/packing-list-form'));
@@ -60,6 +61,7 @@ const InvoicesPage = lazy(() => import('@/pages/invoices'));
 const ProformaInvoicesPage = lazy(() => import('@/pages/proforma-invoices'));
 const ProjectsPage = lazy(() => import('@/pages/projects'));
 const WorkOrdersPage = lazy(() => import('@/pages/work-orders'));
+const QuotationRequestsPage = lazy(() => import('@/pages/quotation-requests'));
 const PurchaseOrdersPage = lazy(() => import('@/pages/purchase-orders'));
 const SalesOrdersPage = lazy(() => import('@/pages/sales-orders'));
 const PackingListsPage = lazy(() => import('@/pages/packing-lists'));
@@ -182,6 +184,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'projects', name: 'Projects' };
       case '/work-orders':
         return { id: 'work-orders', name: 'Work Orders' };
+      case '/quotation-requests':
+        return { id: 'quotation-requests', name: 'Quotation Requests' };
       case '/purchase-orders':
         return { id: 'purchase-orders', name: 'Purchase Orders' };
       case '/sales-orders':
@@ -626,6 +630,8 @@ export default function Layout({ children }: LayoutProps) {
         return '/projects';
       case 'work-orders':
         return '/work-orders';
+      case 'quotation-requests':
+        return '/quotation-requests';
       case 'purchase-orders':
         return '/purchase-orders';
       case 'sales-orders':
@@ -1062,6 +1068,14 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
 
+      if (tab.id === 'quotation-requests') {
+        return (
+          <Suspense fallback={<div></div>}>
+            <QuotationRequestsPage />
+          </Suspense>
+        );
+      }
+
       if (tab.id === 'purchase-orders') {
         return (
           <Suspense fallback={<div></div>}>
@@ -1352,6 +1366,22 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
       
+      if (tab.formType === 'quotation-request') {
+        const qrId = tab.id.startsWith('edit-quotation-request-') 
+          ? tab.id.replace('edit-quotation-request-', '') 
+          : undefined;
+        
+        return (
+          <Suspense fallback={<div></div>}>
+            <QuotationRequestForm 
+              quotationRequestId={qrId}
+              parentId={tab.parentId}
+              onSave={() => {}} 
+            />
+          </Suspense>
+        );
+      }
+
       if (tab.formType === 'purchase-order') {
         const purchaseOrderId = tab.id.startsWith('edit-purchase-order-') 
           ? tab.id.replace('edit-purchase-order-', '') 

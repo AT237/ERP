@@ -20,6 +20,7 @@ import Invoices from "@/pages/invoices";
 import ProformaInvoices from "@/pages/proforma-invoices";
 import Projects from "@/pages/projects";
 import WorkOrders from "@/pages/work-orders";
+import QuotationRequests from "@/pages/quotation-requests";
 import PurchaseOrders from "@/pages/purchase-orders";
 import SalesOrders from "@/pages/sales-orders";
 import PackingLists from "@/pages/packing-lists";
@@ -57,6 +58,7 @@ function Router() {
         <Route path="/proforma-invoices" component={ProformaInvoices} />
         <Route path="/projects" component={Projects} />
         <Route path="/work-orders" component={WorkOrders} />
+        <Route path="/quotation-requests" component={QuotationRequests} />
         <Route path="/purchase-orders" component={PurchaseOrders} />
         <Route path="/sales-orders" component={() => <SalesOrders />} />
         <Route path="/packing-lists" component={PackingLists} />
