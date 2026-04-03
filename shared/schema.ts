@@ -193,6 +193,8 @@ export const inventoryComponents = pgTable("inventory_components", {
   componentUnit: text("component_unit"), // used for unique items
   quantity: decimal("quantity", { precision: 10, scale: 3 }).notNull().default("1"),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0"),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }).default("0"),
+  supplierId: varchar("supplier_id").references(() => suppliers.id),
   notes: text("notes"),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
@@ -212,6 +214,8 @@ export const lineItemComponents = pgTable("line_item_components", {
   componentUnit: text("component_unit"),
   quantity: decimal("quantity", { precision: 10, scale: 3 }).notNull().default("1"),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0"),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }).default("0"),
+  supplierId: varchar("supplier_id").references(() => suppliers.id),
   notes: text("notes"),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
