@@ -636,12 +636,17 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       width: 100,
       filterable: false,
       sortable: true,
+      getValue: (row: any) => {
+        const lineTotal = parseFloat(row.lineTotal || "0") || 0;
+        const qty = parseFloat(row.quantity || "0") || 0;
+        const cost = parseFloat(row.costPrice || "0") || 0;
+        return lineTotal - (qty * cost);
+      },
       renderCell: (_value: any, row: any) => {
         const lineTotal = parseFloat(row.lineTotal || "0") || 0;
         const qty = parseFloat(row.quantity || "0") || 0;
         const cost = parseFloat(row.costPrice || "0") || 0;
-        const lineCost = qty * cost;
-        const margin = lineTotal - lineCost;
+        const margin = lineTotal - (qty * cost);
         return <span className={`text-right w-full block ${margin < 0 ? 'text-red-600 font-medium' : ''}`}>{`€ ${margin.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>;
       }
     },

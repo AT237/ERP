@@ -119,6 +119,7 @@ export type ColumnConfig = {
   fullCell?: boolean;
   align?: 'left' | 'right' | 'center';
   forceVisible?: boolean;
+  getValue?: (row: any) => number | null;
 };
 
 // ============================================================================
@@ -1003,10 +1004,15 @@ export function DataTableLayout<T = any>({
   const summaryValues = useMemo(() => {
     if (!showSummary || Object.keys(summaryConfig).length === 0) return {};
     const result: Record<string, string> = {};
+    const colDefs = columns as ColumnConfig[];
     for (const [colKey, type] of Object.entries(summaryConfig)) {
       if (type === 'none') continue;
+      const colDef = colDefs.find(c => c.key === colKey);
       const values = sortedData
         .map(row => {
+          if (colDef?.getValue) {
+            return colDef.getValue(row);
+          }
           const raw = row[colKey as keyof T];
           if (raw == null || raw === '') return null;
           const n = parseFloat(String(raw).replace(/[€\s]/g, '').replace(',', '.'));
@@ -1016,6 +1022,7 @@ export function DataTableLayout<T = any>({
 
       if (type === 'count') {
         result[colKey] = String(sortedData.filter(row => {
+          if (colDef?.getValue) return colDef.getValue(row) != null;
           const v = row[colKey as keyof T];
           return v != null && v !== '';
         }).length);
@@ -1032,7 +1039,7 @@ export function DataTableLayout<T = any>({
       }
     }
     return result;
-  }, [showSummary, summaryConfig, sortedData]);
+  }, [showSummary, summaryConfig, sortedData, columns]);
 
   const summaryTypeLabels: Record<SummaryType, string> = {
     none: 'Geen',
