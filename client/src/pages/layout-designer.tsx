@@ -3870,6 +3870,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
   const typedPrintData: PrintData = {
     quotation: printData.quotation || {},
     invoice: printData.invoice || {},
+    proformaInvoice: printData.proformaInvoice || {},
     packingList: printData.packingList || {},
     customer: printData.customer || null,
     project: printData.project || null,

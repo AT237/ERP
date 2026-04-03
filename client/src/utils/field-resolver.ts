@@ -4,6 +4,7 @@
 export type PrintData = {
   quotation?: Record<string, any>;
   invoice?: Record<string, any>;
+  proformaInvoice?: Record<string, any>;
   packingList?: Record<string, any>;
   customer: Record<string, any> | null;
   project: Record<string, any> | null;
@@ -223,6 +224,9 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
     'packingLists': 'packingList',
     'packing_list': 'packingList',
     'packing_lists': 'packingList',
+    'proformaInvoices': 'proformaInvoice',
+    'proforma_invoice': 'proformaInvoice',
+    'proforma_invoices': 'proformaInvoice',
   };
   if (tableAliases[tableName]) {
     tableName = tableAliases[tableName];
@@ -239,6 +243,9 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
       break;
     case 'packingList':
       data = printData.packingList;
+      break;
+    case 'proformaInvoice':
+      data = printData.proformaInvoice;
       break;
     case 'customer':
       data = printData.customer;
@@ -258,10 +265,11 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
   }
 
   if (fieldPath.length === 1 && fieldPath[0] === 'totalAmountInWords') {
-    const totalAmount = data?.totalAmount ?? printData.invoice?.totalAmount ?? printData.quotation?.totalAmount;
+    const totalAmount = data?.totalAmount ?? printData.invoice?.totalAmount ?? printData.proformaInvoice?.totalAmount ?? printData.quotation?.totalAmount;
     const total = parseFloat(totalAmount || '0');
     const printLang = (data as any)?.printLanguageCode
       ?? printData.invoice?.printLanguageCode
+      ?? printData.proformaInvoice?.printLanguageCode
       ?? printData.quotation?.printLanguageCode;
     const lang = printLang || (printData.customer as any)?.languageCode || 'nl';
     return amountToWords(total, lang);
@@ -429,7 +437,9 @@ export function replacePlaceholders(
                                fieldPath.startsWith('quotationItems.') || 
                                fieldPath.startsWith('quotationItem.') ||
                                fieldPath.startsWith('invoiceItems.') ||
-                               fieldPath.startsWith('invoiceItem.');
+                               fieldPath.startsWith('invoiceItem.') ||
+                               fieldPath.startsWith('proformaInvoiceItems.') ||
+                               fieldPath.startsWith('proformaInvoiceItem.');
     
     if (isItemPlaceholder && itemContext) {
       // Normalize the field path by removing the prefix
@@ -442,6 +452,10 @@ export function replacePlaceholders(
         itemFieldPath = fieldPath.substring(13); // Remove 'invoiceItems.' prefix
       } else if (fieldPath.startsWith('invoiceItem.')) {
         itemFieldPath = fieldPath.substring(12); // Remove 'invoiceItem.' prefix
+      } else if (fieldPath.startsWith('proformaInvoiceItems.')) {
+        itemFieldPath = fieldPath.substring(21); // Remove 'proformaInvoiceItems.' prefix
+      } else if (fieldPath.startsWith('proformaInvoiceItem.')) {
+        itemFieldPath = fieldPath.substring(20); // Remove 'proformaInvoiceItem.' prefix
       } else {
         itemFieldPath = fieldPath.substring(5); // Remove 'item.' prefix
       }
@@ -539,12 +553,14 @@ export function hasContent(
       const fieldPath = match[1];
       
       // Handle item placeholders for repeating sections (supports nested paths)
-      // Supports {{item.*}}, {{quotationItems.*}}, {{quotationItem.*}}, {{invoiceItems.*}}, {{invoiceItem.*}}
+      // Supports {{item.*}}, {{quotationItems.*}}, {{quotationItem.*}}, {{invoiceItems.*}}, {{invoiceItem.*}}, {{proformaInvoiceItems.*}}, {{proformaInvoiceItem.*}}
       const isItemPlaceholder = fieldPath.startsWith('item.') || 
                                  fieldPath.startsWith('quotationItems.') || 
                                  fieldPath.startsWith('quotationItem.') ||
                                  fieldPath.startsWith('invoiceItems.') ||
-                                 fieldPath.startsWith('invoiceItem.');
+                                 fieldPath.startsWith('invoiceItem.') ||
+                                 fieldPath.startsWith('proformaInvoiceItems.') ||
+                                 fieldPath.startsWith('proformaInvoiceItem.');
       
       if (isItemPlaceholder && itemContext?.item) {
         // Normalize the field path by removing the prefix
@@ -557,6 +573,10 @@ export function hasContent(
           itemFieldPath = fieldPath.substring(13);
         } else if (fieldPath.startsWith('invoiceItem.')) {
           itemFieldPath = fieldPath.substring(12);
+        } else if (fieldPath.startsWith('proformaInvoiceItems.')) {
+          itemFieldPath = fieldPath.substring(21);
+        } else if (fieldPath.startsWith('proformaInvoiceItem.')) {
+          itemFieldPath = fieldPath.substring(20);
         } else {
           itemFieldPath = fieldPath.substring(5);
         }
