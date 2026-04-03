@@ -139,18 +139,25 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
 
   useEffect(() => {
     if (!isEditing && quotationDetails?.items) {
+      const usedNumbers = new Set<number>();
       let maxNumber = 0;
       for (const item of quotationDetails.items) {
         if (item.positionNo) {
           const num = parseInt(item.positionNo, 10);
-          if (!isNaN(num) && num > maxNumber) {
-            maxNumber = num;
+          if (!isNaN(num)) {
+            usedNumbers.add(num);
+            if (num > maxNumber) maxNumber = num;
           }
         }
       }
-      const nextNumber = Math.ceil((maxNumber + 1) / 10) * 10;
+      let nextNumber = 10;
+      for (let n = 10; n <= maxNumber; n += 10) {
+        if (!usedNumbers.has(n)) { nextNumber = n; break; }
+        nextNumber = n + 10;
+      }
       const nextPositionNo = nextNumber.toString().padStart(3, '0');
       form.setValue('positionNo', nextPositionNo);
+      setHasUnsavedChanges(false);
     }
   }, [isEditing, quotationDetails, form]);
 

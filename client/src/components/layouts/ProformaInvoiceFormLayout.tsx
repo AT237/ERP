@@ -586,9 +586,17 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
         const disc = parseFloat(rowData.discountPercent || '0') || 0;
         const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
         const lineTotal = (qty * netPrice).toFixed(2);
-        const np = lineItems.length > 0
-          ? Math.max(...lineItems.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
-          : 10;
+        const usedNums = new Set<number>();
+        let maxNum = 0;
+        for (const li of lineItems) {
+          const n = parseInt(li.positionNo || '0', 10);
+          if (!isNaN(n) && n > 0) { usedNums.add(n); if (n > maxNum) maxNum = n; }
+        }
+        let np = 10;
+        for (let n = 10; n <= maxNum; n += 10) {
+          if (!usedNums.has(n)) { np = n; break; }
+          np = n + 10;
+        }
         const itemData = {
           proformaInvoiceId: currentInvoiceId!,
           lineType: rowData.lineType || 'standard',

@@ -801,9 +801,17 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
 
   const quotationDirectInput = React.useMemo<DirectInputConfig | undefined>(() => {
     if (!currentQuotationId) return undefined;
-    const nextPosition = quotationItems.length > 0
-      ? Math.max(...quotationItems.map(i => parseInt(String(i.positionNo || i.position || '0'), 10) || 0)) + 10
-      : 10;
+    const usedNumbers = new Set<number>();
+    let maxNumber = 0;
+    for (const item of quotationItems) {
+      const num = parseInt(String(item.positionNo || item.position || '0'), 10);
+      if (!isNaN(num) && num > 0) { usedNumbers.add(num); if (num > maxNumber) maxNumber = num; }
+    }
+    let nextPosition = 10;
+    for (let n = 10; n <= maxNumber; n += 10) {
+      if (!usedNumbers.has(n)) { nextPosition = n; break; }
+      nextPosition = n + 10;
+    }
     return {
       columns: [
         { key: 'lineType', fieldType: 'select', defaultValue: '', options: [
@@ -857,9 +865,17 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         const disc = parseFloat(rowData.discountPercent || '0') || 0;
         const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
         const lineTotal = (qty * netPrice).toFixed(2);
-        const np = quotationItems.length > 0
-          ? Math.max(...quotationItems.map(i => parseInt(String(i.positionNo || i.position || '0'), 10) || 0)) + 10
-          : 10;
+        const usedNums = new Set<number>();
+        let maxNum = 0;
+        for (const li of quotationItems) {
+          const n = parseInt(String(li.positionNo || li.position || '0'), 10);
+          if (!isNaN(n) && n > 0) { usedNums.add(n); if (n > maxNum) maxNum = n; }
+        }
+        let np = 10;
+        for (let n = 10; n <= maxNum; n += 10) {
+          if (!usedNums.has(n)) { np = n; break; }
+          np = n + 10;
+        }
         const itemData = {
           quotationId: currentQuotationId!,
           lineType: rowData.lineType || 'standard',

@@ -751,9 +751,17 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
 
   const invoiceDirectInput = React.useMemo<DirectInputConfig | undefined>(() => {
     if (!currentInvoiceId) return undefined;
-    const nextPosition = invoiceItems.length > 0
-      ? Math.max(...invoiceItems.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
-      : 10;
+    const usedNumbers = new Set<number>();
+    let maxNumber = 0;
+    for (const item of invoiceItems) {
+      const num = parseInt(item.positionNo || '0', 10);
+      if (!isNaN(num) && num > 0) { usedNumbers.add(num); if (num > maxNumber) maxNumber = num; }
+    }
+    let nextPosition = 10;
+    for (let n = 10; n <= maxNumber; n += 10) {
+      if (!usedNumbers.has(n)) { nextPosition = n; break; }
+      nextPosition = n + 10;
+    }
     return {
       columns: [
         { key: 'lineType', fieldType: 'select', defaultValue: '', options: [
@@ -807,9 +815,17 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         const disc = parseFloat(rowData.discountPercent || '0') || 0;
         const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
         const lineTotal = (qty * netPrice).toFixed(2);
-        const np = invoiceItems.length > 0
-          ? Math.max(...invoiceItems.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
-          : 10;
+        const usedNums = new Set<number>();
+        let maxNum = 0;
+        for (const li of invoiceItems) {
+          const n = parseInt(li.positionNo || '0', 10);
+          if (!isNaN(n) && n > 0) { usedNums.add(n); if (n > maxNum) maxNum = n; }
+        }
+        let np = 10;
+        for (let n = 10; n <= maxNum; n += 10) {
+          if (!usedNums.has(n)) { np = n; break; }
+          np = n + 10;
+        }
         const itemData = {
           invoiceId: currentInvoiceId!,
           lineType: rowData.lineType || 'standard',
