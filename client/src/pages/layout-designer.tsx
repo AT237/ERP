@@ -37,6 +37,7 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   invoice: 'Invoice',
   packing_list: 'Packing List',
   order_confirmation: 'Order Confirmation',
+  quotation_request: 'Quotation Request',
   purchase_order: 'Purchase Order',
   work_order: 'Work Order',
 };
@@ -692,13 +693,14 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     { name: 'invoiceItems', label: 'Factuur Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'unit', 'unitPrice', 'discountPercent', 'netUnitPrice', 'lineTotal', 'workDate', 'technicianNames', 'technicianIds', 'customerRateId', 'itemId', 'sourceSnippetId', 'sourceSnippetVersion'] },
     { name: 'proformaInvoice', label: 'Proforma Factuur', fields: ['invoiceNumber', 'status', 'dueDate', 'subtotal', 'taxAmount', 'totalAmount'] },
     { name: 'purchaseOrder', label: 'Inkooporder', fields: ['orderNumber', 'orderDate', 'expectedDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
-    { name: 'purchaseOrderItems', label: 'Inkooporder Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
+    { name: 'purchaseOrderItems', label: 'Inkooporder Regels', fields: ['positionNo', 'lineType', 'description', 'quantity', 'unit', 'unitPrice', 'discountPercent', 'lineTotal', 'costPrice', 'hsCode', 'countryOfOrigin', 'itemId'] },
     { name: 'salesOrder', label: 'Verkooporder', fields: ['orderNumber', 'orderDate', 'expectedDeliveryDate', 'status', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
     { name: 'salesOrderItems', label: 'Verkooporder Regels', fields: ['positionNo', 'lineNumber', 'description', 'quantity', 'unit', 'unitPrice', 'lineTotal'] },
     { name: 'workOrders', label: 'Werkorders (gekoppeld)', fields: ['orderNumber', 'title', 'description', 'status', 'priority', 'assignedTo', 'startDate', 'dueDate', 'completedDate', 'estimatedHours', 'actualHours'] },
     { name: 'packingList', label: 'Paklijst', fields: ['packingListNumber', 'packingDate', 'shipDate', 'status', 'shippingMethod', 'shippingAddress', 'trackingNumber', 'totalWeight', 'totalPackages', 'notes'] },
     { name: 'packingListItems', label: 'Paklijst Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'packedQuantity', 'unit', 'itemId', 'hsCode', 'countryOfOrigin', 'weight', 'collieNumber'] },
-    { name: 'quotationRequest', label: 'Offerte Aanvraag', fields: ['requestNumber', 'requestDate', 'status', 'description', 'notes'] },
+    { name: 'quotationRequest', label: 'Offerte Aanvraag', fields: ['requestNumber', 'requestDate', 'dueDate', 'title', 'description', 'requirements', 'status', 'priority', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
+    { name: 'quotationRequestItems', label: 'Offerte Aanvraag Regels', fields: ['positionNo', 'lineType', 'description', 'quantity', 'unit', 'unitPrice', 'discountPercent', 'lineTotal', 'costPrice', 'hsCode', 'countryOfOrigin', 'itemId'] },
     
     // Relations
     { name: 'customer', label: 'Klant', fields: ['customerNumber', 'name', 'kvkNummer', 'generalEmail', 'email', 'phone', 'mobile', 'contactPersonEmail', 'taxId', 'bankAccount', 'invoiceEmail', 'invoiceNotes', 'memo', 'paymentTerms', 'status', 'address.street', 'address.houseNumber', 'address.postalCode', 'address.city', 'address.country'] },
