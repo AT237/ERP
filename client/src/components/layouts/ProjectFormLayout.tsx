@@ -157,6 +157,215 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     staleTime: 10 * 60 * 1000,
   });
 
+  // Load inventory items for line items
+  const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
+    queryKey: ["/api/inventory"],
+  });
+
+  // Load units of measure
+  const { data: unitsOfMeasure = [] } = useQuery<UnitOfMeasure[]>({
+    queryKey: ["/api/masterdata/units-of-measure"],
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // Load project items
+  const { data: fetchedProjectItems = [] } = useQuery<ProjectItem[]>({
+    queryKey: ["/api/projects", currentProjectId, "items"],
+    enabled: !!currentProjectId,
+  });
+  const [projectItemsList, setProjectItemsList] = useState<ProjectItem[]>([]);
+  useEffect(() => {
+    setProjectItemsList(fetchedProjectItems);
+  }, [fetchedProjectItems]);
+
+  // Delete item state
+  const [deleteItemTarget, setDeleteItemTarget] = useState<ProjectItem | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+
+  const deleteItemMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/project-items/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
+    },
+  });
+
+  const handleDeleteItem = (item: ProjectItem) => setDeleteItemTarget(item);
+  const confirmDeleteItem = () => {
+    if (deleteItemTarget) {
+      deleteItemMutation.mutate(deleteItemTarget.id);
+      setDeleteItemTarget(null);
+    }
+  };
+  const handleBulkDeleteItems = async () => {
+    for (const id of itemTableState.selectedRows) {
+      await apiRequest("DELETE", `/api/project-items/${id}`);
+    }
+    queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
+    itemTableState.setSelectedRows([]);
+    setIsBulkDeleteOpen(false);
+  };
+  const handleDuplicateItem = async (item: ProjectItem) => {
+    const { id, ...rest } = item;
+    const maxPos = projectItemsList.length > 0
+      ? Math.max(...projectItemsList.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
+      : 10;
+    await apiRequest("POST", `/api/projects/${currentProjectId}/items`, {
+      ...rest,
+      projectId: currentProjectId,
+      position: maxPos,
+      positionNo: String(maxPos).padStart(3, '0'),
+    });
+    queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
+  };
+
+  // Item columns
+  const itemColumns = useMemo(() => [
+    createPositionColumn(),
+    {
+      key: 'lineType',
+      header: 'Type',
+      visible: true,
+      width: 80,
+      render: (item: ProjectItem) => {
+        const types: Record<string, string> = { standard: 'Std', unique: 'Uni', text: 'Txt', charges: 'Tosl' };
+        return types[item.lineType || ''] || item.lineType || '';
+      }
+    },
+    {
+      key: 'description',
+      header: 'Omschrijving',
+      visible: true,
+      width: 250,
+      render: (item: ProjectItem) => item.description || ''
+    },
+    {
+      key: 'quantity',
+      header: 'Aantal',
+      visible: true,
+      width: 70,
+      render: (item: ProjectItem) => item.lineType === 'text' ? '' : (item.quantity || '0')
+    },
+    {
+      key: 'unit',
+      header: 'Eenheid',
+      visible: true,
+      width: 70,
+      render: (item: ProjectItem) => item.lineType === 'text' ? '' : (item.unit || '')
+    },
+    createCurrencyColumn('unitPrice', 'Prijs', 90),
+    {
+      key: 'discountPercent',
+      header: 'Korting %',
+      visible: true,
+      width: 75,
+      render: (item: ProjectItem) => item.lineType === 'text' ? '' : (item.discountPercent || '0')
+    },
+    createCurrencyColumn('lineTotal', 'Bedrag', 100),
+    createCurrencyColumn('costPrice', 'Kostprijs', 90),
+  ], []);
+
+  const itemTableState = useDataTable({
+    defaultColumns: itemColumns,
+    tableKey: 'project-items'
+  });
+
+  // Direct input for project items
+  const projectDirectInput = React.useMemo<DirectInputConfig | undefined>(() => {
+    if (!currentProjectId) return undefined;
+    const nextPosition = projectItemsList.length > 0
+      ? Math.max(...projectItemsList.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
+      : 10;
+    return {
+      columns: [
+        { key: 'lineType', fieldType: 'select', defaultValue: '', options: [
+          { value: 'standard', label: 'Standaard' },
+          { value: 'unique', label: 'Uniek' },
+          { value: 'text', label: 'Tekst' },
+          { value: 'charges', label: 'Toeslagen' },
+        ]},
+        { key: 'itemId',
+          fieldType: 'searchable-select',
+          placeholder: 'Zoek artikel...',
+          enabledWhen: (r) => !!r.lineType && r.lineType !== 'text',
+          options: inventoryItems.map(item => ({
+            value: item.id,
+            label: `${(item as any).sku || ''} - ${item.description || item.name || ''}`.trim()
+          })),
+          onSelect: (val) => {
+            const item = inventoryItems.find(i => i.id === val);
+            if (!item) return {};
+            return {
+              itemId: item.id,
+              description: item.description || item.name || '',
+              unitPrice: item.unitPrice || '0.00',
+              costPrice: item.costPrice || '0.00',
+              unit: item.unit || 'Pcs.',
+            };
+          },
+        },
+        { key: 'description', fieldType: 'text', placeholder: 'Omschrijving', enabledWhen: (r) => !!r.lineType },
+        { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'unit', fieldType: 'select', defaultValue: 'Pcs.', placeholder: 'Eenheid', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text',
+          options: unitsOfMeasure.filter(u => u.isActive !== false).map(u => ({ value: u.code, label: u.code })),
+        },
+        { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'discountPercent', fieldType: 'number', defaultValue: '0', placeholder: 'Korting %', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+        { key: 'costPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Kostprijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
+      ],
+      defaults: {
+        positionNo: String(nextPosition).padStart(3, '0'),
+        position: nextPosition,
+        lineType: '',
+        quantity: '1',
+        unit: 'Pcs.',
+        unitPrice: '0.00',
+        costPrice: '0.00',
+        discountPercent: '0',
+      },
+      onSave: async (rowData) => {
+        const qty = parseFloat(rowData.quantity || '1') || 1;
+        const price = parseFloat(rowData.unitPrice || '0') || 0;
+        const disc = parseFloat(rowData.discountPercent || '0') || 0;
+        const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
+        const lineTotal = (qty * netPrice).toFixed(2);
+        const np = projectItemsList.length > 0
+          ? Math.max(...projectItemsList.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
+          : 10;
+        const itemData = {
+          projectId: currentProjectId!,
+          lineType: rowData.lineType || 'standard',
+          description: rowData.description || '',
+          quantity: String(qty),
+          unit: rowData.unit || 'Pcs.',
+          unitPrice: String(price),
+          lineTotal,
+          costPrice: rowData.costPrice || '0.00',
+          discountPercent: String(disc),
+          position: np,
+          positionNo: String(np).padStart(3, '0'),
+        };
+        await apiRequest("POST", `/api/projects/${currentProjectId}/items`, itemData);
+        queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
+      },
+      onUpdate: async (rowId, rowData) => {
+        const qty = parseFloat(rowData.quantity || '0') || 0;
+        const price = parseFloat(rowData.unitPrice || '0') || 0;
+        const disc = parseFloat(rowData.discountPercent || '0') || 0;
+        const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
+        const lineTotal = (qty * netPrice).toFixed(2);
+        const updateData: any = {};
+        for (const [k, v] of Object.entries(rowData)) {
+          updateData[k] = v;
+        }
+        updateData.lineTotal = lineTotal;
+        await apiRequest("PUT", `/api/project-items/${rowId}`, updateData);
+        queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
+      },
+    };
+  }, [currentProjectId, projectItemsList, inventoryItems, unitsOfMeasure]);
+
   const { data: nextNumberData, refetch: refetchNextNumber } = useQuery<{ number: string }>({
     queryKey: ["/api/projects/next-number"],
     enabled: !isEditing,
@@ -595,6 +804,21 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       ]
     },
     {
+      id: "items",
+      label: "Regels",
+      icon: <ClipboardList className="h-4 w-4" />,
+      rows: [
+        {
+          type: "custom" as const,
+          customContent: (
+            <div className="text-xs text-muted-foreground italic">
+              {isEditing ? "Regels worden hieronder weergegeven." : "Sla het project eerst op om regels toe te voegen."}
+            </div>
+          ),
+        },
+      ],
+    },
+    {
       id: "images",
       label: "Images",
       icon: <Image className="h-4 w-4" />,
@@ -661,35 +885,94 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
   };
 
   return (
-    <LayoutForm2
-      sections={createFormSections()}
-      activeSection={activeSection}
-      onSectionChange={setActiveSection}
-      form={form}
-      onSubmit={onSubmit}
-      toolbar={toolbar}
-      headerFields={createHeaderFields()}
-      documentType="project"
-      entityId={currentProjectId}
-      isLoading={isLoadingProject}
-      changeTracking={{
-        enabled: true,
-        suppressTracking: false,
-        modifiedFieldClassName: 'ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950',
-        onChangesDetected: (hasChanges, modifiedFields) => {
-          setHasUnsavedChanges(hasChanges);
-          setModifiedFields(modifiedFields);
+    <div>
+      <LayoutForm2
+        sections={createFormSections()}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        form={form}
+        onSubmit={onSubmit}
+        toolbar={toolbar}
+        headerFields={createHeaderFields()}
+        documentType="project"
+        entityId={currentProjectId}
+        isLoading={isLoadingProject}
+        changeTracking={{
+          enabled: true,
+          suppressTracking: false,
+          modifiedFieldClassName: 'ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950',
+          onChangesDetected: (hasChanges, modifiedFields) => {
+            setHasUnsavedChanges(hasChanges);
+            setModifiedFields(modifiedFields);
+          }
+        }}
+        originalValues={originalValues}
+        validationErrorDialog={
+          <ValidationErrorDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            errors={validErrors}
+            onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
+          />
         }
-      }}
-      originalValues={originalValues}
-      validationErrorDialog={
-        <ValidationErrorDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          errors={validErrors}
-          onShowFields={() => handleShowFields(setActiveSection, setActiveSection)}
-        />
-      }
-    />
+      />
+      {isEditing && activeSection === "items" && (
+        <div className="px-6 py-4 pb-10 bg-white ml-[15px] mr-[15px]">
+          <DataTableLayout
+            data={projectItemsList}
+            isLoading={false}
+            columns={itemTableState.columns}
+            setColumns={itemTableState.setColumns}
+            searchTerm={itemTableState.searchTerm}
+            setSearchTerm={itemTableState.setSearchTerm}
+            filters={itemTableState.filters}
+            setFilters={itemTableState.setFilters}
+            onAddFilter={itemTableState.addFilter}
+            onUpdateFilter={itemTableState.updateFilter}
+            onRemoveFilter={itemTableState.removeFilter}
+            sortConfig={itemTableState.sortConfig}
+            onSort={itemTableState.handleSort}
+            selectedRows={itemTableState.selectedRows}
+            setSelectedRows={itemTableState.setSelectedRows}
+            onToggleRowSelection={itemTableState.toggleRowSelection}
+            onToggleAllRows={() => {
+              const allIds = projectItemsList.map(item => item.id);
+              itemTableState.toggleAllRows(allIds);
+            }}
+            getRowId={(item: ProjectItem) => item.id}
+            entityName="Regel"
+            entityNamePlural="Regels"
+            applyFiltersAndSearch={itemTableState.applyFiltersAndSearch}
+            applySorting={itemTableState.applySorting}
+            compact={true}
+            deleteConfirmDialog={{
+              isOpen: isBulkDeleteOpen,
+              onOpenChange: setIsBulkDeleteOpen,
+              onConfirm: handleBulkDeleteItems,
+              itemCount: itemTableState.selectedRows.length,
+            }}
+            onDuplicate={handleDuplicateItem}
+            directInput={projectDirectInput}
+            rowActions={(item: ProjectItem) => [
+              {
+                key: 'delete',
+                label: 'Delete',
+                icon: <X className="h-4 w-4" />,
+                onClick: () => handleDeleteItem(item),
+                variant: 'destructive'
+              }
+            ]}
+          />
+        </div>
+      )}
+      <SafeDeleteDialog
+        open={!!deleteItemTarget}
+        onOpenChange={(open) => { if (!open) setDeleteItemTarget(null); }}
+        onConfirm={confirmDeleteItem}
+        entityName={deleteItemTarget?.description || 'dit regelitem'}
+        entityId={deleteItemTarget?.id || ''}
+        isPending={deleteItemMutation.isPending}
+      />
+    </div>
   );
 }
