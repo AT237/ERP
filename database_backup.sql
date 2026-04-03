@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict XIT0UfkQYPpSgBoPGuCZrYkGWNvSTWfZiIhxAM45vaIr6OANNlFxg9rPdfiwQN7
+\restrict NmabLCcROQN1ascZvYmAh6T0XgRwMccsMXxxTKuLW7xkfaJbtda9lZ1ZdsGCKuJ
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -1289,10 +1289,21 @@ ALTER TABLE public.prospects OWNER TO postgres;
 CREATE TABLE public.purchase_order_items (
     id character varying DEFAULT gen_random_uuid() NOT NULL,
     purchase_order_id character varying NOT NULL,
-    item_id character varying NOT NULL,
-    quantity integer NOT NULL,
+    item_id character varying,
+    quantity numeric(10,3) NOT NULL,
     unit_price numeric(10,2) NOT NULL,
-    line_total numeric(10,2) NOT NULL
+    line_total numeric(10,2) NOT NULL,
+    description text DEFAULT ''::text NOT NULL,
+    unit text,
+    line_type text DEFAULT 'standard'::text,
+    "position" integer DEFAULT 0,
+    position_no text,
+    discount_percent numeric(5,2) DEFAULT 0,
+    cost_price numeric(10,2),
+    hs_code text,
+    country_of_origin text,
+    source_snippet_id character varying,
+    source_snippet_version integer
 );
 
 
@@ -1350,24 +1361,53 @@ CREATE TABLE public.quotation_items (
 ALTER TABLE public.quotation_items OWNER TO postgres;
 
 --
+-- Name: quotation_request_items; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.quotation_request_items (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    quotation_request_id character varying NOT NULL,
+    item_id character varying,
+    description text NOT NULL,
+    quantity numeric(10,3) DEFAULT 0,
+    unit text,
+    unit_price numeric(10,2) DEFAULT 0.00,
+    line_total numeric(10,2) DEFAULT 0.00,
+    line_type text DEFAULT 'standard'::text,
+    "position" integer DEFAULT 0,
+    position_no text,
+    discount_percent numeric(5,2) DEFAULT 0,
+    cost_price numeric(10,2),
+    hs_code text,
+    country_of_origin text,
+    source_snippet_id character varying,
+    source_snippet_version integer
+);
+
+
+ALTER TABLE public.quotation_request_items OWNER TO postgres;
+
+--
 -- Name: quotation_requests; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.quotation_requests (
     id character varying DEFAULT gen_random_uuid() NOT NULL,
     request_number text DEFAULT public.generate_quotation_request_number() NOT NULL,
-    customer_id character varying NOT NULL,
     project_id character varying,
-    status text DEFAULT 'pending'::text,
+    status text DEFAULT 'concept'::text,
     request_date timestamp without time zone DEFAULT now(),
     due_date timestamp without time zone,
     title text NOT NULL,
     description text,
     requirements text,
-    estimated_budget numeric(10,2),
     priority text DEFAULT 'medium'::text,
     notes text,
-    created_at timestamp without time zone DEFAULT now()
+    created_at timestamp without time zone DEFAULT now(),
+    supplier_id character varying DEFAULT ''::character varying NOT NULL,
+    subtotal numeric(10,2) DEFAULT 0,
+    tax_amount numeric(10,2) DEFAULT 0,
+    total_amount numeric(10,2) DEFAULT 0
 );
 
 
@@ -2392,7 +2432,7 @@ COPY public.prospects (id, prospect_number, first_name, last_name, company_name,
 -- Data for Name: purchase_order_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.purchase_order_items (id, purchase_order_id, item_id, quantity, unit_price, line_total) FROM stdin;
+COPY public.purchase_order_items (id, purchase_order_id, item_id, quantity, unit_price, line_total, description, unit, line_type, "position", position_no, discount_percent, cost_price, hs_code, country_of_origin, source_snippet_id, source_snippet_version) FROM stdin;
 \.
 
 
@@ -2421,10 +2461,18 @@ ab9cae95-82ca-403e-afe9-d17a2cf48e3a	660609b2-7e1a-4f80-bc94-73598bf8b866	\N	Tes
 
 
 --
+-- Data for Name: quotation_request_items; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.quotation_request_items (id, quotation_request_id, item_id, description, quantity, unit, unit_price, line_total, line_type, "position", position_no, discount_percent, cost_price, hs_code, country_of_origin, source_snippet_id, source_snippet_version) FROM stdin;
+\.
+
+
+--
 -- Data for Name: quotation_requests; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.quotation_requests (id, request_number, customer_id, project_id, status, request_date, due_date, title, description, requirements, estimated_budget, priority, notes, created_at) FROM stdin;
+COPY public.quotation_requests (id, request_number, project_id, status, request_date, due_date, title, description, requirements, priority, notes, created_at, supplier_id, subtotal, tax_amount, total_amount) FROM stdin;
 \.
 
 
@@ -3437,7 +3485,7 @@ d259ddcd-e75e-465a-9f8e-f4ff1a6df96e	\N	\N	\N	2026-02-23 10:03:54.505894	2026-02
 deaed565-e163-4094-b2a6-f912be4c7b74	\N	\N	\N	2026-02-23 10:10:43.288279	2026-02-23 10:10:43.288279	\N	\N
 ef2cb817-b635-4bb4-8ab4-9366bd75bc80	\N	\N	\N	2026-02-23 10:18:15.731732	2026-02-23 10:18:15.731732	\N	\N
 d89d943c-8acc-4f97-a10e-a3b5924c13f2	\N	\N	\N	2026-02-23 10:18:25.249937	2026-02-23 10:18:25.249937	\N	\N
-b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}, {"id": "task-overview", "href": "/task-overview", "icon": {}, "name": "Task Overview"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "brands", "href": "/master-data/brands", "icon": {}, "name": "Brands"}, {"id": "categories", "href": "/master-data/categories", "icon": {}, "name": "Categories"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "serial-numbers", "href": "/serial-numbers", "icon": {}, "name": "Serial Numbers"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}, {"id": "pdf-archive", "href": "/pdf-archive", "icon": {}, "name": "PDF Database"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "email-designer", "href": "/email-designer", "icon": {}, "name": "Email Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}]	{"Sales": false, "Tools": true, "Reports": true, "Overview": true, "Inventory": false, "Relations": true, "Operations": false, "Master Data": false, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-04-03 06:11:12.556776	layout-designer	page
+b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}, {"id": "task-overview", "href": "/task-overview", "icon": {}, "name": "Task Overview"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "brands", "href": "/master-data/brands", "icon": {}, "name": "Brands"}, {"id": "categories", "href": "/master-data/categories", "icon": {}, "name": "Categories"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "serial-numbers", "href": "/serial-numbers", "icon": {}, "name": "Serial Numbers"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}, {"id": "pdf-archive", "href": "/pdf-archive", "icon": {}, "name": "PDF Database"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "email-designer", "href": "/email-designer", "icon": {}, "name": "Email Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}]	{"Sales": false, "Tools": true, "Reports": true, "Overview": true, "Inventory": false, "Relations": true, "Operations": false, "Master Data": false, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-04-03 07:06:43.502777	layout-designer	page
 c627eaa0-22b9-477f-a97d-558eb254ec1a	\N	\N	\N	2026-02-23 10:35:39.86801	2026-02-23 10:35:39.86801	\N	\N
 edb58413-7021-4e1b-8592-fb495bb8940d	\N	\N	\N	2026-02-23 10:19:42.580459	2026-02-23 10:19:42.580459	\N	\N
 c3f161df-331a-4746-9f78-224cab856721	\N	\N	\N	2026-02-23 10:19:49.234351	2026-02-23 10:19:49.234351	\N	\N
@@ -3583,13 +3631,13 @@ MzJWnBVuaC5erqfSfjQ8izZaZSq-9k83	{"cookie":{"originalMaxAge":604800000,"expires"
 z9XOAqcVlYPxLe_4uJPtklTill04tHvO	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:59:08.399Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 13:05:07
 O-eCAstFqc51FCzHxjc1uh1eRtsDkAVy	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:46.179Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:29:47
 DydfCmxnF9Y7M8cXrMNtollnPcwzY2Eh	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:02:00.267Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:02:41
-Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 06:16:03
 PA3DwNha04cB0K8L_9gpEk09h3fue6uM	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:05:01.379Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:05:02
 GdphYhrEI-DBCwvXuLNnfm6cyFod8fbZ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:31:44.747Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:31:45
 8JSTQcq_nrn4Yk9iJTfhNHmLiJHaeKXL	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:59.640Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:30:52
 06tRqKlA-rfQ_GqAPUsO6r6LmD4Rv0Wf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:03:38.029Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:03:39
 yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 11:32:05
 vOad41z3VWAgzwRSeTGrvBu0HTmLQDlS	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:43:20.347Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:43:21
+Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 07:06:44
 gxU7UMLOcpCMcD8mbTmLwnA20gbdJ27A	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:46:22.733Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:46:23
 \.
 
@@ -4209,6 +4257,14 @@ ALTER TABLE ONLY public.purchase_orders
 
 ALTER TABLE ONLY public.quotation_items
     ADD CONSTRAINT quotation_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: quotation_request_items quotation_request_items_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.quotation_request_items
+    ADD CONSTRAINT quotation_request_items_pkey PRIMARY KEY (id);
 
 
 --
@@ -4874,6 +4930,14 @@ ALTER TABLE ONLY public.purchase_order_items
 
 
 --
+-- Name: purchase_order_items purchase_order_items_source_snippet_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.purchase_order_items
+    ADD CONSTRAINT purchase_order_items_source_snippet_id_fkey FOREIGN KEY (source_snippet_id) REFERENCES public.text_snippets(id);
+
+
+--
 -- Name: purchase_orders purchase_orders_supplier_id_suppliers_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4914,11 +4978,27 @@ ALTER TABLE ONLY public.quotation_items
 
 
 --
--- Name: quotation_requests quotation_requests_customer_id_customers_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: quotation_request_items quotation_request_items_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.quotation_requests
-    ADD CONSTRAINT quotation_requests_customer_id_customers_id_fk FOREIGN KEY (customer_id) REFERENCES public.customers(id);
+ALTER TABLE ONLY public.quotation_request_items
+    ADD CONSTRAINT quotation_request_items_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.inventory_items(id);
+
+
+--
+-- Name: quotation_request_items quotation_request_items_quotation_request_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.quotation_request_items
+    ADD CONSTRAINT quotation_request_items_quotation_request_id_fkey FOREIGN KEY (quotation_request_id) REFERENCES public.quotation_requests(id) ON DELETE CASCADE;
+
+
+--
+-- Name: quotation_request_items quotation_request_items_source_snippet_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.quotation_request_items
+    ADD CONSTRAINT quotation_request_items_source_snippet_id_fkey FOREIGN KEY (source_snippet_id) REFERENCES public.text_snippets(id);
 
 
 --
@@ -4927,6 +5007,14 @@ ALTER TABLE ONLY public.quotation_requests
 
 ALTER TABLE ONLY public.quotation_requests
     ADD CONSTRAINT quotation_requests_project_id_projects_id_fk FOREIGN KEY (project_id) REFERENCES public.projects(id);
+
+
+--
+-- Name: quotation_requests quotation_requests_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.quotation_requests
+    ADD CONSTRAINT quotation_requests_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id);
 
 
 --
@@ -5053,5 +5141,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XIT0UfkQYPpSgBoPGuCZrYkGWNvSTWfZiIhxAM45vaIr6OANNlFxg9rPdfiwQN7
+\unrestrict NmabLCcROQN1ascZvYmAh6T0XgRwMccsMXxxTKuLW7xkfaJbtda9lZ1ZdsGCKuJ
 

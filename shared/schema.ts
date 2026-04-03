@@ -314,22 +314,45 @@ export const quotationItems = pgTable("quotation_items", {
   lineImage: text("line_image"),
 });
 
-// Quotation requests table
+// Quotation requests table (purchase-side: request for quotation sent to suppliers)
 export const quotationRequests = pgTable("quotation_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   requestNumber: text("request_number").notNull().unique().default(sql`generate_quotation_request_number()`),
-  customerId: varchar("customer_id").references(() => customers.id).notNull(),
+  supplierId: varchar("supplier_id").references(() => suppliers.id).notNull(),
   projectId: varchar("project_id").references(() => projects.id),
-  status: text("status").default("pending"),
+  status: text("status").default("concept"),
   requestDate: timestamp("request_date").defaultNow(),
   dueDate: timestamp("due_date"),
   title: text("title").notNull(),
   description: text("description"),
   requirements: text("requirements"),
-  estimatedBudget: decimal("estimated_budget", { precision: 10, scale: 2 }),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).default("0"),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).default("0"),
   priority: text("priority").default("medium"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Quotation request items table
+export const quotationRequestItems = pgTable("quotation_request_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  quotationRequestId: varchar("quotation_request_id").references(() => quotationRequests.id, { onDelete: 'cascade' }).notNull(),
+  itemId: varchar("item_id").references(() => inventoryItems.id),
+  description: text("description").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"),
+  unit: text("unit"),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
+  lineType: text("line_type").default("standard"),
+  position: integer("position").default(0),
+  positionNo: text("position_no"),
+  discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }),
+  hsCode: text("hs_code"),
+  countryOfOrigin: text("country_of_origin"),
+  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id),
+  sourceSnippetVersion: integer("source_snippet_version"),
 });
 
 // Invoices table
@@ -462,11 +485,22 @@ export const purchaseOrders = pgTable("purchase_orders", {
 // Purchase order items table
 export const purchaseOrderItems = pgTable("purchase_order_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id).notNull(),
-  itemId: varchar("item_id").references(() => inventoryItems.id).notNull(),
-  quantity: integer("quantity").notNull(),
-  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
-  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id, { onDelete: 'cascade' }).notNull(),
+  itemId: varchar("item_id").references(() => inventoryItems.id),
+  description: text("description").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"),
+  unit: text("unit"),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
+  lineType: text("line_type").default("standard"),
+  position: integer("position").default(0),
+  positionNo: text("position_no"),
+  discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }),
+  hsCode: text("hs_code"),
+  countryOfOrigin: text("country_of_origin"),
+  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id),
+  sourceSnippetVersion: integer("source_snippet_version"),
 });
 
 // Sales orders table
@@ -1090,10 +1124,13 @@ export const insertQuotationSchema = createInsertSchema(quotations).omit({ id: t
 });
 export const insertQuotationItemSchema = createInsertSchema(quotationItems).omit({ id: true });
 export const insertQuotationRequestSchema = createInsertSchema(quotationRequests).omit({ id: true, createdAt: true }).extend({
-  requestDate: z.string().optional(),
-  dueDate: z.string().optional(),
-  estimatedBudget: z.string().optional()
+  requestDate: z.union([z.string(), z.date()]).optional(),
+  dueDate: z.union([z.string(), z.date()]).optional(),
+  subtotal: z.string().optional(),
+  taxAmount: z.string().optional(),
+  totalAmount: z.string().optional(),
 });
+export const insertQuotationRequestItemSchema = createInsertSchema(quotationRequestItems).omit({ id: true });
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({ id: true, createdAt: true });
 export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({ id: true });
 export const insertProformaInvoiceSchema = createInsertSchema(proformaInvoices).omit({ id: true, createdAt: true });
@@ -1163,6 +1200,8 @@ export type QuotationItem = typeof quotationItems.$inferSelect;
 export type InsertQuotationItem = z.infer<typeof insertQuotationItemSchema>;
 export type QuotationRequest = typeof quotationRequests.$inferSelect;
 export type InsertQuotationRequest = z.infer<typeof insertQuotationRequestSchema>;
+export type QuotationRequestItem = typeof quotationRequestItems.$inferSelect;
+export type InsertQuotationRequestItem = z.infer<typeof insertQuotationRequestItemSchema>;
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type InvoiceItem = typeof invoiceItems.$inferSelect;
