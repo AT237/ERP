@@ -675,13 +675,21 @@ export function DataTableLayout<T = any>({
     }
   }, [directInputMode, directInput, initDirectInputRow]);
 
+  const defaultSummaryConfig = useMemo(() => {
+    const cfg: SummaryConfig = {};
+    for (const col of columns as ColumnConfig[]) {
+      if (col.isCurrency) cfg[col.key] = 'sum';
+    }
+    return cfg;
+  }, [columns]);
+
   const [showSummary, setShowSummary] = useState<boolean>(() => {
-    if (!tableKey) return false;
+    if (!tableKey) return true;
     try {
       const stored = localStorage.getItem(`table-summary-show-${tableKey}`);
-      return stored === 'true';
+      if (stored !== null) return stored === 'true';
     } catch {}
-    return false;
+    return true;
   });
 
   const [summaryConfig, setSummaryConfig] = useState<SummaryConfig>(() => {
@@ -692,6 +700,10 @@ export function DataTableLayout<T = any>({
     } catch {}
     return {};
   });
+
+  const effectiveSummaryConfig = useMemo(() => {
+    return { ...defaultSummaryConfig, ...summaryConfig };
+  }, [summaryConfig, defaultSummaryConfig]);
 
   const toggleShowSummary = useCallback(() => {
     setShowSummary(prev => {
@@ -1004,10 +1016,10 @@ export function DataTableLayout<T = any>({
   sortedDataRef.current = sortedData;
 
   const summaryValues = useMemo(() => {
-    if (!showSummary || Object.keys(summaryConfig).length === 0) return {};
+    if (!showSummary || Object.keys(effectiveSummaryConfig).length === 0) return {};
     const result: Record<string, string> = {};
     const colDefs = columns as ColumnConfig[];
-    for (const [colKey, type] of Object.entries(summaryConfig)) {
+    for (const [colKey, type] of Object.entries(effectiveSummaryConfig)) {
       if (type === 'none') continue;
       const colDef = colDefs.find(c => c.key === colKey);
       const values = sortedData
@@ -1041,7 +1053,7 @@ export function DataTableLayout<T = any>({
       }
     }
     return result;
-  }, [showSummary, summaryConfig, sortedData, columns]);
+  }, [showSummary, effectiveSummaryConfig, sortedData, columns]);
 
   const summaryTypeLabels: Record<SummaryType, string> = {
     none: 'Geen',
@@ -1671,7 +1683,7 @@ export function DataTableLayout<T = any>({
                       <Sigma className="h-3 w-3 mx-auto text-orange-500" />
                     </td>
                     {currentVisibleColumns.map((column) => {
-                      const currentType = summaryConfig[column.key] || 'none';
+                      const currentType = effectiveSummaryConfig[column.key] || 'none';
                       const hasValue = summaryValues[column.key] != null;
                       return (
                         <td

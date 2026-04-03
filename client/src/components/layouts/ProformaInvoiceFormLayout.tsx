@@ -434,6 +434,7 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
       width: 100,
       filterable: false,
       sortable: true,
+      isCurrency: true,
       getValue: (row: any) => {
         const lineTotal = parseFloat(row.lineTotal || "0") || 0;
         const qty = parseFloat(row.quantity || "0") || 0;
