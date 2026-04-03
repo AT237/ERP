@@ -33,6 +33,7 @@ import { Plus, Save, X, FileText, Download, Clock, MessageSquare, Eye, EyeOff, P
 import { CustomerSelect } from "@/components/ui/customer-select";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, createNumericColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
+import { LineItemAssemblyPanel } from '@/components/layouts/LineItemAssemblyPanel';
 import { QuotationPrintDialog } from "@/components/print/QuotationPrintDialog";
 import { amountToWords } from "@/utils/field-resolver";
 import { useDataTable } from '@/hooks/useDataTable';
@@ -2121,6 +2122,24 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             }
           ]}
         />
+        {(() => {
+          const selectedUniqueItem = itemTableState.selectedRows.length === 1
+            ? quotationItems.find(item => item.id === itemTableState.selectedRows[0] && item.lineType === 'unique')
+            : null;
+          if (!selectedUniqueItem) return null;
+          return (
+            <LineItemAssemblyPanel
+              parentLineItemId={selectedUniqueItem.id}
+              parentLineItemType="quotation_item"
+              onCostPriceChanged={(total) => {
+                const updateData: Record<string, any> = { costPrice: total.toFixed(2) };
+                apiRequest("PUT", `/api/quotation-items/${selectedUniqueItem.id}`, updateData).then(() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "items"] });
+                });
+              }}
+            />
+          );
+        })()}
       </div>
       {/* PDF Preview Modal */}
       <Dialog open={showPDFPreview} onOpenChange={setShowPDFPreview}>

@@ -23,6 +23,7 @@ import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
+import { LineItemAssemblyPanel } from '@/components/layouts/LineItemAssemblyPanel';
 import { useDataTable } from '@/hooks/useDataTable';
 import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, VatRate, InventoryItem, UnitOfMeasure } from "@shared/schema";
 import { z } from "zod";
@@ -1486,6 +1487,24 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
               }
             ]}
           />
+          {(() => {
+            const selectedUniqueItem = itemTableState.selectedRows.length === 1
+              ? invoiceItems.find(item => item.id === itemTableState.selectedRows[0] && item.lineType === 'unique')
+              : null;
+            if (!selectedUniqueItem) return null;
+            return (
+              <LineItemAssemblyPanel
+                parentLineItemId={selectedUniqueItem.id}
+                parentLineItemType="invoice_item"
+                onCostPriceChanged={(total) => {
+                  const updateData: Record<string, any> = { costPrice: total.toFixed(2) };
+                  apiRequest("PUT", `/api/invoice-items/${selectedUniqueItem.id}`, updateData).then(() => {
+                    queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId, "items"] });
+                  });
+                }}
+              />
+            );
+          })()}
         </div>
       )}
       <SafeDeleteDialog

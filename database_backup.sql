@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict iOOC3yt0TKZsCvXe0vhgT7JvDyVy3Y3eBtfI1F2C47WBhmZfBiGzDUOGGd1YLdq
+\restrict 02iGZRLWQy7IpCPMSJhgwB4GmddbFHzanOyMQ1yaby9OhfayzZj451yjHY0DAA3
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -912,6 +912,28 @@ CREATE TABLE public.layout_sections (
 
 
 ALTER TABLE public.layout_sections OWNER TO postgres;
+
+--
+-- Name: line_item_components; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.line_item_components (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    parent_line_item_id character varying NOT NULL,
+    parent_line_item_type text NOT NULL,
+    component_type text DEFAULT 'standard'::text NOT NULL,
+    component_item_id character varying,
+    component_name text,
+    component_unit text,
+    quantity numeric(10,3) DEFAULT 1 NOT NULL,
+    unit_price numeric(10,2) DEFAULT 0,
+    notes text,
+    sort_order integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.line_item_components OWNER TO postgres;
 
 --
 -- Name: packing_list_items; Type: TABLE; Schema: public; Owner: postgres
@@ -2287,6 +2309,14 @@ d7cd5879-4620-4889-ab26-42347f820df5	e2c21669-e2bb-4ca4-a7ef-b3b410418b34	footer
 
 
 --
+-- Data for Name: line_item_components; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.line_item_components (id, parent_line_item_id, parent_line_item_type, component_type, component_item_id, component_name, component_unit, quantity, unit_price, notes, sort_order, created_at) FROM stdin;
+\.
+
+
+--
 -- Data for Name: packing_list_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -3632,12 +3662,12 @@ z9XOAqcVlYPxLe_4uJPtklTill04tHvO	{"cookie":{"originalMaxAge":604800000,"expires"
 O-eCAstFqc51FCzHxjc1uh1eRtsDkAVy	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:46.179Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:29:47
 DydfCmxnF9Y7M8cXrMNtollnPcwzY2Eh	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:02:00.267Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:02:41
 PA3DwNha04cB0K8L_9gpEk09h3fue6uM	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:05:01.379Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:05:02
+Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 07:34:10
 GdphYhrEI-DBCwvXuLNnfm6cyFod8fbZ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:31:44.747Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:31:45
 8JSTQcq_nrn4Yk9iJTfhNHmLiJHaeKXL	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:59.640Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:30:52
 06tRqKlA-rfQ_GqAPUsO6r6LmD4Rv0Wf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:03:38.029Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:03:39
 yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 11:32:05
 vOad41z3VWAgzwRSeTGrvBu0HTmLQDlS	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:43:20.347Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:43:21
-Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 07:29:22
 gxU7UMLOcpCMcD8mbTmLwnA20gbdJ27A	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:46:22.733Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:46:23
 \.
 
@@ -4065,6 +4095,14 @@ ALTER TABLE ONLY public.layout_elements
 
 ALTER TABLE ONLY public.layout_sections
     ADD CONSTRAINT layout_sections_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: line_item_components line_item_components_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.line_item_components
+    ADD CONSTRAINT line_item_components_pkey PRIMARY KEY (id);
 
 
 --
@@ -4746,6 +4784,14 @@ ALTER TABLE ONLY public.layout_sections
 
 
 --
+-- Name: line_item_components line_item_components_component_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.line_item_components
+    ADD CONSTRAINT line_item_components_component_item_id_fkey FOREIGN KEY (component_item_id) REFERENCES public.inventory_items(id);
+
+
+--
 -- Name: packing_list_items packing_list_items_item_id_inventory_items_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -5141,5 +5187,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict iOOC3yt0TKZsCvXe0vhgT7JvDyVy3Y3eBtfI1F2C47WBhmZfBiGzDUOGGd1YLdq
+\unrestrict 02iGZRLWQy7IpCPMSJhgwB4GmddbFHzanOyMQ1yaby9OhfayzZj451yjHY0DAA3
 
