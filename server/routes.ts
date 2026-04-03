@@ -871,6 +871,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Supplier routes
+  app.get("/api/suppliers", async (req, res) => {
+    try {
+      const suppliersList = await storage.getSuppliers();
+      res.json(suppliersList);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to fetch suppliers");
+    }
+  });
+
   app.get("/api/suppliers/:id", async (req, res) => {
     try {
       const supplier = await storage.getSupplier(req.params.id);
