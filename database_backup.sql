@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 7JlR5n5RYMkwCSLGOKjODD1L9pLHtaM7lKwK2BpXsyPSJvQbeyZZIdym97JTKXA
+\restrict cbHDrLaBKRwYx7ndloiPxAM9CCnJ6ykHkhphcCMPOjn87M8sPShspbbM6Tfn7h0
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -1157,6 +1157,44 @@ CREATE TABLE public.proforma_invoices (
 ALTER TABLE public.proforma_invoices OWNER TO postgres;
 
 --
+-- Name: project_items; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.project_items (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    project_id character varying NOT NULL,
+    item_id character varying,
+    description text NOT NULL,
+    quantity numeric(10,3) DEFAULT '0'::numeric,
+    packed_quantity numeric(10,3) DEFAULT '0'::numeric,
+    unit text,
+    unit_price numeric(10,2) DEFAULT 0.00,
+    line_total numeric(10,2) DEFAULT 0.00,
+    cost_price numeric(10,2) DEFAULT 0.00,
+    line_type text DEFAULT 'standard'::text,
+    "position" integer DEFAULT 0,
+    position_no text,
+    discount_percent numeric(5,2) DEFAULT '0'::numeric,
+    description_internal text,
+    source_snippet_id character varying,
+    source_snippet_version integer,
+    hs_code text,
+    country_of_origin text,
+    line_image text,
+    delivery_date timestamp without time zone,
+    supplier_id character varying,
+    work_date timestamp without time zone,
+    customer_rate_id character varying,
+    technician_names text,
+    technician_ids text,
+    weight numeric(10,3) DEFAULT '0'::numeric,
+    collie_number text
+);
+
+
+ALTER TABLE public.project_items OWNER TO postgres;
+
+--
 -- Name: project_number_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -2300,6 +2338,14 @@ COPY public.proforma_invoice_items (id, proforma_invoice_id, item_id, descriptio
 
 COPY public.proforma_invoices (id, proforma_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, notes, created_at, description, payment_days_id, invoice_date, paid_amount, total_amount_in_words, vat_rate_percent, customer_snapshot, print_sort_order, print_language_code, print_project_no, print_payment_conditions, print_line_images, incoterm_id) FROM stdin;
 8ca9efc0-766d-4a82-b8c6-f4a83bafe1a1	PFI-2026-001	d487e312-b8dd-4e68-9c0d-32a275388035	\N	a618178f-37e5-4d97-96ac-d2366c17cdd0	concept	2026-04-14 22:00:00	0.00	0.00	0.00		2026-04-01 12:15:40.812066	Additonal items	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-31 22:00:00	0.00	Nul euro	\N	\N	position	nl	t	t	f	\N
+\.
+
+
+--
+-- Data for Name: project_items; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.project_items (id, project_id, item_id, description, quantity, packed_quantity, unit, unit_price, line_total, cost_price, line_type, "position", position_no, discount_percent, description_internal, source_snippet_id, source_snippet_version, hs_code, country_of_origin, line_image, delivery_date, supplier_id, work_date, customer_rate_id, technician_names, technician_ids, weight, collie_number) FROM stdin;
 \.
 
 
@@ -3541,7 +3587,7 @@ PA3DwNha04cB0K8L_9gpEk09h3fue6uM	{"cookie":{"originalMaxAge":604800000,"expires"
 GdphYhrEI-DBCwvXuLNnfm6cyFod8fbZ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:31:44.747Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:31:45
 8JSTQcq_nrn4Yk9iJTfhNHmLiJHaeKXL	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:59.640Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:30:52
 06tRqKlA-rfQ_GqAPUsO6r6LmD4Rv0Wf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-03T10:03:38.029Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-03 10:03:39
-Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 06:11:34
+Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 06:14:44
 yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 11:32:05
 vOad41z3VWAgzwRSeTGrvBu0HTmLQDlS	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:43:20.347Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:43:21
 gxU7UMLOcpCMcD8mbTmLwnA20gbdJ27A	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:46:22.733Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:46:23
@@ -4091,6 +4137,14 @@ ALTER TABLE ONLY public.proforma_invoices
 
 ALTER TABLE ONLY public.proforma_invoices
     ADD CONSTRAINT proforma_invoices_proforma_number_unique UNIQUE (proforma_number);
+
+
+--
+-- Name: project_items project_items_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project_items
+    ADD CONSTRAINT project_items_pkey PRIMARY KEY (id);
 
 
 --
@@ -4740,6 +4794,38 @@ ALTER TABLE ONLY public.proforma_invoices
 
 
 --
+-- Name: project_items project_items_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project_items
+    ADD CONSTRAINT project_items_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.inventory_items(id);
+
+
+--
+-- Name: project_items project_items_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project_items
+    ADD CONSTRAINT project_items_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+
+
+--
+-- Name: project_items project_items_source_snippet_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project_items
+    ADD CONSTRAINT project_items_source_snippet_id_fkey FOREIGN KEY (source_snippet_id) REFERENCES public.text_snippets(id);
+
+
+--
+-- Name: project_items project_items_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project_items
+    ADD CONSTRAINT project_items_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id);
+
+
+--
 -- Name: projects projects_customer_id_customers_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4967,5 +5053,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 7JlR5n5RYMkwCSLGOKjODD1L9pLHtaM7lKwK2BpXsyPSJvQbeyZZIdym97JTKXA
+\unrestrict cbHDrLaBKRwYx7ndloiPxAM9CCnJ6ykHkhphcCMPOjn87M8sPShspbbM6Tfn7h0
 

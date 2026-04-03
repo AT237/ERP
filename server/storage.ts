@@ -1,12 +1,12 @@
 import {
-  users, customers, suppliers, prospects, inventoryItems, projects, quotations, quotationItems,
+  users, customers, suppliers, prospects, inventoryItems, projects, projectItems, quotations, quotationItems,
   invoices, invoiceItems, invoiceWorkOrders, purchaseOrders, purchaseOrderItems, salesOrders, salesOrderItems, workOrders, workOrderItems,
   packingLists, packingListItems, userPreferences, customerContacts, addresses, countries, languages,
   unitsOfMeasure, paymentDays, paymentSchedules, paymentTerms, ratesAndCharges, incoterms, vatRates, cities, statuses, companyProfiles, textSnippets, textSnippetUsages,
   documentLayouts, layoutBlocks, layoutSections, layoutElements, documentLayoutFields, sectionTemplates, customerRates, technicians,
   type User, type InsertUser, type Customer, type InsertCustomer,
   type Supplier, type InsertSupplier, type Prospect, type InsertProspect, type InventoryItem, type InsertInventoryItem,
-  type Project, type InsertProject, type Quotation, type InsertQuotation,
+  type Project, type InsertProject, type ProjectItem, type InsertProjectItem, type Quotation, type InsertQuotation,
   type QuotationItem, type InsertQuotationItem, type Invoice, type InsertInvoice,
   type InvoiceItem, type InsertInvoiceItem, type PurchaseOrder, type InsertPurchaseOrder,
   type PurchaseOrderItem, type InsertPurchaseOrderItem, type SalesOrder, type InsertSalesOrder,
@@ -132,6 +132,13 @@ export interface IStorage {
   createProject(project: InsertProject): Promise<Project>;
   updateProject(id: string, project: Partial<InsertProject>): Promise<Project>;
   deleteProject(id: string): Promise<void>;
+
+  // Project Item methods
+  getProjectItems(projectId: string): Promise<ProjectItem[]>;
+  getProjectItem(id: string): Promise<ProjectItem | undefined>;
+  addProjectItem(item: InsertProjectItem): Promise<ProjectItem>;
+  updateProjectItem(id: string, item: Partial<InsertProjectItem>): Promise<ProjectItem>;
+  deleteProjectItem(id: string): Promise<void>;
 
   // Quotation methods
   getQuotations(): Promise<Quotation[]>;
@@ -742,6 +749,31 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProject(id: string): Promise<void> {
     await db.delete(projects).where(eq(projects.id, id));
+  }
+
+  // Project Item methods
+  async getProjectItems(projectId: string): Promise<ProjectItem[]> {
+    return await db.select().from(projectItems)
+      .where(eq(projectItems.projectId, projectId))
+      .orderBy(asc(projectItems.position));
+  }
+
+  async getProjectItem(id: string): Promise<ProjectItem | undefined> {
+    const [item] = await db.select().from(projectItems).where(eq(projectItems.id, id));
+    return item || undefined;
+  }
+
+  async addProjectItem(item: InsertProjectItem): Promise<ProjectItem> {
+    const [newItem] = await db.insert(projectItems).values(item).returning();
+    return newItem;
+  }
+
+  async updateProjectItem(id: string, item: Partial<InsertProjectItem>): Promise<ProjectItem> {
+    return await safeUpdate(projectItems, item, id);
+  }
+
+  async deleteProjectItem(id: string): Promise<void> {
+    await db.delete(projectItems).where(eq(projectItems.id, id));
   }
 
   // Quotation methods

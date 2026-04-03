@@ -1289,6 +1289,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Project Items routes
+  app.get("/api/projects/:id/items", async (req, res) => {
+    try {
+      const items = await storage.getProjectItems(req.params.id);
+      res.json(items);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to get project items");
+    }
+  });
+
+  app.post("/api/projects/:id/items", async (req, res) => {
+    try {
+      const item = await storage.addProjectItem({ ...req.body, projectId: req.params.id });
+      res.status(201).json(item);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to add project item");
+    }
+  });
+
+  app.put("/api/project-items/:id", async (req, res) => {
+    try {
+      const item = await storage.updateProjectItem(req.params.id, req.body);
+      res.json(item);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to update project item");
+    }
+  });
+
+  app.delete("/api/project-items/:id", async (req, res) => {
+    try {
+      await storage.deleteProjectItem(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      handleRouteError(res, error, "Failed to delete project item");
+    }
+  });
+
   app.get("/api/projects/:id/related-records", async (req, res) => {
     try {
       const { id } = req.params;

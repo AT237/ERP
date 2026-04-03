@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 
@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProjectSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { FolderOpen, Calendar, DollarSign, Image, Truck, List, RefreshCw, Paperclip } from "lucide-react";
+import { FolderOpen, Calendar, DollarSign, Image, Truck, List, RefreshCw, Paperclip, Plus, FileText, X, ClipboardList } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ProjectRelatedRecords } from "@/components/ui/project-related-records";
 import { AttachmentsGallery } from "@/components/ui/attachments-gallery";
@@ -25,7 +25,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
-import type { Project, InsertProject, Customer, Incoterm } from "@shared/schema";
+import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
+import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
+import { useDataTable } from '@/hooks/useDataTable';
+import type { Project, InsertProject, Customer, Incoterm, ProjectItem, InventoryItem, UnitOfMeasure } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { DatePicker } from "@/components/ui/date-picker";
