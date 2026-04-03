@@ -223,6 +223,42 @@ export const projects = pgTable("projects", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Project items table (superset of all line item columns in the ERP)
+export const projectItems = pgTable("project_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").references(() => projects.id, { onDelete: 'cascade' }).notNull(),
+  itemId: varchar("item_id").references(() => inventoryItems.id),
+  description: text("description").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 3 }).default("0"),
+  packedQuantity: decimal("packed_quantity", { precision: 10, scale: 3 }).default("0"),
+  unit: text("unit"),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }).default("0.00"),
+  lineType: text("line_type").default("standard"),
+  position: integer("position").default(0),
+  positionNo: text("position_no"),
+  discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
+  descriptionInternal: text("description_internal"),
+  sourceSnippetId: varchar("source_snippet_id").references(() => textSnippets.id),
+  sourceSnippetVersion: integer("source_snippet_version"),
+  hsCode: text("hs_code"),
+  countryOfOrigin: text("country_of_origin"),
+  lineImage: text("line_image"),
+  deliveryDate: timestamp("delivery_date"),
+  supplierId: varchar("supplier_id").references(() => suppliers.id),
+  workDate: timestamp("work_date"),
+  customerRateId: varchar("customer_rate_id"),
+  technicianNames: text("technician_names"),
+  technicianIds: text("technician_ids"),
+  weight: decimal("weight", { precision: 10, scale: 3 }).default("0"),
+  collieNumber: text("collie_number"),
+});
+
+export const insertProjectItemSchema = createInsertSchema(projectItems).omit({ id: true });
+export type ProjectItem = typeof projectItems.$inferSelect;
+export type InsertProjectItem = z.infer<typeof insertProjectItemSchema>;
+
 // Quotations table
 export const quotations = pgTable("quotations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -823,6 +859,7 @@ export const suppliersRelations = relations(suppliers, ({ many }) => ({
 }));
 
 export const inventoryItemsRelations = relations(inventoryItems, ({ many }) => ({
+  projectItems: many(projectItems),
   quotationItems: many(quotationItems),
   invoiceItems: many(invoiceItems),
   purchaseOrderItems: many(purchaseOrderItems),
@@ -835,10 +872,30 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     fields: [projects.customerId],
     references: [customers.id],
   }),
+  items: many(projectItems),
   quotations: many(quotations),
   invoices: many(invoices),
   workOrders: many(workOrders),
   packingLists: many(packingLists),
+}));
+
+export const projectItemsRelations = relations(projectItems, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectItems.projectId],
+    references: [projects.id],
+  }),
+  item: one(inventoryItems, {
+    fields: [projectItems.itemId],
+    references: [inventoryItems.id],
+  }),
+  supplier: one(suppliers, {
+    fields: [projectItems.supplierId],
+    references: [suppliers.id],
+  }),
+  sourceSnippet: one(textSnippets, {
+    fields: [projectItems.sourceSnippetId],
+    references: [textSnippets.id],
+  }),
 }));
 
 export const quotationsRelations = relations(quotations, ({ one, many }) => ({
