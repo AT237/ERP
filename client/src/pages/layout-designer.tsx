@@ -3810,22 +3810,22 @@ function calculateDynamicPositions(
 }
 
 // Helper function to detect if a section contains item-level placeholders
-// Supports both {{item.*}}, {{quotationItems.*}}, and {{invoiceItems.*}} formats
+// Supports {{item.*}}, {{quotationItems.*}}, {{invoiceItems.*}}, and {{proformaInvoiceItems.*}} formats
 function sectionContainsItemPlaceholders(section: any): boolean {
   const blocks = section.config?.blocks || [];
   
   // Helper to check any string for item placeholders (all formats)
   const hasItemPattern = (str: any): boolean => {
     if (typeof str !== 'string') return false;
-    // Match {{item.*}} or {{quotationItems.*}} or {{quotationItem.*}} or {{invoiceItems.*}} or {{invoiceItem.*}}
-    return /\{\{(item|quotationItems?|invoiceItems?)\.[^}]+\}\}/.test(str);
+    return /\{\{(item|quotationItems?|invoiceItems?|proformaInvoiceItems?)\.[^}]+\}\}/.test(str);
   };
   
-  // Helper to check if a data field starts with item. or quotationItems. or invoiceItems.
+  // Helper to check if a data field starts with item. or quotationItems. or invoiceItems. or proformaInvoiceItems.
   const isItemField = (str: any): boolean => {
     if (typeof str !== 'string') return false;
     return str.startsWith('item.') || str.startsWith('quotationItems.') || str.startsWith('quotationItem.')
-      || str.startsWith('invoiceItems.') || str.startsWith('invoiceItem.');
+      || str.startsWith('invoiceItems.') || str.startsWith('invoiceItem.')
+      || str.startsWith('proformaInvoiceItems.') || str.startsWith('proformaInvoiceItem.');
   };
   
   for (const block of blocks) {
