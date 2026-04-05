@@ -458,154 +458,193 @@ export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentI
   const createFormSections = () => [
     {
       id: 'general',
-      label: 'General',
+      label: 'Algemeen',
       rows: [
-        createSectionHeaderRow<FormData>('Request Details'),
-        createFieldRow<FormData>({
-          key: 'requestNumber',
-          label: 'Request Number',
-          type: 'text',
-          placeholder: 'Auto-generated',
-          register: form.register('requestNumber'),
-          disabled: true,
-          testId: 'input-request-number'
-        }),
-        createFieldRow<FormData>({
-          key: 'supplierId',
-          label: 'Supplier',
-          type: 'custom',
-          validation: { isRequired: true, error: form.formState.errors.supplierId?.message },
-          customComponent: (
-            <SelectWithAdd
-              value={form.watch("supplierId")}
-              onValueChange={(value) => form.setValue("supplierId", value)}
-              placeholder="Select supplier"
-              addFormTitle="Add New Supplier"
-              testId="select-supplier"
-              addFormContent={
-                <QuickAddSupplier onSuccess={(supplierId) => form.setValue("supplierId", supplierId)} />
-              }
-            >
-              {suppliers?.map((supplier) => (
-                <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>
-              ))}
-            </SelectWithAdd>
-          )
-        }),
-        createFieldRow<FormData>({
-          key: 'title',
-          label: 'Title',
-          type: 'text',
-          placeholder: 'Request title',
-          register: form.register('title'),
-          validation: { isRequired: true, error: form.formState.errors.title?.message },
-          testId: 'input-title'
-        }),
-        createFieldRow<FormData>({
-          key: 'status',
-          label: 'Status',
-          type: 'select',
-          options: [
-            { value: 'concept', label: 'Concept' },
-            { value: 'pending', label: 'Pending' },
-            { value: 'sent', label: 'Sent' },
-            { value: 'approved', label: 'Approved' },
-            { value: 'rejected', label: 'Rejected' },
-            { value: 'converted', label: 'Converted' },
-            { value: 'cancelled', label: 'Cancelled' },
+        {
+          type: 'two-column' as const,
+          leftColumn: [
+            {
+              key: "requestNumber",
+              label: "Nummer",
+              type: "custom" as const,
+              customComponent: (
+                <div className="flex gap-1 items-center">
+                  <Input
+                    {...form.register("requestNumber")}
+                    className={`h-10 text-xs flex-1 ${form.formState.errors.requestNumber ? 'border-red-500' : ''}`}
+                    placeholder="QR-2026-001"
+                    data-testid="input-request-number"
+                  />
+                  {!isEditing && (
+                    <button
+                      type="button"
+                      title="Nieuw beschikbaar nummer ophalen"
+                      onClick={async () => {
+                        const result = await refetchNextNumber();
+                        if (result.data?.number) {
+                          form.setValue("requestNumber", result.data.number);
+                        }
+                      }}
+                      className="h-10 w-10 flex items-center justify-center rounded border border-input bg-background hover:bg-orange-50 hover:border-orange-400 transition-colors flex-shrink-0"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  )}
+                </div>
+              ),
+              validation: { isRequired: true },
+              testId: "input-request-number"
+            },
+            {
+              key: "supplierId",
+              label: "Leverancier",
+              type: "custom" as const,
+              customComponent: (
+                <SelectWithAdd
+                  value={form.watch("supplierId")}
+                  onValueChange={(value) => form.setValue("supplierId", value)}
+                  placeholder="Selecteer leverancier..."
+                  addFormTitle="Nieuwe leverancier"
+                  testId="select-supplier"
+                  addFormContent={
+                    <QuickAddSupplier onSuccess={(supplierId) => form.setValue("supplierId", supplierId)} />
+                  }
+                >
+                  {suppliers?.map((supplier) => (
+                    <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>
+                  ))}
+                </SelectWithAdd>
+              ),
+              validation: { isRequired: true, error: form.formState.errors.supplierId?.message },
+              testId: "select-supplier"
+            },
+            {
+              key: "requestDate",
+              label: "Aanvraagdatum",
+              type: "date" as const,
+              placeholder: "dd-mm-jjjj",
+              setValue: (value: string) => form.setValue("requestDate", value),
+              watch: () => form.watch("requestDate"),
+              testId: "input-request-date"
+            },
+            {
+              key: "dueDate",
+              label: "Vervaldatum",
+              type: "date" as const,
+              placeholder: "dd-mm-jjjj",
+              setValue: (value: string) => form.setValue("dueDate", value),
+              watch: () => form.watch("dueDate"),
+              testId: "input-due-date"
+            },
+            {
+              key: "status",
+              label: "Status",
+              type: "select" as const,
+              options: [
+                { value: "concept", label: "Concept" },
+                { value: "pending", label: "In behandeling" },
+                { value: "sent", label: "Verzonden" },
+                { value: "approved", label: "Goedgekeurd" },
+                { value: "rejected", label: "Afgewezen" },
+                { value: "converted", label: "Omgezet" },
+                { value: "cancelled", label: "Geannuleerd" },
+              ],
+              setValue: (value: string) => form.setValue("status", value),
+              watch: () => form.watch("status"),
+              testId: "select-status"
+            },
+            {
+              key: "priority",
+              label: "Prioriteit",
+              type: "select" as const,
+              options: [
+                { value: "low", label: "Laag" },
+                { value: "medium", label: "Normaal" },
+                { value: "high", label: "Hoog" },
+              ],
+              setValue: (value: string) => form.setValue("priority", value),
+              watch: () => form.watch("priority"),
+              testId: "select-priority"
+            },
           ],
-          setValue: (value) => form.setValue('status', value),
-          watch: () => form.watch('status'),
-          testId: 'select-status'
-        }),
-        createFieldRow<FormData>({
-          key: 'priority',
-          label: 'Priority',
-          type: 'select',
-          options: [
-            { value: 'low', label: 'Low' },
-            { value: 'medium', label: 'Medium' },
-            { value: 'high', label: 'High' },
+          rightColumn: [
+            {
+              key: "projectId",
+              label: "Project",
+              type: "custom" as const,
+              customComponent: (
+                <ProjectSelect
+                  value={form.watch("projectId") || ""}
+                  onValueChange={(value) => form.setValue("projectId", value || "")}
+                  placeholder="Selecteer project..."
+                  testId="select-project"
+                />
+              ),
+              testId: "field-project"
+            },
+            {
+              key: "title",
+              label: "Titel",
+              type: "text" as const,
+              placeholder: "Aanvraag titel...",
+              register: form.register("title"),
+              validation: { isRequired: true, error: form.formState.errors.title?.message },
+              testId: "input-title"
+            },
+            {
+              key: "description",
+              label: "Omschrijving",
+              type: "textarea" as const,
+              placeholder: "Omschrijving aanvraag...",
+              register: form.register("description"),
+              testId: "textarea-description"
+            },
+            {
+              key: "requirements",
+              label: "Vereisten",
+              type: "textarea" as const,
+              placeholder: "Specifieke vereisten...",
+              register: form.register("requirements"),
+              testId: "textarea-requirements"
+            },
+            {
+              key: "notes",
+              label: "Notities",
+              type: "textarea" as const,
+              placeholder: "Notities...",
+              register: form.register("notes"),
+              testId: "textarea-notes"
+            },
           ],
-          setValue: (value) => form.setValue('priority', value),
-          watch: () => form.watch('priority'),
-          testId: 'select-priority'
-        }),
-        createFieldRow<FormData>({
-          key: 'requestDate',
-          label: 'Request Date',
-          type: 'date',
-          placeholder: 'dd-mm-yyyy',
-          setValue: (value) => form.setValue('requestDate', value),
-          watch: () => form.watch('requestDate'),
-          testId: 'input-request-date'
-        }),
-        createFieldRow<FormData>({
-          key: 'dueDate',
-          label: 'Due Date',
-          type: 'date',
-          placeholder: 'dd-mm-yyyy',
-          setValue: (value) => form.setValue('dueDate', value),
-          watch: () => form.watch('dueDate'),
-          testId: 'input-due-date'
-        }),
-
-        createSectionHeaderRow<FormData>('Description'),
-        createFieldRow<FormData>({
-          key: 'description',
-          label: 'Description',
-          type: 'textarea',
-          rows: 3,
-          placeholder: 'Request description...',
-          register: form.register('description'),
-          testId: 'textarea-description'
-        }),
-        createFieldRow<FormData>({
-          key: 'requirements',
-          label: 'Requirements',
-          type: 'textarea',
-          rows: 3,
-          placeholder: 'Specific requirements...',
-          register: form.register('requirements'),
-          testId: 'textarea-requirements'
-        }),
-
-        createSectionHeaderRow<FormData>('Financial'),
-        createFieldRow<FormData>({
-          key: 'subtotal',
-          label: 'Subtotal',
-          type: 'text',
-          placeholder: '0.00',
-          register: form.register('subtotal'),
-          disabled: true,
-          testId: 'input-subtotal'
-        }),
-        createFieldRow<FormData>({
-          key: 'taxAmount',
-          label: 'Tax Amount',
-          type: 'text',
-          placeholder: '0.00',
-          register: form.register('taxAmount'),
-          testId: 'input-tax'
-        }),
-        createFieldRow<FormData>({
-          key: 'totalAmount',
-          label: 'Total Amount',
-          type: 'text',
-          placeholder: '0.00',
-          register: form.register('totalAmount'),
-          disabled: true,
-          testId: 'input-total'
-        }),
-        createFieldRow<FormData>({
-          key: 'notes',
-          label: 'Notes',
-          type: 'textarea',
-          rows: 3,
-          placeholder: 'Additional notes...',
-          register: form.register('notes'),
-          testId: 'textarea-notes'
-        }),
+        },
+      ]
+    },
+    {
+      id: 'amounts',
+      label: 'Bedragen',
+      rows: [
+        createFieldRow({
+          key: "subtotal" as any,
+          label: "Subtotaal",
+          type: "display",
+          displayValue: `€ ${form.watch("subtotal") || "0.00"}`,
+          testId: "display-subtotal"
+        } as any),
+        createFieldRow({
+          key: "taxAmount" as any,
+          label: "BTW bedrag",
+          type: "text",
+          placeholder: "0.00",
+          register: form.register("taxAmount"),
+          testId: "input-tax"
+        } as any),
+        createFieldRow({
+          key: "totalAmount" as any,
+          label: "Totaalbedrag",
+          type: "display",
+          displayValue: `€ ${form.watch("totalAmount") || "0.00"}`,
+          testId: "display-total"
+        } as any),
       ]
     },
     {
