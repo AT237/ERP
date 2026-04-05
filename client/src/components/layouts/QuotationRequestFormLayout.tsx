@@ -12,9 +12,7 @@ import { LayoutForm2, createFieldRow, createSectionHeaderRow } from './LayoutFor
 import { DataTableLayout, ColumnConfig, type DirectInputConfig } from './DataTableLayout';
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
 import { useDataTable } from '@/hooks/useDataTable';
-import { SelectWithAdd } from "@/components/ui/select-with-add";
-import { SelectItem } from "@/components/ui/select";
-import { QuickAddSupplier } from "@/components/quick-add-forms";
+import { SupplierSelect } from "@/components/ui/supplier-select";
 import { ProjectSelect } from "@/components/ui/project-select";
 import { Input } from "@/components/ui/input";
 import { RefreshCw, X } from "lucide-react";
