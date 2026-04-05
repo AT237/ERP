@@ -15,7 +15,9 @@ import { useDataTable } from '@/hooks/useDataTable';
 import { SelectWithAdd } from "@/components/ui/select-with-add";
 import { SelectItem } from "@/components/ui/select";
 import { QuickAddSupplier } from "@/components/quick-add-forms";
-import { X } from "lucide-react";
+import { ProjectSelect } from "@/components/ui/project-select";
+import { Input } from "@/components/ui/input";
+import { RefreshCw, X } from "lucide-react";
 import type { QuotationRequest, InsertQuotationRequest, QuotationRequestItem, Supplier, InventoryItem, UnitOfMeasure } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
@@ -80,6 +82,17 @@ export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentI
   const { data: suppliers } = useQuery<Supplier[]>({ queryKey: ["/api/suppliers"] });
   const { data: inventoryItems } = useQuery<InventoryItem[]>({ queryKey: ["/api/inventory"] });
   const { data: units } = useQuery<UnitOfMeasure[]>({ queryKey: ["/api/units-of-measure"] });
+
+  const { data: nextNumberData, refetch: refetchNextNumber } = useQuery<{ number: string }>({
+    queryKey: ["/api/quotation-requests/next-number"],
+    enabled: !isEditing,
+  });
+
+  useEffect(() => {
+    if (!isEditing && nextNumberData?.number && !form.getValues("requestNumber")) {
+      form.setValue("requestNumber", nextNumberData.number);
+    }
+  }, [nextNumberData, isEditing, form]);
 
   const { data: qrItems = [], refetch: refetchItems } = useQuery<QuotationRequestItem[]>({
     queryKey: ["/api/quotation-requests", currentId, "items"],

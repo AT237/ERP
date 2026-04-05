@@ -2250,6 +2250,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Quotation Request routes
+  app.get("/api/quotation-requests/next-number", async (req, res) => {
+    try {
+      const currentYear = new Date().getFullYear();
+      const pattern = `^QR-${currentYear}-[0-9]{3}$`;
+      const rows = await db.execute(
+        sql`SELECT request_number FROM quotation_requests WHERE request_number ~ ${pattern} ORDER BY request_number`
+      );
+      const used = new Set((rows.rows as any[]).map((r: any) => r.request_number as string));
+      let next = 1;
+      while (used.has(`QR-${currentYear}-${String(next).padStart(3, '0')}`)) {
+        next++;
+      }
+      res.json({ number: `QR-${currentYear}-${String(next).padStart(3, '0')}` });
+    } catch (error) {
+      console.error("Error generating next quotation request number:", error);
+      res.status(500).json({ message: "Failed to generate next quotation request number" });
+    }
+  });
+
   app.get("/api/quotation-requests", async (req, res) => {
     try {
       const requests = await storage.getQuotationRequests();

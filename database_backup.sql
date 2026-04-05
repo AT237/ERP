@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict XxlvygdBrvzF8Jd4x8beAuuJa38plJJm3oeMTKeXf3elfHJ71LfEu5zOHL9ISb6
+\restrict kPl7RMq73Z8hV1vAniDa9Ti2hdnIFgYwNcfcx8DgfSdlt3daQhqfX5ET67188M3
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -242,22 +242,26 @@ CREATE FUNCTION public.generate_quotation_request_number() RETURNS text
     AS $_$
 DECLARE
     current_year integer := EXTRACT(YEAR FROM NOW());
-    next_num integer;
-    max_number text;
+    pattern text := '^QR-' || current_year || '-[0-9]{3}$';
+    next_num integer := 1;
+    used_numbers integer[];
+    n integer;
 BEGIN
-    -- Find highest number for current year
-    SELECT request_number INTO max_number
-    FROM quotation_requests 
-    WHERE request_number ~ ('^QR-' || current_year || '-[0-9]{3}$')
-    ORDER BY request_number DESC 
-    LIMIT 1;
-    
-    IF max_number IS NULL THEN
-        next_num := 1;
-    ELSE
-        next_num := (regexp_match(max_number, 'QR-' || current_year || '-([0-9]{3})'))[1]::integer + 1;
+    SELECT array_agg((regexp_match(request_number, 'QR-' || current_year || '-([0-9]{3})'))[1]::integer ORDER BY 1)
+    INTO used_numbers
+    FROM quotation_requests
+    WHERE request_number ~ pattern;
+
+    IF used_numbers IS NOT NULL THEN
+        FOREACH n IN ARRAY used_numbers LOOP
+            IF n = next_num THEN
+                next_num := next_num + 1;
+            ELSE
+                EXIT;
+            END IF;
+        END LOOP;
     END IF;
-    
+
     RETURN 'QR-' || current_year || '-' || LPAD(next_num::text, 3, '0');
 END;
 $_$;
@@ -3690,7 +3694,7 @@ GdphYhrEI-DBCwvXuLNnfm6cyFod8fbZ	{"cookie":{"originalMaxAge":604800000,"expires"
 yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 11:32:05
 vOad41z3VWAgzwRSeTGrvBu0HTmLQDlS	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:43:20.347Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:43:21
 gxU7UMLOcpCMcD8mbTmLwnA20gbdJ27A	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:46:22.733Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:46:23
-Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-12 18:16:58
+Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-12 18:19:29
 \.
 
 
@@ -5225,5 +5229,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XxlvygdBrvzF8Jd4x8beAuuJa38plJJm3oeMTKeXf3elfHJ71LfEu5zOHL9ISb6
+\unrestrict kPl7RMq73Z8hV1vAniDa9Ti2hdnIFgYwNcfcx8DgfSdlt3daQhqfX5ET67188M3
 
