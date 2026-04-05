@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Cx9Pu1Oagrxb99rCmHgONVEgF4rl2axZbpl79LoaudG8nI4pWKgQFVIQwewczzS
+\restrict 7Bedx8On9s8T63MQYRiaRXRYGumQ2IfxGHwfOXetIpzqvcPwhjaJChqxIWZA1SM
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -140,23 +140,27 @@ CREATE FUNCTION public.generate_proforma_invoice_number() RETURNS text
     AS $_$
 DECLARE
     current_year integer := EXTRACT(YEAR FROM NOW());
-    next_num integer;
-    max_number text;
+    pattern text := '^PFI-' || current_year || '-[0-9]{3}$';
+    next_num integer := 1;
+    used_numbers integer[];
+    n integer;
 BEGIN
-    -- Find highest number for current year in proforma invoices
-    SELECT proforma_number INTO max_number
-    FROM proforma_invoices 
-    WHERE proforma_number ~ ('^PRI-' || current_year || '-[0-9]{3}$')
-    ORDER BY proforma_number DESC 
-    LIMIT 1;
-    
-    IF max_number IS NULL THEN
-        next_num := 1;
-    ELSE
-        next_num := (regexp_match(max_number, 'PRI-' || current_year || '-([0-9]{3})'))[1]::integer + 1;
+    SELECT array_agg((regexp_match(proforma_number, 'PFI-' || current_year || '-([0-9]{3})'))[1]::integer ORDER BY 1)
+    INTO used_numbers
+    FROM proforma_invoices
+    WHERE proforma_number ~ pattern;
+
+    IF used_numbers IS NOT NULL THEN
+        FOREACH n IN ARRAY used_numbers LOOP
+            IF n = next_num THEN
+                next_num := next_num + 1;
+            ELSE
+                EXIT;
+            END IF;
+        END LOOP;
     END IF;
-    
-    RETURN 'PRI-' || current_year || '-' || LPAD(next_num::text, 3, '0');
+
+    RETURN 'PFI-' || current_year || '-' || LPAD(next_num::text, 3, '0');
 END;
 $_$;
 
@@ -2426,7 +2430,7 @@ fb62b84d-dfbc-4d5a-bc02-8dc18b0accaf	5aa9e337-5d97-40cb-b76f-2f4d65e6b168	\N		1.
 
 COPY public.proforma_invoices (id, proforma_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, notes, created_at, description, payment_days_id, invoice_date, paid_amount, total_amount_in_words, vat_rate_percent, customer_snapshot, print_sort_order, print_language_code, print_project_no, print_payment_conditions, print_line_images, incoterm_id) FROM stdin;
 8ca9efc0-766d-4a82-b8c6-f4a83bafe1a1	PFI-2026-001	d487e312-b8dd-4e68-9c0d-32a275388035	\N	a618178f-37e5-4d97-96ac-d2366c17cdd0	concept	2026-04-14 22:00:00	0.00	0.00	0.00		2026-04-01 12:15:40.812066	Additonal items	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-31 22:00:00	0.00	Nul euro	\N	\N	position	nl	t	t	f	\N
-5aa9e337-5d97-40cb-b76f-2f4d65e6b168	PRI-2026-002	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	db43039e-cb89-460a-9308-2453f5bad5d0	concept	\N	3048.40	640.16	3688.56		2026-04-05 06:57:54.974049	Consulting fees P1-2026	\N	2026-04-04 22:00:00	0.00	Three thousand six hundred eighty-eight euro and fifty-six cents	21.00	\N	position_low_high	en	t	t	t	\N
+5aa9e337-5d97-40cb-b76f-2f4d65e6b168	PFI-2026-002	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	db43039e-cb89-460a-9308-2453f5bad5d0	concept	\N	3048.40	640.16	3688.56		2026-04-05 06:57:54.974049	Consulting fees P1-2026	\N	2026-04-04 22:00:00	0.00	Three thousand six hundred eighty-eight euro and fifty-six cents	21.00	\N	position_low_high	en	t	t	t	\N
 \.
 
 
@@ -3686,7 +3690,7 @@ GdphYhrEI-DBCwvXuLNnfm6cyFod8fbZ	{"cookie":{"originalMaxAge":604800000,"expires"
 yfGCzjUSFmdjjFzA1bMksjG1HAFhXRmX	{"cookie":{"originalMaxAge":604800000,"expires":"2026-03-30T12:21:35.460Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 11:32:05
 vOad41z3VWAgzwRSeTGrvBu0HTmLQDlS	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:43:20.347Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:43:21
 gxU7UMLOcpCMcD8mbTmLwnA20gbdJ27A	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:46:22.733Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:46:23
-Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-12 08:20:25
+Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-12 08:21:46
 \.
 
 
@@ -5221,5 +5225,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Cx9Pu1Oagrxb99rCmHgONVEgF4rl2axZbpl79LoaudG8nI4pWKgQFVIQwewczzS
+\unrestrict 7Bedx8On9s8T63MQYRiaRXRYGumQ2IfxGHwfOXetIpzqvcPwhjaJChqxIWZA1SM
 

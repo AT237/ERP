@@ -1910,6 +1910,11 @@ export class DatabaseStorage implements IStorage {
         hsCode: item.hsCode,
         countryOfOrigin: item.countryOfOrigin,
         lineImage: item.lineImage,
+        workDate: (item as any).workDate,
+        technicianNames: (item as any).technicianNames,
+        technicianIds: (item as any).technicianIds,
+        descriptionInternal: (item as any).descriptionInternal,
+        customerRateId: (item as any).customerRateId,
       };
       await this.addProformaInvoiceItem(proformaItem);
     }
@@ -2125,6 +2130,11 @@ export class DatabaseStorage implements IStorage {
         hsCode: (item as any).hsCode,
         countryOfOrigin: (item as any).countryOfOrigin,
         lineImage: (item as any).lineImage,
+        workDate: (item as any).workDate,
+        technicianNames: (item as any).technicianNames,
+        technicianIds: (item as any).technicianIds,
+        descriptionInternal: (item as any).descriptionInternal,
+        customerRateId: (item as any).customerRateId,
       };
       await this.addProformaInvoiceItem(proformaItem);
     }
