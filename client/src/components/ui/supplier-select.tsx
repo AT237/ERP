@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown, Plus, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -31,7 +31,6 @@ export function SupplierSelect({
   parentId,
 }: SupplierSelectProps) {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
 
   const { data: internalSuppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],

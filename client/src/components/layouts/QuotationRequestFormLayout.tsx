@@ -16,7 +16,7 @@ import { SupplierSelect } from "@/components/ui/supplier-select";
 import { ProjectSelect } from "@/components/ui/project-select";
 import { Input } from "@/components/ui/input";
 import { RefreshCw, X } from "lucide-react";
-import type { QuotationRequest, InsertQuotationRequest, QuotationRequestItem, Supplier, InventoryItem, UnitOfMeasure } from "@shared/schema";
+import type { QuotationRequest, InsertQuotationRequest, QuotationRequestItem, InventoryItem, UnitOfMeasure } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 
@@ -77,7 +77,6 @@ export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentI
     enabled: !!quotationRequestId,
   });
 
-  const { data: suppliers } = useQuery<Supplier[]>({ queryKey: ["/api/suppliers"] });
   const { data: inventoryItems } = useQuery<InventoryItem[]>({ queryKey: ["/api/inventory"] });
   const { data: units } = useQuery<UnitOfMeasure[]>({ queryKey: ["/api/units-of-measure"] });
 
@@ -498,20 +497,13 @@ export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentI
               label: "Leverancier",
               type: "custom" as const,
               customComponent: (
-                <SelectWithAdd
+                <SupplierSelect
                   value={form.watch("supplierId")}
                   onValueChange={(value) => form.setValue("supplierId", value)}
                   placeholder="Selecteer leverancier..."
-                  addFormTitle="Nieuwe leverancier"
                   testId="select-supplier"
-                  addFormContent={
-                    <QuickAddSupplier onSuccess={(supplierId) => form.setValue("supplierId", supplierId)} />
-                  }
-                >
-                  {suppliers?.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>
-                  ))}
-                </SelectWithAdd>
+                  parentId={parentId}
+                />
               ),
               validation: { isRequired: true, error: form.formState.errors.supplierId?.message },
               testId: "select-supplier"
