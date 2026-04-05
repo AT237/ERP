@@ -868,6 +868,7 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
       vatRatePercent: (invoice as any).vatRatePercent ? parseFloat(String((invoice as any).vatRatePercent)).toString() : null,
       notes: invoice.notes,
       paymentTerms: paymentTermsLabel,
+      workOrderNumbers: '',
       printLanguageCode: (invoice as any).printLanguageCode || null,
       incoTerms: incotermLabel,
       printProjectNo: (invoice as any).printProjectNo ?? true,
