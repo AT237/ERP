@@ -134,6 +134,62 @@ async function fixQuotationTotals() {
   }
 }
 
+async function ensureSeedLayouts() {
+  try {
+    const layoutIds = [
+      '57f6cf12-da83-46ce-b93e-c39f34c3f090',
+      '6ce6fe5f-0dd3-43c5-aa5f-88d2b1b284fd',
+    ];
+    const existing = await pool.query(
+      `SELECT id FROM document_layouts WHERE id = ANY($1)`,
+      [layoutIds]
+    );
+    const existingIds = new Set(existing.rows.map((r: any) => r.id));
+    const missing = layoutIds.filter(id => !existingIds.has(id));
+    if (missing.length === 0) return;
+
+    const possiblePaths = [
+      join(import.meta.dirname, "seed-data.sql"),
+      join(process.cwd(), "server", "seed-data.sql"),
+      join(process.cwd(), "dist", "seed-data.sql"),
+    ];
+    let sqlContent = "";
+    for (const p of possiblePaths) {
+      try {
+        sqlContent = readFileSync(p, "utf-8");
+        break;
+      } catch { }
+    }
+    if (!sqlContent) return;
+
+    const missingSet = new Set(missing);
+    const lines = sqlContent.split("\n").filter(line =>
+      line.startsWith("INSERT INTO") &&
+      (line.includes("document_layouts") || line.includes("layout_sections"))
+    );
+
+    let imported = 0;
+    for (const line of lines) {
+      const hasRelevantId = [...missingSet].some(id => line.includes(id));
+      if (hasRelevantId) {
+        try {
+          await pool.query(line);
+          imported++;
+        } catch (err: any) {
+          if (!err.message?.includes("duplicate key")) {
+            log(`Layout seed warning: ${err.message?.substring(0, 100)}`);
+          }
+        }
+      }
+    }
+    if (imported > 0) {
+      log(`Ensured ${imported} missing layout records (${missing.length} layout(s))`);
+    }
+  } catch (err: any) {
+    log(`Layout seed error: ${err.message}`);
+  }
+}
+
 async function ensureDbFunctions() {
   try {
     await pool.query(`
@@ -412,6 +468,7 @@ async function ensureAdminEmployee() {
 
 (async () => {
   await seedProductionDatabase();
+  await ensureSeedLayouts();
   await ensureDbFunctions();
   await ensureBrandsTable();
   await ensureLineItemColumns();
