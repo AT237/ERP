@@ -330,6 +330,10 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   useEffect(() => {
     if (invoice && formInitializedForId.current !== invoice.id) {
       formInitializedForId.current = invoice.id;
+      const storedVatPercent = (invoice as any).vatRatePercent ? parseFloat(String((invoice as any).vatRatePercent)) : 0;
+      if (storedVatPercent > 0) {
+        setVatRatePercent(storedVatPercent);
+      }
       invoiceForm.reset({
         invoiceNumber: invoice.invoiceNumber || "",
         customerId: invoice.customerId || "",
@@ -344,7 +348,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         totalAmount: invoice.totalAmount || "0.00",
         totalAmountInWords: (invoice as any).totalAmountInWords || "",
         paidAmount: invoice.paidAmount || "0.00",
-        vatRatePercent: (invoice as any).vatRatePercent ? parseFloat(String((invoice as any).vatRatePercent)).toString() : "",
+        vatRatePercent: storedVatPercent > 0 ? storedVatPercent.toString() : "",
         notes: invoice.notes || "",
         printSortOrder: (invoice as any).printSortOrder || "position",
         printLanguageCode: (invoice as any).printLanguageCode || "nl",
