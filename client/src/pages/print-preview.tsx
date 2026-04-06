@@ -36,17 +36,6 @@ export default function PrintPreviewPage() {
   }, []);
 
   useEffect(() => {
-    if (!printRef.current) return;
-    const observer = new ResizeObserver(() => {
-      if (printRef.current) {
-        setContentHeight(printRef.current.scrollHeight);
-      }
-    });
-    observer.observe(printRef.current);
-    return () => observer.disconnect();
-  }, [layout, sections, printData]);
-
-  useEffect(() => {
     const metaViewport = document.querySelector('meta[name="viewport"]');
     const original = metaViewport?.getAttribute("content") ?? "";
     metaViewport?.setAttribute(
@@ -109,6 +98,17 @@ export default function PrintPreviewPage() {
   });
 
   const isLoading = layoutLoading || sectionsLoading || printDataLoading;
+
+  useEffect(() => {
+    if (!printRef.current) return;
+    const observer = new ResizeObserver(() => {
+      if (printRef.current) {
+        setContentHeight(printRef.current.scrollHeight);
+      }
+    });
+    observer.observe(printRef.current);
+    return () => observer.disconnect();
+  }, [layout, sections, printData]);
 
   useEffect(() => {
     document.title =
@@ -187,19 +187,25 @@ export default function PrintPreviewPage() {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
           }
-          .draft-watermark {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            z-index: 9999 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-          }
           .print-page-gap { display: none !important; }
         }
+        ${isDraft ? `
+        [data-pdf-page="true"]::after {
+          content: "CONCEPT";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(-45deg);
+          font-size: 120px;
+          font-weight: 700;
+          color: rgba(0, 0, 0, 0.06);
+          letter-spacing: 16px;
+          text-transform: uppercase;
+          white-space: nowrap;
+          pointer-events: none;
+          z-index: 10;
+        }
+        ` : ''}
       `}</style>
 
       <div className="print-toolbar flex items-center justify-between px-4 py-2 bg-white border-b shadow-sm gap-2 flex-wrap">
@@ -243,14 +249,14 @@ export default function PrintPreviewPage() {
           id="print-doc-container"
           style={{
             width: `${DOC_WIDTH * totalScale}px`,
-            height: `${scaledHeight}px`,
+            minHeight: `${scaledHeight}px`,
             margin: "0 auto",
             position: "relative",
           }}
         >
           <div
             ref={printRef}
-            className="print-scale-wrapper bg-white shadow-lg"
+            className="print-scale-wrapper"
             style={{
               width: `${DOC_WIDTH}px`,
               minHeight: `${DOC_HEIGHT}px`,
@@ -258,41 +264,8 @@ export default function PrintPreviewPage() {
               transformOrigin: "top left",
               fontFamily: "Arial, Helvetica, sans-serif",
               position: "relative",
-              overflow: "hidden",
             }}
           >
-            {isDraft && (
-              <div
-                className="draft-watermark"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  pointerEvents: "none",
-                  zIndex: 10,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "120px",
-                    fontWeight: 700,
-                    color: "rgba(0, 0, 0, 0.06)",
-                    transform: "rotate(-45deg)",
-                    userSelect: "none",
-                    letterSpacing: "16px",
-                    textTransform: "uppercase",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  CONCEPT
-                </span>
-              </div>
-            )}
             <LayoutPreview
               layout={layout}
               sections={sections}
