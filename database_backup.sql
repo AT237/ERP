@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 3hRe3euMvlIeg195Sv8uzxcMsmRCYsjavBAfEzRtOwvO9781gn1mNv9mZ10JUrK
+\restrict oUzGxoUxdNY013z0FqBMeCcvjrsIDSw2Ax9J6BpLE0sRyvDVmBYp76df1ztOgSY
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -138,31 +138,31 @@ ALTER FUNCTION public.generate_packing_list_number() OWNER TO postgres;
 CREATE FUNCTION public.generate_proforma_invoice_number() RETURNS text
     LANGUAGE plpgsql
     AS $_$
-DECLARE
-    current_year integer := EXTRACT(YEAR FROM NOW());
-    pattern text := '^PFI-' || current_year || '-[0-9]{3}$';
-    next_num integer := 1;
-    used_numbers integer[];
-    n integer;
-BEGIN
-    SELECT array_agg((regexp_match(proforma_number, 'PFI-' || current_year || '-([0-9]{3})'))[1]::integer ORDER BY 1)
-    INTO used_numbers
-    FROM proforma_invoices
-    WHERE proforma_number ~ pattern;
+      DECLARE
+          current_year integer := EXTRACT(YEAR FROM NOW());
+          pattern text := '^PFI-' || current_year || '-[0-9]{3}$';
+          next_num integer := 1;
+          used_numbers integer[];
+          n integer;
+      BEGIN
+          SELECT array_agg((regexp_match(proforma_number, 'PFI-' || current_year || '-([0-9]{3})'))[1]::integer ORDER BY 1)
+          INTO used_numbers
+          FROM proforma_invoices
+          WHERE proforma_number ~ pattern;
 
-    IF used_numbers IS NOT NULL THEN
-        FOREACH n IN ARRAY used_numbers LOOP
-            IF n = next_num THEN
-                next_num := next_num + 1;
-            ELSE
-                EXIT;
-            END IF;
-        END LOOP;
-    END IF;
+          IF used_numbers IS NOT NULL THEN
+              FOREACH n IN ARRAY used_numbers LOOP
+                  IF n = next_num THEN
+                      next_num := next_num + 1;
+                  ELSE
+                      EXIT;
+                  END IF;
+              END LOOP;
+          END IF;
 
-    RETURN 'PFI-' || current_year || '-' || LPAD(next_num::text, 3, '0');
-END;
-$_$;
+          RETURN 'PFI-' || current_year || '-' || LPAD(next_num::text, 3, '0');
+      END;
+      $_$;
 
 
 ALTER FUNCTION public.generate_proforma_invoice_number() OWNER TO postgres;
@@ -240,31 +240,31 @@ ALTER FUNCTION public.generate_quotation_number() OWNER TO postgres;
 CREATE FUNCTION public.generate_quotation_request_number() RETURNS text
     LANGUAGE plpgsql
     AS $_$
-DECLARE
-    current_year integer := EXTRACT(YEAR FROM NOW());
-    pattern text := '^QR-' || current_year || '-[0-9]{3}$';
-    next_num integer := 1;
-    used_numbers integer[];
-    n integer;
-BEGIN
-    SELECT array_agg((regexp_match(request_number, 'QR-' || current_year || '-([0-9]{3})'))[1]::integer ORDER BY 1)
-    INTO used_numbers
-    FROM quotation_requests
-    WHERE request_number ~ pattern;
+      DECLARE
+          current_year integer := EXTRACT(YEAR FROM NOW());
+          pattern text := '^QR-' || current_year || '-[0-9]{3}$';
+          next_num integer := 1;
+          used_numbers integer[];
+          n integer;
+      BEGIN
+          SELECT array_agg((regexp_match(request_number, 'QR-' || current_year || '-([0-9]{3})'))[1]::integer ORDER BY 1)
+          INTO used_numbers
+          FROM quotation_requests
+          WHERE request_number ~ pattern;
 
-    IF used_numbers IS NOT NULL THEN
-        FOREACH n IN ARRAY used_numbers LOOP
-            IF n = next_num THEN
-                next_num := next_num + 1;
-            ELSE
-                EXIT;
-            END IF;
-        END LOOP;
-    END IF;
+          IF used_numbers IS NOT NULL THEN
+              FOREACH n IN ARRAY used_numbers LOOP
+                  IF n = next_num THEN
+                      next_num := next_num + 1;
+                  ELSE
+                      EXIT;
+                  END IF;
+              END LOOP;
+          END IF;
 
-    RETURN 'QR-' || current_year || '-' || LPAD(next_num::text, 3, '0');
-END;
-$_$;
+          RETURN 'QR-' || current_year || '-' || LPAD(next_num::text, 3, '0');
+      END;
+      $_$;
 
 
 ALTER FUNCTION public.generate_quotation_request_number() OWNER TO postgres;
@@ -3686,7 +3686,7 @@ Y5hQ4asUMJvcyQnh4WQbD_iJS-ntWE19	{"cookie":{"originalMaxAge":604800000,"expires"
 X9gw_zOMQjpk7cd6h2EVqXqaYX7cvccO	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:38.777Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:29:39
 z9XOAqcVlYPxLe_4uJPtklTill04tHvO	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:59:08.399Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-06 13:05:07
 O-eCAstFqc51FCzHxjc1uh1eRtsDkAVy	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-08T09:29:46.179Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-08 09:29:47
-kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-13 19:33:00
+kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-13 19:39:42
 8geNcP-CMKiED6tl9n4DTFQeWfxStevQ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-10T11:42:23.985Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 11:42:25
 CHT3r4La7hWEYODSLhXsmnp1QNmnOh4L	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-10T11:42:30.598Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 11:42:31
 Y6VX0BCjZ3xsjhAdK4tkCq2FddN57Xgf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-10T11:42:34.670Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 11:42:40
@@ -5230,5 +5230,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 3hRe3euMvlIeg195Sv8uzxcMsmRCYsjavBAfEzRtOwvO9781gn1mNv9mZ10JUrK
+\unrestrict oUzGxoUxdNY013z0FqBMeCcvjrsIDSw2Ax9J6BpLE0sRyvDVmBYp76df1ztOgSY
 
