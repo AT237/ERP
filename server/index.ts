@@ -134,6 +134,69 @@ async function fixQuotationTotals() {
   }
 }
 
+async function ensureDbFunctions() {
+  try {
+    await pool.query(`
+      CREATE OR REPLACE FUNCTION generate_proforma_invoice_number() RETURNS text LANGUAGE plpgsql AS $$
+      DECLARE
+          current_year integer := EXTRACT(YEAR FROM NOW());
+          pattern text := '^PFI-' || current_year || '-[0-9]{3}$';
+          next_num integer := 1;
+          used_numbers integer[];
+          n integer;
+      BEGIN
+          SELECT array_agg((regexp_match(proforma_number, 'PFI-' || current_year || '-([0-9]{3})'))[1]::integer ORDER BY 1)
+          INTO used_numbers
+          FROM proforma_invoices
+          WHERE proforma_number ~ pattern;
+
+          IF used_numbers IS NOT NULL THEN
+              FOREACH n IN ARRAY used_numbers LOOP
+                  IF n = next_num THEN
+                      next_num := next_num + 1;
+                  ELSE
+                      EXIT;
+                  END IF;
+              END LOOP;
+          END IF;
+
+          RETURN 'PFI-' || current_year || '-' || LPAD(next_num::text, 3, '0');
+      END;
+      $$;
+    `);
+    await pool.query(`
+      CREATE OR REPLACE FUNCTION generate_quotation_request_number() RETURNS text LANGUAGE plpgsql AS $$
+      DECLARE
+          current_year integer := EXTRACT(YEAR FROM NOW());
+          pattern text := '^QR-' || current_year || '-[0-9]{3}$';
+          next_num integer := 1;
+          used_numbers integer[];
+          n integer;
+      BEGIN
+          SELECT array_agg((regexp_match(request_number, 'QR-' || current_year || '-([0-9]{3})'))[1]::integer ORDER BY 1)
+          INTO used_numbers
+          FROM quotation_requests
+          WHERE request_number ~ pattern;
+
+          IF used_numbers IS NOT NULL THEN
+              FOREACH n IN ARRAY used_numbers LOOP
+                  IF n = next_num THEN
+                      next_num := next_num + 1;
+                  ELSE
+                      EXIT;
+                  END IF;
+              END LOOP;
+          END IF;
+
+          RETURN 'QR-' || current_year || '-' || LPAD(next_num::text, 3, '0');
+      END;
+      $$;
+    `);
+  } catch (err: any) {
+    log(`DB functions warning: ${err.message}`);
+  }
+}
+
 async function syncSequences() {
   try {
     const sequenceMap: Record<string, { table: string; column: string }> = {
@@ -349,6 +412,7 @@ async function ensureAdminEmployee() {
 
 (async () => {
   await seedProductionDatabase();
+  await ensureDbFunctions();
   await ensureBrandsTable();
   await ensureLineItemColumns();
   await syncSequences();
