@@ -7,6 +7,7 @@ import { LayoutPreview } from "./layout-designer";
 
 const DOC_WIDTH = 794;
 const DOC_HEIGHT = 1123;
+const PAGE_GAP = 20;
 
 export default function PrintPreviewPage() {
   const [, params] = useRoute("/print/:documentType/:entityId");
@@ -22,6 +23,7 @@ export default function PrintPreviewPage() {
 
   const [fitScale, setFitScale] = useState(1);
   const [userZoom, setUserZoom] = useState(1);
+  const [contentHeight, setContentHeight] = useState(DOC_HEIGHT);
 
   useEffect(() => {
     const updateFitScale = () => {
@@ -32,6 +34,17 @@ export default function PrintPreviewPage() {
     window.addEventListener("resize", updateFitScale);
     return () => window.removeEventListener("resize", updateFitScale);
   }, []);
+
+  useEffect(() => {
+    if (!printRef.current) return;
+    const observer = new ResizeObserver(() => {
+      if (printRef.current) {
+        setContentHeight(printRef.current.scrollHeight);
+      }
+    });
+    observer.observe(printRef.current);
+    return () => observer.disconnect();
+  }, [layout, sections, printData]);
 
   useEffect(() => {
     const metaViewport = document.querySelector('meta[name="viewport"]');
@@ -132,7 +145,7 @@ export default function PrintPreviewPage() {
     );
   }
 
-  const scaledHeight = DOC_HEIGHT * totalScale;
+  const scaledHeight = contentHeight * totalScale;
 
   return (
     <>
@@ -171,6 +184,8 @@ export default function PrintPreviewPage() {
           [data-pdf-page="true"] {
             box-shadow: none !important;
             margin: 0 !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
           .draft-watermark {
             position: fixed !important;
@@ -183,6 +198,7 @@ export default function PrintPreviewPage() {
             align-items: center !important;
             justify-content: center !important;
           }
+          .print-page-gap { display: none !important; }
         }
       `}</style>
 
