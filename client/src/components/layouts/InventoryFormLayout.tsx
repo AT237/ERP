@@ -813,6 +813,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       brand: "",
       manufacturerPartNumber: "",
       hsCode: "",
+      countryOfOrigin: "",
     },
   });
 
@@ -865,6 +866,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         brand: inventoryItem.brand || "",
         manufacturerPartNumber: inventoryItem.manufacturerPartNumber || "",
         hsCode: inventoryItem.hsCode || "",
+        countryOfOrigin: inventoryItem.countryOfOrigin || "",
       };
       
       form.reset(formData);
@@ -1325,6 +1327,17 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
                 error: form.formState.errors.hsCode?.message
               },
               testId: "input-inventory-hs-code"
+            } as FormField2<InventoryFormData>,
+            {
+              key: "countryOfOrigin",
+              label: "Country of Origin",
+              type: "text",
+              placeholder: "Bijv. Netherlands",
+              register: form.register("countryOfOrigin"),
+              validation: {
+                error: form.formState.errors.countryOfOrigin?.message
+              },
+              testId: "input-inventory-country-of-origin"
             } as FormField2<InventoryFormData>,
           ]
         ),
