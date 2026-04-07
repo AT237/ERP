@@ -122,6 +122,25 @@ export function ProjectFilesTab({ projectId }: ProjectFilesTabProps) {
     document.body.removeChild(link);
   };
 
+  const openFileInNewTab = (attachment: EntityAttachment) => {
+    try {
+      const parts = attachment.fileData.split(",");
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : attachment.mimeType;
+      const byteString = atob(parts[1]);
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      const blob = new Blob([ab], { type: mime });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch {
+      downloadFile(attachment);
+    }
+  };
+
   if (!projectId) {
     return (
       <div className="text-center py-8 text-gray-500 text-sm">
@@ -188,7 +207,9 @@ export function ProjectFilesTab({ projectId }: ProjectFilesTabProps) {
           {files.map((file) => (
             <div
               key={file.id}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50/50 dark:hover:bg-orange-900/10 group"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50/50 dark:hover:bg-orange-900/10 group cursor-pointer"
+              onDoubleClick={() => openFileInNewTab(file)}
+              title="Dubbelklik om te openen"
             >
               {getFileIcon(file.mimeType)}
               <div className="flex-1 min-w-0">
