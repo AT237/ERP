@@ -335,8 +335,11 @@ function CompositeComponentsPanel({ parentItemId, onCostPriceChanged, onComposit
       .map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0")))
       .reduce((sum, v) => sum + v, 0);
     if (prevTotalRef.current !== savedTotal) {
+      const isFirstRender = prevTotalRef.current === null;
       prevTotalRef.current = savedTotal;
-      onCostPriceChangedRef.current?.(savedTotal);
+      if (!isFirstRender || components.length > 0) {
+        onCostPriceChangedRef.current?.(savedTotal);
+      }
     }
     const hasComponents = components.length > 0;
     if (prevIsCompositeRef.current !== hasComponents) {
