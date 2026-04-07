@@ -220,6 +220,27 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
   };
 
+  const handleAddItem = async () => {
+    if (!currentProjectId) return;
+    const maxPos = projectItemsList.length > 0
+      ? Math.max(...projectItemsList.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
+      : 10;
+    await apiRequest("POST", `/api/projects/${currentProjectId}/items`, {
+      projectId: currentProjectId,
+      lineType: 'standard',
+      description: '',
+      quantity: '1',
+      unit: 'stk',
+      unitPrice: '0.00',
+      costPrice: '0.00',
+      discountPercent: '0',
+      lineTotal: '0.00',
+      position: maxPos,
+      positionNo: String(maxPos).padStart(3, '0'),
+    });
+    queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
+  };
+
   // Item columns
   const itemColumns = useMemo(() => [
     createPositionColumn(),
@@ -951,6 +972,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
               onConfirm: handleBulkDeleteItems,
               itemCount: itemTableState.selectedRows.length,
             }}
+            onAdd={handleAddItem}
             onDuplicate={handleDuplicateItem}
             directInput={projectDirectInput}
             rowActions={(item: ProjectItem) => [

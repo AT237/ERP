@@ -261,6 +261,7 @@ export interface DataTableLayoutProps<T = any> {
   
   // Event handlers
   onRowDoubleClick?: (row: T) => void;
+  onAdd?: () => void;
   getRowId: (row: T) => string;
   
   // Customization
@@ -549,6 +550,7 @@ export function DataTableLayout<T = any>({
   detailDialog,
   deleteConfirmDialog,
   onRowDoubleClick,
+  onAdd,
   getRowId,
   entityName,
   entityNamePlural,
@@ -1169,6 +1171,18 @@ export function DataTableLayout<T = any>({
               <Separator orientation="vertical" className="h-6 mx-1" />
               
               {/* Filter */}
+              {onAdd && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 bg-orange-500 text-white hover:bg-orange-600"
+                  onClick={onAdd}
+                  title={`Nieuwe ${entityName} toevoegen`}
+                  data-testid="button-add"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
