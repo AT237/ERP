@@ -922,8 +922,15 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
         createFieldRow({
           key: "totalAmountInWords" as any,
           label: "Bedrag in woorden",
-          type: "textarea",
-          register: invoiceForm.register("totalAmountInWords"),
+          type: "custom",
+          customComponent: (
+            <textarea
+              className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              value={invoiceForm.watch("totalAmountInWords") || ""}
+              onChange={(e) => invoiceForm.setValue("totalAmountInWords", e.target.value)}
+              data-testid="input-total-amount-in-words"
+            />
+          ),
           testId: "input-total-amount-in-words"
         } as any),
         createFieldRow({
@@ -975,9 +982,7 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
               onValueChange={(value) => {
                 invoiceForm.setValue("printLanguageCode" as any, value);
                 const total = parseFloat(invoiceForm.getValues("totalAmount") || "0") || 0;
-                if (total > 0) {
-                  invoiceForm.setValue("totalAmountInWords", amountToWords(total, value));
-                }
+                invoiceForm.setValue("totalAmountInWords", amountToWords(total, value));
               }}
             >
               <SelectTrigger className="w-full" data-testid="select-print-language">
