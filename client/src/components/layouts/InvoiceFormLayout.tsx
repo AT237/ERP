@@ -497,8 +497,28 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     }
     try {
       await apiRequest("POST", `/api/invoices/${currentInvoiceId}/refresh-customer`);
+      const customerId = invoiceForm.getValues("customerId");
+      const customer = customers.find(c => c.id === customerId);
+      if (customer) {
+        if (customer.paymentDaysId) {
+          invoiceForm.setValue("paymentDaysId", customer.paymentDaysId);
+        }
+        const vatRate = vatRates.find(v => v.id === (customer as any)?.vatRateId);
+        const pct = vatRate ? parseFloat(String(vatRate.rate)) : 0;
+        setVatRatePercent(pct);
+        invoiceForm.setValue("vatRatePercent", pct > 0 ? pct.toString() : "");
+        const lang = (customer as any)?.languageCode || 'nl';
+        setCustomerLanguageCode(lang);
+        invoiceForm.setValue("printLanguageCode" as any, lang);
+        const subtotal = parseFloat(invoiceForm.getValues("subtotal") || "0") || 0;
+        const taxAmount = subtotal * pct / 100;
+        const total = subtotal + taxAmount;
+        invoiceForm.setValue("taxAmount", taxAmount.toFixed(2));
+        invoiceForm.setValue("totalAmount", total.toFixed(2));
+        invoiceForm.setValue("totalAmountInWords", amountToWords(total, lang));
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/invoices", currentInvoiceId] });
-      toast({ title: "Klantgegevens bijgewerkt", description: "De adresgegevens van de klant zijn gesynchroniseerd met deze factuur." });
+      toast({ title: "Klantgegevens bijgewerkt", description: "Klantgegevens, betaalcondities en taalinstellingen zijn gesynchroniseerd." });
     } catch {
       toast({ title: "Fout", description: "Synchronisatie mislukt.", variant: "destructive" });
     }

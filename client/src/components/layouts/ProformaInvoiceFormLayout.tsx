@@ -323,8 +323,28 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
     }
     try {
       await apiRequest("POST", `/api/proforma-invoices/${currentInvoiceId}/refresh-customer`);
+      const customerId = invoiceForm.getValues("customerId");
+      const customer = customers.find(c => c.id === customerId);
+      if (customer) {
+        if (customer.paymentDaysId) {
+          invoiceForm.setValue("paymentDaysId", customer.paymentDaysId);
+        }
+        const vatRate = vatRates.find(v => v.id === (customer as any)?.vatRateId);
+        const pct = vatRate ? parseFloat(String(vatRate.rate)) : 0;
+        setVatRatePercent(pct);
+        invoiceForm.setValue("vatRatePercent", pct > 0 ? pct.toString() : "");
+        const lang = (customer as any)?.languageCode || 'nl';
+        setCustomerLanguageCode(lang);
+        invoiceForm.setValue("printLanguageCode" as any, lang);
+        const subtotal = parseFloat(invoiceForm.getValues("subtotal") || "0") || 0;
+        const taxAmount = subtotal * pct / 100;
+        const total = subtotal + taxAmount;
+        invoiceForm.setValue("taxAmount", taxAmount.toFixed(2));
+        invoiceForm.setValue("totalAmount", total.toFixed(2));
+        invoiceForm.setValue("totalAmountInWords", amountToWords(total, lang));
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/proforma-invoices", currentInvoiceId] });
-      toast({ title: "Klantgegevens bijgewerkt", description: "De adresgegevens van de klant zijn gesynchroniseerd." });
+      toast({ title: "Klantgegevens bijgewerkt", description: "Klantgegevens, betaalcondities en taalinstellingen zijn gesynchroniseerd." });
     } catch {
       toast({ title: "Fout", description: "Synchronisatie mislukt.", variant: "destructive" });
     }

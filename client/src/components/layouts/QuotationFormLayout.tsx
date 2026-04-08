@@ -936,8 +936,14 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
     try {
       await apiRequest("POST", `/api/quotations/${currentQuotationId}/refresh-customer`);
+      const customerId = quotationForm.getValues("customerId");
+      const customer = customers.find(c => c.id === customerId);
+      if (customer) {
+        const lang = (customer as any)?.languageCode || 'nl';
+        quotationForm.setValue("printLanguageCode", lang);
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId] });
-      toast({ title: "Klantgegevens bijgewerkt", description: "De adresgegevens van de klant zijn gesynchroniseerd met deze offerte." });
+      toast({ title: "Klantgegevens bijgewerkt", description: "Klantgegevens en taalinstellingen zijn gesynchroniseerd." });
     } catch {
       toast({ title: "Fout", description: "Synchronisatie mislukt.", variant: "destructive" });
     }
