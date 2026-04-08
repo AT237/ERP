@@ -1491,9 +1491,10 @@ export default function Layout({ children }: LayoutProps) {
       }
       
       if (tab.formType === 'address') {
-        const addressId = tab.id.startsWith('edit-address-') 
-          ? tab.id.replace('edit-address-', '') 
-          : undefined;
+        const addressId = tab.entityId
+          || tab.parentId
+          || (tab.id.startsWith('edit-address-') ? tab.id.replace('edit-address-', '') : undefined)
+          || (tab.id.startsWith('address-') ? tab.id.replace('address-', '') : undefined);
         
         return (
           <Suspense fallback={<div></div>}>
