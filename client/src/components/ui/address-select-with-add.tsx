@@ -143,7 +143,11 @@ export function AddressSelectWithAdd({
                       — Clear selection —
                     </CommandItem>
                   )}
-                  {addresses.map((address) => (
+                  {[...addresses].sort((a, b) => {
+                    if (a.id === value) return -1;
+                    if (b.id === value) return 1;
+                    return 0;
+                  }).map((address) => (
                     <CommandItem
                       key={address.id}
                       value={`${address.id} ${formatAddress(address)}`}
@@ -193,7 +197,19 @@ export function AddressSelectWithAdd({
           </PopoverContent>
         </Popover>
         {value && selectedAddress && (
-          <RefreshIconButton queryKeys={["/api/addresses"]} className="absolute right-9 top-1/2 -translate-y-1/2 z-10" title="Ververs adressen" />
+          <button
+            type="button"
+            className="absolute right-9 top-1/2 -translate-y-1/2 z-10 h-6 w-6 flex items-center justify-center rounded text-orange-500 hover:text-orange-700 hover:bg-orange-50 transition-colors"
+            title="Open adresformulier"
+            onClick={(e) => {
+              e.stopPropagation();
+              window.dispatchEvent(new CustomEvent('open-form-tab', {
+                detail: { id: `address-${value}`, name: formatAddress(selectedAddress), formType: 'address', entityId: value }
+              }));
+            }}
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+          </button>
         )}
     </div>
   );

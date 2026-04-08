@@ -307,7 +307,11 @@ export function CustomerSelect({
                         — Clear selection —
                       </CommandItem>
                     )}
-                    {customersTyped.map((customer) => (
+                    {[...customersTyped].sort((a, b) => {
+                      if (a.id === value) return -1;
+                      if (b.id === value) return 1;
+                      return 0;
+                    }).map((customer) => (
                       <CommandItem
                         key={customer.id}
                         value={customer.id}
@@ -359,10 +363,30 @@ export function CustomerSelect({
               </Command>
             </PopoverContent>
           </Popover>
+          {value && selectedCustomer && (
+            <button
+              type="button"
+              className="absolute right-9 top-1/2 -translate-y-1/2 z-10 h-6 w-6 flex items-center justify-center rounded text-orange-500 hover:text-orange-700 hover:bg-orange-50 transition-colors"
+              title="Open klantformulier"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.dispatchEvent(new CustomEvent('open-form-tab', {
+                  detail: {
+                    id: `customer-${value}`,
+                    name: selectedCustomer.customerNumber || selectedCustomer.name,
+                    formType: 'customer',
+                    entityId: value,
+                  }
+                }));
+              }}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </button>
+          )}
           {value && selectedCustomer && onRefreshCustomer && (
             <RefreshIconButton
               onRefresh={onRefreshCustomer}
-              className="absolute right-9 top-1/2 -translate-y-1/2 z-10"
+              className={`absolute top-1/2 -translate-y-1/2 z-10 ${value && selectedCustomer ? 'right-[4.25rem]' : 'right-9'}`}
               title="Klantgegevens synchroniseren met dit document"
             />
           )}
