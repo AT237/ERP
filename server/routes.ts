@@ -2145,9 +2145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const invoice = await storage.getProformaInvoice(req.params.id);
       if (!invoice) return res.status(404).json({ message: "Proforma invoice not found" });
-      const customer = await storage.getCustomer(invoice.customerId);
-      if (!customer) return res.status(404).json({ message: "Customer not found" });
-      const snapshot = JSON.stringify(customer);
+      const snapshot = invoice.customerId ? await buildCustomerSnapshot(invoice.customerId) : null;
       const updated = await storage.updateProformaInvoice(req.params.id, { customerSnapshot: snapshot });
       res.json(updated);
     } catch (error) {

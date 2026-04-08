@@ -282,6 +282,12 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
     try {
       const snap = JSON.parse((quotation as any).customerSnapshot);
       if (snap.bankAccount) snap.bankAccount = formatIban(snap.bankAccount);
+      if (!snap.address && snap.addressId) {
+        const address = await db.query.addresses.findFirst({ where: eq(addresses.id, snap.addressId) });
+        if (address) {
+          snap.address = { street: address.street, houseNumber: address.houseNumber, postalCode: address.postalCode, city: address.city, country: address.country };
+        }
+      }
       customerData = snap;
     } catch { /* fall through to live lookup */ }
   }
@@ -540,6 +546,12 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     try {
       const snap = JSON.parse((invoice as any).customerSnapshot);
       if (snap.bankAccount) snap.bankAccount = formatIban(snap.bankAccount);
+      if (!snap.address && snap.addressId) {
+        const address = await db.query.addresses.findFirst({ where: eq(addresses.id, snap.addressId) });
+        if (address) {
+          snap.address = { street: address.street, houseNumber: address.houseNumber, postalCode: address.postalCode, city: address.city, country: address.country };
+        }
+      }
       customerData = snap;
     } catch { /* fall through to live lookup */ }
   }
@@ -755,6 +767,12 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
     try {
       const snap = JSON.parse((invoice as any).customerSnapshot);
       if (snap.bankAccount) snap.bankAccount = formatIban(snap.bankAccount);
+      if (!snap.address && snap.addressId) {
+        const address = await db.query.addresses.findFirst({ where: eq(addresses.id, snap.addressId) });
+        if (address) {
+          snap.address = { street: address.street, houseNumber: address.houseNumber, postalCode: address.postalCode, city: address.city, country: address.country };
+        }
+      }
       customerData = snap;
     } catch { /* fall through */ }
   }
