@@ -746,6 +746,7 @@ export function DataTableLayout<T = any>({
     if (cleanupRef.current) cleanupRef.current();
 
     let lastTap = { time: 0, rowId: '' };
+    let touchStartPos = { x: 0, y: 0 };
     let touchMoved = false;
     let touchHandled = false;
 
@@ -773,8 +774,22 @@ export function DataTableLayout<T = any>({
       }
     };
 
-    const onTouchStart = () => { touchMoved = false; };
-    const onTouchMove = () => { touchMoved = true; };
+    const TOUCH_MOVE_THRESHOLD = 10;
+
+    const onTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      touchStartPos = { x: touch.clientX, y: touch.clientY };
+      touchMoved = false;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchMoved) return;
+      const touch = e.touches[0];
+      const dx = Math.abs(touch.clientX - touchStartPos.x);
+      const dy = Math.abs(touch.clientY - touchStartPos.y);
+      if (dx > TOUCH_MOVE_THRESHOLD || dy > TOUCH_MOVE_THRESHOLD) {
+        touchMoved = true;
+      }
+    };
     const onTouchEnd = (e: TouchEvent) => {
       if (touchMoved) return;
       const rowId = findRowId(e.target as HTMLElement);
@@ -1178,15 +1193,31 @@ export function DataTableLayout<T = any>({
                     <span className="ml-1">{action.label}</span>
                   </Button>
                 ))}
-                {deleteConfirmDialog && selectedRows.length > 0 && (
+                {deleteConfirmDialog && (
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 text-sm bg-red-500 text-white hover:bg-red-600 border-red-500"
-                    onClick={() => deleteConfirmDialog.onOpenChange(true)}
+                    className={`h-9 text-sm ${selectedRows.length > 0 ? 'bg-red-500 text-white hover:bg-red-600 border-red-500' : 'opacity-40'}`}
+                    onClick={selectedRows.length > 0 ? () => deleteConfirmDialog.onOpenChange(true) : undefined}
+                    disabled={selectedRows.length === 0}
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
-                    ({selectedRows.length})
+                    Verwijderen{selectedRows.length > 0 ? ` (${selectedRows.length})` : ''}
+                  </Button>
+                )}
+                {onDuplicate && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`h-9 text-sm ${selectedRows.length === 1 ? 'bg-orange-500 text-white hover:bg-orange-600 border-orange-500' : 'opacity-40'}`}
+                    onClick={selectedRows.length === 1 ? () => {
+                      const selectedItem = sortedData.find(item => getRowId(item) === selectedRows[0]);
+                      if (selectedItem) onDuplicate(selectedItem);
+                    } : undefined}
+                    disabled={selectedRows.length !== 1}
+                  >
+                    <CopyPlus className="h-4 w-4 mr-1" />
+                    Dupliceren
                   </Button>
                 )}
               </div>
@@ -1551,14 +1582,14 @@ export function DataTableLayout<T = any>({
                                 ? 'bg-white dark:bg-gray-950' 
                                 : 'bg-white dark:bg-gray-900/50'
                         }`}
-                        style={{ height: '32px', minHeight: '32px', maxHeight: '32px' }}
+                        style={isMobile ? { height: '44px', minHeight: '44px' } : { height: '32px', minHeight: '32px', maxHeight: '32px' }}
                         onDoubleClick={() => {
                           if (directInputMode && directInput?.onUpdate) {
                             startEditingRow(row);
                           }
                         }}
                       >
-                        <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ width: '48px', minWidth: '48px', maxWidth: '48px', height: '32px', lineHeight: '1.2' }}>
+                        <TableCell className="p-2 border-r border-gray-100 dark:border-gray-700" style={{ width: '48px', minWidth: '48px', maxWidth: '48px', height: isMobile ? '44px' : '32px', lineHeight: '1.2' }}>
                           <div className="flex items-center justify-center h-4 w-4 mx-auto">
                             <Checkbox
                               checked={selectedRows.includes(rowId)}
