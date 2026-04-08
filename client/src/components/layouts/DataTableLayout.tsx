@@ -1151,7 +1151,45 @@ export function DataTableLayout<T = any>({
                 </DropdownMenu>
               </div>
 
-              {/* Mobile Action Buttons - hidden, actions are in bottom nav */}
+              {/* Mobile Action Buttons */}
+              <div className="flex gap-1.5 flex-wrap">
+                {onAdd && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-sm bg-orange-500 text-white hover:bg-orange-600 border-orange-500"
+                    onClick={onAdd}
+                    title={`Nieuwe ${entityName} toevoegen`}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Nieuw
+                  </Button>
+                )}
+                {headerActions.map((action) => (
+                  <Button
+                    key={action.key}
+                    variant="outline"
+                    size="sm"
+                    className={`h-9 text-sm ${action.disabled ? 'opacity-50' : 'bg-orange-500 text-white hover:bg-orange-600 border-orange-500'}`}
+                    onClick={action.disabled ? undefined : action.onClick}
+                    disabled={action.disabled}
+                  >
+                    {action.icon || <Plus className="h-4 w-4" />}
+                    <span className="ml-1">{action.label}</span>
+                  </Button>
+                ))}
+                {deleteConfirmDialog && selectedRows.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-sm bg-red-500 text-white hover:bg-red-600 border-red-500"
+                    onClick={() => deleteConfirmDialog.onOpenChange(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    ({selectedRows.length})
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             /* Desktop Layout - FormToolbar style icon bar */
