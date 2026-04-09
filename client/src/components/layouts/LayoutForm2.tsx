@@ -63,6 +63,7 @@ export interface FormField2<T extends FieldValues = FieldValues> {
   
   // Select options
   options?: Array<{ value: string; label: string }>;
+  clearable?: boolean;
   
   // Custom component
   customComponent?: ReactNode;
@@ -343,13 +344,18 @@ function renderField<T extends FieldValues>(
     case 'select':
       return (
         <Select 
-          onValueChange={field.setValue}
+          onValueChange={(val) => field.setValue?.(val === "__clear__" ? "" : val)}
           value={field.watch?.() || ""}
         >
           <SelectTrigger className={className} data-testid={field.testId || `select-${field.key}`}>
             <SelectValue placeholder={field.placeholder} />
           </SelectTrigger>
           <SelectContent>
+            {field.clearable && (
+              <SelectItem value="__clear__" className="text-muted-foreground italic">
+                — Wis selectie —
+              </SelectItem>
+            )}
             {field.options?.filter(option => option.value !== "").map(option => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
