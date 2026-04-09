@@ -871,6 +871,8 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
     itemId: item.itemId || null,
     sourceSnippetId: item.sourceSnippetId || null,
     sourceSnippetVersion: item.sourceSnippetVersion || null,
+    hsCode: (item as any).hsCode || null,
+    countryOfOrigin: (item as any).countryOfOrigin || null,
   }));
 
   let incotermLabel: string | null = null;
@@ -878,6 +880,9 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
     const incoterm = await db.query.incoterms.findFirst({ where: eq(incoterms.id, (invoice as any).incotermId) });
     if (incoterm) incotermLabel = `${incoterm.code} - ${incoterm.name}`;
   }
+
+  const countryOfOriginName = await resolveCountryName((invoice as any).countryOfOrigin ?? null);
+  const countryOfSupplyName = await resolveCountryName((invoice as any).countryOfSupply ?? null);
 
   let vatRateData = null;
   const pfiCustomerVatRateId = customer?.vatRateId ?? (await db.query.customers.findFirst({ where: eq(customers.id, invoice.customerId) }))?.vatRateId;
@@ -915,6 +920,16 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
       finalDestination: (invoice as any).finalDestination || null,
       modeOfShipment: (invoice as any).modeOfShipment || null,
       paymentTermsType: (invoice as any).paymentTermsType || null,
+      countryOfOrigin: (invoice as any).countryOfOrigin || null,
+      countryOfOriginName: countryOfOriginName || null,
+      grossWeight: (invoice as any).grossWeight || null,
+      placeOfConsignment: (invoice as any).placeOfConsignment || null,
+      countryOfSupply: (invoice as any).countryOfSupply || null,
+      countryOfSupplyName: countryOfSupplyName || null,
+      freightText: (invoice as any).freightText || null,
+      deliveryTime: (invoice as any).deliveryTime || null,
+      validity: (invoice as any).validity || null,
+      signoffName: (invoice as any).signoffName || null,
     },
     invoice: {
       number: invoice.proformaNumber,
@@ -944,6 +959,16 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
       finalDestination: (invoice as any).finalDestination || null,
       modeOfShipment: (invoice as any).modeOfShipment || null,
       paymentTermsType: (invoice as any).paymentTermsType || null,
+      countryOfOrigin: (invoice as any).countryOfOrigin || null,
+      countryOfOriginName: countryOfOriginName || null,
+      grossWeight: (invoice as any).grossWeight || null,
+      placeOfConsignment: (invoice as any).placeOfConsignment || null,
+      countryOfSupply: (invoice as any).countryOfSupply || null,
+      countryOfSupplyName: countryOfSupplyName || null,
+      freightText: (invoice as any).freightText || null,
+      deliveryTime: (invoice as any).deliveryTime || null,
+      validity: (invoice as any).validity || null,
+      signoffName: (invoice as any).signoffName || null,
     },
     customer: customerData,
     project: projectData,
