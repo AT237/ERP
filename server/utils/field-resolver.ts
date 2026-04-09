@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, workOrders, invoiceWorkOrders, vatRates, incoterms, packingLists, packingListItems, proformaInvoices, proformaInvoiceItems, countries } from "../../shared/schema";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, paymentTerms, workOrders, invoiceWorkOrders, vatRates, incoterms, packingLists, packingListItems, proformaInvoices, proformaInvoiceItems, countries } from "../../shared/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 
 function formatIban(value: string | null): string | null {
@@ -842,6 +842,12 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
     if (paymentDay) paymentTermsLabel = paymentDay.name_en || paymentDay.name_nl;
   }
 
+  let paymentScheduleLabel: string | null = null;
+  if ((invoice as any).paymentScheduleId) {
+    const schedule = await db.query.paymentTerms.findFirst({ where: eq(paymentTerms.id, (invoice as any).paymentScheduleId) });
+    if (schedule) paymentScheduleLabel = `${schedule.code} - ${schedule.name}`;
+  }
+
   const rawItems = await db.query.proformaInvoiceItems.findMany({
     where: eq(proformaInvoiceItems.proformaInvoiceId, proformaInvoiceId),
     orderBy: [asc(proformaInvoiceItems.position)],
@@ -920,6 +926,7 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
       finalDestination: (invoice as any).finalDestination || null,
       modeOfShipment: (invoice as any).modeOfShipment || null,
       paymentTermsType: (invoice as any).paymentTermsType || null,
+      paymentSchedule: paymentScheduleLabel || null,
       countryOfOrigin: (invoice as any).countryOfOrigin || null,
       countryOfOriginName: countryOfOriginName || null,
       grossWeight: (invoice as any).grossWeight || null,
@@ -959,6 +966,7 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
       finalDestination: (invoice as any).finalDestination || null,
       modeOfShipment: (invoice as any).modeOfShipment || null,
       paymentTermsType: (invoice as any).paymentTermsType || null,
+      paymentSchedule: paymentScheduleLabel || null,
       countryOfOrigin: (invoice as any).countryOfOrigin || null,
       countryOfOriginName: countryOfOriginName || null,
       grossWeight: (invoice as any).grossWeight || null,

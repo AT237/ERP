@@ -114,6 +114,7 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
       finalDestination: "",
       modeOfShipment: "",
       paymentTermsType: "",
+      paymentScheduleId: "",
       countryOfOrigin: "",
       grossWeight: "",
       placeOfConsignment: "",
@@ -220,6 +221,7 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
         finalDestination: (invoice as any).finalDestination || "",
         modeOfShipment: (invoice as any).modeOfShipment || "",
         paymentTermsType: (invoice as any).paymentTermsType || "",
+        paymentScheduleId: (invoice as any).paymentScheduleId || "",
         countryOfOrigin: (invoice as any).countryOfOrigin || "",
         grossWeight: (invoice as any).grossWeight || "",
         placeOfConsignment: (invoice as any).placeOfConsignment || "",
@@ -708,6 +710,7 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
       finalDestination: data.finalDestination || null,
       modeOfShipment: data.modeOfShipment || null,
       paymentTermsType: data.paymentTermsType || null,
+      paymentScheduleId: data.paymentScheduleId || null,
     };
 
     if (isEditing) {
@@ -1079,16 +1082,17 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
           ],
           rightColumn: [
             {
-              key: "paymentTermsType",
+              key: "paymentScheduleId",
               label: "Payment Terms",
-              type: "select",
-              options: [
-                { value: "CAD", label: "CAD - Cash Against Documents" },
-                { value: "LC", label: "LC - Letter of Credit" },
-              ],
-              setValue: (value: string) => invoiceForm.setValue("paymentTermsType", value),
-              watch: () => invoiceForm.watch("paymentTermsType"),
-              testId: "select-payment-terms-type"
+              type: "custom",
+              customComponent: (
+                <PaymentScheduleSelectWithAdd
+                  value={invoiceForm.watch("paymentScheduleId") || ""}
+                  onValueChange={(value) => invoiceForm.setValue("paymentScheduleId", value)}
+                  placeholder="Selecteer payment terms..."
+                  testId="select-payment-schedule"
+                />
+              ),
             },
             {
               key: "finalDestination",
