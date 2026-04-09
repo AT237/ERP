@@ -1113,10 +1113,12 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
             {
               key: "placeOfConsignment",
               label: "Place of Consignment",
-              type: "text",
-              placeholder: "Bijv. Ethiopia",
-              register: invoiceForm.register("placeOfConsignment"),
-              testId: "input-place-of-consignment"
+              type: "select",
+              clearable: true,
+              options: countriesList.map((c) => ({ value: c.name, label: `${c.code} - ${c.name}` })),
+              setValue: (value: string) => invoiceForm.setValue("placeOfConsignment", value),
+              watch: () => invoiceForm.watch("placeOfConsignment"),
+              testId: "select-place-of-consignment"
             },
             {
               key: "freightText",
