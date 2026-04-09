@@ -3932,7 +3932,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
     
     // Whether this section is allowed to compact to actual content height.
     // Defined before the block-height helpers so closures can reference it.
-    const sectionCanShrink = section.config?.heightCanShrink || false;
+    const sectionCanShrink = section.config?.heightCanShrink || section.config?.canShrink || false;
 
     // Helper: compute the effective rendered height (mm) of a block.
     // For Text/DataField: uses canvas measurement to account for text wrapping.
@@ -3946,7 +3946,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
       const childBlocks: any[] = block.config?.childBlocks || [];
       const collapseEmpty = block.config?.collapseEmpty || false;
       // The group itself can shrink when either the section allows it OR the group's own heightCanShrink is set.
-      const groupCanShrink = sectionCanShrink || (block.config?.heightCanShrink || false);
+      const groupCanShrink = sectionCanShrink || (block.config?.heightCanShrink || block.config?.canShrink || false);
 
       // Determine hidden children and collect holes (y, h).
       // Visible blocks shift UP by height of holes strictly above them.
@@ -4286,7 +4286,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
         const dynamicPositions = calculateDynamicPositions(blocks, typedPrintData);
         
         // Pre-compute shrink flag so the helper closure can reference it.
-        const staticSectionCanShrink = section.config?.heightCanShrink || false;
+        const staticSectionCanShrink = section.config?.heightCanShrink || section.config?.canShrink || false;
 
         // Helper: effective rendered height (mm) for a block.
         // For Text/DataField: uses canvas measurement to account for text wrapping.
@@ -4299,7 +4299,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
           const childBlocks: any[] = block.config?.childBlocks || [];
           const collapseEmpty = block.config?.collapseEmpty || false;
           // Group can shrink when section allows it OR group has its own heightCanShrink set.
-          const staticGroupCanShrink = staticSectionCanShrink || (block.config?.heightCanShrink || false);
+          const staticGroupCanShrink = staticSectionCanShrink || (block.config?.heightCanShrink || block.config?.canShrink || false);
 
           // Collect holes from hidden children; visible blocks shift up by holes strictly above them.
           const holes: Array<{ y: number; h: number }> = [];
