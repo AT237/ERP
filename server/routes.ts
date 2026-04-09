@@ -3429,6 +3429,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Master Data routes - Countries
+  app.get("/api/masterdata/countries", async (req, res) => {
+    try {
+      const countries = await storage.getCountries();
+      res.json(countries);
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+      res.status(500).json({ message: "Failed to fetch countries" });
+    }
+  });
+
+  app.post("/api/masterdata/countries", async (req, res) => {
+    try {
+      const countryData = insertCountrySchema.parse(req.body);
+      const country = await storage.createCountry(countryData);
+      res.json(country);
+    } catch (error) {
+      console.error("Error creating country:", error);
+      res.status(400).json({ message: "Failed to create country" });
+    }
+  });
+
+  app.get("/api/masterdata/countries/:id", async (req, res) => {
+    try {
+      const country = await storage.getCountry(req.params.id);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      res.json(country);
+    } catch (error) {
+      console.error("Error fetching country:", error);
+      res.status(500).json({ message: "Failed to fetch country" });
+    }
+  });
+
+  app.put("/api/masterdata/countries/:id", async (req, res) => {
+    try {
+      const countryData = insertCountrySchema.partial().parse(req.body);
+      const country = await storage.updateCountry(req.params.id, countryData);
+      res.json(country);
+    } catch (error) {
+      console.error("Error updating country:", error);
+      res.status(400).json({ message: "Failed to update country" });
+    }
+  });
+
+  app.delete("/api/masterdata/countries/:id", async (req, res) => {
+    try {
+      await storage.deleteCountry(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting country:", error);
+      res.status(500).json({ message: "Failed to delete country" });
+    }
+  });
+
   // Master Data routes - Statuses
   app.get("/api/masterdata/statuses", async (req, res) => {
     try {
