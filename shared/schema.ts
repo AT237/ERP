@@ -465,6 +465,14 @@ export const proformaInvoices = pgTable("proforma_invoices", {
   finalDestination: text("final_destination"),
   modeOfShipment: text("mode_of_shipment"),
   paymentTermsType: text("payment_terms_type"),
+  countryOfOrigin: text("country_of_origin"),
+  grossWeight: text("gross_weight"),
+  placeOfConsignment: text("place_of_consignment"),
+  countryOfSupply: text("country_of_supply"),
+  freightText: text("freight_text"),
+  deliveryTime: text("delivery_time"),
+  validity: text("validity"),
+  signoffName: text("signoff_name"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
