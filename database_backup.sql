@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict qZykurTkOlHFV99c6RQOYD8KdZE5jpP4ivYt54chCZh2uzJcNEz13smeKUXfaJq
+\restrict q58lI1bjHNfgZmkH1FqbVk6U3FkhemSi4ILdbzh4a98eTHtCuHph19FrwaILyOd
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -1189,7 +1189,15 @@ CREATE TABLE public.proforma_invoices (
     port_of_discharge text,
     final_destination text,
     mode_of_shipment text,
-    payment_terms_type text
+    payment_terms_type text,
+    country_of_origin text,
+    gross_weight text,
+    place_of_consignment text,
+    country_of_supply text,
+    freight_text text,
+    delivery_time text,
+    validity text,
+    signoff_name text
 );
 
 
@@ -2439,9 +2447,9 @@ fb4d31d6-1f2c-4abd-926d-104cfc038628	405a2240-2807-4dc1-8bf9-b610faf2ff9e	\N		0.
 -- Data for Name: proforma_invoices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.proforma_invoices (id, proforma_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, notes, created_at, description, payment_days_id, invoice_date, paid_amount, total_amount_in_words, vat_rate_percent, customer_snapshot, print_sort_order, print_language_code, print_project_no, print_payment_conditions, print_line_images, incoterm_id, port_of_loading, port_of_discharge, final_destination, mode_of_shipment, payment_terms_type) FROM stdin;
-405a2240-2807-4dc1-8bf9-b610faf2ff9e	PFI-2026-002	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	db43039e-cb89-460a-9308-2453f5bad5d0	concept	\N	3048.40	640.16	3688.56		2026-04-05 08:25:11.735304	Consulting fees P1-2026	\N	2026-04-04 22:00:00	0.00	Drieduizend zeshonderdachtentachtig euro en zesenvijftig cent	21.00	\N	position_low_high	nl	t	t	f	\N	\N	\N	\N	\N	\N
-8ca9efc0-766d-4a82-b8c6-f4a83bafe1a1	PFI-2026-001	d487e312-b8dd-4e68-9c0d-32a275388035	\N	a618178f-37e5-4d97-96ac-d2366c17cdd0	concept	2026-04-14 22:00:00	0.00	0.00	0.00		2026-04-01 12:15:40.812066	Additonal items	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-31 22:00:00	0.00	Nul euro	\N	{"name":"Florensis Abyssinia Farm PLC","customerNumber":"DEB-0017","email":"","generalEmail":"","invoiceEmail":"","phone":"","mobile":"","btwNummer":null,"taxId":"","kvkNummer":"","bankAccount":"","countryCode":null,"countryName":null,"languageCode":"nl","memo":"","invoiceNotes":"","address":{"street":"Korpersteeg","houseNumber":"15A","postalCode":"3853LD","city":"ERMELO","country":"The Netherlands"}}	position	nl	t	t	f	\N	\N	\N	\N	\N	\N
+COPY public.proforma_invoices (id, proforma_number, customer_id, quotation_id, project_id, status, due_date, subtotal, tax_amount, total_amount, notes, created_at, description, payment_days_id, invoice_date, paid_amount, total_amount_in_words, vat_rate_percent, customer_snapshot, print_sort_order, print_language_code, print_project_no, print_payment_conditions, print_line_images, incoterm_id, port_of_loading, port_of_discharge, final_destination, mode_of_shipment, payment_terms_type, country_of_origin, gross_weight, place_of_consignment, country_of_supply, freight_text, delivery_time, validity, signoff_name) FROM stdin;
+405a2240-2807-4dc1-8bf9-b610faf2ff9e	PFI-2026-002	1698a4d0-7d34-4685-b256-1d0cf6e5200b	\N	db43039e-cb89-460a-9308-2453f5bad5d0	concept	\N	3048.40	640.16	3688.56		2026-04-05 08:25:11.735304	Consulting fees P1-2026	\N	2026-04-04 22:00:00	0.00	Drieduizend zeshonderdachtentachtig euro en zesenvijftig cent	21.00	\N	position_low_high	nl	t	t	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8ca9efc0-766d-4a82-b8c6-f4a83bafe1a1	PFI-2026-001	d487e312-b8dd-4e68-9c0d-32a275388035	\N	a618178f-37e5-4d97-96ac-d2366c17cdd0	concept	2026-04-14 22:00:00	0.00	0.00	0.00		2026-04-01 12:15:40.812066	Additonal items	22456c44-8edc-47c7-9ae7-47513d7e7ac2	2026-03-31 22:00:00	0.00	Nul euro	\N	{"name":"Florensis Abyssinia Farm PLC","customerNumber":"DEB-0017","email":"","generalEmail":"","invoiceEmail":"","phone":"","mobile":"","btwNummer":null,"taxId":"","kvkNummer":"","bankAccount":"","countryCode":null,"countryName":null,"languageCode":"nl","memo":"","invoiceNotes":"","address":{"street":"Korpersteeg","houseNumber":"15A","postalCode":"3853LD","city":"ERMELO","country":"The Netherlands"}}	position	nl	t	t	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 \.
 
 
@@ -3692,7 +3700,7 @@ COPY public.user_sessions (sid, sess, expire) FROM stdin;
 8geNcP-CMKiED6tl9n4DTFQeWfxStevQ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-10T11:42:23.985Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 11:42:25
 CHT3r4La7hWEYODSLhXsmnp1QNmnOh4L	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-10T11:42:30.598Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 11:42:31
 Y6VX0BCjZ3xsjhAdK4tkCq2FddN57Xgf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-10T11:42:34.670Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 11:42:40
-kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-16 12:03:25
+kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-16 12:06:14
 Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-12 18:26:27
 \.
 
@@ -5228,5 +5236,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict qZykurTkOlHFV99c6RQOYD8KdZE5jpP4ivYt54chCZh2uzJcNEz13smeKUXfaJq
+\unrestrict q58lI1bjHNfgZmkH1FqbVk6U3FkhemSi4ILdbzh4a98eTHtCuHph19FrwaILyOd
 

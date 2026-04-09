@@ -23,7 +23,7 @@ import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { ProformaInvoice, ProformaInvoiceItem, InsertProformaInvoice, InsertProformaInvoiceItem, Customer, PaymentDay, VatRate, InventoryItem, UnitOfMeasure } from "@shared/schema";
+import type { ProformaInvoice, ProformaInvoiceItem, InsertProformaInvoice, InsertProformaInvoiceItem, Customer, PaymentDay, VatRate, InventoryItem, UnitOfMeasure, Country } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { amountToWords } from "@/utils/field-resolver";
@@ -112,6 +112,14 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
       finalDestination: "",
       modeOfShipment: "",
       paymentTermsType: "",
+      countryOfOrigin: "",
+      grossWeight: "",
+      placeOfConsignment: "",
+      countryOfSupply: "",
+      freightText: "",
+      deliveryTime: "",
+      validity: "",
+      signoffName: "",
     },
   });
 
@@ -149,6 +157,10 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
   const { data: incotermsList = [] } = useQuery<any[]>({
     queryKey: ["/api/masterdata/incoterms"],
     staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: countriesList = [] } = useQuery<Country[]>({
+    queryKey: ["/api/countries"],
   });
 
   const { data: fetchedItems = [] } = useQuery<ProformaInvoiceItem[]>({
@@ -206,6 +218,14 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
         finalDestination: (invoice as any).finalDestination || "",
         modeOfShipment: (invoice as any).modeOfShipment || "",
         paymentTermsType: (invoice as any).paymentTermsType || "",
+        countryOfOrigin: (invoice as any).countryOfOrigin || "",
+        grossWeight: (invoice as any).grossWeight || "",
+        placeOfConsignment: (invoice as any).placeOfConsignment || "",
+        countryOfSupply: (invoice as any).countryOfSupply || "",
+        freightText: (invoice as any).freightText || "",
+        deliveryTime: (invoice as any).deliveryTime || "",
+        validity: (invoice as any).validity || "",
+        signoffName: (invoice as any).signoffName || "",
       } as any);
     }
   }, [invoice]);
@@ -901,6 +921,30 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
               register: invoiceForm.register("notes"),
               testId: "textarea-notes"
             },
+            {
+              key: "deliveryTime",
+              label: "Levertijd",
+              type: "text",
+              placeholder: "Bijv. 98 Days to FAT test",
+              register: invoiceForm.register("deliveryTime"),
+              testId: "input-delivery-time"
+            },
+            {
+              key: "validity",
+              label: "Geldigheid",
+              type: "text",
+              placeholder: "Bijv. 30 Days",
+              register: invoiceForm.register("validity"),
+              testId: "input-validity"
+            },
+            {
+              key: "signoffName",
+              label: "Ondertekening",
+              type: "text",
+              placeholder: "Bijv. A. Tomassen",
+              register: invoiceForm.register("signoffName"),
+              testId: "input-signoff-name"
+            },
           ],
         },
       ]
@@ -1004,6 +1048,32 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
               register: invoiceForm.register("portOfDischarge"),
               testId: "input-port-of-discharge"
             },
+            {
+              key: "countryOfOrigin",
+              label: "Country of Origin",
+              type: "select",
+              options: countriesList.map((c) => ({ value: c.code, label: `${c.code} - ${c.name}` })),
+              setValue: (value: string) => invoiceForm.setValue("countryOfOrigin", value),
+              watch: () => invoiceForm.watch("countryOfOrigin"),
+              testId: "select-country-of-origin"
+            },
+            {
+              key: "countryOfSupply",
+              label: "Country of Supply",
+              type: "select",
+              options: countriesList.map((c) => ({ value: c.code, label: `${c.code} - ${c.name}` })),
+              setValue: (value: string) => invoiceForm.setValue("countryOfSupply", value),
+              watch: () => invoiceForm.watch("countryOfSupply"),
+              testId: "select-country-of-supply"
+            },
+            {
+              key: "grossWeight",
+              label: "Gross Weight",
+              type: "text",
+              placeholder: "Bijv. 2867 Kg",
+              register: invoiceForm.register("grossWeight"),
+              testId: "input-gross-weight"
+            },
           ],
           rightColumn: [
             {
@@ -1031,6 +1101,22 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
               type: "text",
               register: invoiceForm.register("modeOfShipment"),
               testId: "input-mode-of-shipment"
+            },
+            {
+              key: "placeOfConsignment",
+              label: "Place of Consignment",
+              type: "text",
+              placeholder: "Bijv. Ethiopia",
+              register: invoiceForm.register("placeOfConsignment"),
+              testId: "input-place-of-consignment"
+            },
+            {
+              key: "freightText",
+              label: "Freight Info",
+              type: "text",
+              placeholder: "Bijv. Freight prepaid up to Djibouti",
+              register: invoiceForm.register("freightText"),
+              testId: "input-freight-text"
             },
           ],
         },
