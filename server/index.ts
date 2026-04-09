@@ -466,6 +466,45 @@ async function ensureAdminEmployee() {
   }
 }
 
+async function ensureCountriesSeed() {
+  try {
+    const possiblePaths = [
+      join(import.meta.dirname, "countries-seed.json"),
+      join(process.cwd(), "server", "countries-seed.json"),
+      join(process.cwd(), "dist", "countries-seed.json"),
+    ];
+    let jsonContent = "";
+    for (const p of possiblePaths) {
+      try {
+        if (existsSync(p)) {
+          jsonContent = readFileSync(p, "utf-8").trim();
+          break;
+        }
+      } catch {}
+    }
+    if (!jsonContent) return;
+
+    const countries: Array<{ code: string; name: string; requiresBtw?: boolean; requiresAreaCode?: boolean }> = JSON.parse(jsonContent);
+    if (!Array.isArray(countries) || countries.length === 0) return;
+
+    const existing = await pool.query(`SELECT code FROM countries`);
+    const existingCodes = new Set(existing.rows.map((r: any) => r.code));
+
+    const missing = countries.filter(c => !existingCodes.has(c.code));
+    if (missing.length === 0) return;
+
+    for (const c of missing) {
+      await pool.query(
+        `INSERT INTO countries (code, name, requires_btw, requires_area_code) VALUES ($1, $2, $3, $4) ON CONFLICT (code) DO NOTHING`,
+        [c.code, c.name, c.requiresBtw || false, c.requiresAreaCode || false]
+      );
+    }
+    log(`Added ${missing.length} missing countries (total seed: ${countries.length})`);
+  } catch (err: any) {
+    log(`Countries seed error: ${err.message}`);
+  }
+}
+
 async function migrateLY0016DocumentFooter() {
   try {
     const possiblePaths = [
@@ -512,6 +551,7 @@ async function migrateLY0016DocumentFooter() {
   await seedProductionDatabase();
   await ensureSeedLayouts();
   await migrateLY0016DocumentFooter();
+  await ensureCountriesSeed();
   await ensureDbFunctions();
   await ensureBrandsTable();
   await ensureLineItemColumns();
