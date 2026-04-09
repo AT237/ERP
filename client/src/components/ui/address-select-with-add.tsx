@@ -67,14 +67,14 @@ export function AddressSelectWithAdd({
   const selectedAddress = addresses.find(address => address.id === value);
 
   return (
-    <div className="relative flex-1 min-w-0">
+    <div className="flex items-center gap-1 flex-1 min-w-0">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className={cn("w-full justify-between", value && selectedAddress ? "pr-12" : "", className)}
+              className={cn("w-full justify-between", className)}
               data-testid={testId}
             >
               <span
@@ -89,7 +89,7 @@ export function AddressSelectWithAdd({
                   }));
                 }}
               >{selectedAddress ? formatAddress(selectedAddress) : placeholder}</span>
-              <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
+              <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 text-orange-400" />
             </Button>
           </PopoverTrigger>
           <PopoverContent 

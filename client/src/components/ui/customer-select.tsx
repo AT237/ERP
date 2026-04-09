@@ -210,7 +210,7 @@ export function CustomerSelect({
 
   return (
     <>
-      <div className="relative flex-1 min-w-0">
+      <div className="flex items-center gap-1 flex-1 min-w-0">
           <Popover open={open} onOpenChange={(isOpen) => {
             setOpen(isOpen);
             if (isOpen && onOpen) {
@@ -222,7 +222,7 @@ export function CustomerSelect({
                 variant="outline"
                 role="combobox"
                 aria-expanded={open}
-                className={cn("w-full justify-between", value && selectedCustomer ? (onRefreshCustomer ? "pr-[5.5rem]" : "pr-12") : "", className)}
+                className={cn("w-full justify-between", className)}
                 data-testid={testId}
               >
                 <span
@@ -242,7 +242,7 @@ export function CustomerSelect({
                     }));
                   }}
                 >{selectedCustomer ? selectedCustomer.name : placeholder}</span>
-                <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
+                <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 text-orange-400" />
               </Button>
             </PopoverTrigger>
             <PopoverContent 
@@ -363,10 +363,17 @@ export function CustomerSelect({
               </Command>
             </PopoverContent>
           </Popover>
+          {value && selectedCustomer && onRefreshCustomer && (
+            <RefreshIconButton
+              onRefresh={onRefreshCustomer}
+              className="shrink-0"
+              title="Klantgegevens synchroniseren met dit document"
+            />
+          )}
           {value && selectedCustomer && (
             <button
               type="button"
-              className="absolute right-9 top-1/2 -translate-y-1/2 z-10 h-6 w-6 flex items-center justify-center rounded text-orange-500 hover:text-orange-700 hover:bg-orange-50 transition-colors"
+              className="shrink-0 h-7 w-7 flex items-center justify-center rounded text-orange-500 hover:text-orange-700 hover:bg-orange-50 transition-colors"
               title="Open klantformulier"
               onClick={(e) => {
                 e.stopPropagation();
@@ -382,13 +389,6 @@ export function CustomerSelect({
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </button>
-          )}
-          {value && selectedCustomer && onRefreshCustomer && (
-            <RefreshIconButton
-              onRefresh={onRefreshCustomer}
-              className={`absolute top-1/2 -translate-y-1/2 z-10 ${value && selectedCustomer ? 'right-[4.25rem]' : 'right-9'}`}
-              title="Klantgegevens synchroniseren met dit document"
-            />
           )}
       </div>
 
