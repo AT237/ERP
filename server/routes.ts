@@ -1562,15 +1562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quotation = await db.query.quotations.findFirst({ where: eq(quotations.id, req.params.id) });
       if (!quotation) return res.status(404).json({ message: "Quotation not found" });
       const snapshot = quotation.customerId ? await buildCustomerSnapshot(quotation.customerId) : null;
-      const updateData: any = { customerSnapshot: snapshot };
-      if (quotation.customerId) {
-        const { customers: customersTable } = await import('@shared/schema');
-        const customer = await db.query.customers.findFirst({ where: eq(customersTable.id, quotation.customerId) });
-        if (customer) {
-          updateData.paymentDaysId = (customer as any).paymentDaysId ?? null;
-        }
-      }
-      await db.update(quotations).set(updateData as any).where(eq(quotations.id, req.params.id));
+      await db.update(quotations).set({ customerSnapshot: snapshot } as any).where(eq(quotations.id, req.params.id));
       res.json({ success: true });
     } catch (error) {
       console.error("refresh-customer quotation error:", error);
