@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
@@ -466,9 +466,52 @@ async function ensureAdminEmployee() {
   }
 }
 
+async function migrateLY0016DocumentFooter() {
+  try {
+    const possiblePaths = [
+      join(import.meta.dirname, "ly0016-footer.json"),
+      join(process.cwd(), "server", "ly0016-footer.json"),
+      join(process.cwd(), "dist", "ly0016-footer.json"),
+    ];
+    let configJson = "";
+    for (const p of possiblePaths) {
+      try {
+        if (existsSync(p)) {
+          configJson = readFileSync(p, "utf-8").trim();
+          break;
+        }
+      } catch {}
+    }
+    if (!configJson) return;
+
+    const parsed = JSON.parse(configJson);
+    const expectedBlockCount = (parsed.blocks || []).length;
+    if (expectedBlockCount < 30) return;
+
+    const existing = await pool.query(
+      `SELECT id, config::text as config FROM layout_sections WHERE layout_id = '6ce6fe5f-0dd3-43c5-aa5f-88d2b1b284fd' AND name = 'Document footer'`
+    );
+    if (existing.rows.length === 0) return;
+
+    const currentConfig = JSON.parse(existing.rows[0].config);
+    const currentBlockCount = (currentConfig.blocks || []).length;
+
+    if (currentBlockCount >= expectedBlockCount) return;
+
+    await pool.query(
+      `UPDATE layout_sections SET config = $1::jsonb WHERE id = $2`,
+      [configJson, existing.rows[0].id]
+    );
+    log(`Migrated LY-0016 Document footer: ${currentBlockCount} → ${expectedBlockCount} blocks`);
+  } catch (err: any) {
+    log(`LY-0016 migration error: ${err.message}`);
+  }
+}
+
 (async () => {
   await seedProductionDatabase();
   await ensureSeedLayouts();
+  await migrateLY0016DocumentFooter();
   await ensureDbFunctions();
   await ensureBrandsTable();
   await ensureLineItemColumns();
