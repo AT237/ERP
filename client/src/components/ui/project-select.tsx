@@ -152,7 +152,7 @@ export function ProjectSelect({
                       : selectedProject.name)
                   : placeholder}
               </span>
-              <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
+              <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 text-orange-400" />
             </Button>
           </PopoverTrigger>
           <PopoverContent 

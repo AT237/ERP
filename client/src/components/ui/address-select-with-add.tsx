@@ -199,7 +199,7 @@ export function AddressSelectWithAdd({
         {value && selectedAddress && (
           <button
             type="button"
-            className="absolute right-9 top-1/2 -translate-y-1/2 z-10 h-6 w-6 flex items-center justify-center rounded text-orange-500 hover:text-orange-700 hover:bg-orange-50 transition-colors"
+            className="shrink-0 h-7 w-7 flex items-center justify-center rounded text-orange-500 hover:text-orange-700 hover:bg-orange-50 transition-colors"
             title="Open adresformulier"
             onClick={(e) => {
               e.stopPropagation();

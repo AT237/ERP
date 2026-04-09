@@ -66,14 +66,14 @@ export function SupplierSelect({
   const selectedSupplier = suppliersTyped.find(s => s.id === value);
 
   return (
-    <div className="relative flex-1 min-w-0">
+    <div className="flex items-center gap-1 flex-1 min-w-0">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className={cn("w-full justify-between", value && selectedSupplier ? "pr-12" : "", className)}
+            className={cn("w-full justify-between", className)}
             data-testid={testId}
           >
             <span
@@ -93,7 +93,7 @@ export function SupplierSelect({
                 }));
               }}
             >{selectedSupplier ? selectedSupplier.name : placeholder}</span>
-            <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 text-orange-400" />
           </Button>
         </PopoverTrigger>
         <PopoverContent 
@@ -216,7 +216,7 @@ export function SupplierSelect({
       {value && selectedSupplier && (
         <button
           type="button"
-          className="absolute right-9 top-1/2 -translate-y-1/2 z-10 h-6 w-6 flex items-center justify-center rounded text-orange-500 hover:text-orange-700 hover:bg-orange-50 transition-colors"
+          className="shrink-0 h-7 w-7 flex items-center justify-center rounded text-orange-500 hover:text-orange-700 hover:bg-orange-50 transition-colors"
           title="Open leverancierformulier"
           onClick={(e) => {
             e.stopPropagation();
