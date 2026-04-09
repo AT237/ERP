@@ -1,11 +1,17 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, workOrders, invoiceWorkOrders, vatRates, incoterms, packingLists, packingListItems, proformaInvoices, proformaInvoiceItems } from "../../shared/schema";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, workOrders, invoiceWorkOrders, vatRates, incoterms, packingLists, packingListItems, proformaInvoices, proformaInvoiceItems, countries } from "../../shared/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 
 function formatIban(value: string | null): string | null {
   if (!value) return null;
   const cleaned = value.replace(/\s+/g, "").toUpperCase();
   return cleaned.match(/.{1,4}/g)?.join(" ") ?? cleaned;
+}
+
+async function resolveCountryName(countryCode: string | null): Promise<string | null> {
+  if (!countryCode) return null;
+  const country = await db.query.countries.findFirst({ where: eq(countries.code, countryCode) });
+  return country?.name ?? countryCode;
 }
 
 /**
@@ -288,6 +294,9 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
           snap.address = { street: address.street, houseNumber: address.houseNumber, postalCode: address.postalCode, city: address.city, country: address.country };
         }
       }
+      if (snap.countryCode && !snap.countryName) {
+        snap.countryName = await resolveCountryName(snap.countryCode);
+      }
       customerData = snap;
     } catch { /* fall through to live lookup */ }
   }
@@ -326,6 +335,7 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
         kvkNummer: customer.kvkNummer ?? null,
         bankAccount: formatIban(customer.bankAccount ?? null),
         countryCode: customer.countryCode ?? null,
+        countryName: await resolveCountryName(customer.countryCode ?? null),
         languageCode: (customer as any).languageCode ?? null,
         memo: customer.memo ?? null,
         invoiceNotes: customer.invoiceNotes ?? null,
@@ -552,6 +562,9 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
           snap.address = { street: address.street, houseNumber: address.houseNumber, postalCode: address.postalCode, city: address.city, country: address.country };
         }
       }
+      if (snap.countryCode && !snap.countryName) {
+        snap.countryName = await resolveCountryName(snap.countryCode);
+      }
       customerData = snap;
     } catch { /* fall through to live lookup */ }
   }
@@ -588,6 +601,7 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
       kvkNummer: customer.kvkNummer ?? null,
       bankAccount: formatIban(customer.bankAccount ?? null),
       countryCode: customer.countryCode ?? null,
+      countryName: await resolveCountryName(customer.countryCode ?? null),
       languageCode: (customer as any).languageCode ?? null,
       memo: customer.memo ?? null,
       invoiceNotes: customer.invoiceNotes ?? null,
@@ -773,6 +787,9 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
           snap.address = { street: address.street, houseNumber: address.houseNumber, postalCode: address.postalCode, city: address.city, country: address.country };
         }
       }
+      if (snap.countryCode && !snap.countryName) {
+        snap.countryName = await resolveCountryName(snap.countryCode);
+      }
       customerData = snap;
     } catch { /* fall through */ }
   }
@@ -793,6 +810,7 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
       phone: customer.phone, mobile: customer.mobile ?? null, btwNummer: customer.btwNummer ?? null,
       taxId: customer.taxId ?? null, kvkNummer: customer.kvkNummer ?? null,
       bankAccount: formatIban(customer.bankAccount ?? null), countryCode: customer.countryCode ?? null,
+      countryName: await resolveCountryName(customer.countryCode ?? null),
       languageCode: (customer as any).languageCode ?? null, memo: customer.memo ?? null,
       invoiceNotes: customer.invoiceNotes ?? null, address: addressData,
     };

@@ -134,6 +134,13 @@ async function buildCustomerSnapshot(customerId: string): Promise<string | null>
       kvkNummer: (customer as any).kvkNummer ?? null,
       bankAccount: customer.bankAccount ?? null,
       countryCode: (customer as any).countryCode ?? null,
+      countryName: await (async () => {
+        const cc = (customer as any).countryCode;
+        if (!cc) return null;
+        const { countries } = await import('@shared/schema');
+        const c = await db.query.countries.findFirst({ where: eq(countries.code, cc) });
+        return c?.name ?? cc;
+      })(),
       languageCode: (customer as any).languageCode ?? null,
       memo: customer.memo ?? null,
       invoiceNotes: (customer as any).invoiceNotes ?? null,

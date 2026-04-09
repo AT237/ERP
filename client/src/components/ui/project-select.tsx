@@ -120,7 +120,7 @@ export function ProjectSelect({
   const selectedProject = projects.find(p => p.id === value);
 
   return (
-    <div className="relative flex-1 min-w-0">
+    <div className="flex items-center gap-1 flex-1 min-w-0">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -260,7 +260,7 @@ export function ProjectSelect({
           </PopoverContent>
         </Popover>
         {value && selectedProject && (
-          <RefreshIconButton queryKeys={["/api/projects"]} className="absolute right-9 top-1/2 -translate-y-1/2 z-10" title="Ververs projecten" />
+          <RefreshIconButton queryKeys={["/api/projects"]} className="shrink-0" title="Ververs projecten" />
         )}
     </div>
   );
