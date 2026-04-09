@@ -326,7 +326,8 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
       const customerId = invoiceForm.getValues("customerId");
       const customer = customers.find(c => c.id === customerId);
       if (customer) {
-        if (customer.paymentDaysId) {
+        const currentPaymentDaysId = invoiceForm.getValues("paymentDaysId");
+        if (!currentPaymentDaysId && customer.paymentDaysId) {
           invoiceForm.setValue("paymentDaysId", customer.paymentDaysId);
         }
         const vatRate = vatRates.find(v => v.id === (customer as any)?.vatRateId);
