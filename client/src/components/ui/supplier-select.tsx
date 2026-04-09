@@ -66,7 +66,7 @@ export function SupplierSelect({
   const selectedSupplier = suppliersTyped.find(s => s.id === value);
 
   return (
-    <div className="flex items-center gap-1 flex-1 min-w-0">
+    <div className="flex items-center gap-2 flex-1 min-w-0">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -93,7 +93,6 @@ export function SupplierSelect({
                 }));
               }}
             >{selectedSupplier ? selectedSupplier.name : placeholder}</span>
-            <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 text-orange-400" />
           </Button>
         </PopoverTrigger>
         <PopoverContent 
