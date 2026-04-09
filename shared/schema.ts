@@ -465,6 +465,7 @@ export const proformaInvoices = pgTable("proforma_invoices", {
   finalDestination: text("final_destination"),
   modeOfShipment: text("mode_of_shipment"),
   paymentTermsType: text("payment_terms_type"),
+  paymentScheduleId: varchar("payment_schedule_id").references(() => paymentTerms.id),
   countryOfOrigin: text("country_of_origin"),
   grossWeight: text("gross_weight"),
   placeOfConsignment: text("place_of_consignment"),

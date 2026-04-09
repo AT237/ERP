@@ -28,6 +28,7 @@ import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { amountToWords } from "@/utils/field-resolver";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
+import { PaymentScheduleSelectWithAdd } from "@/components/ui/payment-schedule-select-with-add";
 import { addDays } from "date-fns";
 
 const proformaFormSchema = insertProformaInvoiceSchema.omit({
@@ -50,6 +51,7 @@ const proformaFormSchema = insertProformaInvoiceSchema.omit({
   finalDestination: z.string().optional(),
   modeOfShipment: z.string().optional(),
   paymentTermsType: z.string().optional(),
+  paymentScheduleId: z.string().optional(),
 });
 
 const proformaItemFormSchema = insertProformaInvoiceItemSchema.extend({
