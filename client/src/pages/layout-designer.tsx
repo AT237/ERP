@@ -3588,7 +3588,7 @@ function estimateActualBlockHeightMm(
   // Group blocks: when shrinking is allowed (by section or by the group's own heightCanShrink),
   // measure actual content height from visible children.
   // Uses a "holes" approach: hidden blocks create holes; visible blocks shift up by holes strictly above them.
-  const groupOwnCanShrink = block.type === 'Group' && (block.config?.heightCanShrink || false);
+  const groupOwnCanShrink = block.type === 'Group' && (block.config?.heightCanShrink || block.config?.canShrink || false);
   if (block.type === 'Group' && (allowShrink || groupOwnCanShrink)) {
     const childBlocks: any[] = block.config?.childBlocks || [];
     const collapseEmpty = block.config?.collapseEmpty || false;
