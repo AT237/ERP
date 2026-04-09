@@ -3600,8 +3600,8 @@ function estimateActualBlockHeightMm(
       let hidden = false;
       if (collapseEmpty) {
         hidden = !blockHasContent(ch, printData, itemContext);
-      } else {
-        hidden = !!(ch.config?.hideWhenEmpty && !blockHasContent(ch, printData, itemContext, false));
+      } else if (ch.config?.hideWhenEmpty || ch.config?.hideWhenFieldEmpty) {
+        hidden = !blockHasContent(ch, printData, itemContext, false);
       }
       if (hidden) {
         hiddenSet.add(ch);
@@ -3957,7 +3957,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
           let hidden = false;
           if (collapseEmpty) {
             hidden = !blockHasContent(child, typedPrintData, itemContext, true);
-          } else if (groupCanShrink && child.config?.hideWhenEmpty) {
+          } else if (groupCanShrink && (child.config?.hideWhenEmpty || child.config?.hideWhenFieldEmpty)) {
             hidden = !blockHasContent(child, typedPrintData, itemContext, false);
           }
           if (hidden) {
@@ -4309,7 +4309,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
               let hidden = false;
               if (collapseEmpty) {
                 hidden = !blockHasContent(child, typedPrintData, undefined, true);
-              } else if (staticGroupCanShrink && child.config?.hideWhenEmpty) {
+              } else if (staticGroupCanShrink && (child.config?.hideWhenEmpty || child.config?.hideWhenFieldEmpty)) {
                 hidden = !blockHasContent(child, typedPrintData, undefined, false);
               }
               if (hidden) {
