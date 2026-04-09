@@ -45,6 +45,11 @@ const proformaFormSchema = insertProformaInvoiceSchema.omit({
   invoiceDate: z.string().optional(),
   paymentDaysId: z.string().optional(),
   incotermId: z.string().optional(),
+  portOfLoading: z.string().optional(),
+  portOfDischarge: z.string().optional(),
+  finalDestination: z.string().optional(),
+  modeOfShipment: z.string().optional(),
+  paymentTermsType: z.string().optional(),
 });
 
 const proformaItemFormSchema = insertProformaInvoiceItemSchema.extend({
@@ -102,6 +107,11 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
       printSortOrder: "position",
       printLanguageCode: "nl",
       incotermId: "",
+      portOfLoading: "",
+      portOfDischarge: "",
+      finalDestination: "",
+      modeOfShipment: "",
+      paymentTermsType: "",
     },
   });
 
@@ -191,6 +201,11 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
         printPaymentConditions: (invoice as any).printPaymentConditions ?? true,
         printLineImages: (invoice as any).printLineImages ?? false,
         incotermId: (invoice as any).incotermId || "",
+        portOfLoading: (invoice as any).portOfLoading || "",
+        portOfDischarge: (invoice as any).portOfDischarge || "",
+        finalDestination: (invoice as any).finalDestination || "",
+        modeOfShipment: (invoice as any).modeOfShipment || "",
+        paymentTermsType: (invoice as any).paymentTermsType || "",
       } as any);
     }
   }, [invoice]);
@@ -666,6 +681,11 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
       paymentDaysId: data.paymentDaysId || null,
       projectId: data.projectId || null,
       incotermId: data.incotermId || null,
+      portOfLoading: data.portOfLoading || null,
+      portOfDischarge: data.portOfDischarge || null,
+      finalDestination: data.finalDestination || null,
+      modeOfShipment: data.modeOfShipment || null,
+      paymentTermsType: data.paymentTermsType || null,
     };
 
     if (isEditing) {
@@ -833,15 +853,6 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
               testId: "input-due-date"
             },
             {
-              key: "incotermId",
-              label: "Incoterm",
-              type: "select",
-              options: incotermsList.map((i: any) => ({ value: i.id, label: `${i.code} - ${i.description || ''}`.trim() })),
-              setValue: (value: string) => invoiceForm.setValue("incotermId", value),
-              watch: () => invoiceForm.watch("incotermId"),
-              testId: "select-incoterm"
-            },
-            {
               key: "status",
               label: "Status",
               type: "select",
@@ -961,6 +972,68 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
           register: invoiceForm.register("paidAmount"),
           testId: "input-paid-amount"
         })
+      ]
+    },
+    {
+      id: "transport",
+      label: "Transport",
+      rows: [
+        {
+          type: 'two-column' as const,
+          leftColumn: [
+            {
+              key: "incotermId",
+              label: "Incoterm",
+              type: "select",
+              options: incotermsList.map((i: any) => ({ value: i.id, label: `${i.code} - ${i.description || ''}`.trim() })),
+              setValue: (value: string) => invoiceForm.setValue("incotermId", value),
+              watch: () => invoiceForm.watch("incotermId"),
+              testId: "select-incoterm"
+            },
+            {
+              key: "portOfLoading",
+              label: "Port of Loading",
+              type: "text",
+              register: invoiceForm.register("portOfLoading"),
+              testId: "input-port-of-loading"
+            },
+            {
+              key: "portOfDischarge",
+              label: "Port of Discharge",
+              type: "text",
+              register: invoiceForm.register("portOfDischarge"),
+              testId: "input-port-of-discharge"
+            },
+          ],
+          rightColumn: [
+            {
+              key: "paymentTermsType",
+              label: "Payment Terms",
+              type: "select",
+              options: [
+                { value: "CAD", label: "CAD - Cash Against Documents" },
+                { value: "LC", label: "LC - Letter of Credit" },
+              ],
+              setValue: (value: string) => invoiceForm.setValue("paymentTermsType", value),
+              watch: () => invoiceForm.watch("paymentTermsType"),
+              testId: "select-payment-terms-type"
+            },
+            {
+              key: "finalDestination",
+              label: "Final Destination",
+              type: "text",
+              register: invoiceForm.register("finalDestination"),
+              testId: "input-final-destination"
+            },
+            {
+              key: "modeOfShipment",
+              label: "Mode of Shipment",
+              type: "text",
+              register: invoiceForm.register("modeOfShipment"),
+              testId: "input-mode-of-shipment"
+            },
+          ],
+        },
       ]
     },
     {

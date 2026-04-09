@@ -460,6 +460,11 @@ export const proformaInvoices = pgTable("proforma_invoices", {
   printPaymentConditions: boolean("print_payment_conditions").default(true),
   printLineImages: boolean("print_line_images").default(false),
   incotermId: varchar("incoterm_id").references(() => incoterms.id),
+  portOfLoading: text("port_of_loading"),
+  portOfDischarge: text("port_of_discharge"),
+  finalDestination: text("final_destination"),
+  modeOfShipment: text("mode_of_shipment"),
+  paymentTermsType: text("payment_terms_type"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

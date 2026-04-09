@@ -2116,6 +2116,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requiredNumerics.forEach(f => { if (body[f] === '' || body[f] == null) body[f] = '0'; });
     const nullableFKs = ['customerId', 'projectId', 'paymentDaysId', 'incotermId'];
     nullableFKs.forEach(f => { if (body[f] === '') body[f] = null; });
+    const nullableTextFields = ['portOfLoading', 'portOfDischarge', 'finalDestination', 'modeOfShipment', 'paymentTermsType'];
+    nullableTextFields.forEach(f => { if (body[f] === '') body[f] = null; });
     return body;
   }
 
