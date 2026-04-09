@@ -22,7 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertProformaInvoiceItemSchema } from "@shared/schema";
+import { insertProformaInvoiceItemSchema, type Country } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Save, ArrowLeft, Package, FileText, Search, Library, Check, CalendarIcon, ChevronsUpDown, X } from "lucide-react";
@@ -154,6 +154,10 @@ export function ProformaInvoiceLineItemFormLayout({ onSave, lineItemId, proforma
   const { data: proformaDetails } = useQuery<{ invoice: any; items: ProformaInvoiceItem[]; customer: any }>({
     queryKey: ["/api/proforma-invoices", proformaInvoiceId, "details"],
     enabled: !!proformaInvoiceId && !isEditing,
+  });
+
+  const { data: countriesList = [] } = useQuery<Country[]>({
+    queryKey: ["/api/countries"],
   });
 
   const { data: customerRates = [] } = useQuery<CustomerRate[]>({
@@ -947,13 +951,14 @@ export function ProformaInvoiceLineItemFormLayout({ onSave, lineItemId, proforma
     {
       key: 'countryOfOrigin',
       label: 'Land van herkomst',
-      type: 'text',
-      placeholder: 'Bijv. Nederland',
-      register: form.register('countryOfOrigin'),
+      type: 'select',
+      options: countriesList.map((c) => ({ value: c.code, label: `${c.code} - ${c.name}` })),
+      setValue: (value: string) => { form.setValue('countryOfOrigin', value); setHasUnsavedChanges(true); },
+      watch: () => form.watch('countryOfOrigin'),
       validation: {
         error: form.formState.errors.countryOfOrigin?.message
       },
-      testId: 'input-country-of-origin'
+      testId: 'select-country-of-origin'
     } as FormField2<LineItemFormData>,
   ];
 

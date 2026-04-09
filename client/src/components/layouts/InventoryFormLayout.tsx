@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { EntitySelect } from "@/components/ui/entity-select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertInventoryItemSchema } from "@shared/schema";
+import { insertInventoryItemSchema, type Country } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Package, Image, Plus, Trash2, Check, X, Layers, AlertCircle, Loader2, Search, CopyPlus, Filter } from "lucide-react";
@@ -824,6 +824,10 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
 
 
   // Load inventory item data if editing
+  const { data: countriesList = [] } = useQuery<Country[]>({
+    queryKey: ["/api/countries"],
+  });
+
   const { data: inventoryItem, isLoading: isLoadingInventory } = useQuery<InventoryItem>({
     queryKey: ["/api/inventory", inventoryId],
     enabled: !!inventoryId,
@@ -1334,13 +1338,14 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
             {
               key: "countryOfOrigin",
               label: "Country of Origin",
-              type: "text",
-              placeholder: "Bijv. Netherlands",
-              register: form.register("countryOfOrigin"),
+              type: "select",
+              options: countriesList.map((c) => ({ value: c.code, label: `${c.code} - ${c.name}` })),
+              setValue: (value: string) => { form.setValue("countryOfOrigin", value); setHasUnsavedChanges(true); },
+              watch: () => form.watch("countryOfOrigin"),
               validation: {
                 error: form.formState.errors.countryOfOrigin?.message
               },
-              testId: "input-inventory-country-of-origin"
+              testId: "select-inventory-country-of-origin"
             } as FormField2<InventoryFormData>,
           ]
         ),

@@ -214,6 +214,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'incoterms', name: 'Incoterms' };
       case '/master-data/vat':
         return { id: 'vat', name: 'VAT Rates' };
+      case '/master-data/countries':
+        return { id: 'countries', name: 'Countries' };
       case '/master-data/cities':
         return { id: 'cities', name: 'Cities' };
       case '/master-data/statuses':
@@ -658,6 +660,8 @@ export default function Layout({ children }: LayoutProps) {
         return '/master-data/incoterms';
       case 'vat':
         return '/master-data/vat';
+      case 'countries':
+        return '/master-data/countries';
       case 'cities':
         return '/master-data/cities';
       case 'statuses':
@@ -956,6 +960,7 @@ export default function Layout({ children }: LayoutProps) {
       'rates-and-charges': 'rates-and-charges',
       'incoterms': 'incoterms',
       'vat': 'vat-rates',
+      'countries': 'countries',
       'cities': 'cities',
       'statuses': 'statuses',
     };

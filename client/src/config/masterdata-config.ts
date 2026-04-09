@@ -6,6 +6,7 @@ import {
   insertRateAndChargeSchema,
   insertIncotermSchema,
   insertVatRateSchema,
+  insertCountrySchema,
   insertCitySchema,
   insertStatusSchema,
   insertImageSchema,
@@ -240,6 +241,25 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
     ]
   },
 
+  'countries': {
+    title: "Countries",
+    singularTitle: "Country",
+    endpoint: "countries",
+    schema: insertCountrySchema,
+    fields: [
+      { name: "code", label: "ISO Code", type: "text", required: true },
+      { name: "name", label: "Country Name", type: "text", required: true },
+      { name: "requiresBtw", label: "Requires BTW", type: "select", options: [{ value: "true", label: "Yes" }, { value: "false", label: "No" }] },
+      { name: "requiresAreaCode", label: "Requires Area Code", type: "select", options: [{ value: "true", label: "Yes" }, { value: "false", label: "No" }] }
+    ],
+    columns: [
+      { key: "code", label: "ISO Code" },
+      { key: "name", label: "Country Name" },
+      { key: "requiresBtw", label: "Requires BTW", render: (v: any) => v ? "Yes" : "No" },
+      { key: "requiresAreaCode", label: "Requires Area Code", render: (v: any) => v ? "Yes" : "No" }
+    ]
+  },
+
   'cities': {
     title: "Cities",
     singularTitle: "City",
@@ -253,14 +273,8 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
         label: "Country", 
         type: "select",
         required: true,
-        options: [
-          { value: "NL", label: "Netherlands" },
-          { value: "DE", label: "Germany" },
-          { value: "BE", label: "Belgium" },
-          { value: "FR", label: "France" },
-          { value: "GB", label: "United Kingdom" },
-          { value: "US", label: "United States" }
-        ]
+        fetchOptionsFrom: "countries",
+        fetchOptionsMap: { value: "code", label: "name" }
       },
       { name: "region", label: "Region/State", type: "text" }
     ],

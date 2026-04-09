@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertPackingListItemSchema } from "@shared/schema";
+import { insertPackingListItemSchema, type Country } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Save, Package, FileText, Search, Library } from "lucide-react";
@@ -118,6 +118,10 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
 
   const itemIdValue = form.watch("itemId");
   const prevItemIdRef = useRef<string>("");
+
+  const { data: countriesList = [] } = useQuery<Country[]>({
+    queryKey: ["/api/countries"],
+  });
 
   const { data: selectedInventoryItem } = useQuery<any>({
     queryKey: ["/api/inventory", itemIdValue],
@@ -532,11 +536,12 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
     {
       key: 'countryOfOrigin',
       label: 'Land van herkomst',
-      type: 'text',
-      placeholder: 'Bijv. Nederland',
-      register: form.register('countryOfOrigin'),
+      type: 'select',
+      options: countriesList.map((c) => ({ value: c.code, label: `${c.code} - ${c.name}` })),
+      setValue: (value: string) => { form.setValue('countryOfOrigin', value); setHasUnsavedChanges(true); },
+      watch: () => form.watch('countryOfOrigin'),
       validation: { error: form.formState.errors.countryOfOrigin?.message },
-      testId: 'input-country-of-origin'
+      testId: 'select-country-of-origin'
     } as FormField2<PackingListItemFormData>,
   ];
 
