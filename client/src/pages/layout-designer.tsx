@@ -3773,9 +3773,42 @@ function calculateDynamicPositions(
     (a.position?.y || 0) - (b.position?.y || 0)
   );
   
-  // For each visible block calculate two offsets from blocks that START above it:
-  //   shiftUp:   sum of heights of HIDDEN blocks above → block moves up
-  //   shiftDown: sum of overflow of VISIBLE blocks above → block moves down when content wraps
+  // Group blocks by Y position into "rows". Blocks at the same Y share one vertical band.
+  // When ALL blocks in a hidden row are hidden, the row's height (max block height in that band)
+  // contributes to shiftUp. This prevents double-counting when label+value pairs at the same Y
+  // are both hidden.
+  const rowMap = new Map<number, any[]>();
+  for (const block of sortedBlocks) {
+    const y = block.position?.y || 0;
+    if (!rowMap.has(y)) rowMap.set(y, []);
+    rowMap.get(y)!.push(block);
+  }
+
+  // Pre-compute per-row: whether the entire row is hidden, its effective height, and overflow/margin
+  const rowInfo = new Map<number, { allHidden: boolean; maxHeight: number; maxMargin: number; maxOverflow: number }>();
+  for (const [y, rowBlocks] of rowMap) {
+    const allHidden = rowBlocks.every((b: any) => !(blockVisibility.get(b.id) ?? true));
+    let maxHeight = 0;
+    let maxMargin = 0;
+    let maxOverflow = 0;
+    for (const b of rowBlocks) {
+      const h = b.size?.height || 0;
+      const margin = parseFloat(String(b.style?.marginBottom || '0')) || 0;
+      if (h > maxHeight) maxHeight = h;
+      if (margin > maxMargin) maxMargin = margin;
+      if (!allHidden) {
+        const configuredH = h;
+        const actualH = actualHeights.get(b.id) ?? configuredH;
+        const overflow = Math.max(0, actualH - configuredH);
+        if (overflow > maxOverflow) maxOverflow = overflow;
+      }
+    }
+    rowInfo.set(y, { allHidden, maxHeight, maxMargin, maxOverflow });
+  }
+
+  // For each visible block calculate offsets based on rows above it:
+  //   shiftUp:   sum of row heights where ALL blocks in the row are hidden
+  //   shiftDown: sum of overflow from visible rows above (text wrapping + margins)
   for (const block of sortedBlocks) {
     const isVisible = blockVisibility.get(block.id) ?? true;
     const originalY = block.position?.y || 0;
@@ -3785,21 +3818,12 @@ function calculateDynamicPositions(
     } else {
       let shiftUp = 0;
       let shiftDown = 0;
-      for (const otherBlock of sortedBlocks) {
-        if (otherBlock.id === block.id) continue;
-        const otherY = otherBlock.position?.y || 0;
-        if (otherY < originalY) {
-          const otherVisible = blockVisibility.get(otherBlock.id) ?? true;
-          const otherMarginMm = parseFloat(String(otherBlock.style?.marginBottom || '0')) || 0;
-          if (!otherVisible) {
-            // Hidden block: shift this block up by its full configured height + marginBottom
-            shiftUp += (otherBlock.size?.height || 0) + otherMarginMm;
+      for (const [rowY, info] of rowInfo) {
+        if (rowY < originalY) {
+          if (info.allHidden) {
+            shiftUp += info.maxHeight + info.maxMargin;
           } else {
-            // Visible block: shift down by text overflow AND marginBottom
-            const configuredH = otherBlock.size?.height || 0;
-            const actualH = actualHeights.get(otherBlock.id) ?? configuredH;
-            const overflow = Math.max(0, actualH - configuredH);
-            shiftDown += overflow + otherMarginMm;
+            shiftDown += info.maxOverflow + info.maxMargin;
           }
         }
       }
