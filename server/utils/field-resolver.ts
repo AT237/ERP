@@ -983,6 +983,8 @@ export async function loadPackingListPrintData(packingListId: string): Promise<a
         taxId: customer.taxId ?? null,
         kvkNummer: customer.kvkNummer ?? null,
         bankAccount: formatIban(customer.bankAccount ?? null),
+        countryCode: customer.countryCode ?? null,
+        countryName: await resolveCountryName(customer.countryCode ?? null),
         address: addressData,
       };
     }
