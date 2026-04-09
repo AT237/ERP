@@ -1562,7 +1562,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quotation = await db.query.quotations.findFirst({ where: eq(quotations.id, req.params.id) });
       if (!quotation) return res.status(404).json({ message: "Quotation not found" });
       const snapshot = quotation.customerId ? await buildCustomerSnapshot(quotation.customerId) : null;
-      await db.update(quotations).set({ customerSnapshot: snapshot } as any).where(eq(quotations.id, req.params.id));
+      const updateData: any = { customerSnapshot: snapshot };
+      if (quotation.customerId) {
+        const { customers: customersTable } = await import('@shared/schema');
+        const customer = await db.query.customers.findFirst({ where: eq(customersTable.id, quotation.customerId) });
+        if (customer) {
+          updateData.paymentDaysId = (customer as any).paymentDaysId ?? null;
+        }
+      }
+      await db.update(quotations).set(updateData as any).where(eq(quotations.id, req.params.id));
       res.json({ success: true });
     } catch (error) {
       console.error("refresh-customer quotation error:", error);
@@ -1575,7 +1583,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const invoice = await db.query.invoices.findFirst({ where: eq(invoices.id, req.params.id) });
       if (!invoice) return res.status(404).json({ message: "Invoice not found" });
       const snapshot = invoice.customerId ? await buildCustomerSnapshot(invoice.customerId) : null;
-      await db.update(invoices).set({ customerSnapshot: snapshot } as any).where(eq(invoices.id, req.params.id));
+      const updateData: any = { customerSnapshot: snapshot };
+      if (invoice.customerId) {
+        const { customers: customersTable } = await import('@shared/schema');
+        const customer = await db.query.customers.findFirst({ where: eq(customersTable.id, invoice.customerId) });
+        if (customer) {
+          updateData.paymentDaysId = (customer as any).paymentDaysId ?? null;
+        }
+      }
+      await db.update(invoices).set(updateData as any).where(eq(invoices.id, req.params.id));
       res.json({ success: true });
     } catch (error) {
       console.error("refresh-customer invoice error:", error);
@@ -2155,7 +2171,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const invoice = await storage.getProformaInvoice(req.params.id);
       if (!invoice) return res.status(404).json({ message: "Proforma invoice not found" });
       const snapshot = invoice.customerId ? await buildCustomerSnapshot(invoice.customerId) : null;
-      const updated = await storage.updateProformaInvoice(req.params.id, { customerSnapshot: snapshot });
+      const updateData: any = { customerSnapshot: snapshot };
+      if (invoice.customerId) {
+        const { customers: customersTable } = await import('@shared/schema');
+        const customer = await db.query.customers.findFirst({ where: eq(customersTable.id, invoice.customerId) });
+        if (customer) {
+          updateData.paymentDaysId = (customer as any).paymentDaysId ?? null;
+          updateData.paymentScheduleId = (customer as any).paymentScheduleId ?? null;
+        }
+      }
+      const updated = await storage.updateProformaInvoice(req.params.id, updateData);
       res.json(updated);
     } catch (error) {
       console.error("Error refreshing proforma customer:", error);
