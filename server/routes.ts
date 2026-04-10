@@ -1609,6 +1609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/quotations", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['quotationDate', 'deliveryDate', 'validUntil']);
+      if (body.printLayoutId === '') body.printLayoutId = null;
       const quotationData = insertQuotationSchema.parse(body);
       const quotation = await storage.createQuotation(quotationData);
       res.status(201).json(quotation);
@@ -1644,6 +1645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/quotations/:id", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['quotationDate', 'deliveryDate', 'validUntil']);
+      if (body.printLayoutId === '') body.printLayoutId = null;
       const quotationData = insertQuotationSchema.partial().parse(body);
       const quotation = await storage.updateQuotation(req.params.id, quotationData);
       res.json(quotation);
@@ -2682,6 +2684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/work-orders", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['startDate', 'dueDate', 'completedDate']);
+      if (body.printLayoutId === '') body.printLayoutId = null;
       const orderData = insertWorkOrderSchema.parse(body);
       const order = await storage.createWorkOrder(orderData);
       res.status(201).json(order);
@@ -2698,6 +2701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/work-orders/:id", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['startDate', 'dueDate', 'completedDate']);
+      if (body.printLayoutId === '') body.printLayoutId = null;
       const orderData = insertWorkOrderSchema.partial().parse(body);
       const order = await storage.updateWorkOrder(req.params.id, orderData);
       res.json(order);

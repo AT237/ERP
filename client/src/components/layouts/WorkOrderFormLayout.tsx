@@ -25,7 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
-import type { WorkOrder, InsertWorkOrder, WorkOrderItem, InventoryItem, UnitOfMeasure } from "@shared/schema";
+import type { WorkOrder, InsertWorkOrder, WorkOrderItem, InventoryItem, UnitOfMeasure, DocumentLayout } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -90,6 +90,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
       completedDate: undefined,
       estimatedHours: "",
       actualHours: "",
+      printLayoutId: "",
     },
   });
 
@@ -148,6 +149,15 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
   const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory"],
     staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: availableLayouts = [] } = useQuery<DocumentLayout[]>({
+    queryKey: ["/api/layouts", { documentType: "work_order" }],
+    queryFn: async () => {
+      const res = await fetch("/api/layouts?documentType=work_order");
+      if (!res.ok) throw new Error("Failed to fetch layouts");
+      return res.json();
+    },
   });
 
   const { data: unitsOfMeasure = [] } = useQuery<UnitOfMeasure[]>({
@@ -258,6 +268,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
         completedDate: workOrder.completedDate ? toDisplayDate(workOrder.completedDate) : undefined,
         estimatedHours: workOrder.estimatedHours?.toString() || "",
         actualHours: workOrder.actualHours?.toString() || "",
+        printLayoutId: (workOrder as any).printLayoutId || "",
       };
 
       // Auto-derive customer from the linked project
@@ -749,8 +760,42 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
           } as FormField2<FormData>
         ])
       ]
+    },
+    {
+      id: "printSettings",
+      label: "Afdrukinstellingen",
+      rows: [
+        createSectionHeaderRow("Afdrukinstellingen", "mb-6"),
+        createFieldRow({
+          key: "printLayoutId",
+          label: "Layout",
+          type: "custom",
+          customComponent: (
+            <Select
+              value={form.watch("printLayoutId" as any) || ""}
+              onValueChange={(value) => form.setValue("printLayoutId" as any, value === "__clear__" ? "" : value)}
+            >
+              <SelectTrigger className="w-full" data-testid="select-print-layout">
+                <SelectValue placeholder="Selecteer een layout..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__clear__">— Wis selectie —</SelectItem>
+                {availableLayouts.map((layout) => (
+                  <SelectItem key={layout.id} value={layout.id}>
+                    {layout.name} ({layout.pageFormat} - {layout.orientation})
+                    {layout.isDefault ? " ★" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ),
+          testId: "field-print-layout"
+        }),
+      ]
     }
   ];
+
+  const watchedWoPrintLayoutId = form.watch("printLayoutId" as any) as string | undefined;
 
   const toolbar = useFormToolbar({
     entityType: "work_order",
@@ -759,6 +804,7 @@ export function WorkOrderFormLayout({ onSave, workOrderId, parentId }: WorkOrder
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
+    printLayoutId: watchedWoPrintLayoutId || undefined,
   });
 
   // Header fields for info display (when editing)

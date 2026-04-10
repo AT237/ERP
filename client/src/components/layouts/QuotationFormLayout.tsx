@@ -37,7 +37,7 @@ import { LineItemAssemblyPanel } from '@/components/layouts/LineItemAssemblyPane
 import { QuotationPrintDialog } from "@/components/print/QuotationPrintDialog";
 import { amountToWords } from "@/utils/field-resolver";
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem, Project, UnitOfMeasure } from "@shared/schema";
+import type { Quotation, QuotationItem, InsertQuotationItem, Customer, InventoryItem, Project, UnitOfMeasure, DocumentLayout } from "@shared/schema";
 import { insertInventoryItemSchema } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
@@ -239,6 +239,15 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     refetchOnWindowFocus: false,
   });
 
+  const { data: availableLayouts = [] } = useQuery<DocumentLayout[]>({
+    queryKey: ["/api/layouts", { documentType: "quotation" }],
+    queryFn: async () => {
+      const res = await fetch("/api/layouts?documentType=quotation");
+      if (!res.ok) throw new Error("Failed to fetch layouts");
+      return res.json();
+    },
+  });
+
   // Fetch existing quotation details (combined: quotation + items + customer) if editing
   const { data: quotationDetails, isLoading: quotationLoading } = useQuery<{
     quotation: Quotation,
@@ -305,6 +314,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
       deliveryConditions: "",
       printSortOrder: "position",
       printLineImages: false,
+      printLayoutId: "",
     },
   });
 
@@ -495,6 +505,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         deliveryConditions: existingQuotation.deliveryConditions || "",
         printSortOrder: existingQuotation.printSortOrder || "position",
         printLineImages: existingQuotation.printLineImages || false,
+        printLayoutId: (existingQuotation as any).printLayoutId || "",
       });
       setQuotationItems(existingQuotationItems);
     }
@@ -1839,6 +1850,31 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
         rows: [
           createSectionHeaderRow("Afdrukinstellingen", "mb-6"),
           createFieldRow({
+            key: "printLayoutId",
+            label: "Layout",
+            type: "custom",
+            customComponent: (
+              <Select
+                value={quotationForm.watch("printLayoutId" as any) || ""}
+                onValueChange={(value) => quotationForm.setValue("printLayoutId" as any, value === "__clear__" ? "" : value)}
+              >
+                <SelectTrigger className="w-full" data-testid="select-print-layout">
+                  <SelectValue placeholder="Selecteer een layout..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__clear__">— Wis selectie —</SelectItem>
+                  {availableLayouts.map((layout) => (
+                    <SelectItem key={layout.id} value={layout.id}>
+                      {layout.name} ({layout.pageFormat} - {layout.orientation})
+                      {layout.isDefault ? " ★" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
+            testId: "field-print-layout"
+          }),
+          createFieldRow({
             key: "printSortOrder",
             label: "Sorteervolgorde",
             type: "custom",
@@ -2025,6 +2061,8 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     { label: "Maak Verkooporder (VO)", onClick: () => handleConvert("sales-order") },
   ] : [];
 
+  const watchedQuotPrintLayoutId = quotationForm.watch("printLayoutId" as any) as string | undefined;
+
   const toolbar = useFormToolbar({
     entityType: "quotation",
     entityId: currentQuotationId,
@@ -2032,6 +2070,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     onClose: onSave,
     saveDisabled: createQuotationMutation.isPending || updateQuotationMutation.isPending,
     saveLoading: createQuotationMutation.isPending || updateQuotationMutation.isPending,
+    printLayoutId: watchedQuotPrintLayoutId || undefined,
   });
 
   const toolbarWithConvert = {
