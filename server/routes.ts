@@ -7,6 +7,7 @@ declare module "express-session" {
   interface SessionData {
     userId: string;
     username: string;
+    fullName: string;
   }
 }
 
@@ -222,7 +223,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       clearLoginAttempts(ip);
       req.session.userId = user.id;
       req.session.username = user.username;
-      res.json({ id: user.id, username: user.username, role: user.role });
+      req.session.fullName = (user as any).fullName || "";
+      res.json({ id: user.id, username: user.username, fullName: (user as any).fullName || "", role: user.role });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Inloggen mislukt" });
@@ -239,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.session?.userId) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    res.json({ id: req.session.userId, username: req.session.username });
+    res.json({ id: req.session.userId, username: req.session.username, fullName: req.session.fullName || "" });
   });
 
   app.post("/api/auth/change-password", requireAuth, async (req, res) => {
@@ -261,6 +263,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Change password error:", error);
       res.status(500).json({ message: "Wachtwoord wijzigen mislukt" });
+    }
+  });
+
+  app.put("/api/auth/profile", requireAuth, async (req, res) => {
+    try {
+      const { fullName } = req.body;
+      const { users: usersTable } = await import("@shared/schema");
+      await db.update(usersTable).set({ fullName: fullName || null }).where(eq(usersTable.id, req.session.userId!));
+      req.session.fullName = fullName || "";
+      res.json({ message: "Profiel bijgewerkt" });
+    } catch (error) {
+      console.error("Update profile error:", error);
+      res.status(500).json({ message: "Profiel bijwerken mislukt" });
     }
   });
 

@@ -128,6 +128,22 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
 
   const watchedPrintLanguageCode = invoiceForm.watch("printLanguageCode" as any) as string | undefined;
 
+  const { data: currentUser } = useQuery<{ id: string; username: string; fullName: string }>({
+    queryKey: ["/api/auth/me"],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const hasSetSignoff = useRef(false);
+  useEffect(() => {
+    if (!isEditing && currentUser?.fullName && !hasSetSignoff.current) {
+      const current = invoiceForm.getValues("signoffName" as any);
+      if (!current) {
+        invoiceForm.setValue("signoffName" as any, currentUser.fullName);
+        hasSetSignoff.current = true;
+      }
+    }
+  }, [currentUser, isEditing]);
+
   const { data: invoice, isLoading: invoiceLoading } = useQuery<ProformaInvoice>({
     queryKey: ["/api/proforma-invoices", currentInvoiceId],
     enabled: !!currentInvoiceId,

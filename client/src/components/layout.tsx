@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
-import { X, Menu, PanelRightClose, LogOut } from "lucide-react";
+import { X, Menu, PanelRightClose, LogOut, User } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -100,12 +100,31 @@ export default function Layout({ children }: LayoutProps) {
     queryFn: async () => {
       const res = await fetch("/api/auth/me");
       if (!res.ok) return null;
-      return res.json() as Promise<{ id: string; username: string }>;
+      return res.json() as Promise<{ id: string; username: string; fullName: string }>;
     },
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
   const userId = currentUser?.id ?? "admin";
+
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [profileFullName, setProfileFullName] = useState("");
+
+  useEffect(() => {
+    if (currentUser?.fullName) {
+      setProfileFullName(currentUser.fullName);
+    }
+  }, [currentUser?.fullName]);
+
+  const saveProfileMutation = useMutation({
+    mutationFn: async (data: { fullName: string }) => {
+      return await apiRequest("PUT", "/api/auth/profile", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      setShowProfileDialog(false);
+    },
+  });
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -1718,9 +1737,15 @@ export default function Layout({ children }: LayoutProps) {
         {/* User Info */}
         <div className="flex items-center gap-3 ml-auto">
           <div className="text-right">
-            <div className="text-sm md:text-lg font-semibold text-foreground" data-testid="user-name">
-              {currentUser?.username ?? "Gebruiker"}
-            </div>
+            <button
+              onClick={() => { setProfileFullName(currentUser?.fullName || ""); setShowProfileDialog(true); }}
+              className="text-sm md:text-lg font-semibold text-foreground hover:text-orange-600 transition-colors cursor-pointer flex items-center gap-1"
+              title="Profiel bewerken"
+              data-testid="user-name"
+            >
+              <User className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+              {currentUser?.fullName || currentUser?.username || "Gebruiker"}
+            </button>
             <div className="text-xs md:text-sm text-muted-foreground hidden md:block" data-testid="current-date">
               {formatDate(currentTime)}
             </div>
@@ -1736,6 +1761,43 @@ export default function Layout({ children }: LayoutProps) {
             <LogOut className="h-4 w-4" />
           </button>
         </div>
+
+        {/* Profile Dialog */}
+        <AlertDialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Profiel bewerken</AlertDialogTitle>
+              <AlertDialogDescription>
+                Stel je volledige naam in. Deze wordt o.a. gebruikt als standaard ondertekening op documenten.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-4">
+              <label className="text-sm font-medium text-foreground mb-2 block">Volledige naam</label>
+              <input
+                type="text"
+                value={profileFullName}
+                onChange={(e) => setProfileFullName(e.target.value)}
+                placeholder="Bijv. A. Tomassen"
+                className="w-full px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    saveProfileMutation.mutate({ fullName: profileFullName });
+                  }
+                }}
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuleren</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => saveProfileMutation.mutate({ fullName: profileFullName })}
+                disabled={saveProfileMutation.isPending}
+              >
+                Opslaan
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
