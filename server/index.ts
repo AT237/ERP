@@ -576,9 +576,118 @@ async function migrateLY0016DocumentFooter() {
   }
 }
 
+async function ensureContractLayout() {
+  try {
+    const layoutId = 'contract-layout-ate-001';
+    const existing = await pool.query(`SELECT id FROM document_layouts WHERE id = $1`, [layoutId]);
+    if (existing.rows.length > 0) return;
+
+    await pool.query(`
+      INSERT INTO document_layouts (id, name, document_type, page_format, orientation, margin_top, margin_right, margin_bottom, margin_left, is_default, created_at)
+      VALUES ($1, 'ATE Solutions Contract', 'contract', 'A4', 'portrait', 15, 15, 20, 15, true, NOW())
+    `, [layoutId]);
+
+    const headerSectionId = 'contract-section-header-001';
+    const bodySectionId = 'contract-section-body-001';
+    const footerSectionId = 'contract-section-footer-001';
+
+    await pool.query(`
+      INSERT INTO layout_sections (id, layout_id, name, type, position, height, config, created_at)
+      VALUES
+        ($1, $2, 'Koptekst', 'header', 0, 35, '{"firstPage":true,"allPages":false}', NOW()),
+        ($3, $2, 'Inhoud', 'body', 1, 220, '{}', NOW()),
+        ($4, $2, 'Voettekst', 'footer', 2, 18, '{"allPages":true}', NOW())
+    `, [headerSectionId, layoutId, bodySectionId, footerSectionId]);
+
+    await pool.query(`INSERT INTO layout_blocks (id, section_id, type, label, config, style, x_position, y_position, width, height, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`, [
+      'contract-block-logo-001', headerSectionId, 'Image', 'Logo',
+      JSON.stringify({ field: 'company.logoUrl', fallbackText: 'ATE Solutions B.V.' }),
+      JSON.stringify({ objectFit: 'contain' }),
+      0, 0, 50, 20
+    ]);
+
+    await pool.query(`INSERT INTO layout_blocks (id, section_id, type, label, config, style, x_position, y_position, width, height, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`, [
+      'contract-block-companyinfo-001', headerSectionId, 'Text Block', 'Bedrijfsgegevens',
+      JSON.stringify({ text: '{{company.name}}\n{{company.address.street}} {{company.address.houseNumber}}\n{{company.address.postalCode}} {{company.address.city}}\nTel: {{company.phone}}\nE-mail: {{company.email}}' }),
+      JSON.stringify({ fontSize: 8, color: '#444444', textAlign: 'right' }),
+      120, 0, 60, 20
+    ]);
+
+    await pool.query(`INSERT INTO layout_blocks (id, section_id, type, label, config, style, x_position, y_position, width, height, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`, [
+      'contract-block-line-001', headerSectionId, 'Line', 'Oranje lijn',
+      JSON.stringify({}),
+      JSON.stringify({ borderColor: '#e87722', borderWidth: 3 }),
+      0, 22, 180, 1
+    ]);
+
+    await pool.query(`INSERT INTO layout_blocks (id, section_id, type, label, config, style, x_position, y_position, width, height, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`, [
+      'contract-block-title-001', bodySectionId, 'Text Block', 'Titel',
+      JSON.stringify({ text: 'OVEREENKOMST' }),
+      JSON.stringify({ fontSize: 22, fontWeight: 'bold', color: '#1a365d', textAlign: 'center', marginBottom: 4 }),
+      0, 0, 180, 12
+    ]);
+
+    await pool.query(`INSERT INTO layout_blocks (id, section_id, type, label, config, style, x_position, y_position, width, height, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`, [
+      'contract-block-subtitle-001', bodySectionId, 'Text Block', 'Ondertitel',
+      JSON.stringify({ text: '{{contract.description}}' }),
+      JSON.stringify({ fontSize: 12, color: '#1a365d', textAlign: 'center', marginBottom: 6 }),
+      0, 12, 180, 8
+    ]);
+
+    await pool.query(`INSERT INTO layout_blocks (id, section_id, type, label, config, style, x_position, y_position, width, height, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`, [
+      'contract-block-info-001', bodySectionId, 'Text Block', 'Contractinfo',
+      JSON.stringify({ text: 'Contractnummer: {{contract.contractNumber}}\nDatum: {{contract.contractDate}}\nGeldig tot: {{contract.validUntil}}' }),
+      JSON.stringify({ fontSize: 9, color: '#333333', backgroundColor: '#f8f4ef', padding: 8, borderRadius: 4 }),
+      0, 22, 85, 18
+    ]);
+
+    await pool.query(`INSERT INTO layout_blocks (id, section_id, type, label, config, style, x_position, y_position, width, height, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`, [
+      'contract-block-customer-001', bodySectionId, 'Text Block', 'Klantgegevens',
+      JSON.stringify({ text: 'T.a.v. {{customer.name}}\n{{customer.address.street}} {{customer.address.houseNumber}}\n{{customer.address.postalCode}} {{customer.address.city}}\n{{customer.countryName}}' }),
+      JSON.stringify({ fontSize: 9, color: '#333333', backgroundColor: '#f8f4ef', padding: 8, borderRadius: 4 }),
+      95, 22, 85, 18
+    ]);
+
+    await pool.query(`INSERT INTO layout_blocks (id, section_id, type, label, config, style, x_position, y_position, width, height, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`, [
+      'contract-block-body-001', bodySectionId, 'Contract Body', 'Contractinhoud',
+      JSON.stringify({}),
+      JSON.stringify({ fontSize: 10, titleColor: '#1a365d', accentColor: '#e87722' }),
+      0, 44, 180, 170
+    ]);
+
+    await pool.query(`INSERT INTO layout_blocks (id, section_id, type, label, config, style, x_position, y_position, width, height, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`, [
+      'contract-block-line2-001', footerSectionId, 'Line', 'Voettekst lijn',
+      JSON.stringify({}),
+      JSON.stringify({ borderColor: '#e87722', borderWidth: 2 }),
+      0, 0, 180, 1
+    ]);
+
+    await pool.query(`INSERT INTO layout_blocks (id, section_id, type, label, config, style, x_position, y_position, width, height, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`, [
+      'contract-block-footer-001', footerSectionId, 'Text Block', 'Voettekst info',
+      JSON.stringify({ text: '{{company.name}} | KVK: {{company.kvkNummer}} | BTW: {{company.btwNummer}} | IBAN: {{company.bankAccount}} | {{company.phone}} | {{company.email}}' }),
+      JSON.stringify({ fontSize: 7, color: '#888888', textAlign: 'center' }),
+      0, 2, 180, 8
+    ]);
+
+    await pool.query(`INSERT INTO layout_blocks (id, section_id, type, label, config, style, x_position, y_position, width, height, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`, [
+      'contract-block-pagenum-001', footerSectionId, 'Page Number', 'Paginanummer',
+      JSON.stringify({ format: 'Pagina [PAGINANUMMER] van [TOTAALPAGINAS]' }),
+      JSON.stringify({ fontSize: 7, color: '#888888', textAlign: 'right' }),
+      140, 10, 40, 6
+    ]);
+
+    log('Contract layout seeded successfully');
+  } catch (err: any) {
+    if (!err.message?.includes('duplicate key')) {
+      log(`Contract layout seed error: ${err.message}`);
+    }
+  }
+}
+
 (async () => {
   await seedProductionDatabase();
   await ensureSeedLayouts();
+  await ensureContractLayout();
   await migrateLY0016DocumentFooter();
   await ensureCountriesSeed();
   await ensureDbFunctions();

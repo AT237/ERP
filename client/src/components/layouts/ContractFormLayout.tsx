@@ -241,7 +241,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     onClose: onSave,
     saveDisabled: saveMutation.isPending,
     saveLoading: saveMutation.isPending,
-    showPrint: false,
+    showPrint: isEditing,
   });
 
   const addRow = useCallback((type: string = "text") => {
