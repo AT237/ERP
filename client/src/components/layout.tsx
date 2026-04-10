@@ -53,6 +53,7 @@ const EmployeeForm = lazy(() => import('@/pages/employee-form'));
 const ImageForm = lazy(() => import('@/pages/image-form'));
 const MasterDataTable = lazy(() => import('./masterdata-table'));
 const MasterDataFormLayout = lazy(() => import('@/components/layouts/MasterDataFormLayout'));
+const ContractForm = lazy(() => import('@/pages/contract-form'));
 const DevFuturesPage = lazy(() => import('@/pages/dev-futures'));
 
 const DashboardPage = lazy(() => import('@/pages/dashboard'));
@@ -215,6 +216,8 @@ export default function Layout({ children }: LayoutProps) {
         return { id: 'reports', name: 'Reports' };
       case '/pdf-archive':
         return { id: 'pdf-archive', name: 'PDF Database' };
+      case '/contracts':
+        return { id: 'contracts', name: 'Contracten' };
       case '/addresses':
         return { id: 'addresses', name: 'Addresses' };
       case '/customer-form':
@@ -663,6 +666,8 @@ export default function Layout({ children }: LayoutProps) {
         return '/reports';
       case 'pdf-archive':
         return '/pdf-archive';
+      case 'contracts':
+        return '/contracts';
       case 'addresses':
         return '/addresses';
       case 'text-snippets':
@@ -1624,6 +1629,21 @@ export default function Layout({ children }: LayoutProps) {
           <Suspense fallback={<div></div>}>
             <TextSnippetForm
               textSnippetId={snippetId}
+              parentId={tab.parentId}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+
+      if (tab.formType === 'contract') {
+        const cId = tab.entityId
+          || (tab.id.startsWith('edit-contract-') ? tab.parentId : undefined)
+          || (tab.id.startsWith('view-contract-') ? tab.parentId : undefined);
+        return (
+          <Suspense fallback={<div></div>}>
+            <ContractForm
+              contractId={cId}
               parentId={tab.parentId}
               onSave={() => {}}
             />

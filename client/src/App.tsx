@@ -27,6 +27,7 @@ import SalesOrders from "@/pages/sales-orders";
 import PackingLists from "@/pages/packing-lists";
 import Reports from "@/pages/reports";
 import PdfArchive from "@/pages/pdf-archive";
+import Contracts from "@/pages/contracts";
 import TextSnippets from "@/pages/text-snippets";
 import Images from "@/pages/images";
 import Pictograms from "@/pages/pictograms";
@@ -65,6 +66,7 @@ function Router() {
         <Route path="/packing-lists" component={PackingLists} />
         <Route path="/reports" component={Reports} />
         <Route path="/pdf-archive" component={PdfArchive} />
+        <Route path="/contracts" component={Contracts} />
         <Route path="/text-snippets" component={TextSnippets} />
         <Route path="/layout-designer" component={LayoutDesigner} />
         <Route path="/email-designer" component={EmailDesigner} />

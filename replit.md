@@ -36,6 +36,7 @@ The frontend is built with React 18 and TypeScript, using Wouter for routing, sh
 - **Customer Multi-Address**: Customers can have multiple linked addresses via `customer_addresses` junction table. "Adressen" tab in CustomerFormLayout allows adding/removing/setting default addresses. Packing list shipping address field becomes a dropdown of linked customer addresses when available, with fallback to manual text entry.
 - **Filter Persistence**: Table filters are persisted to localStorage per table via `table-filters-${tableKey}`. Filters are automatically restored when revisiting a table.
 - **Admin Employee**: EM-0001 is reserved for the Admin system account (created at startup via `ensureAdminEmployee`). Existing employees are shifted up by 1 in a transaction if Admin doesn't exist yet.
+- **Contracts Module**: Under Reports in sidebar. `contracts` + `contract_items` tables. Contract header: number, customer, date, valid-until, status, description, notes. Contract body: ordered rows with types (heading, text, table, image), hierarchical numbering (auto-nummering), indent levels (0-3). Right-side placeholder panel for inserting `{{klant.naam}}`, `{{bedrijf.kvk}}`, etc. into text content. Batch save for items via `PUT /api/contracts/:id/items/batch`. Form type: `contract`, registered in `use-form-toolbar.ts`.
 
 ### Technical Implementations
 - **LayoutForm2**: A central, configurable React component ensuring visual consistency, change tracking, tab-based sections, type safety, and validation for all business forms.
