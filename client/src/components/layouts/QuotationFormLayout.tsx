@@ -357,85 +357,71 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     }
   }, [watchedCostPrice, watchedUnitPrice, inventoryForm]);
 
-  // Watch for changes in quotation date and validity days to auto-calculate valid until
   const watchedQuotationDate = quotationForm.watch("quotationDate");
   const watchedValidityDays = quotationForm.watch("validityDays");
-
-  // Track if we're currently updating to prevent circular updates
-  const [isUpdatingDates, setIsUpdatingDates] = React.useState(false);
-
-  React.useEffect(() => {
-    if (watchedQuotationDate && watchedValidityDays && !isUpdatingDates) {
-      // Parse dd-mm-yyyy format
-      const parts = watchedQuotationDate.split('-');
-      if (parts.length === 3) {
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
-        const year = parseInt(parts[2], 10);
-        const quotationDate = new Date(year, month, day);
-        
-        // Check if the date is valid before processing
-        if (!isNaN(quotationDate.getTime())) {
-          const validUntilDate = new Date(quotationDate);
-          validUntilDate.setDate(quotationDate.getDate() + watchedValidityDays);
-          
-          // Only proceed if the calculated date is also valid
-          if (!isNaN(validUntilDate.getTime())) {
-            // Format as dd-mm-yyyy
-            const validUntilString = toDisplayDate(validUntilDate);
-            
-            // Only update if the calculated date is different from current value
-            const currentValidUntil = quotationForm.getValues("validUntil");
-            if (currentValidUntil !== validUntilString) {
-              setIsUpdatingDates(true);
-              quotationForm.setValue("validUntil", validUntilString, { shouldTouch: false, shouldDirty: false });
-              setTimeout(() => setIsUpdatingDates(false), 0);
-            }
-          }
-        }
-      }
-    }
-  }, [watchedQuotationDate, watchedValidityDays, isUpdatingDates]);
-
-  // Watch for changes in valid until to auto-calculate validity days (reverse calculation)
   const watchedValidUntil = quotationForm.watch("validUntil");
 
+  const dateUpdateSourceRef = useRef<"none" | "forward" | "reverse">("none");
+
   React.useEffect(() => {
-    if (watchedQuotationDate && watchedValidUntil && !isUpdatingDates) {
-      // Parse both dates (dd-mm-yyyy format)
-      const quotationParts = watchedQuotationDate.split('-');
-      const validUntilParts = watchedValidUntil.split('-');
-      
-      if (quotationParts.length === 3 && validUntilParts.length === 3) {
-        const quotationDate = new Date(
-          parseInt(quotationParts[2], 10),
-          parseInt(quotationParts[1], 10) - 1,
-          parseInt(quotationParts[0], 10)
-        );
-        
-        const validUntilDate = new Date(
-          parseInt(validUntilParts[2], 10),
-          parseInt(validUntilParts[1], 10) - 1,
-          parseInt(validUntilParts[0], 10)
-        );
-        
-        // Check if both dates are valid
-        if (!isNaN(quotationDate.getTime()) && !isNaN(validUntilDate.getTime())) {
-          // Calculate difference in days
-          const diffTime = validUntilDate.getTime() - quotationDate.getTime();
-          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-          
-          // Only update if positive and different from current value
-          const currentValidityDays = quotationForm.getValues("validityDays");
-          if (diffDays >= 0 && currentValidityDays !== diffDays) {
-            setIsUpdatingDates(true);
-            quotationForm.setValue("validityDays", diffDays, { shouldTouch: false, shouldDirty: false });
-            setTimeout(() => setIsUpdatingDates(false), 0);
-          }
-        }
-      }
+    if (dateUpdateSourceRef.current === "reverse") {
+      dateUpdateSourceRef.current = "none";
+      return;
     }
-  }, [watchedQuotationDate, watchedValidUntil, isUpdatingDates]);
+    if (!watchedQuotationDate || !watchedValidityDays) return;
+
+    const parts = watchedQuotationDate.split('-');
+    if (parts.length !== 3) return;
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    const quotationDate = new Date(year, month, day);
+    if (isNaN(quotationDate.getTime())) return;
+
+    const validUntilDate = new Date(quotationDate);
+    validUntilDate.setDate(quotationDate.getDate() + watchedValidityDays);
+    if (isNaN(validUntilDate.getTime())) return;
+
+    const validUntilString = toDisplayDate(validUntilDate);
+    const currentValidUntil = quotationForm.getValues("validUntil");
+    if (currentValidUntil !== validUntilString) {
+      dateUpdateSourceRef.current = "forward";
+      quotationForm.setValue("validUntil", validUntilString, { shouldTouch: false, shouldDirty: false });
+    }
+  }, [watchedQuotationDate, watchedValidityDays]);
+
+  React.useEffect(() => {
+    if (dateUpdateSourceRef.current === "forward") {
+      dateUpdateSourceRef.current = "none";
+      return;
+    }
+    if (!watchedQuotationDate || !watchedValidUntil) return;
+
+    const quotationParts = watchedQuotationDate.split('-');
+    const validUntilParts = watchedValidUntil.split('-');
+    if (quotationParts.length !== 3 || validUntilParts.length !== 3) return;
+
+    const quotationDate = new Date(
+      parseInt(quotationParts[2], 10),
+      parseInt(quotationParts[1], 10) - 1,
+      parseInt(quotationParts[0], 10)
+    );
+    const validUntilDate = new Date(
+      parseInt(validUntilParts[2], 10),
+      parseInt(validUntilParts[1], 10) - 1,
+      parseInt(validUntilParts[0], 10)
+    );
+
+    if (isNaN(quotationDate.getTime()) || isNaN(validUntilDate.getTime())) return;
+
+    const diffTime = validUntilDate.getTime() - quotationDate.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    const currentValidityDays = quotationForm.getValues("validityDays");
+    if (diffDays >= 0 && currentValidityDays !== diffDays) {
+      dateUpdateSourceRef.current = "reverse";
+      quotationForm.setValue("validityDays", diffDays, { shouldTouch: false, shouldDirty: false });
+    }
+  }, [watchedQuotationDate, watchedValidUntil]);
 
   // Calculate line total when quantity or unit price changes
   const watchedQuantity = itemForm.watch('quantity');
