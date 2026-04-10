@@ -2,19 +2,19 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Plus, Trash2, GripVertical, ChevronRight, ChevronDown, Type, Heading, Table, Image, MoveUp, MoveDown, Indent, Outdent, Copy } from "lucide-react";
+import { Trash2, GripVertical, ChevronRight, ChevronDown, Type, Heading, Table, Image, MoveUp, MoveDown, Indent, Outdent, Copy } from "lucide-react";
 import { insertContractSchema, type InsertContract, type Contract, type ContractItem, type Customer } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
-import { FormToolbar } from "@/components/layouts/FormToolbar";
+import { useValidationErrors } from "@/hooks/use-validation-errors";
+import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
+import { LayoutForm2, type FormSection2, createFieldRow } from './LayoutForm2';
+import { CustomerSelect } from "@/components/ui/customer-select";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -88,6 +88,11 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["Klant", "Bedrijf"]));
   const activeTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [originalValues, setOriginalValues] = useState<Partial<FormData>>({});
+
+  const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
+    contractNumber: { label: "Contractnummer" },
+  });
 
   const effectiveId = contractId || (parentId !== 'contracts' ? parentId : undefined);
   const [currentContractId, setCurrentContractId] = useState<string | undefined>(effectiveId);
@@ -134,7 +139,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
 
   useEffect(() => {
     if (contract && isEditing) {
-      form.reset({
+      const formData = {
         contractNumber: contract.contractNumber || "",
         description: contract.description || "",
         customerId: contract.customerId || "",
@@ -143,7 +148,9 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         status: contract.status || "concept",
         notes: contract.notes || "",
         printLayoutId: contract.printLayoutId || "",
-      });
+      };
+      form.reset(formData);
+      setOriginalValues(formData);
     }
   }, [contract, isEditing, form]);
 
@@ -207,7 +214,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       }
       setHasUnsavedChanges(false);
       toast({ title: "Opgeslagen", description: "Contract is opgeslagen." });
-      onSave();
     },
     onError: (error: any) => {
       toast({ title: "Fout", description: error.message || "Opslaan mislukt", variant: "destructive" });
@@ -217,12 +223,13 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
   const handleSave = useCallback(() => {
     form.handleSubmit(
       (data) => saveMutation.mutate(data),
-      (errors) => {
-        console.error("Validation errors:", errors);
-        toast({ title: "Validatiefout", description: "Controleer de verplichte velden", variant: "destructive" });
-      }
+      onInvalid
     )();
-  }, [form, saveMutation, toast]);
+  }, [form, saveMutation, onInvalid]);
+
+  const handleChangesDetected = useCallback((hasChanges: boolean) => {
+    setHasUnsavedChanges(hasChanges);
+  }, []);
 
   const toolbar = useFormToolbar({
     entityType: "contract",
@@ -360,233 +367,301 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     setHasUnsavedChanges(true);
   }, []);
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className="sticky top-0 z-20 bg-white pt-2 pb-2 px-4">
-        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 flex items-center gap-1">
-          <FormToolbar {...toolbar} />
-        </div>
-      </div>
-      <div className="flex-1 overflow-hidden">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <div className="border-b px-4">
-            <TabsList>
-              <TabsTrigger value="general">Algemeen</TabsTrigger>
-              <TabsTrigger value="content">Inhoud</TabsTrigger>
-              <TabsTrigger value="notes">Notities</TabsTrigger>
-            </TabsList>
+  const contentBuilder = (
+    <div className="flex h-[calc(100vh-220px)]">
+      <div className="flex-1 flex flex-col overflow-hidden border-r">
+        <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
+          <TooltipProvider>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => addRow("text")}><Type className="w-4 h-4 mr-1" />Tekst</Button>
+            </TooltipTrigger><TooltipContent>Tekstrij toevoegen</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => addRow("heading")}><Heading className="w-4 h-4 mr-1" />Kop</Button>
+            </TooltipTrigger><TooltipContent>Koprij toevoegen</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => addRow("table")}><Table className="w-4 h-4 mr-1" />Tabel</Button>
+            </TooltipTrigger><TooltipContent>Tabelrij toevoegen</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => addRow("image")}><Image className="w-4 h-4 mr-1" />Afbeelding</Button>
+            </TooltipTrigger><TooltipContent>Afbeeldingrij toevoegen</TooltipContent></Tooltip>
+          </TooltipProvider>
+          <div className="ml-auto">
+            <Button variant="ghost" size="sm" onClick={autoNumber}>Auto-nummering</Button>
           </div>
+        </div>
+        <ScrollArea className="flex-1">
+          <div className="p-3 space-y-2">
+            {rows.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <Type className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                <p>Nog geen rijen. Gebruik de knoppen hierboven om inhoud toe te voegen.</p>
+              </div>
+            )}
+            {rows.map((row, index) => (
+              <Card
+                key={index}
+                className={`cursor-pointer transition-colors ${selectedRowIndex === index ? 'ring-2 ring-primary' : 'hover:bg-muted/50'}`}
+                onClick={() => setSelectedRowIndex(index)}
+              >
+                <CardContent className="p-3">
+                  <div className="flex items-start gap-2">
+                    <div className="flex flex-col items-center gap-1 pt-1">
+                      <GripVertical className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{getTypeIcon(row.itemType)}</span>
+                    </div>
+                    <div className="flex-1" style={{ marginLeft: `${row.indentLevel * 24}px` }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Input
+                          value={row.articleNumber}
+                          onChange={(e) => updateRow(index, 'articleNumber', e.target.value)}
+                          className="w-20 h-7 text-xs"
+                          placeholder="Nr."
+                        />
+                        <span className="text-xs text-muted-foreground font-medium">{getTypeLabel(row.itemType)}</span>
+                        <div className="ml-auto flex items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); moveRow(index, 'up'); }} disabled={index === 0}>
+                            <MoveUp className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); moveRow(index, 'down'); }} disabled={index === rows.length - 1}>
+                            <MoveDown className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); changeIndent(index, 'decrease'); }} disabled={row.indentLevel === 0}>
+                            <Outdent className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); changeIndent(index, 'increase'); }} disabled={row.indentLevel >= 3}>
+                            <Indent className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); duplicateRow(index); }}>
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 hover:text-red-700" onClick={(e) => { e.stopPropagation(); removeRow(index); }}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      {row.itemType === 'heading' ? (
+                        <Input
+                          value={row.content}
+                          onChange={(e) => updateRow(index, 'content', e.target.value)}
+                          className="font-bold text-base"
+                          placeholder="Koptekst..."
+                        />
+                      ) : row.itemType === 'image' ? (
+                        <Input
+                          value={row.content}
+                          onChange={(e) => updateRow(index, 'content', e.target.value)}
+                          placeholder="Afbeelding URL of referentie..."
+                        />
+                      ) : (
+                        <Textarea
+                          ref={(el) => {
+                            if (selectedRowIndex === index) activeTextareaRef.current = el;
+                          }}
+                          value={row.content}
+                          onChange={(e) => updateRow(index, 'content', e.target.value)}
+                          placeholder={row.itemType === 'table' ? "Tabelinhoud (bijv. kolom1 | kolom2 | kolom3)..." : "Tekst invoeren... Gebruik {{placeholders}} voor dynamische data."}
+                          rows={row.itemType === 'table' ? 4 : 3}
+                          className="resize-none text-sm"
+                          onFocus={() => {
+                            setSelectedRowIndex(index);
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
 
-          <TabsContent value="general" className="flex-1 overflow-auto p-4 m-0">
-            <div className="grid grid-cols-2 gap-4 max-w-4xl">
-              <div>
-                <Label htmlFor="contractNumber">Contractnummer *</Label>
-                <Input id="contractNumber" {...form.register("contractNumber")} onChange={(e) => { form.setValue("contractNumber", e.target.value); setHasUnsavedChanges(true); }} />
-                {form.formState.errors.contractNumber && (
-                  <p className="text-xs text-red-500 mt-1">{form.formState.errors.contractNumber.message}</p>
+      <div className="w-64 flex flex-col overflow-hidden bg-muted/20">
+        <div className="p-3 border-b">
+          <h3 className="font-semibold text-sm">Placeholders</h3>
+          <p className="text-xs text-muted-foreground mt-1">Klik om in te voegen bij geselecteerde rij</p>
+        </div>
+        <ScrollArea className="flex-1">
+          <div className="p-2">
+            {PLACEHOLDERS.map(group => (
+              <div key={group.category} className="mb-1">
+                <button
+                  className="w-full flex items-center gap-1 px-2 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground rounded"
+                  onClick={() => toggleCategory(group.category)}
+                >
+                  {expandedCategories.has(group.category) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                  {group.category}
+                </button>
+                {expandedCategories.has(group.category) && (
+                  <div className="ml-4 space-y-0.5">
+                    {group.items.map(item => (
+                      <button
+                        key={item.value}
+                        className="w-full text-left px-2 py-1 text-xs rounded hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between group"
+                        onClick={() => insertPlaceholder(item.value)}
+                        title={item.value}
+                      >
+                        <span>{item.label}</span>
+                        <span className="text-[10px] text-muted-foreground group-hover:text-primary/70 font-mono truncate ml-2">{item.value}</span>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
-              <div>
-                <Label htmlFor="customerId">Klant</Label>
-                <Select value={form.watch("customerId") || ""} onValueChange={(v) => { form.setValue("customerId", v === "__clear__" ? "" : v); setHasUnsavedChanges(true); }}>
-                  <SelectTrigger><SelectValue placeholder="Selecteer klant" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__clear__">-- Geen --</SelectItem>
-                    {customers.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="contractDate">Datum</Label>
-                <Input id="contractDate" placeholder="DD-MM-YYYY" {...form.register("contractDate")} onChange={(e) => { form.setValue("contractDate", e.target.value); setHasUnsavedChanges(true); }} />
-              </div>
-              <div>
-                <Label htmlFor="validUntil">Geldig tot</Label>
-                <Input id="validUntil" placeholder="DD-MM-YYYY" {...form.register("validUntil")} onChange={(e) => { form.setValue("validUntil", e.target.value); setHasUnsavedChanges(true); }} />
-              </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select value={form.watch("status") || "concept"} onValueChange={(v) => { form.setValue("status", v); setHasUnsavedChanges(true); }}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="concept">Concept</SelectItem>
-                    <SelectItem value="actief">Actief</SelectItem>
-                    <SelectItem value="verlopen">Verlopen</SelectItem>
-                    <SelectItem value="geannuleerd">Geannuleerd</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="description">Omschrijving</Label>
-                <Input id="description" {...form.register("description")} onChange={(e) => { form.setValue("description", e.target.value); setHasUnsavedChanges(true); }} />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="content" className="flex-1 overflow-hidden p-0 m-0">
-            <div className="flex h-full">
-              <div className="flex-1 flex flex-col overflow-hidden border-r">
-                <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
-                  <TooltipProvider>
-                    <Tooltip><TooltipTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => addRow("text")}><Type className="w-4 h-4 mr-1" />Tekst</Button>
-                    </TooltipTrigger><TooltipContent>Tekstrij toevoegen</TooltipContent></Tooltip>
-                    <Tooltip><TooltipTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => addRow("heading")}><Heading className="w-4 h-4 mr-1" />Kop</Button>
-                    </TooltipTrigger><TooltipContent>Koprij toevoegen</TooltipContent></Tooltip>
-                    <Tooltip><TooltipTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => addRow("table")}><Table className="w-4 h-4 mr-1" />Tabel</Button>
-                    </TooltipTrigger><TooltipContent>Tabelrij toevoegen</TooltipContent></Tooltip>
-                    <Tooltip><TooltipTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => addRow("image")}><Image className="w-4 h-4 mr-1" />Afbeelding</Button>
-                    </TooltipTrigger><TooltipContent>Afbeeldingrij toevoegen</TooltipContent></Tooltip>
-                  </TooltipProvider>
-                  <div className="ml-auto">
-                    <Button variant="ghost" size="sm" onClick={autoNumber}>Auto-nummering</Button>
-                  </div>
-                </div>
-                <ScrollArea className="flex-1">
-                  <div className="p-3 space-y-2">
-                    {rows.length === 0 && (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <Type className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                        <p>Nog geen rijen. Gebruik de knoppen hierboven om inhoud toe te voegen.</p>
-                      </div>
-                    )}
-                    {rows.map((row, index) => (
-                      <Card
-                        key={index}
-                        className={`cursor-pointer transition-colors ${selectedRowIndex === index ? 'ring-2 ring-primary' : 'hover:bg-muted/50'}`}
-                        onClick={() => setSelectedRowIndex(index)}
-                      >
-                        <CardContent className="p-3">
-                          <div className="flex items-start gap-2">
-                            <div className="flex flex-col items-center gap-1 pt-1">
-                              <GripVertical className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">{getTypeIcon(row.itemType)}</span>
-                            </div>
-                            <div className="flex-1" style={{ marginLeft: `${row.indentLevel * 24}px` }}>
-                              <div className="flex items-center gap-2 mb-2">
-                                <Input
-                                  value={row.articleNumber}
-                                  onChange={(e) => updateRow(index, 'articleNumber', e.target.value)}
-                                  className="w-20 h-7 text-xs"
-                                  placeholder="Nr."
-                                />
-                                <span className="text-xs text-muted-foreground font-medium">{getTypeLabel(row.itemType)}</span>
-                                <div className="ml-auto flex items-center gap-1">
-                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); moveRow(index, 'up'); }} disabled={index === 0}>
-                                    <MoveUp className="w-3 h-3" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); moveRow(index, 'down'); }} disabled={index === rows.length - 1}>
-                                    <MoveDown className="w-3 h-3" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); changeIndent(index, 'decrease'); }} disabled={row.indentLevel === 0}>
-                                    <Outdent className="w-3 h-3" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); changeIndent(index, 'increase'); }} disabled={row.indentLevel >= 3}>
-                                    <Indent className="w-3 h-3" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); duplicateRow(index); }}>
-                                    <Copy className="w-3 h-3" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 hover:text-red-700" onClick={(e) => { e.stopPropagation(); removeRow(index); }}>
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                              {row.itemType === 'heading' ? (
-                                <Input
-                                  value={row.content}
-                                  onChange={(e) => updateRow(index, 'content', e.target.value)}
-                                  className="font-bold text-base"
-                                  placeholder="Koptekst..."
-                                />
-                              ) : row.itemType === 'image' ? (
-                                <Input
-                                  value={row.content}
-                                  onChange={(e) => updateRow(index, 'content', e.target.value)}
-                                  placeholder="Afbeelding URL of referentie..."
-                                />
-                              ) : (
-                                <Textarea
-                                  ref={(el) => {
-                                    if (selectedRowIndex === index) activeTextareaRef.current = el;
-                                  }}
-                                  value={row.content}
-                                  onChange={(e) => updateRow(index, 'content', e.target.value)}
-                                  placeholder={row.itemType === 'table' ? "Tabelinhoud (bijv. kolom1 | kolom2 | kolom3)..." : "Tekst invoeren... Gebruik {{placeholders}} voor dynamische data."}
-                                  rows={row.itemType === 'table' ? 4 : 3}
-                                  className="resize-none text-sm"
-                                  onFocus={() => {
-                                    setSelectedRowIndex(index);
-                                  }}
-                                />
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </div>
-
-              <div className="w-64 flex flex-col overflow-hidden bg-muted/20">
-                <div className="p-3 border-b">
-                  <h3 className="font-semibold text-sm">Placeholders</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Klik om in te voegen bij geselecteerde rij</p>
-                </div>
-                <ScrollArea className="flex-1">
-                  <div className="p-2">
-                    {PLACEHOLDERS.map(group => (
-                      <div key={group.category} className="mb-1">
-                        <button
-                          className="w-full flex items-center gap-1 px-2 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground rounded"
-                          onClick={() => toggleCategory(group.category)}
-                        >
-                          {expandedCategories.has(group.category) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                          {group.category}
-                        </button>
-                        {expandedCategories.has(group.category) && (
-                          <div className="ml-4 space-y-0.5">
-                            {group.items.map(item => (
-                              <button
-                                key={item.value}
-                                className="w-full text-left px-2 py-1 text-xs rounded hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between group"
-                                onClick={() => insertPlaceholder(item.value)}
-                                title={item.value}
-                              >
-                                <span>{item.label}</span>
-                                <span className="text-[10px] text-muted-foreground group-hover:text-primary/70 font-mono truncate ml-2">{item.value}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="notes" className="flex-1 overflow-auto p-4 m-0">
-            <div className="max-w-4xl">
-              <Label htmlFor="notes">Notities</Label>
-              <Textarea
-                id="notes"
-                {...form.register("notes")}
-                onChange={(e) => { form.setValue("notes", e.target.value); setHasUnsavedChanges(true); }}
-                rows={12}
-                placeholder="Interne notities..."
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
     </div>
+  );
+
+  const formSections: FormSection2<FormData>[] = [
+    {
+      id: "general",
+      label: "Algemeen",
+      rows: [
+        {
+          type: 'two-column' as const,
+          leftColumn: [
+            {
+              key: "contractNumber",
+              label: "Contractnummer",
+              type: "text",
+              placeholder: "CON-2026-001",
+              register: form.register("contractNumber"),
+              validation: {
+                isRequired: true,
+                error: form.formState.errors.contractNumber?.message,
+              },
+              testId: "input-contract-number"
+            },
+            {
+              key: "customerId",
+              label: "Klant",
+              type: "custom",
+              customComponent: (
+                <CustomerSelect
+                  value={form.watch("customerId") || ""}
+                  onValueChange={(value) => form.setValue("customerId", value || "")}
+                  placeholder="Selecteer klant..."
+                  testId="select-contract-customer"
+                  customers={customers.map(c => ({
+                    id: c.id,
+                    customerNumber: (c as any).customerNumber || '',
+                    name: c.name,
+                    email: (c as any).generalEmail || (c as any).email || undefined,
+                    phone: (c as any).phone || undefined,
+                  }))}
+                  parentId={currentContractId || 'new-contract'}
+                />
+              ),
+            },
+            {
+              key: "contractDate",
+              label: "Datum",
+              type: "date",
+              placeholder: "dd-mm-yyyy",
+              setValue: (value: string) => form.setValue("contractDate", value),
+              watch: () => form.watch("contractDate"),
+              testId: "input-contract-date"
+            },
+            {
+              key: "validUntil",
+              label: "Geldig tot",
+              type: "date",
+              placeholder: "dd-mm-yyyy",
+              setValue: (value: string) => form.setValue("validUntil", value),
+              watch: () => form.watch("validUntil"),
+              testId: "input-valid-until"
+            },
+            {
+              key: "status",
+              label: "Status",
+              type: "select",
+              options: [
+                { value: "concept", label: "Concept" },
+                { value: "actief", label: "Actief" },
+                { value: "verlopen", label: "Verlopen" },
+                { value: "geannuleerd", label: "Geannuleerd" },
+              ],
+              setValue: (value: string) => form.setValue("status", value),
+              watch: () => form.watch("status"),
+              testId: "select-status"
+            },
+          ],
+          rightColumn: [
+            {
+              key: "description",
+              label: "Omschrijving",
+              type: "textarea",
+              placeholder: "Contract omschrijving...",
+              register: form.register("description"),
+              testId: "textarea-description"
+            },
+            {
+              key: "notes",
+              label: "Notities",
+              type: "textarea",
+              placeholder: "Interne notities...",
+              register: form.register("notes"),
+              rows: 6,
+              testId: "textarea-notes"
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: "content",
+      label: "Inhoud",
+      rows: [
+        {
+          type: "custom" as const,
+          customContent: contentBuilder,
+        },
+      ],
+    },
+    {
+      id: "notes",
+      label: "Notities",
+      rows: [
+        createFieldRow({
+          key: "notes",
+          label: "Notities",
+          type: "textarea",
+          placeholder: "Interne notities...",
+          register: form.register("notes"),
+          rows: 12,
+          testId: "textarea-notes-full"
+        }),
+      ],
+    },
+  ];
+
+  return (
+    <>
+      <LayoutForm2
+        sections={formSections}
+        activeSection={activeTab}
+        onSectionChange={setActiveTab}
+        form={form}
+        onSubmit={(data) => saveMutation.mutate(data)}
+        toolbar={toolbar}
+        documentType="contract"
+        entityId={currentContractId}
+        isLoading={isLoadingContract}
+        originalValues={originalValues}
+        changeTracking={{
+          enabled: true,
+          onChangesDetected: handleChangesDetected,
+        }}
+      />
+      <ValidationErrorDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        errors={validErrors}
+        onShowFields={() => handleShowFields(setActiveTab, setActiveTab)}
+      />
+    </>
   );
 }
