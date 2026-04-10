@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -113,6 +113,20 @@ export function FormToolbar({
 }: FormToolbarProps) {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+        e.preventDefault();
+        if (showPrint && !printDisabled && documentType) {
+          setPrintDialogOpen(true);
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [showPrint, printDisabled, documentType]);
+
   const buttonClass = "h-8 w-8 p-0";
   const iconClass = "h-4 w-4";
   const activeClass = "bg-orange-500 text-white hover:bg-orange-600";
