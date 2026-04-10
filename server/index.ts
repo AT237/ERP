@@ -370,6 +370,10 @@ async function ensureLineItemColumns() {
     await db.execute(sql`ALTER TABLE company_profiles ADD COLUMN IF NOT EXISTS swift_code TEXT`);
     await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name TEXT`);
     await db.execute(sql`ALTER TABLE proforma_invoices ADD COLUMN IF NOT EXISTS print_layout_id VARCHAR`);
+    await db.execute(sql`ALTER TABLE quotations ADD COLUMN IF NOT EXISTS print_layout_id VARCHAR`);
+    await db.execute(sql`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS print_layout_id VARCHAR`);
+    await db.execute(sql`ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS print_layout_id VARCHAR`);
+    await db.execute(sql`ALTER TABLE packing_lists ADD COLUMN IF NOT EXISTS print_layout_id VARCHAR`);
     await db.execute(sql`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS cost_price DECIMAL(10,2) DEFAULT '0.00'`);
   } catch (err: any) {
     log(`Could not ensure line item columns: ${err.message}`);

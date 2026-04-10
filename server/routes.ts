@@ -1895,7 +1895,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const requiredNumerics = ['subtotal', 'totalAmount'];
     requiredNumerics.forEach(f => { if (body[f] === '' || body[f] == null) body[f] = '0'; });
     // Convert empty string FK fields to null
-    const nullableFKs = ['customerId', 'projectId', 'statusId', 'paymentDaysId', 'vatRateId'];
+    const nullableFKs = ['customerId', 'projectId', 'statusId', 'paymentDaysId', 'vatRateId', 'printLayoutId'];
     nullableFKs.forEach(f => { if (body[f] === '') body[f] = null; });
     return body;
   }

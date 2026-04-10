@@ -310,6 +310,7 @@ export const quotations = pgTable("quotations", {
   printPaymentConditions: boolean("print_payment_conditions").default(true),
   printLineImages: boolean("print_line_images").default(false),
   printLanguageCode: text("print_language_code").references(() => languages.code).default("nl"),
+  printLayoutId: varchar("print_layout_id"),
   customerSnapshot: text("customer_snapshot"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -461,6 +462,7 @@ export const proformaInvoices = pgTable("proforma_invoices", {
   printProjectNo: boolean("print_project_no").default(true),
   printPaymentConditions: boolean("print_payment_conditions").default(true),
   printLineImages: boolean("print_line_images").default(false),
+  printLayoutId: varchar("print_layout_id"),
   incotermId: varchar("incoterm_id").references(() => incoterms.id),
   portOfLoading: text("port_of_loading"),
   portOfDischarge: text("port_of_discharge"),
@@ -587,6 +589,7 @@ export const workOrders = pgTable("work_orders", {
   completedDate: timestamp("completed_date"),
   estimatedHours: integer("estimated_hours"),
   actualHours: integer("actual_hours"),
+  printLayoutId: varchar("print_layout_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -647,6 +650,7 @@ export const packingLists = pgTable("packing_lists", {
   totalPackages: integer("total_packages"),
   dimensions: text("dimensions"),
   notes: text("notes"),
+  printLayoutId: varchar("print_layout_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

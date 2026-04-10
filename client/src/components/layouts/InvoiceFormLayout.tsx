@@ -25,7 +25,7 @@ import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { LineItemAssemblyPanel } from '@/components/layouts/LineItemAssemblyPanel';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, VatRate, InventoryItem, UnitOfMeasure } from "@shared/schema";
+import type { Invoice, InvoiceItem, InsertInvoice, InsertInvoiceItem, Customer, PaymentDay, VatRate, InventoryItem, UnitOfMeasure, DocumentLayout } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { amountToWords } from "@/utils/field-resolver";
@@ -241,6 +241,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       notes: "",
       printSortOrder: "position",
       printLanguageCode: "nl",
+      printLayoutId: "",
       incotermId: "",
     },
   });
@@ -285,6 +286,15 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
   const { data: vatRates = [] } = useQuery<VatRate[]>({
     queryKey: ["/api/masterdata/vat-rates"],
     staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: availableLayouts = [] } = useQuery<DocumentLayout[]>({
+    queryKey: ["/api/layouts", { documentType: "invoice" }],
+    queryFn: async () => {
+      const res = await fetch("/api/layouts?documentType=invoice");
+      if (!res.ok) throw new Error("Failed to fetch layouts");
+      return res.json();
+    },
   });
 
   const { data: incotermsList = [] } = useQuery<any[]>({
@@ -352,6 +362,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
         notes: invoice.notes || "",
         printSortOrder: (invoice as any).printSortOrder || "position",
         printLanguageCode: (invoice as any).printLanguageCode || "nl",
+        printLayoutId: (invoice as any).printLayoutId || "",
         printProjectNo: (invoice as any).printProjectNo ?? true,
         printPaymentConditions: (invoice as any).printPaymentConditions ?? true,
         printLineImages: (invoice as any).printLineImages ?? false,
@@ -1018,6 +1029,8 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     { label: "Maak Pakbon (PL)", onClick: () => handleConvert("packing-list") },
   ] : [];
 
+  const watchedInvPrintLayoutId = invoiceForm.watch("printLayoutId" as any) as string | undefined;
+
   const toolbar = useFormToolbar({
     entityType: "invoice",
     entityId: currentInvoiceId,
@@ -1025,6 +1038,7 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
+    printLayoutId: watchedInvPrintLayoutId || undefined,
   });
 
   const toolbarWithConvert = {
@@ -1331,6 +1345,31 @@ export function InvoiceFormLayout({ onSave, invoiceId, parentId }: InvoiceFormLa
       label: "Print Settings",
       rows: [
         createSectionHeaderRow("Afdrukinstellingen", "mb-6"),
+        createFieldRow({
+          key: "printLayoutId",
+          label: "Layout",
+          type: "custom",
+          customComponent: (
+            <Select
+              value={invoiceForm.watch("printLayoutId" as any) || ""}
+              onValueChange={(value) => invoiceForm.setValue("printLayoutId" as any, value === "__clear__" ? "" : value)}
+            >
+              <SelectTrigger className="w-full" data-testid="select-print-layout">
+                <SelectValue placeholder="Selecteer een layout..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__clear__">— Wis selectie —</SelectItem>
+                {availableLayouts.map((layout) => (
+                  <SelectItem key={layout.id} value={layout.id}>
+                    {layout.name} ({layout.pageFormat} - {layout.orientation})
+                    {layout.isDefault ? " ★" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ),
+          testId: "field-print-layout"
+        }),
         createFieldRow({
           key: "printSortOrder",
           label: "Sorteervolgorde",
