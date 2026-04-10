@@ -801,6 +801,8 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
     }));
   };
 
+  const watchedPrintLayoutId = invoiceForm.watch("printLayoutId" as any) as string | undefined;
+
   const toolbar = useFormToolbar({
     entityType: "proforma-invoice",
     entityId: currentInvoiceId,
@@ -808,6 +810,7 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
+    printLayoutId: watchedPrintLayoutId || undefined,
   });
 
   const formSections: any[] = [

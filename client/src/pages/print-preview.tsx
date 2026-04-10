@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRoute, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Printer, ZoomIn, ZoomOut } from "lucide-react";
+import { Printer, ZoomIn, ZoomOut, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LayoutPreview } from "./layout-designer";
 
@@ -119,8 +119,38 @@ export default function PrintPreviewPage() {
       "Print Preview";
   }, [printData]);
 
+  const [approving, setApproving] = useState(false);
+
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleApprove = async () => {
+    if (approving) return;
+    setApproving(true);
+    try {
+      const res = await fetch("/api/pdf-archive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentType: rawDocumentType,
+          entityId,
+          layoutId,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "Archiveren mislukt" }));
+        alert(err.message || "Archiveren mislukt");
+        return;
+      }
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.delete("draft");
+      window.location.href = currentUrl.toString();
+    } catch (e: any) {
+      alert(e.message || "Archiveren mislukt");
+    } finally {
+      setApproving(false);
+    }
   };
 
   if (isLoading) {
@@ -237,6 +267,17 @@ export default function PrintPreviewPage() {
             <Printer className="h-4 w-4 mr-1" />
             Afdrukken / PDF
           </Button>
+          {isDraft && (
+            <Button
+              onClick={handleApprove}
+              disabled={approving}
+              className="bg-green-600 hover:bg-green-700 text-white ml-1"
+              size="sm"
+            >
+              <CheckCircle className="h-4 w-4 mr-1" />
+              {approving ? "Bezig..." : "Goedkeuren"}
+            </Button>
+          )}
         </div>
       </div>
 

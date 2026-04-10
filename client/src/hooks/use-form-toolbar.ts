@@ -358,6 +358,7 @@ export interface UseFormToolbarOptions {
   navigationParentId?: string;
   entityNumber?: string;
   convertOptions?: { label: string; onClick: () => void; disabled?: boolean }[];
+  printLayoutId?: string;
 }
 
 export function useFormToolbar({
@@ -377,6 +378,7 @@ export function useFormToolbar({
   navigationParentId,
   entityNumber,
   convertOptions,
+  printLayoutId,
 }: UseFormToolbarOptions): FormToolbarProps & { deleteConflict: { name: string; usages: UsageLocation[] } | null; onClearDeleteConflict: () => void } {
   const { toast } = useToast();
   const config = ENTITY_CONFIGS[entityType];
@@ -583,6 +585,7 @@ export function useFormToolbar({
 
     documentType: config?.documentType || entityType,
     entityId,
+    printLayoutId,
     checkUsagesUrl: config && entityId ? `${config.apiPath}/${entityId}/check-usages` : undefined,
     entityName: config?.label,
     entityNumber,

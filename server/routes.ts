@@ -2137,7 +2137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     nullableNumerics.forEach(f => { if (body[f] === '') body[f] = null; });
     const requiredNumerics = ['subtotal', 'totalAmount'];
     requiredNumerics.forEach(f => { if (body[f] === '' || body[f] == null) body[f] = '0'; });
-    const nullableFKs = ['customerId', 'projectId', 'paymentDaysId', 'incotermId', 'paymentScheduleId'];
+    const nullableFKs = ['customerId', 'projectId', 'paymentDaysId', 'incotermId', 'paymentScheduleId', 'printLayoutId'];
     nullableFKs.forEach(f => { if (body[f] === '') body[f] = null; });
     const nullableTextFields = ['portOfLoading', 'portOfDischarge', 'finalDestination', 'modeOfShipment', 'paymentTermsType'];
     nullableTextFields.forEach(f => { if (body[f] === '') body[f] = null; });

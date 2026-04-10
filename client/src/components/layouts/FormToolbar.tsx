@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -106,6 +106,7 @@ export function FormToolbar({
 
   documentType,
   entityId,
+  printLayoutId,
   checkUsagesUrl,
   entityName = "this record",
   entityNumber,
@@ -115,18 +116,31 @@ export function FormToolbar({
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+  const openDirectPreview = useCallback(() => {
+    if (printLayoutId && entityId && documentType) {
+      window.open(
+        `/print/${documentType}/${entityId}?layoutId=${printLayoutId}&draft=true`,
+        "_blank"
+      );
+      return true;
+    }
+    return false;
+  }, [printLayoutId, entityId, documentType]);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "p") {
         e.preventDefault();
-        if (showPrint && !printDisabled && documentType) {
-          setPrintDialogOpen(true);
+        if (showPrint && !printDisabled) {
+          if (!openDirectPreview()) {
+            if (documentType) setPrintDialogOpen(true);
+          }
         }
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [showPrint, printDisabled, documentType]);
+  }, [showPrint, printDisabled, documentType, openDirectPreview]);
 
   const buttonClass = "h-8 w-8 p-0";
   const iconClass = "h-4 w-4";
@@ -134,10 +148,12 @@ export function FormToolbar({
   const inactiveClass = "opacity-30";
 
   const handlePrintClick = () => {
-    if (documentType) {
-      setPrintDialogOpen(true);
-    } else if (onPrint) {
-      onPrint();
+    if (!openDirectPreview()) {
+      if (documentType) {
+        setPrintDialogOpen(true);
+      } else if (onPrint) {
+        onPrint();
+      }
     }
   };
 
