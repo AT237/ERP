@@ -2839,6 +2839,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/packing-lists", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['packingDate', 'shipDate']);
+      if (body.printLayoutId === '') body.printLayoutId = null;
       const listData = insertPackingListSchema.parse(body);
       const list = await storage.createPackingList(listData);
       res.status(201).json(list);
@@ -2900,6 +2901,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/packing-lists/:id", async (req, res) => {
     try {
       const body = parseDateFields(req.body, ['packingDate', 'shipDate']);
+      if (body.printLayoutId === '') body.printLayoutId = null;
       const listData = insertPackingListSchema.partial().parse(body);
       const list = await storage.updatePackingList(req.params.id, listData);
       res.json(list);
@@ -4765,6 +4767,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           documentNumber = pl.packingNumber;
           if ((pl as any).customerId) customerId = (pl as any).customerId;
           if ((pl as any).projectId) projectId = (pl as any).projectId;
+        }
+      } else if (documentType === 'work_order' || documentType === 'work-order') {
+        const wo = await db.query.workOrders.findFirst({ where: eq(workOrders.id, documentId) });
+        if (wo) {
+          documentNumber = wo.orderNumber;
+          if (wo.projectId) projectId = wo.projectId;
         }
       }
 

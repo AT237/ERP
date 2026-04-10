@@ -20,13 +20,13 @@ import { Box, Package, Truck, RefreshCw, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTableLayout, createIdColumn, createNumericColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { PackingList, PackingListItem, InsertPackingList, Customer, Invoice, Project, InventoryItem, Address, CustomerAddress } from "@shared/schema";
+import type { PackingList, PackingListItem, InsertPackingList, Customer, Invoice, Project, InventoryItem, Address, CustomerAddress, DocumentLayout } from "@shared/schema";
 
 interface CustomerAddressWithAddress extends CustomerAddress {
   address: Address | null;
 }
 import { z } from "zod";
-import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createFieldsRow } from './LayoutForm2';
+import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createFieldsRow, createSectionHeaderRow } from './LayoutForm2';
 
 const formSchema = insertPackingListSchema.extend({
   weight: z.string().optional(),
@@ -76,6 +76,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
       weight: "",
       dimensions: "",
       notes: "",
+      printLayoutId: "",
     },
   });
 
@@ -153,6 +154,15 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
 
   const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory"],
+  });
+
+  const { data: availableLayouts = [] } = useQuery<DocumentLayout[]>({
+    queryKey: ["/api/layouts", { documentType: "packing_list" }],
+    queryFn: async () => {
+      const res = await fetch("/api/layouts?documentType=packing_list");
+      if (!res.ok) throw new Error("Failed to fetch layouts");
+      return res.json();
+    },
   });
 
   const { data: packingListItems = [] } = useQuery<PackingListItem[]>({
@@ -266,6 +276,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
         weight: packingList.weight || "",
         dimensions: packingList.dimensions || "",
         notes: packingList.notes || "",
+        printLayoutId: (packingList as any).printLayoutId || "",
       };
       form.reset(formData);
       setOriginalValues(formData);
@@ -664,8 +675,42 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
           rows: 3
         } as FormField2<FormData>)
       ]
+    },
+    {
+      id: "printSettings",
+      label: "Afdrukinstellingen",
+      rows: [
+        createSectionHeaderRow("Afdrukinstellingen", "mb-6"),
+        createFieldRow({
+          key: "printLayoutId",
+          label: "Layout",
+          type: "custom",
+          customComponent: (
+            <Select
+              value={form.watch("printLayoutId" as any) || ""}
+              onValueChange={(value) => form.setValue("printLayoutId" as any, value === "__clear__" ? "" : value)}
+            >
+              <SelectTrigger className="w-full" data-testid="select-print-layout">
+                <SelectValue placeholder="Selecteer een layout..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__clear__">— Wis selectie —</SelectItem>
+                {availableLayouts.map((layout) => (
+                  <SelectItem key={layout.id} value={layout.id}>
+                    {layout.name} ({layout.pageFormat} - {layout.orientation})
+                    {layout.isDefault ? " ★" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ),
+          testId: "field-print-layout"
+        }),
+      ]
     }
   ];
+
+  const watchedPlPrintLayoutId = form.watch("printLayoutId" as any) as string | undefined;
 
   const toolbar = useFormToolbar({
     entityType: "packing_list",
@@ -674,6 +719,7 @@ export function PackingListFormLayout({ onSave, packingListId, parentId }: Packi
     onClose: onSave,
     saveDisabled: createMutation.isPending || updateMutation.isPending,
     saveLoading: createMutation.isPending || updateMutation.isPending,
+    printLayoutId: watchedPlPrintLayoutId || undefined,
   });
 
   return (
