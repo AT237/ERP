@@ -1,5 +1,6 @@
 import React, { Suspense } from "react";
 import { Switch, Route } from "wouter";
+import { getMasterDataConfig } from "@/config/masterdata-config";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -117,6 +118,22 @@ function Router() {
             </div>
           </div>
         )} />
+        <Route path="/master-data/payment-days" component={() => {
+          const MasterDataTable = React.lazy(() => import("@/components/masterdata-table"));
+          const config = getMasterDataConfig("payment-days");
+          if (!config) return null;
+          return (
+            <React.Suspense fallback={<div className="p-6">Laden...</div>}>
+              <MasterDataTable
+                title={config.title}
+                endpoint={config.endpoint}
+                schema={config.schema}
+                fields={config.fields}
+                columns={config.columns}
+              />
+            </React.Suspense>
+          );
+        }} />
         <Route path="/master-data/payment-terms" component={() => (
           <div className="p-6">
             <div className="bg-gray-100 border border-border rounded-lg p-8 text-center">
