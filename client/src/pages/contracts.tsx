@@ -170,6 +170,11 @@ export default function Contracts() {
           const allIds = enrichedContracts.map(c => c.id);
           tableState.toggleAllRows(allIds);
         }, [enrichedContracts, tableState.toggleAllRows])}
+        getRowId={(item: any) => item.id}
+        entityName="Contract"
+        entityNamePlural="Contracten"
+        applyFiltersAndSearch={tableState.applyFiltersAndSearch}
+        applySorting={tableState.applySorting}
         deleteConfirmDialog={{
           isOpen: del.isBulkDeleteOpen,
           onOpenChange: del.setIsBulkDeleteOpen,
