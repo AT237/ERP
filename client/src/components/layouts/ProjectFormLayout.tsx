@@ -27,9 +27,9 @@ import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { SafeDeleteDialog } from "@/components/ui/safe-delete-dialog";
-import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
+import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { Project, InsertProject, Customer, Incoterm, ProjectItem, InventoryItem, UnitOfMeasure } from "@shared/schema";
+import type { Project, InsertProject, Customer, Incoterm, ProjectItem } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -156,17 +156,6 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
   // Load incoterms for select
   const { data: incoterms = [] } = useQuery<Incoterm[]>({
     queryKey: ["/api/masterdata/incoterms"],
-    staleTime: 10 * 60 * 1000,
-  });
-
-  // Load inventory items for line items
-  const { data: inventoryItems = [] } = useQuery<InventoryItem[]>({
-    queryKey: ["/api/inventory"],
-  });
-
-  // Load units of measure
-  const { data: unitsOfMeasure = [] } = useQuery<UnitOfMeasure[]>({
-    queryKey: ["/api/masterdata/units-of-measure"],
     staleTime: 10 * 60 * 1000,
   });
 
@@ -869,9 +858,17 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
               onConfirm: handleBulkDeleteItems,
               itemCount: itemTableState.selectedRows.length,
             }}
-            onAdd={handleAddItem}
+            onRowDoubleClick={handleRowDoubleClick}
+            headerActions={[
+              {
+                key: 'add-item',
+                label: 'ADD LINE',
+                icon: <Plus className="h-4 w-4" />,
+                onClick: handleAddItem,
+                variant: 'default' as const
+              }
+            ]}
             onDuplicate={handleDuplicateItem}
-            directInput={projectDirectInput}
             rowActions={(item: ProjectItem) => [
               {
                 key: 'delete',

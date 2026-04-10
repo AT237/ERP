@@ -1630,6 +1630,20 @@ export default function Layout({ children }: LayoutProps) {
         );
       }
 
+      if (tab.formType === 'project-line-item') {
+        const lineItemId = tab.entityId ?? tab.id.replace('project-line-item-edit-', '');
+        const projectIdVal = tab.parentId;
+        return (
+          <Suspense fallback={<div></div>}>
+            <ProjectLineItemForm
+              projectId={projectIdVal!}
+              itemId={lineItemId}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+
       if (tab.formType === 'invoice-line-item') {
         const lineItemId = tab.entityId ?? tab.id.replace('invoice-line-item-edit-', '');
         const invoiceId = tab.parentId;
