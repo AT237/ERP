@@ -895,6 +895,7 @@ export const companyProfiles = pgTable("company_profiles", {
   btwNummer: text("btw_nummer"), // VAT number
   bankAccount: text("bank_account"), // Bank account (IBAN)
   bankName: text("bank_name"), // Bank name
+  swiftCode: text("swift_code"), // SWIFT/BIC code
   isActive: boolean("is_active").default(true), // Only one should be active at a time
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

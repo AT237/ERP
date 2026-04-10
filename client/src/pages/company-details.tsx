@@ -52,6 +52,7 @@ export default function CompanyDetailsPage() {
       btwNummer: "",
       bankAccount: "",
       bankName: "",
+      swiftCode: "",
       isActive: true
     }
   });
@@ -74,6 +75,7 @@ export default function CompanyDetailsPage() {
         btwNummer: companyProfile.btwNummer || "",
         bankAccount: formatIban(companyProfile.bankAccount),
         bankName: companyProfile.bankName || "",
+        swiftCode: companyProfile.swiftCode || "",
         isActive: companyProfile.isActive ?? true
       });
     }
@@ -286,6 +288,15 @@ export default function CompanyDetailsPage() {
             type: "text",
             register: form.register("bankName"),
             testId: "input-company-bank-name"
+          } as FormField2<CompanyDetailsFormData>
+        ]),
+        createFieldsRow([
+          {
+            key: "swiftCode",
+            label: "SWIFT / BIC Code",
+            type: "text",
+            register: form.register("swiftCode"),
+            testId: "input-company-swift-code"
           } as FormField2<CompanyDetailsFormData>
         ])
       ]
