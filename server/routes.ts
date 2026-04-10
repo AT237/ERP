@@ -4747,6 +4747,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customerId = quot.customerId;
           if (quot.projectId) projectId = quot.projectId;
         }
+      } else if (documentType === 'proforma_invoice' || documentType === 'proforma-invoice') {
+        const inv = await db.query.proformaInvoices.findFirst({ where: eq(proformaInvoices.id, documentId) });
+        if (inv) {
+          documentNumber = inv.proformaNumber;
+          customerId = inv.customerId;
+          if (inv.projectId) projectId = inv.projectId;
+        }
       } else if (documentType === 'packing_list' || documentType === 'packing-list') {
         const { packingLists: plTable } = await import('@shared/schema');
         const pl = await db.query.packingLists.findFirst({ where: eq(plTable.id, documentId) });

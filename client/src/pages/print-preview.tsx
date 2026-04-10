@@ -134,7 +134,7 @@ export default function PrintPreviewPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           documentType: rawDocumentType,
-          entityId,
+          documentId: entityId,
           layoutId,
         }),
       });
