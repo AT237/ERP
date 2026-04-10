@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 
@@ -70,6 +71,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
     name: { label: "Projectnaam" },
@@ -220,25 +222,9 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
   };
 
-  const handleAddItem = async () => {
+  const handleAddItem = () => {
     if (!currentProjectId) return;
-    const maxPos = projectItemsList.length > 0
-      ? Math.max(...projectItemsList.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
-      : 10;
-    await apiRequest("POST", `/api/projects/${currentProjectId}/items`, {
-      projectId: currentProjectId,
-      lineType: 'standard',
-      description: '',
-      quantity: '1',
-      unit: 'stk',
-      unitPrice: '0.00',
-      costPrice: '0.00',
-      discountPercent: '0',
-      lineTotal: '0.00',
-      position: maxPos,
-      positionNo: String(maxPos).padStart(3, '0'),
-    });
-    queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
+    navigate(`/projects/${currentProjectId}/items/new`);
   };
 
   // Item columns
@@ -292,100 +278,11 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     tableKey: 'project-items'
   });
 
-  // Direct input for project items
-  const projectDirectInput = React.useMemo<DirectInputConfig | undefined>(() => {
-    if (!currentProjectId) return undefined;
-    const nextPosition = projectItemsList.length > 0
-      ? Math.max(...projectItemsList.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
-      : 10;
-    return {
-      columns: [
-        { key: 'lineType', fieldType: 'select', defaultValue: '', options: [
-          { value: 'standard', label: 'Standaard' },
-          { value: 'unique', label: 'Uniek' },
-          { value: 'text', label: 'Tekst' },
-          { value: 'charges', label: 'Toeslagen' },
-        ]},
-        { key: 'itemId',
-          fieldType: 'searchable-select',
-          placeholder: 'Zoek artikel...',
-          enabledWhen: (r) => !!r.lineType && r.lineType !== 'text',
-          options: inventoryItems.map(item => ({
-            value: item.id,
-            label: `${(item as any).sku || ''} - ${item.description || item.name || ''}`.trim()
-          })),
-          onSelect: (val) => {
-            const item = inventoryItems.find(i => i.id === val);
-            if (!item) return {};
-            return {
-              itemId: item.id,
-              description: item.description || item.name || '',
-              unitPrice: item.unitPrice || '0.00',
-              costPrice: item.costPrice || '0.00',
-              unit: item.unit || 'Pcs.',
-            };
-          },
-        },
-        { key: 'description', fieldType: 'text', placeholder: 'Omschrijving', enabledWhen: (r) => !!r.lineType },
-        { key: 'quantity', fieldType: 'number', defaultValue: '1', placeholder: 'Aantal', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
-        { key: 'unit', fieldType: 'select', defaultValue: 'Pcs.', placeholder: 'Eenheid', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text',
-          options: unitsOfMeasure.filter(u => u.isActive !== false).map(u => ({ value: u.code, label: u.code })),
-        },
-        { key: 'unitPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Prijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
-        { key: 'discountPercent', fieldType: 'number', defaultValue: '0', placeholder: 'Korting %', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
-        { key: 'costPrice', fieldType: 'currency', defaultValue: '0.00', placeholder: 'Kostprijs', enabledWhen: (r) => !!r.lineType && r.lineType !== 'text' },
-      ],
-      defaults: {
-        positionNo: String(nextPosition).padStart(3, '0'),
-        position: nextPosition,
-        lineType: '',
-        quantity: '1',
-        unit: 'Pcs.',
-        unitPrice: '0.00',
-        costPrice: '0.00',
-        discountPercent: '0',
-      },
-      onSave: async (rowData) => {
-        const qty = parseFloat(rowData.quantity || '1') || 1;
-        const price = parseFloat(rowData.unitPrice || '0') || 0;
-        const disc = parseFloat(rowData.discountPercent || '0') || 0;
-        const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
-        const lineTotal = (qty * netPrice).toFixed(2);
-        const np = projectItemsList.length > 0
-          ? Math.max(...projectItemsList.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
-          : 10;
-        const itemData = {
-          projectId: currentProjectId!,
-          lineType: rowData.lineType || 'standard',
-          description: rowData.description || '',
-          quantity: String(qty),
-          unit: rowData.unit || 'Pcs.',
-          unitPrice: String(price),
-          lineTotal,
-          costPrice: rowData.costPrice || '0.00',
-          discountPercent: String(disc),
-          position: np,
-          positionNo: String(np).padStart(3, '0'),
-        };
-        await apiRequest("POST", `/api/projects/${currentProjectId}/items`, itemData);
-        queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
-      },
-      onUpdate: async (rowId, rowData) => {
-        const qty = parseFloat(rowData.quantity || '0') || 0;
-        const price = parseFloat(rowData.unitPrice || '0') || 0;
-        const disc = parseFloat(rowData.discountPercent || '0') || 0;
-        const netPrice = disc > 0 ? price * (1 - disc / 100) : price;
-        const lineTotal = (qty * netPrice).toFixed(2);
-        const updateData: any = {};
-        for (const [k, v] of Object.entries(rowData)) {
-          updateData[k] = v;
-        }
-        updateData.lineTotal = lineTotal;
-        await apiRequest("PUT", `/api/project-items/${rowId}`, updateData);
-        queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
-      },
-    };
-  }, [currentProjectId, projectItemsList, inventoryItems, unitsOfMeasure]);
+  const handleRowDoubleClick = (item: ProjectItem) => {
+    if (currentProjectId) {
+      navigate(`/projects/${currentProjectId}/items/${item.id}`);
+    }
+  };
 
   const { data: nextNumberData, refetch: refetchNextNumber } = useQuery<{ number: string }>({
     queryKey: ["/api/projects/next-number"],

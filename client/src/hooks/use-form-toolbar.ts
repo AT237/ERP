@@ -251,6 +251,17 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsDelete: true,
     supportsAddNew: false,
   },
+  project_line_item: {
+    apiPath: "/api/project-items",
+    formType: "project-line-item",
+    label: "Projectregel",
+    labelPlural: "Projectregels",
+    listQueryKey: "/api/project-items",
+    documentType: "project_line_item",
+    supportsNavigation: true,
+    supportsDelete: true,
+    supportsAddNew: false,
+  },
   work_order_line_item: {
     apiPath: "/api/work-order-items",
     formType: "work-order-line-item",

@@ -53,6 +53,7 @@ const EmployeeForm = lazy(() => import('@/pages/employee-form'));
 const ImageForm = lazy(() => import('@/pages/image-form'));
 const MasterDataTable = lazy(() => import('./masterdata-table'));
 const MasterDataFormLayout = lazy(() => import('@/components/layouts/MasterDataFormLayout'));
+const ProjectLineItemForm = lazy(() => import('@/pages/project-line-item-form'));
 const ContractForm = lazy(() => import('@/pages/contract-form'));
 const DevFuturesPage = lazy(() => import('@/pages/dev-futures'));
 
@@ -158,6 +159,17 @@ export default function Layout({ children }: LayoutProps) {
       return { id: `quotation-line-${quotationItemEditMatch[2]}`, name: 'Offerteregel' };
     }
     
+    // Check for project line item routes
+    const projectItemNewMatch = path.match(/^\/projects\/([^/]+)\/items\/new$/);
+    if (projectItemNewMatch) {
+      return { id: `project-line-new-${projectItemNewMatch[1]}`, name: 'Projectregel' };
+    }
+
+    const projectItemEditMatch = path.match(/^\/projects\/([^/]+)\/items\/([^/]+)$/);
+    if (projectItemEditMatch) {
+      return { id: `project-line-${projectItemEditMatch[2]}`, name: 'Projectregel', parentId: projectItemEditMatch[1] };
+    }
+
     // Check for invoice line item routes
     const invoiceItemNewMatch = path.match(/^\/invoices\/([^/]+)\/items\/new$/);
     if (invoiceItemNewMatch) {
@@ -1220,6 +1232,31 @@ export default function Layout({ children }: LayoutProps) {
           <Suspense fallback={<div></div>}>
             <LineItemFormLayoutComponent
               lineItemId={lineItemId}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+
+      // Handle route-based project line item tabs
+      const projectLineNewMatch = tab.id.match(/^project-line-new-(.+)$/);
+      if (projectLineNewMatch) {
+        return (
+          <Suspense fallback={<div></div>}>
+            <ProjectLineItemForm
+              projectId={projectLineNewMatch[1]}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+      if (tab.id.startsWith('project-line-') && !tab.id.startsWith('project-line-new-')) {
+        const lineItemId = tab.id.replace('project-line-', '');
+        return (
+          <Suspense fallback={<div></div>}>
+            <ProjectLineItemForm
+              projectId={tab.parentId || ''}
+              itemId={lineItemId}
               onSave={() => {}}
             />
           </Suspense>
