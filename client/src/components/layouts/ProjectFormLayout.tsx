@@ -622,7 +622,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
             <div className="flex gap-1 items-center">
               <Input
                 {...form.register("projectNumber")}
-                className={`h-10 text-xs flex-1 ${modifiedFields.has("projectNumber") ? 'ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950' : ''}`}
+                className={`h-10 text-sm flex-1 ${modifiedFields.has("projectNumber") ? 'ring-2 ring-orange-400 border-orange-400 bg-orange-50 dark:bg-orange-950' : ''}`}
                 placeholder="PR-0001"
                 data-testid="input-project-number"
               />
