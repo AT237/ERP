@@ -383,11 +383,11 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
   }, [lineTypeValue]);
 
   useEffect(() => {
-    const tabId = lineItemId ? `edit-project-line-item-${lineItemId}` : 'new-project-line-item';
+    const tabId = lineItemId ? `project-line-${lineItemId}` : `project-line-new-${projectId}`;
     window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
       detail: { tabId, hasUnsavedChanges }
     }));
-  }, [hasUnsavedChanges, lineItemId]);
+  }, [hasUnsavedChanges, lineItemId, projectId]);
 
   const handleCustomerRateChange = (rateId: string) => {
     form.setValue("customerRateId", rateId);
@@ -438,7 +438,7 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
       const newKey = buildFormPersistenceKey({ formType: "project-line-item", entityId: undefined, scope: projectId });
       localStorage.removeItem(newKey);
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
-        detail: { tabId: 'new-project-line-item', hasUnsavedChanges: false }
+        detail: { tabId: `project-line-new-${projectId}`, hasUnsavedChanges: false }
       }));
       toast({ title: "Opgeslagen", description: "Regel toegevoegd" });
       window.dispatchEvent(new CustomEvent('entity-created', {
@@ -470,7 +470,7 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
       queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
       setHasUnsavedChanges(false);
-      const tabId = lineItemId ? `project-line-${lineItemId}` : 'new-project-line-item';
+      const tabId = lineItemId ? `project-line-${lineItemId}` : `project-line-new-${projectId}`;
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
         detail: { tabId, hasUnsavedChanges: false }
       }));
