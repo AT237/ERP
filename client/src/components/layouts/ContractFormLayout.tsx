@@ -3,13 +3,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Trash2, GripVertical, ChevronRight, ChevronDown, Type, Heading, Table, Image, MoveUp, MoveDown, Indent, Outdent, Copy } from "lucide-react";
-import { insertContractSchema, type InsertContract, type Contract, type ContractItem, type Customer } from "@shared/schema";
+import { insertContractSchema, type Contract, type ContractItem, type Customer } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
-import { LayoutForm2, type FormSection2, createFieldRow } from './LayoutForm2';
+import { LayoutForm2, type FormSection2 } from './LayoutForm2';
 import { CustomerSelect } from "@/components/ui/customer-select";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
@@ -214,6 +214,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       }
       setHasUnsavedChanges(false);
       toast({ title: "Opgeslagen", description: "Contract is opgeslagen." });
+      onSave();
     },
     onError: (error: any) => {
       toast({ title: "Fout", description: error.message || "Opslaan mislukt", variant: "destructive" });
@@ -619,21 +620,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
           type: "custom" as const,
           customContent: contentBuilder,
         },
-      ],
-    },
-    {
-      id: "notes",
-      label: "Notities",
-      rows: [
-        createFieldRow({
-          key: "notes",
-          label: "Notities",
-          type: "textarea",
-          placeholder: "Interne notities...",
-          register: form.register("notes"),
-          rows: 12,
-          testId: "textarea-notes-full"
-        }),
       ],
     },
   ];
