@@ -5048,6 +5048,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/contracts", async (_req, res) => {
+    try {
+      const allContracts = await storage.getContracts();
+      res.json(allContracts);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to fetch contracts");
+    }
+  });
+
+  app.get("/api/contracts/:id", async (req, res) => {
+    try {
+      const contract = await storage.getContract(req.params.id);
+      if (!contract) return res.status(404).json({ message: "Contract niet gevonden" });
+      res.json(contract);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to fetch contract");
+    }
+  });
+
+  app.post("/api/contracts", async (req, res) => {
+    try {
+      const data = parseDateFields(req.body, ["contractDate", "validUntil"]);
+      if (data.printLayoutId === "") data.printLayoutId = null;
+      const contract = await storage.createContract(data as any);
+      res.status(201).json(contract);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to create contract");
+    }
+  });
+
+  app.patch("/api/contracts/:id", async (req, res) => {
+    try {
+      const data = parseDateFields(req.body, ["contractDate", "validUntil"]);
+      if (data.printLayoutId === "") data.printLayoutId = null;
+      const contract = await storage.updateContract(req.params.id, data as any);
+      res.json(contract);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to update contract");
+    }
+  });
+
+  app.delete("/api/contracts/:id", async (req, res) => {
+    try {
+      await storage.deleteContract(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to delete contract");
+    }
+  });
+
+  app.get("/api/contracts/:id/items", async (req, res) => {
+    try {
+      const items = await storage.getContractItems(req.params.id);
+      res.json(items);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to fetch contract items");
+    }
+  });
+
+  app.post("/api/contracts/:id/items", async (req, res) => {
+    try {
+      const item = await storage.createContractItem({ ...req.body, contractId: req.params.id });
+      res.status(201).json(item);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to create contract item");
+    }
+  });
+
+  app.patch("/api/contract-items/:id", async (req, res) => {
+    try {
+      const item = await storage.updateContractItem(req.params.id, req.body);
+      res.json(item);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to update contract item");
+    }
+  });
+
+  app.delete("/api/contract-items/:id", async (req, res) => {
+    try {
+      await storage.deleteContractItem(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to delete contract item");
+    }
+  });
+
+  app.put("/api/contracts/:id/items/batch", async (req, res) => {
+    try {
+      const { items } = req.body;
+      if (!Array.isArray(items)) return res.status(400).json({ message: "items array required" });
+      const contractId = req.params.id;
+      const existingItems = await storage.getContractItems(contractId);
+      const existingIds = new Set(existingItems.map(i => i.id));
+      const incomingIds = new Set(items.filter((i: any) => i.id).map((i: any) => i.id));
+      for (const existing of existingItems) {
+        if (!incomingIds.has(existing.id)) {
+          await storage.deleteContractItem(existing.id);
+        }
+      }
+      const results: any[] = [];
+      for (const item of items) {
+        if (item.id && existingIds.has(item.id)) {
+          const { id, createdAt, ...updateData } = item;
+          results.push(await storage.updateContractItem(id, updateData));
+        } else {
+          const { id, createdAt, ...createData } = item;
+          results.push(await storage.createContractItem({ ...createData, contractId }));
+        }
+      }
+      res.json(results);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to batch update contract items");
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

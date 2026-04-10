@@ -33,7 +33,10 @@ import {
   documentImages, type DocumentImage, type InsertDocumentImage,
   proformaInvoices, proformaInvoiceItems,
   type ProformaInvoice, type InsertProformaInvoice,
-  type ProformaInvoiceItem, type InsertProformaInvoiceItem
+  type ProformaInvoiceItem, type InsertProformaInvoiceItem,
+  contracts, contractItems,
+  type Contract, type InsertContract,
+  type ContractItem, type InsertContractItem
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, sql, and, or, ilike } from "drizzle-orm";
@@ -372,6 +375,18 @@ export interface IStorage {
   createDocumentImage(image: InsertDocumentImage): Promise<DocumentImage>;
   deleteDocumentImage(id: string): Promise<void>;
   updateDocumentImage(id: string, data: Partial<InsertDocumentImage>): Promise<DocumentImage>;
+
+  // Contract methods
+  getContracts(): Promise<Contract[]>;
+  getContract(id: string): Promise<Contract | undefined>;
+  createContract(contract: InsertContract): Promise<Contract>;
+  updateContract(id: string, contract: Partial<InsertContract>): Promise<Contract>;
+  deleteContract(id: string): Promise<void>;
+  getContractItems(contractId: string): Promise<ContractItem[]>;
+  getContractItem(id: string): Promise<ContractItem | undefined>;
+  createContractItem(item: InsertContractItem): Promise<ContractItem>;
+  updateContractItem(id: string, item: Partial<InsertContractItem>): Promise<ContractItem>;
+  deleteContractItem(id: string): Promise<void>;
 
   // Conversion methods
   convertQuotationToSalesOrder(quotationId: string): Promise<SalesOrder>;
@@ -2438,6 +2453,51 @@ export class DatabaseStorage implements IStorage {
 
   async updateDocumentImage(id: string, data: Partial<InsertDocumentImage>): Promise<DocumentImage> {
     return safeUpdate<DocumentImage>(documentImages, data, id);
+  }
+
+  async getContracts(): Promise<Contract[]> {
+    return await db.select().from(contracts).orderBy(desc(contracts.createdAt));
+  }
+
+  async getContract(id: string): Promise<Contract | undefined> {
+    const [contract] = await db.select().from(contracts).where(eq(contracts.id, id));
+    return contract || undefined;
+  }
+
+  async createContract(contract: InsertContract): Promise<Contract> {
+    const [newContract] = await db.insert(contracts).values(contract).returning();
+    return newContract;
+  }
+
+  async updateContract(id: string, contract: Partial<InsertContract>): Promise<Contract> {
+    return await safeUpdate(contracts, contract, id);
+  }
+
+  async deleteContract(id: string): Promise<void> {
+    await db.delete(contractItems).where(eq(contractItems.contractId, id));
+    await db.delete(contracts).where(eq(contracts.id, id));
+  }
+
+  async getContractItems(contractId: string): Promise<ContractItem[]> {
+    return await db.select().from(contractItems).where(eq(contractItems.contractId, contractId)).orderBy(asc(contractItems.position));
+  }
+
+  async getContractItem(id: string): Promise<ContractItem | undefined> {
+    const [item] = await db.select().from(contractItems).where(eq(contractItems.id, id));
+    return item || undefined;
+  }
+
+  async createContractItem(item: InsertContractItem): Promise<ContractItem> {
+    const [newItem] = await db.insert(contractItems).values(item).returning();
+    return newItem;
+  }
+
+  async updateContractItem(id: string, item: Partial<InsertContractItem>): Promise<ContractItem> {
+    return await safeUpdate(contractItems, item, id);
+  }
+
+  async deleteContractItem(id: string): Promise<void> {
+    await db.delete(contractItems).where(eq(contractItems.id, id));
   }
 }
 

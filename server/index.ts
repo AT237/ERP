@@ -375,6 +375,28 @@ async function ensureLineItemColumns() {
     await db.execute(sql`ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS print_layout_id VARCHAR`);
     await db.execute(sql`ALTER TABLE packing_lists ADD COLUMN IF NOT EXISTS print_layout_id VARCHAR`);
     await db.execute(sql`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS cost_price DECIMAL(10,2) DEFAULT '0.00'`);
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS contracts (
+      id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+      contract_number TEXT NOT NULL UNIQUE,
+      description TEXT,
+      customer_id VARCHAR REFERENCES customers(id),
+      contract_date TIMESTAMP,
+      valid_until TIMESTAMP,
+      status TEXT DEFAULT 'concept',
+      notes TEXT,
+      print_layout_id VARCHAR,
+      created_at TIMESTAMP DEFAULT NOW()
+    )`);
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS contract_items (
+      id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+      contract_id VARCHAR NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+      position INTEGER DEFAULT 0,
+      article_number TEXT NOT NULL,
+      item_type TEXT DEFAULT 'text',
+      content TEXT,
+      indent_level INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    )`);
   } catch (err: any) {
     log(`Could not ensure line item columns: ${err.message}`);
   }

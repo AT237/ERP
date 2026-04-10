@@ -105,7 +105,8 @@ export const defaultNavigation = [
     collapsible: true,
     items: [
       { id: "analytics", name: "Analytics", href: "/reports", icon: BarChart3 },
-      { id: "pdf-archive", name: "PDF Database", href: "/pdf-archive", icon: Archive }
+      { id: "pdf-archive", name: "PDF Database", href: "/pdf-archive", icon: Archive },
+      { id: "contracts", name: "Contracten", href: "/contracts", icon: FileText }
     ]
   },
   {

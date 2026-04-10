@@ -1624,3 +1624,35 @@ export const documentImages = pgTable("document_images", {
 export const insertDocumentImageSchema = createInsertSchema(documentImages).omit({ id: true, createdAt: true });
 export type InsertDocumentImage = z.infer<typeof insertDocumentImageSchema>;
 export type DocumentImage = typeof documentImages.$inferSelect;
+
+export const contracts = pgTable("contracts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contractNumber: text("contract_number").notNull().unique(),
+  description: text("description"),
+  customerId: varchar("customer_id").references(() => customers.id),
+  contractDate: timestamp("contract_date"),
+  validUntil: timestamp("valid_until"),
+  status: text("status").default("concept"),
+  notes: text("notes"),
+  printLayoutId: varchar("print_layout_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const contractItems = pgTable("contract_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contractId: varchar("contract_id").references(() => contracts.id, { onDelete: 'cascade' }).notNull(),
+  position: integer("position").default(0),
+  articleNumber: text("article_number").notNull(),
+  itemType: text("item_type").default("text"),
+  content: text("content"),
+  indentLevel: integer("indent_level").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertContractSchema = createInsertSchema(contracts).omit({ id: true, createdAt: true });
+export type InsertContract = z.infer<typeof insertContractSchema>;
+export type Contract = typeof contracts.$inferSelect;
+
+export const insertContractItemSchema = createInsertSchema(contractItems).omit({ id: true, createdAt: true });
+export type InsertContractItem = z.infer<typeof insertContractItemSchema>;
+export type ContractItem = typeof contractItems.$inferSelect;

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict mR2x61wWI9RreHZsEnKa1agx90wtMuKUmdGhoJTkFWl4EZVdM7JcFcLMehivMcS
+\restrict q1JSuDNgDJPVAwIatpHo3KCXD815H2UWUmuEIqeKnYoT6MiuLuCME3p0ljlFTe3
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -386,6 +386,44 @@ CREATE TABLE public.company_profiles (
 
 
 ALTER TABLE public.company_profiles OWNER TO postgres;
+
+--
+-- Name: contract_items; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.contract_items (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    contract_id character varying NOT NULL,
+    "position" integer DEFAULT 0,
+    article_number text NOT NULL,
+    item_type text DEFAULT 'text'::text,
+    content text,
+    indent_level integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.contract_items OWNER TO postgres;
+
+--
+-- Name: contracts; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.contracts (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    contract_number text NOT NULL,
+    description text,
+    customer_id character varying,
+    contract_date timestamp without time zone,
+    valid_until timestamp without time zone,
+    status text DEFAULT 'concept'::text,
+    notes text,
+    print_layout_id character varying,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.contracts OWNER TO postgres;
 
 --
 -- Name: countries; Type: TABLE; Schema: public; Owner: postgres
@@ -1951,6 +1989,22 @@ COPY public.cities (id, name, postal_code, country, region, is_active, created_a
 
 COPY public.company_profiles (id, name, logo_url, street, house_number, postal_code, city, country, phone, email, website, kvk_nummer, btw_nummer, bank_account, bank_name, is_active, created_at, updated_at, swift_code) FROM stdin;
 a1346f21-f1c6-45a3-b95f-e9c56730e831	ATE Solutions B.V.		Oude Telgterweg	255	3853PG	Ermelo	Netherlands	0031 085-0410183	info@atesolutions.nl		91385415	NL 8656 38792 B01	NL28INGB0102962979		t	2025-12-17 09:23:07.658254	2026-03-06 19:49:10.760196	\N
+\.
+
+
+--
+-- Data for Name: contract_items; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.contract_items (id, contract_id, "position", article_number, item_type, content, indent_level, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: contracts; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.contracts (id, contract_number, description, customer_id, contract_date, valid_until, status, notes, print_layout_id, created_at) FROM stdin;
 \.
 
 
@@ -3757,7 +3811,7 @@ d51e7de9-dd37-47a3-9227-1db7a1709de6	\N	\N	\N	2026-02-22 20:45:17.2383	2026-02-2
 7de98354-b15d-4563-b8c2-21cfdd1fa7bc	\N	\N	\N	2026-02-23 09:54:52.963351	2026-02-23 09:54:52.963351	\N	\N
 9e3665cd-9372-4833-bb15-0c52593b30cc	\N	\N	\N	2026-02-23 09:56:49.93118	2026-02-23 09:56:49.93118	\N	\N
 5a981933-ed1e-4544-8bad-d488076de2e0	\N	\N	\N	2026-02-23 09:57:45.57981	2026-02-23 09:57:45.57981	\N	\N
-b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}, {"id": "task-overview", "href": "/task-overview", "icon": {}, "name": "Task Overview"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "categories", "href": "/master-data/categories", "icon": {}, "name": "Categories"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "serial-numbers", "href": "/serial-numbers", "icon": {}, "name": "Serial Numbers"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}, {"id": "pdf-archive", "href": "/pdf-archive", "icon": {}, "name": "PDF Database"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}, {"id": "brands", "href": "/master-data/brands", "icon": {}, "name": "Brands"}, {"id": "payment-days", "href": "/master-data/payment-days", "icon": {}, "name": "Payment Days"}, {"id": "countries", "href": "/master-data/countries", "icon": {}, "name": "Countries"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "email-designer", "href": "/email-designer", "icon": {}, "name": "Email Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}, {"id": "purchase", "name": "Purchase", "items": [{"id": "quotation-requests", "href": "/quotation-requests", "icon": {}, "name": "Quotation Requests"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}]	{"Sales": false, "Tools": false, "Reports": false, "Overview": true, "Purchase": true, "Inventory": false, "Relations": false, "Operations": false, "Master Data": false, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-04-10 09:47:06.522766	layout-designer	page
+b3b0654b-d950-475c-b7d6-4592e3d7a7d6	admin	[{"id": "overview", "name": "Overview", "items": [{"id": "dashboard", "href": "/dashboard", "icon": {}, "name": "Dashboard"}, {"id": "task-overview", "href": "/task-overview", "icon": {}, "name": "Task Overview"}], "collapsible": true}, {"id": "relations", "name": "Relations", "items": [{"id": "customers", "href": "/customers", "icon": {}, "name": "Customers"}, {"id": "suppliers", "href": "/suppliers", "icon": {}, "name": "Suppliers"}, {"id": "contact-persons", "href": "/contact-persons", "icon": {}, "name": "Contact Persons"}, {"id": "employees", "href": "/employees", "icon": {}, "name": "Employees"}, {"id": "addresses", "href": "/addresses", "icon": {}, "name": "Addresses"}, {"id": "prospects", "href": "/prospects", "icon": {}, "name": "Prospects"}], "collapsible": true}, {"id": "inventory", "name": "Inventory", "items": [{"id": "stock", "href": "/inventory", "icon": {}, "name": "Stock Management"}, {"id": "categories", "href": "/master-data/categories", "icon": {}, "name": "Categories"}], "collapsible": true}, {"id": "sales", "name": "Sales", "items": [{"id": "quotations", "href": "/quotations", "icon": {}, "name": "Quotations"}, {"id": "proforma", "href": "/proforma-invoices", "icon": {}, "name": "Proforma Invoices"}, {"id": "invoices", "href": "/invoices", "icon": {}, "name": "Invoices"}, {"id": "orders", "href": "/sales-orders", "icon": {}, "name": "Orders"}], "collapsible": true}, {"id": "operations", "name": "Operations", "items": [{"id": "confirmations", "href": "/order-confirmations", "icon": {}, "name": "Order Confirmations"}, {"id": "work-orders", "href": "/work-orders", "icon": {}, "name": "Work Orders"}, {"id": "projects", "href": "/projects", "icon": {}, "name": "Projects"}, {"id": "packing-lists", "href": "/packing-lists", "icon": {}, "name": "Packing Lists"}, {"id": "serial-numbers", "href": "/serial-numbers", "icon": {}, "name": "Serial Numbers"}], "collapsible": true}, {"id": "reports", "name": "Reports", "items": [{"id": "analytics", "href": "/reports", "icon": {}, "name": "Analytics"}, {"id": "pdf-archive", "href": "/pdf-archive", "icon": {}, "name": "PDF Database"}], "collapsible": true}, {"id": "master-data", "name": "Master Data", "items": [{"id": "company-details", "href": "/master-data/company-details", "icon": {}, "name": "Our Company Details"}, {"id": "text-snippets", "href": "/text-snippets", "icon": {}, "name": "Text Snippets"}, {"id": "images", "href": "/master-data/images", "icon": {}, "name": "Images"}, {"id": "uom", "href": "/master-data/uom", "icon": {}, "name": "Units of Measure"}, {"id": "payment-terms", "href": "/master-data/payment-terms", "icon": {}, "name": "Payment Terms"}, {"id": "rates-and-charges", "href": "/master-data/rates-and-charges", "icon": {}, "name": "Rates & Charges"}, {"id": "incoterms", "href": "/master-data/incoterms", "icon": {}, "name": "Incoterms"}, {"id": "vat", "href": "/master-data/vat", "icon": {}, "name": "VAT Rates"}, {"id": "cities", "href": "/master-data/cities", "icon": {}, "name": "Cities"}, {"id": "statuses", "href": "/master-data/statuses", "icon": {}, "name": "Statuses"}, {"id": "pictograms", "href": "/master-data/pictograms", "icon": {}, "name": "Pictograms"}, {"id": "brands", "href": "/master-data/brands", "icon": {}, "name": "Brands"}, {"id": "payment-days", "href": "/master-data/payment-days", "icon": {}, "name": "Payment Days"}, {"id": "countries", "href": "/master-data/countries", "icon": {}, "name": "Countries"}], "collapsible": true}, {"id": "tools", "name": "Tools", "items": [{"id": "layout-designer", "href": "/layout-designer", "icon": {}, "name": "Layout Designer"}, {"id": "email-designer", "href": "/email-designer", "icon": {}, "name": "Email Designer"}, {"id": "style-guide", "href": "/style-guide", "icon": {}, "name": "Design System"}], "collapsible": true}, {"id": "development", "name": "Software Development Futures", "items": [{"id": "dev-futures", "href": "/dev-futures", "icon": {}, "name": "Feature Wishes"}], "collapsible": true}, {"id": "purchase", "name": "Purchase", "items": [{"id": "quotation-requests", "href": "/quotation-requests", "icon": {}, "name": "Quotation Requests"}, {"id": "purchase-orders", "href": "/purchase-orders", "icon": {}, "name": "Purchase Orders"}], "collapsible": true}]	{"Sales": true, "Tools": true, "Reports": true, "Overview": true, "Purchase": true, "Inventory": true, "Relations": true, "Operations": false, "Master Data": true, "Software Development Futures": true}	2025-10-21 08:05:37.652363	2026-04-10 12:16:00.563451	layout-designer	page
 373d2916-318f-4172-8759-33d719e0d235	\N	\N	\N	2026-02-23 09:59:07.067	2026-02-23 09:59:07.067	\N	\N
 4704be24-0a4d-4cba-9590-09bfd563a301	\N	\N	\N	2026-02-23 09:59:14.881319	2026-02-23 09:59:14.881319	\N	\N
 1df37923-2aae-457f-bdf4-455f0af35c70	\N	\N	\N	2026-02-23 10:02:53.354924	2026-02-23 10:02:53.354924	\N	\N
@@ -3906,10 +3960,7 @@ bffa71e4-59b0-47a4-9d35-59992507a495	\N	\N	\N	2026-03-02 18:55:11.019526	2026-03
 --
 
 COPY public.user_sessions (sid, sess, expire) FROM stdin;
-8geNcP-CMKiED6tl9n4DTFQeWfxStevQ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-10T11:42:23.985Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 11:42:25
-CHT3r4La7hWEYODSLhXsmnp1QNmnOh4L	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-10T11:42:30.598Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 11:42:31
-Y6VX0BCjZ3xsjhAdK4tkCq2FddN57Xgf	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-10T11:42:34.670Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-10 11:42:40
-kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-17 11:54:52
+kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-17 12:16:40
 Sv76RFsB9y7SL3Pi0yfZSv2polZI6VeU	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-06T12:44:19.702Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-12 18:26:27
 \.
 
@@ -4073,6 +4124,30 @@ ALTER TABLE ONLY public.cities
 
 ALTER TABLE ONLY public.company_profiles
     ADD CONSTRAINT company_profiles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: contract_items contract_items_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.contract_items
+    ADD CONSTRAINT contract_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: contracts contracts_contract_number_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.contracts
+    ADD CONSTRAINT contracts_contract_number_key UNIQUE (contract_number);
+
+
+--
+-- Name: contracts contracts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.contracts
+    ADD CONSTRAINT contracts_pkey PRIMARY KEY (id);
 
 
 --
@@ -4826,6 +4901,22 @@ CREATE INDEX entity_attachments_entity_idx ON public.entity_attachments USING bt
 
 
 --
+-- Name: contract_items contract_items_contract_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.contract_items
+    ADD CONSTRAINT contract_items_contract_id_fkey FOREIGN KEY (contract_id) REFERENCES public.contracts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: contracts contracts_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.contracts
+    ADD CONSTRAINT contracts_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id);
+
+
+--
 -- Name: customer_addresses customer_addresses_address_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -5453,5 +5544,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict mR2x61wWI9RreHZsEnKa1agx90wtMuKUmdGhoJTkFWl4EZVdM7JcFcLMehivMcS
+\unrestrict q1JSuDNgDJPVAwIatpHo3KCXD815H2UWUmuEIqeKnYoT6MiuLuCME3p0ljlFTe3
 
