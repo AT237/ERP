@@ -824,6 +824,138 @@ export function ItemRepeaterRenderer({ block, printData, currentPage = 1, totalP
   );
 }
 
+export function ContractBodyRenderer({ block, printData }: BlockRendererProps) {
+  const items = printData?.items || [];
+  if (!items.length) {
+    return <div style={{ padding: '8px', color: '#999', fontSize: '10px' }}>Geen contractinhoud</div>;
+  }
+
+  const titleColor = block.style?.titleColor || '#1a365d';
+  const accentColor = block.style?.accentColor || '#e87722';
+  const fontSize = block.style?.fontSize || 10;
+
+  return (
+    <div style={{ width: '100%' }}>
+      {items.map((item: any, idx: number) => {
+        const indent = (item.indentLevel || 0) * 16;
+        const content = replaceTextVariables(item.content || '', printData);
+        const artNum = item.articleNumber || '';
+
+        if (item.itemType === 'heading') {
+          const headingSize = item.indentLevel === 0 ? fontSize + 4 
+            : item.indentLevel === 1 ? fontSize + 2 
+            : fontSize + 1;
+          return (
+            <div key={idx} style={{
+              display: 'flex',
+              gap: '8px',
+              marginTop: idx === 0 ? 0 : '12px',
+              marginBottom: '4px',
+              paddingLeft: `${indent}px`,
+              borderBottom: item.indentLevel === 0 ? `2px solid ${accentColor}` : 'none',
+              paddingBottom: item.indentLevel === 0 ? '4px' : '0',
+            }}>
+              {artNum && (
+                <span style={{
+                  fontWeight: 700,
+                  fontSize: `${headingSize}px`,
+                  color: titleColor,
+                  minWidth: '40px',
+                  flexShrink: 0,
+                }}>{artNum}</span>
+              )}
+              <span style={{
+                fontWeight: 700,
+                fontSize: `${headingSize}px`,
+                color: titleColor,
+              }}>{content}</span>
+            </div>
+          );
+        }
+
+        if (item.itemType === 'table') {
+          const rows = content.split('\n').filter((r: string) => r.trim());
+          return (
+            <div key={idx} style={{
+              paddingLeft: `${indent}px`,
+              marginTop: '6px',
+              marginBottom: '6px',
+            }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: `${fontSize}px`,
+              }}>
+                <tbody>
+                  {rows.map((row: string, rIdx: number) => {
+                    const cells = row.split('|').map((c: string) => c.trim());
+                    const isHeader = rIdx === 0;
+                    return (
+                      <tr key={rIdx}>
+                        {cells.map((cell: string, cIdx: number) => (
+                          <td key={cIdx} style={{
+                            padding: '4px 8px',
+                            border: '1px solid #ddd',
+                            fontWeight: isHeader ? 700 : 400,
+                            backgroundColor: isHeader ? '#f5f5f5' : 'transparent',
+                            fontSize: `${fontSize}px`,
+                          }}>{cell}</td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          );
+        }
+
+        if (item.itemType === 'image') {
+          return (
+            <div key={idx} style={{
+              paddingLeft: `${indent}px`,
+              marginTop: '6px',
+              marginBottom: '6px',
+              textAlign: 'center',
+            }}>
+              <img
+                src={content}
+                alt=""
+                style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
+              />
+            </div>
+          );
+        }
+
+        return (
+          <div key={idx} style={{
+            display: 'flex',
+            gap: '8px',
+            marginTop: '3px',
+            marginBottom: '3px',
+            paddingLeft: `${indent}px`,
+            lineHeight: '1.5',
+          }}>
+            {artNum && (
+              <span style={{
+                fontSize: `${fontSize}px`,
+                color: '#666',
+                minWidth: '40px',
+                flexShrink: 0,
+              }}>{artNum}</span>
+            )}
+            <span style={{
+              fontSize: `${fontSize}px`,
+              whiteSpace: 'pre-wrap',
+              flex: 1,
+            }}>{content}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // Main block renderer map
 export const BlockRenderers: Record<string, React.FC<BlockRendererProps>> = {
   'Text': TextBlockRenderer,
@@ -841,6 +973,7 @@ export const BlockRenderers: Record<string, React.FC<BlockRendererProps>> = {
   'Group': GroupBlockRenderer,
   'Line': LineBlockRenderer,
   'Rectangle': RectangleBlockRenderer,
+  'Contract Body': ContractBodyRenderer,
 };
 
 // Fallback renderer for unknown block types

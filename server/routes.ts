@@ -72,7 +72,7 @@ async function recalculateQuotationTotals(storage: any, quotationId: string) {
   }
 }
 
-import { loadQuotationPrintData, loadInvoicePrintData, loadProformaInvoicePrintData, loadPackingListPrintData } from "./utils/field-resolver";
+import { loadQuotationPrintData, loadInvoicePrintData, loadProformaInvoicePrintData, loadPackingListPrintData, loadContractPrintData } from "./utils/field-resolver";
 import {
   insertCustomerSchema, insertSupplierSchema, insertProspectSchema, insertInventoryItemSchema,
   insertProjectSchema, insertQuotationSchema, insertQuotationItemSchema,
@@ -1579,6 +1579,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching packing list print data:", error);
       res.status(500).json({ message: "Failed to fetch packing list print data" });
+    }
+  });
+
+  app.get("/api/contracts/:id/print-data", async (req, res) => {
+    try {
+      const printData = await loadContractPrintData(req.params.id);
+      if (!printData) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+      res.json(printData);
+    } catch (error) {
+      console.error("Error fetching contract print data:", error);
+      res.status(500).json({ message: "Failed to fetch contract print data" });
     }
   });
 

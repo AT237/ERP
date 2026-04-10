@@ -81,6 +81,7 @@ export default function PrintPreviewPage() {
       case "proforma-invoice": return `/api/proforma-invoices/${entityId}/print-data`;
       case "packing-list": return `/api/packing-lists/${entityId}/print-data`;
       case "work-order": return `/api/work-orders/${entityId}/print-data`;
+      case "contract": return `/api/contracts/${entityId}/print-data`;
       default: return `/api/quotations/${entityId}/print-data`;
     }
   })();
@@ -116,6 +117,7 @@ export default function PrintPreviewPage() {
       printData?.quotation?.quotationNumber ||
       printData?.packingList?.packingNumber ||
       printData?.workOrder?.workOrderNumber ||
+      printData?.contract?.contractNumber ||
       "Print Preview";
   }, [printData]);
 

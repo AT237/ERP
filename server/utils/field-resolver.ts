@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, paymentTerms, workOrders, invoiceWorkOrders, vatRates, incoterms, packingLists, packingListItems, proformaInvoices, proformaInvoiceItems, countries } from "../../shared/schema";
+import { quotations, customers, projects, companyProfiles, addresses, quotationItems, invoices, invoiceItems, paymentDays, paymentTerms, workOrders, invoiceWorkOrders, vatRates, incoterms, packingLists, packingListItems, proformaInvoices, proformaInvoiceItems, countries, contracts, contractItems } from "../../shared/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 
 function formatIban(value: string | null): string | null {
@@ -1208,4 +1208,106 @@ export function formatFieldValue(value: any, dataType: string): string {
     default:
       return String(value);
   }
+}
+
+export async function loadContractPrintData(contractId: string): Promise<any | null> {
+  const contract = await db.query.contracts.findFirst({
+    where: eq(contracts.id, contractId),
+  });
+  if (!contract) return null;
+
+  let customerData = null;
+  if (contract.customerId) {
+    const customer = await db.query.customers.findFirst({
+      where: eq(customers.id, contract.customerId),
+    });
+    if (customer) {
+      let addressData = null;
+      if (customer.addressId) {
+        const address = await db.query.addresses.findFirst({
+          where: eq(addresses.id, customer.addressId),
+        });
+        if (address) {
+          addressData = {
+            street: address.street,
+            houseNumber: address.houseNumber,
+            postalCode: address.postalCode,
+            city: address.city,
+            country: address.country,
+          };
+        }
+      }
+      customerData = {
+        name: customer.name,
+        customerNumber: customer.customerNumber,
+        email: customer.email,
+        generalEmail: customer.generalEmail ?? null,
+        phone: customer.phone,
+        mobile: customer.mobile ?? null,
+        btwNummer: customer.btwNummer ?? null,
+        taxId: customer.taxId ?? null,
+        kvkNummer: customer.kvkNummer ?? null,
+        bankAccount: formatIban(customer.bankAccount ?? null),
+        countryCode: customer.countryCode ?? null,
+        countryName: await resolveCountryName(customer.countryCode ?? null),
+        address: addressData,
+      };
+    }
+  }
+
+  let companyData = null;
+  const companyProfile = await db.query.companyProfiles.findFirst({
+    where: eq(companyProfiles.isActive, true),
+  });
+  if (companyProfile) {
+    companyData = {
+      name: companyProfile.name,
+      logoUrl: companyProfile.logoUrl,
+      phone: companyProfile.phone,
+      email: companyProfile.email,
+      website: companyProfile.website,
+      address: {
+        street: companyProfile.street,
+        houseNumber: companyProfile.houseNumber,
+        postalCode: companyProfile.postalCode,
+        city: companyProfile.city,
+        country: companyProfile.country,
+      },
+      kvkNummer: companyProfile.kvkNummer,
+      btwNummer: companyProfile.btwNummer,
+      bankAccount: formatIban(companyProfile.bankAccount ?? null),
+      iban: formatIban(companyProfile.bankAccount ?? null),
+      bankName: companyProfile.bankName,
+    };
+  }
+
+  const items = await db.query.contractItems.findMany({
+    where: eq(contractItems.contractId, contractId),
+    orderBy: [asc(contractItems.position)],
+  });
+
+  const itemsData = items.map((item) => ({
+    id: item.id,
+    position: item.position ?? 0,
+    articleNumber: item.articleNumber || "",
+    itemType: item.itemType || "text",
+    content: item.content || "",
+    indentLevel: item.indentLevel ?? 0,
+  }));
+
+  return {
+    contract: {
+      number: contract.contractNumber,
+      contractNumber: contract.contractNumber,
+      date: contract.contractDate,
+      contractDate: contract.contractDate,
+      validUntil: contract.validUntil,
+      description: contract.description,
+      status: contract.status,
+      notes: contract.notes,
+    },
+    customer: customerData,
+    company: companyData,
+    items: itemsData,
+  };
 }
