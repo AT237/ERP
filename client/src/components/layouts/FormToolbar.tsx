@@ -64,6 +64,7 @@ export interface FormToolbarProps {
 
   documentType?: string;
   entityId?: string;
+  printLayoutId?: string;
   checkUsagesUrl?: string;
   entityName?: string;
   entityNumber?: string;

@@ -23,7 +23,7 @@ import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { DataTableLayout, createIdColumn, createPositionColumn, createCurrencyColumn, type DirectInputConfig } from '@/components/layouts/DataTableLayout';
 import { useDataTable } from '@/hooks/useDataTable';
-import type { ProformaInvoice, ProformaInvoiceItem, InsertProformaInvoice, InsertProformaInvoiceItem, Customer, PaymentDay, VatRate, InventoryItem, UnitOfMeasure, Country } from "@shared/schema";
+import type { ProformaInvoice, ProformaInvoiceItem, InsertProformaInvoice, InsertProformaInvoiceItem, Customer, PaymentDay, VatRate, InventoryItem, UnitOfMeasure, Country, DocumentLayout } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 import { amountToWords } from "@/utils/field-resolver";
@@ -108,6 +108,7 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
       notes: "",
       printSortOrder: "position",
       printLanguageCode: "nl",
+      printLayoutId: "",
       incotermId: "",
       portOfLoading: "",
       portOfDischarge: "",
@@ -182,6 +183,15 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
     queryKey: ["/api/countries"],
   });
 
+  const { data: availableLayouts = [] } = useQuery<DocumentLayout[]>({
+    queryKey: ["/api/layouts", { documentType: "proforma_invoice" }],
+    queryFn: async () => {
+      const res = await fetch("/api/layouts?documentType=proforma_invoice");
+      if (!res.ok) throw new Error("Failed to fetch layouts");
+      return res.json();
+    },
+  });
+
   const { data: fetchedItems = [] } = useQuery<ProformaInvoiceItem[]>({
     queryKey: ["/api/proforma-invoices", currentInvoiceId, "items"],
     enabled: !!currentInvoiceId,
@@ -228,6 +238,7 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
         notes: invoice.notes || "",
         printSortOrder: (invoice as any).printSortOrder || "position",
         printLanguageCode: (invoice as any).printLanguageCode || "nl",
+        printLayoutId: (invoice as any).printLayoutId || "",
         printProjectNo: (invoice as any).printProjectNo ?? true,
         printPaymentConditions: (invoice as any).printPaymentConditions ?? true,
         printLineImages: (invoice as any).printLineImages ?? false,
@@ -1153,6 +1164,31 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
       label: "Afdrukinstellingen",
       rows: [
         createSectionHeaderRow("Afdrukinstellingen", "mb-6"),
+        createFieldRow({
+          key: "printLayoutId",
+          label: "Layout",
+          type: "custom",
+          customComponent: (
+            <Select
+              value={invoiceForm.watch("printLayoutId" as any) || ""}
+              onValueChange={(value) => invoiceForm.setValue("printLayoutId" as any, value === "__clear__" ? "" : value)}
+            >
+              <SelectTrigger className="w-full" data-testid="select-print-layout">
+                <SelectValue placeholder="Selecteer een layout..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__clear__">— Wis selectie —</SelectItem>
+                {availableLayouts.map((layout) => (
+                  <SelectItem key={layout.id} value={layout.id}>
+                    {layout.name} ({layout.pageFormat} - {layout.orientation})
+                    {layout.isDefault ? " ★" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ),
+          testId: "field-print-layout"
+        }),
         createFieldRow({
           key: "printSortOrder",
           label: "Sorteervolgorde",

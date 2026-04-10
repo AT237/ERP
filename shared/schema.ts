@@ -404,6 +404,7 @@ export const invoices = pgTable("invoices", {
   printProjectNo: boolean("print_project_no").default(true),
   printPaymentConditions: boolean("print_payment_conditions").default(true),
   printLineImages: boolean("print_line_images").default(false),
+  printLayoutId: varchar("print_layout_id"),
   incotermId: varchar("incoterm_id").references(() => incoterms.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
