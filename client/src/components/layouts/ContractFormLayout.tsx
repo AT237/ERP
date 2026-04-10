@@ -7,6 +7,7 @@ import { insertContractSchema, type InsertContract, type Contract, type Contract
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
+import { FormToolbar } from "@/components/layouts/FormToolbar";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -147,16 +148,14 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
   }, [contract, isEditing, form]);
 
   useEffect(() => {
-    if (contractItems.length > 0) {
-      setRows(contractItems.map(item => ({
-        id: item.id,
-        articleNumber: item.articleNumber || "",
-        itemType: item.itemType || "text",
-        content: item.content || "",
-        position: item.position || 0,
-        indentLevel: item.indentLevel || 0,
-      })));
-    }
+    setRows(contractItems.map(item => ({
+      id: item.id,
+      articleNumber: item.articleNumber || "",
+      itemType: item.itemType || "text",
+      content: item.content || "",
+      position: item.position || 0,
+      indentLevel: item.indentLevel || 0,
+    })));
   }, [contractItems]);
 
   const parseDateValue = (val: string) => {
@@ -187,18 +186,16 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         setCurrentContractId(savedContract.id);
       }
 
-      if (rows.length > 0) {
-        await apiRequest("PUT", `/api/contracts/${savedContract.id}/items/batch`, {
-          items: rows.map((r, i) => ({
-            ...(r.id ? { id: r.id } : {}),
-            articleNumber: r.articleNumber,
-            itemType: r.itemType,
-            content: r.content,
-            position: i,
-            indentLevel: r.indentLevel,
-          }))
-        });
-      }
+      await apiRequest("PUT", `/api/contracts/${savedContract.id}/items/batch`, {
+        items: rows.map((r, i) => ({
+          ...(r.id ? { id: r.id } : {}),
+          articleNumber: r.articleNumber,
+          itemType: r.itemType,
+          content: r.content,
+          position: i,
+          indentLevel: r.indentLevel,
+        }))
+      });
 
       return savedContract;
     },
@@ -228,11 +225,13 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
   }, [form, saveMutation, toast]);
 
   const toolbar = useFormToolbar({
+    entityType: "contract",
+    entityId: currentContractId,
     onSave: handleSave,
-    isPending: saveMutation.isPending,
-    hasUnsavedChanges,
-    documentType: 'contract',
-    documentId: currentContractId,
+    onClose: onSave,
+    saveDisabled: saveMutation.isPending,
+    saveLoading: saveMutation.isPending,
+    showPrint: false,
   });
 
   const addRow = useCallback((type: string = "text") => {
@@ -363,7 +362,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
 
   return (
     <div className="flex flex-col h-full">
-      {toolbar.element}
+      <FormToolbar {...toolbar} />
       <div className="flex-1 overflow-hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <div className="border-b px-4">
