@@ -362,7 +362,11 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
 
   return (
     <div className="flex flex-col h-full">
-      <FormToolbar {...toolbar} />
+      <div className="sticky top-0 z-20 bg-white pt-2 pb-2 px-4">
+        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 flex items-center gap-1">
+          <FormToolbar {...toolbar} />
+        </div>
+      </div>
       <div className="flex-1 overflow-hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <div className="border-b px-4">
