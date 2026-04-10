@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { Trash2, GripVertical, ChevronRight, ChevronDown, Type, Heading, Table, Image, MoveUp, MoveDown, Indent, Outdent, Copy } from "lucide-react";
 import { insertContractSchema, type Contract, type ContractItem, type Customer } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -108,7 +108,8 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     enabled: !!effectiveId,
   });
 
-  const { data: contractItems = [] } = useQuery<ContractItem[]>({
+  const emptyItems: ContractItem[] = useMemo(() => [], []);
+  const { data: contractItemsData } = useQuery<ContractItem[]>({
     queryKey: ["/api/contracts", effectiveId, "items"],
     queryFn: async () => {
       const response = await fetch(`/api/contracts/${effectiveId}/items`);
@@ -117,6 +118,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     },
     enabled: !!effectiveId,
   });
+  const contractItems = contractItemsData ?? emptyItems;
 
   const { data: customers = [] } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
