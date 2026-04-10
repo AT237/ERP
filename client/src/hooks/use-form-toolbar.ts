@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useState, useEffect } from "react";
 import type { UsageLocation } from "@/components/ui/safe-delete-dialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -382,6 +382,19 @@ export function useFormToolbar({
   const config = ENTITY_CONFIGS[entityType];
   const [deleteConflict, setDeleteConflict] = useState<{ name: string; usages: UsageLocation[] } | null>(null);
   const isEditing = !!entityId;
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        if (!saveDisabled && !saveLoading) {
+          onSave();
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onSave, saveDisabled, saveLoading]);
 
   const resolvedShowAddNew = showAddNew ?? (config?.supportsAddNew ?? false);
   const resolvedShowDelete = showDelete ?? (config?.supportsDelete ?? false);

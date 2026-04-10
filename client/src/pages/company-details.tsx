@@ -134,6 +134,17 @@ export default function CompanyDetailsPage() {
     }
   };
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        form.handleSubmit(onSubmit)();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [form, onSubmit]);
+
   // Helper to create a fields row (simplified version)
   const createFieldsRow = (fields: FormField2<CompanyDetailsFormData>[]) => ({
     type: "fields" as const,
