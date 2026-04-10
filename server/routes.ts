@@ -1386,6 +1386,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/project-items/:id", async (req, res) => {
+    try {
+      const item = await storage.getProjectItem(req.params.id);
+      if (!item) return res.status(404).json({ message: "Project item niet gevonden" });
+      res.json(item);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to get project item");
+    }
+  });
+
   app.put("/api/project-items/:id", async (req, res) => {
     try {
       const item = await storage.updateProjectItem(req.params.id, req.body);
