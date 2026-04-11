@@ -1708,19 +1708,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
               },
               testId: "input-valid-until"
             },
-            // Positie 7: Budget Quotation
-            {
-              key: "isBudgetQuotation",
-              label: "Budget offerte",
-              type: "checkbox",
-              watch: () => quotationForm.watch("isBudgetQuotation") || false,
-              setValue: (checked) => quotationForm.setValue("isBudgetQuotation", checked === true),
-              validation: {
-                error: quotationForm.formState.errors.isBudgetQuotation?.message
-              },
-              testId: "checkbox-budget-quotation"
-            }
-            // Positie 8-12: automatisch leeg
+            // Positie 7-12: automatisch leeg
           ]),
           // Custom row voor Description veld dat over de gehele breedte loopt
           {
@@ -1894,6 +1882,17 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             watch: () => quotationForm.watch("printProjectNo") ?? true,
             setValue: (checked) => quotationForm.setValue("printProjectNo", checked === true),
             testId: "checkbox-print-project-no"
+          }),
+          createFieldRow({
+            key: "isBudgetQuotation",
+            label: "Budget offerte",
+            type: "checkbox",
+            watch: () => quotationForm.watch("isBudgetQuotation") || false,
+            setValue: (checked) => quotationForm.setValue("isBudgetQuotation", checked === true),
+            validation: {
+              error: quotationForm.formState.errors.isBudgetQuotation?.message
+            },
+            testId: "checkbox-budget-quotation"
           }),
           createFieldRow({
             key: "printLanguageCode",
