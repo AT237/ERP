@@ -27,6 +27,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Save, ArrowLeft, Package, FileText, Search, Library, Check, CalendarIcon, ChevronsUpDown, X } from "lucide-react";
 import { ImageUploadZone } from "@/components/ui/image-upload-zone";
+import { LineItemComponentsPanel } from "@/components/ui/line-item-components-panel";
 import { EmployeeSelectWithAdd } from "@/components/ui/employee-select-with-add";
 import { useToast } from "@/hooks/use-toast";
 import type { InvoiceItem, InsertInvoiceItem, TextSnippet, Invoice, CustomerRate, RateAndCharge, Employee } from "@shared/schema";
@@ -997,6 +998,18 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         createFieldRow(deliveryFields[1]),
       ]
     },
+    ...(lineTypeValue === 'unique' && isEditing ? [{
+      id: 'components',
+      label: 'Onderdelen',
+      rows: [
+        createCustomRow(
+          <LineItemComponentsPanel
+            parentLineItemId={lineItemId!}
+            parentLineItemType="invoice_item"
+          />
+        ),
+      ],
+    }] : []),
   ];
 
   const snippetSelectionDialog = (

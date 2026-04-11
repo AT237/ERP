@@ -23,6 +23,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { Save, ArrowLeft, Package, FileText, Search, Library, Check } from "lucide-react";
 import { ImageUploadZone } from "@/components/ui/image-upload-zone";
+import { LineItemComponentsPanel } from "@/components/ui/line-item-components-panel";
 import { useToast } from "@/hooks/use-toast";
 import type { QuotationItem, InsertQuotationItem, TextSnippet, Supplier } from "@shared/schema";
 import { z } from "zod";
@@ -768,7 +769,19 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         createFieldRow(deliveryFields[2]),
         createFieldRow(deliveryFields[3]),
       ]
-    }
+    },
+    ...(lineTypeValue === 'unique' && isEditing ? [{
+      id: 'components',
+      label: 'Onderdelen',
+      rows: [
+        createCustomRow(
+          <LineItemComponentsPanel
+            parentLineItemId={lineItemId!}
+            parentLineItemType="quotation_item"
+          />
+        ),
+      ],
+    }] : []),
   ];
 
   const snippetSelectionDialog = (
