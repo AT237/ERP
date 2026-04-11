@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LayoutForm2, buildFormPersistenceKey, type FormSection2, type FormField2, createFieldRow, createTwoColumnRow } from './LayoutForm2';
+import { LayoutForm2, buildFormPersistenceKey, type FormSection2, type FormField2, createFieldRow, createCustomRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
@@ -932,6 +932,18 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
         createFieldRow(fieldCollieNumber),
       ]
     },
+    ...(lineTypeValue === 'unique' && isEditing ? [{
+      id: 'components',
+      label: 'Onderdelen',
+      rows: [
+        createCustomRow(
+          <LineItemComponentsPanel
+            parentLineItemId={lineItemId!}
+            parentLineItemType="project_item"
+          />
+        ),
+      ],
+    }] : []),
   ];
 
   const snippetSelectionDialog = (
