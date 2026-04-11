@@ -24,6 +24,7 @@ import { insertProjectItemSchema, type Country, type ProjectItem, type TextSnipp
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Save, Package, FileText, Search, Library, Check, CalendarIcon } from "lucide-react";
 import { ImageUploadZone } from "@/components/ui/image-upload-zone";
+import { LineItemComponentsPanel } from "@/components/ui/line-item-components-panel";
 import { EmployeeSelectWithAdd } from "@/components/ui/employee-select-with-add";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
