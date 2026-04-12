@@ -4,8 +4,8 @@ export type ScreenSize = 'phone' | 'tablet-compact' | 'tablet-wide' | 'desktop';
 
 const BREAKPOINTS = {
   phone: 640,
-  tabletCompact: 1024,
-  tabletWide: 1280,
+  tabletCompact: 1280,
+  tabletWide: 1440,
 };
 
 function getScreenSize(width: number): ScreenSize {
