@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Save, 
   Plus, 
@@ -115,6 +116,7 @@ export function FormToolbar({
 }: FormToolbarProps) {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const openDirectPreview = useCallback(() => {
     if (printLayoutId && entityId && documentType) {
@@ -289,8 +291,8 @@ export function FormToolbar({
       )}
 
       {convertOptions && convertOptions.length > 0 && (
-        <>
-          <Separator orientation="vertical" className="h-6 mx-3" />
+        <div className={`flex items-center ${isMobile ? 'basis-full pt-1' : ''}`}>
+          {!isMobile && <Separator orientation="vertical" className="h-6 mx-3" />}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -322,7 +324,7 @@ export function FormToolbar({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </>
+        </div>
       )}
 
       {documentType && (
