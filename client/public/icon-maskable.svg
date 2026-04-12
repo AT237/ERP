@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" fill="#e87722"/>
-  <text x="256" y="210" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="140" fill="#ffffff">ATE</text>
-  <text x="256" y="320" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="52" fill="#ffffff" opacity="0.95">Solutions</text>
-  <text x="256" y="370" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="400" font-size="32" fill="#ffffff" opacity="0.8">B.V.</text>
+  <text x="256" y="200" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="140" fill="#ffffff">ATE</text>
+  <text x="256" y="330" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="110" fill="#ffffff">Solutions</text>
+  <text x="256" y="395" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="400" font-size="45" fill="#ffffff" opacity="0.85">B.V.</text>
 </svg>
