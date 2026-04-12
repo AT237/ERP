@@ -41,6 +41,7 @@ const lineItemFormSchema = insertQuotationItemSchema.extend({
   descriptionInternal: z.string().optional(),
   descriptionExternal: z.string().optional(),
   discountPercent: z.string().optional(),
+  costPrice: z.string().optional(),
   sourceSnippetId: z.string().optional(),
   sourceSnippetVersion: z.number().optional(),
   deliveryDate: z.string().optional(),
@@ -111,6 +112,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       descriptionInternal: "",
       descriptionExternal: "",
       discountPercent: "0",
+      costPrice: "0.00",
       sourceSnippetId: undefined,
       sourceSnippetVersion: undefined,
       deliveryDate: undefined,
@@ -200,6 +202,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         descriptionInternal: lineItem.description || "",
         descriptionExternal: lineItem.description || "",
         discountPercent: (lineItem as any).discountPercent?.toString() || "0",
+        costPrice: (lineItem as any).costPrice?.toString() || "0.00",
         sourceSnippetId: lineItem.sourceSnippetId || undefined,
         sourceSnippetVersion: lineItem.sourceSnippetVersion || undefined,
         deliveryDate: (lineItem as any).deliveryDate ? toDisplayDate((lineItem as any).deliveryDate) : undefined,
@@ -225,6 +228,16 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   const unitPriceValue = form.watch("unitPrice");
   const lineTotalValue = form.watch("lineTotal");
   const discountPercentValue = form.watch("discountPercent");
+  const costPriceValue = form.watch("costPrice");
+
+  const marginPercent = useMemo(() => {
+    const cost = parseFloat(costPriceValue || "0");
+    const price = parseFloat(unitPriceValue || "0");
+    if (cost > 0 && price > 0) {
+      return (((price - cost) / price) * 100).toFixed(1);
+    }
+    return null;
+  }, [costPriceValue, unitPriceValue]);
 
   const discountedUnitPrice = useMemo(() => {
     const price = parseFloat(unitPriceValue || "0");
@@ -625,6 +638,28 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     ),
   };
 
+  const fieldCostPrice: FormField2<LineItemFormData> = {
+    key: 'costPrice',
+    label: 'Kostprijs',
+    type: 'decimal',
+    placeholder: '0,00',
+    setValue: (value: string) => { form.setValue('costPrice', value); setHasUnsavedChanges(true); },
+    watch: () => form.watch('costPrice'),
+    validation: { error: form.formState.errors.costPrice?.message },
+    testId: 'input-cost-price',
+  };
+
+  const fieldMargin: FormField2<LineItemFormData> = {
+    key: 'margin' as any,
+    label: 'Marge',
+    type: 'custom',
+    customComponent: (
+      <div className="mt-1 px-3 py-2 rounded-md border bg-muted/50 text-sm" data-testid="margin-display">
+        {marginPercent ? `${marginPercent.replace('.', ',')}%` : '—'}
+      </div>
+    ),
+  };
+
   const fieldTextContent: FormField2<LineItemFormData> = {
     key: 'descriptionExternal',
     label: 'Tekst',
@@ -662,11 +697,11 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   const getRightColumnFields = (): FormField2<LineItemFormData>[] => {
     switch (lineTypeValue) {
       case 'charges':
-        return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice];
+        return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice, fieldCostPrice, fieldMargin];
       case 'unique':
-        return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice];
+        return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice, fieldCostPrice, fieldMargin];
       case 'standard':
-        return [fieldStockItem, fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount, fieldDiscountedPrice];
+        return [fieldStockItem, fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount, fieldDiscountedPrice, fieldCostPrice, fieldMargin];
       case 'text':
         return [fieldTextContent];
       default:
