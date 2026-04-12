@@ -296,66 +296,6 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
         </div>
       </main>
 
-      {/* Bottom Navigation - responsive grid */}
-      <nav className="bg-white border-t border-gray-200 px-1 py-1 shrink-0 w-full safe-area-inset-bottom">
-        {isOnDatabasePage ? (
-          /* Action buttons for database pages */
-          <div className="grid grid-cols-3 gap-1 w-full">
-            <button
-              onClick={handleAdd}
-              className="relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors text-gray-600 hover:text-orange-500 active:bg-orange-50"
-              data-testid="action-add"
-            >
-              <Plus className="h-6 w-6 shrink-0" />
-              <span className="text-xs mt-1 font-medium">ADD</span>
-            </button>
-            <button
-              onClick={handleDelete}
-              className="relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors text-gray-600 hover:text-orange-500 active:bg-orange-50"
-              data-testid="action-delete"
-            >
-              <Trash2 className="h-6 w-6 shrink-0" />
-              <span className="text-xs mt-1 font-medium">DELETE</span>
-            </button>
-            <button
-              onClick={handleDuplicate}
-              className="relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors text-gray-600 hover:text-orange-500 active:bg-orange-50"
-              data-testid="action-duplicate"
-            >
-              <Copy className="h-6 w-6 shrink-0" />
-              <span className="text-xs mt-1 font-medium">Dupliceren</span>
-            </button>
-          </div>
-        ) : (
-          /* Standard navigation for other pages */
-          <div className="grid grid-cols-4 gap-1 w-full">
-            {bottomNavItems.map((item) => {
-              const active = isActive(item.href);
-              const IconComponent = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item.href)}
-                  className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-lg min-h-[56px] transition-colors ${
-                    active 
-                      ? 'text-orange-500' 
-                      : 'text-gray-500 hover:text-gray-700 active:bg-gray-100'
-                  }`}
-                  data-testid={`nav-${item.id}`}
-                >
-                  <IconComponent className={`h-6 w-6 shrink-0 ${active ? 'text-orange-500' : ''}`} />
-                  <span className={`text-xs mt-1 font-medium truncate max-w-full ${active ? 'text-orange-500' : ''}`}>
-                    {item.name}
-                  </span>
-                  {active && (
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-orange-500 rounded-t-full" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </nav>
     </div>
   );
 }
