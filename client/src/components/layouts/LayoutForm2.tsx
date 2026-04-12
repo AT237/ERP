@@ -707,7 +707,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
       case 'field':
         if (!row.field) return null;
         return (
-          <div key={`field-${rowIndex}`} className="grid grid-cols-2 gap-8">
+          <div key={`field-${rowIndex}`} className={isMobile ? "" : "grid grid-cols-2 gap-8"}>
             {renderSimpleField(row.field)}
           </div>
         );
@@ -716,7 +716,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         if (!row.fields || row.fields.length === 0) return null;
         
         return (
-          <div key={`fields-${rowIndex}`} className="grid grid-cols-2 gap-8">
+          <div key={`fields-${rowIndex}`} className={isMobile ? "space-y-4" : "grid grid-cols-2 gap-8"}>
             {row.fields.map((field) => renderSimpleField(field))}
           </div>
         );
@@ -726,6 +726,13 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         const rightFields = row.rightColumn || [];
         const maxFields = Math.max(leftFields.length, rightFields.length);
         
+        if (isMobile) {
+          return (
+            <div key={`two-column-${rowIndex}`} className="space-y-4">
+              {[...leftFields, ...rightFields].map((field) => renderSimpleField(field))}
+            </div>
+          );
+        }
         return (
           <div key={`two-column-${rowIndex}`} className="grid grid-cols-2 gap-8">
             <div className="space-y-4">
