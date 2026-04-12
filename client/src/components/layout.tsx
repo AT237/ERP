@@ -1791,7 +1791,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Top Logo Bar */}
-      <div className="bg-white border-b border-border px-4 md:px-6 py-2 md:py-4 flex items-center justify-between">
+      <div className="bg-white border-b border-border px-4 md:px-6 py-4 md:py-7 flex items-center justify-between">
         <div className="flex items-center">
           {companyLogo?.imageData ? (
             <img 
