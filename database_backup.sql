@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict eh6iVja6IInCQqrgiHIRzcHFFKY4LgKKYv0s8XOmDc88sfeeaNBBxSD6WvRnzCM
+\restrict F1vEOwQnFQVapCNwIaqvF1o65DipNGiDhebyQc02apI6xC1vMMAQ6za17Smzyd3
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -3973,8 +3973,8 @@ bffa71e4-59b0-47a4-9d35-59992507a495	\N	\N	\N	2026-03-02 18:55:11.019526	2026-03
 --
 
 COPY public.user_sessions (sid, sess, expire) FROM stdin;
+mZxlnAyl_6L_vUpnnNT3YDd7IQcCgr5R	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-19T09:13:55.587Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-19 20:20:58
 kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-18 10:28:19
-mZxlnAyl_6L_vUpnnNT3YDd7IQcCgr5R	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-19T09:13:55.587Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-19 20:06:03
 \.
 
 
@@ -5557,5 +5557,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict eh6iVja6IInCQqrgiHIRzcHFFKY4LgKKYv0s8XOmDc88sfeeaNBBxSD6WvRnzCM
+\unrestrict F1vEOwQnFQVapCNwIaqvF1o65DipNGiDhebyQc02apI6xC1vMMAQ6za17Smzyd3
 
