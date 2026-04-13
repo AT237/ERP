@@ -1275,6 +1275,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/projects/next-number", async (req, res) => {
+    try {
+      const rows = await db.execute(
+        sql`SELECT project_number FROM projects WHERE project_number ~ '^PR-[0-9]{4}$' ORDER BY project_number`
+      );
+      const used = new Set((rows.rows as any[]).map((r: any) => r.project_number as string));
+      let next = 1;
+      while (used.has(`PR-${String(next).padStart(4, '0')}`)) {
+        next++;
+      }
+      res.json({ number: `PR-${String(next).padStart(4, '0')}` });
+    } catch (error) {
+      console.error("Error generating next project number:", error);
+      res.status(500).json({ message: "Failed to generate next project number" });
+    }
+  });
+
   app.get("/api/projects/:id", async (req, res) => {
     try {
       const project = await storage.getProject(req.params.id);
@@ -1300,23 +1317,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching invoiced total:", error);
       res.status(500).json({ message: "Failed to fetch invoiced total" });
-    }
-  });
-
-  app.get("/api/projects/next-number", async (req, res) => {
-    try {
-      const rows = await db.execute(
-        sql`SELECT project_number FROM projects WHERE project_number ~ '^PR-[0-9]{4}$' ORDER BY project_number`
-      );
-      const used = new Set((rows.rows as any[]).map((r: any) => r.project_number as string));
-      let next = 1;
-      while (used.has(`PR-${String(next).padStart(4, '0')}`)) {
-        next++;
-      }
-      res.json({ number: `PR-${String(next).padStart(4, '0')}` });
-    } catch (error) {
-      console.error("Error generating next project number:", error);
-      res.status(500).json({ message: "Failed to generate next project number" });
     }
   });
 
