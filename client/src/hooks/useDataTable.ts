@@ -168,18 +168,23 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey, data }: Us
 
     setColumnsState(prev => {
       const existingKeys = new Set(prev.map(c => c.key));
+      const validKeys = new Set(allColumns.map(c => c.key));
+      const defaultKeys = new Set(defaultColumns.map(c => c.key));
       const brandNew = allColumns.filter(c => !existingKeys.has(c.key));
-      const updated = prev.map(col => {
-        const discovered = allColumns.find(d => d.key === col.key);
-        if (!discovered) return col;
-        return {
-          ...col,
-          renderCell: discovered.renderCell ?? col.renderCell,
-          align: discovered.align ?? col.align,
-        };
-      });
+      const updated = prev
+        .filter(col => validKeys.has(col.key) || defaultKeys.has(col.key))
+        .map(col => {
+          const discovered = allColumns.find(d => d.key === col.key);
+          if (!discovered) return col;
+          return {
+            ...col,
+            renderCell: discovered.renderCell ?? col.renderCell,
+            align: discovered.align ?? col.align,
+          };
+        });
       const merged = [...updated, ...brandNew];
-      if (brandNew.length > 0 && tableKey) saveColumnsToStorage(tableKey, merged);
+      const changed = brandNew.length > 0 || merged.length !== prev.length;
+      if (changed && tableKey) saveColumnsToStorage(tableKey, merged);
       return merged;
     });
   }, [data, defaultColumns, tableKey]);
