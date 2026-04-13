@@ -260,6 +260,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         queryClient.invalidateQueries({ queryKey: ["/api/contracts", currentContractId] });
         queryClient.invalidateQueries({ queryKey: ["/api/contracts", currentContractId, "items"] });
       }
+      setOriginalValues(form.getValues());
       setHasUnsavedChanges(false);
       toast({ title: "Opgeslagen", description: "Contract is opgeslagen." });
       onSave();
@@ -638,6 +639,41 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
               watch: () => form.watch("status"),
               testId: "select-status"
             },
+            {
+              key: "printLanguageCode",
+              label: "Taal",
+              type: "custom",
+              customComponent: (
+                <Select
+                  value={form.watch("printLanguageCode") || "nl"}
+                  onValueChange={(value) => form.setValue("printLanguageCode", value)}
+                  onOpenChange={(open) => {
+                    if (open) setShouldLoadLanguages(true);
+                  }}
+                >
+                  <SelectTrigger className="w-full" data-testid="select-contract-language">
+                    <SelectValue placeholder="Selecteer taal..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {languages.length > 0 ? (
+                      languages.map((lang) => (
+                        <SelectItem key={lang.code} value={lang.code}>
+                          {lang.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="nl">Nederlands</SelectItem>
+                        <SelectItem value="en">Engels</SelectItem>
+                        <SelectItem value="de">Duits</SelectItem>
+                        <SelectItem value="fr">Frans</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              ),
+              testId: "field-contract-language"
+            },
           ],
           rightColumn: [
             {
@@ -668,6 +704,78 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         {
           type: "custom" as const,
           customContent: contentBuilder,
+        },
+      ],
+    },
+    {
+      id: "printSettings",
+      label: "Printen",
+      rows: [
+        {
+          type: 'two-column' as const,
+          leftColumn: [
+            {
+              key: "printLayoutId",
+              label: "Layout",
+              type: "custom",
+              customComponent: (
+                <Select
+                  value={form.watch("printLayoutId") || "__clear__"}
+                  onValueChange={(value) => form.setValue("printLayoutId", value === "__clear__" ? "" : value)}
+                >
+                  <SelectTrigger className="w-full" data-testid="select-print-layout">
+                    <SelectValue placeholder="Selecteer een layout..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__clear__">— Wis selectie —</SelectItem>
+                    {availableLayouts.map((layout) => (
+                      <SelectItem key={layout.id} value={layout.id}>
+                        {layout.name} ({layout.pageFormat} - {layout.orientation})
+                        {layout.isDefault ? " ★" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ),
+              testId: "field-print-layout"
+            },
+            {
+              key: "printLanguageCode2",
+              label: "Afdruktaal",
+              type: "custom",
+              customComponent: (
+                <Select
+                  value={form.watch("printLanguageCode") || "nl"}
+                  onValueChange={(value) => form.setValue("printLanguageCode", value)}
+                  onOpenChange={(open) => {
+                    if (open) setShouldLoadLanguages(true);
+                  }}
+                >
+                  <SelectTrigger className="w-full" data-testid="select-print-language">
+                    <SelectValue placeholder="Selecteer taal..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {languages.length > 0 ? (
+                      languages.map((lang) => (
+                        <SelectItem key={lang.code} value={lang.code}>
+                          {lang.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="nl">Nederlands</SelectItem>
+                        <SelectItem value="en">Engels</SelectItem>
+                        <SelectItem value="de">Duits</SelectItem>
+                        <SelectItem value="fr">Frans</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              ),
+              testId: "field-print-language"
+            },
+          ],
+          rightColumn: [],
         },
       ],
     },
