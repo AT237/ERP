@@ -114,6 +114,7 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
   const [previewImage, setPreviewImage] = useState<string>("");
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
   const [projectPopoverOpen, setProjectPopoverOpen] = useState(false);
+  const [deleteItemsDialogOpen, setDeleteItemsDialogOpen] = useState(false);
   const { toast } = useToast();
   const { dialogOpen: validDialogOpen, setDialogOpen: setValidDialogOpen, errors: validErrors, onInvalid: quotationOnInvalid, handleShowFields } = useValidationErrors({
     quotationNumber: { label: "Offertenummer" },
@@ -767,12 +768,30 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
     });
   };
 
-  const handleDeleteItem = (item: QuotationItem) => {
-    setQuotationItems(prev => prev.filter(i => i.id !== item.id));
-    toast({
-      title: "Success",
-      description: "Item deleted",
-    });
+  const handleDeleteItem = async (item: QuotationItem) => {
+    try {
+      await apiRequest("DELETE", `/api/quotation-items/${item.id}`);
+      setQuotationItems(prev => prev.filter(i => i.id !== item.id));
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "details"] });
+      toast({ title: "Success", description: "Item verwijderd" });
+    } catch (error) {
+      toast({ title: "Error", description: "Kon item niet verwijderen", variant: "destructive" });
+    }
+  };
+
+  const handleBulkDeleteItems = async () => {
+    const selectedIds = itemTableState.selectedRows;
+    if (selectedIds.length === 0) return;
+    try {
+      await Promise.all(selectedIds.map(id => apiRequest("DELETE", `/api/quotation-items/${id}`)));
+      setQuotationItems(prev => prev.filter(i => !selectedIds.includes(i.id)));
+      itemTableState.setSelectedRows([]);
+      queryClient.invalidateQueries({ queryKey: ["/api/quotations", currentQuotationId, "details"] });
+      setDeleteItemsDialogOpen(false);
+      toast({ title: "Success", description: `${selectedIds.length} item(s) verwijderd` });
+    } catch (error) {
+      toast({ title: "Error", description: "Kon items niet verwijderen", variant: "destructive" });
+    }
   };
 
   const handleDuplicateItem = async (item: QuotationItem) => {
