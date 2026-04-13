@@ -37,6 +37,9 @@ interface ContractRow {
   content: string;
   position: number;
   indentLevel: number;
+  fontFamily: string;
+  fontSize: number | null;
+  fontWeight: string | null;
 }
 
 const PLACEHOLDERS = (() => {
@@ -172,6 +175,9 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       content: item.content || "",
       position: item.position || 0,
       indentLevel: item.indentLevel || 0,
+      fontFamily: (item as any).fontFamily || "Arial",
+      fontSize: (item as any).fontSize || null,
+      fontWeight: (item as any).fontWeight || null,
     })));
   }, [contractItems]);
 
@@ -251,6 +257,9 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
           content: r.content,
           position: i,
           indentLevel: r.indentLevel,
+          fontFamily: r.fontFamily || "Arial",
+          fontSize: r.fontSize,
+          fontWeight: r.fontWeight,
         }))
       });
 
@@ -299,12 +308,15 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       itemType: type,
       content: "",
       position: rows.length,
-      indentLevel: 0,
+      indentLevel: type === 'heading' ? 0 : (rows.length > 0 ? rows[rows.length - 1].indentLevel : 0),
+      fontFamily: "Arial",
+      fontSize: null,
+      fontWeight: type === 'heading' ? 'bold' : null,
     };
     setRows(prev => [...prev, newRow]);
     setSelectedRowIndex(rows.length);
     setHasUnsavedChanges(true);
-  }, [rows.length]);
+  }, [rows]);
 
   const updateRow = useCallback((index: number, field: keyof ContractRow, value: any) => {
     setRows(prev => {

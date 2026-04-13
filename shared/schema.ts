@@ -1647,6 +1647,9 @@ export const contractItems = pgTable("contract_items", {
   itemType: text("item_type").default("text"),
   content: text("content"),
   indentLevel: integer("indent_level").default(0),
+  fontFamily: text("font_family").default("Arial"),
+  fontSize: integer("font_size"),
+  fontWeight: text("font_weight"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

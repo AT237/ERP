@@ -398,6 +398,9 @@ async function ensureLineItemColumns() {
       created_at TIMESTAMP DEFAULT NOW()
     )`);
     await db.execute(sql`ALTER TABLE contracts ADD COLUMN IF NOT EXISTS print_language_code TEXT DEFAULT 'nl'`);
+    await db.execute(sql`ALTER TABLE contract_items ADD COLUMN IF NOT EXISTS font_family TEXT DEFAULT 'Arial'`);
+    await db.execute(sql`ALTER TABLE contract_items ADD COLUMN IF NOT EXISTS font_size INTEGER`);
+    await db.execute(sql`ALTER TABLE contract_items ADD COLUMN IF NOT EXISTS font_weight TEXT`);
   } catch (err: any) {
     log(`Could not ensure line item columns: ${err.message}`);
   }
