@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { ChevronRight, ChevronDown, Upload, Bold, Type, Heading, Table2, ImageIcon } from "lucide-react";
+import { ChevronRight, ChevronDown, Upload, Bold, Type, Heading, Table2, ImageIcon, Indent, Outdent } from "lucide-react";
 import { type ContractItem } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
 
 const itemFormSchema = z.object({
   articleNumber: z.string().min(1, "Positie is verplicht"),
@@ -39,6 +41,9 @@ const PLACEHOLDERS = (() => {
     })),
   }));
 })();
+
+const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 48, 72];
+const FONT_FAMILIES = ['Arial', 'Times New Roman', 'Helvetica', 'Calibri', 'Georgia', 'Verdana', 'Courier New', 'Tahoma', 'Trebuchet MS'];
 
 interface ContractItemFormLayoutProps {
   onSave: () => void;
@@ -188,24 +193,146 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
     if (file && file.type.startsWith('image/')) handleImageUpload(file);
   }, [handleImageUpload]);
 
-  const typeIcon = (t: string) => {
-    switch (t) {
-      case 'heading': return <Heading className="w-4 h-4 text-blue-600" />;
-      case 'image': return <ImageIcon className="w-4 h-4 text-green-600" />;
-      case 'table': return <Table2 className="w-4 h-4 text-purple-600" />;
-      default: return <Type className="w-4 h-4 text-gray-600" />;
-    }
-  };
-
   const currentType = form.watch('itemType') || 'text';
   const currentContent = form.watch('content') || '';
   const currentFontFamily = form.watch('fontFamily') || 'Arial';
   const currentFontSize = form.watch('fontSize');
   const currentFontWeight = form.watch('fontWeight');
+  const currentIndentLevel = form.watch('indentLevel') ?? 0;
 
-  const contentEditor = (
-    <div className="flex gap-4" style={{ minHeight: '250px' }}>
-      <div className="flex-1">
+  const typeButtons = [
+    { value: 'heading', label: 'Kop', icon: <Heading className="w-4 h-4" /> },
+    { value: 'text', label: 'Tekst', icon: <Type className="w-4 h-4" /> },
+    { value: 'image', label: 'Afbeelding', icon: <ImageIcon className="w-4 h-4" /> },
+    { value: 'table', label: 'Tabel', icon: <Table2 className="w-4 h-4" /> },
+  ];
+
+  const fontToolbar = (
+    <TooltipProvider delayDuration={300}>
+      <div className="flex items-center gap-1 px-2 py-1.5 bg-gray-50 dark:bg-gray-800 border rounded-md">
+        <div className="flex items-center border-r pr-2 mr-1 gap-1">
+          {typeButtons.map(tb => (
+            <Tooltip key={tb.value}>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant={currentType === tb.value ? 'default' : 'ghost'}
+                  size="sm"
+                  className={`h-7 w-7 p-0 ${currentType === tb.value ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                  onClick={() => form.setValue('itemType', tb.value)}
+                >
+                  {tb.icon}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">{tb.label}</TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
+        <Select
+          value={currentFontFamily}
+          onValueChange={(val) => form.setValue('fontFamily', val)}
+        >
+          <SelectTrigger className="h-7 w-[140px] text-xs border-gray-300">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FONT_FAMILIES.map(f => (
+              <SelectItem key={f} value={f}>
+                <span style={{ fontFamily: f }} className="text-xs">{f}</span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={currentFontSize ? String(currentFontSize) : ""}
+          onValueChange={(val) => form.setValue('fontSize', val ? parseInt(val) : null)}
+        >
+          <SelectTrigger className="h-7 w-[65px] text-xs border-gray-300">
+            <SelectValue placeholder="pt" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="0">Auto</SelectItem>
+            {FONT_SIZES.map(s => (
+              <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant={currentFontWeight === 'bold' ? 'default' : 'ghost'}
+              size="sm"
+              className={`h-7 w-7 p-0 font-bold text-sm ${currentFontWeight === 'bold' ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+              onClick={() => form.setValue('fontWeight', currentFontWeight === 'bold' ? null : 'bold')}
+            >
+              B
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">Vetgedrukt</TooltipContent>
+        </Tooltip>
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className={`h-7 w-7 p-0 ${currentIndentLevel <= 0 ? 'opacity-30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+              onClick={() => form.setValue('indentLevel', Math.max(0, currentIndentLevel - 1))}
+              disabled={currentIndentLevel <= 0}
+            >
+              <Outdent className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">Minder inspringen</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className={`h-7 w-7 p-0 ${currentIndentLevel >= 3 ? 'opacity-30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+              onClick={() => form.setValue('indentLevel', Math.min(3, currentIndentLevel + 1))}
+              disabled={currentIndentLevel >= 3}
+            >
+              <Indent className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">Meer inspringen</TooltipContent>
+        </Tooltip>
+        {currentIndentLevel > 0 && (
+          <span className="text-[10px] text-muted-foreground ml-1">Niv. {currentIndentLevel}</span>
+        )}
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
+        <div className="flex items-center gap-1 ml-auto">
+          <span className="text-[10px] text-muted-foreground mr-1">Pos:</span>
+          <Input
+            value={form.watch('articleNumber') || ''}
+            onChange={(e) => form.setValue('articleNumber', e.target.value)}
+            className="h-7 w-16 text-xs px-2"
+            placeholder="1"
+          />
+        </div>
+      </div>
+    </TooltipProvider>
+  );
+
+  const contentArea = (
+    <div className="flex gap-3 flex-1 min-h-0">
+      <div className="flex-1 min-h-0 flex flex-col">
         {currentType === 'heading' && (
           <Input
             value={currentContent}
@@ -222,12 +349,12 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
             value={currentContent}
             onChange={(e) => form.setValue('content', e.target.value)}
             placeholder="Tekst invoeren... Gebruik {{placeholders}} voor dynamische data."
-            rows={12}
-            className="resize-none text-sm"
+            className="resize-none text-sm flex-1"
             style={{
               fontFamily: currentFontFamily,
               fontWeight: currentFontWeight === 'bold' ? 'bold' : 'normal',
               fontSize: currentFontSize ? `${currentFontSize}px` : undefined,
+              minHeight: '300px',
             }}
           />
         )}
@@ -238,14 +365,14 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
             value={currentContent}
             onChange={(e) => form.setValue('content', e.target.value)}
             placeholder="Tabelinhoud invoeren (bijv. kolom1 | kolom2 | kolom3)..."
-            rows={12}
-            className="resize-none text-sm font-mono"
+            className="resize-none text-sm font-mono flex-1"
+            style={{ minHeight: '300px' }}
           />
         )}
 
         {currentType === 'image' && (
           <div
-            className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50/50 transition-colors"
+            className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50/50 transition-colors flex-1 flex items-center justify-center"
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => fileInputRef.current?.click()}
@@ -278,15 +405,15 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
       </div>
 
       {(currentType === 'heading' || currentType === 'text' || currentType === 'table') && (
-        <div className="w-56 border rounded-md flex flex-col overflow-hidden bg-muted/20">
-          <div className="p-3 border-b">
+        <div className="w-52 border rounded-md flex flex-col overflow-hidden bg-muted/20 shrink-0">
+          <div className="p-2 border-b">
             <h3 className="font-semibold text-xs">Placeholders</h3>
             <p className="text-[10px] text-muted-foreground mt-0.5">Klik om in te voegen</p>
           </div>
-          <ScrollArea className="flex-1" style={{ maxHeight: '400px' }}>
-            <div className="p-2">
+          <ScrollArea className="flex-1">
+            <div className="p-1.5">
               {PLACEHOLDERS.map(group => (
-                <div key={group.category} className="mb-1">
+                <div key={group.category} className="mb-0.5">
                   <button
                     className="w-full flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground rounded"
                     onClick={() => toggleCategory(group.category)}
@@ -317,130 +444,21 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
     </div>
   );
 
+  const combinedContent = (
+    <div className="flex flex-col gap-3" style={{ minHeight: '400px' }}>
+      {fontToolbar}
+      {contentArea}
+    </div>
+  );
+
   const formSections: FormSection2<ItemFormData>[] = [
     {
       id: "general",
-      label: "Algemeen",
-      rows: [
-        {
-          type: 'two-column' as const,
-          leftColumn: [
-            {
-              key: "articleNumber",
-              label: "Positie nr.",
-              type: "text",
-              placeholder: "1",
-              register: form.register("articleNumber"),
-              validation: {
-                isRequired: true,
-                error: form.formState.errors.articleNumber?.message,
-              },
-            },
-            {
-              key: "itemType",
-              label: "Type",
-              type: "custom",
-              customComponent: (
-                <Select
-                  value={currentType}
-                  onValueChange={(val) => form.setValue('itemType', val)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="heading">
-                      <span className="flex items-center gap-2"><Heading className="w-3.5 h-3.5 text-blue-600" /> Kop</span>
-                    </SelectItem>
-                    <SelectItem value="text">
-                      <span className="flex items-center gap-2"><Type className="w-3.5 h-3.5 text-gray-600" /> Tekst</span>
-                    </SelectItem>
-                    <SelectItem value="image">
-                      <span className="flex items-center gap-2"><ImageIcon className="w-3.5 h-3.5 text-green-600" /> Afbeelding</span>
-                    </SelectItem>
-                    <SelectItem value="table">
-                      <span className="flex items-center gap-2"><Table2 className="w-3.5 h-3.5 text-purple-600" /> Tabel</span>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              ),
-            },
-            {
-              key: "indentLevel",
-              label: "Inspringniveau",
-              type: "custom",
-              customComponent: (
-                <Select
-                  value={String(form.watch('indentLevel') ?? 0)}
-                  onValueChange={(val) => form.setValue('indentLevel', parseInt(val))}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">0 — Hoofdniveau</SelectItem>
-                    <SelectItem value="1">1 — Sub</SelectItem>
-                    <SelectItem value="2">2 — Sub-sub</SelectItem>
-                    <SelectItem value="3">3 — Sub-sub-sub</SelectItem>
-                  </SelectContent>
-                </Select>
-              ),
-            },
-          ],
-          rightColumn: [
-            {
-              key: "fontFamily",
-              label: "Lettertype",
-              type: "custom",
-              customComponent: (
-                <Select
-                  value={currentFontFamily}
-                  onValueChange={(val) => form.setValue('fontFamily', val)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {['Arial', 'Times New Roman', 'Helvetica', 'Calibri', 'Georgia', 'Verdana', 'Courier New'].map(f => (
-                      <SelectItem key={f} value={f}><span style={{ fontFamily: f }}>{f}</span></SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ),
-            },
-            {
-              key: "fontSize",
-              label: "Lettergrootte (pt)",
-              type: "number",
-              placeholder: "Standaard",
-              register: form.register("fontSize", { valueAsNumber: true }),
-            },
-            {
-              key: "fontWeight",
-              label: "Vetgedrukt",
-              type: "custom",
-              customComponent: (
-                <Button
-                  variant={currentFontWeight === 'bold' ? 'default' : 'outline'}
-                  className={`w-full ${currentFontWeight === 'bold' ? 'bg-orange-500 hover:bg-orange-600 text-white' : ''}`}
-                  onClick={() => form.setValue('fontWeight', currentFontWeight === 'bold' ? null : 'bold')}
-                >
-                  <Bold className="w-4 h-4 mr-2" />
-                  {currentFontWeight === 'bold' ? 'Vetgedrukt AAN' : 'Vetgedrukt UIT'}
-                </Button>
-              ),
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: "content",
-      label: "Inhoud",
+      label: "Contractregel",
       rows: [
         {
           type: "custom" as const,
-          customContent: contentEditor,
+          customContent: combinedContent,
         },
       ],
     },
