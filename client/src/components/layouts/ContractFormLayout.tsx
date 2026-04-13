@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { Type, Heading, Table2, ImageIcon, MoveUp, MoveDown, Copy } from "lucide-react";
+import { Type, Heading, Table2, ImageIcon } from "lucide-react";
 import { insertContractSchema, type Contract, type ContractItem, type Customer, type DocumentLayout } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -15,7 +15,6 @@ import { DataTableLayout, createPositionColumn, type ColumnConfig, type DirectIn
 import { useDataTable } from "@/hooks/useDataTable";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
-import { getContractPlaceholderTables, getFieldLabel } from "@/utils/available-fields";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -40,24 +39,6 @@ interface ContractRow {
   fontWeight: string | null;
 }
 
-const PLACEHOLDERS = (() => {
-  const tables = getContractPlaceholderTables();
-  const groups = tables.map(table => ({
-    category: table.label,
-    items: table.fields.map(field => ({
-      label: getFieldLabel(field),
-      value: `{{${table.name}.${field}}}`,
-    })),
-  }));
-  groups.push({
-    category: "Datum",
-    items: [
-      { label: "Vandaag", value: "[VANDAAG]" },
-      { label: "Huidig jaar", value: "[JAAR]" },
-    ],
-  });
-  return groups;
-})();
 
 interface ContractFormLayoutProps {
   onSave: () => void;
@@ -71,10 +52,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
   const [activeTab, setActiveTab] = useState("general");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [rows, setRows] = useState<ContractRow[]>([]);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => {
-    const tables = getContractPlaceholderTables();
-    return new Set(tables.map(t => t.label));
-  });
   const [originalValues, setOriginalValues] = useState<Partial<FormData>>({});
 
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
@@ -311,7 +288,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       fontWeight: type === 'heading' ? 'bold' : null,
     };
     setRows(prev => [...prev, newRow]);
-    setSelectedRowIndex(rows.length);
     setHasUnsavedChanges(true);
   }, [rows]);
 
@@ -324,46 +300,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     setHasUnsavedChanges(true);
   }, []);
 
-  const removeRow = useCallback((index: number) => {
-    setRows(prev => prev.filter((_, i) => i !== index));
-    setSelectedRowIndex(null);
-    setHasUnsavedChanges(true);
-  }, []);
-
-  const moveRow = useCallback((index: number, direction: 'up' | 'down') => {
-    setRows(prev => {
-      const updated = [...prev];
-      const targetIndex = direction === 'up' ? index - 1 : index + 1;
-      if (targetIndex < 0 || targetIndex >= updated.length) return prev;
-      [updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]];
-      return updated;
-    });
-    setSelectedRowIndex(direction === 'up' ? index - 1 : index + 1);
-    setHasUnsavedChanges(true);
-  }, []);
-
-  const changeIndent = useCallback((index: number, direction: 'increase' | 'decrease') => {
-    setRows(prev => {
-      const updated = [...prev];
-      const current = updated[index].indentLevel;
-      updated[index] = {
-        ...updated[index],
-        indentLevel: direction === 'increase' ? Math.min(current + 1, 3) : Math.max(current - 1, 0)
-      };
-      return updated;
-    });
-    setHasUnsavedChanges(true);
-  }, []);
-
-  const duplicateRow = useCallback((index: number) => {
-    setRows(prev => {
-      const updated = [...prev];
-      const copy = { ...updated[index], id: undefined };
-      updated.splice(index + 1, 0, copy);
-      return updated;
-    });
-    setHasUnsavedChanges(true);
-  }, []);
 
 
   const autoNumber = useCallback(() => {
