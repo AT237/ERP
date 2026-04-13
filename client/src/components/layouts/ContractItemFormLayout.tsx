@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { ChevronRight, ChevronDown, Upload, Bold, Type, Heading, Table2, ImageIcon, Indent, Outdent } from "lucide-react";
+import { ChevronRight, ChevronDown, Upload, Bold, Type, Heading, Table2, ImageIcon } from "lucide-react";
 import { type ContractItem } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -272,41 +272,6 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
           <TooltipContent side="bottom" className="text-xs">Tekstkleur</TooltipContent>
         </Tooltip>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className={`h-7 w-7 p-0 ${currentIndentLevel <= 0 ? 'opacity-30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-              onClick={() => form.setValue('indentLevel', Math.max(0, currentIndentLevel - 1))}
-              disabled={currentIndentLevel <= 0}
-            >
-              <Outdent className="w-4 h-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-xs">Minder inspringen</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className={`h-7 w-7 p-0 ${currentIndentLevel >= 3 ? 'opacity-30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-              onClick={() => form.setValue('indentLevel', Math.min(3, currentIndentLevel + 1))}
-              disabled={currentIndentLevel >= 3}
-            >
-              <Indent className="w-4 h-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-xs">Meer inspringen</TooltipContent>
-        </Tooltip>
-        {currentIndentLevel > 0 && (
-          <span className="text-[10px] text-muted-foreground ml-1">Niv. {currentIndentLevel}</span>
-        )}
 
       </div>
     </TooltipProvider>
