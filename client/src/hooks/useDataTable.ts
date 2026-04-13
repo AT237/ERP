@@ -328,11 +328,24 @@ export function useDataTable({ defaultColumns, defaultSort, tableKey, data }: Us
       const bValue = b[sortConfig.column];
       if (aValue === null || aValue === undefined) return 1;
       if (bValue === null || bValue === undefined) return -1;
-      const aStr = String(aValue).toLowerCase();
-      const bStr = String(bValue).toLowerCase();
+      const aStr = String(aValue);
+      const bStr = String(bValue);
       let comparison = 0;
-      if (aStr < bStr) comparison = -1;
-      if (aStr > bStr) comparison = 1;
+      const isDottedNumber = /^\d+(\.\d+)*$/.test(aStr) && /^\d+(\.\d+)*$/.test(bStr);
+      if (isDottedNumber) {
+        const partsA = aStr.split('.').map(Number);
+        const partsB = bStr.split('.').map(Number);
+        const maxLen = Math.max(partsA.length, partsB.length);
+        for (let i = 0; i < maxLen; i++) {
+          const diff = (partsA[i] || 0) - (partsB[i] || 0);
+          if (diff !== 0) { comparison = diff; break; }
+        }
+      } else {
+        const aLower = aStr.toLowerCase();
+        const bLower = bStr.toLowerCase();
+        if (aLower < bLower) comparison = -1;
+        if (aLower > bLower) comparison = 1;
+      }
       return sortConfig.direction === 'desc' ? comparison * -1 : comparison;
     });
   }, [sortConfig]);

@@ -412,6 +412,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     defaultColumns: itemColumns,
     tableKey: 'contract-items',
     data: rows,
+    defaultSort: { column: 'articleNumber', direction: 'asc' as const },
   });
 
   const contractDirectInput: DirectInputConfig = useMemo(() => ({
