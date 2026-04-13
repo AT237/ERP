@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { Type, Heading, Table2, ImageIcon } from "lucide-react";
+import { Type, Heading, Table2, ImageIcon, ListOrdered } from "lucide-react";
 import { insertContractSchema, type Contract, type ContractItem, type Customer, type DocumentLayout } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -489,6 +489,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         compact={true}
         directInput={contractDirectInput}
         onAdd={() => {
+          console.log('[CONTRACT] onAdd clicked, current rows:', rows.length);
           const newRow: ContractRow = {
             articleNumber: String(rows.length + 1),
             itemType: 'text',
@@ -499,11 +500,14 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
             fontWeight: null,
             fontColor: null,
           };
-          setRows(prev => [...prev, newRow]);
+          setRows(prev => {
+            console.log('[CONTRACT] setRows from', prev.length, 'to', prev.length + 1);
+            return [...prev, newRow];
+          });
           setHasUnsavedChanges(true);
         }}
         headerActions={[
-          { key: 'autoNumber', label: 'Auto-nummering', onClick: autoNumber },
+          { key: 'autoNumber', label: 'Auto-nummering', onClick: autoNumber, icon: <ListOrdered className="h-4 w-4" /> },
         ]}
         onRowDoubleClick={(row: any) => {
           if (currentContractId && row.id) {
