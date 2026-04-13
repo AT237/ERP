@@ -386,6 +386,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       setCurrentProjectId(newProject.id);
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setOriginalValues(form.getValues());
       setHasUnsavedChanges(false);
       setModifiedFields(new Set());
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
@@ -433,6 +434,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      setOriginalValues(form.getValues());
       setHasUnsavedChanges(false);
       setModifiedFields(new Set());
       const tabId = currentProjectId ? `edit-project-${currentProjectId}` : 'new-project';
