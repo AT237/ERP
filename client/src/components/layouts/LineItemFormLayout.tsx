@@ -468,10 +468,26 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     },
   ];
 
+  const handleDeleteLineItem = async () => {
+    if (!lineItemId) return;
+    try {
+      await apiRequest("DELETE", `/api/quotation-items/${lineItemId}`);
+      if (quotationId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/quotations", quotationId, "details"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/quotations", quotationId, "items"] });
+      }
+      toast({ title: "Success", description: "Item verwijderd" });
+      onSave();
+    } catch (error) {
+      toast({ title: "Error", description: "Kon item niet verwijderen", variant: "destructive" });
+    }
+  };
+
   const toolbar = useFormToolbar({
     entityType: "line_item",
     entityId: lineItemId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
+    onDelete: isEditing ? handleDeleteLineItem : undefined,
     onClose: onSave,
     saveDisabled: !form.formState.isDirty && !hasUnsavedChanges,
     saveLoading: createMutation.isPending || updateMutation.isPending,

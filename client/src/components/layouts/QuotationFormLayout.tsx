@@ -2157,6 +2157,12 @@ export function QuotationFormLayout({ onSave, quotationId }: QuotationFormLayout
             }
           ]}
           onDuplicate={handleDuplicateItem}
+          deleteConfirmDialog={{
+            isOpen: deleteItemsDialogOpen,
+            onOpenChange: setDeleteItemsDialogOpen,
+            onConfirm: handleBulkDeleteItems,
+            itemCount: itemTableState.selectedRows.length,
+          }}
           directInput={quotationDirectInput}
           rowActions={(item: QuotationItem) => [
             {
