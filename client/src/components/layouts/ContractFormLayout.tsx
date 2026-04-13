@@ -11,7 +11,7 @@ import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
 import { LayoutForm2, type FormSection2 } from './LayoutForm2';
 import { CustomerSelect } from "@/components/ui/customer-select";
-import DataTableLayout, { createPositionColumn, type ColumnConfig, type DirectInputConfig } from './DataTableLayout';
+import { DataTableLayout, createPositionColumn, type ColumnConfig, type DirectInputConfig } from './DataTableLayout';
 import { useDataTable } from "@/hooks/useDataTable";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
@@ -548,6 +548,15 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     },
   }), [rows]);
 
+  useEffect(() => {
+    if (itemTableState.selectedRows.length === 1) {
+      const idx = parseInt(itemTableState.selectedRows[0]);
+      if (!isNaN(idx) && idx >= 0 && idx < rows.length) {
+        setSelectedRowIndex(idx);
+      }
+    }
+  }, [itemTableState.selectedRows, rows.length]);
+
   const selectedRow = selectedRowIndex !== null && selectedRowIndex < rows.length ? rows[selectedRowIndex] : null;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -775,15 +784,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         onRowDoubleClick={(row: any) => {
           const idx = row._rowIdx ?? 0;
           setSelectedRowIndex(idx);
-        }}
-        rowActions={(row: any) => {
-          const idx = row._rowIdx ?? 0;
-          return [
-            { key: 'up', label: 'Omhoog', icon: <MoveUp className="w-4 h-4" />, onClick: () => moveRow(idx, 'up'), disabled: idx === 0 },
-            { key: 'down', label: 'Omlaag', icon: <MoveDown className="w-4 h-4" />, onClick: () => moveRow(idx, 'down'), disabled: idx === rows.length - 1 },
-            { key: 'dup', label: 'Dupliceren', icon: <Copy className="w-4 h-4" />, onClick: () => duplicateRow(idx) },
-            { key: 'del', label: 'Verwijderen', icon: <Trash2 className="w-4 h-4" />, onClick: () => removeRow(idx), variant: 'destructive' as const },
-          ];
         }}
       />
       {editPanel}
