@@ -49,6 +49,8 @@ export const FIELD_LABELS: Record<string, string> = {
   function: 'Functie', logoUrl: 'Logo URL',
   vatRatePercent: 'BTW tarief (%)',
   contractNumber: 'Contractnummer', contractDate: 'Contractdatum',
+  articleNumber: 'Artikelnummer', itemType: 'Item Type', indentLevel: 'Inspringing',
+  fontFamily: 'Lettertype', fontWeight: 'Lettergewicht', fontColor: 'Letterkleur',
   countryName: 'Landnaam',
   collieNumber: 'Collinummer',
 };
@@ -74,6 +76,7 @@ export const AVAILABLE_TABLES: FieldTable[] = [
   { name: 'quotationRequest', label: 'Offerte Aanvraag', fields: ['requestNumber', 'requestDate', 'dueDate', 'title', 'description', 'requirements', 'status', 'priority', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
   { name: 'quotationRequestItems', label: 'Offerte Aanvraag Regels', fields: ['positionNo', 'lineType', 'description', 'quantity', 'unit', 'unitPrice', 'discountPercent', 'lineTotal', 'costPrice', 'hsCode', 'countryOfOrigin', 'itemId'] },
   { name: 'contract', label: 'Contract', fields: ['contractNumber', 'contractDate', 'validUntil', 'description', 'status', 'notes'] },
+  { name: 'contractItems', label: 'Contract Regels', fields: ['articleNumber', 'itemType', 'content', 'indentLevel', 'fontFamily', 'fontSize', 'fontWeight', 'fontColor'] },
 
   { name: 'customer', label: 'Klant', fields: ['customerNumber', 'name', 'kvkNummer', 'generalEmail', 'email', 'phone', 'mobile', 'contactPersonEmail', 'taxId', 'bankAccount', 'invoiceEmail', 'invoiceNotes', 'memo', 'paymentTerms', 'status', 'countryName', 'address.street', 'address.houseNumber', 'address.postalCode', 'address.city', 'address.country'] },
   { name: 'customerContact', label: 'Klant Contact', fields: ['name', 'email', 'phone', 'function'] },
@@ -102,7 +105,7 @@ export const AVAILABLE_TABLES: FieldTable[] = [
 ];
 
 export function getContractPlaceholderTables(): FieldTable[] {
-  const orderedNames = ['customer', 'company', 'contract'];
+  const orderedNames = ['customer', 'company', 'contract', 'contractItems'];
   return orderedNames
     .map(name => AVAILABLE_TABLES.find(t => t.name === name))
     .filter((t): t is FieldTable => !!t);
