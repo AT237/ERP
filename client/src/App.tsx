@@ -66,6 +66,26 @@ function Router() {
         <Route path="/packing-lists" component={PackingLists} />
         <Route path="/reports" component={Reports} />
         <Route path="/pdf-archive" component={PdfArchive} />
+        <Route path="/contracts/:contractId/items/new">
+          {(params) => {
+            const ContractItemForm = React.lazy(() => import('./pages/contract-item-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <ContractItemForm onSave={() => window.history.back()} contractId={params.contractId} />
+              </Suspense>
+            );
+          }}
+        </Route>
+        <Route path="/contracts/:contractId/items/:itemId">
+          {(params) => {
+            const ContractItemForm = React.lazy(() => import('./pages/contract-item-form'));
+            return (
+              <Suspense fallback={<div></div>}>
+                <ContractItemForm onSave={() => window.history.back()} contractId={params.contractId} itemId={params.itemId} />
+              </Suspense>
+            );
+          }}
+        </Route>
         <Route path="/contracts" component={Contracts} />
         <Route path="/text-snippets" component={TextSnippets} />
         <Route path="/layout-designer" component={LayoutDesigner} />

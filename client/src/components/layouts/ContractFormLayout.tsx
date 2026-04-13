@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
+import { useLocation } from "wouter";
 
 const formSchema = insertContractSchema.extend({
   contractNumber: z.string().min(1, "Contractnummer is verplicht"),
@@ -69,6 +70,7 @@ interface ContractFormLayoutProps {
 
 export function ContractFormLayout({ onSave, contractId, parentId }: ContractFormLayoutProps) {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("general");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [rows, setRows] = useState<ContractRow[]>([]);
@@ -617,14 +619,9 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
           { key: 'autoNumber', label: 'Auto-nummering', onClick: autoNumber },
         ]}
         onRowDoubleClick={(row: any) => {
-          const idx = row._rowIdx ?? 0;
-          setSelectedRowIndex(idx);
-          setActiveTab("editRow");
-        }}
-        onToggleRowSelection={(id) => {
-          const idx = parseInt(id);
-          setSelectedRowIndex(idx);
-          itemTableState.toggleRowSelection(id);
+          if (currentContractId && row.id) {
+            navigate(`/contracts/${currentContractId}/items/${row.id}`);
+          }
         }}
       />
     </div>
