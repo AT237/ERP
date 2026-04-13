@@ -1226,8 +1226,8 @@ export function DataTableLayout<T = any>({
 
               <Separator orientation="vertical" className="h-6 mx-1" />
               
-              {/* Filter */}
-              {onAdd && (
+              {/* Add button */}
+              {onAdd && !directInput && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1235,6 +1235,28 @@ export function DataTableLayout<T = any>({
                   onClick={onAdd}
                   title={`Nieuwe ${entityName} toevoegen`}
                   data-testid="button-add"
+                  type="button"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              )}
+              {directInput && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-8 w-8 p-0 ${directInputMode ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
+                  onClick={() => {
+                    if (!directInputMode) {
+                      setDirectInputMode(true);
+                      setEditingRowId(null);
+                      setEditingRowData({});
+                    } else {
+                      handleDirectInputSave();
+                    }
+                  }}
+                  title={`Nieuwe ${entityName} toevoegen`}
+                  data-testid="button-add"
+                  type="button"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
