@@ -1168,33 +1168,12 @@ export function DataTableLayout<T = any>({
 
               {/* Mobile Action Buttons */}
               <div className="flex gap-1.5 flex-wrap">
-                {onAdd && !directInput && (
+                {onAdd && (
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-9 text-sm bg-orange-500 text-white hover:bg-orange-600 border-orange-500"
                     onClick={onAdd}
-                    title={`Nieuwe ${entityName} toevoegen`}
-                    type="button"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Nieuw
-                  </Button>
-                )}
-                {directInput && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 text-sm bg-orange-500 text-white hover:bg-orange-600 border-orange-500"
-                    onClick={() => {
-                      if (!directInputMode) {
-                        setDirectInputMode(true);
-                        setEditingRowId(null);
-                        setEditingRowData({});
-                      } else {
-                        handleDirectInputSave();
-                      }
-                    }}
                     title={`Nieuwe ${entityName} toevoegen`}
                     type="button"
                   >
@@ -1249,33 +1228,12 @@ export function DataTableLayout<T = any>({
               <Separator orientation="vertical" className="h-6 mx-1" />
               
               {/* Add button */}
-              {onAdd && !directInput && (
+              {onAdd && (
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0 bg-orange-500 text-white hover:bg-orange-600"
                   onClick={onAdd}
-                  title={`Nieuwe ${entityName} toevoegen`}
-                  data-testid="button-add"
-                  type="button"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              )}
-              {directInput && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`h-8 w-8 p-0 ${directInputMode ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
-                  onClick={() => {
-                    if (!directInputMode) {
-                      setDirectInputMode(true);
-                      setEditingRowId(null);
-                      setEditingRowData({});
-                    } else {
-                      handleDirectInputSave();
-                    }
-                  }}
                   title={`Nieuwe ${entityName} toevoegen`}
                   data-testid="button-add"
                   type="button"

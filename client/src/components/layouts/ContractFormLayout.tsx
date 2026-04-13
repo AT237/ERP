@@ -488,6 +488,11 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         applySorting={(data: any[]) => itemTableState.applySorting(data)}
         compact={true}
         directInput={contractDirectInput}
+        onAdd={() => {
+          if (currentContractId) {
+            navigate(`/contracts/${currentContractId}/items/new`);
+          }
+        }}
         headerActions={[
           { key: 'autoNumber', label: 'Auto-nummering', onClick: autoNumber, icon: <ListOrdered className="h-4 w-4" /> },
         ]}
