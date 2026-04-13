@@ -481,13 +481,6 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
                 </Select>
               ),
             },
-            {
-              key: "position",
-              label: "Positie (volgorde)",
-              type: "number",
-              placeholder: "0",
-              register: form.register("position", { valueAsNumber: true }),
-            },
           ],
         },
       ],
