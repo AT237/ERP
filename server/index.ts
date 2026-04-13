@@ -594,7 +594,7 @@ async function ensureContractLayout() {
     await pool.query(`
       INSERT INTO document_layouts (id, document_type, name, page_format, orientation, is_default, metadata, layout_number, created_at, updated_at)
       VALUES ($1, 'contract', 'ATE Solutions Contract', 'a4', 'portrait', true,
-        '{"printMargins":{"top":10,"left":15,"right":15,"bottom":10},"layoutVersion":2}',
+        '{"printMargins":{"top":10,"left":15,"right":15,"bottom":10},"layoutVersion":3}',
         'LY-0020', NOW(), NOW())
     `, [layoutId]);
 
