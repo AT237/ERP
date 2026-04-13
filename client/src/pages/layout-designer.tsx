@@ -41,6 +41,7 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   quotation_request: 'Quotation Request',
   purchase_order: 'Purchase Order',
   work_order: 'Work Order',
+  contract: 'Contract',
 };
 
 export default function LayoutDesigner() {
