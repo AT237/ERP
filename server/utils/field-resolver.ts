@@ -1283,7 +1283,7 @@ export async function loadContractPrintData(contractId: string): Promise<any | n
 
   const items = await db.query.contractItems.findMany({
     where: eq(contractItems.contractId, contractId),
-    orderBy: [asc(contractItems.articleNumber), asc(contractItems.position)],
+    orderBy: [asc(contractItems.position)],
   });
 
   const itemsData = items.map((item) => ({
