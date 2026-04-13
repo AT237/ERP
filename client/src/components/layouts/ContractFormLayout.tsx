@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { getContractPlaceholderTables, getFieldLabel } from "@/utils/available-fields";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -397,23 +396,22 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     });
   }, []);
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'heading': return <Heading className="w-4 h-4" />;
-      case 'table': return <Table className="w-4 h-4" />;
-      case 'image': return <Image className="w-4 h-4" />;
-      default: return <Type className="w-4 h-4" />;
-    }
-  };
+  const FONT_OPTIONS = [
+    { value: "Arial", label: "Arial" },
+    { value: "Times New Roman", label: "Times New Roman" },
+    { value: "Helvetica", label: "Helvetica" },
+    { value: "Calibri", label: "Calibri" },
+    { value: "Georgia", label: "Georgia" },
+    { value: "Verdana", label: "Verdana" },
+    { value: "Courier New", label: "Courier New" },
+  ];
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'heading': return 'Kop';
-      case 'table': return 'Tabel';
-      case 'image': return 'Afbeelding';
-      default: return 'Tekst';
-    }
-  };
+  const TYPE_OPTIONS = [
+    { value: "heading", label: "Kop", icon: <Heading className="w-3.5 h-3.5" /> },
+    { value: "text", label: "Tekst", icon: <Type className="w-3.5 h-3.5" /> },
+    { value: "image", label: "Afbeelding", icon: <Image className="w-3.5 h-3.5" /> },
+    { value: "table", label: "Tabel", icon: <Table className="w-3.5 h-3.5" /> },
+  ];
 
   const autoNumber = useCallback(() => {
     setRows(prev => {
@@ -434,113 +432,206 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
   const contentBuilder = (
     <div className="flex h-[calc(100vh-220px)]">
       <div className="flex-1 flex flex-col overflow-hidden border-r">
-        <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
+        <div className="flex items-center gap-2 p-2 border-b bg-muted/30">
           <TooltipProvider>
             <Tooltip><TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => addRow("text")}><Type className="w-4 h-4 mr-1" />Tekst</Button>
-            </TooltipTrigger><TooltipContent>Tekstrij toevoegen</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => addRow("heading")}><Heading className="w-4 h-4 mr-1" />Kop</Button>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => addRow("heading")}><Heading className="w-3.5 h-3.5 mr-1" />Kop</Button>
             </TooltipTrigger><TooltipContent>Koprij toevoegen</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => addRow("table")}><Table className="w-4 h-4 mr-1" />Tabel</Button>
-            </TooltipTrigger><TooltipContent>Tabelrij toevoegen</TooltipContent></Tooltip>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => addRow("text")}><Type className="w-3.5 h-3.5 mr-1" />Tekst</Button>
+            </TooltipTrigger><TooltipContent>Tekstrij toevoegen</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => addRow("image")}><Image className="w-4 h-4 mr-1" />Afbeelding</Button>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => addRow("image")}><Image className="w-3.5 h-3.5 mr-1" />Afbeelding</Button>
             </TooltipTrigger><TooltipContent>Afbeeldingrij toevoegen</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => addRow("table")}><Table className="w-3.5 h-3.5 mr-1" />Tabel</Button>
+            </TooltipTrigger><TooltipContent>Tabelrij toevoegen</TooltipContent></Tooltip>
           </TooltipProvider>
-          <div className="ml-auto">
-            <Button variant="ghost" size="sm" onClick={autoNumber}>Auto-nummering</Button>
-          </div>
+          <div className="h-4 w-px bg-border mx-1" />
+          <TooltipProvider>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={autoNumber}>Auto-nummering</Button>
+            </TooltipTrigger><TooltipContent>Automatisch nummeren op basis van inspringniveau</TooltipContent></Tooltip>
+          </TooltipProvider>
         </div>
-        <ScrollArea className="flex-1">
-          <div className="p-3 space-y-2">
-            {rows.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                <Type className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                <p>Nog geen rijen. Gebruik de knoppen hierboven om inhoud toe te voegen.</p>
-              </div>
-            )}
-            {rows.map((row, index) => (
-              <Card
-                key={index}
-                className={`cursor-pointer transition-colors ${selectedRowIndex === index ? 'ring-2 ring-primary' : 'hover:bg-muted/50'}`}
-                onClick={() => setSelectedRowIndex(index)}
-              >
-                <CardContent className="p-3">
-                  <div className="flex items-start gap-2">
-                    <div className="flex flex-col items-center gap-1 pt-1">
-                      <span className="text-xs text-muted-foreground">{getTypeIcon(row.itemType)}</span>
-                      <span className="text-[10px] text-muted-foreground">{index + 1}</span>
-                    </div>
-                    <div className="flex-1" style={{ marginLeft: `${row.indentLevel * 24}px` }}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Input
-                          value={row.articleNumber}
-                          onChange={(e) => updateRow(index, 'articleNumber', e.target.value)}
-                          className="w-20 h-7 text-xs"
-                          placeholder="Nr."
-                        />
-                        <span className="text-xs text-muted-foreground font-medium">{getTypeLabel(row.itemType)}</span>
-                        <div className="ml-auto flex items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); moveRow(index, 'up'); }} disabled={index === 0}>
-                            <MoveUp className="w-3 h-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); moveRow(index, 'down'); }} disabled={index === rows.length - 1}>
-                            <MoveDown className="w-3 h-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); changeIndent(index, 'decrease'); }} disabled={row.indentLevel === 0}>
-                            <Outdent className="w-3 h-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); changeIndent(index, 'increase'); }} disabled={row.indentLevel >= 3}>
-                            <Indent className="w-3 h-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); duplicateRow(index); }}>
-                            <Copy className="w-3 h-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 hover:text-red-700" onClick={(e) => { e.stopPropagation(); removeRow(index); }}>
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
+
+        <div className="flex-1 overflow-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-muted/60 border-b text-xs text-muted-foreground">
+                <th className="w-[32px] px-1 py-1.5 text-center font-medium">#</th>
+                <th className="w-[70px] px-1 py-1.5 text-center font-medium">Pos.</th>
+                <th className="w-[100px] px-1 py-1.5 text-left font-medium">Type</th>
+                <th className="w-[120px] px-1 py-1.5 text-left font-medium">Lettertype</th>
+                <th className="w-[50px] px-1 py-1.5 text-center font-medium">Grootte</th>
+                <th className="w-[32px] px-1 py-1.5 text-center font-medium">B</th>
+                <th className="w-[32px] px-1 py-1.5 text-center font-medium">Niv.</th>
+                <th className="px-2 py-1.5 text-left font-medium">Inhoud</th>
+                <th className="w-[120px] px-1 py-1.5 text-center font-medium">Acties</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="text-center py-12 text-muted-foreground">
+                    <Type className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm">Nog geen rijen. Gebruik de knoppen hierboven om inhoud toe te voegen.</p>
+                  </td>
+                </tr>
+              )}
+              {rows.map((row, index) => {
+                const isSelected = selectedRowIndex === index;
+                const isHeading = row.itemType === 'heading';
+                return (
+                  <tr
+                    key={index}
+                    className={`border-b transition-colors cursor-pointer ${isSelected ? 'bg-orange-50 dark:bg-orange-950/20' : 'hover:bg-muted/30'} ${isHeading ? 'bg-blue-50/50 dark:bg-blue-950/10' : ''}`}
+                    onClick={() => setSelectedRowIndex(index)}
+                  >
+                    <td className="px-1 py-1 text-center text-[10px] text-muted-foreground">{index + 1}</td>
+                    <td className="px-1 py-1">
+                      <Input
+                        value={row.articleNumber}
+                        onChange={(e) => updateRow(index, 'articleNumber', e.target.value)}
+                        className="h-7 text-xs text-center px-1 w-full"
+                        placeholder="Nr."
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <Select
+                        value={row.itemType}
+                        onValueChange={(val) => updateRow(index, 'itemType', val)}
+                      >
+                        <SelectTrigger className="h-7 text-xs px-1.5 w-full" onClick={(e) => e.stopPropagation()}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TYPE_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              <span className="flex items-center gap-1.5">{opt.icon}{opt.label}</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="px-1 py-1">
+                      <Select
+                        value={row.fontFamily || "Arial"}
+                        onValueChange={(val) => updateRow(index, 'fontFamily', val)}
+                      >
+                        <SelectTrigger className="h-7 text-xs px-1.5 w-full" onClick={(e) => e.stopPropagation()}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FONT_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              <span style={{ fontFamily: opt.value }}>{opt.label}</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="px-1 py-1">
+                      <Input
+                        type="number"
+                        value={row.fontSize ?? ""}
+                        onChange={(e) => updateRow(index, 'fontSize', e.target.value ? parseInt(e.target.value) : null)}
+                        className="h-7 text-xs text-center px-1 w-full"
+                        placeholder="pt"
+                        min={6}
+                        max={72}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </td>
+                    <td className="px-1 py-1 text-center">
+                      <Button
+                        variant={row.fontWeight === 'bold' ? 'default' : 'ghost'}
+                        size="icon"
+                        className={`h-7 w-7 ${row.fontWeight === 'bold' ? 'bg-orange-500 hover:bg-orange-600 text-white' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); updateRow(index, 'fontWeight', row.fontWeight === 'bold' ? null : 'bold'); }}
+                      >
+                        <span className="font-bold text-xs">B</span>
+                      </Button>
+                    </td>
+                    <td className="px-1 py-1">
+                      <div className="flex items-center justify-center gap-0.5">
+                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={(e) => { e.stopPropagation(); changeIndent(index, 'decrease'); }} disabled={row.indentLevel === 0}>
+                          <Outdent className="w-3 h-3" />
+                        </Button>
+                        <span className="text-[10px] w-3 text-center text-muted-foreground">{row.indentLevel}</span>
+                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={(e) => { e.stopPropagation(); changeIndent(index, 'increase'); }} disabled={row.indentLevel >= 3}>
+                          <Indent className="w-3 h-3" />
+                        </Button>
                       </div>
+                    </td>
+                    <td className="px-2 py-1">
                       {row.itemType === 'heading' ? (
                         <Input
                           value={row.content}
                           onChange={(e) => updateRow(index, 'content', e.target.value)}
-                          className="font-bold text-base"
+                          className="h-7 text-sm font-bold"
+                          style={{ fontFamily: row.fontFamily || 'Arial' }}
                           placeholder="Koptekst..."
+                          onClick={(e) => e.stopPropagation()}
                         />
                       ) : row.itemType === 'image' ? (
                         <Input
                           value={row.content}
                           onChange={(e) => updateRow(index, 'content', e.target.value)}
+                          className="h-7 text-xs"
                           placeholder="Afbeelding URL of referentie..."
+                          onClick={(e) => e.stopPropagation()}
                         />
                       ) : (
                         <Textarea
-                          ref={(el) => {
-                            if (selectedRowIndex === index) activeTextareaRef.current = el;
-                          }}
+                          ref={(el) => { if (isSelected) activeTextareaRef.current = el; }}
                           value={row.content}
                           onChange={(e) => updateRow(index, 'content', e.target.value)}
-                          placeholder={row.itemType === 'table' ? "Tabelinhoud (bijv. kolom1 | kolom2 | kolom3)..." : "Tekst invoeren... Gebruik {{placeholders}} voor dynamische data."}
-                          rows={row.itemType === 'table' ? 4 : 3}
-                          className="resize-none text-sm"
-                          onFocus={() => {
-                            setSelectedRowIndex(index);
-                          }}
+                          placeholder={row.itemType === 'table' ? "Tabelinhoud..." : "Tekst invoeren... {{placeholders}} voor dynamische data."}
+                          rows={2}
+                          className="resize-none text-xs min-h-[36px] py-1"
+                          style={{ fontFamily: row.fontFamily || 'Arial', fontWeight: row.fontWeight === 'bold' ? 'bold' : 'normal' }}
+                          onFocus={() => setSelectedRowIndex(index)}
+                          onClick={(e) => e.stopPropagation()}
                         />
                       )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </ScrollArea>
+                    </td>
+                    <td className="px-1 py-1">
+                      <div className="flex items-center justify-center gap-0.5">
+                        <TooltipProvider>
+                          <Tooltip><TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); moveRow(index, 'up'); }} disabled={index === 0}>
+                              <MoveUp className="w-3 h-3" />
+                            </Button>
+                          </TooltipTrigger><TooltipContent>Omhoog</TooltipContent></Tooltip>
+                          <Tooltip><TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); moveRow(index, 'down'); }} disabled={index === rows.length - 1}>
+                              <MoveDown className="w-3 h-3" />
+                            </Button>
+                          </TooltipTrigger><TooltipContent>Omlaag</TooltipContent></Tooltip>
+                          <Tooltip><TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); duplicateRow(index); }}>
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </TooltipTrigger><TooltipContent>Dupliceren</TooltipContent></Tooltip>
+                          <Tooltip><TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 hover:text-red-700" onClick={(e) => { e.stopPropagation(); removeRow(index); }}>
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </TooltipTrigger><TooltipContent>Verwijderen</TooltipContent></Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="w-64 flex flex-col overflow-hidden bg-muted/20">
+      <div className="w-56 flex flex-col overflow-hidden bg-muted/20">
         <div className="p-3 border-b">
           <h3 className="font-semibold text-sm">Placeholders</h3>
           <p className="text-xs text-muted-foreground mt-1">Klik om in te voegen bij geselecteerde rij</p>
