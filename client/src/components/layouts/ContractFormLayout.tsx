@@ -13,6 +13,7 @@ import { LayoutForm2, type FormSection2 } from './LayoutForm2';
 import { CustomerSelect } from "@/components/ui/customer-select";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
+import { getContractPlaceholderTables, getFieldLabel } from "@/utils/available-fields";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,49 +39,24 @@ interface ContractRow {
   indentLevel: number;
 }
 
-const PLACEHOLDERS = [
-  { category: "Klant", items: [
-    { label: "Naam", value: "{{customer.name}}" },
-    { label: "Straat", value: "{{customer.address.street}}" },
-    { label: "Huisnummer", value: "{{customer.address.houseNumber}}" },
-    { label: "Postcode", value: "{{customer.address.postalCode}}" },
-    { label: "Plaats", value: "{{customer.address.city}}" },
-    { label: "Land", value: "{{customer.countryName}}" },
-    { label: "E-mail", value: "{{customer.generalEmail}}" },
-    { label: "Telefoon", value: "{{customer.phone}}" },
-    { label: "Mobiel", value: "{{customer.mobile}}" },
-    { label: "KVK", value: "{{customer.kvkNummer}}" },
-    { label: "BTW nummer", value: "{{customer.btwNummer}}" },
-    { label: "Klantnummer", value: "{{customer.customerNumber}}" },
-    { label: "Bankrekening", value: "{{customer.bankAccount}}" },
-  ]},
-  { category: "Bedrijf", items: [
-    { label: "Naam", value: "{{company.name}}" },
-    { label: "Straat", value: "{{company.address.street}}" },
-    { label: "Huisnummer", value: "{{company.address.houseNumber}}" },
-    { label: "Postcode", value: "{{company.address.postalCode}}" },
-    { label: "Plaats", value: "{{company.address.city}}" },
-    { label: "Land", value: "{{company.address.country}}" },
-    { label: "KVK", value: "{{company.kvkNummer}}" },
-    { label: "BTW nummer", value: "{{company.btwNummer}}" },
-    { label: "IBAN", value: "{{company.iban}}" },
-    { label: "Bank", value: "{{company.bankName}}" },
-    { label: "Telefoon", value: "{{company.phone}}" },
-    { label: "E-mail", value: "{{company.email}}" },
-    { label: "Website", value: "{{company.website}}" },
-  ]},
-  { category: "Contract", items: [
-    { label: "Contractnummer", value: "{{contract.contractNumber}}" },
-    { label: "Datum", value: "{{contract.contractDate}}" },
-    { label: "Geldig tot", value: "{{contract.validUntil}}" },
-    { label: "Omschrijving", value: "{{contract.description}}" },
-    { label: "Status", value: "{{contract.status}}" },
-  ]},
-  { category: "Datum", items: [
-    { label: "Vandaag", value: "[VANDAAG]" },
-    { label: "Huidig jaar", value: "[JAAR]" },
-  ]},
-];
+const PLACEHOLDERS = (() => {
+  const tables = getContractPlaceholderTables();
+  const groups = tables.map(table => ({
+    category: table.label,
+    items: table.fields.map(field => ({
+      label: getFieldLabel(field),
+      value: `{{${table.name}.${field}}}`,
+    })),
+  }));
+  groups.push({
+    category: "Datum",
+    items: [
+      { label: "Vandaag", value: "[VANDAAG]" },
+      { label: "Huidig jaar", value: "[JAAR]" },
+    ],
+  });
+  return groups;
+})();
 
 interface ContractFormLayoutProps {
   onSave: () => void;

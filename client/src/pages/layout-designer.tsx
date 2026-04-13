@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, Fragment } from 'react';
+import { FIELD_LABELS, getFieldLabel, AVAILABLE_TABLES } from '@/utils/available-fields';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline, Copy, Trash2, Group, Ungroup, Minus, Square, Repeat } from 'lucide-react';
 import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES } from '@/components/print/BlockRenderers';
@@ -372,8 +373,7 @@ const PX_TO_MM = 1 / MM_TO_PX;
 const pxToMm = (px: number): number => Math.round(px * PX_TO_MM * 10) / 10;
 const mmToPx = (mm: number): number => Math.round(mm * MM_TO_PX);
 
-// Dutch labels for field names used in layout designer field browser and properties panel
-import { FIELD_LABELS, getFieldLabel, AVAILABLE_TABLES } from '@/utils/available-fields';
+// FIELD_LABELS, getFieldLabel, AVAILABLE_TABLES imported from '@/utils/available-fields' at the top of this file
 
 // Data Field Insert Menu Component with collapsible categories
 function DataFieldInsertMenu({ 
