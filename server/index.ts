@@ -580,101 +580,160 @@ async function migrateLY0016DocumentFooter() {
 async function ensureContractLayout() {
   try {
     const layoutId = 'contract-layout-ate-001';
-    const existing = await pool.query(`SELECT id FROM document_layouts WHERE id = $1`, [layoutId]);
-    if (existing.rows.length > 0) return;
+    const versionCheck = await pool.query(`SELECT metadata FROM document_layouts WHERE id = $1`, [layoutId]);
+    const meta = versionCheck.rows.length > 0 ? (typeof versionCheck.rows[0].metadata === 'string' ? JSON.parse(versionCheck.rows[0].metadata) : versionCheck.rows[0].metadata || {}) : {};
+    const currentVersion = versionCheck.rows.length > 0 ? (meta.layoutVersion || 1) : 0;
+
+    if (currentVersion >= 2) return;
+
+    if (versionCheck.rows.length > 0) {
+      await pool.query(`DELETE FROM layout_sections WHERE layout_id = $1`, [layoutId]);
+      await pool.query(`DELETE FROM document_layouts WHERE id = $1`, [layoutId]);
+    }
 
     await pool.query(`
       INSERT INTO document_layouts (id, document_type, name, page_format, orientation, is_default, metadata, layout_number, created_at, updated_at)
       VALUES ($1, 'contract', 'ATE Solutions Contract', 'a4', 'portrait', true,
-        '{"printMargins":{"top":10,"left":15,"right":15,"bottom":10}}',
+        '{"printMargins":{"top":10,"left":15,"right":15,"bottom":10},"layoutVersion":2}',
         'LY-0020', NOW(), NOW())
     `, [layoutId]);
 
     const headerConfig = {
       style: {
-        padding: { top: 5, left: 10, right: 10, bottom: 5 },
+        padding: { top: 3, left: 0, right: 0, bottom: 3 },
         backgroundColor: '#ffffff',
       },
       blocks: [
         {
           id: 'cblk-logo',
           type: 'Image',
-          size: { width: 50, height: 20 },
+          size: { width: 45, height: 15 },
           position: { x: 0, y: 0 },
           config: { field: 'company.logoUrl', alt: 'ATE Solutions B.V.', fit: 'contain' },
           style: { fontSize: 9 },
         },
         {
-          id: 'cblk-companyinfo',
-          type: 'Text Block',
-          size: { width: 60, height: 20 },
-          position: { x: 120, y: 0 },
-          config: { text: '{{company.name}}\n{{company.address.street}} {{company.address.houseNumber}}\n{{company.address.postalCode}} {{company.address.city}}\nTel: {{company.phone}}\nE-mail: {{company.email}}' },
-          style: { fontSize: 8, color: '#444444', textAlign: 'right' },
+          id: 'cblk-date',
+          type: 'Data Field',
+          size: { width: 50, height: 6 },
+          position: { x: 130, y: 0 },
+          config: { tableName: 'contract', fieldName: 'contractDate', label: 'Datum:' },
+          style: { fontSize: 8, color: '#555555', textAlign: 'right' },
         },
         {
-          id: 'cblk-orangeline',
+          id: 'cblk-pagenum-header',
+          type: 'Page Number',
+          size: { width: 50, height: 6 },
+          position: { x: 130, y: 7 },
+          config: { format: 'Pagina [PAGINANUMMER] van [TOTAALPAGINAS]' },
+          style: { fontSize: 8, color: '#555555', textAlign: 'right' },
+        },
+        {
+          id: 'cblk-orangeline-header',
           type: 'Line',
           size: { width: 180, height: 1 },
-          position: { x: 0, y: 24 },
+          position: { x: 0, y: 17 },
           config: {},
           style: { borderColor: '#e87722', borderWidth: 3 },
         },
       ],
-      printRules: { firstPage: true, allPages: false },
+      printRules: { everyPage: true },
+    };
+
+    const coverConfig = {
+      style: {
+        padding: { top: 0, left: 0, right: 0, bottom: 0 },
+        backgroundColor: '#ffffff',
+      },
+      dimensions: { height: 230 },
+      blocks: [
+        {
+          id: 'cblk-cover-title',
+          type: 'Text Block',
+          size: { width: 180, height: 16 },
+          position: { x: 0, y: 50 },
+          config: { text: 'OVEREENKOMST' },
+          style: { fontSize: 28, fontWeight: 'bold', color: '#1a365d', textAlign: 'center' },
+        },
+        {
+          id: 'cblk-cover-line1',
+          type: 'Line',
+          size: { width: 100, height: 1 },
+          position: { x: 40, y: 70 },
+          config: {},
+          style: { borderColor: '#e87722', borderWidth: 2 },
+        },
+        {
+          id: 'cblk-cover-company',
+          type: 'Text Block',
+          size: { width: 180, height: 10 },
+          position: { x: 0, y: 80 },
+          config: { text: '{{company.name}}' },
+          style: { fontSize: 14, fontWeight: 'bold', color: '#1a365d', textAlign: 'center' },
+        },
+        {
+          id: 'cblk-cover-en',
+          type: 'Text Block',
+          size: { width: 180, height: 8 },
+          position: { x: 0, y: 94 },
+          config: { text: 'en' },
+          style: { fontSize: 11, color: '#666666', textAlign: 'center', fontStyle: 'italic' },
+        },
+        {
+          id: 'cblk-cover-customer',
+          type: 'Text Block',
+          size: { width: 180, height: 10 },
+          position: { x: 0, y: 106 },
+          config: { text: '{{customer.name}}' },
+          style: { fontSize: 14, fontWeight: 'bold', color: '#1a365d', textAlign: 'center' },
+        },
+        {
+          id: 'cblk-cover-line2',
+          type: 'Line',
+          size: { width: 100, height: 1 },
+          position: { x: 40, y: 122 },
+          config: {},
+          style: { borderColor: '#e87722', borderWidth: 2 },
+        },
+        {
+          id: 'cblk-cover-desc',
+          type: 'Data Field',
+          size: { width: 140, height: 12 },
+          position: { x: 20, y: 132 },
+          config: { tableName: 'contract', fieldName: 'description' },
+          style: { fontSize: 12, color: '#333333', textAlign: 'center' },
+        },
+        {
+          id: 'cblk-cover-number',
+          type: 'Text Block',
+          size: { width: 180, height: 10 },
+          position: { x: 0, y: 155 },
+          config: { text: 'Contractnummer: {{contract.contractNumber}}' },
+          style: { fontSize: 10, color: '#555555', textAlign: 'center' },
+        },
+        {
+          id: 'cblk-cover-date',
+          type: 'Text Block',
+          size: { width: 180, height: 8 },
+          position: { x: 0, y: 168 },
+          config: { text: 'Datum: {{contract.contractDate}}  |  Geldig tot: {{contract.validUntil}}' },
+          style: { fontSize: 9, color: '#777777', textAlign: 'center' },
+        },
+      ],
+      printRules: { firstPage: true },
     };
 
     const bodyConfig = {
       style: {
-        padding: { top: 5, left: 10, right: 10, bottom: 5 },
+        padding: { top: 5, left: 0, right: 0, bottom: 5 },
         backgroundColor: '#ffffff',
       },
       blocks: [
         {
-          id: 'cblk-title',
-          type: 'Text Block',
-          size: { width: 180, height: 12 },
-          position: { x: 0, y: 0 },
-          config: { text: 'OVEREENKOMST' },
-          style: { fontSize: 22, fontWeight: 'bold', color: '#1a365d', textAlign: 'center' },
-        },
-        {
-          id: 'cblk-subtitle',
-          type: 'Text Block',
-          size: { width: 180, height: 8 },
-          position: { x: 0, y: 14 },
-          config: { text: '{{contract.description}}' },
-          style: { fontSize: 12, color: '#1a365d', textAlign: 'center' },
-        },
-        {
-          id: 'cblk-line2',
-          type: 'Line',
-          size: { width: 180, height: 1 },
-          position: { x: 0, y: 24 },
-          config: {},
-          style: { borderColor: '#e87722', borderWidth: 1 },
-        },
-        {
-          id: 'cblk-contractinfo',
-          type: 'Text Block',
-          size: { width: 80, height: 18 },
-          position: { x: 0, y: 28 },
-          config: { text: 'Contractnummer: {{contract.contractNumber}}\nDatum: {{contract.contractDate}}\nGeldig tot: {{contract.validUntil}}' },
-          style: { fontSize: 9, color: '#333333' },
-        },
-        {
-          id: 'cblk-customerinfo',
-          type: 'Text Block',
-          size: { width: 80, height: 18 },
-          position: { x: 100, y: 28 },
-          config: { text: 'T.a.v. {{customer.name}}\n{{customer.address.street}} {{customer.address.houseNumber}}\n{{customer.address.postalCode}} {{customer.address.city}}\n{{customer.countryName}}' },
-          style: { fontSize: 9, color: '#333333' },
-        },
-        {
           id: 'cblk-body',
           type: 'Contract Body',
-          size: { width: 180, height: 170 },
-          position: { x: 0, y: 50 },
+          size: { width: 180, height: 800 },
+          position: { x: 0, y: 0 },
           config: {},
           style: { fontSize: 10, titleColor: '#1a365d', accentColor: '#e87722' },
         },
@@ -683,7 +742,7 @@ async function ensureContractLayout() {
 
     const footerConfig = {
       style: {
-        padding: { top: 3, left: 10, right: 10, bottom: 3 },
+        padding: { top: 3, left: 0, right: 0, bottom: 3 },
         backgroundColor: '#ffffff',
       },
       blocks: [
@@ -703,27 +762,20 @@ async function ensureContractLayout() {
           config: { text: '{{company.name}} | KVK: {{company.kvkNummer}} | BTW: {{company.btwNummer}} | IBAN: {{company.bankAccount}} | {{company.phone}} | {{company.email}}' },
           style: { fontSize: 7, color: '#888888', textAlign: 'center' },
         },
-        {
-          id: 'cblk-pagenum',
-          type: 'Page Number',
-          size: { width: 40, height: 6 },
-          position: { x: 140, y: 10 },
-          config: { format: 'Pagina [PAGINANUMMER] van [TOTAALPAGINAS]' },
-          style: { fontSize: 7, color: '#888888', textAlign: 'right' },
-        },
       ],
-      printRules: { allPages: true },
+      printRules: { everyPage: true },
     };
 
     await pool.query(`
       INSERT INTO layout_sections (id, layout_id, name, section_type, "position", allow_multiple, config, created_at)
       VALUES
         ('contract-sec-header', $1, 'Koptekst', 'header', 0, false, $2, NOW()),
-        ('contract-sec-body', $1, 'Inhoud', 'body', 1, false, $3, NOW()),
-        ('contract-sec-footer', $1, 'Voettekst', 'footer', 2, false, $4, NOW())
-    `, [layoutId, JSON.stringify(headerConfig), JSON.stringify(bodyConfig), JSON.stringify(footerConfig)]);
+        ('contract-sec-cover', $1, 'Voorblad', 'body', 1, false, $3, NOW()),
+        ('contract-sec-body', $1, 'Inhoud', 'body', 2, false, $4, NOW()),
+        ('contract-sec-footer', $1, 'Voettekst', 'footer', 3, false, $5, NOW())
+    `, [layoutId, JSON.stringify(headerConfig), JSON.stringify(coverConfig), JSON.stringify(bodyConfig), JSON.stringify(footerConfig)]);
 
-    log('Contract layout seeded successfully');
+    log('Contract layout v2 seeded successfully');
   } catch (err: any) {
     if (!err.message?.includes('duplicate key')) {
       log(`Contract layout seed error: ${err.message}`);
