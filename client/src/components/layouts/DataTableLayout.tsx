@@ -1180,19 +1180,6 @@ export function DataTableLayout<T = any>({
                     Nieuw
                   </Button>
                 )}
-                {headerActions.map((action) => (
-                  <Button
-                    key={action.key}
-                    variant="outline"
-                    size="sm"
-                    className={`h-9 text-sm ${action.disabled ? 'opacity-50' : 'bg-orange-500 text-white hover:bg-orange-600 border-orange-500'}`}
-                    onClick={action.disabled ? undefined : action.onClick}
-                    disabled={action.disabled}
-                  >
-                    {action.icon || <Plus className="h-4 w-4" />}
-                    <span className="ml-1">{action.label}</span>
-                  </Button>
-                ))}
                 {deleteConfirmDialog && (
                   <Button
                     variant="outline"
