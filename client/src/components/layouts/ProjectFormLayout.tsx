@@ -282,6 +282,12 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
   useEffect(() => {
     if (!isEditing && nextNumberData?.number && !form.getValues("projectNumber")) {
       form.setValue("projectNumber", nextNumberData.number);
+      setOriginalValues(prev => ({ ...prev, projectNumber: nextNumberData.number }));
+      setModifiedFields(prev => {
+        const next = new Set(prev);
+        next.delete("projectNumber");
+        return next;
+      });
     }
   }, [nextNumberData, isEditing]);
 
