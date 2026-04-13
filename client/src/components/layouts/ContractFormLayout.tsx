@@ -290,20 +290,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     showPrint: isEditing,
   });
 
-  const addRow = useCallback((type: string = "text") => {
-    const newRow: ContractRow = {
-      articleNumber: `${rows.length + 1}`,
-      itemType: type,
-      content: "",
-      indentLevel: type === 'heading' ? 0 : (rows.length > 0 ? rows[rows.length - 1].indentLevel : 0),
-      fontFamily: "Arial",
-      fontSize: null,
-      fontWeight: type === 'heading' ? 'bold' : null,
-      fontColor: null,
-    };
-    setRows(prev => [...prev, newRow]);
-    setHasUnsavedChanges(true);
-  }, [rows]);
+
 
   const updateRow = useCallback((index: number, field: keyof ContractRow, value: any) => {
     setRows(prev => {
@@ -500,10 +487,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         compact={true}
         directInput={contractDirectInput}
         headerActions={[
-          { key: 'addHeading', label: 'Kop', icon: <Heading className="w-4 h-4" />, onClick: () => addRow('heading') },
-          { key: 'addText', label: 'Tekst', icon: <Type className="w-4 h-4" />, onClick: () => addRow('text') },
-          { key: 'addImage', label: 'Afbeelding', icon: <ImageIcon className="w-4 h-4" />, onClick: () => addRow('image') },
-          { key: 'addTable', label: 'Tabel', icon: <Table2 className="w-4 h-4" />, onClick: () => addRow('table') },
           { key: 'autoNumber', label: 'Auto-nummering', onClick: autoNumber },
         ]}
         onRowDoubleClick={(row: any) => {
