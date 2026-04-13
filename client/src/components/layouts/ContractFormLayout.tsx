@@ -27,6 +27,17 @@ const formSchema = insertContractSchema.extend({
 
 type FormData = z.infer<typeof formSchema>;
 
+function compareArticleNumbers(a: string, b: string): number {
+  const partsA = a.split('.').map(p => parseInt(p) || 0);
+  const partsB = b.split('.').map(p => parseInt(p) || 0);
+  const maxLen = Math.max(partsA.length, partsB.length);
+  for (let i = 0; i < maxLen; i++) {
+    const diff = (partsA[i] || 0) - (partsB[i] || 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
 interface ContractRow {
   id?: string;
   articleNumber: string;
@@ -143,7 +154,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
   }, [contract, isEditing, form]);
 
   useEffect(() => {
-    setRows(contractItems.map(item => ({
+    const mapped = contractItems.map(item => ({
       id: item.id,
       articleNumber: item.articleNumber || "",
       itemType: item.itemType || "text",
@@ -154,7 +165,9 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       fontSize: (item as any).fontSize || null,
       fontWeight: (item as any).fontWeight || null,
       fontColor: (item as any).fontColor || null,
-    })));
+    }));
+    mapped.sort((a, b) => compareArticleNumbers(a.articleNumber, b.articleNumber));
+    setRows(mapped);
   }, [contractItems]);
 
   const customerIdValue = form.watch("customerId");
@@ -225,8 +238,9 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         setCurrentContractId(savedContract.id);
       }
 
+      const sortedRows = [...rows].sort((a, b) => compareArticleNumbers(a.articleNumber, b.articleNumber));
       await apiRequest("PUT", `/api/contracts/${savedContract.id}/items/batch`, {
-        items: rows.map((r, i) => ({
+        items: sortedRows.map((r, i) => ({
           ...(r.id ? { id: r.id } : {}),
           articleNumber: r.articleNumber,
           itemType: r.itemType,

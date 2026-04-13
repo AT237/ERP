@@ -2479,7 +2479,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getContractItems(contractId: string): Promise<ContractItem[]> {
-    return await db.select().from(contractItems).where(eq(contractItems.contractId, contractId)).orderBy(asc(contractItems.position));
+    return await db.select().from(contractItems).where(eq(contractItems.contractId, contractId)).orderBy(asc(contractItems.articleNumber), asc(contractItems.position));
   }
 
   async getContractItem(id: string): Promise<ContractItem | undefined> {

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict VStnaAhxyogIH4bEPIcbQ94EJOFewPLXAM1Uwv4oYLgzaZ7yAO1ogx2bE27beXf
+\restrict PF5gKlK4hvr93SfNCN6ePi8oHd7ufrC5f22BiDG6JwmTrIegb0hFlhOnp13WzEh
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -2003,11 +2003,11 @@ a1346f21-f1c6-45a3-b95f-e9c56730e831	ATE Solutions B.V.		Oude Telgterweg	255	385
 
 COPY public.contract_items (id, contract_id, "position", article_number, item_type, content, indent_level, created_at, font_family, font_size, font_weight, font_color) FROM stdin;
 7b87730d-a678-4b0e-9433-5267e94bdf9f	b346f661-f11d-42d9-ad72-5f69879659cc	0	1.1	text	CUSTOMER:\n{{customer.name}} a private limited company incorporated pursuant to the laws of Ethiopia with registered office at {{klant.adres}}{{klant.postcode}}{{klant.plaats}}{{klant.land}} 	0	2026-04-10 14:52:02.623443	Arial	\N	\N	\N
+f27ac2b5-3f21-417c-86ba-be7ee7b206d4	b346f661-f11d-42d9-ad72-5f69879659cc	1	4	heading	SCOPE OF SERVICE: 	0	2026-04-10 14:57:02.425316	Arial	\N	\N	\N
+eba59ebb-d095-4038-b29d-9df3c6e0ca3a	b346f661-f11d-42d9-ad72-5f69879659cc	2	1	text	Customer and the Supplier are hereinafter collectively referred to as: “Parties” and each individually as: “Party.”\n	0	2026-04-10 14:52:02.629011	Arial	\N	\N	\N
 f3fcc084-8945-4034-9c28-0ed65f976629	b346f661-f11d-42d9-ad72-5f69879659cc	3	4	heading	SCOPE OF DELIVERY: 	0	2026-04-10 14:57:16.135633	Arial	\N	\N	\N
 a296d037-1d17-40d7-b0de-bb3d62790061	b346f661-f11d-42d9-ad72-5f69879659cc	4	3.9	text	Customer want to purchase an electrical installation for its industrial plant in Adama, Ethiopia and wants to order various equipment / turn key installation with the Supplier.	0	2026-04-10 14:55:59.872352	Arial	\N	\N	\N
 379b6044-b67b-413d-b2eb-04ef315a9cd9	b346f661-f11d-42d9-ad72-5f69879659cc	5	6	image		0	2026-04-10 14:57:33.790813	Arial	\N	\N	\N
-f27ac2b5-3f21-417c-86ba-be7ee7b206d4	b346f661-f11d-42d9-ad72-5f69879659cc	1	4	heading	SCOPE OF SERVICE: 	0	2026-04-10 14:57:02.425316	Arial	\N	\N	\N
-eba59ebb-d095-4038-b29d-9df3c6e0ca3a	b346f661-f11d-42d9-ad72-5f69879659cc	2	1	text	Customer and the Supplier are hereinafter collectively referred to as: “Parties” and each individually as: “Party.”\n	0	2026-04-10 14:52:02.629011	Arial	\N	\N	\N
 \.
 
 
@@ -3980,11 +3980,11 @@ bffa71e4-59b0-47a4-9d35-59992507a495	\N	\N	\N	2026-03-02 18:55:11.019526	2026-03
 --
 
 COPY public.user_sessions (sid, sess, expire) FROM stdin;
+kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-20 18:52:28
 mZxlnAyl_6L_vUpnnNT3YDd7IQcCgr5R	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-19T09:13:55.587Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-19 20:31:37
 ijKKoKSIPx7qxHF_Q9rsiATVFBVaMMj9	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T07:23:09.607Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-20 07:23:10
 64X9FLFfYvqREZpZkSkyUNBg8UJ_wCVh	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T07:23:15.713Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-20 07:23:16
 9h7LEZesmiLoTsnGd7Xg_qkRAh5RDpxI	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T07:23:45.449Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-20 07:23:46
-kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-20 18:51:00
 \.
 
 
@@ -5567,5 +5567,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict VStnaAhxyogIH4bEPIcbQ94EJOFewPLXAM1Uwv4oYLgzaZ7yAO1ogx2bE27beXf
+\unrestrict PF5gKlK4hvr93SfNCN6ePi8oHd7ufrC5f22BiDG6JwmTrIegb0hFlhOnp13WzEh
 
