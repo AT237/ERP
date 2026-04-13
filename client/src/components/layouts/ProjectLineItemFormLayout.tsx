@@ -622,6 +622,17 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
     testId: 'input-cost-price',
   };
 
+  const fieldMargin: FormField2<LineItemFormData> = {
+    key: 'margin' as any,
+    label: 'Marge',
+    type: 'custom',
+    customComponent: (
+      <div className="mt-1 px-3 py-2 rounded-md border bg-muted/50 text-sm" data-testid="margin-display">
+        {marginPercent ? `${marginPercent.replace('.', ',')}%` : '—'}
+      </div>
+    ),
+  };
+
   const fieldTechnician: FormField2<LineItemFormData> = {
     key: 'technicianNames',
     label: 'Monteur',
@@ -866,19 +877,34 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
   const getRightColumnFields = (): FormField2<LineItemFormData>[] => {
     switch (lineTypeValue) {
       case 'charges':
-        return [fieldTechnician, fieldWorkDate, fieldRate, fieldDescription, fieldQuantity, fieldUnitPrice, fieldUnit];
+        return [fieldQuantity, fieldUnitPrice, fieldUnit, fieldCostPrice, fieldMargin, fieldLineTotal];
       case 'unique':
-        return [fieldDescription, fieldQuantity, fieldUnit, fieldUnitPrice];
+        return [fieldQuantity, fieldUnit, fieldUnitPrice, fieldCostPrice, fieldMargin, fieldLineTotal];
       case 'standard':
-        return [fieldStockItem, fieldDescriptionWithLookup, fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount, fieldDiscountedPrice];
+        return [fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount, fieldDiscountedPrice, fieldCostPrice, fieldMargin, fieldLineTotal];
       case 'text':
-        return [fieldTextContent];
+        return [];
       default:
         return [];
     }
   };
 
-  const leftFields = [fieldPosNo, fieldLineType, fieldDescriptionInternal, fieldCostPrice, fieldLineTotal];
+  const getLeftColumnFields = (): FormField2<LineItemFormData>[] => {
+    switch (lineTypeValue) {
+      case 'charges':
+        return [fieldPosNo, fieldLineType, fieldTechnician, fieldWorkDate, fieldRate, fieldDescription];
+      case 'unique':
+        return [fieldPosNo, fieldLineType, fieldDescription, fieldDescriptionInternal];
+      case 'standard':
+        return [fieldPosNo, fieldLineType, fieldStockItem, fieldDescriptionWithLookup, fieldDescriptionInternal];
+      case 'text':
+        return [fieldPosNo, fieldLineType, fieldTextContent];
+      default:
+        return [fieldPosNo, fieldLineType];
+    }
+  };
+
+  const leftFields = getLeftColumnFields();
   const rightFields = getRightColumnFields();
 
   const deliveryFields = [
