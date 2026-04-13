@@ -762,11 +762,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         onSort={itemTableState.handleSort}
         selectedRows={itemTableState.selectedRows}
         setSelectedRows={itemTableState.setSelectedRows}
-        onToggleRowSelection={(id) => {
-          const idx = parseInt(id);
-          setSelectedRowIndex(idx);
-          itemTableState.toggleRowSelection(id);
-        }}
         onToggleAllRows={() => {
           const allIds = rows.map((_: any, i: number) => String(i));
           itemTableState.toggleAllRows(allIds);
@@ -784,9 +779,14 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         onRowDoubleClick={(row: any) => {
           const idx = row._rowIdx ?? 0;
           setSelectedRowIndex(idx);
+          setActiveTab("editRow");
+        }}
+        onToggleRowSelection={(id) => {
+          const idx = parseInt(id);
+          setSelectedRowIndex(idx);
+          itemTableState.toggleRowSelection(id);
         }}
       />
-      {editPanel}
     </div>
   );
 
@@ -926,6 +926,175 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         },
       ],
     },
+    ...(selectedRow ? [{
+      id: "editRow",
+      label: `Regel ${selectedRow.articleNumber || (selectedRowIndex! + 1)} — ${typeLabel(selectedRow.itemType)}`,
+      rows: [
+        {
+          type: "custom" as const,
+          customContent: (
+            <div className="flex" style={{ minHeight: '350px' }}>
+              <div className="flex-1 space-y-4">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    {typeIcon(selectedRow.itemType)}
+                    <span className="text-sm font-medium">{typeLabel(selectedRow.itemType)}</span>
+                  </div>
+                  <Select value={selectedRow.fontFamily || "Arial"} onValueChange={(val) => updateRow(selectedRowIndex!, 'fontFamily', val)}>
+                    <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {['Arial','Times New Roman','Helvetica','Calibri','Georgia','Verdana','Courier New'].map(f => (
+                        <SelectItem key={f} value={f}><span style={{ fontFamily: f }}>{f}</span></SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    value={selectedRow.fontSize ?? ""}
+                    onChange={(e) => updateRow(selectedRowIndex!, 'fontSize', e.target.value ? parseInt(e.target.value) : null)}
+                    className="h-8 w-16 text-xs text-center"
+                    placeholder="pt"
+                    min={6} max={72}
+                  />
+                  <Button
+                    variant={selectedRow.fontWeight === 'bold' ? 'default' : 'outline'}
+                    size="icon"
+                    className={`h-8 w-8 ${selectedRow.fontWeight === 'bold' ? 'bg-orange-500 hover:bg-orange-600 text-white' : ''}`}
+                    onClick={() => updateRow(selectedRowIndex!, 'fontWeight', selectedRow.fontWeight === 'bold' ? null : 'bold')}
+                  >
+                    <Bold className="w-4 h-4" />
+                  </Button>
+                  <div className="h-5 w-px bg-border" />
+                  <Button variant="ghost" size="sm" className="h-8" onClick={() => moveRow(selectedRowIndex!, 'up')} disabled={selectedRowIndex === 0}>
+                    <MoveUp className="w-4 h-4 mr-1" />Omhoog
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8" onClick={() => moveRow(selectedRowIndex!, 'down')} disabled={selectedRowIndex === rows.length - 1}>
+                    <MoveDown className="w-4 h-4 mr-1" />Omlaag
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8" onClick={() => duplicateRow(selectedRowIndex!)}>
+                    <Copy className="w-4 h-4 mr-1" />Dupliceren
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 text-red-500" onClick={() => { removeRow(selectedRowIndex!); setSelectedRowIndex(null); setActiveTab("general"); }}>
+                    <Trash2 className="w-4 h-4 mr-1" />Verwijderen
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-8 ml-auto" onClick={() => setActiveTab("general")}>
+                    Terug naar tabel
+                  </Button>
+                </div>
+
+                {selectedRow.itemType === 'heading' && (
+                  <Input
+                    value={selectedRow.content}
+                    onChange={(e) => updateRow(selectedRowIndex!, 'content', e.target.value)}
+                    className="text-lg font-bold"
+                    style={{ fontFamily: selectedRow.fontFamily || 'Arial' }}
+                    placeholder="Koptekst invoeren..."
+                  />
+                )}
+
+                {selectedRow.itemType === 'text' && (
+                  <Textarea
+                    ref={(el) => { activeTextareaRef.current = el; }}
+                    value={selectedRow.content}
+                    onChange={(e) => updateRow(selectedRowIndex!, 'content', e.target.value)}
+                    placeholder="Tekst invoeren... Gebruik {{placeholders}} voor dynamische data."
+                    rows={10}
+                    className="resize-none text-sm"
+                    style={{
+                      fontFamily: selectedRow.fontFamily || 'Arial',
+                      fontWeight: selectedRow.fontWeight === 'bold' ? 'bold' : 'normal',
+                      fontSize: selectedRow.fontSize ? `${selectedRow.fontSize}px` : undefined,
+                    }}
+                  />
+                )}
+
+                {selectedRow.itemType === 'table' && (
+                  <Textarea
+                    ref={(el) => { activeTextareaRef.current = el; }}
+                    value={selectedRow.content}
+                    onChange={(e) => updateRow(selectedRowIndex!, 'content', e.target.value)}
+                    placeholder="Tabelinhoud invoeren (bijv. kolom1 | kolom2 | kolom3)..."
+                    rows={10}
+                    className="resize-none text-sm font-mono"
+                  />
+                )}
+
+                {selectedRow.itemType === 'image' && (
+                  <div
+                    className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50/50 transition-colors"
+                    onDrop={handleDrop}
+                    onDragOver={(e) => e.preventDefault()}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file);
+                      }}
+                    />
+                    {selectedRow.content ? (
+                      <div>
+                        <img src={selectedRow.content} alt="Preview" className="max-h-48 mx-auto mb-2 rounded" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        <p className="text-xs text-muted-foreground">{selectedRow.content}</p>
+                        <p className="text-xs text-orange-500 mt-2">Klik of sleep om te wijzigen</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <Upload className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
+                        <p className="text-sm font-medium">Sleep een afbeelding hierheen</p>
+                        <p className="text-xs text-muted-foreground mt-1">of klik om te bladeren</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {(selectedRow.itemType === 'heading' || selectedRow.itemType === 'text' || selectedRow.itemType === 'table') && (
+                <div className="w-56 ml-4 border-l flex flex-col overflow-hidden bg-muted/20 rounded-r-md">
+                  <div className="p-3 border-b">
+                    <h3 className="font-semibold text-xs">Placeholders</h3>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Klik om in te voegen</p>
+                  </div>
+                  <ScrollArea className="flex-1" style={{ maxHeight: '400px' }}>
+                    <div className="p-2">
+                      {PLACEHOLDERS.map(group => (
+                        <div key={group.category} className="mb-1">
+                          <button
+                            className="w-full flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground rounded"
+                            onClick={() => toggleCategory(group.category)}
+                          >
+                            {expandedCategories.has(group.category) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                            {group.category}
+                          </button>
+                          {expandedCategories.has(group.category) && (
+                            <div className="ml-4 space-y-0.5">
+                              {group.items.map(item => (
+                                <button
+                                  key={item.value}
+                                  className="w-full text-left px-2 py-0.5 text-[11px] rounded hover:bg-primary/10 hover:text-primary transition-colors"
+                                  onClick={() => insertPlaceholder(item.value)}
+                                  title={item.value}
+                                >
+                                  {item.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
+            </div>
+          ),
+        },
+      ],
+    }] : []) as FormSection2<FormData>[],
     {
       id: "printSettings",
       label: "Printen",
