@@ -430,7 +430,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
   }, []);
 
   const contentBuilder = (
-    <div className="flex h-[calc(100vh-220px)]">
+    <div className="flex border rounded-md overflow-hidden" style={{ height: 'calc(100vh - 480px)', minHeight: '300px' }}>
       <div className="flex-1 flex flex-col overflow-hidden border-r">
         <div className="flex items-center gap-2 p-2 border-b bg-muted/30">
           <TooltipProvider>
@@ -800,12 +800,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
             },
           ],
         },
-      ],
-    },
-    {
-      id: "content",
-      label: "Inhoud",
-      rows: [
         {
           type: "custom" as const,
           customContent: contentBuilder,
