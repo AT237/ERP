@@ -70,7 +70,10 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [rows, setRows] = useState<ContractRow[]>([]);
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["Klant", "Bedrijf"]));
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => {
+    const tables = getContractPlaceholderTables();
+    return new Set(tables.map(t => t.label));
+  });
   const activeTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [originalValues, setOriginalValues] = useState<Partial<FormData>>({});
 

@@ -102,6 +102,8 @@ export const AVAILABLE_TABLES: FieldTable[] = [
 ];
 
 export function getContractPlaceholderTables(): FieldTable[] {
-  const relevantNames = ['contract', 'customer', 'company'];
-  return AVAILABLE_TABLES.filter(t => relevantNames.includes(t.name));
+  const orderedNames = ['customer', 'company', 'contract'];
+  return orderedNames
+    .map(name => AVAILABLE_TABLES.find(t => t.name === name))
+    .filter((t): t is FieldTable => !!t);
 }
