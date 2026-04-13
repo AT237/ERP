@@ -213,6 +213,26 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
     parts = [tableName, ...alias.prefix, ...parts.slice(1)];
   }
 
+  // If there's no dot (single-part key like "name"), search all data objects
+  if (parts.length === 1) {
+    const searchOrder = [
+      printData.customer,
+      printData.contract,
+      printData.quotation,
+      printData.invoice,
+      printData.proformaInvoice,
+      printData.packingList,
+      printData.company,
+      printData.project,
+    ];
+    for (const dataObj of searchOrder) {
+      if (dataObj && dataObj[parts[0]] !== undefined && dataObj[parts[0]] !== null) {
+        return dataObj[parts[0]];
+      }
+    }
+    return null;
+  }
+
   const fieldPath = parts.slice(1);
 
   // Normalize table names (plural to singular)
