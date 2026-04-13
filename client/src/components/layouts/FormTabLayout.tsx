@@ -22,7 +22,7 @@ export function FormTabLayout({ tabs, activeTab, onTabChange, className = "" }: 
     <div className={className}>
       {/* Tab bar — sits above the orange frame, same horizontal width as the frame (mx-4) */}
       <div
-        className={`sticky top-14 z-10 bg-white ${mx} ${isMobile ? 'h-[46px] px-1' : 'h-[40px] px-2'} flex items-end`}
+        className={`bg-white ${mx} ${isMobile ? 'h-[46px] px-1' : 'h-[40px] px-2'} flex items-end`}
       >
         <div className={`flex items-end ${isMobile ? 'space-x-0.5 w-full' : 'space-x-1'} overflow-x-auto`}>
           {tabs.map((tab) => (
