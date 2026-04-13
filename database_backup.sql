@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict yvfgqHH0GkiRDIQnZdohDsXVeakFPSOIvxMFlBMp6u0DlH3JlTd5KFTvQYZTXfE
+\restrict cpDHaealuAin4AUjYQcdb4OYRgn5STA4YBDSdvKuP2dcwQR5EtgHoCyoY4MgwHd
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -2965,6 +2965,7 @@ COPY public.text_snippets (id, code, title, body, category, locale, version, is_
 84903628-5d89-4748-8644-16daa72a79ad	WELCOME	Welcome Message	Welcome to our services. We appreciate your business.	header	en	1	t	2025-09-16 14:24:42.730385	2025-09-16 14:24:42.730385
 4b326653-83aa-473b-85d6-4e21beea6c01	TERMS	Payment Terms	Payment terms: Net 30 days from invoice date.	footer	en	1	t	2025-09-16 14:24:42.730385	2025-09-16 14:24:42.730385
 2d225aa8-2d09-44ff-8fee-876054b99c11	WARRANTY	Standard Warranty	12-month manufacturer warranty included on all products.	general	en	1	t	2025-09-16 14:24:42.730385	2025-09-16 14:24:42.730385
+5a47a971-b119-44cb-8dcf-acef0f9c1ab1	TEST_DEBUG_123	Test		general	nl	1	f	2026-04-13 07:23:09.672972	2026-04-13 07:23:09.672972
 \.
 
 
@@ -3974,7 +3975,10 @@ bffa71e4-59b0-47a4-9d35-59992507a495	\N	\N	\N	2026-03-02 18:55:11.019526	2026-03
 
 COPY public.user_sessions (sid, sess, expire) FROM stdin;
 mZxlnAyl_6L_vUpnnNT3YDd7IQcCgr5R	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-19T09:13:55.587Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-19 20:31:37
-kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-20 07:21:51
+ijKKoKSIPx7qxHF_Q9rsiATVFBVaMMj9	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T07:23:09.607Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-20 07:23:10
+64X9FLFfYvqREZpZkSkyUNBg8UJ_wCVh	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T07:23:15.713Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-20 07:23:16
+kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-20 07:23:32
+9h7LEZesmiLoTsnGd7Xg_qkRAh5RDpxI	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T07:23:45.449Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-20 07:23:46
 \.
 
 
@@ -5557,5 +5561,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict yvfgqHH0GkiRDIQnZdohDsXVeakFPSOIvxMFlBMp6u0DlH3JlTd5KFTvQYZTXfE
+\unrestrict cpDHaealuAin4AUjYQcdb4OYRgn5STA4YBDSdvKuP2dcwQR5EtgHoCyoY4MgwHd
 
