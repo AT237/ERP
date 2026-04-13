@@ -4214,9 +4214,89 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
           return;
         }
         
+        // --- CONTRACT BODY SPLITTING ---
+        // When a section contains a 'Contract Body' block, split it into separate paginatable
+        // items (TOC + one item per chapter) so the pagination engine can place each on its own page.
+        const sectionBlocks = section.config?.blocks || [];
+        const contractBodyBlock = sectionBlocks.find((b: any) => b.type === 'Contract Body');
+        if (contractBodyBlock && typedPrintData.items?.length > 0) {
+          const { preItems, chapters } = splitContractChapters(typedPrintData.items);
+          if (chapters.length > 0) {
+            const bodyBlockStyle: React.CSSProperties = {
+              position: 'relative',
+              width: '100%',
+              overflow: 'visible',
+            };
+            const sectionBg = section.config?.style?.backgroundColor || '#ffffff';
+            const ContractBodyComp = BlockRenderers['Contract Body'];
+
+            if (preItems.length > 0) {
+              const capturedPreItems = preItems;
+              const preItemsHeightPx = mmToPx(capturedPreItems.length * 6);
+              renderedItems.push({
+                heightPx: Math.max(preItemsHeightPx, mmToPx(20)),
+                isEveryPage: false, isFirstPage: false, isLastPage: false,
+                isFixed: false, fixedY: 0, fixedPrintRules: printRules,
+                renderFn: (ctx: PageCtx) => {
+                  const modifiedData = { ...typedPrintData, items: capturedPreItems, _contractRenderMode: 'chapter' as const };
+                  return (
+                    <div key={`${section.id}-pre`} style={{ ...bodyBlockStyle, backgroundColor: sectionBg, height: 'auto', minHeight: `${mmToPx(20)}px` }}>
+                      <ContractBodyComp block={contractBodyBlock} printData={modifiedData} currentPage={ctx.currentPage} totalPages={ctx.totalPages} />
+                    </div>
+                  );
+                },
+              });
+            }
+
+            const tocHeightPx = mmToPx(Math.max(30, chapters.length * 8 + 20));
+            renderedItems.push({
+              heightPx: tocHeightPx,
+              isEveryPage: false, isFirstPage: false, isLastPage: false,
+              isFixed: false, fixedY: 0, fixedPrintRules: printRules,
+              renderFn: (ctx: PageCtx) => {
+                const tocData = { ...typedPrintData, _contractRenderMode: 'toc' as const };
+                return (
+                  <div key={`${section.id}-toc`} style={{ ...bodyBlockStyle, backgroundColor: sectionBg, height: 'auto', minHeight: `${tocHeightPx}px` }}>
+                    <ContractBodyComp block={contractBodyBlock} printData={tocData} currentPage={ctx.currentPage} totalPages={ctx.totalPages} />
+                  </div>
+                );
+              },
+            });
+
+            chapters.forEach((chapter, chIdx) => {
+              const capturedChapter = chapter;
+              const capturedIdx = chIdx;
+              const chapterItems = [capturedChapter.heading, ...capturedChapter.children];
+              const estimatedLines = chapterItems.reduce((sum: number, item: any) => {
+                if (item.itemType === 'heading') return sum + 3;
+                if (item.itemType === 'table') return sum + 8;
+                const contentLen = (item.content || '').length;
+                return sum + Math.max(2, Math.ceil(contentLen / 80));
+              }, 0);
+              const chapterHeightPx = mmToPx(Math.max(30, estimatedLines * 5 + 10));
+
+              renderedItems.push({
+                heightPx: chapterHeightPx,
+                isEveryPage: false, isFirstPage: false, isLastPage: false,
+                isFixed: false, fixedY: 0, fixedPrintRules: printRules,
+                renderFn: (ctx: PageCtx) => {
+                  const chapterData = { ...typedPrintData, items: chapterItems, _contractRenderMode: 'chapter' as const };
+                  return (
+                    <div key={`${section.id}-ch-${capturedIdx}`} style={{ ...bodyBlockStyle, backgroundColor: sectionBg, height: 'auto', minHeight: `${chapterHeightPx}px` }}>
+                      <ContractBodyComp block={contractBodyBlock} printData={chapterData} currentPage={ctx.currentPage} totalPages={ctx.totalPages} />
+                    </div>
+                  );
+                },
+              });
+            });
+
+            return;
+          }
+        }
+
         // Regular non-repeating section - use original logic
         const configuredHeight = section.config?.dimensions?.height || 200;
-        const blocks = section.config?.blocks || [];
+        const blocks = sectionBlocks;
         
         // Calculate dynamic positions for blocks in this section
         const dynamicPositions = calculateDynamicPositions(blocks, typedPrintData);
