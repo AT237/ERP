@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, Fragment } from 'react';
 import { FIELD_LABELS, getFieldLabel, AVAILABLE_TABLES } from '@/utils/available-fields';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Plus, Download, Eye, Save, FileText, Receipt, Package, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Grid3x3, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Maximize2, Database, ArrowUp, ArrowDown, Type, Image, Table2, Printer, Bold, Italic, Underline, Copy, Trash2, Group, Ungroup, Minus, Square, Repeat } from 'lucide-react';
-import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES } from '@/components/print/BlockRenderers';
+import { BlockRenderers, UnknownBlockRenderer, TEXT_VARIABLES, splitContractChapters } from '@/components/print/BlockRenderers';
 import { PrintData, blockHasContent, replacePlaceholders, resolveAndFormat } from '@/utils/field-resolver';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

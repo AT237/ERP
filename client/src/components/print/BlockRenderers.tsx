@@ -941,6 +941,25 @@ function renderContractItem(item: any, idx: number, printData: any, fontSize: nu
   );
 }
 
+export function splitContractChapters(items: any[]) {
+  const preItems: any[] = [];
+  const chapters: { heading: any; children: any[] }[] = [];
+  let currentChapter: typeof chapters[0] | null = null;
+
+  for (const item of items) {
+    if (item.itemType === 'heading' && (item.indentLevel || 0) === 0) {
+      if (currentChapter) chapters.push(currentChapter);
+      currentChapter = { heading: item, children: [] };
+    } else if (currentChapter) {
+      currentChapter.children.push(item);
+    } else {
+      preItems.push(item);
+    }
+  }
+  if (currentChapter) chapters.push(currentChapter);
+  return { preItems, chapters };
+}
+
 export function ContractBodyRenderer({ block, printData }: BlockRendererProps) {
   const items = printData?.items || [];
   if (!items.length) {
@@ -951,23 +970,54 @@ export function ContractBodyRenderer({ block, printData }: BlockRendererProps) {
   const accentColor = block.style?.accentColor || '#e87722';
   const fontSize = block.style?.fontSize || 10;
 
-  const preItems: { item: any; idx: number }[] = [];
-  const chapters: { heading: any; headingIdx: number; children: { item: any; idx: number }[] }[] = [];
-  let currentChapter: typeof chapters[0] | null = null;
-  let itemIdx = 0;
+  const renderMode = (printData as any)?._contractRenderMode;
 
-  for (const item of items) {
-    if (item.itemType === 'heading' && (item.indentLevel || 0) === 0) {
-      if (currentChapter) chapters.push(currentChapter);
-      currentChapter = { heading: item, headingIdx: itemIdx, children: [] };
-    } else if (currentChapter) {
-      currentChapter.children.push({ item, idx: itemIdx });
-    } else {
-      preItems.push({ item, idx: itemIdx });
-    }
-    itemIdx++;
+  if (renderMode === 'toc') {
+    const { chapters } = splitContractChapters(items);
+    const tocEntries = chapters.map((ch) => ({
+      number: ch.heading.articleNumber || '',
+      title: replaceTextVariables(ch.heading.content || '', printData),
+    }));
+
+    return (
+      <div style={{ width: '100%' }}>
+        <div style={{
+          fontSize: `${fontSize + 6}px`,
+          fontWeight: 700,
+          color: titleColor,
+          marginBottom: '16px',
+          borderBottom: `2px solid ${accentColor}`,
+          paddingBottom: '6px',
+        }}>INHOUDSOPGAVE</div>
+        {tocEntries.map((entry, i) => (
+          <div key={`toc-${i}`} style={{
+            display: 'flex',
+            gap: '8px',
+            padding: '4px 0',
+            fontSize: `${fontSize + 1}px`,
+            borderBottom: '1px dotted #ccc',
+          }}>
+            {entry.number && (
+              <span style={{ fontWeight: 600, color: titleColor, minWidth: '40px' }}>{entry.number}</span>
+            )}
+            <span style={{ flex: 1 }}>{entry.title}</span>
+          </div>
+        ))}
+      </div>
+    );
   }
-  if (currentChapter) chapters.push(currentChapter);
+
+  if (renderMode === 'chapter') {
+    return (
+      <div style={{ width: '100%' }}>
+        {items.map((item: any, idx: number) =>
+          renderContractItem(item, idx, printData, fontSize, titleColor, accentColor)
+        )}
+      </div>
+    );
+  }
+
+  const { preItems, chapters } = splitContractChapters(items);
 
   if (chapters.length === 0) {
     return (
@@ -988,7 +1038,7 @@ export function ContractBodyRenderer({ block, printData }: BlockRendererProps) {
     <div style={{ width: '100%' }}>
       {preItems.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
-          {preItems.map(({ item, idx }) =>
+          {preItems.map((item: any, idx: number) =>
             renderContractItem(item, idx, printData, fontSize, titleColor, accentColor)
           )}
         </div>
@@ -1024,9 +1074,9 @@ export function ContractBodyRenderer({ block, printData }: BlockRendererProps) {
           breakBefore: 'page',
           pageBreakBefore: 'always',
         }}>
-          {renderContractItem(chapter.heading, chapter.headingIdx, printData, fontSize, titleColor, accentColor)}
-          {chapter.children.map(({ item, idx }) =>
-            renderContractItem(item, idx, printData, fontSize, titleColor, accentColor)
+          {renderContractItem(chapter.heading, chIdx * 100, printData, fontSize, titleColor, accentColor)}
+          {chapter.children.map((item: any, idx: number) =>
+            renderContractItem(item, chIdx * 100 + idx + 1, printData, fontSize, titleColor, accentColor)
           )}
         </div>
       ))}
