@@ -434,7 +434,7 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
   );
 
   const editorContent = (
-    <div className="flex flex-col gap-3" style={{ minHeight: '350px' }}>
+    <div className="flex flex-col gap-3 px-4 pb-4" style={{ minHeight: '350px' }}>
       {fontToolbar}
       {contentArea}
     </div>
@@ -520,10 +520,6 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
             },
           ],
         },
-        {
-          type: "custom" as const,
-          customContent: editorContent,
-        },
       ],
     },
   ];
@@ -539,6 +535,7 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
       documentType="contract-item"
       entityId={itemId}
       isLoading={isLoading}
+      afterContent={editorContent}
     />
   );
 }

@@ -199,6 +199,9 @@ export interface LayoutForm2Props<T extends FieldValues = FieldValues> {
 
   // Optional validation error dialog (rendered alongside form)
   validationErrorDialog?: ReactNode;
+
+  // Optional content rendered below the form sections
+  afterContent?: ReactNode;
 }
 
 // ============================================================================
@@ -445,6 +448,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
   isLoading = false,
   className = "",
   validationErrorDialog,
+  afterContent,
 }: LayoutForm2Props<T>) {
 
   // ========================================================================
@@ -979,6 +983,7 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
         onTabChange={onSectionChange}
         isLoading={isLoading}
       />
+      {afterContent}
       {validationErrorDialog}
     </div>
   );
