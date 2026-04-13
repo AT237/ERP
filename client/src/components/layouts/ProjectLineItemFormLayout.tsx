@@ -324,7 +324,17 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
   const unitPriceValue = form.watch("unitPrice");
   const discountPercentValue = form.watch("discountPercent");
   const lineTotalValue = form.watch("lineTotal");
+  const costPriceValue = form.watch("costPrice");
   const customerRateIdValue = form.watch("customerRateId");
+
+  const marginPercent = useMemo(() => {
+    const cost = parseFloat(costPriceValue || "0");
+    const price = parseFloat(unitPriceValue || "0");
+    if (cost > 0 && price > 0) {
+      return (((price - cost) / price) * 100).toFixed(1);
+    }
+    return null;
+  }, [costPriceValue, unitPriceValue]);
 
   const SNIPPET_CATEGORIES = [
     { value: "all", label: "Alle categorieën" },
