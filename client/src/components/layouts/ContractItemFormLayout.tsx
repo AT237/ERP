@@ -26,6 +26,7 @@ const itemFormSchema = z.object({
   fontFamily: z.string().default("Arial"),
   fontSize: z.coerce.number().nullable().default(null),
   fontWeight: z.string().nullable().default(null),
+  fontColor: z.string().nullable().default(null),
   position: z.coerce.number().default(0),
 });
 
@@ -69,6 +70,7 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
       fontFamily: "Arial",
       fontSize: null,
       fontWeight: null,
+      fontColor: null,
       position: 0,
     },
   });
@@ -92,6 +94,7 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
         fontFamily: existingItem.fontFamily || "Arial",
         fontSize: existingItem.fontSize ?? null,
         fontWeight: existingItem.fontWeight ?? null,
+        fontColor: (existingItem as any).fontColor ?? null,
         position: existingItem.position ?? 0,
       });
     }

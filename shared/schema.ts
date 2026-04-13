@@ -1650,6 +1650,7 @@ export const contractItems = pgTable("contract_items", {
   fontFamily: text("font_family").default("Arial"),
   fontSize: integer("font_size"),
   fontWeight: text("font_weight"),
+  fontColor: text("font_color"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
