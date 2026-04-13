@@ -37,6 +37,7 @@ interface ContractRow {
   fontFamily: string;
   fontSize: number | null;
   fontWeight: string | null;
+  fontColor: string | null;
 }
 
 

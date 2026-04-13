@@ -201,6 +201,7 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
   const currentFontFamily = form.watch('fontFamily') || 'Arial';
   const currentFontSize = form.watch('fontSize');
   const currentFontWeight = form.watch('fontWeight');
+  const currentFontColor = form.watch('fontColor');
   const currentIndentLevel = form.watch('indentLevel') ?? 0;
 
   const fontToolbar = (
@@ -254,6 +255,23 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
           <TooltipContent side="bottom" className="text-xs">Vetgedrukt</TooltipContent>
         </Tooltip>
 
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="relative h-7 w-7 flex items-center justify-center">
+              <span className="text-sm font-bold" style={{ color: currentFontColor || '#000000' }}>A</span>
+              <div className="absolute bottom-0.5 left-1 right-1 h-1 rounded-sm" style={{ backgroundColor: currentFontColor || '#000000' }} />
+              <input
+                type="color"
+                value={currentFontColor || '#000000'}
+                onChange={(e) => form.setValue('fontColor', e.target.value)}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                title="Tekstkleur"
+              />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">Tekstkleur</TooltipContent>
+        </Tooltip>
+
         <Separator orientation="vertical" className="h-6 mx-1" />
 
         <Tooltip>
@@ -301,8 +319,13 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
           <Input
             value={currentContent}
             onChange={(e) => form.setValue('content', e.target.value)}
-            className="text-lg font-bold"
-            style={{ fontFamily: currentFontFamily }}
+            className="text-lg"
+            style={{
+              fontFamily: currentFontFamily,
+              fontWeight: currentFontWeight === 'bold' ? 'bold' : 'normal',
+              fontSize: currentFontSize ? `${currentFontSize}px` : '18px',
+              color: currentFontColor || undefined,
+            }}
             placeholder="Koptekst invoeren..."
           />
         )}
@@ -313,11 +336,12 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
             value={currentContent}
             onChange={(e) => form.setValue('content', e.target.value)}
             placeholder="Tekst invoeren... Gebruik {{placeholders}} voor dynamische data."
-            className="resize-none text-sm flex-1"
+            className="resize-none flex-1"
             style={{
               fontFamily: currentFontFamily,
               fontWeight: currentFontWeight === 'bold' ? 'bold' : 'normal',
-              fontSize: currentFontSize ? `${currentFontSize}px` : undefined,
+              fontSize: currentFontSize ? `${currentFontSize}px` : '14px',
+              color: currentFontColor || undefined,
               minHeight: '300px',
             }}
           />
@@ -329,8 +353,14 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
             value={currentContent}
             onChange={(e) => form.setValue('content', e.target.value)}
             placeholder="Tabelinhoud invoeren (bijv. kolom1 | kolom2 | kolom3)..."
-            className="resize-none text-sm font-mono flex-1"
-            style={{ minHeight: '300px' }}
+            className="resize-none font-mono flex-1"
+            style={{
+              fontFamily: currentFontFamily,
+              fontWeight: currentFontWeight === 'bold' ? 'bold' : 'normal',
+              fontSize: currentFontSize ? `${currentFontSize}px` : '14px',
+              color: currentFontColor || undefined,
+              minHeight: '300px',
+            }}
           />
         )}
 
