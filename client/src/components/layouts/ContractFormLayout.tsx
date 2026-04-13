@@ -488,6 +488,20 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         applySorting={(data: any[]) => itemTableState.applySorting(data)}
         compact={true}
         directInput={contractDirectInput}
+        onAdd={() => {
+          const newRow: ContractRow = {
+            articleNumber: String(rows.length + 1),
+            itemType: 'text',
+            content: '',
+            indentLevel: 0,
+            fontFamily: 'Arial',
+            fontSize: null,
+            fontWeight: null,
+            fontColor: null,
+          };
+          setRows(prev => [...prev, newRow]);
+          setHasUnsavedChanges(true);
+        }}
         headerActions={[
           { key: 'autoNumber', label: 'Auto-nummering', onClick: autoNumber },
         ]}
