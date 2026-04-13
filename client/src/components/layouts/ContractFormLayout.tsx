@@ -280,6 +280,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     setHasUnsavedChanges(hasChanges);
   }, []);
 
+  const watchedPrintLayoutId = form.watch("printLayoutId") as string | undefined;
   const toolbar = useFormToolbar({
     entityType: "contract",
     entityId: currentContractId,
@@ -288,6 +289,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     saveDisabled: saveMutation.isPending,
     saveLoading: saveMutation.isPending,
     showPrint: isEditing,
+    printLayoutId: watchedPrintLayoutId || undefined,
   });
 
 
