@@ -153,6 +153,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       fontFamily: (item as any).fontFamily || "Arial",
       fontSize: (item as any).fontSize || null,
       fontWeight: (item as any).fontWeight || null,
+      fontColor: (item as any).fontColor || null,
     })));
   }, [contractItems]);
 
@@ -235,6 +236,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
           fontFamily: r.fontFamily || "Arial",
           fontSize: r.fontSize,
           fontWeight: r.fontWeight,
+          fontColor: r.fontColor,
         }))
       });
 
@@ -287,6 +289,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       fontFamily: "Arial",
       fontSize: null,
       fontWeight: type === 'heading' ? 'bold' : null,
+      fontColor: null,
     };
     setRows(prev => [...prev, newRow]);
     setHasUnsavedChanges(true);
@@ -426,7 +429,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         ],
       },
     ],
-    defaults: { articleNumber: String(rows.length + 1), itemType: 'text', content: '', fontFamily: 'Arial', indentLevel: 0, fontWeight: null, fontSize: null },
+    defaults: { articleNumber: String(rows.length + 1), itemType: 'text', content: '', fontFamily: 'Arial', indentLevel: 0, fontWeight: null, fontSize: null, fontColor: null },
     onSave: async (rowData) => {
       const newRow: ContractRow = {
         articleNumber: rowData.articleNumber || String(rows.length + 1),
@@ -437,6 +440,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         fontFamily: rowData.fontFamily || 'Arial',
         fontSize: null,
         fontWeight: rowData.itemType === 'heading' ? 'bold' : null,
+        fontColor: rowData.fontColor || null,
       };
       setRows(prev => [...prev, newRow]);
       setHasUnsavedChanges(true);
