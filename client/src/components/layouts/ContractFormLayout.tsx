@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { Trash2, GripVertical, ChevronRight, ChevronDown, Type, Heading, Table, Image, MoveUp, MoveDown, Indent, Outdent, Copy } from "lucide-react";
-import { insertContractSchema, type Contract, type ContractItem, type Customer } from "@shared/schema";
+import { insertContractSchema, type Contract, type ContractItem, type Customer, type DocumentLayout } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 
 const formSchema = insertContractSchema.extend({
@@ -125,6 +126,25 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     staleTime: 60000,
   });
 
+  const [shouldLoadLanguages, setShouldLoadLanguages] = useState(false);
+  const { data: languages = [] } = useQuery<{ id: string; code: string; name: string }[]>({
+    queryKey: ["/api/languages"],
+    enabled: shouldLoadLanguages,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: availableLayouts = [] } = useQuery<DocumentLayout[]>({
+    queryKey: ["/api/layouts", { documentType: "contract" }],
+    queryFn: async () => {
+      const res = await fetch("/api/layouts?documentType=contract");
+      if (!res.ok) throw new Error("Failed to fetch layouts");
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -136,6 +156,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       status: "concept",
       notes: "",
       printLayoutId: "",
+      printLanguageCode: "nl",
     }
   });
 
@@ -150,6 +171,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         status: contract.status || "concept",
         notes: contract.notes || "",
         printLayoutId: contract.printLayoutId || "",
+        printLanguageCode: (contract as any).printLanguageCode || "nl",
       };
       form.reset(formData);
       setOriginalValues(formData);
@@ -166,6 +188,30 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       indentLevel: item.indentLevel || 0,
     })));
   }, [contractItems]);
+
+  const customerIdValue = form.watch("customerId");
+  const prevCustomerIdRef = useRef(customerIdValue);
+  useEffect(() => {
+    if (customerIdValue && customerIdValue !== prevCustomerIdRef.current) {
+      const customer = customers.find(c => c.id === customerIdValue);
+      if (customer) {
+        const lang = (customer as any)?.languageCode || 'nl';
+        form.setValue("printLanguageCode", lang);
+      }
+    }
+    prevCustomerIdRef.current = customerIdValue;
+  }, [customerIdValue, customers, form]);
+
+  const handleRefreshCustomer = useCallback(async () => {
+    const customerId = form.getValues("customerId");
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      const lang = (customer as any)?.languageCode || 'nl';
+      form.setValue("printLanguageCode", lang);
+    }
+    queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+    toast({ title: "Klantgegevens bijgewerkt", description: "Klantgegevens en taalinstellingen zijn gesynchroniseerd." });
+  }, [form, customers, toast]);
 
   const parseDateValue = (val: string) => {
     if (!val) return null;
@@ -556,6 +602,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
                     phone: (c as any).phone || undefined,
                   }))}
                   parentId={currentContractId || 'new-contract'}
+                  onRefreshCustomer={handleRefreshCustomer}
                 />
               ),
             },

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict vsFieTIeFGPBiY9e0I1nUJue0FNWh4ItHSjwa9N3vCLMIHuk7Lss3dGtwqCBPTt
+\restrict w35tTKTrIk5YBvSvEAiVWdSrH7HrwuGOdiYy3KuJBGTMxe6wBHViNX5ne92W8aM
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -419,7 +419,8 @@ CREATE TABLE public.contracts (
     status text DEFAULT 'concept'::text,
     notes text,
     print_layout_id character varying,
-    created_at timestamp without time zone DEFAULT now()
+    created_at timestamp without time zone DEFAULT now(),
+    print_language_code text DEFAULT 'nl'::text
 );
 
 
@@ -2010,8 +2011,8 @@ a296d037-1d17-40d7-b0de-bb3d62790061	b346f661-f11d-42d9-ad72-5f69879659cc	4	3.9	
 -- Data for Name: contracts; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.contracts (id, contract_number, description, customer_id, contract_date, valid_until, status, notes, print_layout_id, created_at) FROM stdin;
-b346f661-f11d-42d9-ad72-5f69879659cc	CON-2026-001	INSTALLATION AND CONSULTANCY AGREEMENT	d487e312-b8dd-4e68-9c0d-32a275388035	\N	\N	concept		\N	2026-04-10 14:33:37.276413
+COPY public.contracts (id, contract_number, description, customer_id, contract_date, valid_until, status, notes, print_layout_id, created_at, print_language_code) FROM stdin;
+b346f661-f11d-42d9-ad72-5f69879659cc	CON-2026-001	INSTALLATION AND CONSULTANCY AGREEMENT	d487e312-b8dd-4e68-9c0d-32a275388035	\N	\N	concept		\N	2026-04-10 14:33:37.276413	nl
 \.
 
 
@@ -3975,9 +3976,9 @@ bffa71e4-59b0-47a4-9d35-59992507a495	\N	\N	\N	2026-03-02 18:55:11.019526	2026-03
 
 COPY public.user_sessions (sid, sess, expire) FROM stdin;
 mZxlnAyl_6L_vUpnnNT3YDd7IQcCgr5R	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-19T09:13:55.587Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-19 20:31:37
-kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-20 11:43:56
 ijKKoKSIPx7qxHF_Q9rsiATVFBVaMMj9	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T07:23:09.607Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-20 07:23:10
 64X9FLFfYvqREZpZkSkyUNBg8UJ_wCVh	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T07:23:15.713Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-20 07:23:16
+kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-20 11:46:38
 9h7LEZesmiLoTsnGd7Xg_qkRAh5RDpxI	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T07:23:45.449Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-20 07:23:46
 \.
 
@@ -5561,5 +5562,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict vsFieTIeFGPBiY9e0I1nUJue0FNWh4ItHSjwa9N3vCLMIHuk7Lss3dGtwqCBPTt
+\unrestrict w35tTKTrIk5YBvSvEAiVWdSrH7HrwuGOdiYy3KuJBGTMxe6wBHViNX5ne92W8aM
 

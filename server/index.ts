@@ -397,6 +397,7 @@ async function ensureLineItemColumns() {
       indent_level INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW()
     )`);
+    await db.execute(sql`ALTER TABLE contracts ADD COLUMN IF NOT EXISTS print_language_code TEXT DEFAULT 'nl'`);
   } catch (err: any) {
     log(`Could not ensure line item columns: ${err.message}`);
   }

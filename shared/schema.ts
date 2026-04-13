@@ -1635,6 +1635,7 @@ export const contracts = pgTable("contracts", {
   status: text("status").default("concept"),
   notes: text("notes"),
   printLayoutId: varchar("print_layout_id"),
+  printLanguageCode: text("print_language_code").default("nl"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
