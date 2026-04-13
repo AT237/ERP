@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { Trash2, GripVertical, ChevronRight, ChevronDown, Type, Heading, Table, Image, MoveUp, MoveDown, Indent, Outdent, Copy } from "lucide-react";
+import { Trash2, ChevronRight, ChevronDown, Type, Heading, Table, Image, MoveUp, MoveDown, Indent, Outdent, Copy } from "lucide-react";
 import { insertContractSchema, type Contract, type ContractItem, type Customer, type DocumentLayout } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -40,38 +40,45 @@ interface ContractRow {
 
 const PLACEHOLDERS = [
   { category: "Klant", items: [
-    { label: "Naam", value: "{{klant.naam}}" },
-    { label: "Adres", value: "{{klant.adres}}" },
-    { label: "Postcode", value: "{{klant.postcode}}" },
-    { label: "Plaats", value: "{{klant.plaats}}" },
-    { label: "Land", value: "{{klant.land}}" },
-    { label: "E-mail", value: "{{klant.email}}" },
-    { label: "Telefoon", value: "{{klant.telefoon}}" },
-    { label: "KVK", value: "{{klant.kvk}}" },
-    { label: "BTW nummer", value: "{{klant.btw}}" },
-    { label: "Contactpersoon", value: "{{klant.contactpersoon}}" },
+    { label: "Naam", value: "{{customer.name}}" },
+    { label: "Straat", value: "{{customer.address.street}}" },
+    { label: "Huisnummer", value: "{{customer.address.houseNumber}}" },
+    { label: "Postcode", value: "{{customer.address.postalCode}}" },
+    { label: "Plaats", value: "{{customer.address.city}}" },
+    { label: "Land", value: "{{customer.countryName}}" },
+    { label: "E-mail", value: "{{customer.generalEmail}}" },
+    { label: "Telefoon", value: "{{customer.phone}}" },
+    { label: "Mobiel", value: "{{customer.mobile}}" },
+    { label: "KVK", value: "{{customer.kvkNummer}}" },
+    { label: "BTW nummer", value: "{{customer.btwNummer}}" },
+    { label: "Klantnummer", value: "{{customer.customerNumber}}" },
+    { label: "Bankrekening", value: "{{customer.bankAccount}}" },
   ]},
   { category: "Bedrijf", items: [
-    { label: "Naam", value: "{{bedrijf.naam}}" },
-    { label: "Adres", value: "{{bedrijf.adres}}" },
-    { label: "Postcode", value: "{{bedrijf.postcode}}" },
-    { label: "Plaats", value: "{{bedrijf.plaats}}" },
-    { label: "KVK", value: "{{bedrijf.kvk}}" },
-    { label: "BTW nummer", value: "{{bedrijf.btw}}" },
-    { label: "IBAN", value: "{{bedrijf.iban}}" },
-    { label: "Telefoon", value: "{{bedrijf.telefoon}}" },
-    { label: "E-mail", value: "{{bedrijf.email}}" },
+    { label: "Naam", value: "{{company.name}}" },
+    { label: "Straat", value: "{{company.address.street}}" },
+    { label: "Huisnummer", value: "{{company.address.houseNumber}}" },
+    { label: "Postcode", value: "{{company.address.postalCode}}" },
+    { label: "Plaats", value: "{{company.address.city}}" },
+    { label: "Land", value: "{{company.address.country}}" },
+    { label: "KVK", value: "{{company.kvkNummer}}" },
+    { label: "BTW nummer", value: "{{company.btwNummer}}" },
+    { label: "IBAN", value: "{{company.iban}}" },
+    { label: "Bank", value: "{{company.bankName}}" },
+    { label: "Telefoon", value: "{{company.phone}}" },
+    { label: "E-mail", value: "{{company.email}}" },
+    { label: "Website", value: "{{company.website}}" },
   ]},
   { category: "Contract", items: [
-    { label: "Contractnummer", value: "{{contract.nummer}}" },
-    { label: "Datum", value: "{{contract.datum}}" },
-    { label: "Geldig tot", value: "{{contract.geldig_tot}}" },
-    { label: "Omschrijving", value: "{{contract.omschrijving}}" },
+    { label: "Contractnummer", value: "{{contract.contractNumber}}" },
+    { label: "Datum", value: "{{contract.contractDate}}" },
+    { label: "Geldig tot", value: "{{contract.validUntil}}" },
+    { label: "Omschrijving", value: "{{contract.description}}" },
+    { label: "Status", value: "{{contract.status}}" },
   ]},
   { category: "Datum", items: [
-    { label: "Vandaag", value: "{{datum.vandaag}}" },
-    { label: "Huidig jaar", value: "{{datum.jaar}}" },
-    { label: "Huidige maand", value: "{{datum.maand}}" },
+    { label: "Vandaag", value: "[VANDAAG]" },
+    { label: "Huidig jaar", value: "[JAAR]" },
   ]},
 ];
 
@@ -472,8 +479,8 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
                 <CardContent className="p-3">
                   <div className="flex items-start gap-2">
                     <div className="flex flex-col items-center gap-1 pt-1">
-                      <GripVertical className="w-4 h-4 text-muted-foreground" />
                       <span className="text-xs text-muted-foreground">{getTypeIcon(row.itemType)}</span>
+                      <span className="text-[10px] text-muted-foreground">{index + 1}</span>
                     </div>
                     <div className="flex-1" style={{ marginLeft: `${row.indentLevel * 24}px` }}>
                       <div className="flex items-center gap-2 mb-2">
