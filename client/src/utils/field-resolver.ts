@@ -196,6 +196,39 @@ export function amountToWords(amount: number, language: string = 'nl'): string {
 export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
   if (!fieldKey || !printData) return null;
 
+  // Dutch field name aliases → map to actual data field paths
+  const dutchFieldAliases: Record<string, string> = {
+    'adres': 'address.street',
+    'straat': 'address.street',
+    'huisnummer': 'address.houseNumber',
+    'postcode': 'address.postalCode',
+    'plaats': 'address.city',
+    'stad': 'address.city',
+    'land': 'address.country',
+    'naam': 'name',
+    'telefoon': 'phone',
+    'mobiel': 'mobile',
+    'klantnummer': 'customerNumber',
+    'kvknummer': 'kvkNummer',
+    'btwnummer': 'btwNummer',
+    'bankrekening': 'bankAccount',
+    'contactpersoon': 'contactPerson',
+    'notities': 'notes',
+    'omschrijving': 'description',
+    'datum': 'date',
+    'factuurnummer': 'invoiceNumber',
+    'factuurdatum': 'invoiceDate',
+    'offertenummer': 'quotationNumber',
+    'offertedatum': 'quotationDate',
+    'contractnummer': 'contractNumber',
+    'contractdatum': 'contractDate',
+    'geldigtot': 'validUntil',
+    'totaalbedrag': 'totalAmount',
+    'subtotaal': 'subtotal',
+    'btwbedrag': 'taxAmount',
+    'landnaam': 'countryName',
+  };
+
   let parts = fieldKey.split('.');
   
   // First part is the table name (quotation, customer, project, company)
@@ -205,6 +238,7 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
   // Handle shorthand aliases like "address" -> "customer.address"
   const shorthandAliases: Record<string, { table: string; prefix: string[] }> = {
     'address': { table: 'customer', prefix: ['address'] },
+    'adres': { table: 'customer', prefix: ['address'] },
   };
   
   if (shorthandAliases[tableName]) {
@@ -215,6 +249,8 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
 
   // If there's no dot (single-part key like "name"), search all data objects
   if (parts.length === 1) {
+    const key = parts[0];
+    const resolvedKey = dutchFieldAliases[key.toLowerCase()] || key;
     const searchOrder = [
       printData.customer,
       printData.contract,
@@ -226,16 +262,37 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
       printData.project,
     ];
     for (const dataObj of searchOrder) {
-      if (dataObj && dataObj[parts[0]] !== undefined && dataObj[parts[0]] !== null) {
-        return dataObj[parts[0]];
+      if (!dataObj) continue;
+      // Try direct key first
+      if (dataObj[key] !== undefined && dataObj[key] !== null && dataObj[key] !== '') {
+        return dataObj[key];
+      }
+      // Try resolved Dutch alias (may be nested like "address.street")
+      if (resolvedKey !== key) {
+        const resolvedParts = resolvedKey.split('.');
+        let val: any = dataObj;
+        for (const p of resolvedParts) {
+          if (val === null || val === undefined) break;
+          val = val[p];
+        }
+        if (val !== undefined && val !== null && val !== '') return val;
       }
     }
     return null;
   }
 
+  // Apply Dutch field aliases to the field parts (after the table name)
+  const fieldParts = parts.slice(1);
+  if (fieldParts.length === 1) {
+    const alias = dutchFieldAliases[fieldParts[0].toLowerCase()];
+    if (alias) {
+      parts = [parts[0], ...alias.split('.')];
+    }
+  }
+
   const fieldPath = parts.slice(1);
 
-  // Normalize table names (plural to singular)
+  // Normalize table names (plural to singular, including Dutch names)
   const tableAliases: Record<string, string> = {
     'quotations': 'quotation',
     'customers': 'customer',
@@ -249,6 +306,19 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
     'proforma_invoice': 'proformaInvoice',
     'proforma_invoices': 'proformaInvoice',
     'contracts': 'contract',
+    'klant': 'customer',
+    'klanten': 'customer',
+    'bedrijf': 'company',
+    'offerte': 'quotation',
+    'offertes': 'quotation',
+    'factuur': 'invoice',
+    'facturen': 'invoice',
+    'project': 'project',
+    'projecten': 'project',
+    'paklijst': 'packingList',
+    'leverancier': 'supplier',
+    'contract': 'contract',
+    'contracten': 'contract',
   };
   if (tableAliases[tableName]) {
     tableName = tableAliases[tableName];
