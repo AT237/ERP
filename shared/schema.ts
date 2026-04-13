@@ -1642,7 +1642,6 @@ export const contracts = pgTable("contracts", {
 export const contractItems = pgTable("contract_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   contractId: varchar("contract_id").references(() => contracts.id, { onDelete: 'cascade' }).notNull(),
-  position: integer("position").default(0),
   articleNumber: text("article_number").notNull(),
   itemType: text("item_type").default("text"),
   content: text("content"),

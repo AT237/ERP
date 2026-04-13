@@ -43,7 +43,6 @@ interface ContractRow {
   articleNumber: string;
   itemType: string;
   content: string;
-  position: number;
   indentLevel: number;
   fontFamily: string;
   fontSize: number | null;
@@ -159,7 +158,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       articleNumber: item.articleNumber || "",
       itemType: item.itemType || "text",
       content: item.content || "",
-      position: item.position || 0,
       indentLevel: item.indentLevel || 0,
       fontFamily: (item as any).fontFamily || "Arial",
       fontSize: (item as any).fontSize || null,
@@ -245,7 +243,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
           articleNumber: r.articleNumber,
           itemType: r.itemType,
           content: r.content,
-          position: i,
           indentLevel: r.indentLevel,
           fontFamily: r.fontFamily || "Arial",
           fontSize: r.fontSize,
@@ -298,7 +295,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       articleNumber: `${rows.length + 1}`,
       itemType: type,
       content: "",
-      position: rows.length,
       indentLevel: type === 'heading' ? 0 : (rows.length > 0 ? rows[rows.length - 1].indentLevel : 0),
       fontFamily: "Arial",
       fontSize: null,
@@ -450,7 +446,6 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         articleNumber: rowData.articleNumber || String(rows.length + 1),
         itemType: rowData.itemType || 'text',
         content: rowData.content || '',
-        position: rows.length,
         indentLevel: 0,
         fontFamily: rowData.fontFamily || 'Arial',
         fontSize: null,
