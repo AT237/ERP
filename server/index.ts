@@ -584,7 +584,7 @@ async function ensureContractLayout() {
     const meta = versionCheck.rows.length > 0 ? (typeof versionCheck.rows[0].metadata === 'string' ? JSON.parse(versionCheck.rows[0].metadata) : versionCheck.rows[0].metadata || {}) : {};
     const currentVersion = versionCheck.rows.length > 0 ? (meta.layoutVersion || 1) : 0;
 
-    if (currentVersion >= 2) return;
+    if (currentVersion >= 3) return;
 
     if (versionCheck.rows.length > 0) {
       await pool.query(`DELETE FROM layout_sections WHERE layout_id = $1`, [layoutId]);
@@ -609,7 +609,7 @@ async function ensureContractLayout() {
           type: 'Image',
           size: { width: 45, height: 15 },
           position: { x: 0, y: 0 },
-          config: { field: 'company.logoUrl', alt: 'ATE Solutions B.V.', fit: 'contain' },
+          config: { src: 'company.logo', alt: 'ATE Solutions B.V.', fit: 'contain' },
           style: { fontSize: 9 },
         },
         {
@@ -625,7 +625,7 @@ async function ensureContractLayout() {
           type: 'Page Number',
           size: { width: 50, height: 6 },
           position: { x: 130, y: 7 },
-          config: { format: 'Pagina [PAGINANUMMER] van [TOTAALPAGINAS]' },
+          config: { format: 'of_total' },
           style: { fontSize: 8, color: '#555555', textAlign: 'right' },
         },
         {
@@ -728,16 +728,19 @@ async function ensureContractLayout() {
         padding: { top: 5, left: 0, right: 0, bottom: 5 },
         backgroundColor: '#ffffff',
       },
+      heightCanShrink: true,
+      canShrink: true,
       blocks: [
         {
           id: 'cblk-body',
           type: 'Contract Body',
-          size: { width: 180, height: 800 },
+          size: { width: 180, height: 500 },
           position: { x: 0, y: 0 },
           config: {},
           style: { fontSize: 10, titleColor: '#1a365d', accentColor: '#e87722' },
         },
       ],
+      printRules: { everyPage: false },
     };
 
     const footerConfig = {

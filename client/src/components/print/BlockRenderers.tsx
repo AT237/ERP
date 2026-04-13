@@ -951,6 +951,7 @@ export function ContractBodyRenderer({ block, printData }: BlockRendererProps) {
   const accentColor = block.style?.accentColor || '#e87722';
   const fontSize = block.style?.fontSize || 10;
 
+  const preItems: { item: any; idx: number }[] = [];
   const chapters: { heading: any; headingIdx: number; children: { item: any; idx: number }[] }[] = [];
   let currentChapter: typeof chapters[0] | null = null;
   let itemIdx = 0;
@@ -961,6 +962,8 @@ export function ContractBodyRenderer({ block, printData }: BlockRendererProps) {
       currentChapter = { heading: item, headingIdx: itemIdx, children: [] };
     } else if (currentChapter) {
       currentChapter.children.push({ item, idx: itemIdx });
+    } else {
+      preItems.push({ item, idx: itemIdx });
     }
     itemIdx++;
   }
@@ -983,6 +986,14 @@ export function ContractBodyRenderer({ block, printData }: BlockRendererProps) {
 
   return (
     <div style={{ width: '100%' }}>
+      {preItems.length > 0 && (
+        <div style={{ marginBottom: '16px' }}>
+          {preItems.map(({ item, idx }) =>
+            renderContractItem(item, idx, printData, fontSize, titleColor, accentColor)
+          )}
+        </div>
+      )}
+
       <div>
         <div style={{
           fontSize: `${fontSize + 6}px`,
