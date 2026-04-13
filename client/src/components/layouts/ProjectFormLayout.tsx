@@ -221,7 +221,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     createPositionColumn(),
     {
       key: 'lineType',
-      header: 'Type',
+      label: 'Type',
       visible: true,
       width: 80,
       render: (item: ProjectItem) => {
@@ -231,21 +231,21 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     },
     {
       key: 'description',
-      header: 'Omschrijving',
+      label: 'Omschrijving',
       visible: true,
       width: 250,
       render: (item: ProjectItem) => item.description || ''
     },
     {
       key: 'quantity',
-      header: 'Aantal',
+      label: 'Aantal',
       visible: true,
       width: 70,
       render: (item: ProjectItem) => item.lineType === 'text' ? '' : (item.quantity || '0')
     },
     {
       key: 'unit',
-      header: 'Eenheid',
+      label: 'Eenheid',
       visible: true,
       width: 70,
       render: (item: ProjectItem) => item.lineType === 'text' ? '' : (item.unit || '')
@@ -253,7 +253,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     createCurrencyColumn('unitPrice', 'Prijs', 90),
     {
       key: 'discountPercent',
-      header: 'Korting %',
+      label: 'Korting %',
       visible: true,
       width: 75,
       render: (item: ProjectItem) => item.lineType === 'text' ? '' : (item.discountPercent || '0')
