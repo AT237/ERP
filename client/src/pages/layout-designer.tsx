@@ -3810,6 +3810,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
     invoice: printData.invoice || {},
     proformaInvoice: printData.proformaInvoice || {},
     packingList: printData.packingList || {},
+    contract: printData.contract || {},
     customer: printData.customer || null,
     project: printData.project || null,
     company: printData.company || null,

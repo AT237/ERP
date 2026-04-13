@@ -6,6 +6,7 @@ export type PrintData = {
   invoice?: Record<string, any>;
   proformaInvoice?: Record<string, any>;
   packingList?: Record<string, any>;
+  contract?: Record<string, any>;
   customer: Record<string, any> | null;
   project: Record<string, any> | null;
   company: Record<string, any> | null;
@@ -258,7 +259,7 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
       data = printData.company;
       break;
     case 'contract':
-      data = (printData as any).contract;
+      data = printData.contract;
       break;
     case 'vatrate':
     case 'vatRate':
@@ -443,25 +444,31 @@ export function replacePlaceholders(
                                fieldPath.startsWith('invoiceItems.') ||
                                fieldPath.startsWith('invoiceItem.') ||
                                fieldPath.startsWith('proformaInvoiceItems.') ||
-                               fieldPath.startsWith('proformaInvoiceItem.');
+                               fieldPath.startsWith('proformaInvoiceItem.') ||
+                               fieldPath.startsWith('contractItems.') ||
+                               fieldPath.startsWith('contractItem.');
     
     if (isItemPlaceholder && itemContext) {
       // Normalize the field path by removing the prefix
       let itemFieldPath: string;
       if (fieldPath.startsWith('quotationItems.')) {
-        itemFieldPath = fieldPath.substring(15); // Remove 'quotationItems.' prefix
+        itemFieldPath = fieldPath.substring(15);
       } else if (fieldPath.startsWith('quotationItem.')) {
-        itemFieldPath = fieldPath.substring(14); // Remove 'quotationItem.' prefix
+        itemFieldPath = fieldPath.substring(14);
       } else if (fieldPath.startsWith('invoiceItems.')) {
-        itemFieldPath = fieldPath.substring(13); // Remove 'invoiceItems.' prefix
+        itemFieldPath = fieldPath.substring(13);
       } else if (fieldPath.startsWith('invoiceItem.')) {
-        itemFieldPath = fieldPath.substring(12); // Remove 'invoiceItem.' prefix
+        itemFieldPath = fieldPath.substring(12);
       } else if (fieldPath.startsWith('proformaInvoiceItems.')) {
-        itemFieldPath = fieldPath.substring(21); // Remove 'proformaInvoiceItems.' prefix
+        itemFieldPath = fieldPath.substring(21);
       } else if (fieldPath.startsWith('proformaInvoiceItem.')) {
-        itemFieldPath = fieldPath.substring(20); // Remove 'proformaInvoiceItem.' prefix
+        itemFieldPath = fieldPath.substring(20);
+      } else if (fieldPath.startsWith('contractItems.')) {
+        itemFieldPath = fieldPath.substring(14);
+      } else if (fieldPath.startsWith('contractItem.')) {
+        itemFieldPath = fieldPath.substring(13);
       } else {
-        itemFieldPath = fieldPath.substring(5); // Remove 'item.' prefix
+        itemFieldPath = fieldPath.substring(5);
       }
       const itemValue = resolveItemValue(itemFieldPath, itemContext);
       

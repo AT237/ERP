@@ -245,6 +245,7 @@ export default function PrintPreviewPage() {
           {printData?.invoice?.invoiceNumber ||
             printData?.quotation?.quotationNumber ||
             printData?.packingList?.packingNumber ||
+            printData?.contract?.contractNumber ||
             "Print Preview"}
         </div>
         <div className="flex items-center gap-1">
