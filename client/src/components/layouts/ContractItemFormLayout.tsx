@@ -433,78 +433,8 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
     </div>
   );
 
-  const fieldRow = (
-    <div className="grid grid-cols-4 gap-4">
-      <div>
-        <label className="text-xs font-medium text-muted-foreground mb-1 block">Positie nr.</label>
-        <Input
-          value={form.watch('articleNumber') || ''}
-          onChange={(e) => form.setValue('articleNumber', e.target.value)}
-          className="h-8 text-sm"
-          placeholder="1"
-        />
-        {form.formState.errors.articleNumber && (
-          <p className="text-[10px] text-red-500 mt-0.5">{form.formState.errors.articleNumber.message}</p>
-        )}
-      </div>
-      <div>
-        <label className="text-xs font-medium text-muted-foreground mb-1 block">Type</label>
-        <Select
-          value={currentType}
-          onValueChange={(val) => form.setValue('itemType', val)}
-        >
-          <SelectTrigger className="h-8 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="heading">
-              <span className="flex items-center gap-2"><Heading className="w-3.5 h-3.5 text-blue-600" /> Kop</span>
-            </SelectItem>
-            <SelectItem value="text">
-              <span className="flex items-center gap-2"><Type className="w-3.5 h-3.5 text-gray-600" /> Tekst</span>
-            </SelectItem>
-            <SelectItem value="image">
-              <span className="flex items-center gap-2"><ImageIcon className="w-3.5 h-3.5 text-green-600" /> Afbeelding</span>
-            </SelectItem>
-            <SelectItem value="table">
-              <span className="flex items-center gap-2"><Table2 className="w-3.5 h-3.5 text-purple-600" /> Tabel</span>
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <label className="text-xs font-medium text-muted-foreground mb-1 block">Inspringniveau</label>
-        <Select
-          value={String(currentIndentLevel)}
-          onValueChange={(val) => form.setValue('indentLevel', parseInt(val))}
-        >
-          <SelectTrigger className="h-8 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="0">0 — Hoofdniveau</SelectItem>
-            <SelectItem value="1">1 — Sub</SelectItem>
-            <SelectItem value="2">2 — Sub-sub</SelectItem>
-            <SelectItem value="3">3 — Sub-sub-sub</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <label className="text-xs font-medium text-muted-foreground mb-1 block">Positie (volgorde)</label>
-        <Input
-          type="number"
-          value={form.watch('position') ?? 0}
-          onChange={(e) => form.setValue('position', parseInt(e.target.value) || 0)}
-          className="h-8 text-sm"
-          placeholder="0"
-        />
-      </div>
-    </div>
-  );
-
-  const combinedContent = (
-    <div className="flex flex-col gap-3" style={{ minHeight: '400px' }}>
-      {fieldRow}
+  const editorContent = (
+    <div className="flex flex-col gap-3" style={{ minHeight: '350px' }}>
       {fontToolbar}
       {contentArea}
     </div>
@@ -516,8 +446,83 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
       label: "Contractregel",
       rows: [
         {
+          type: 'two-column' as const,
+          leftColumn: [
+            {
+              key: "articleNumber",
+              label: "Positie nr.",
+              type: "text",
+              placeholder: "1",
+              register: form.register("articleNumber"),
+              validation: {
+                isRequired: true,
+                error: form.formState.errors.articleNumber?.message,
+              },
+            },
+            {
+              key: "itemType",
+              label: "Type",
+              type: "custom",
+              customComponent: (
+                <Select
+                  value={currentType}
+                  onValueChange={(val) => form.setValue('itemType', val)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="heading">
+                      <span className="flex items-center gap-2"><Heading className="w-3.5 h-3.5 text-blue-600" /> Kop</span>
+                    </SelectItem>
+                    <SelectItem value="text">
+                      <span className="flex items-center gap-2"><Type className="w-3.5 h-3.5 text-gray-600" /> Tekst</span>
+                    </SelectItem>
+                    <SelectItem value="image">
+                      <span className="flex items-center gap-2"><ImageIcon className="w-3.5 h-3.5 text-green-600" /> Afbeelding</span>
+                    </SelectItem>
+                    <SelectItem value="table">
+                      <span className="flex items-center gap-2"><Table2 className="w-3.5 h-3.5 text-purple-600" /> Tabel</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              ),
+            },
+          ],
+          rightColumn: [
+            {
+              key: "indentLevel",
+              label: "Inspringniveau",
+              type: "custom",
+              customComponent: (
+                <Select
+                  value={String(currentIndentLevel)}
+                  onValueChange={(val) => form.setValue('indentLevel', parseInt(val))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0 — Hoofdniveau</SelectItem>
+                    <SelectItem value="1">1 — Sub</SelectItem>
+                    <SelectItem value="2">2 — Sub-sub</SelectItem>
+                    <SelectItem value="3">3 — Sub-sub-sub</SelectItem>
+                  </SelectContent>
+                </Select>
+              ),
+            },
+            {
+              key: "position",
+              label: "Positie (volgorde)",
+              type: "number",
+              placeholder: "0",
+              register: form.register("position", { valueAsNumber: true }),
+            },
+          ],
+        },
+        {
           type: "custom" as const,
-          customContent: combinedContent,
+          customContent: editorContent,
         },
       ],
     },
