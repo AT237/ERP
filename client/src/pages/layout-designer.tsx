@@ -4222,44 +4222,98 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
         if (contractBodyBlock && typedPrintData.items?.length > 0) {
           const { preItems, chapters } = splitContractChapters(typedPrintData.items);
           if (chapters.length > 0) {
-            const bodyBlockStyle: React.CSSProperties = {
-              position: 'relative',
-              width: '100%',
-              overflow: 'visible',
-            };
             const sectionBg = section.config?.style?.backgroundColor || '#ffffff';
             const ContractBodyComp = BlockRenderers['Contract Body'];
+            const otherBlocks = sectionBlocks.filter((b: any) => b.type !== 'Contract Body');
+            const bodyX = contractBodyBlock.position?.x || 0;
+            const bodyW = contractBodyBlock.size?.width || 190;
+            const bodyFontSize = parseFloat(String(contractBodyBlock.style?.fontSize || '10')) || 10;
+            const bodyFontFamily = contractBodyBlock.style?.fontFamily || 'Arial';
+            const bodyLineHeight = parseFloat(String(contractBodyBlock.style?.lineHeight || '1.4')) || 1.4;
+            const bodyWidthPx = mmToPx(bodyW);
+
+            const estimateItemsHeightPx = (items: any[]): number => {
+              let totalPx = 0;
+              for (const item of items) {
+                if (item.itemType === 'heading') {
+                  const headingFontPt = bodyFontSize + (item.indentLevel === 0 ? 4 : 2);
+                  const text = item.articleNumber ? `${item.articleNumber}  ${item.content || ''}` : (item.content || '');
+                  const hPx = measureTextHeightPx(text, headingFontPt, bodyWidthPx, bodyFontFamily, bodyLineHeight);
+                  totalPx += hPx + 16;
+                } else if (item.itemType === 'table') {
+                  totalPx += 100;
+                } else {
+                  const text = item.content || '';
+                  const hPx = measureTextHeightPx(text, bodyFontSize, bodyWidthPx, bodyFontFamily, bodyLineHeight);
+                  totalPx += Math.max(hPx, 14) + 6;
+                }
+              }
+              return totalPx;
+            };
+
+            const renderOtherBlocks = (ctx: PageCtx, keyPrefix: string) => (
+              <>
+                {otherBlocks.map((block: any, idx: number) => {
+                  const Renderer = BlockRenderers[block.type];
+                  if (!Renderer) return null;
+                  return (
+                    <div key={`${keyPrefix}-ob-${idx}`} style={{
+                      position: 'absolute',
+                      left: `${mmToPx(block.position?.x || 0)}px`,
+                      top: `${mmToPx(block.position?.y || 0)}px`,
+                      width: `${mmToPx(block.size?.width || 50)}px`,
+                      height: `${mmToPx(block.size?.height || 25)}px`,
+                    }}>
+                      <Renderer block={block} printData={typedPrintData} currentPage={ctx.currentPage} totalPages={ctx.totalPages} />
+                    </div>
+                  );
+                })}
+              </>
+            );
+
+            const renderChunkSection = (chunkData: any, heightPx: number, key: string, ctx: PageCtx) => (
+              <div key={key} style={{
+                position: 'relative',
+                backgroundColor: sectionBg,
+                height: `${heightPx}px`,
+                overflow: 'visible',
+              }}>
+                {renderOtherBlocks(ctx, key)}
+                <div style={{
+                  position: 'absolute',
+                  left: `${mmToPx(bodyX)}px`,
+                  top: '0px',
+                  width: `${mmToPx(bodyW)}px`,
+                  height: `${heightPx}px`,
+                  overflow: 'visible',
+                }}>
+                  <ContractBodyComp block={contractBodyBlock} printData={chunkData} currentPage={ctx.currentPage} totalPages={ctx.totalPages} />
+                </div>
+              </div>
+            );
 
             if (preItems.length > 0) {
               const capturedPreItems = preItems;
-              const preItemsHeightPx = mmToPx(capturedPreItems.length * 6);
+              const preHeightPx = Math.max(estimateItemsHeightPx(capturedPreItems), mmToPx(20));
               renderedItems.push({
-                heightPx: Math.max(preItemsHeightPx, mmToPx(20)),
+                heightPx: preHeightPx,
                 isEveryPage: false, isFirstPage: false, isLastPage: false,
                 isFixed: false, fixedY: 0, fixedPrintRules: printRules,
                 renderFn: (ctx: PageCtx) => {
                   const modifiedData = { ...typedPrintData, items: capturedPreItems, _contractRenderMode: 'chapter' as const };
-                  return (
-                    <div key={`${section.id}-pre`} style={{ ...bodyBlockStyle, backgroundColor: sectionBg, height: 'auto', minHeight: `${mmToPx(20)}px` }}>
-                      <ContractBodyComp block={contractBodyBlock} printData={modifiedData} currentPage={ctx.currentPage} totalPages={ctx.totalPages} />
-                    </div>
-                  );
+                  return renderChunkSection(modifiedData, preHeightPx, `${section.id}-pre`, ctx);
                 },
               });
             }
 
-            const tocHeightPx = mmToPx(Math.max(30, chapters.length * 8 + 20));
+            const tocHeightPx = Math.max(mmToPx(30), chapters.length * 24 + 60);
             renderedItems.push({
               heightPx: tocHeightPx,
               isEveryPage: false, isFirstPage: false, isLastPage: false,
               isFixed: false, fixedY: 0, fixedPrintRules: printRules,
               renderFn: (ctx: PageCtx) => {
                 const tocData = { ...typedPrintData, _contractRenderMode: 'toc' as const };
-                return (
-                  <div key={`${section.id}-toc`} style={{ ...bodyBlockStyle, backgroundColor: sectionBg, height: 'auto', minHeight: `${tocHeightPx}px` }}>
-                    <ContractBodyComp block={contractBodyBlock} printData={tocData} currentPage={ctx.currentPage} totalPages={ctx.totalPages} />
-                  </div>
-                );
+                return renderChunkSection(tocData, tocHeightPx, `${section.id}-toc`, ctx);
               },
             });
 
@@ -4267,13 +4321,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
               const capturedChapter = chapter;
               const capturedIdx = chIdx;
               const chapterItems = [capturedChapter.heading, ...capturedChapter.children];
-              const estimatedLines = chapterItems.reduce((sum: number, item: any) => {
-                if (item.itemType === 'heading') return sum + 3;
-                if (item.itemType === 'table') return sum + 8;
-                const contentLen = (item.content || '').length;
-                return sum + Math.max(2, Math.ceil(contentLen / 80));
-              }, 0);
-              const chapterHeightPx = mmToPx(Math.max(30, estimatedLines * 5 + 10));
+              const chapterHeightPx = Math.max(estimateItemsHeightPx(chapterItems), mmToPx(30));
 
               renderedItems.push({
                 heightPx: chapterHeightPx,
@@ -4281,11 +4329,7 @@ export function LayoutPreview({ layout, sections, printData, showMarginOverlays 
                 isFixed: false, fixedY: 0, fixedPrintRules: printRules,
                 renderFn: (ctx: PageCtx) => {
                   const chapterData = { ...typedPrintData, items: chapterItems, _contractRenderMode: 'chapter' as const };
-                  return (
-                    <div key={`${section.id}-ch-${capturedIdx}`} style={{ ...bodyBlockStyle, backgroundColor: sectionBg, height: 'auto', minHeight: `${chapterHeightPx}px` }}>
-                      <ContractBodyComp block={contractBodyBlock} printData={chapterData} currentPage={ctx.currentPage} totalPages={ctx.totalPages} />
-                    </div>
-                  );
+                  return renderChunkSection(chapterData, chapterHeightPx, `${section.id}-ch-${capturedIdx}`, ctx);
                 },
               });
             });
