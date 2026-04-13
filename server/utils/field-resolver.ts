@@ -1283,7 +1283,7 @@ export async function loadContractPrintData(contractId: string): Promise<any | n
 
   const items = await db.query.contractItems.findMany({
     where: eq(contractItems.contractId, contractId),
-    orderBy: [asc(contractItems.position)],
+    orderBy: [asc(contractItems.articleNumber), asc(contractItems.position)],
   });
 
   const itemsData = items.map((item) => ({
@@ -1293,6 +1293,10 @@ export async function loadContractPrintData(contractId: string): Promise<any | n
     itemType: item.itemType || "text",
     content: item.content || "",
     indentLevel: item.indentLevel ?? 0,
+    fontFamily: item.fontFamily || "Arial",
+    fontSize: item.fontSize,
+    fontWeight: item.fontWeight,
+    fontColor: item.fontColor,
   }));
 
   return {

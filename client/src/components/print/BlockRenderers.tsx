@@ -828,11 +828,15 @@ function renderContractItem(item: any, idx: number, printData: any, fontSize: nu
   const indent = (item.indentLevel || 0) * 16;
   const content = replaceTextVariables(item.content || '', printData);
   const artNum = item.articleNumber || '';
+  const itemFontFamily = item.fontFamily || undefined;
+  const itemFontSize = item.fontSize || undefined;
+  const itemFontWeight = item.fontWeight || undefined;
+  const itemFontColor = item.fontColor || undefined;
 
   if (item.itemType === 'heading') {
-    const headingSize = item.indentLevel === 0 ? fontSize + 4
+    const headingSize = itemFontSize || (item.indentLevel === 0 ? fontSize + 4
       : item.indentLevel === 1 ? fontSize + 2
-      : fontSize + 1;
+      : fontSize + 1);
     return (
       <div key={idx} style={{
         display: 'flex',
@@ -842,20 +846,21 @@ function renderContractItem(item: any, idx: number, printData: any, fontSize: nu
         paddingLeft: `${indent}px`,
         borderBottom: item.indentLevel === 0 ? `2px solid ${accentColor}` : 'none',
         paddingBottom: item.indentLevel === 0 ? '4px' : '0',
+        fontFamily: itemFontFamily,
       }}>
         {artNum && (
           <span style={{
-            fontWeight: 700,
+            fontWeight: itemFontWeight === 'bold' ? 700 : (itemFontWeight || 700),
             fontSize: `${headingSize}px`,
-            color: titleColor,
+            color: itemFontColor || titleColor,
             minWidth: '40px',
             flexShrink: 0,
           }}>{artNum}</span>
         )}
         <span style={{
-          fontWeight: 700,
+          fontWeight: itemFontWeight === 'bold' ? 700 : (itemFontWeight || 700),
           fontSize: `${headingSize}px`,
-          color: titleColor,
+          color: itemFontColor || titleColor,
         }}>{content}</span>
       </div>
     );
@@ -868,11 +873,12 @@ function renderContractItem(item: any, idx: number, printData: any, fontSize: nu
         paddingLeft: `${indent}px`,
         marginTop: '6px',
         marginBottom: '6px',
+        fontFamily: itemFontFamily,
       }}>
         <table style={{
           width: '100%',
           borderCollapse: 'collapse',
-          fontSize: `${fontSize}px`,
+          fontSize: `${itemFontSize || fontSize}px`,
         }}>
           <tbody>
             {rows.map((row: string, rIdx: number) => {
@@ -923,19 +929,23 @@ function renderContractItem(item: any, idx: number, printData: any, fontSize: nu
       marginBottom: '3px',
       paddingLeft: `${indent}px`,
       lineHeight: '1.5',
+      fontFamily: itemFontFamily,
     }}>
       {artNum && (
         <span style={{
-          fontSize: `${fontSize}px`,
-          color: '#666',
+          fontSize: `${itemFontSize || fontSize}px`,
+          color: itemFontColor || '#666',
           minWidth: '40px',
           flexShrink: 0,
+          fontWeight: itemFontWeight === 'bold' ? 700 : undefined,
         }}>{artNum}</span>
       )}
       <span style={{
-        fontSize: `${fontSize}px`,
+        fontSize: `${itemFontSize || fontSize}px`,
         whiteSpace: 'pre-wrap',
         flex: 1,
+        fontWeight: itemFontWeight === 'bold' ? 700 : undefined,
+        color: itemFontColor || undefined,
       }}>{content}</span>
     </div>
   );
