@@ -11,6 +11,7 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   packing_list: 'Packing List',
   order_confirmation: 'Order Confirmation',
   purchase_order: 'Purchase Order',
+  contract: 'Contract',
   work_order: 'Work Order',
 };
 

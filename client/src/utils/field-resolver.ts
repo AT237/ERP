@@ -227,6 +227,7 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
     'proformaInvoices': 'proformaInvoice',
     'proforma_invoice': 'proformaInvoice',
     'proforma_invoices': 'proformaInvoice',
+    'contracts': 'contract',
   };
   if (tableAliases[tableName]) {
     tableName = tableAliases[tableName];
@@ -255,6 +256,9 @@ export function resolveFieldValue(fieldKey: string, printData: PrintData): any {
       break;
     case 'company':
       data = printData.company;
+      break;
+    case 'contract':
+      data = (printData as any).contract;
       break;
     case 'vatrate':
     case 'vatRate':

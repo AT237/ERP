@@ -705,6 +705,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     { name: 'packingListItems', label: 'Paklijst Regels', fields: ['positionNo', 'lineType', 'description', 'descriptionInternal', 'quantity', 'packedQuantity', 'unit', 'itemId', 'hsCode', 'countryOfOrigin', 'weight', 'collieNumber'] },
     { name: 'quotationRequest', label: 'Offerte Aanvraag', fields: ['requestNumber', 'requestDate', 'dueDate', 'title', 'description', 'requirements', 'status', 'priority', 'subtotal', 'taxAmount', 'totalAmount', 'notes'] },
     { name: 'quotationRequestItems', label: 'Offerte Aanvraag Regels', fields: ['positionNo', 'lineType', 'description', 'quantity', 'unit', 'unitPrice', 'discountPercent', 'lineTotal', 'costPrice', 'hsCode', 'countryOfOrigin', 'itemId'] },
+    { name: 'contract', label: 'Contract', fields: ['contractNumber', 'contractDate', 'validUntil', 'description', 'status', 'notes'] },
     
     // Relations
     { name: 'customer', label: 'Klant', fields: ['customerNumber', 'name', 'kvkNummer', 'generalEmail', 'email', 'phone', 'mobile', 'contactPersonEmail', 'taxId', 'bankAccount', 'invoiceEmail', 'invoiceNotes', 'memo', 'paymentTerms', 'status', 'address.street', 'address.houseNumber', 'address.postalCode', 'address.city', 'address.country'] },
@@ -739,6 +740,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
 
   const isInvoiceLayoutType = localDocumentType === 'invoice';
   const isProformaLayoutType = localDocumentType === 'proforma_invoice';
+  const isContractLayoutType = localDocumentType === 'contract';
   const { data: sampleInvoices } = useQuery<any[]>({
     queryKey: ['/api/invoices'],
     enabled: isInvoiceLayoutType,
@@ -747,12 +749,16 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     queryKey: ['/api/proforma-invoices'],
     enabled: isProformaLayoutType,
   });
+  const { data: sampleContracts } = useQuery<any[]>({
+    queryKey: ['/api/contracts'],
+    enabled: isContractLayoutType,
+  });
   const { data: sampleQuotations } = useQuery<any[]>({
     queryKey: ['/api/quotations'],
-    enabled: !isInvoiceLayoutType && !isProformaLayoutType && !!localDocumentType,
+    enabled: !isInvoiceLayoutType && !isProformaLayoutType && !isContractLayoutType && !!localDocumentType,
   });
-  const sampleDocId = isInvoiceLayoutType ? sampleInvoices?.[0]?.id : isProformaLayoutType ? sampleProformaInvoices?.[0]?.id : sampleQuotations?.[0]?.id;
-  const samplePrintDataEndpoint = isInvoiceLayoutType ? 'invoices' : isProformaLayoutType ? 'proforma-invoices' : 'quotations';
+  const sampleDocId = isInvoiceLayoutType ? sampleInvoices?.[0]?.id : isProformaLayoutType ? sampleProformaInvoices?.[0]?.id : isContractLayoutType ? sampleContracts?.[0]?.id : sampleQuotations?.[0]?.id;
+  const samplePrintDataEndpoint = isInvoiceLayoutType ? 'invoices' : isProformaLayoutType ? 'proforma-invoices' : isContractLayoutType ? 'contracts' : 'quotations';
   const { data: samplePrintData } = useQuery<any>({
     queryKey: [`/api/${samplePrintDataEndpoint}`, sampleDocId, 'print-data'],
     queryFn: async () => {
