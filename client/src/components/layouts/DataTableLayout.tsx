@@ -1168,13 +1168,35 @@ export function DataTableLayout<T = any>({
 
               {/* Mobile Action Buttons */}
               <div className="flex gap-1.5 flex-wrap">
-                {onAdd && (
+                {onAdd && !directInput && (
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-9 text-sm bg-orange-500 text-white hover:bg-orange-600 border-orange-500"
                     onClick={onAdd}
                     title={`Nieuwe ${entityName} toevoegen`}
+                    type="button"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Nieuw
+                  </Button>
+                )}
+                {directInput && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-sm bg-orange-500 text-white hover:bg-orange-600 border-orange-500"
+                    onClick={() => {
+                      if (!directInputMode) {
+                        setDirectInputMode(true);
+                        setEditingRowId(null);
+                        setEditingRowData({});
+                      } else {
+                        handleDirectInputSave();
+                      }
+                    }}
+                    title={`Nieuwe ${entityName} toevoegen`}
+                    type="button"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Nieuw
