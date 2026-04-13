@@ -4169,9 +4169,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const snippetData = insertTextSnippetSchema.parse(req.body);
       const snippet = await storage.createTextSnippet(snippetData);
       res.status(201).json(snippet);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating text snippet:", error);
-      res.status(400).json({ message: "Failed to create text snippet" });
+      if (error?.code === '23505' && error?.constraint?.includes('code')) {
+        res.status(409).json({ message: `Code "${req.body.code}" is al in gebruik. Kies een andere code.` });
+      } else {
+        res.status(400).json({ message: "Failed to create text snippet" });
+      }
     }
   });
 
