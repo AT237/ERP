@@ -191,7 +191,13 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
 
   const customerIdValue = form.watch("customerId");
   const prevCustomerIdRef = useRef(customerIdValue);
+  const isInitialLoadRef = useRef(true);
   useEffect(() => {
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      prevCustomerIdRef.current = customerIdValue;
+      return;
+    }
     if (customerIdValue && customerIdValue !== prevCustomerIdRef.current) {
       const customer = customers.find(c => c.id === customerIdValue);
       if (customer) {
@@ -202,16 +208,26 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     prevCustomerIdRef.current = customerIdValue;
   }, [customerIdValue, customers, form]);
 
+  useEffect(() => {
+    if (contract && isEditing) {
+      isInitialLoadRef.current = true;
+    }
+  }, [contract, isEditing]);
+
   const handleRefreshCustomer = useCallback(async () => {
     const customerId = form.getValues("customerId");
-    const customer = customers.find(c => c.id === customerId);
-    if (customer) {
-      const lang = (customer as any)?.languageCode || 'nl';
-      form.setValue("printLanguageCode", lang);
-    }
+    if (!customerId) return;
+    try {
+      const res = await fetch(`/api/customers/${customerId}`);
+      if (res.ok) {
+        const freshCustomer = await res.json();
+        const lang = freshCustomer?.languageCode || 'nl';
+        form.setValue("printLanguageCode", lang);
+      }
+    } catch {}
     queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
     toast({ title: "Klantgegevens bijgewerkt", description: "Klantgegevens en taalinstellingen zijn gesynchroniseerd." });
-  }, [form, customers, toast]);
+  }, [form, toast]);
 
   const parseDateValue = (val: string) => {
     if (!val) return null;
