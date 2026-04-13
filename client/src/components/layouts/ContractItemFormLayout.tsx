@@ -200,37 +200,9 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
   const currentFontWeight = form.watch('fontWeight');
   const currentIndentLevel = form.watch('indentLevel') ?? 0;
 
-  const typeButtons = [
-    { value: 'heading', label: 'Kop', icon: <Heading className="w-4 h-4" /> },
-    { value: 'text', label: 'Tekst', icon: <Type className="w-4 h-4" /> },
-    { value: 'image', label: 'Afbeelding', icon: <ImageIcon className="w-4 h-4" /> },
-    { value: 'table', label: 'Tabel', icon: <Table2 className="w-4 h-4" /> },
-  ];
-
   const fontToolbar = (
     <TooltipProvider delayDuration={300}>
       <div className="flex items-center gap-1 px-2 py-1.5 bg-gray-50 dark:bg-gray-800 border rounded-md">
-        <div className="flex items-center border-r pr-2 mr-1 gap-1">
-          {typeButtons.map(tb => (
-            <Tooltip key={tb.value}>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant={currentType === tb.value ? 'default' : 'ghost'}
-                  size="sm"
-                  className={`h-7 w-7 p-0 ${currentType === tb.value ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-                  onClick={() => form.setValue('itemType', tb.value)}
-                >
-                  {tb.icon}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">{tb.label}</TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
-
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
         <Select
           value={currentFontFamily}
           onValueChange={(val) => form.setValue('fontFamily', val)}
