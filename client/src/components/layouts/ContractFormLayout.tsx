@@ -512,6 +512,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         onSort={itemTableState.handleSort}
         selectedRows={itemTableState.selectedRows}
         setSelectedRows={itemTableState.setSelectedRows}
+        onToggleRowSelection={itemTableState.toggleRowSelection}
         onToggleAllRows={() => {
           const allIds = rows.map((_: any, i: number) => String(i));
           itemTableState.toggleAllRows(allIds);
