@@ -64,7 +64,7 @@ export function LanguageSelectWithAdd({
                   e.stopPropagation();
                   setOpen(false);
                   window.dispatchEvent(new CustomEvent('open-form-tab', {
-                    detail: { id: `language-${value}`, name: selectedLanguage.name, formType: 'language', entityId: value }
+                    detail: { id: `languages-${selectedLanguage.id}`, name: selectedLanguage.name, formType: 'masterdata-languages', entityId: selectedLanguage.id }
                   }));
                 }}
               >{selectedLanguage ? selectedLanguage.name : placeholder}</span>
@@ -95,9 +95,9 @@ export function LanguageSelectWithAdd({
                       setOpen(false);
                       window.dispatchEvent(new CustomEvent('open-form-tab', { 
                         detail: { 
-                          id: 'new-language', 
-                          name: 'New Language', 
-                          formType: 'language'
+                          id: 'new-languages', 
+                          name: 'Nieuwe Taal', 
+                          formType: 'masterdata-languages'
                         } 
                       }));
                     }}
@@ -155,10 +155,10 @@ export function LanguageSelectWithAdd({
                           setOpen(false);
                           window.dispatchEvent(new CustomEvent('open-form-tab', { 
                             detail: { 
-                              id: `language-${language.id}`, 
+                              id: `languages-${language.id}`, 
                               name: language.name, 
-                              formType: 'language',
-                              recordId: language.id
+                              formType: 'masterdata-languages',
+                              entityId: language.id
                             } 
                           }));
                         }}
