@@ -392,6 +392,10 @@ export interface UseFormToolbarOptions {
   entityNumber?: string;
   convertOptions?: { label: string; onClick: () => void; disabled?: boolean }[];
   printLayoutId?: string;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  previousDisabled?: boolean;
+  nextDisabled?: boolean;
 }
 
 export function useFormToolbar({
@@ -412,6 +416,10 @@ export function useFormToolbar({
   entityNumber,
   convertOptions,
   printLayoutId,
+  onPrevious: customOnPrevious,
+  onNext: customOnNext,
+  previousDisabled: customPreviousDisabled,
+  nextDisabled: customNextDisabled,
 }: UseFormToolbarOptions): FormToolbarProps & { deleteConflict: { name: string; usages: UsageLocation[] } | null; onClearDeleteConflict: () => void } {
   const { toast } = useToast();
   const config = ENTITY_CONFIGS[entityType];
@@ -605,11 +613,11 @@ export function useFormToolbar({
     showPrint,
     printDisabled: !isEditing,
 
-    onPrevious: resolvedShowNavigation ? handlePrevious : undefined,
-    onNext: resolvedShowNavigation ? handleNext : undefined,
+    onPrevious: resolvedShowNavigation ? (customOnPrevious || handlePrevious) : undefined,
+    onNext: resolvedShowNavigation ? (customOnNext || handleNext) : undefined,
     showNavigation: resolvedShowNavigation,
-    previousDisabled: !isEditing || currentIndex <= 0,
-    nextDisabled: !isEditing || currentIndex < 0 || currentIndex >= entityIds.length - 1,
+    previousDisabled: customPreviousDisabled ?? (!isEditing || currentIndex <= 0),
+    nextDisabled: customNextDisabled ?? (!isEditing || currentIndex < 0 || currentIndex >= entityIds.length - 1),
 
     showExport,
     exportDisabled: true,

@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useLocation } from "wouter";
 import { ChevronRight, ChevronDown, Upload, Bold, Type, Heading, Table2, ImageIcon } from "lucide-react";
 import { type ContractItem } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
