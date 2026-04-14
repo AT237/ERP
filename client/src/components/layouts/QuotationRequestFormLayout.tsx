@@ -41,6 +41,271 @@ interface QuotationRequestFormLayoutProps {
   parentId?: string;
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'In afwachting',
+  sent: 'Verzonden',
+  received: 'Ontvangen',
+  selected: 'Geselecteerd',
+  rejected: 'Afgewezen',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: 'bg-gray-100 text-gray-700',
+  sent: 'bg-blue-100 text-blue-700',
+  received: 'bg-green-100 text-green-700',
+  selected: 'bg-orange-100 text-orange-700',
+  rejected: 'bg-red-100 text-red-700',
+};
+
+function QRSuppliersTab({ quotationRequestId }: { quotationRequestId: string }) {
+  const { toast } = useToast();
+  const [selectedSupplierId, setSelectedSupplierId] = useState("");
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const { data: qrSuppliers = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/quotation-requests", quotationRequestId, "suppliers"],
+    queryFn: async () => {
+      const res = await fetch(`/api/quotation-requests/${quotationRequestId}/suppliers`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!quotationRequestId,
+  });
+
+  const addSupplierMutation = useMutation({
+    mutationFn: async (supplierId: string) => {
+      const res = await apiRequest("POST", `/api/quotation-requests/${quotationRequestId}/suppliers`, { supplierId });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/quotation-requests", quotationRequestId, "suppliers"] });
+      setSelectedSupplierId("");
+      toast({ title: "Leverancier toegevoegd" });
+    },
+    onError: (err: any) => {
+      toast({ title: "Fout", description: err.message || "Kon leverancier niet toevoegen", variant: "destructive" });
+    },
+  });
+
+  const removeSupplierMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/quotation-request-suppliers/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/quotation-requests", quotationRequestId, "suppliers"] });
+      toast({ title: "Leverancier verwijderd" });
+    },
+  });
+
+  const updateSupplierMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest("PUT", `/api/quotation-request-suppliers/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/quotation-requests", quotationRequestId, "suppliers"] });
+    },
+  });
+
+  const handleFileUpload = (qrSupplierId: string, attachmentSlot: 1 | 2 | 3, file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "Fout", description: "Bestand mag maximaal 10MB zijn", variant: "destructive" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      updateSupplierMutation.mutate({
+        id: qrSupplierId,
+        data: {
+          [`attachment${attachmentSlot}`]: base64,
+          [`attachment${attachmentSlot}Name`]: file.name,
+        }
+      });
+      toast({ title: "Bijlage geüpload", description: file.name });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveAttachment = (qrSupplierId: string, slot: 1 | 2 | 3) => {
+    updateSupplierMutation.mutate({
+      id: qrSupplierId,
+      data: {
+        [`attachment${slot}`]: null,
+        [`attachment${slot}Name`]: null,
+      }
+    });
+  };
+
+  const handlePrint = (qrSupplier: any) => {
+    window.dispatchEvent(new CustomEvent('open-print-dialog', {
+      detail: {
+        documentType: 'quotation_request',
+        documentId: quotationRequestId,
+        supplierId: qrSupplier.supplier_id,
+        supplierName: qrSupplier.supplier_name,
+      }
+    }));
+    toast({ title: "Afdrukken", description: `PDF genereren voor ${qrSupplier.supplier_name}...` });
+  };
+
+  const handleDownloadAttachment = (base64Data: string, fileName: string) => {
+    const link = document.createElement('a');
+    link.href = base64Data;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="space-y-4 pt-2">
+      <div className="flex items-end gap-3">
+        <div className="flex-1">
+          <Label className="text-xs font-medium text-muted-foreground mb-1 block">Leverancier toevoegen</Label>
+          <SupplierSelect
+            value={selectedSupplierId}
+            onValueChange={setSelectedSupplierId}
+            placeholder="Zoek en selecteer leverancier..."
+            testId="select-add-supplier"
+          />
+        </div>
+        <Button
+          size="sm"
+          className="h-9 bg-orange-500 hover:bg-orange-600 text-white gap-1.5"
+          disabled={!selectedSupplierId || addSupplierMutation.isPending}
+          onClick={() => selectedSupplierId && addSupplierMutation.mutate(selectedSupplierId)}
+        >
+          <Plus className="h-4 w-4" />
+          Toevoegen
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground text-sm">Laden...</div>
+      ) : qrSuppliers.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg bg-gray-50">
+          <FileText className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+          <p className="text-sm font-medium text-gray-500">Nog geen leveranciers gekoppeld</p>
+          <p className="text-xs text-gray-400 mt-1">Selecteer hierboven een leverancier om een aanvraag naar te sturen</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {qrSuppliers.map((qs: any) => (
+            <div key={qs.id} className="border rounded-lg bg-white overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <span className="text-sm font-medium">{qs.supplier_name}</span>
+                    {qs.supplier_number && (
+                      <span className="text-xs text-muted-foreground ml-2">({qs.supplier_number})</span>
+                    )}
+                  </div>
+                  <Badge className={`text-[10px] ${STATUS_COLORS[qs.status] || STATUS_COLORS.pending}`}>
+                    {STATUS_LABELS[qs.status] || qs.status}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <select
+                    className="h-7 text-xs border rounded px-2 bg-white"
+                    value={qs.status || 'pending'}
+                    onChange={(e) => updateSupplierMutation.mutate({ id: qs.id, data: { status: e.target.value } })}
+                  >
+                    {Object.entries(STATUS_LABELS).map(([v, l]) => (
+                      <option key={v} value={v}>{l}</option>
+                    ))}
+                  </select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 text-xs border-orange-200 text-orange-600 hover:bg-orange-50"
+                    onClick={() => handlePrint(qs)}
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    PDF
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-red-500 hover:bg-red-50"
+                    onClick={() => removeSupplierMutation.mutate(qs.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="px-4 py-3">
+                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                  <Paperclip className="h-3 w-3 inline mr-1" />
+                  Ontvangen offertes (max. 3 bijlagen)
+                </Label>
+                <div className="grid grid-cols-3 gap-3">
+                  {([1, 2, 3] as const).map((slot) => {
+                    const data = qs[`attachment_${slot}`];
+                    const name = qs[`attachment_${slot}_name`];
+                    const refKey = `${qs.id}-${slot}`;
+                    return (
+                      <div key={slot} className="border rounded-md p-2 min-h-[60px] flex flex-col items-center justify-center bg-gray-50/50">
+                        <input
+                          ref={(el) => { fileInputRefs.current[refKey] = el; }}
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(qs.id, slot, file);
+                            e.target.value = '';
+                          }}
+                        />
+                        {data && name ? (
+                          <div className="flex flex-col items-center gap-1 w-full">
+                            <FileText className="h-5 w-5 text-orange-500" />
+                            <span className="text-[10px] text-center truncate w-full px-1" title={name}>{name}</span>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 w-5 p-0 text-blue-500"
+                                title="Download"
+                                onClick={() => handleDownloadAttachment(data, name)}
+                              >
+                                <Download className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 w-5 p-0 text-red-500"
+                                title="Verwijderen"
+                                onClick={() => handleRemoveAttachment(qs.id, slot)}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="flex flex-col items-center gap-1 text-gray-400 hover:text-orange-500 transition-colors cursor-pointer"
+                            onClick={() => fileInputRefs.current[refKey]?.click()}
+                          >
+                            <Upload className="h-5 w-5" />
+                            <span className="text-[10px]">Bijlage {slot}</span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentId }: QuotationRequestFormLayoutProps) {
   const [activeSection, setActiveSection] = useState('general');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -60,7 +325,7 @@ export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentI
     resolver: zodResolver(formSchema),
     defaultValues: {
       requestNumber: "",
-      supplierId: "",
+      supplierId: undefined,
       projectId: undefined,
       status: "concept",
       requestDate: toDisplayDate(new Date()),
@@ -625,6 +890,16 @@ export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentI
         } as any),
       ]
     },
+    ...(isEditing ? [{
+      id: 'suppliers',
+      label: 'Leveranciers',
+      rows: [{
+        type: 'custom' as const,
+        customContent: (
+          <QRSuppliersTab quotationRequestId={currentId!} />
+        )
+      }]
+    }] : []),
   ];
 
   return (
