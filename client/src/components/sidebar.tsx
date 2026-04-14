@@ -127,7 +127,8 @@ export const defaultNavigation = [
       { id: "cities", name: "Cities", href: "/master-data/cities", icon: MapPin },
       { id: "statuses", name: "Statuses", href: "/master-data/statuses", icon: Tag },
       { id: "pictograms", name: "Pictograms", href: "/master-data/pictograms", icon: FileCheck },
-      { id: "brands", name: "Brands", href: "/master-data/brands", icon: Award }
+      { id: "brands", name: "Brands", href: "/master-data/brands", icon: Award },
+      { id: "languages", name: "Talen", href: "/master-data/languages", icon: BookOpen }
     ]
   },
   {

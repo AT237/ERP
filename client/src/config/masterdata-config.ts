@@ -11,7 +11,8 @@ import {
   insertStatusSchema,
   insertImageSchema,
   insertInventoryCategorySchema,
-  insertBrandSchema
+  insertBrandSchema,
+  insertLanguageSchema
 } from "@shared/schema";
 
 export interface MasterDataField {
@@ -377,6 +378,31 @@ MASTERDATA_CONFIG['inventory-categories'] = {
     { key: "code", label: "Code" },
     { key: "name", label: "Naam" },
     { key: "description", label: "Omschrijving" },
+  ]
+};
+
+MASTERDATA_CONFIG['languages'] = {
+  title: "Talen",
+  singularTitle: "Taal",
+  endpoint: "languages",
+  schema: insertLanguageSchema,
+  fields: [
+    { name: "code", label: "ISO Code", type: "text", required: true },
+    { name: "name", label: "Naam", type: "text", required: true },
+  ],
+  sections: [
+    {
+      id: "general",
+      label: "Algemeen",
+      fields: [
+        { name: "code", label: "ISO Code", type: "text", required: true },
+        { name: "name", label: "Naam", type: "text", required: true },
+      ]
+    }
+  ],
+  columns: [
+    { key: "code", label: "ISO Code" },
+    { key: "name", label: "Naam" },
   ]
 };
 

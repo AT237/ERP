@@ -1322,6 +1322,7 @@ export const documentLayouts = pgTable("document_layouts", {
   orientation: text("orientation").notNull().default("portrait"), // 'portrait' or 'landscape'
   isDefault: boolean("is_default").default(false), // Default layout for this document type
   allowedTables: jsonb("allowed_tables").$type<string[]>().default(sql`'[]'::jsonb`), // Tables/databases accessible for data fields (e.g., ['quotations', 'customers', 'projects'])
+  languageCode: text("language_code").references(() => languages.code).default("nl"),
   metadata: jsonb("metadata").$type<Record<string, any>>().default(sql`'{}'::jsonb`), // Additional configuration
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

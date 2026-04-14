@@ -51,11 +51,16 @@ export default function LayoutDesigner() {
   const [newLayoutName, setNewLayoutName] = useState('');
   const [newLayoutDocumentType, setNewLayoutDocumentType] = useState('quotation');
   const [newLayoutOrientation, setNewLayoutOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const [newLayoutLanguageCode, setNewLayoutLanguageCode] = useState('nl');
   const { toast } = useToast();
   
   // Load existing layouts
   const { data: layouts = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/layouts'],
+  });
+
+  const { data: languagesList = [] } = useQuery<any[]>({
+    queryKey: ['/api/languages'],
   });
 
   // Create new layout mutation
@@ -96,6 +101,7 @@ export default function LayoutDesigner() {
       documentType: newLayoutDocumentType,
       pageFormat: 'A4',
       orientation: newLayoutOrientation,
+      languageCode: newLayoutLanguageCode,
       isDefault: false,
     });
   };
@@ -205,13 +211,17 @@ export default function LayoutDesigner() {
     selectedRows, setSelectedRows, toggleRowSelection, toggleAllRows,
     applyFiltersAndSearch, applySorting,
   } = useDataTable({
-    tableKey: 'layouts',
+    tableKey: 'layouts-v2',
     defaultColumns: [
       { key: 'layoutNumber', label: 'ID', visible: true, sortable: true, filterable: true, width: 110 },
       { key: 'name', label: 'Omschrijving', visible: true, sortable: true, filterable: true },
       { key: 'documentType', label: 'Document Type', visible: true, sortable: true, renderCell: (v: any) => DOCUMENT_TYPE_LABELS[v] || v },
       { key: 'pageFormat', label: 'Page Size', visible: true, sortable: true, width: 110, renderCell: (v: any) => v?.toUpperCase() || '—' },
       { key: 'orientation', label: 'Oriëntatie', visible: true, sortable: true, width: 120, renderCell: (v: any) => <span className="capitalize">{v}</span> },
+      { key: 'languageCode', label: 'Taal', visible: true, sortable: true, width: 110, renderCell: (v: any) => {
+        const langMap: Record<string, string> = { nl: 'Nederlands', en: 'English', de: 'Deutsch', fr: 'Français', es: 'Español', it: 'Italiano' };
+        return langMap[v] || v || '—';
+      }},
       { key: 'isDefault', label: 'Status', visible: true, sortable: true, width: 120, renderCell: (v: any) => (
         <Badge variant={v ? 'default' : 'outline'} className={`text-xs ${v ? 'bg-green-100 text-green-800 border-green-200' : ''}`}>
           {v ? 'Default' : 'Active'}
@@ -229,7 +239,7 @@ export default function LayoutDesigner() {
         data={layouts as any[]}
         columns={columns}
         setColumns={setColumns}
-        tableKey="layouts"
+        tableKey="layouts-v2"
         isLoading={isLoading}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -324,6 +334,20 @@ export default function LayoutDesigner() {
                 <SelectContent>
                   <SelectItem value="portrait">Staand (Portrait)</SelectItem>
                   <SelectItem value="landscape">Liggend (Landscape)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="language">Taal</Label>
+              <Select value={newLayoutLanguageCode} onValueChange={setNewLayoutLanguageCode}>
+                <SelectTrigger id="language" data-testid="select-language">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {languagesList.map((lang: any) => (
+                    <SelectItem key={lang.code} value={lang.code}>{lang.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -611,7 +635,12 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   const [localPageFormat, setLocalPageFormat] = useState<string>(layout?.pageFormat || 'A4');
   const [localOrientation, setLocalOrientation] = useState<string>(layout?.orientation || 'portrait');
   const [localIsDefault, setLocalIsDefault] = useState<boolean>(layout?.isDefault || false);
+  const [localLanguageCode, setLocalLanguageCode] = useState<string>(layout?.languageCode || 'nl');
   const { toast } = useToast();
+
+  const { data: availableLanguages = [] } = useQuery<any[]>({
+    queryKey: ['/api/languages'],
+  });
   
   // Drag state for block positioning with alignment guides
   const [isDraggingBlock, setIsDraggingBlock] = useState(false);
@@ -995,7 +1024,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
   });
 
   const updateLayoutInfoMutation = useMutation({
-    mutationFn: async (payload: { name?: string; layoutNumber?: string; documentType?: string; pageFormat?: string; orientation?: string; isDefault?: boolean }) => {
+    mutationFn: async (payload: { name?: string; layoutNumber?: string; documentType?: string; pageFormat?: string; orientation?: string; isDefault?: boolean; languageCode?: string }) => {
       await apiRequest('PUT', `/api/layouts/${layout.id}`, payload);
     },
     onSuccess: () => {
@@ -3079,6 +3108,27 @@ export function VisualDesignerView({ layout }: { layout: any }) {
                     <SelectContent>
                       <SelectItem value="portrait" className="text-xs">Portrait</SelectItem>
                       <SelectItem value="landscape" className="text-xs">Landscape</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Language */}
+                <div>
+                  <Label className="text-xs">Taal</Label>
+                  <Select
+                    value={localLanguageCode}
+                    onValueChange={(v) => {
+                      setLocalLanguageCode(v);
+                      handleLayoutPropsChange('languageCode', v);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableLanguages.map((lang: any) => (
+                        <SelectItem key={lang.code} value={lang.code} className="text-xs">{lang.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

@@ -89,7 +89,7 @@ import {
   insertDocumentLayoutSchema, insertLayoutBlockSchema, insertLayoutSectionSchema,
   insertLayoutElementSchema, insertDocumentLayoutFieldSchema, insertSectionTemplateSchema,
   insertDevFutureSchema, devFutures, insertCustomerRateSchema, insertTechnicianSchema, insertEmployeeSchema,
-  unitsOfMeasure, inventoryItems, invoiceItems, ratesAndCharges,
+  languages, unitsOfMeasure, inventoryItems, invoiceItems, ratesAndCharges,
   quotations, invoices, projects, purchaseOrders, suppliers,
   quotationItems, salesOrders, packingLists, quotationRequests, proformaInvoices,
   pdfArchive, insertPdfArchiveSchema,
@@ -3117,6 +3117,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete brand" });
+    }
+  });
+
+  // Master Data routes - Languages
+  app.get("/api/masterdata/languages", async (req, res) => {
+    try {
+      const langs = await storage.getLanguages();
+      res.json(langs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch languages" });
+    }
+  });
+
+  app.post("/api/masterdata/languages", async (req, res) => {
+    try {
+      const langData = insertLanguageSchema.parse(req.body);
+      const lang = await storage.createLanguage(langData);
+      res.status(201).json(lang);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create language" });
+    }
+  });
+
+  app.get("/api/masterdata/languages/:id", async (req, res) => {
+    try {
+      const lang = await storage.getLanguage(req.params.id);
+      if (!lang) return res.status(404).json({ message: "Language not found" });
+      res.json(lang);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch language" });
+    }
+  });
+
+  app.put("/api/masterdata/languages/:id", async (req, res) => {
+    try {
+      const langData = insertLanguageSchema.partial().parse(req.body);
+      const lang = await storage.updateLanguage(req.params.id, langData);
+      res.json(lang);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update language" });
+    }
+  });
+
+  app.delete("/api/masterdata/languages/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await db.delete(languages).where(eq(languages.id, id));
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete language" });
     }
   });
 

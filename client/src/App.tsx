@@ -220,6 +220,22 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        <Route path="/master-data/languages" component={() => {
+          const MasterDataTable = React.lazy(() => import("@/components/masterdata-table"));
+          const config = getMasterDataConfig("languages");
+          if (!config) return null;
+          return (
+            <React.Suspense fallback={<div className="p-6">Laden...</div>}>
+              <MasterDataTable
+                title={config.title}
+                endpoint={config.endpoint}
+                schema={config.schema}
+                fields={config.fields}
+                columns={config.columns}
+              />
+            </React.Suspense>
+          );
+        }} />
         <Route path="/master-data/company-details" component={() => {
           const CompanyDetailsPage = React.lazy(() => import('./pages/company-details.tsx'));
           return (
