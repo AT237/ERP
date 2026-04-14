@@ -55,11 +55,45 @@ interface ContractItemFormLayoutProps {
 
 export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractItemFormLayoutProps) {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const isEditing = !!itemId && itemId !== 'new';
   const [activeTab, setActiveTab] = useState("general");
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const activeTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: allItems = [] } = useQuery<ContractItem[]>({
+    queryKey: ["/api/contracts", contractId, "items"],
+    queryFn: async () => {
+      const response = await fetch(`/api/contracts/${contractId}/items`);
+      if (!response.ok) throw new Error("Failed to fetch items");
+      return response.json();
+    },
+    enabled: !!contractId && isEditing,
+  });
+
+  const sortedItemIds = useMemo(() => {
+    return [...allItems]
+      .sort((a, b) => (a.articleNumber || '').localeCompare(b.articleNumber || '', undefined, { numeric: true }))
+      .map(i => i.id);
+  }, [allItems]);
+
+  const currentNavIndex = useMemo(() => {
+    if (!itemId) return -1;
+    return sortedItemIds.indexOf(itemId);
+  }, [itemId, sortedItemIds]);
+
+  const handleNavPrevious = useCallback(() => {
+    if (currentNavIndex > 0) {
+      navigate(`/contracts/${contractId}/items/${sortedItemIds[currentNavIndex - 1]}`);
+    }
+  }, [currentNavIndex, sortedItemIds, contractId, navigate]);
+
+  const handleNavNext = useCallback(() => {
+    if (currentNavIndex >= 0 && currentNavIndex < sortedItemIds.length - 1) {
+      navigate(`/contracts/${contractId}/items/${sortedItemIds[currentNavIndex + 1]}`);
+    }
+  }, [currentNavIndex, sortedItemIds, contractId, navigate]);
 
   const form = useForm<ItemFormData>({
     resolver: zodResolver(itemFormSchema),
@@ -154,12 +188,15 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
     entityId: itemId,
     onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: handleClose,
-    onDelete: isEditing ? () => deleteMutation.mutate() : undefined,
     saveDisabled: false,
     saveLoading: saveMutation.isPending,
     extraQueryKeysToInvalidate: contractId ? [["/api/contracts", contractId, "items"], ["/api/contracts", contractId]] : [],
     navigationListQueryKey: contractId ? ["/api/contracts", contractId, "items"] : undefined,
     navigationParentId: contractId,
+    onPrevious: handleNavPrevious,
+    onNext: handleNavNext,
+    previousDisabled: !isEditing || currentNavIndex <= 0,
+    nextDisabled: !isEditing || currentNavIndex < 0 || currentNavIndex >= sortedItemIds.length - 1,
   });
 
   const toggleCategory = useCallback((category: string) => {
