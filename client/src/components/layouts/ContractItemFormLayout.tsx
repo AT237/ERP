@@ -36,8 +36,9 @@ const PLACEHOLDERS = (() => {
   return tables.map(table => ({
     category: table.label,
     items: table.fields.map(field => ({
-      label: getFieldLabel(field),
-      value: `{{${field}}}`,
+      label: `${table.name}.${field}`,
+      displayLabel: getFieldLabel(field),
+      value: `{{${table.name}.${field}}}`,
     })),
   }));
 })();
@@ -397,11 +398,12 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
                       {group.items.map(item => (
                         <button
                           key={item.value}
-                          className="w-full text-left px-2 py-0.5 text-[11px] rounded hover:bg-primary/10 hover:text-primary transition-colors"
+                          className="w-full text-left px-2 py-0.5 text-[11px] rounded hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between gap-1"
                           onClick={() => insertPlaceholder(item.value)}
                           title={item.value}
                         >
-                          {item.label}
+                          <span>{item.displayLabel}</span>
+                          <span className="text-[9px] text-muted-foreground font-mono">{item.label}</span>
                         </button>
                       ))}
                     </div>
