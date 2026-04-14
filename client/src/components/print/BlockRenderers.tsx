@@ -835,7 +835,6 @@ function renderContractItem(item: any, idx: number, printData: any, fontSize: nu
 
   if (item.itemType === 'heading') {
     const headingSize = itemFontSize || (item.indentLevel === 0 ? fontSize + 4
-      : item.indentLevel === 1 ? fontSize + 2
       : fontSize + 1);
     return (
       <div key={idx} style={{
