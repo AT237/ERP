@@ -356,7 +356,7 @@ export const quotationItems = pgTable("quotation_items", {
 export const quotationRequests = pgTable("quotation_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   requestNumber: text("request_number").notNull().unique().default(sql`generate_quotation_request_number()`),
-  supplierId: varchar("supplier_id").references(() => suppliers.id).notNull(),
+  supplierId: varchar("supplier_id").references(() => suppliers.id),
   projectId: varchar("project_id").references(() => projects.id),
   status: text("status").default("concept"),
   requestDate: timestamp("request_date").defaultNow(),
@@ -371,6 +371,25 @@ export const quotationRequests = pgTable("quotation_requests", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const quotationRequestSuppliers = pgTable("quotation_request_suppliers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  quotationRequestId: varchar("quotation_request_id").references(() => quotationRequests.id, { onDelete: 'cascade' }).notNull(),
+  supplierId: varchar("supplier_id").references(() => suppliers.id).notNull(),
+  status: text("status").default("pending"),
+  notes: text("notes"),
+  attachment1: text("attachment_1"),
+  attachment1Name: text("attachment_1_name"),
+  attachment2: text("attachment_2"),
+  attachment2Name: text("attachment_2_name"),
+  attachment3: text("attachment_3"),
+  attachment3Name: text("attachment_3_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertQuotationRequestSupplierSchema = createInsertSchema(quotationRequestSuppliers).omit({ id: true, createdAt: true });
+export type InsertQuotationRequestSupplier = z.infer<typeof insertQuotationRequestSupplierSchema>;
+export type QuotationRequestSupplier = typeof quotationRequestSuppliers.$inferSelect;
 
 // Quotation request items table
 export const quotationRequestItems = pgTable("quotation_request_items", {
