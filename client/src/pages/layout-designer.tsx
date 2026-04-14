@@ -118,6 +118,7 @@ export default function LayoutDesigner() {
         documentType: layoutToDuplicate.documentType,
         pageFormat: layoutToDuplicate.pageFormat,
         orientation: layoutToDuplicate.orientation,
+        languageCode: layoutToDuplicate.languageCode || 'nl',
         isDefault: false,
         isActive: true,
         metadata: layoutToDuplicate.metadata,
