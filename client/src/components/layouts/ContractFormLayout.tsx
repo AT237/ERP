@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { Type, Heading, Table2, ImageIcon, ListOrdered } from "lucide-react";
+import { Type, Heading, Table2, ImageIcon, ListOrdered, Trash2 } from "lucide-react";
 import { insertContractSchema, type Contract, type ContractItem, type Customer, type DocumentLayout } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -62,6 +62,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("general");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [rows, setRows] = useState<ContractRow[]>([]);
   const [originalValues, setOriginalValues] = useState<Partial<FormData>>({});
 
@@ -305,6 +306,11 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
 
 
 
+  const deleteRow = useCallback((index: number) => {
+    setRows(prev => prev.filter((_, i) => i !== index));
+    setHasUnsavedChanges(true);
+  }, []);
+
   const autoNumber = useCallback(() => {
     setRows(prev => {
       const updated = [...prev];
@@ -435,6 +441,15 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     defaultSort: { column: 'articleNumber', direction: 'asc' as const },
   });
 
+  const deleteSelectedRows = useCallback(() => {
+    const selectedIndices = new Set(
+      [...itemTableState.selectedRows].map(id => parseInt(id))
+    );
+    setRows(prev => prev.filter((_, i) => !selectedIndices.has(i)));
+    itemTableState.setSelectedRows([]);
+    setHasUnsavedChanges(true);
+  }, [itemTableState]);
+
   const contractDirectInput: DirectInputConfig = useMemo(() => ({
     columns: [
       { key: 'articleNumber', fieldType: 'text' as const, placeholder: '1', defaultValue: '' },
@@ -536,6 +551,21 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
           if (currentContractId && row.id) {
             navigate(`/contracts/${currentContractId}/items/${row.id}`);
           }
+        }}
+        rowActions={(row: any) => [
+          {
+            key: 'delete',
+            label: 'Verwijderen',
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: () => deleteRow(row._rowIdx),
+            variant: 'destructive' as const,
+          }
+        ]}
+        deleteConfirmDialog={{
+          isOpen: isBulkDeleteOpen,
+          onOpenChange: setIsBulkDeleteOpen,
+          onConfirm: () => { deleteSelectedRows(); setIsBulkDeleteOpen(false); },
+          itemCount: itemTableState.selectedRows.length,
         }}
       />
     </div>
