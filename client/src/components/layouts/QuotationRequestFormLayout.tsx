@@ -637,11 +637,6 @@ export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentI
         } as any),
       ]
     },
-    {
-      id: 'items',
-      label: 'Regels',
-      rows: []
-    }
   ];
 
   return (
@@ -675,8 +670,8 @@ export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentI
           />
         }
       />
-      {isEditing && activeSection === "items" && (
-        <div className="px-6 py-4 pb-10 bg-white ml-[15px] mr-[15px]">
+      {isEditing && (
+        <div className="px-6 py-4 pb-10 bg-white ml-[15px] mr-[15px] border-t">
           <DataTableLayout
             data={qrItemsList}
             isLoading={false}
