@@ -385,22 +385,52 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     {
       key: 'indentLevel',
       label: 'Niv.',
-      visible: false,
+      visible: true,
       width: 50,
       filterable: false,
       sortable: false,
       align: 'center' as const,
+      renderCell: (value: any) => <span className="text-xs">{value || 0}</span>,
     },
-    { key: 'fontSize', label: 'Lettergrootte', visible: false, width: 80, filterable: false, sortable: false },
-    { key: 'fontWeight', label: 'Letterdikte', visible: false, width: 80, filterable: false, sortable: false },
-    { key: 'fontColor', label: 'Kleur', visible: false, width: 80, filterable: false, sortable: false },
+    {
+      key: 'fontSize',
+      label: 'Grootte',
+      visible: true,
+      width: 70,
+      filterable: false,
+      sortable: false,
+      renderCell: (value: any) => <span className="text-xs text-muted-foreground">{value || '11'}</span>,
+    },
+    {
+      key: 'fontWeight',
+      label: 'Dikte',
+      visible: true,
+      width: 70,
+      filterable: false,
+      sortable: false,
+      renderCell: (value: any) => <span className="text-xs text-muted-foreground">{value || 'normal'}</span>,
+    },
+    {
+      key: 'fontColor',
+      label: 'Kleur',
+      visible: true,
+      width: 80,
+      filterable: false,
+      sortable: false,
+      renderCell: (value: any) => value ? (
+        <span className="flex items-center gap-1 text-xs">
+          <span className="w-3 h-3 rounded-sm border border-gray-300" style={{ backgroundColor: value }} />
+          {value}
+        </span>
+      ) : <span className="text-xs text-muted-foreground">#000000</span>,
+    },
     { key: '_rowIdx', label: '#', visible: false, width: 40, filterable: false, sortable: false },
     { key: 'id', label: 'ID', visible: false, width: 40, filterable: false, sortable: false },
   ], []);
 
   const itemTableState = useDataTable({
     defaultColumns: itemColumns,
-    tableKey: 'contract-items-v2',
+    tableKey: 'contract-items-v3',
     data: rows,
     defaultSort: { column: 'articleNumber', direction: 'asc' as const },
   });
@@ -470,7 +500,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         isLoading={false}
         columns={itemTableState.columns}
         setColumns={itemTableState.setColumns}
-        tableKey="contract-items-v2"
+        tableKey="contract-items-v3"
         searchTerm={itemTableState.searchTerm}
         setSearchTerm={itemTableState.setSearchTerm}
         filters={itemTableState.filters}
