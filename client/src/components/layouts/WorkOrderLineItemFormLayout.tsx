@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { LINE_ITEM_TYPES } from "@shared/line-item-types";
 import { EntitySelect } from "@/components/ui/entity-select";
 import { InventorySelect } from "@/components/ui/inventory-select";
+import { ImageUploadZone } from "@/components/ui/image-upload-zone";
 
 const lineItemFormSchema = insertWorkOrderItemSchema.extend({
   unitPrice: z.string().min(1, "Prijs per eenheid is verplicht"),
@@ -86,6 +87,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
   const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
+  const [lineImage, setLineImage] = useState<string | null>(null);
 
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -232,10 +234,12 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
       form.reset(formData);
       setOriginalValues(formData);
       setHasUnsavedChanges(false);
+      setLineImage((lineItem as any).lineImage || null);
       prevItemIdRef.current = lineItem.itemId || "";
     } else {
       setOriginalValues(form.getValues());
       setHasUnsavedChanges(false);
+      setLineImage(null);
     }
   }, [lineItem, form, workOrderId]);
 
@@ -417,6 +421,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
       technicianNames: techName || undefined,
       technicianIds: selectedEmployeeId || undefined,
       printCocHs: data.printCocHs || false,
+      lineImage: lineImage || null,
     };
 
     if (isEditing) {
@@ -425,6 +430,11 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
       createMutation.mutate(transformedData);
     }
   };
+
+  const handleLineImageChange = useCallback((value: string | null) => {
+    setLineImage(value);
+    setHasUnsavedChanges(true);
+  }, []);
 
   const headerFields: InfoField[] = [
     { label: 'Type', value: lineTypeValue || 'standard' },
@@ -693,11 +703,33 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
     } as FormField2<LineItemFormData>,
   ];
 
+  const lineImageField: FormField2<LineItemFormData> = {
+    key: 'lineImage' as any,
+    label: 'Regelafbeelding',
+    type: 'custom',
+    customComponent: (
+      <ImageUploadZone
+        value={lineImage}
+        onChange={handleLineImageChange}
+        label="Regelafbeelding"
+        maxSizeMB={2}
+        hint="Klik of sleep een afbeelding · JPG, PNG, max 2MB"
+      />
+    ),
+  };
+
   const formSections: FormSection2<LineItemFormData>[] = [
     {
       id: 'general',
       label: 'General',
       rows: [createTwoColumnRow(leftFields, rightFields)],
+    },
+    {
+      id: 'image',
+      label: 'Afbeelding',
+      rows: [
+        createFieldRow(lineImageField),
+      ],
     },
     {
       id: 'delivery',

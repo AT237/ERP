@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { PackingListItem, PackingList, InventoryItem, TextSnippet } from "@shared/schema";
 import { z } from "zod";
 import { LINE_ITEM_TYPES } from "@shared/line-item-types";
+import { ImageUploadZone } from "@/components/ui/image-upload-zone";
 
 const packingListItemFormSchema = insertPackingListItemSchema.extend({
   unitPrice: z.string().optional(),
@@ -67,6 +68,7 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
   const [showSnippetDialog, setShowSnippetDialog] = useState(false);
   const [snippetSearchTerm, setSnippetSearchTerm] = useState("");
   const [selectedSnippetCategory, setSelectedSnippetCategory] = useState<string>("all");
+  const [lineImage, setLineImage] = useState<string | null>(null);
 
   const { toast } = useToast();
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
@@ -201,6 +203,7 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
       
       form.reset(formData);
       setHasUnsavedChanges(false);
+      setLineImage((lineItem as any).lineImage || null);
       prevItemIdRef.current = lineItem.itemId || "";
     }
   }, [lineItem, form, packingListId]);
@@ -326,6 +329,7 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
       discountPercent: data.discountPercent || "0",
       packedQuantity: data.packedQuantity || "0",
       printCocHs: data.printCocHs || false,
+      lineImage: lineImage || null,
     };
 
     if (isEditing) {
@@ -334,6 +338,11 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
       createMutation.mutate(transformedData);
     }
   };
+
+  const handleLineImageChange = useCallback((value: string | null) => {
+    setLineImage(value);
+    setHasUnsavedChanges(true);
+  }, []);
 
   const headerFields: InfoField[] = [
     { label: 'Type', value: lineTypeValue || 'standard' },
