@@ -218,6 +218,17 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsDelete: true,
     supportsAddNew: true,
   },
+  "contract-item": {
+    apiPath: "/api/contract-items",
+    formType: "contract-item",
+    label: "Contractregel",
+    labelPlural: "Contractregels",
+    listQueryKey: "/api/contract-items",
+    documentType: "contract_item",
+    supportsNavigation: true,
+    supportsDelete: true,
+    supportsAddNew: false,
+  },
   line_item: {
     apiPath: "/api/quotation-items",
     formType: "line-item",
