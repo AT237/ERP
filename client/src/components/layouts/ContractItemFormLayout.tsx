@@ -110,6 +110,9 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
     onSuccess: () => {
       toast({ title: isEditing ? "Regel bijgewerkt" : "Regel aangemaakt" });
       setHasUnsavedChanges(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/contract-items', itemId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contracts', contractId, 'items'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contracts'] });
     },
     onError: (error: any) => {
       toast({ title: "Fout bij opslaan", description: error.message, variant: "destructive" });
