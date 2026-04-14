@@ -405,7 +405,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
       width: 70,
       filterable: false,
       sortable: false,
-      renderCell: (value: any) => <span className="text-xs text-muted-foreground">{value || '11'}</span>,
+      renderCell: (value: any) => <span className="text-xs text-muted-foreground">{value || 'Auto'}</span>,
     },
     {
       key: 'fontWeight',

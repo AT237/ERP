@@ -237,14 +237,14 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
         </Select>
 
         <Select
-          value={currentFontSize ? String(currentFontSize) : ""}
-          onValueChange={(val) => form.setValue('fontSize', val ? parseInt(val) : null)}
+          value={currentFontSize != null ? String(currentFontSize) : ""}
+          onValueChange={(val) => form.setValue('fontSize', val === "" || val === "__auto__" ? null : parseInt(val))}
         >
           <SelectTrigger className="h-7 w-[65px] text-xs border-gray-300">
             <SelectValue placeholder="pt" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="0">Auto</SelectItem>
+            <SelectItem value="__auto__">Auto</SelectItem>
             {FONT_SIZES.map(s => (
               <SelectItem key={s} value={String(s)}>{s}</SelectItem>
             ))}
