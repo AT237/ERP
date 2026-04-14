@@ -337,6 +337,7 @@ export const quotationItems = pgTable("quotation_items", {
   hsCode: text("hs_code"),
   countryOfOrigin: text("country_of_origin"),
   lineImage: text("line_image"),
+  printCocHs: boolean("print_coc_hs").default(false),
 });
 
 // Quotation requests table (purchase-side: request for quotation sent to suppliers)
@@ -435,6 +436,7 @@ export const invoiceItems = pgTable("invoice_items", {
   hsCode: text("hs_code"),
   countryOfOrigin: text("country_of_origin"),
   lineImage: text("line_image"),
+  printCocHs: boolean("print_coc_hs").default(false),
 });
 
 // Proforma invoices table
@@ -506,6 +508,7 @@ export const proformaInvoiceItems = pgTable("proforma_invoice_items", {
   hsCode: text("hs_code"),
   countryOfOrigin: text("country_of_origin"),
   lineImage: text("line_image"),
+  printCocHs: boolean("print_coc_hs").default(false),
 });
 
 // Purchase orders table
@@ -615,6 +618,8 @@ export const workOrderItems = pgTable("work_order_items", {
   sourceSnippetVersion: integer("source_snippet_version"),
   hsCode: text("hs_code"),
   countryOfOrigin: text("country_of_origin"),
+  lineImage: text("line_image"),
+  printCocHs: boolean("print_coc_hs").default(false),
 });
 
 export const insertWorkOrderItemSchema = createInsertSchema(workOrderItems).omit({ id: true });
@@ -673,6 +678,8 @@ export const packingListItems = pgTable("packing_list_items", {
   discountPercent: decimal("discount_percent", { precision: 5, scale: 2 }).default("0"),
   hsCode: text("hs_code"),
   countryOfOrigin: text("country_of_origin"),
+  lineImage: text("line_image"),
+  printCocHs: boolean("print_coc_hs").default(false),
   weight: decimal("weight", { precision: 10, scale: 3 }).default("0"),
   collieNumber: text("collie_number"),
 });
