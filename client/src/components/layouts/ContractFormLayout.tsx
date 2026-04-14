@@ -385,17 +385,22 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
     {
       key: 'indentLevel',
       label: 'Niv.',
-      visible: true,
+      visible: false,
       width: 50,
       filterable: false,
       sortable: false,
       align: 'center' as const,
     },
+    { key: 'fontSize', label: 'Lettergrootte', visible: false, width: 80, filterable: false, sortable: false },
+    { key: 'fontWeight', label: 'Letterdikte', visible: false, width: 80, filterable: false, sortable: false },
+    { key: 'fontColor', label: 'Kleur', visible: false, width: 80, filterable: false, sortable: false },
+    { key: '_rowIdx', label: '#', visible: false, width: 40, filterable: false, sortable: false },
+    { key: 'id', label: 'ID', visible: false, width: 40, filterable: false, sortable: false },
   ], []);
 
   const itemTableState = useDataTable({
     defaultColumns: itemColumns,
-    tableKey: 'contract-items',
+    tableKey: 'contract-items-v2',
     data: rows,
     defaultSort: { column: 'articleNumber', direction: 'asc' as const },
   });
@@ -465,7 +470,7 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
         isLoading={false}
         columns={itemTableState.columns}
         setColumns={itemTableState.setColumns}
-        tableKey="contract-items"
+        tableKey="contract-items-v2"
         searchTerm={itemTableState.searchTerm}
         setSearchTerm={itemTableState.setSearchTerm}
         filters={itemTableState.filters}
