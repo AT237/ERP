@@ -707,6 +707,15 @@ export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentI
             }}
             onDuplicate={handleDuplicateItem}
             directInput={qrDirectInput}
+            onAdd={() => {
+              setTimeout(() => {
+                const btn = document.querySelector('[data-testid="button-direct-input"]') as HTMLButtonElement;
+                if (btn) {
+                  btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  btn.focus();
+                }
+              }, 100);
+            }}
             rowActions={(item: QuotationRequestItem) => [
               {
                 key: 'delete',
