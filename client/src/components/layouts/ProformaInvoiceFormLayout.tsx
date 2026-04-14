@@ -540,11 +540,27 @@ export function ProformaInvoiceFormLayout({ onSave, invoiceId, parentId }: Profo
         return <span className={`text-right w-full block ${margin < 0 ? 'text-red-600 font-medium' : ''}`}>{`€ ${margin.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>;
       }
     },
+    {
+      key: 'hsCode',
+      label: 'HS Code',
+      visible: false,
+      width: 120,
+      filterable: true,
+      sortable: true,
+    },
+    {
+      key: 'countryOfOrigin',
+      label: 'Land v. herkomst',
+      visible: false,
+      width: 130,
+      filterable: true,
+      sortable: true,
+    },
   ], [inventoryItems]);
 
   const itemTableState = useDataTable({
     defaultColumns: itemColumns,
-    tableKey: 'proforma-invoice-items'
+    tableKey: 'proforma-invoice-items-v2'
   });
 
   const createMutation = useMutation({
