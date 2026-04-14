@@ -5,11 +5,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSupplierSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Building2 } from "lucide-react";
+import { Building2, CreditCard, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
 import { ValidationErrorDialog } from "@/components/ui/validation-error-dialog";
+import { AddressSelectWithAdd } from "@/components/ui/address-select-with-add";
+import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
+import { LanguageSelectWithAdd } from "@/components/ui/language-select-with-add";
+import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import type { Supplier, InsertSupplier } from "@shared/schema";
 import { z } from "zod";
 import { 
@@ -19,12 +25,26 @@ import {
   createFieldRow, 
   createFieldsRow, 
   createSectionHeaderRow,
+  createTwoColumnRow,
   type ChangeTrackingConfig 
 } from './LayoutForm2';
 import type { InfoField } from './InfoHeaderLayout';
 
 const supplierFormSchema = insertSupplierSchema.extend({
-  paymentTerms: z.string().min(1, "Payment terms is required").transform(val => parseInt(val, 10)),
+  paymentTerms: z.string().optional().transform(val => val ? parseInt(val, 10) : 30),
+  paymentDaysId: z.string().optional(),
+  countryCode: z.string().optional(),
+  addressId: z.string().optional(),
+  languageCode: z.string().optional(),
+  kvkNummer: z.string().optional(),
+  bankAccount: z.string().optional(),
+  website: z.string().optional(),
+  memo: z.string().optional(),
+  mobile: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  country: z.string().optional(),
+  discountPercent: z.string().optional().nullable(),
 });
 
 type SupplierFormData = z.infer<typeof supplierFormSchema>;
@@ -38,7 +58,20 @@ interface SupplierFormLayoutProps {
 const supplierFieldLabels: Record<string, { label: string; section?: string }> = {
   name: { label: "Bedrijfsnaam", section: "general" },
   email: { label: "E-mail", section: "general" },
+  phone: { label: "Telefoon", section: "general" },
+  mobile: { label: "Mobiel", section: "general" },
+  contactPerson: { label: "Contactpersoon", section: "general" },
+  addressId: { label: "Adres", section: "general" },
+  countryCode: { label: "Land", section: "general" },
+  kvkNummer: { label: "KvK Nummer", section: "general" },
+  taxId: { label: "BTW Nummer", section: "general" },
+  languageCode: { label: "Taal", section: "general" },
   paymentTerms: { label: "Betalingstermijn", section: "financial" },
+  paymentDaysId: { label: "Betaaldag", section: "financial" },
+  bankAccount: { label: "Bankrekening", section: "financial" },
+  website: { label: "Website", section: "general" },
+  memo: { label: "Memo", section: "general" },
+  status: { label: "Status", section: "general" },
 };
 
 export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFormLayoutProps) {
@@ -58,23 +91,30 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
       contactPerson: "",
       email: "",
       phone: "",
+      mobile: "",
       address: "",
+      addressId: "",
       city: "",
       postalCode: "",
       country: "",
+      countryCode: "",
       taxId: "",
+      kvkNummer: "",
+      bankAccount: "",
+      website: "",
+      memo: "",
+      languageCode: "nl",
       paymentTerms: "30",
+      paymentDaysId: "",
       status: "active",
     },
   });
 
-  // Load supplier data if editing
   const { data: supplier, isLoading: isLoadingSupplier } = useQuery<Supplier>({
     queryKey: ["/api/suppliers", supplierId],
     enabled: !!supplierId,
   });
 
-  // Update form when supplier data loads
   useEffect(() => {
     if (supplier) {
       const formData = {
@@ -82,12 +122,21 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
         contactPerson: supplier.contactPerson || "",
         email: supplier.email || "",
         phone: supplier.phone || "",
+        mobile: (supplier as any).mobile || "",
         address: supplier.address || "",
-        city: supplier.city || "",
-        postalCode: supplier.postalCode || "",
-        country: supplier.country || "",
+        addressId: (supplier as any).addressId || "",
+        city: (supplier as any).city || "",
+        postalCode: (supplier as any).postalCode || "",
+        country: (supplier as any).country || "",
+        countryCode: (supplier as any).countryCode || "",
         taxId: supplier.taxId || "",
+        kvkNummer: (supplier as any).kvkNummer || "",
+        bankAccount: (supplier as any).bankAccount || "",
+        website: (supplier as any).website || "",
+        memo: (supplier as any).memo || "",
+        languageCode: (supplier as any).languageCode || "nl",
         paymentTerms: supplier.paymentTerms?.toString() || "30",
+        paymentDaysId: (supplier as any).paymentDaysId || "",
         status: supplier.status || "active",
       };
       
@@ -101,7 +150,17 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
     }
   }, [supplier, form]);
 
-  // Communicate unsaved changes status to parent Layout
+  useEffect(() => {
+    if (supplier && supplierId) {
+      window.dispatchEvent(new CustomEvent('update-tab-name', {
+        detail: {
+          tabId: `supplier-${supplierId}`,
+          name: supplier.supplierNumber
+        }
+      }));
+    }
+  }, [supplier, supplierId]);
+
   useEffect(() => {
     const tabId = supplierId ? `edit-supplier-${supplierId}` : 'new-supplier';
     window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
@@ -109,7 +168,6 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
     }));
   }, [hasUnsavedChanges, supplierId]);
 
-  // Mutations
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest("POST", "/api/suppliers", data);
@@ -124,11 +182,10 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
         detail: { tabId: 'new-supplier', hasUnsavedChanges: false }
       }));
       toast({
-        title: "Success",
-        description: "Supplier added successfully",
+        title: "Opgeslagen",
+        description: "Leverancier succesvol aangemaakt",
       });
       
-      // Dispatch entity-created event for potential auto-selection
       window.dispatchEvent(new CustomEvent('entity-created', {
         detail: {
           entityType: 'supplier',
@@ -136,12 +193,11 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
           parentId: parentId
         }
       }));
-      
-          },
+    },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to add supplier",
+        title: "Fout",
+        description: "Kon leverancier niet aanmaken",
         variant: "destructive",
       });
     },
@@ -162,14 +218,14 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
         detail: { tabId, hasUnsavedChanges: false }
       }));
       toast({
-        title: "Success",
-        description: "Supplier updated successfully",
+        title: "Opgeslagen",
+        description: "Leverancier succesvol bijgewerkt",
       });
-          },
+    },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to update supplier",
+        title: "Fout",
+        description: "Kon leverancier niet bijwerken",
         variant: "destructive",
       });
     },
@@ -188,7 +244,6 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
     }
   };
 
-  // Change tracking configuration
   const changeTrackingConfig: ChangeTrackingConfig = {
     enabled: true,
     suppressTracking: false,
@@ -197,9 +252,8 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
     }
   };
 
-  // Header fields
   const headerFields: InfoField[] = isEditing && supplier ? [
-    { key: 'supplier-number', label: 'Supplier ID', value: supplier.supplierNumber || 'N/A' },
+    { key: 'supplier-number', label: 'Leverancier ID', value: supplier.supplierNumber || 'N/A' },
     { key: 'status', label: 'Status', value: supplier.status || 'active' },
   ] : [];
 
@@ -212,55 +266,132 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
     saveLoading: createMutation.isPending || updateMutation.isPending,
   });
 
-  // Form sections
   const formSections: FormSection2<SupplierFormData>[] = [
     {
       id: "general",
-      label: "General Information",
+      label: "Algemeen",
       icon: <Building2 className="h-4 w-4" />,
       rows: [
-        createFieldRow({
-          key: "name",
-          label: "Company Name *",
-          type: "text",
-          placeholder: "Enter supplier company name",
-          register: form.register("name"),
-          validation: {
-            error: form.formState.errors.name?.message,
-            isRequired: true
-          },
-          testId: "input-supplier-name"
-        } as FormField2<SupplierFormData>),
-        
-        createFieldRow({
-          key: "contactPerson",
-          label: "Contact Person",
-          type: "text",
-          placeholder: "Primary contact name",
-          register: form.register("contactPerson"),
-          validation: {
-            error: form.formState.errors.contactPerson?.message
-          },
-          testId: "input-supplier-contact-person"
-        } as FormField2<SupplierFormData>),
-
+        createTwoColumnRow([
+          {
+            key: "name",
+            label: "Bedrijfsnaam",
+            type: "text",
+            placeholder: "Naam van het bedrijf",
+            register: form.register("name"),
+            validation: {
+              error: form.formState.errors.name?.message,
+              isRequired: true
+            },
+            testId: "input-supplier-name"
+          } as FormField2<SupplierFormData>,
+          {
+            key: "addressId",
+            label: "Adres",
+            type: "custom",
+            customComponent: (
+              <AddressSelectWithAdd
+                value={form.watch("addressId") || ""}
+                onValueChange={(value) => form.setValue("addressId", value)}
+                placeholder="Selecteer adres..."
+                testId="select-supplier-address"
+              />
+            )
+          } as FormField2<SupplierFormData>,
+          {
+            key: "languageCode",
+            label: "Taal",
+            type: "custom",
+            customComponent: (
+              <LanguageSelectWithAdd
+                value={form.watch("languageCode") || ""}
+                onValueChange={(value) => form.setValue("languageCode", value)}
+                placeholder="Selecteer taal..."
+                testId="select-supplier-language"
+              />
+            )
+          } as FormField2<SupplierFormData>,
+          {
+            key: "kvkNummer",
+            label: "KvK Nummer",
+            type: "text",
+            placeholder: "12345678",
+            register: form.register("kvkNummer"),
+            validation: {
+              error: form.formState.errors.kvkNummer?.message
+            },
+            testId: "input-supplier-kvk"
+          } as FormField2<SupplierFormData>,
+          {
+            key: "countryCode",
+            label: "Land",
+            type: "custom",
+            customComponent: (
+              <CountrySelectWithAdd
+                value={form.watch("countryCode") || ""}
+                onValueChange={(value) => form.setValue("countryCode", value)}
+                placeholder="Selecteer land..."
+                testId="select-supplier-country"
+              />
+            )
+          } as FormField2<SupplierFormData>,
+          {
+            key: "taxId",
+            label: "BTW Nummer",
+            type: "text",
+            placeholder: "NL123456789B01",
+            register: form.register("taxId"),
+            validation: {
+              error: form.formState.errors.taxId?.message
+            },
+            testId: "input-supplier-tax-id"
+          } as FormField2<SupplierFormData>,
+        ]),
+        {
+          type: 'custom',
+          customContent: (
+            <div className="grid grid-cols-[130px_1fr] items-start gap-3 mt-4">
+              <Label className="text-sm font-medium text-right pt-2">Memo</Label>
+              <Textarea
+                placeholder="Notities over deze leverancier..."
+                value={form.watch("memo") || ""}
+                onChange={(e) => form.setValue("memo", e.target.value)}
+                className="min-h-[80px] resize-none"
+              />
+            </div>
+          )
+        },
+        createSectionHeaderRow("Contactgegevens"),
         createFieldsRow([
           {
+            key: "contactPerson",
+            label: "Contactpersoon",
+            type: "text",
+            placeholder: "Naam contactpersoon",
+            layout: "single",
+            register: form.register("contactPerson"),
+            validation: {
+              error: form.formState.errors.contactPerson?.message
+            },
+            testId: "input-supplier-contact-person"
+          } as FormField2<SupplierFormData>,
+          {
             key: "email",
-            label: "Email *",
+            label: "E-mail",
             type: "email",
-            placeholder: "supplier@example.com",
+            placeholder: "leverancier@voorbeeld.nl",
             layout: "single",
             register: form.register("email"),
             validation: {
-              error: form.formState.errors.email?.message,
-              isRequired: true
+              error: form.formState.errors.email?.message
             },
             testId: "input-supplier-email"
-          } as FormField2<SupplierFormData>,
+          } as FormField2<SupplierFormData>
+        ]),
+        createFieldsRow([
           {
             key: "phone",
-            label: "Phone",
+            label: "Telefoon",
             type: "tel",
             placeholder: "+31 20 123 4567",
             layout: "single",
@@ -269,112 +400,95 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
               error: form.formState.errors.phone?.message
             },
             testId: "input-supplier-phone"
-          } as FormField2<SupplierFormData>
-        ])
-      ]
-    },
-    {
-      id: "address",
-      label: "Address",
-      rows: [
-        createFieldRow({
-          key: "address",
-          label: "Address",
-          type: "text",
-          placeholder: "Street address",
-          register: form.register("address"),
-          validation: {
-            error: form.formState.errors.address?.message
-          },
-          testId: "input-supplier-address"
-        } as FormField2<SupplierFormData>),
-
-        createFieldsRow([
-          {
-            key: "city",
-            label: "City",
-            type: "text",
-            placeholder: "City",
-            layout: "single",
-            register: form.register("city"),
-            validation: {
-              error: form.formState.errors.city?.message
-            },
-            testId: "input-supplier-city"
           } as FormField2<SupplierFormData>,
           {
-            key: "postalCode",
-            label: "Postal Code",
-            type: "text",
-            placeholder: "1000 AB",
+            key: "mobile",
+            label: "Mobiel",
+            type: "tel",
+            placeholder: "+31 6 1234 5678",
             layout: "single",
-            register: form.register("postalCode"),
+            register: form.register("mobile"),
             validation: {
-              error: form.formState.errors.postalCode?.message
+              error: form.formState.errors.mobile?.message
             },
-            testId: "input-supplier-postal-code"
+            testId: "input-supplier-mobile"
           } as FormField2<SupplierFormData>
         ]),
-
         createFieldRow({
-          key: "country",
-          label: "Country",
+          key: "website",
+          label: "Website",
           type: "text",
-          placeholder: "Netherlands",
-          register: form.register("country"),
+          placeholder: "https://www.voorbeeld.nl",
+          register: form.register("website"),
           validation: {
-            error: form.formState.errors.country?.message
+            error: form.formState.errors.website?.message
           },
-          testId: "input-supplier-country"
-        } as FormField2<SupplierFormData>)
+          testId: "input-supplier-website"
+        } as FormField2<SupplierFormData>),
       ]
     },
     {
       id: "financial",
-      label: "Financial Information", 
+      label: "Financieel", 
+      icon: <CreditCard className="h-4 w-4" />,
       rows: [
         createFieldsRow([
           {
-            key: "taxId",
-            label: "Tax ID",
-            type: "text",
-            placeholder: "NL123456789B01",
-            layout: "single",
-            register: form.register("taxId"),
-            validation: {
-              error: form.formState.errors.taxId?.message
-            },
-            testId: "input-supplier-tax-id"
-          } as FormField2<SupplierFormData>,
-          {
             key: "paymentTerms",
-            label: "Payment Terms *",
+            label: "Betalingstermijn",
             type: "select",
             options: [
-              { value: "7", label: "7 days" },
-              { value: "14", label: "14 days" },
-              { value: "30", label: "30 days" },
-              { value: "45", label: "45 days" },
-              { value: "60", label: "60 days" }
+              { value: "0", label: "Vooraf betalen" },
+              { value: "7", label: "7 dagen" },
+              { value: "14", label: "14 dagen" },
+              { value: "21", label: "21 dagen" },
+              { value: "30", label: "30 dagen" },
+              { value: "45", label: "45 dagen" },
+              { value: "60", label: "60 dagen" },
+              { value: "90", label: "90 dagen" }
             ],
             layout: "single",
             setValue: (value) => form.setValue("paymentTerms", value),
             watch: () => form.watch("paymentTerms"),
             validation: {
-              error: form.formState.errors.paymentTerms?.message,
-              isRequired: true
+              error: form.formState.errors.paymentTerms?.message
             },
             testId: "select-supplier-payment-terms"
+          } as FormField2<SupplierFormData>,
+          {
+            key: "paymentDaysId",
+            label: "Betaaldag",
+            type: "custom",
+            layout: "single",
+            customComponent: (
+              <PaymentDaySelectWithAdd
+                value={form.watch("paymentDaysId") || ""}
+                onValueChange={(value) => form.setValue("paymentDaysId", value)}
+                placeholder="Selecteer betaaldag..."
+                testId="select-supplier-payment-day"
+              />
+            )
           } as FormField2<SupplierFormData>
         ]),
+        createFieldRow({
+          key: "bankAccount",
+          label: "Bankrekening",
+          type: "text",
+          placeholder: "NL00 BANK 0000 0000 00",
+          register: form.register("bankAccount"),
+          validation: {
+            error: form.formState.errors.bankAccount?.message
+          },
+          testId: "input-supplier-bank-account"
+        } as FormField2<SupplierFormData>),
 
         createFieldRow({
           key: "status",
           label: "Status",
           type: "select",
           options: [
-            { value: "active", label: "Active" },
-            { value: "inactive", label: "Inactive" }
+            { value: "active", label: "Actief" },
+            { value: "inactive", label: "Inactief" }
           ],
           setValue: (value) => form.setValue("status", value),
           watch: () => form.watch("status"),
