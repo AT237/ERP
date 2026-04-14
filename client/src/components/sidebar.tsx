@@ -106,7 +106,7 @@ export const defaultNavigation = [
     items: [
       { id: "analytics", name: "Analytics", href: "/reports", icon: BarChart3 },
       { id: "pdf-archive", name: "PDF Database", href: "/pdf-archive", icon: Archive },
-      { id: "contracts", name: "Contracten", href: "/contracts", icon: FileText }
+      { id: "contracts", name: "Contracts", href: "/contracts", icon: FileText }
     ]
   },
   {
