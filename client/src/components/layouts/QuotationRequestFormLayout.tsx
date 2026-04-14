@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,12 +15,17 @@ import { useDataTable } from '@/hooks/useDataTable';
 import { SupplierSelect } from "@/components/ui/supplier-select";
 import { ProjectSelect } from "@/components/ui/project-select";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, X } from "lucide-react";
-import type { QuotationRequest, InsertQuotationRequest, QuotationRequestItem, InventoryItem, UnitOfMeasure } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { RefreshCw, X, Plus, Printer, Paperclip, Trash2, FileText, Upload, Download } from "lucide-react";
+import type { QuotationRequest, InsertQuotationRequest, QuotationRequestItem, InventoryItem, UnitOfMeasure, QuotationRequestSupplier } from "@shared/schema";
 import { z } from "zod";
 import { toDisplayDate, toStorageDate } from "@/lib/date-utils";
 
 const formSchema = insertQuotationRequestSchema.extend({
+  supplierId: z.string().optional().nullable(),
   subtotal: z.string().optional(),
   taxAmount: z.string().optional(),
   totalAmount: z.string().optional(),
@@ -48,7 +53,6 @@ export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentI
   const isEditing = !!currentId;
 
   const { dialogOpen, setDialogOpen, errors: validErrors, onInvalid, handleShowFields } = useValidationErrors({
-    supplierId: { label: "Leverancier" },
     title: { label: "Titel" },
   });
 
@@ -491,22 +495,6 @@ export function QuotationRequestFormLayout({ onSave, quotationRequestId, parentI
               ),
               validation: { isRequired: true },
               testId: "input-request-number"
-            },
-            {
-              key: "supplierId",
-              label: "Leverancier",
-              type: "custom" as const,
-              customComponent: (
-                <SupplierSelect
-                  value={form.watch("supplierId")}
-                  onValueChange={(value) => form.setValue("supplierId", value)}
-                  placeholder="Selecteer leverancier..."
-                  testId="select-supplier"
-                  parentId={parentId}
-                />
-              ),
-              validation: { isRequired: true, error: form.formState.errors.supplierId?.message },
-              testId: "select-supplier"
             },
             {
               key: "requestDate",

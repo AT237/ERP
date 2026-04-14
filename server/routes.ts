@@ -2424,6 +2424,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Quotation Request Suppliers routes
+  app.get("/api/quotation-requests/:id/suppliers", async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT qrs.*, s.name as supplier_name, s.email as supplier_email, s.supplier_number 
+         FROM quotation_request_suppliers qrs 
+         JOIN suppliers s ON s.id = qrs.supplier_id 
+         WHERE qrs.quotation_request_id = $1 
+         ORDER BY qrs.created_at ASC`,
+        [req.params.id]
+      );
+      res.json(result.rows);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to fetch quotation request suppliers");
+    }
+  });
+
+  app.post("/api/quotation-requests/:id/suppliers", async (req, res) => {
+    try {
+      const { supplierId, status, notes } = req.body;
+      const existing = await pool.query(
+        `SELECT id FROM quotation_request_suppliers WHERE quotation_request_id = $1 AND supplier_id = $2`,
+        [req.params.id, supplierId]
+      );
+      if (existing.rows.length > 0) {
+        return res.status(400).json({ message: "Leverancier is al gekoppeld aan dit offerteverzoek" });
+      }
+      const result = await pool.query(
+        `INSERT INTO quotation_request_suppliers (quotation_request_id, supplier_id, status, notes) VALUES ($1, $2, $3, $4) RETURNING *`,
+        [req.params.id, supplierId, status || 'pending', notes || null]
+      );
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to add supplier to quotation request");
+    }
+  });
+
+  app.put("/api/quotation-request-suppliers/:id", async (req, res) => {
+    try {
+      const { status, notes, attachment1, attachment1Name, attachment2, attachment2Name, attachment3, attachment3Name } = req.body;
+      const setClauses: string[] = [];
+      const values: any[] = [];
+      let idx = 1;
+      if (status !== undefined) { setClauses.push(`status = $${idx++}`); values.push(status); }
+      if (notes !== undefined) { setClauses.push(`notes = $${idx++}`); values.push(notes); }
+      if (attachment1 !== undefined) { setClauses.push(`attachment_1 = $${idx++}`); values.push(attachment1); }
+      if (attachment1Name !== undefined) { setClauses.push(`attachment_1_name = $${idx++}`); values.push(attachment1Name); }
+      if (attachment2 !== undefined) { setClauses.push(`attachment_2 = $${idx++}`); values.push(attachment2); }
+      if (attachment2Name !== undefined) { setClauses.push(`attachment_2_name = $${idx++}`); values.push(attachment2Name); }
+      if (attachment3 !== undefined) { setClauses.push(`attachment_3 = $${idx++}`); values.push(attachment3); }
+      if (attachment3Name !== undefined) { setClauses.push(`attachment_3_name = $${idx++}`); values.push(attachment3Name); }
+      if (setClauses.length === 0) return res.status(400).json({ message: "No fields to update" });
+      values.push(req.params.id);
+      const result = await pool.query(
+        `UPDATE quotation_request_suppliers SET ${setClauses.join(', ')} WHERE id = $${idx} RETURNING *`,
+        values
+      );
+      if (result.rows.length === 0) return res.status(404).json({ message: "Not found" });
+      res.json(result.rows[0]);
+    } catch (error) {
+      handleRouteError(res, error, "Failed to update quotation request supplier");
+    }
+  });
+
+  app.delete("/api/quotation-request-suppliers/:id", async (req, res) => {
+    try {
+      await pool.query(`DELETE FROM quotation_request_suppliers WHERE id = $1`, [req.params.id]);
+      res.status(204).send();
+    } catch (error) {
+      handleRouteError(res, error, "Failed to delete quotation request supplier");
+    }
+  });
+
   // Purchase Order item update/delete routes
   app.put("/api/purchase-order-items/:id", async (req, res) => {
     try {
