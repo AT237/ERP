@@ -493,6 +493,13 @@ function resolveItemValue(fieldPath: string, itemContext: ItemContext): any {
   if (positionAliases.includes(fieldPath.toLowerCase())) {
     return itemContext.index + 1;
   }
+
+  const lowerField = fieldPath.toLowerCase();
+  if (lowerField === 'hscode' || lowerField === 'hs_code' || lowerField === 'countryoforigin' || lowerField === 'country_of_origin') {
+    if (!itemContext.item.printCocHs && !itemContext.item.print_coc_hs) {
+      return '';
+    }
+  }
   
   const parts = fieldPath.split('.');
   let value: any = itemContext.item;

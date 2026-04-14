@@ -119,6 +119,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       supplierId: undefined,
       hsCode: "",
       countryOfOrigin: "",
+      printCocHs: false,
     },
   });
 
@@ -209,6 +210,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         supplierId: (lineItem as any).supplierId || undefined,
         hsCode: (lineItem as any).hsCode || "",
         countryOfOrigin: (lineItem as any).countryOfOrigin || "",
+        printCocHs: (lineItem as any).printCocHs || false,
       };
       
       form.reset(formData);
@@ -448,6 +450,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       hsCode: data.hsCode || undefined,
       countryOfOrigin: data.countryOfOrigin || undefined,
       lineImage: lineImage || null,
+      printCocHs: data.printCocHs || false,
     };
     
     if (isEditing) {
@@ -757,6 +760,13 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
       testId: 'select-supplier'
     },
     {
+      key: 'printCocHs' as any,
+      label: 'COC/HS afdrukken',
+      type: 'checkbox',
+      setValue: (value: boolean) => { form.setValue('printCocHs' as any, value); setHasUnsavedChanges(true); },
+      watch: () => form.watch('printCocHs' as any),
+    },
+    {
       key: 'hsCode',
       label: 'HS Code',
       type: 'text',
@@ -819,6 +829,7 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
         createFieldRow(deliveryFields[1]),
         createFieldRow(deliveryFields[2]),
         createFieldRow(deliveryFields[3]),
+        createFieldRow(deliveryFields[4]),
       ]
     },
     ...(lineTypeValue === 'unique' && isEditing ? [{

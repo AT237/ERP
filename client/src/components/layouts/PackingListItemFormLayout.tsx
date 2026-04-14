@@ -93,6 +93,7 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
       costPrice: "0.00",
       hsCode: "",
       countryOfOrigin: "",
+      printCocHs: false,
       packedQuantity: "0",
     },
   });
@@ -194,6 +195,7 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
         costPrice: (lineItem as any).costPrice?.toString() || "0.00",
         hsCode: (lineItem as any).hsCode || "",
         countryOfOrigin: (lineItem as any).countryOfOrigin || "",
+        printCocHs: (lineItem as any).printCocHs || false,
         packedQuantity: (lineItem as any).packedQuantity?.toString() || "0",
       };
       
@@ -323,6 +325,7 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
       descriptionInternal: data.descriptionInternal || undefined,
       discountPercent: data.discountPercent || "0",
       packedQuantity: data.packedQuantity || "0",
+      printCocHs: data.printCocHs || false,
     };
 
     if (isEditing) {
@@ -523,6 +526,14 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
   const leftFields = [fieldPosNo, fieldLineType, fieldDescriptionInternal];
   const rightFields = getRightColumnFields();
 
+  const fieldPrintCocHs: FormField2<PackingListItemFormData> = {
+    key: 'printCocHs' as any,
+    label: 'COC/HS afdrukken',
+    type: 'checkbox',
+    setValue: (value: boolean) => { form.setValue('printCocHs' as any, value); setHasUnsavedChanges(true); },
+    watch: () => form.watch('printCocHs' as any),
+  };
+
   const deliveryFields = [
     {
       key: 'hsCode',
@@ -557,6 +568,7 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
       id: 'delivery',
       label: 'Levering',
       rows: [
+        createFieldRow(fieldPrintCocHs),
         createFieldRow(deliveryFields[0]),
         createFieldRow(deliveryFields[1]),
       ]

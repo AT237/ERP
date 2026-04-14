@@ -133,6 +133,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       costPrice: "0.00",
       hsCode: "",
       countryOfOrigin: "",
+      printCocHs: false,
     },
   });
 
@@ -288,6 +289,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
         costPrice: (lineItem as any).costPrice?.toString() || "0.00",
         hsCode: (lineItem as any).hsCode || "",
         countryOfOrigin: (lineItem as any).countryOfOrigin || "",
+        printCocHs: (lineItem as any).printCocHs || false,
       };
       
       if ((lineItem as any).workDate) {
@@ -587,6 +589,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       technicianNames: techName || undefined,
       technicianIds: selectedEmployeeId || undefined,
       lineImage: lineImage || null,
+      printCocHs: data.printCocHs || false,
     };
     
     if (isEditing) {
@@ -934,6 +937,14 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   const leftFields = [fieldPosNo, fieldLineType, fieldDescriptionInternal, fieldLineTotal];
   const rightFields = getRightColumnFields();
 
+  const fieldPrintCocHs: FormField2<LineItemFormData> = {
+    key: 'printCocHs' as any,
+    label: 'COC/HS afdrukken',
+    type: 'checkbox',
+    setValue: (value: boolean) => { form.setValue('printCocHs' as any, value); setHasUnsavedChanges(true); },
+    watch: () => form.watch('printCocHs' as any),
+  };
+
   const deliveryFields = [
     {
       key: 'hsCode',
@@ -994,6 +1005,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
       id: 'delivery',
       label: 'Levering',
       rows: [
+        createFieldRow(fieldPrintCocHs),
         createFieldRow(deliveryFields[0]),
         createFieldRow(deliveryFields[1]),
       ]

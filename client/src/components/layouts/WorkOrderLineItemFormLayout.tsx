@@ -118,6 +118,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
       technicianIds: "",
       hsCode: "",
       countryOfOrigin: "",
+      printCocHs: false,
     },
   });
 
@@ -222,6 +223,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
         technicianIds: (lineItem as any).technicianIds || "",
         hsCode: (lineItem as any).hsCode || "",
         countryOfOrigin: (lineItem as any).countryOfOrigin || "",
+        printCocHs: (lineItem as any).printCocHs || false,
       };
 
       if ((lineItem as any).workDate) setSelectedDate(new Date((lineItem as any).workDate));
@@ -414,6 +416,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
       workDate: selectedDate ? selectedDate.toISOString() : undefined,
       technicianNames: techName || undefined,
       technicianIds: selectedEmployeeId || undefined,
+      printCocHs: data.printCocHs || false,
     };
 
     if (isEditing) {
@@ -656,6 +659,14 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
   const leftFields = [fieldPosNo, fieldLineType, fieldDescriptionInternal, fieldLineTotal];
   const rightFields = getRightColumnFields();
 
+  const fieldPrintCocHs: FormField2<LineItemFormData> = {
+    key: 'printCocHs' as any,
+    label: 'COC/HS afdrukken',
+    type: 'checkbox',
+    setValue: (value: boolean) => { form.setValue('printCocHs' as any, value); setHasUnsavedChanges(true); },
+    watch: () => form.watch('printCocHs' as any),
+  };
+
   const deliveryFields = [
     {
       key: 'hsCode',
@@ -692,6 +703,7 @@ export function WorkOrderLineItemFormLayout({ onSave, lineItemId, workOrderId, p
       id: 'delivery',
       label: 'Levering',
       rows: [
+        createFieldRow(fieldPrintCocHs),
         createFieldRow(deliveryFields[0]),
         createFieldRow(deliveryFields[1]),
       ]
