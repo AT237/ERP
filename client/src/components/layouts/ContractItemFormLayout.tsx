@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { ChevronRight, ChevronDown, Upload, Bold, Type, Heading, Table2, ImageIcon } from "lucide-react";
 import { type ContractItem } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -97,6 +97,8 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
     }
   }, [existingItem, form]);
 
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   const saveMutation = useMutation({
     mutationFn: async (data: ItemFormData) => {
       if (isEditing) {
@@ -107,9 +109,7 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
     },
     onSuccess: () => {
       toast({ title: isEditing ? "Regel bijgewerkt" : "Regel aangemaakt" });
-      queryClient.invalidateQueries({ queryKey: ['/api/contracts', contractId] });
-      queryClient.invalidateQueries({ queryKey: [`/api/contracts/${contractId}/items`] });
-      onSave();
+      setHasUnsavedChanges(false);
     },
     onError: (error: any) => {
       toast({ title: "Fout bij opslaan", description: error.message, variant: "destructive" });
@@ -122,8 +122,6 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
     },
     onSuccess: () => {
       toast({ title: "Regel verwijderd" });
-      queryClient.invalidateQueries({ queryKey: ['/api/contracts', contractId] });
-      queryClient.invalidateQueries({ queryKey: [`/api/contracts/${contractId}/items`] });
       onSave();
     },
     onError: (error: any) => {
@@ -131,18 +129,32 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
     },
   });
 
-  const handleSave = useCallback(() => {
-    form.handleSubmit((data) => saveMutation.mutate(data))();
-  }, [form, saveMutation]);
+  const onSubmit = useCallback((data: ItemFormData) => {
+    saveMutation.mutate(data);
+  }, [saveMutation]);
+
+  const onInvalid = useCallback((errors: any) => {
+    const firstError = Object.values(errors)[0] as any;
+    if (firstError?.message) {
+      toast({ title: "Validatiefout", description: firstError.message, variant: "destructive" });
+    }
+  }, [toast]);
+
+  const handleClose = useCallback(() => {
+    onSave();
+  }, [onSave]);
 
   const toolbar = useFormToolbar({
     entityType: "contract-item",
     entityId: itemId,
-    onSave: handleSave,
-    onClose: onSave,
+    onSave: form.handleSubmit(onSubmit, onInvalid),
+    onClose: handleClose,
     onDelete: isEditing ? () => deleteMutation.mutate() : undefined,
-    saveDisabled: saveMutation.isPending,
+    saveDisabled: !form.formState.isDirty && !hasUnsavedChanges,
     saveLoading: saveMutation.isPending,
+    extraQueryKeysToInvalidate: contractId ? [["/api/contracts", contractId, "items"], ["/api/contracts", contractId]] : [],
+    navigationListQueryKey: contractId ? ["/api/contracts", contractId, "items"] : undefined,
+    navigationParentId: contractId,
   });
 
   const toggleCategory = useCallback((category: string) => {
