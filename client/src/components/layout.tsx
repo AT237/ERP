@@ -259,7 +259,7 @@ export default function Layout({ children }: LayoutProps) {
       case '/master-data/brands':
         return { id: 'brands', name: 'Brands' };
       case '/master-data/languages':
-        return { id: 'languages', name: 'Talen' };
+        return { id: 'languages', name: 'Languages' };
       case '/style-guide':
         return { id: 'design-system', name: 'Design System' };
       case '/dev-futures':

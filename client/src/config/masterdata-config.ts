@@ -382,7 +382,7 @@ MASTERDATA_CONFIG['inventory-categories'] = {
 };
 
 MASTERDATA_CONFIG['languages'] = {
-  title: "Talen",
+  title: "Languages",
   singularTitle: "Taal",
   endpoint: "languages",
   schema: insertLanguageSchema,
