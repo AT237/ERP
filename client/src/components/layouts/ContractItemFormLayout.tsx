@@ -150,7 +150,7 @@ export function ContractItemFormLayout({ onSave, contractId, itemId }: ContractI
     onSave: form.handleSubmit(onSubmit, onInvalid),
     onClose: handleClose,
     onDelete: isEditing ? () => deleteMutation.mutate() : undefined,
-    saveDisabled: !form.formState.isDirty && !hasUnsavedChanges,
+    saveDisabled: false,
     saveLoading: saveMutation.isPending,
     extraQueryKeysToInvalidate: contractId ? [["/api/contracts", contractId, "items"], ["/api/contracts", contractId]] : [],
     navigationListQueryKey: contractId ? ["/api/contracts", contractId, "items"] : undefined,
