@@ -405,6 +405,9 @@ export async function loadQuotationPrintData(quotationId: string): Promise<Quota
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",
     lineImage: (item as any).lineImage || null,
+    hsCode: (item as any).hsCode || null,
+    countryOfOrigin: (item as any).countryOfOrigin || null,
+    printCocHs: (item as any).printCocHs || false,
   }));
 
   // Load VAT rate from customer's vatRateId
@@ -685,6 +688,9 @@ export async function loadInvoicePrintData(invoiceId: string): Promise<InvoicePr
     lineTotal: item.lineTotal || "0.00",
     lineType: item.lineType || "standard",
     lineImage: (item as any).lineImage || null,
+    hsCode: (item as any).hsCode || null,
+    countryOfOrigin: (item as any).countryOfOrigin || null,
+    printCocHs: (item as any).printCocHs || false,
     discountPercent: item.discountPercent || null,
     workDate: item.workDate,
     technicianNames: item.technicianNames,
@@ -879,6 +885,7 @@ export async function loadProformaInvoicePrintData(proformaInvoiceId: string): P
     sourceSnippetVersion: item.sourceSnippetVersion || null,
     hsCode: (item as any).hsCode || null,
     countryOfOrigin: (item as any).countryOfOrigin || null,
+    printCocHs: (item as any).printCocHs || false,
   }));
 
   let incotermLabel: string | null = null;
@@ -1089,6 +1096,8 @@ export async function loadPackingListPrintData(packingListId: string): Promise<a
     itemId: item.itemId || null,
     hsCode: item.hsCode || null,
     countryOfOrigin: item.countryOfOrigin || null,
+    lineImage: item.lineImage || null,
+    printCocHs: item.printCocHs || false,
     weight: parseFloat(String(item.weight || 0)),
     collieNumber: item.collieNumber || null,
   }));
