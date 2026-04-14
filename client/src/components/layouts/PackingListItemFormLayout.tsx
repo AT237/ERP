@@ -565,12 +565,34 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
     } as FormField2<PackingListItemFormData>,
   ];
 
+  const lineImageField: FormField2<PackingListItemFormData> = {
+    key: 'lineImage' as any,
+    label: 'Regelafbeelding',
+    type: 'custom',
+    customComponent: (
+      <ImageUploadZone
+        value={lineImage}
+        onChange={handleLineImageChange}
+        label="Regelafbeelding"
+        maxSizeMB={2}
+        hint="Klik of sleep een afbeelding · JPG, PNG, max 2MB"
+      />
+    ),
+  };
+
   const formSections: FormSection2<PackingListItemFormData>[] = [
     {
       id: 'general',
       label: 'General',
       rows: [
         createTwoColumnRow(leftFields, rightFields),
+      ],
+    },
+    {
+      id: 'image',
+      label: 'Afbeelding',
+      rows: [
+        createFieldRow(lineImageField),
       ],
     },
     {

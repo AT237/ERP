@@ -543,7 +543,11 @@ export function replacePlaceholders(
                                fieldPath.startsWith('proformaInvoiceItems.') ||
                                fieldPath.startsWith('proformaInvoiceItem.') ||
                                fieldPath.startsWith('contractItems.') ||
-                               fieldPath.startsWith('contractItem.');
+                               fieldPath.startsWith('contractItem.') ||
+                               fieldPath.startsWith('packingListItems.') ||
+                               fieldPath.startsWith('packingListItem.') ||
+                               fieldPath.startsWith('workOrderItems.') ||
+                               fieldPath.startsWith('workOrderItem.');
     
     if (isItemPlaceholder && itemContext) {
       // Normalize the field path by removing the prefix
@@ -564,6 +568,14 @@ export function replacePlaceholders(
         itemFieldPath = fieldPath.substring(14);
       } else if (fieldPath.startsWith('contractItem.')) {
         itemFieldPath = fieldPath.substring(13);
+      } else if (fieldPath.startsWith('packingListItems.')) {
+        itemFieldPath = fieldPath.substring(17);
+      } else if (fieldPath.startsWith('packingListItem.')) {
+        itemFieldPath = fieldPath.substring(16);
+      } else if (fieldPath.startsWith('workOrderItems.')) {
+        itemFieldPath = fieldPath.substring(15);
+      } else if (fieldPath.startsWith('workOrderItem.')) {
+        itemFieldPath = fieldPath.substring(14);
       } else {
         itemFieldPath = fieldPath.substring(5);
       }
@@ -668,7 +680,13 @@ export function hasContent(
                                  fieldPath.startsWith('invoiceItems.') ||
                                  fieldPath.startsWith('invoiceItem.') ||
                                  fieldPath.startsWith('proformaInvoiceItems.') ||
-                                 fieldPath.startsWith('proformaInvoiceItem.');
+                                 fieldPath.startsWith('proformaInvoiceItem.') ||
+                                 fieldPath.startsWith('contractItems.') ||
+                                 fieldPath.startsWith('contractItem.') ||
+                                 fieldPath.startsWith('packingListItems.') ||
+                                 fieldPath.startsWith('packingListItem.') ||
+                                 fieldPath.startsWith('workOrderItems.') ||
+                                 fieldPath.startsWith('workOrderItem.');
       
       if (isItemPlaceholder && itemContext?.item) {
         // Normalize the field path by removing the prefix
@@ -685,6 +703,18 @@ export function hasContent(
           itemFieldPath = fieldPath.substring(21);
         } else if (fieldPath.startsWith('proformaInvoiceItem.')) {
           itemFieldPath = fieldPath.substring(20);
+        } else if (fieldPath.startsWith('contractItems.')) {
+          itemFieldPath = fieldPath.substring(14);
+        } else if (fieldPath.startsWith('contractItem.')) {
+          itemFieldPath = fieldPath.substring(13);
+        } else if (fieldPath.startsWith('packingListItems.')) {
+          itemFieldPath = fieldPath.substring(17);
+        } else if (fieldPath.startsWith('packingListItem.')) {
+          itemFieldPath = fieldPath.substring(16);
+        } else if (fieldPath.startsWith('workOrderItems.')) {
+          itemFieldPath = fieldPath.substring(15);
+        } else if (fieldPath.startsWith('workOrderItem.')) {
+          itemFieldPath = fieldPath.substring(14);
         } else {
           itemFieldPath = fieldPath.substring(5);
         }
