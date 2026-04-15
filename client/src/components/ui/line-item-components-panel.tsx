@@ -53,7 +53,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
   }, [totalBedrag]);
 
   const assemblyColumns = useMemo(() => [
-    createPositionColumn('sortOrder', 'Pos.', 70),
+    createPositionColumn('positionNo', 'Pos.', 70),
     {
       key: 'description',
       label: 'Description',
