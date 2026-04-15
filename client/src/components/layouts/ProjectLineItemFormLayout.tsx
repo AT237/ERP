@@ -636,17 +636,28 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
     testId: 'input-line-total',
   };
 
+  const fieldCostPriceLabor: FormField2<LineItemFormData> = {
+    key: 'costPriceLabor',
+    label: 'Kostprijs uren',
+    type: 'decimal',
+    prefix: '€',
+    placeholder: '0,00',
+    setValue: (value) => { form.setValue('costPriceLabor', value); setHasUnsavedChanges(true); },
+    watch: () => form.watch('costPriceLabor'),
+    testId: 'input-cost-price-labor',
+  };
+
   const fieldCostPrice: FormField2<LineItemFormData> = {
     key: 'costPrice',
-    label: 'Kostprijs',
+    label: 'Kostprijs totaal',
     type: 'decimal',
     prefix: '€',
     placeholder: '0,00',
     setValue: (value) => { form.setValue('costPrice', value); setHasUnsavedChanges(true); },
     watch: () => form.watch('costPrice'),
     testId: 'input-cost-price',
-    className: lineTypeValue === 'unique' && assemblyComponents.length > 0 ? 'bg-gray-50 dark:bg-gray-800' : undefined,
-    disabled: lineTypeValue === 'unique' && assemblyComponents.length > 0,
+    className: lineTypeValue === 'unique' ? 'bg-gray-50 dark:bg-gray-800' : undefined,
+    disabled: lineTypeValue === 'unique',
   };
 
   const fieldMargin: FormField2<LineItemFormData> = {
@@ -906,7 +917,7 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
       case 'charges':
         return [fieldQuantity, fieldUnitPrice, fieldUnit, fieldCostPrice, fieldMargin, fieldLineTotal];
       case 'unique':
-        return [fieldQuantity, fieldUnit, fieldUnitPrice, fieldCostPrice, fieldMargin, fieldLineTotal];
+        return [fieldQuantity, fieldUnit, fieldUnitPrice, fieldCostPriceLabor, fieldCostPrice, fieldMargin, fieldLineTotal];
       case 'standard':
         return [fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount, fieldDiscountedPrice, fieldCostPrice, fieldMargin, fieldLineTotal];
       case 'text':
