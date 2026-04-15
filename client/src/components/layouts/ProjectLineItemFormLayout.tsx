@@ -542,7 +542,7 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
       ...data,
       description: data.description || '',
       quantity: Number(data.quantity),
-      descriptionInternal: data.descriptionInternal || undefined,
+      descriptionInternal: data.descriptionInternal ?? "",
       discountPercent: data.discountPercent || "0",
       sourceSnippetId: data.sourceSnippetId || undefined,
       sourceSnippetVersion: data.sourceSnippetVersion || undefined,
