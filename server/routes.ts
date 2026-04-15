@@ -4807,6 +4807,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/attachments/reorder", async (req, res) => {
+    try {
+      const { ids } = req.body;
+      if (!Array.isArray(ids)) return res.status(400).json({ message: "ids array required" });
+      for (let i = 0; i < ids.length; i++) {
+        await db.update(schema.entityAttachments).set({ sortOrder: i }).where(eq(schema.entityAttachments.id, ids[i]));
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error reordering attachments:", error);
+      res.status(500).json({ message: "Failed to reorder attachments" });
+    }
+  });
+
   app.delete("/api/attachments/:id", async (req, res) => {
     try {
       await storage.deleteEntityAttachment(req.params.id);

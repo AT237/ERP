@@ -6,7 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInventoryItemSchema, type Country } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Package, Image, Plus, Trash2, Check, X, Layers, AlertCircle, Loader2, Search, CopyPlus, Filter } from "lucide-react";
+import { Package, Image, Plus, Trash2, Check, X, Layers, AlertCircle, Loader2, Search, CopyPlus, Filter, Paperclip } from "lucide-react";
+import { EntityFilesTab } from "@/components/ui/entity-files-tab";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
@@ -1489,6 +1490,20 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
             testId: "select-inventory-status"
           } as FormField2<InventoryFormData>
         ])
+      ]
+    },
+    {
+      id: "attachments",
+      label: "Bijlagen",
+      icon: <Paperclip className="h-4 w-4" />,
+      rows: [
+        createCustomRow(
+          <EntityFilesTab
+            entityType="inventory-file"
+            entityId={currentInventoryId}
+            emptyMessage="Sla het artikel eerst op om tekeningen en datasheets te uploaden."
+          />
+        ),
       ]
     }
   ];
