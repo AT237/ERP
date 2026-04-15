@@ -1418,6 +1418,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/project-items/:id/duplicate", async (req, res) => {
+    try {
+      const original = await storage.getProjectItem(req.params.id);
+      if (!original) return res.status(404).json({ message: "Project item niet gevonden" });
+
+      const { id, createdAt, updatedAt, ...itemData } = original as any;
+      const copy = await storage.addProjectItem({
+        ...itemData,
+        description: `${itemData.description || ''} (kopie)`.trim(),
+      });
+
+      const components = await db.select().from(lineItemComponents)
+        .where(eq(lineItemComponents.parentLineItemId, req.params.id));
+
+      for (const comp of components) {
+        const { id: compId, createdAt: compCreatedAt, ...compData } = comp as any;
+        await db.insert(lineItemComponents).values({
+          ...compData,
+          parentLineItemId: copy.id,
+        });
+      }
+
+      res.status(201).json(copy);
+    } catch (error: any) {
+      handleRouteError(res, error, "Failed to duplicate project item");
+    }
+  });
+
   app.get("/api/project-items/:id", async (req, res) => {
     try {
       const item = await storage.getProjectItem(req.params.id);

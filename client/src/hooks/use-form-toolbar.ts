@@ -272,6 +272,7 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsNavigation: true,
     supportsDelete: true,
     supportsAddNew: false,
+    supportsDuplicate: true,
   },
   component: {
     apiPath: "/api/line-item-components",
