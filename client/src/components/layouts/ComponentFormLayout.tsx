@@ -13,6 +13,7 @@ import { CalendarIcon, RefreshCw, ExternalLink } from "lucide-react";
 import { InventorySelect } from "@/components/ui/inventory-select";
 import { EntitySelect } from "@/components/ui/entity-select";
 import { EmployeeSelectWithAdd } from "@/components/ui/employee-select-with-add";
+import { SupplierSelect } from "@/components/ui/supplier-select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { LineItemComponent, InventoryItem, CustomerRate, RateAndCharge, Employee, Customer } from "@shared/schema";
@@ -22,11 +23,6 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-interface SupplierOption {
-  id: string;
-  name: string;
-  supplierNumber: string;
-}
 
 const componentFormSchema = z.object({
   parentLineItemId: z.string(),
@@ -114,10 +110,6 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     enabled: !!componentId,
   });
 
-  const { data: allSuppliers = [] } = useQuery<SupplierOption[]>({
-    queryKey: ["/api/suppliers"],
-    staleTime: 30000,
-  });
 
   const { data: allEmployees = [] } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
@@ -706,23 +698,12 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     label: 'Leverancier',
     type: 'custom',
     customComponent: (
-      <Select
-        value={form.watch("supplierId") || "__none__"}
-        onValueChange={(v) => { form.setValue("supplierId", v === "__none__" ? null : v); setHasUnsavedChanges(true); }}
-      >
-        <SelectTrigger className="h-10">
-          <SelectValue placeholder="Geen leverancier" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__none__">Geen</SelectItem>
-          {allSuppliers.map(s => (
-            <SelectItem key={s.id} value={s.id}>
-              <span className="font-mono text-xs text-slate-500 mr-1">{s.supplierNumber}</span>
-              {s.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <SupplierSelect
+        value={form.watch("supplierId") || ""}
+        onValueChange={(v) => { form.setValue("supplierId", v || null); setHasUnsavedChanges(true); }}
+        placeholder="Selecteer leverancier..."
+        testId="select-component-supplier"
+      />
     ),
   };
 
