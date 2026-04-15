@@ -260,6 +260,29 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     },
     createCurrencyColumn('lineTotal', 'Bedrag', 100),
     createCurrencyColumn('costPrice', 'Kostprijs', 90),
+    {
+      key: 'costTotal',
+      label: 'Cost Total',
+      visible: true,
+      width: 100,
+      align: 'right' as const,
+      isCurrency: true,
+      filterable: false,
+      sortable: true,
+      getValue: (row: any) => {
+        if (row.lineType === 'text') return 0;
+        const qty = parseFloat(row.quantity || "0") || 0;
+        const cost = parseFloat(row.costPrice || "0") || 0;
+        return qty * cost;
+      },
+      renderCell: (_value: any, row: any) => {
+        if (row.lineType === 'text') return '';
+        const qty = parseFloat(row.quantity || "0") || 0;
+        const cost = parseFloat(row.costPrice || "0") || 0;
+        const total = qty * cost;
+        return `€\u00A0${total.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      },
+    },
   ], []);
 
   const itemTableState = useDataTable({
