@@ -408,7 +408,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
 
   const fieldCustomerDisplay: FormField2<ComponentFormData> = {
     key: 'customerId' as any,
-    label: 'Customer',
+    label: 'Klant',
     type: 'custom',
     customComponent: (
       <div className="flex items-center gap-1.5">
