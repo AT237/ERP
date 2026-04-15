@@ -1076,12 +1076,10 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
         isLoading={isLoadingLineItem}
       />
       {lineTypeValue === 'unique' && isEditing && lineItemId && (
-        <div className="px-6 py-4 pb-10 bg-white ml-[15px] mr-[15px]">
-          <LineItemComponentsPanel
-            parentLineItemId={lineItemId}
-            parentLineItemType="project_item"
-          />
-        </div>
+        <LineItemComponentsPanel
+          parentLineItemId={lineItemId}
+          parentLineItemType="project_item"
+        />
       )}
       {snippetSelectionDialog}
       <ValidationErrorDialog

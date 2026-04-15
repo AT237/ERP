@@ -20,7 +20,7 @@ interface SupplierOption {
 
 interface PendingRow {
   tempId: string;
-  componentType: "standard" | "unique";
+  componentType: "standard" | "unique" | "charge" | "text";
   componentItemId: string;
   componentName: string;
   quantity: string;
@@ -305,7 +305,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
     }
   }, [components]);
 
-  function addRow(type: "standard" | "unique") {
+  function addRow(type: "standard" | "unique" | "charge" | "text") {
     setPendingRows(prev => [...prev, {
       tempId: `temp-${Date.now()}`,
       componentType: type,
@@ -424,7 +424,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
   const hasSingleSelection = selectedRows.length === 1;
 
   return (
-    <div className="px-10 mb-6 mt-0 w-full overflow-hidden">
+    <div className="pl-8 pr-6 mb-6 mt-0 w-full overflow-hidden">
       <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-3">Onderdelen</h3>
       <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 flex items-center gap-1 mb-3">
         <div className="relative">
@@ -478,10 +478,16 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => addRow("standard")} className="text-xs">
-              Standaard artikel
+              Standard Item
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => addRow("charge")} className="text-xs">
+              Charge
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => addRow("unique")} className="text-xs">
-              Uniek artikel
+              Unique Item
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => addRow("text")} className="text-xs">
+              Text
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
