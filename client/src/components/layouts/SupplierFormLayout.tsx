@@ -144,12 +144,34 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
       form.reset(formData);
       setOriginalValues(formData);
       setHasUnsavedChanges(false);
-    } else {
-      const defaultFormData = form.getValues();
-      setOriginalValues(defaultFormData);
+    } else if (!supplierId) {
+      const emptyFormData = {
+        name: "",
+        contactPerson: "",
+        email: "",
+        phone: "",
+        mobile: "",
+        address: "",
+        addressId: "",
+        city: "",
+        postalCode: "",
+        country: "",
+        countryCode: "",
+        taxId: "",
+        kvkNummer: "",
+        bankAccount: "",
+        website: "",
+        memo: "",
+        languageCode: "nl",
+        paymentTerms: "30",
+        paymentDaysId: "",
+        status: "active",
+      };
+      form.reset(emptyFormData);
+      setOriginalValues(emptyFormData);
       setHasUnsavedChanges(false);
     }
-  }, [supplier, form]);
+  }, [supplier, supplierId, form]);
 
   useEffect(() => {
     if (supplier && supplierId) {
