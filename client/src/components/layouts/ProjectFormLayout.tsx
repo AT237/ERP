@@ -653,8 +653,8 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       ]
     },
     {
-      id: "metrics",
-      label: "Metrics",
+      id: "amounts",
+      label: "Amounts",
       icon: <DollarSign className="h-4 w-4" />,
       rows: [
         createFieldsRow([
@@ -679,6 +679,30 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
             width: "50%",
             isModified: modifiedFields.has("progress")
           } as FormField2<FormData>
+        ]),
+        createFieldsRow([
+          {
+            key: "salesTotalCalc" as any,
+            label: "Sales Total",
+            type: "display",
+            displayValue: isEditing ? `€ ${projectItemsList.reduce((sum, item) => {
+              if (item.lineType === 'text') return sum;
+              return sum + (parseFloat(item.lineTotal || "0") || 0);
+            }, 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—",
+            testId: "display-sales-total",
+          } as any,
+          {
+            key: "costTotalCalc" as any,
+            label: "Cost Total",
+            type: "display",
+            displayValue: isEditing ? `€ ${projectItemsList.reduce((sum, item) => {
+              if (item.lineType === 'text') return sum;
+              const qty = parseFloat(item.quantity || "0") || 0;
+              const cost = parseFloat(item.costPrice || "0") || 0;
+              return sum + (qty * cost);
+            }, 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—",
+            testId: "display-cost-total",
+          } as any,
         ]),
         createFieldRow({
           key: "invoicedTotal" as any,
