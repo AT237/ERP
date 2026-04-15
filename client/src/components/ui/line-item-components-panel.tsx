@@ -418,6 +418,28 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
     };
   }, [parentLineItemId, parentLineItemType, components, inventoryItems, unitsOfMeasure, qc, toast]);
 
+  const handleExport = useCallback(() => {
+    const exportData = components.map((comp: any) => {
+      const item = inventoryItems.find((i: any) => i.id === comp.componentItemId);
+      const qty = parseFloat(comp.quantity || "0") || 0;
+      const price = parseFloat(comp.unitPrice || "0") || 0;
+      const cost = parseFloat(comp.costPrice || "0") || 0;
+      return {
+        ...comp,
+        description: comp.componentType === "standard"
+          ? (item ? (item.description || item.name || '') : (comp.description || comp.componentName || ''))
+          : (comp.description || comp.componentName || comp.notes || ''),
+        componentUnit: comp.componentType === "standard" ? (item?.unit || comp.componentUnit || '') : (comp.componentUnit || ''),
+        lineTotal: comp.componentType === 'text' ? '' : (qty * price).toFixed(2),
+        _brand: comp._brand || (item?.brand || ''),
+        _manufacturerPartNumber: comp._manufacturerPartNumber || (item?.manufacturerPartNumber || ''),
+        _stockItemLabel: comp._stockItemLabel || (item ? `${item.sku || ''} - ${item.name || ''}`.trim() : ''),
+        costPriceTotal: comp.componentType === 'text' ? '' : (qty * cost).toFixed(2),
+      };
+    });
+    exportTableToCSV(exportData, tableState.columns, 'assembly-export');
+  }, [components, inventoryItems, tableState.columns]);
+
   return (
     <div className="pl-8 pr-6 pb-4">
       <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-2">
@@ -475,6 +497,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
           onConfirm: handleBulkDelete,
           itemCount: tableState.selectedRows.length,
         }}
+        onExport={handleExport}
         onDuplicate={handleDuplicateComponent}
         directInput={directInput}
         rowActions={(c: LineItemComponent) => [
