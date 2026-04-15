@@ -356,11 +356,21 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
         const qty = parseFloat(rowData.quantity || '0') || 0;
         const price = parseFloat(rowData.unitPrice || '0') || 0;
 
-        const updateData: Record<string, any> = { ...rowData };
-        updateData.unitPrice = String(price);
-        updateData.quantity = String(qty);
+        const updateData: Record<string, any> = {};
+        if (rowData.componentType != null) updateData.componentType = rowData.componentType;
+        if (rowData.quantity != null) updateData.quantity = String(qty);
+        if (rowData.unitPrice != null) updateData.unitPrice = String(price);
+        if (rowData.costPrice != null) updateData.costPrice = rowData.costPrice;
+        if (rowData.componentUnit != null) updateData.componentUnit = rowData.componentUnit;
+        if (rowData.componentItemId != null) updateData.componentItemId = rowData.componentItemId;
+        if (rowData.description != null) {
+          updateData.notes = rowData.description;
+          updateData.componentName = rowData.description;
+        }
+        if (rowData.componentName != null) updateData.componentName = rowData.componentName;
+        if (rowData.notes != null) updateData.notes = rowData.notes;
 
-        await apiRequest("PUT", `/api/line-item-components/${parentLineItemId}/${rowId}`, updateData);
+        await apiRequest("PATCH", `/api/line-item-components/${parentLineItemId}/${rowId}`, updateData);
         qc.invalidateQueries({ queryKey: ["/api/line-item-components", parentLineItemId] });
       },
     };
