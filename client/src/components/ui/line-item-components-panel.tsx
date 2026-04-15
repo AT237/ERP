@@ -99,7 +99,7 @@ function LICComponentRow({ component, inventoryItems, suppliers, parentLineItemI
       style={{ height: '32px', lineHeight: '1.2' }}
       onDoubleClick={() => !editing && onDoubleClick?.(component.id)}
     >
-      <td className="p-2 border-r border-gray-100" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
+      <td className="p-2 border-r border-gray-100" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }} onDoubleClick={e => e.stopPropagation()}>
         <input
           type="checkbox"
           className="rounded border-gray-300 accent-orange-500 h-4 w-4"
@@ -228,7 +228,7 @@ function LICComponentRow({ component, inventoryItems, suppliers, parentLineItemI
         )}
       </td>
 
-      <td className="p-2 w-20 text-right">
+      <td className="p-2 w-20 text-right" onDoubleClick={e => e.stopPropagation()}>
         {editing ? (
           <div className="flex items-center gap-1 justify-end">
             <button
