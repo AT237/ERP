@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Search, Filter, Check, X, Loader2, CopyPlus } from "lucide-react";
+import { Plus, Trash2, Search, Filter, Check, X, Loader2, CopyPlus, PenLine, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LineItemComponent, InventoryItem } from "@shared/schema";
 
@@ -32,72 +32,48 @@ interface PendingRow {
   notes: string;
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  standard: "Std",
+  unique: "Uni",
+  charge: "Tosl",
+  text: "Txt",
+};
+
+const TYPE_BADGE_STYLES: Record<string, string> = {
+  standard: "bg-blue-50 text-blue-700 border-blue-200",
+  unique: "bg-purple-50 text-purple-700 border-purple-200",
+  charge: "bg-amber-50 text-amber-700 border-amber-200",
+  text: "bg-gray-50 text-gray-600 border-gray-200",
+};
+
+const TYPE_FULL_LABELS: Record<string, string> = {
+  standard: "Standaard",
+  unique: "Uniek",
+  charge: "Toeslagen",
+  text: "Tekst",
+};
+
 interface ComponentRowProps {
   component: LineItemComponent;
   inventoryItems: InventoryItem[];
   suppliers: SupplierOption[];
-  parentLineItemId: string;
-  onDeleted: () => void;
   selected?: boolean;
   onToggleSelect?: () => void;
-  onDoubleClick?: (componentId: string) => void;
+  onOpen?: (componentId: string) => void;
 }
 
-function LICComponentRow({ component, inventoryItems, suppliers, parentLineItemId, onDeleted, selected, onToggleSelect, onDoubleClick }: ComponentRowProps) {
-  const { toast } = useToast();
-  const qc = useQueryClient();
-  const [editing, setEditing] = useState(false);
-  const [qty, setQty] = useState(component.quantity ?? "1");
-  const [unitPrice, setUnitPrice] = useState(component.unitPrice ?? "0");
-  const [costPrice, setCostPrice] = useState(component.costPrice ?? "0");
-  const [supplierId, setSupplierId] = useState(component.supplierId ?? "");
-  const [notes, setNotes] = useState(component.notes ?? "");
-  const [selectedItemId, setSelectedItemId] = useState(component.componentItemId ?? "");
-  const [uniqueName, setUniqueName] = useState(component.componentName ?? "");
-  const [uniqueUnit, setUniqueUnit] = useState(component.componentUnit ?? "");
-
-  const patchMutation = useMutation({
-    mutationFn: (data: Record<string, any>) =>
-      apiRequest("PATCH", `/api/line-item-components/${parentLineItemId}/${component.id}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["/api/line-item-components", parentLineItemId] });
-      setEditing(false);
-    },
-    onError: (e: any) => toast({ title: "Fout", description: e.message, variant: "destructive" }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () =>
-      apiRequest("DELETE", `/api/line-item-components/${parentLineItemId}/${component.id}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["/api/line-item-components", parentLineItemId] });
-      onDeleted();
-    },
-    onError: (e: any) => toast({ title: "Fout", description: e.message, variant: "destructive" }),
-  });
-
+function LICComponentRow({ component, inventoryItems, suppliers, selected, onToggleSelect, onOpen }: ComponentRowProps) {
   const linkedItem = inventoryItems.find(i => i.id === component.componentItemId);
   const isStandard = component.componentType === "standard";
-  const lineTotal = (parseFloat(qty) || 0) * (parseFloat(unitPrice) || 0);
-
-  function saveRow() {
-    patchMutation.mutate({
-      quantity: qty,
-      unitPrice,
-      costPrice: costPrice || "0",
-      supplierId: supplierId || null,
-      notes,
-      ...(isStandard
-        ? { componentItemId: selectedItemId }
-        : { componentName: uniqueName, componentUnit: uniqueUnit }),
-    });
-  }
+  const isText = component.componentType === "text";
+  const lineTotal = isText ? 0 : (parseFloat(component.quantity ?? "0") * parseFloat(component.unitPrice ?? "0"));
+  const supplier = suppliers.find(s => s.id === component.supplierId);
 
   return (
     <tr
       className={cn("border-b border-gray-100 hover:bg-slate-50 group cursor-pointer", selected && "bg-orange-50/50")}
       style={{ height: '32px', lineHeight: '1.2' }}
-      onDoubleClick={() => !editing && onDoubleClick?.(component.id)}
+      onDoubleClick={() => onOpen?.(component.id)}
     >
       <td className="p-2 border-r border-gray-100" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }} onDoubleClick={e => e.stopPropagation()}>
         <input
@@ -107,156 +83,58 @@ function LICComponentRow({ component, inventoryItems, suppliers, parentLineItemI
           onChange={() => onToggleSelect?.()}
         />
       </td>
-      <td className="p-2 border-r border-gray-100 w-24">
-        <Badge variant="outline" className={cn(
-          "text-xs font-medium",
-          component.componentType === "standard" && "bg-blue-50 text-blue-700 border-blue-200",
-          component.componentType === "unique" && "bg-purple-50 text-purple-700 border-purple-200",
-          component.componentType === "charge" && "bg-amber-50 text-amber-700 border-amber-200",
-          component.componentType === "text" && "bg-gray-50 text-gray-600 border-gray-200",
-        )}>
-          {component.componentType === "standard" ? "Standaard" : component.componentType === "unique" ? "Uniek" : component.componentType === "charge" ? "Charge" : "Text"}
+
+      <td className="p-2 border-r border-gray-100 w-16 text-center">
+        <Badge variant="outline" className={cn("text-[10px] font-medium px-1.5 py-0", TYPE_BADGE_STYLES[component.componentType] || TYPE_BADGE_STYLES.standard)}>
+          {TYPE_LABELS[component.componentType] || component.componentType}
         </Badge>
       </td>
 
       <td className="p-2 border-r border-gray-100">
-        {editing ? (
-          isStandard ? (
-            <Select value={selectedItemId} onValueChange={setSelectedItemId}>
-              <SelectTrigger className="h-8 text-sm w-full">
-                <SelectValue placeholder="Selecteer artikel..." />
-              </SelectTrigger>
-              <SelectContent>
-                {inventoryItems.filter(item => item.id).map(item => (
-                  <SelectItem key={item.id} value={item.id}>
-                    <span className="font-mono text-xs text-slate-500 mr-2">{item.sku}</span>
-                    {item.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <Input
-              value={uniqueName}
-              onChange={e => setUniqueName(e.target.value)}
-              placeholder="Naam component..."
-              className="h-8 text-sm"
-            />
-          )
-        ) : (
-          <span className="text-sm text-slate-700">
-            {isStandard
-              ? linkedItem
-                ? <><span className="font-mono text-xs text-slate-400 mr-2">{linkedItem.sku}</span>{linkedItem.name}</>
-                : <span className="text-slate-400 italic">—</span>
-              : component.componentName || <span className="text-slate-400 italic">—</span>
-            }
-          </span>
-        )}
-      </td>
-
-      <td className="p-2 border-r border-gray-100 w-24">
-        {editing ? (
-          <Input value={qty} onChange={e => setQty(e.target.value)} className="h-8 text-sm text-right" type="number" min="0" step="0.001" />
-        ) : (
-          <span className="text-sm text-right block font-mono">{component.quantity}</span>
-        )}
-      </td>
-
-      <td className="p-2 border-r border-gray-100 w-28">
-        {editing && !isStandard ? (
-          <Input value={uniqueUnit} onChange={e => setUniqueUnit(e.target.value)} placeholder="stuk, m², kg..." className="h-8 text-sm" />
-        ) : (
-          <span className="text-sm text-slate-500">
-            {isStandard ? (linkedItem?.unit ?? "") : (component.componentUnit ?? "")}
-          </span>
-        )}
-      </td>
-
-      <td className="p-2 border-r border-gray-100 w-28">
-        {editing ? (
-          <Input value={unitPrice} onChange={e => setUnitPrice(e.target.value)} className="h-8 text-sm text-right" type="number" min="0" step="0.01" />
-        ) : (
-          <span className="text-sm text-right block font-mono">€ {parseFloat(component.unitPrice ?? "0").toFixed(2)}</span>
-        )}
-      </td>
-
-      <td className="p-2 border-r border-gray-100 w-28">
-        <span className="text-sm text-right block font-mono font-medium">
-          € {(editing ? lineTotal : (parseFloat(component.quantity ?? "0") * parseFloat(component.unitPrice ?? "0"))).toFixed(2)}
+        <span className="text-sm text-slate-700">
+          {isStandard
+            ? linkedItem
+              ? <><span className="font-mono text-xs text-slate-400 mr-2">{linkedItem.sku}</span>{linkedItem.name}</>
+              : <span className="text-slate-400 italic">—</span>
+            : component.componentName || <span className="text-slate-400 italic">—</span>
+          }
         </span>
       </td>
 
-      <td className="p-2 border-r border-gray-100 w-28">
-        {editing && !isStandard ? (
-          <Input value={costPrice} onChange={e => setCostPrice(e.target.value)} className="h-8 text-sm text-right" type="number" min="0" step="0.01" />
-        ) : (
-          <span className="text-sm text-right block font-mono">
-            {!isStandard ? `€ ${parseFloat(component.costPrice ?? "0").toFixed(2)}` : ""}
-          </span>
-        )}
-      </td>
-
-      <td className="p-2 border-r border-gray-100 w-36">
-        {editing && !isStandard ? (
-          <Select value={supplierId || "_none_"} onValueChange={v => setSupplierId(v === "_none_" ? "" : v)}>
-            <SelectTrigger className="h-8 text-sm w-full">
-              <SelectValue placeholder="Geen" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none_">Geen</SelectItem>
-              {suppliers.map(s => (
-                <SelectItem key={s.id} value={s.id}>
-                  <span className="font-mono text-xs text-slate-500 mr-1">{s.supplierNumber}</span>
-                  {s.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <span className="text-sm text-slate-500">
-            {!isStandard && component.supplierId ? (suppliers.find(s => s.id === component.supplierId)?.name ?? "") : ""}
-          </span>
-        )}
-      </td>
-
       <td className="p-2 border-r border-gray-100">
-        {editing ? (
-          <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optionele notitie..." className="h-8 text-sm" />
-        ) : (
-          <span className="text-sm text-slate-500">{component.notes ?? ""}</span>
-        )}
+        <span className="text-sm text-slate-500 line-clamp-1">{component.notes ?? ""}</span>
       </td>
 
-      <td className="p-2 w-20 text-right" onDoubleClick={e => e.stopPropagation()}>
-        {editing ? (
-          <div className="flex items-center gap-1 justify-end">
-            <button
-              onClick={saveRow}
-              disabled={patchMutation.isPending}
-              className="p-1 rounded hover:bg-green-100 text-green-600"
-              title="Opslaan"
-            >
-              {patchMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-            </button>
-            <button onClick={() => setEditing(false)} className="p-1 rounded hover:bg-slate-100 text-slate-400" title="Annuleren">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={() => setEditing(true)} className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600">
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-            <button
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
-              className="p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500"
-            >
-              {deleteMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-            </button>
-          </div>
-        )}
+      <td className="p-2 border-r border-gray-100 w-16 text-right">
+        {!isText && <span className="text-sm font-mono">{component.quantity}</span>}
+      </td>
+
+      <td className="p-2 border-r border-gray-100 w-20">
+        <span className="text-sm text-slate-500">
+          {isStandard ? (linkedItem?.unit ?? "") : (component.componentUnit ?? "")}
+        </span>
+      </td>
+
+      <td className="p-2 border-r border-gray-100 w-24 text-right">
+        {!isText && <span className="text-sm font-mono">€ {parseFloat(component.unitPrice ?? "0").toFixed(2)}</span>}
+      </td>
+
+      <td className="p-2 border-r border-gray-100 w-24 text-right">
+        <span className="text-sm font-mono">€ {parseFloat(component.costPrice ?? "0").toFixed(2)}</span>
+      </td>
+
+      <td className="p-2 border-r border-gray-100 w-24 text-right">
+        {!isText && <span className="text-sm font-mono font-medium">€ {lineTotal.toFixed(2)}</span>}
+      </td>
+
+      <td className="p-2 w-10 text-center" onDoubleClick={e => e.stopPropagation()}>
+        <button
+          onClick={() => onOpen?.(component.id)}
+          className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-orange-600 opacity-0 group-hover:opacity-100 transition-opacity"
+          title="Bewerken"
+        >
+          <PenLine className="h-3.5 w-3.5" />
+        </button>
       </td>
     </tr>
   );
@@ -274,7 +152,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
   const qc = useQueryClient();
   const [, navigate] = useLocation();
 
-  const handleComponentDoubleClick = (componentId: string) => {
+  const handleOpenComponent = (componentId: string) => {
     if (!enableNavigation) return;
     navigate(`/components/${parentLineItemId}/${parentLineItemType}/${componentId}`);
   };
@@ -299,11 +177,21 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "standard" | "unique" | "charge" | "text">("all");
+  const [articleSearch, setArticleSearch] = useState<Record<string, string>>({});
 
   const totalCostPrice = [
     ...components.map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0"))),
     ...pendingRows.map(r => (parseFloat(r.quantity) || 0) * (parseFloat(r.unitPrice) || 0)),
   ].reduce((sum, v) => sum + v, 0);
+
+  const totalLineTotal = components
+    .filter(c => c.componentType !== "text")
+    .map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0")))
+    .reduce((sum, v) => sum + v, 0);
+
+  const totalCost = components
+    .map(c => parseFloat(c.costPrice ?? "0"))
+    .reduce((sum, v) => sum + v, 0);
 
   const onCostPriceChangedRef = useRef(onCostPriceChanged);
   onCostPriceChangedRef.current = onCostPriceChanged;
@@ -325,7 +213,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
       componentType: type,
       componentItemId: "",
       componentName: "",
-      quantity: "1",
+      quantity: type === "text" ? "0" : "1",
       unitPrice: "0",
       costPrice: "0",
       supplierId: "",
@@ -388,21 +276,20 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
     mutationFn: async (id: string) => {
       const comp = components.find(c => c.id === id);
       if (!comp) return;
-      const payload: Record<string, any> = {
+      return apiRequest("POST", `/api/line-item-components/${parentLineItemId}`, {
         parentLineItemId,
         parentLineItemType,
         componentType: comp.componentType,
+        componentItemId: comp.componentItemId,
+        componentName: comp.componentName,
+        componentUnit: comp.componentUnit,
         quantity: comp.quantity,
-        unitPrice: comp.unitPrice || "0",
-        costPrice: comp.costPrice || "0",
-        supplierId: comp.supplierId || null,
-        notes: comp.notes || null,
+        unitPrice: comp.unitPrice,
+        costPrice: comp.costPrice,
+        supplierId: comp.supplierId,
+        notes: comp.notes,
         sortOrder: components.length,
-        componentItemId: comp.componentItemId || null,
-        componentName: comp.componentName || null,
-        componentUnit: comp.componentUnit || null,
-      };
-      return apiRequest("POST", `/api/line-item-components/${parentLineItemId}`, payload);
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/line-item-components", parentLineItemId] });
@@ -412,14 +299,6 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
   });
 
   function savePending(row: PendingRow) {
-    if (row.componentType === "standard" && !row.componentItemId) {
-      toast({ title: "Selecteer een artikel", variant: "destructive" });
-      return;
-    }
-    if (row.componentType === "unique" && !row.componentName.trim()) {
-      toast({ title: "Vul een naam in", variant: "destructive" });
-      return;
-    }
     createMutation.mutate(row);
   }
 
@@ -427,33 +306,54 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
     setSelectedRows(prev => prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]);
   }
 
-  const filteredComponents = components.filter(c => {
-    if (typeFilter !== "all" && c.componentType !== typeFilter) return false;
-    if (searchTerm) {
-      const linked = allInventoryItems.find(i => i.id === c.componentItemId);
-      const name = c.componentType === "standard" ? (linked?.name ?? "") : (c.componentName ?? "");
-      const sku = linked?.sku ?? "";
-      const term = searchTerm.toLowerCase();
-      if (!name.toLowerCase().includes(term) && !sku.toLowerCase().includes(term)) return false;
+  const filteredComponents = useMemo(() => {
+    let result = components;
+    if (typeFilter !== "all") {
+      result = result.filter(c => c.componentType === typeFilter);
     }
-    return true;
-  });
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      result = result.filter(c => {
+        const name = c.componentName?.toLowerCase() ?? "";
+        const notes = c.notes?.toLowerCase() ?? "";
+        const linked = allInventoryItems.find(i => i.id === c.componentItemId);
+        const sku = linked?.sku?.toLowerCase() ?? "";
+        const itemName = linked?.name?.toLowerCase() ?? "";
+        return name.includes(lower) || notes.includes(lower) || sku.includes(lower) || itemName.includes(lower);
+      });
+    }
+    return result;
+  }, [components, typeFilter, searchTerm, allInventoryItems]);
 
   const hasSelection = selectedRows.length > 0;
   const hasSingleSelection = selectedRows.length === 1;
 
+  const getFilteredInventory = (tempId: string) => {
+    const term = (articleSearch[tempId] || "").toLowerCase();
+    if (!term) return allInventoryItems.filter(i => i.id);
+    return allInventoryItems.filter(i => {
+      if (!i.id) return false;
+      const sku = i.sku?.toLowerCase() ?? "";
+      const name = i.name?.toLowerCase() ?? "";
+      return sku.includes(term) || name.includes(term);
+    });
+  };
+
   return (
-    <div className="pl-8 pr-6 mb-6 mt-0 w-full overflow-hidden">
-      <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-3">Onderdelen</h3>
-      <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 flex items-center gap-1 mb-3">
+    <div className="pl-8 pr-6 pb-4">
+      <div className="flex items-center gap-2 mb-2">
+        <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider">Onderdelen</h3>
+        <span className="text-xs text-slate-400">({components.length})</span>
+        <div className="flex-1" />
+
         <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-orange-400" />
           <Input
             placeholder="Zoek onderdelen..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 h-8 text-sm w-64"
+            onChange={e => setSearchTerm(e.target.value)}
+            className="h-8 text-sm pl-8 w-48 border-orange-200 focus:border-orange-400"
           />
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-orange-500" size={14} />
         </div>
 
         <Separator orientation="vertical" className="h-6 mx-1" />
@@ -463,8 +363,8 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 ring-1 ring-orange-400 text-orange-600"
-              title="Filter"
+              className={cn("h-8 w-8 p-0", typeFilter !== "all" ? 'ring-1 ring-orange-400 text-orange-600' : '')}
+              title="Filter op type"
             >
               <Filter className="h-4 w-4" />
             </Button>
@@ -488,14 +388,12 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 ring-1 ring-orange-400 text-orange-600"
+              className="h-8 w-8 p-0 text-green-600 hover:bg-green-50"
               title="Onderdeel toevoegen"
             >
               <Plus className="h-4 w-4" />
@@ -516,6 +414,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
         <Button
           variant="ghost"
           size="sm"
@@ -567,16 +466,15 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
                     }}
                   />
                 </th>
-                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-24">Type</th>
+                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-16">Type</th>
                 <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50">Artikel / Naam</th>
-                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-24">Hoev.</th>
-                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Eenheid</th>
-                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Prijs</th>
-                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Regeltotaal</th>
-                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-28">Kostprijs</th>
-                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-36">Leverancier</th>
-                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50">Notities</th>
-                <th className="p-2 w-20" />
+                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50">Omschrijving</th>
+                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-16">Aantal</th>
+                <th className="p-2 text-left text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-20">Eenh.</th>
+                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-24">Prijs</th>
+                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-24">Kostprijs</th>
+                <th className="p-2 text-right text-[11px] font-semibold text-orange-700 uppercase tracking-wider border-r border-orange-200/50 w-24">Bedrag</th>
+                <th className="p-2 w-10" />
               </tr>
             </thead>
             <tbody>
@@ -586,168 +484,208 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
                   component={c}
                   inventoryItems={allInventoryItems}
                   suppliers={allSuppliers}
-                  parentLineItemId={parentLineItemId}
-                  onDeleted={() => {}}
                   selected={selectedRows.includes(c.id)}
                   onToggleSelect={() => toggleRowSelection(c.id)}
-                  onDoubleClick={handleComponentDoubleClick}
+                  onOpen={handleOpenComponent}
                 />
               ))}
 
-              {pendingRows.map(row => (
-                <tr key={row.tempId} className="border-b border-orange-100 bg-orange-50/40">
-                  <td className="p-2 border-r border-gray-100" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }} />
-                  <td className="p-2 border-r border-gray-100 w-24">
-                    <Badge variant="outline" className={cn(
-                      "text-xs font-medium",
-                      row.componentType === "standard"
-                        ? "bg-blue-50 text-blue-700 border-blue-200"
-                        : "bg-purple-50 text-purple-700 border-purple-200"
-                    )}>
-                      {row.componentType === "standard" ? "Standaard" : "Uniek"}
-                    </Badge>
-                  </td>
-                  <td className="p-2 border-r border-gray-100">
-                    {row.componentType === "standard" ? (
-                      <Select value={row.componentItemId} onValueChange={v => {
-                        const selectedItem = allInventoryItems.find(i => i.id === v);
-                        setPendingRows(prev => prev.map(r => r.tempId === row.tempId ? {
-                          ...r,
-                          componentItemId: v,
-                          unitPrice: selectedItem?.costPrice ?? r.unitPrice,
-                        } : r));
-                      }}>
-                        <SelectTrigger className="h-8 text-sm w-full bg-white">
-                          <SelectValue placeholder="Selecteer artikel..." />
+              {pendingRows.map(row => {
+                const isStd = row.componentType === "standard";
+                const isTxt = row.componentType === "text";
+                const pendingTotal = isTxt ? 0 : (parseFloat(row.quantity) || 0) * (parseFloat(row.unitPrice) || 0);
+                const filteredInv = getFilteredInventory(row.tempId);
+
+                return (
+                  <tr key={row.tempId} className="border-b border-green-200 bg-green-50/40">
+                    <td className="p-2 border-r border-gray-100 text-center text-green-600 font-bold" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
+                      +
+                    </td>
+
+                    <td className="p-2 border-r border-gray-100 w-16">
+                      <Select value={row.componentType} onValueChange={v => updatePending(row.tempId, "componentType", v)}>
+                        <SelectTrigger className="h-7 text-[10px] w-full bg-white border-green-200 px-1">
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {allInventoryItems.filter(item => item.id).map(item => (
-                            <SelectItem key={item.id} value={item.id}>
-                              <span className="font-mono text-xs text-slate-500 mr-2">{item.sku}</span>
-                              {item.name}
-                            </SelectItem>
-                          ))}
+                          <SelectItem value="standard">Standaard</SelectItem>
+                          <SelectItem value="charge">Toeslagen</SelectItem>
+                          <SelectItem value="unique">Uniek</SelectItem>
+                          <SelectItem value="text">Tekst</SelectItem>
                         </SelectContent>
                       </Select>
-                    ) : (
+                    </td>
+
+                    <td className="p-2 border-r border-gray-100">
+                      {isStd ? (
+                        <div className="relative">
+                          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400" />
+                          <Input
+                            value={articleSearch[row.tempId] ?? ""}
+                            onChange={e => {
+                              setArticleSearch(prev => ({ ...prev, [row.tempId]: e.target.value }));
+                            }}
+                            placeholder="Zoek artikel..."
+                            className="h-7 text-xs pl-7 bg-white border-green-200"
+                          />
+                          {(articleSearch[row.tempId] ?? "").length > 0 && !row.componentItemId && (
+                            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                              {filteredInv.slice(0, 20).map(item => (
+                                <button
+                                  key={item.id}
+                                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 border-b border-gray-50 last:border-0"
+                                  onClick={() => {
+                                    setPendingRows(prev => prev.map(r => r.tempId === row.tempId ? {
+                                      ...r,
+                                      componentItemId: item.id,
+                                      unitPrice: item.sellingPrice ?? item.unitPrice ?? r.unitPrice,
+                                      costPrice: item.costPrice ?? r.costPrice,
+                                      componentUnit: item.unit ?? r.componentUnit,
+                                    } : r));
+                                    setArticleSearch(prev => ({ ...prev, [row.tempId]: `${item.sku} - ${item.name}` }));
+                                  }}
+                                >
+                                  <span className="font-mono text-slate-400 mr-2">{item.sku}</span>
+                                  {item.name}
+                                </button>
+                              ))}
+                              {filteredInv.length === 0 && (
+                                <div className="px-3 py-2 text-xs text-slate-400 italic">Geen resultaten</div>
+                              )}
+                            </div>
+                          )}
+                          {row.componentItemId && (
+                            <button
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500"
+                              onClick={() => {
+                                setPendingRows(prev => prev.map(r => r.tempId === row.tempId ? { ...r, componentItemId: "", unitPrice: "0", costPrice: "0" } : r));
+                                setArticleSearch(prev => ({ ...prev, [row.tempId]: "" }));
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <Input
+                          value={row.componentName}
+                          onChange={e => updatePending(row.tempId, "componentName", e.target.value)}
+                          placeholder={isTxt ? "Tekst..." : "Naam onderdeel..."}
+                          className="h-7 text-xs bg-white border-green-200"
+                          autoFocus
+                        />
+                      )}
+                    </td>
+
+                    <td className="p-2 border-r border-gray-100">
                       <Input
-                        value={row.componentName}
-                        onChange={e => updatePending(row.tempId, "componentName", e.target.value)}
-                        placeholder="Naam component..."
-                        className="h-8 text-sm bg-white"
-                        autoFocus
+                        value={row.notes}
+                        onChange={e => updatePending(row.tempId, "notes", e.target.value)}
+                        placeholder="Omschrijving..."
+                        className="h-7 text-xs bg-white border-green-200"
                       />
-                    )}
-                  </td>
-                  <td className="p-2 border-r border-gray-100 w-24">
-                    <Input
-                      value={row.quantity}
-                      onChange={e => updatePending(row.tempId, "quantity", e.target.value)}
-                      type="number" min="0" step="0.001"
-                      className="h-8 text-sm text-right bg-white"
-                    />
-                  </td>
-                  <td className="p-2 border-r border-gray-100 w-28">
-                    {row.componentType === "unique" ? (
-                      <Input
-                        value={row.componentUnit}
-                        onChange={e => updatePending(row.tempId, "componentUnit", e.target.value)}
-                        placeholder="stuk, kg..."
-                        className="h-8 text-sm bg-white"
-                      />
-                    ) : (
-                      <span className="text-sm text-slate-400 italic">auto</span>
-                    )}
-                  </td>
-                  <td className="p-2 border-r border-gray-100 w-28">
-                    <Input
-                      value={row.unitPrice}
-                      onChange={e => updatePending(row.tempId, "unitPrice", e.target.value)}
-                      type="number" min="0" step="0.01"
-                      className="h-8 text-sm text-right bg-white"
-                      placeholder="0.00"
-                    />
-                  </td>
-                  <td className="p-2 border-r border-gray-100 w-28">
-                    <span className="text-sm text-right block font-mono font-medium">
-                      € {((parseFloat(row.quantity) || 0) * (parseFloat(row.unitPrice) || 0)).toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="p-2 border-r border-gray-100 w-28">
-                    {row.componentType === "unique" ? (
-                      <Input
-                        value={row.costPrice}
-                        onChange={e => updatePending(row.tempId, "costPrice", e.target.value)}
-                        type="number" min="0" step="0.01"
-                        className="h-8 text-sm text-right bg-white"
-                        placeholder="0.00"
-                      />
-                    ) : (
-                      <span className="text-sm text-slate-400 italic" />
-                    )}
-                  </td>
-                  <td className="p-2 border-r border-gray-100 w-36">
-                    {row.componentType === "unique" ? (
-                      <Select value={row.supplierId || "_none_"} onValueChange={v => updatePending(row.tempId, "supplierId", v === "_none_" ? "" : v)}>
-                        <SelectTrigger className="h-8 text-sm w-full bg-white">
-                          <SelectValue placeholder="Geen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none_">Geen</SelectItem>
-                          {allSuppliers.map(s => (
-                            <SelectItem key={s.id} value={s.id}>
-                              <span className="font-mono text-xs text-slate-500 mr-1">{s.supplierNumber}</span>
-                              {s.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <span className="text-sm text-slate-400 italic" />
-                    )}
-                  </td>
-                  <td className="p-2 border-r border-gray-100">
-                    <Input
-                      value={row.notes}
-                      onChange={e => updatePending(row.tempId, "notes", e.target.value)}
-                      placeholder="Optionele notitie..."
-                      className="h-8 text-sm bg-white"
-                    />
-                  </td>
-                  <td className="p-2 w-20">
-                    <div className="flex items-center gap-1 justify-end">
-                      <button
-                        onClick={() => savePending(row)}
-                        disabled={createMutation.isPending}
-                        className="p-1 rounded hover:bg-green-100 text-green-600"
-                        title="Opslaan"
-                      >
-                        {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                      </button>
-                      <button
-                        onClick={() => setPendingRows(prev => prev.filter(r => r.tempId !== row.tempId))}
-                        className="p-1 rounded hover:bg-slate-100 text-slate-400"
-                        title="Annuleren"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+
+                    <td className="p-2 border-r border-gray-100 w-16">
+                      {!isTxt && (
+                        <Input
+                          value={row.quantity}
+                          onChange={e => updatePending(row.tempId, "quantity", e.target.value)}
+                          type="number" min="0" step="0.001"
+                          className="h-7 text-xs text-right bg-white border-green-200"
+                        />
+                      )}
+                    </td>
+
+                    <td className="p-2 border-r border-gray-100 w-20">
+                      {!isTxt && (
+                        <Input
+                          value={row.componentUnit}
+                          onChange={e => updatePending(row.tempId, "componentUnit", e.target.value)}
+                          placeholder="Pcs."
+                          className="h-7 text-xs bg-white border-green-200"
+                        />
+                      )}
+                    </td>
+
+                    <td className="p-2 border-r border-gray-100 w-24">
+                      {!isTxt && (
+                        <Input
+                          value={row.unitPrice}
+                          onChange={e => updatePending(row.tempId, "unitPrice", e.target.value)}
+                          type="number" min="0" step="0.01"
+                          className="h-7 text-xs text-right bg-white border-green-200"
+                          placeholder="0,00"
+                        />
+                      )}
+                    </td>
+
+                    <td className="p-2 border-r border-gray-100 w-24">
+                      {!isTxt && (
+                        <Input
+                          value={row.costPrice}
+                          onChange={e => updatePending(row.tempId, "costPrice", e.target.value)}
+                          type="number" min="0" step="0.01"
+                          className="h-7 text-xs text-right bg-white border-green-200"
+                          placeholder="0,00"
+                        />
+                      )}
+                    </td>
+
+                    <td className="p-2 border-r border-gray-100 w-24 text-right">
+                      {!isTxt && (
+                        <span className="text-xs font-mono font-medium">€ {pendingTotal.toFixed(2)}</span>
+                      )}
+                    </td>
+
+                    <td className="p-2 w-10">
+                      <div className="flex items-center gap-0.5 justify-center">
+                        <button
+                          onClick={() => savePending(row)}
+                          disabled={createMutation.isPending}
+                          className="p-1 rounded hover:bg-green-100 text-green-600"
+                          title="Opslaan"
+                        >
+                          {createMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setPendingRows(prev => prev.filter(r => r.tempId !== row.tempId));
+                            setArticleSearch(prev => { const copy = { ...prev }; delete copy[row.tempId]; return copy; });
+                          }}
+                          className="p-1 rounded hover:bg-slate-100 text-slate-400"
+                          title="Annuleren"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
             {(components.length > 0 || pendingRows.length > 0) && (
               <tfoot>
                 <tr className="border-t-2 border-slate-200 bg-slate-50">
-                  <td colSpan={6} className="px-3 py-2.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                    Totaal kostprijs
+                  <td colSpan={6} className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Totaal:
                   </td>
-                  <td className="px-3 py-2.5 w-28">
-                    <span className="text-sm text-right block font-mono font-bold text-orange-700">
+                  <td className="px-2 py-2 w-24 text-right">
+                    <span className="text-xs font-mono font-bold text-slate-600">
+                      € {totalLineTotal.toFixed(2)}
+                    </span>
+                  </td>
+                  <td className="px-2 py-2 w-24 text-right">
+                    <span className="text-xs font-mono font-bold text-slate-600">
+                      € {totalCost.toFixed(2)}
+                    </span>
+                  </td>
+                  <td className="px-2 py-2 w-24 text-right">
+                    <span className="text-xs font-mono font-bold text-orange-700">
                       € {totalCostPrice.toFixed(2)}
                     </span>
                   </td>
-                  <td colSpan={4} />
+                  <td className="p-2 w-10" />
                 </tr>
               </tfoot>
             )}
