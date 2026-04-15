@@ -256,6 +256,25 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
     }
   }, [isEditing, projectDetails, form]);
 
+  const { data: assemblyComponents = [] } = useQuery<any[]>({
+    queryKey: ["/api/line-item-components", lineItemId],
+    queryFn: () => fetch(`/api/line-item-components/${lineItemId}`).then(r => r.json()),
+    enabled: !!lineItemId && lineTypeValue === 'unique',
+    staleTime: 10000,
+  });
+
+  useEffect(() => {
+    if (lineTypeValue === 'unique' && assemblyComponents.length > 0) {
+      const totalCost = assemblyComponents.reduce((sum: number, comp: any) => {
+        if (comp.componentType === 'text') return sum;
+        const qty = parseFloat(comp.quantity || "0") || 0;
+        const cost = parseFloat(comp.costPrice || "0") || 0;
+        return sum + (qty * cost);
+      }, 0);
+      form.setValue('costPrice', totalCost.toFixed(2));
+    }
+  }, [assemblyComponents, lineTypeValue]);
+
   const { data: textSnippets = [], isLoading: isLoadingSnippets } = useQuery<TextSnippet[]>({
     queryKey: ["/api/text-snippets"],
     enabled: showSnippetDialog,
@@ -620,6 +639,8 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
     setValue: (value) => { form.setValue('costPrice', value); setHasUnsavedChanges(true); },
     watch: () => form.watch('costPrice'),
     testId: 'input-cost-price',
+    className: lineTypeValue === 'unique' && assemblyComponents.length > 0 ? 'bg-gray-50 dark:bg-gray-800' : undefined,
+    disabled: lineTypeValue === 'unique' && assemblyComponents.length > 0,
   };
 
   const fieldMargin: FormField2<LineItemFormData> = {
