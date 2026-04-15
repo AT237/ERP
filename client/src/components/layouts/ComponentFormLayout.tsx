@@ -61,6 +61,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
+  const [margin, setMargin] = useState<string>("");
   const { toast } = useToast();
   const isEditing = !!componentId;
   const hasClearedRef = useRef(false);
