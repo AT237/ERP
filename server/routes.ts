@@ -1244,12 +1244,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
               .from(inventoryItems)
               .where(eq(inventoryItems.id, comp.componentItemId));
             if (inv) {
+              let brandName: string | null = null;
+              if (inv.brand) {
+                const [b] = await db.select({ name: brands.name }).from(brands).where(eq(brands.code, inv.brand));
+                brandName = b?.name || inv.brand;
+              }
               return {
                 ...comp,
                 componentUnit: inv.unit || comp.componentUnit,
                 _stockItemLabel: inv.sku && inv.name ? `${inv.sku} - ${inv.name}` : (inv.sku || inv.name || null),
-                _brand: inv.brand || null,
-                _manufacturerPartNumber: inv.manufacturerPartNumber || null,
+                _brand: brandName,
+                _manufacturerPartNumber: inv.manufacturerPartNumber && inv.manufacturerPartNumber.trim() ? inv.manufacturerPartNumber : null,
               };
             }
           } catch {}
