@@ -488,7 +488,10 @@ export function useFormToolbar({
     },
     onSuccess: (newRecord: any) => {
       if (config) queryClient.invalidateQueries({ queryKey: [config.listQueryKey] });
-      toast({ title: "Duplicated", description: `${config?.label || "Item"} duplicated` });
+      for (const key of extraQueryKeysToInvalidate) {
+        queryClient.invalidateQueries({ queryKey: key });
+      }
+      toast({ title: "Gedupliceerd", description: `${config?.label || "Item"} gedupliceerd` });
       window.dispatchEvent(
         new CustomEvent("open-form-tab", {
           detail: {
