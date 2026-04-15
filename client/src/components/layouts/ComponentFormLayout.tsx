@@ -351,6 +351,9 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
   };
 
   const handleDateChange = (date: Date | undefined) => {
+    if (date && !(date instanceof Date)) {
+      date = new Date(date);
+    }
     setSelectedDate(date);
     form.setValue("workDate", date ? date.toISOString() : undefined);
     setHasUnsavedChanges(true);
@@ -548,11 +551,11 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
             className={cn("w-full justify-start text-left font-normal h-10", !selectedDate && "text-muted-foreground")}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {selectedDate ? format(selectedDate, "dd-MM-yy") : "Selecteer datum..."}
+            {selectedDate ? format(selectedDate instanceof Date ? selectedDate : new Date(selectedDate), "dd-MM-yy") : "Selecteer datum..."}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Calendar mode="single" selected={selectedDate} onSelect={handleDateChange} initialFocus />
+          <Calendar mode="single" selected={selectedDate instanceof Date ? selectedDate : selectedDate ? new Date(selectedDate) : undefined} onSelect={handleDateChange} initialFocus />
         </PopoverContent>
       </Popover>
     ),
