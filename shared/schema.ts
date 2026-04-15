@@ -277,6 +277,7 @@ export const projectItems = pgTable("project_items", {
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).default("0.00"),
   lineTotal: decimal("line_total", { precision: 10, scale: 2 }).default("0.00"),
   costPrice: decimal("cost_price", { precision: 10, scale: 2 }).default("0.00"),
+  costPriceLabor: decimal("cost_price_labor", { precision: 10, scale: 2 }).default("0.00"),
   lineType: text("line_type").default("standard"),
   position: integer("position").default(0),
   positionNo: text("position_no"),

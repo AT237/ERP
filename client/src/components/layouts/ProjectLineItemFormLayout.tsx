@@ -48,6 +48,7 @@ const lineItemFormSchema = insertProjectItemSchema.extend({
   technicianNames: z.string().optional(),
   technicianIds: z.string().optional(),
   costPrice: z.string().optional(),
+  costPriceLabor: z.string().optional(),
   weight: z.string().optional(),
   collieNumber: z.string().optional(),
 }).refine((data) => {
@@ -72,6 +73,7 @@ type LineItemFormData = z.infer<typeof lineItemFormSchema> & {
   technicianNames?: string;
   technicianIds?: string;
   costPrice?: string;
+  costPriceLabor?: string;
   weight?: string;
   collieNumber?: string;
 };
@@ -134,6 +136,7 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
       customerRateId: "",
       technicianNames: "",
       costPrice: "0.00",
+      costPriceLabor: "0.00",
       hsCode: "",
       countryOfOrigin: "",
       weight: "0",
@@ -296,6 +299,7 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
         technicianNames: lineItem.technicianNames || "",
         technicianIds: lineItem.technicianIds || "",
         costPrice: lineItem.costPrice?.toString() || "0.00",
+        costPriceLabor: (lineItem as any).costPriceLabor?.toString() || "0.00",
         hsCode: lineItem.hsCode || "",
         countryOfOrigin: lineItem.countryOfOrigin || "",
         weight: lineItem.weight?.toString() || "0",
@@ -325,6 +329,7 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
   const discountPercentValue = form.watch("discountPercent");
   const lineTotalValue = form.watch("lineTotal");
   const costPriceValue = form.watch("costPrice");
+  const costPriceLaborValue = form.watch("costPriceLabor");
   const customerRateIdValue = form.watch("customerRateId");
 
   const { data: assemblyComponents = [] } = useQuery<any[]>({
@@ -335,16 +340,17 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
   });
 
   useEffect(() => {
-    if (lineTypeValue === 'unique' && assemblyComponents.length > 0) {
-      const totalCost = assemblyComponents.reduce((sum: number, comp: any) => {
+    if (lineTypeValue === 'unique') {
+      const materialCost = assemblyComponents.reduce((sum: number, comp: any) => {
         if (comp.componentType === 'text') return sum;
         const qty = parseFloat(comp.quantity || "0") || 0;
         const cost = parseFloat(comp.costPrice || "0") || 0;
         return sum + (qty * cost);
       }, 0);
-      form.setValue('costPrice', totalCost.toFixed(2));
+      const laborCost = parseFloat(costPriceLaborValue || "0") || 0;
+      form.setValue('costPrice', (materialCost + laborCost).toFixed(2));
     }
-  }, [assemblyComponents, lineTypeValue]);
+  }, [assemblyComponents, lineTypeValue, costPriceLaborValue]);
 
   const marginPercent = useMemo(() => {
     const cost = parseFloat(costPriceValue || "0");
