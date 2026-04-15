@@ -181,7 +181,8 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
         fetchOptionsFrom: "units-of-measure",
         fetchOptionsMap: { value: "code", label: "name" }
       },
-      { name: "rate", label: "Cost Price", type: "number", required: true },
+      { name: "rate", label: "Sales Price", type: "number", required: true },
+      { name: "costPrice", label: "Cost Price", type: "number" },
       { 
         name: "category", 
         label: "Category", 
@@ -202,7 +203,8 @@ export const MASTERDATA_CONFIG: Record<string, MasterDataConfig> = {
       { key: "name", label: "Name" },
       { key: "description", label: "Description" },
       { key: "unit", label: "Unit" },
-      { key: "rate", label: "Cost Price", render: (value) => `€ ${Number(value).toFixed(2)}` }
+      { key: "rate", label: "Sales Price", render: (value) => `€ ${Number(value).toFixed(2)}` },
+      { key: "costPrice", label: "Cost Price", render: (value) => value ? `€ ${Number(value).toFixed(2)}` : '—' }
     ]
   },
 

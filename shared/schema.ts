@@ -801,6 +801,7 @@ export const ratesAndCharges = pgTable("rates_and_charges", {
   description: text("description"),
   unit: text("unit"),
   rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }),
   category: text("category"),
   isActive: boolean("is_active").default(true),
   sortOrder: integer("sort_order").default(0),

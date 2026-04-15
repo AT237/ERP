@@ -207,6 +207,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
           label: `${r.code} — ${r.name} (€ ${discountedPrice.toFixed(2)}${discount > 0 ? ` / -${discount}%` : ''})`,
           unit: r.unit || "hrs",
           discountedPrice,
+          rateCostPrice: Number((r as any).costPrice) || 0,
         };
       });
   }, [customerRates, allRates]);
@@ -345,6 +346,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     const rateOpt = customerRateOptions.find(opt => opt.rateId === rateId);
     if (rateOpt) {
       form.setValue("unitPrice", rateOpt.discountedPrice.toFixed(2));
+      form.setValue("costPrice", rateOpt.rateCostPrice.toFixed(2));
       form.setValue("componentUnit", rateOpt.unit || "hrs");
     }
     setHasUnsavedChanges(true);

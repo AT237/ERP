@@ -217,6 +217,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
           baseRate,
           discount,
           discountedPrice,
+          rateCostPrice: Number((r as any).costPrice) || 0,
           label: `${r.code} - ${r.name} (€${discountedPrice.toFixed(2)}${discount > 0 ? ` / ${discount}% disc.` : ''})`,
         };
       });
@@ -402,6 +403,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
     const rateOpt = customerRateOptions.find(opt => opt.rateId === rateId);
     if (rateOpt) {
       form.setValue("unitPrice", rateOpt.discountedPrice.toFixed(2));
+      form.setValue("costPrice", rateOpt.rateCostPrice.toFixed(2));
       form.setValue("unit" as any, rateOpt.unit || "hrs");
     }
     setHasUnsavedChanges(true);
