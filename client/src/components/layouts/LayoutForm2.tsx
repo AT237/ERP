@@ -60,6 +60,7 @@ export interface FormField2<T extends FieldValues = FieldValues> {
   rows?: number; // For textarea
   disabled?: boolean;
   prefix?: string;
+  suffix?: ReactNode;
   
   // Select options
   options?: Array<{ value: string; label: string }>;
@@ -307,13 +308,19 @@ function renderField<T extends FieldValues>(
           }}
         />
       );
-      if (field.prefix) {
+      if (field.prefix || field.suffix) {
         return (
-          <div className="flex">
-            <span className="inline-flex items-center px-3 h-10 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm select-none">
-              {field.prefix}
-            </span>
-            {inputEl}
+          <div className="flex items-center gap-1">
+            {field.prefix && (
+              <div className="flex flex-1">
+                <span className="inline-flex items-center px-3 h-10 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm select-none">
+                  {field.prefix}
+                </span>
+                {inputEl}
+              </div>
+            )}
+            {!field.prefix && inputEl}
+            {field.suffix}
           </div>
         );
       }

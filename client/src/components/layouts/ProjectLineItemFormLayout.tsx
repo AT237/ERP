@@ -22,7 +22,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProjectItemSchema, type Country, type ProjectItem, type TextSnippet, type Project, type CustomerRate, type RateAndCharge, type Employee } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Save, Package, FileText, Search, Library, Check, CalendarIcon } from "lucide-react";
+import { Save, Package, FileText, Search, Library, Check, CalendarIcon, RefreshCw } from "lucide-react";
 import { ImageUploadZone } from "@/components/ui/image-upload-zone";
 import { LineItemComponentsPanel } from "@/components/ui/line-item-components-panel";
 import { EmployeeSelectWithAdd } from "@/components/ui/employee-select-with-add";
@@ -339,7 +339,7 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
     staleTime: 10000,
   });
 
-  useEffect(() => {
+  const recalcCostFromAssembly = useCallback(() => {
     if (lineTypeValue === 'unique') {
       const materialCost = assemblyComponents.reduce((sum: number, comp: any) => {
         if (comp.componentType === 'text') return sum;
@@ -347,11 +347,8 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
         const cost = parseFloat(comp.costPrice || "0") || 0;
         return sum + (qty * cost);
       }, 0);
-      const newCost = materialCost.toFixed(2);
-      const currentCost = form.getValues('costPrice');
-      if (currentCost !== newCost) {
-        form.setValue('costPrice', newCost);
-      }
+      form.setValue('costPrice', materialCost.toFixed(2));
+      setHasUnsavedChanges(true);
     }
   }, [assemblyComponents, lineTypeValue]);
 
@@ -660,8 +657,16 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
     setValue: (value) => { form.setValue('costPrice', value); setHasUnsavedChanges(true); },
     watch: () => form.watch('costPrice'),
     testId: 'input-cost-price',
-    className: lineTypeValue === 'unique' ? 'bg-gray-50 dark:bg-gray-800' : undefined,
-    disabled: lineTypeValue === 'unique',
+    labelExtra: lineTypeValue === 'unique' && assemblyComponents.length > 0 ? (
+      <button
+        type="button"
+        onClick={recalcCostFromAssembly}
+        className="ml-1 p-0.5 rounded hover:bg-orange-100 dark:hover:bg-orange-900 text-orange-500 hover:text-orange-600 transition-colors"
+        title="Herbereken vanuit assembly"
+      >
+        <RefreshCw className="h-3.5 w-3.5" />
+      </button>
+    ) : undefined,
   };
 
   const fieldMargin: FormField2<LineItemFormData> = {
