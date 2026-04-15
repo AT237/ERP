@@ -221,6 +221,7 @@ export const lineItemComponents = pgTable("line_item_components", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   parentLineItemId: varchar("parent_line_item_id").notNull(),
   parentLineItemType: text("parent_line_item_type").notNull(),
+  positionNo: text("position_no"),
   componentType: text("component_type").notNull().default("standard"),
   componentItemId: varchar("component_item_id").references(() => inventoryItems.id),
   componentName: text("component_name"),

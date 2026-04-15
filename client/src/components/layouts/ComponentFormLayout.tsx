@@ -9,13 +9,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, RefreshCw, ExternalLink } from "lucide-react";
 import { InventorySelect } from "@/components/ui/inventory-select";
 import { EntitySelect } from "@/components/ui/entity-select";
 import { EmployeeSelectWithAdd } from "@/components/ui/employee-select-with-add";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { LineItemComponent, InventoryItem, CustomerRate, RateAndCharge, Employee } from "@shared/schema";
+import type { LineItemComponent, InventoryItem, CustomerRate, RateAndCharge, Employee, Customer } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -31,6 +31,7 @@ interface SupplierOption {
 const componentFormSchema = z.object({
   parentLineItemId: z.string(),
   parentLineItemType: z.string(),
+  positionNo: z.string().optional().nullable(),
   componentType: z.string().min(1, "Type is verplicht"),
   quantity: z.string().default("1"),
   unitPrice: z.string().default("0"),
@@ -84,6 +85,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     defaultValues: {
       parentLineItemId,
       parentLineItemType,
+      positionNo: "",
       componentType: "standard",
       quantity: "1",
       unitPrice: "0.00",
@@ -171,6 +173,25 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
 
   const customerId = parentLineItem?.customerId || parentDoc?.customerId || parentProject?.customerId;
 
+  const { data: customerData } = useQuery<Customer>({
+    queryKey: ["/api/customers", customerId],
+    enabled: !!customerId,
+    staleTime: 60000,
+  });
+
+  const refreshCustomerData = useCallback(() => {
+    if (customerId) {
+      queryClient.invalidateQueries({ queryKey: ["/api/customers", customerId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/customer-rates/${customerId}`] });
+    }
+    queryClient.invalidateQueries({ queryKey: ["parent-line-item", parentLineItemType, parentLineItemId] });
+    queryClient.invalidateQueries({ queryKey: ["parent-doc", parentDocEndpoint] });
+    if (parentProjectId) {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", parentProjectId] });
+    }
+    toast({ title: "Vernieuwd", description: "Klantgegevens vernieuwd" });
+  }, [customerId, parentLineItemType, parentLineItemId, parentDocEndpoint, parentProjectId]);
+
   const { data: customerRates = [] } = useQuery<CustomerRate[]>({
     queryKey: [`/api/customer-rates/${customerId}`],
     enabled: !!customerId,
@@ -202,6 +223,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
       const vals: Partial<ComponentFormData> = {
         parentLineItemId: component.parentLineItemId,
         parentLineItemType: component.parentLineItemType,
+        positionNo: (component as any).positionNo ?? "",
         componentType: component.componentType,
         quantity: component.componentType === 'charge'
           ? String(parseFloat(component.quantity ?? "1"))
@@ -276,6 +298,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
   const onSubmit = (data: ComponentFormData) => {
     const transformedData: any = {
       ...data,
+      positionNo: data.positionNo || null,
       componentName: data.componentName || null,
       componentUnit: data.componentUnit || null,
       componentItemId: data.componentItemId || null,
@@ -371,6 +394,53 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     saveLoading: createMutation.isPending || updateMutation.isPending,
     extraQueryKeysToInvalidate: [["/api/line-item-components", parentLineItemId]],
   });
+
+  const fieldPositionNo: FormField2<ComponentFormData> = {
+    key: 'positionNo',
+    label: 'Pos. No.',
+    type: 'text',
+    register: form.register('positionNo'),
+    placeholder: 'bijv. 010',
+  };
+
+  const fieldCustomerDisplay: FormField2<ComponentFormData> = {
+    key: 'customerId' as any,
+    label: 'Customer',
+    type: 'custom',
+    customComponent: (
+      <div className="flex items-center gap-1.5">
+        <div className="flex-1 h-10 px-3 py-2 rounded-md border bg-muted/30 text-sm flex items-center text-muted-foreground">
+          {customerData ? customerData.name : (customerId ? "Laden..." : "Geen klant gevonden")}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 shrink-0"
+          onClick={refreshCustomerData}
+          title="Klantgegevens vernieuwen"
+        >
+          <RefreshCw className="h-3.5 w-3.5 text-orange-500" />
+        </Button>
+        {customerId && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-10 w-10 shrink-0"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('open-tab', {
+                detail: { path: `/customers/${customerId}` }
+              }));
+            }}
+            title="Klant openen"
+          >
+            <ExternalLink className="h-3.5 w-3.5 text-orange-500" />
+          </Button>
+        )}
+      </div>
+    ),
+  };
 
   const typeOptions = [
     { value: "standard", label: "Standard Item" },
@@ -614,9 +684,9 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
 
   const getLeftColumnFields = (): FormField2<ComponentFormData>[] => {
     if (isCharge) {
-      return [fieldType, fieldInternalNotes];
+      return [fieldPositionNo, fieldType, fieldCustomerDisplay, fieldInternalNotes];
     }
-    const fields: FormField2<ComponentFormData>[] = [fieldType];
+    const fields: FormField2<ComponentFormData>[] = [fieldPositionNo, fieldType];
     if (isStandard) {
       fields.push(fieldStockItem);
     } else {
