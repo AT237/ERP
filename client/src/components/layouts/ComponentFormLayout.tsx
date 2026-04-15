@@ -127,9 +127,18 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     staleTime: 30000,
   });
 
+  const parentEndpoint = useMemo(() => {
+    switch (parentLineItemType) {
+      case 'invoice_item': return `/api/invoice-items/${parentLineItemId}`;
+      case 'quotation_item': return `/api/quotation-items/${parentLineItemId}`;
+      case 'proforma_invoice_item': return `/api/proforma-invoice-items/${parentLineItemId}`;
+      default: return `/api/project-items/${parentLineItemId}`;
+    }
+  }, [parentLineItemId, parentLineItemType]);
+
   const { data: parentLineItem } = useQuery<any>({
-    queryKey: ["/api/project-items", parentLineItemId],
-    queryFn: () => fetch(`/api/project-items/${parentLineItemId}`).then(r => {
+    queryKey: ["parent-line-item", parentLineItemType, parentLineItemId],
+    queryFn: () => fetch(parentEndpoint).then(r => {
       if (!r.ok) return null;
       return r.json();
     }),
@@ -145,7 +154,22 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     staleTime: 60000,
   });
 
-  const customerId = parentLineItem?.customerId || parentProject?.customerId;
+  const parentDocId = parentLineItem?.invoiceId || parentLineItem?.quotationId || parentLineItem?.proformaInvoiceId;
+  const parentDocEndpoint = useMemo(() => {
+    if (parentLineItem?.invoiceId) return `/api/invoices/${parentLineItem.invoiceId}`;
+    if (parentLineItem?.quotationId) return `/api/quotations/${parentLineItem.quotationId}`;
+    if (parentLineItem?.proformaInvoiceId) return `/api/proforma-invoices/${parentLineItem.proformaInvoiceId}`;
+    return null;
+  }, [parentLineItem]);
+
+  const { data: parentDoc } = useQuery<any>({
+    queryKey: ["parent-doc", parentDocEndpoint],
+    queryFn: () => parentDocEndpoint ? fetch(parentDocEndpoint).then(r => r.ok ? r.json() : null) : null,
+    enabled: !!parentDocEndpoint,
+    staleTime: 60000,
+  });
+
+  const customerId = parentLineItem?.customerId || parentDoc?.customerId || parentProject?.customerId;
 
   const { data: customerRates = [] } = useQuery<CustomerRate[]>({
     queryKey: [`/api/customer-rates/${customerId}`],
@@ -179,7 +203,9 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
         parentLineItemId: component.parentLineItemId,
         parentLineItemType: component.parentLineItemType,
         componentType: component.componentType,
-        quantity: String(Math.round(parseFloat(component.quantity ?? "1"))),
+        quantity: component.componentType === 'charge'
+          ? String(parseFloat(component.quantity ?? "1"))
+          : String(Math.round(parseFloat(component.quantity ?? "1"))),
         unitPrice: component.unitPrice ?? "0",
         costPrice: component.costPrice ?? "0",
         componentName: component.componentName ?? "",
@@ -495,7 +521,15 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     ),
   };
 
-  const fieldQuantity: FormField2<ComponentFormData> = {
+  const fieldQuantity: FormField2<ComponentFormData> = isCharge ? {
+    key: 'quantity',
+    label: 'Aantal',
+    type: 'decimal',
+    placeholder: '0,00',
+    setValue: (value) => { form.setValue('quantity', value); setHasUnsavedChanges(true); },
+    watch: () => form.watch('quantity'),
+    validation: { isRequired: true },
+  } : {
     key: 'quantity',
     label: 'Aantal',
     type: 'number',

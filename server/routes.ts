@@ -1231,7 +1231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/line-item-components/:parentId", async (req, res) => {
     try {
-      const body = { ...req.body, parentLineItemId: req.params.parentId };
+      const body = parseDateFields({ ...req.body, parentLineItemId: req.params.parentId }, ['workDate']);
       const parsed = insertLineItemComponentSchema.safeParse(body);
       if (!parsed.success) return res.status(400).json({ message: "Validation failed", errors: parsed.error.errors });
       const [created] = await db.insert(lineItemComponents).values(parsed.data).returning();
@@ -1243,8 +1243,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/line-item-components/:parentId/:componentId", async (req, res) => {
     try {
+      const body = parseDateFields(req.body, ['workDate']);
       const [updated] = await db.update(lineItemComponents)
-        .set(req.body)
+        .set(body)
         .where(and(eq(lineItemComponents.id, req.params.componentId), eq(lineItemComponents.parentLineItemId, req.params.parentId)))
         .returning();
       if (!updated) return res.status(404).json({ message: "Component not found" });
