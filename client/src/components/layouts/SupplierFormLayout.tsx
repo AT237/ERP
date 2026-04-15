@@ -14,6 +14,7 @@ import { AddressSelectWithAdd } from "@/components/ui/address-select-with-add";
 import { CountrySelectWithAdd } from "@/components/ui/country-select-with-add";
 import { LanguageSelectWithAdd } from "@/components/ui/language-select-with-add";
 import { PaymentDaySelectWithAdd } from "@/components/ui/payment-day-select-with-add";
+import { PaymentTermsSelect } from "@/components/ui/payment-terms-select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Supplier, InsertSupplier } from "@shared/schema";
@@ -436,24 +437,16 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
           {
             key: "paymentTerms",
             label: "Betalingstermijn",
-            type: "select",
-            options: [
-              { value: "0", label: "Vooraf betalen" },
-              { value: "7", label: "7 dagen" },
-              { value: "14", label: "14 dagen" },
-              { value: "21", label: "21 dagen" },
-              { value: "30", label: "30 dagen" },
-              { value: "45", label: "45 dagen" },
-              { value: "60", label: "60 dagen" },
-              { value: "90", label: "90 dagen" }
-            ],
+            type: "custom",
             layout: "single",
-            setValue: (value) => form.setValue("paymentTerms", value),
-            watch: () => form.watch("paymentTerms"),
-            validation: {
-              error: form.formState.errors.paymentTerms?.message
-            },
-            testId: "select-supplier-payment-terms"
+            customComponent: (
+              <PaymentTermsSelect
+                value={form.watch("paymentTerms") || ""}
+                onValueChange={(v) => form.setValue("paymentTerms", v)}
+                placeholder="Selecteer betalingstermijn..."
+                testId="select-supplier-payment-terms"
+              />
+            ),
           } as FormField2<SupplierFormData>,
           {
             key: "paymentDaysId",
