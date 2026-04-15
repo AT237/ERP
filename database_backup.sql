@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict lXnKShG5Y2ugGK1aX3x3UUM0kaDthJZm79enbz1EtKvu8c1eG4wkOJ6rQN99E7y
+\restrict gXzh6E5eLd18srJZY8pJjFFJO5EvRug8OWgkBjubXqyWmoW5cuXSQBjWUZi0zkv
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -987,7 +987,12 @@ CREATE TABLE public.line_item_components (
     sort_order integer DEFAULT 0,
     created_at timestamp without time zone DEFAULT now(),
     cost_price numeric(10,2) DEFAULT '0'::numeric,
-    supplier_id character varying
+    supplier_id character varying,
+    description text,
+    technician_names text,
+    technician_ids text,
+    work_date timestamp without time zone,
+    customer_rate_id character varying
 );
 
 
@@ -2672,9 +2677,9 @@ d7cd5879-4620-4889-ab26-42347f820df5	e2c21669-e2bb-4ca4-a7ef-b3b410418b34	footer
 -- Data for Name: line_item_components; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.line_item_components (id, parent_line_item_id, parent_line_item_type, component_type, component_item_id, component_name, component_unit, quantity, unit_price, notes, sort_order, created_at, cost_price, supplier_id) FROM stdin;
-bc3059bc-424e-4980-abd9-16f028b0b260	a76b2d89-469f-4443-ba43-7cb064ed23eb	project_item	unique	\N	Test if it limites a secodn assambly 	Pcs.	1.000	0.00	ik wil niet teveel assamblies in een assambly hebben	0	2026-04-15 10:03:10.86271	0.00	\N
-ed95e436-64f9-4101-a96f-a949f86174c8	a76b2d89-469f-4443-ba43-7cb064ed23eb	project_item	standard	1cb94395-d6de-4ed1-8437-4d7a4804b54b	Fuse DII, 35Amp, 500V, 	Pcs.	20.000	3.18	\N	0	2026-04-15 10:09:16.185697	2.27	\N
+COPY public.line_item_components (id, parent_line_item_id, parent_line_item_type, component_type, component_item_id, component_name, component_unit, quantity, unit_price, notes, sort_order, created_at, cost_price, supplier_id, description, technician_names, technician_ids, work_date, customer_rate_id) FROM stdin;
+bc3059bc-424e-4980-abd9-16f028b0b260	a76b2d89-469f-4443-ba43-7cb064ed23eb	project_item	unique	\N	Test if it limites a secodn assambly 	Pcs.	1.000	0.00	ik wil niet teveel assamblies in een assambly hebben	0	2026-04-15 10:03:10.86271	0.00	\N	\N	\N	\N	\N	\N
+ed95e436-64f9-4101-a96f-a949f86174c8	a76b2d89-469f-4443-ba43-7cb064ed23eb	project_item	standard	1cb94395-d6de-4ed1-8437-4d7a4804b54b	Fuse DII, 35Amp, 500V, 	Pcs.	20.000	3.18	\N	0	2026-04-15 10:09:16.185697	2.27	\N	\N	\N	\N	\N	\N
 \.
 
 
@@ -4046,7 +4051,7 @@ ijKKoKSIPx7qxHF_Q9rsiATVFBVaMMj9	{"cookie":{"originalMaxAge":604800000,"expires"
 9h7LEZesmiLoTsnGd7Xg_qkRAh5RDpxI	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T07:23:45.449Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-20 07:23:46
 8TXQzmA0m8fdnTMKawCzlw0WvweLafil	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T20:30:30.274Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-20 20:32:45
 kWgjWYE7p5KrXFQNZMRwczmcNXiikMuJ	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-13T19:32:02.344Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin"}	2026-04-20 19:29:05
-7SkZiEq1-E9mBgvzZM7cU8wwgzG1ZC5U	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T19:41:22.405Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-22 10:25:42
+7SkZiEq1-E9mBgvzZM7cU8wwgzG1ZC5U	{"cookie":{"originalMaxAge":604800000,"expires":"2026-04-20T19:41:22.405Z","secure":false,"httpOnly":true,"path":"/"},"userId":"admin","username":"admin","fullName":""}	2026-04-22 10:27:14
 \.
 
 
@@ -5661,5 +5666,5 @@ ALTER TABLE ONLY public.work_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict lXnKShG5Y2ugGK1aX3x3UUM0kaDthJZm79enbz1EtKvu8c1eG4wkOJ6rQN99E7y
+\unrestrict gXzh6E5eLd18srJZY8pJjFFJO5EvRug8OWgkBjubXqyWmoW5cuXSQBjWUZi0zkv
 
