@@ -1103,6 +1103,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/inventory", async (req, res) => {
     try {
       const itemData = insertInventoryItemSchema.parse(req.body);
+      if (itemData.sku) {
+        const existing = await db.select({ id: inventoryItems.id }).from(inventoryItems)
+          .where(eq(inventoryItems.sku, itemData.sku));
+        if (existing.length > 0) {
+          return res.status(409).json({ message: `SKU "${itemData.sku}" is al in gebruik. Vernieuw het formulier voor een nieuw artikelnummer.` });
+        }
+      }
       const item = await storage.createInventoryItem(itemData);
       res.status(201).json(item);
     } catch (error) {
@@ -1114,6 +1121,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/inventory/:id", async (req, res) => {
     try {
       const itemData = insertInventoryItemSchema.partial().parse(req.body);
+      if (itemData.sku) {
+        const existing = await db.select({ id: inventoryItems.id }).from(inventoryItems)
+          .where(and(eq(inventoryItems.sku, itemData.sku), sql`${inventoryItems.id} != ${req.params.id}`));
+        if (existing.length > 0) {
+          return res.status(409).json({ message: `SKU "${itemData.sku}" is al in gebruik door een ander artikel` });
+        }
+      }
       const item = await storage.updateInventoryItem(req.params.id, itemData);
       res.json(item);
     } catch (error) {

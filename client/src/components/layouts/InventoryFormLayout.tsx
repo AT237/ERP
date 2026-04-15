@@ -1045,6 +1045,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
     onSuccess: (newItem) => {
       setCurrentInventoryId(newItem.id);
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/next-sku"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setHasUnsavedChanges(false);
       window.dispatchEvent(new CustomEvent('tab-unsaved-changes', {
@@ -1065,10 +1066,11 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
       }));
       
           },
-    onError: () => {
+    onError: (error: any) => {
+      const msg = error?.message?.includes(": ") ? error.message.split(": ").slice(1).join(": ") : "Kan artikel niet toevoegen";
       toast({
-        title: "Error",
-        description: "Failed to add inventory item",
+        title: "Fout",
+        description: msg,
         variant: "destructive",
       });
     },
@@ -1092,11 +1094,12 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
         title: "Success",
         description: "Inventory item updated successfully",
       });
-          },
-    onError: () => {
+    },
+    onError: (error: any) => {
+      const msg = error?.message?.includes(": ") ? error.message.split(": ").slice(1).join(": ") : "Kan artikel niet bijwerken";
       toast({
-        title: "Error",
-        description: "Failed to update inventory item",
+        title: "Fout",
+        description: msg,
         variant: "destructive",
       });
     },
