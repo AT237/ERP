@@ -149,6 +149,22 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
         return <span>{item ? `${item.sku || ''} - ${item.name || ''}`.trim() : value}</span>;
       },
     },
+    {
+      key: '_brand',
+      label: 'Fabrikant',
+      visible: true,
+      width: 140,
+      filterable: true,
+      sortable: true,
+      renderCell: (value: any, row: any) => {
+        if (value) return value;
+        if (row.componentItemId) {
+          const item = inventoryItems.find((i: any) => i.id === row.componentItemId);
+          return item?.brand || '';
+        }
+        return '';
+      },
+    },
     createCurrencyColumn('costPrice', 'Cost Price', 100),
     {
       key: 'costPriceTotal',

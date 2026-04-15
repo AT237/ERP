@@ -1240,7 +1240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enriched = await Promise.all(components.map(async (comp) => {
         if (comp.componentItemId) {
           try {
-            const [inv] = await db.select({ unit: inventoryItems.unit, sku: inventoryItems.sku, name: inventoryItems.name })
+            const [inv] = await db.select({ unit: inventoryItems.unit, sku: inventoryItems.sku, name: inventoryItems.name, brand: inventoryItems.brand })
               .from(inventoryItems)
               .where(eq(inventoryItems.id, comp.componentItemId));
             if (inv) {
@@ -1248,6 +1248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ...comp,
                 componentUnit: inv.unit || comp.componentUnit,
                 _stockItemLabel: inv.sku && inv.name ? `${inv.sku} - ${inv.name}` : (inv.sku || inv.name || null),
+                _brand: inv.brand || null,
               };
             }
           } catch {}
