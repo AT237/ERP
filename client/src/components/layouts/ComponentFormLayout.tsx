@@ -560,34 +560,73 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
 
   const fieldRate: FormField2<ComponentFormData> = {
     key: 'customerRateId',
-    label: 'Rate',
+    label: 'Tarief',
     type: 'custom',
     customComponent: (
-      <Select
-        value={customerRateIdValue || ""}
-        onValueChange={(value) => handleCustomerRateChange(value === "__none__" ? "" : value)}
-      >
-        <SelectTrigger className="h-10">
-          <SelectValue placeholder="Selecteer tarief..." />
-        </SelectTrigger>
-        <SelectContent>
-          {customerRateIdValue && (
-            <SelectItem value="__none__" className="text-muted-foreground italic">
-              — Selectie wissen —
-            </SelectItem>
-          )}
-          {customerRateOptions.map(opt => (
-            <SelectItem key={opt.rateId} value={opt.rateId}>
-              {opt.label}
-            </SelectItem>
-          ))}
-          {customerRateOptions.length === 0 && (
-            <SelectItem value="__none__" disabled className="text-muted-foreground italic text-xs">
-              Geen tarieven beschikbaar
-            </SelectItem>
-          )}
-        </SelectContent>
-      </Select>
+      <div className="flex items-center gap-1.5">
+        <div className="flex-1">
+          <Select
+            value={customerRateIdValue || ""}
+            onValueChange={(value) => handleCustomerRateChange(value === "__none__" ? "" : value)}
+          >
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder="Selecteer tarief..." />
+            </SelectTrigger>
+            <SelectContent>
+              {customerRateIdValue && (
+                <SelectItem value="__none__" className="text-muted-foreground italic">
+                  — Selectie wissen —
+                </SelectItem>
+              )}
+              {customerRateOptions.map(opt => (
+                <SelectItem key={opt.rateId} value={opt.rateId}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+              {customerRateOptions.length === 0 && (
+                <SelectItem value="__none__" disabled className="text-muted-foreground italic text-xs">
+                  Geen tarieven beschikbaar
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 shrink-0"
+          onClick={() => {
+            if (customerId) {
+              queryClient.invalidateQueries({ queryKey: [`/api/customer-rates/${customerId}`] });
+              queryClient.invalidateQueries({ queryKey: ["/api/masterdata/rates-and-charges"] });
+            }
+            toast({ title: "Vernieuwd", description: "Tarieven vernieuwd" });
+          }}
+          title="Tarieven vernieuwen"
+        >
+          <RefreshCw className="h-3.5 w-3.5 text-orange-500" />
+        </Button>
+        {customerRateIdValue && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-10 w-10 shrink-0"
+            onClick={() => {
+              const rateOpt = customerRateOptions.find(o => o.rateId === customerRateIdValue);
+              if (rateOpt) {
+                window.dispatchEvent(new CustomEvent('open-tab', {
+                  detail: { path: `/masterdata/rates-and-charges/${customerRateIdValue}` }
+                }));
+              }
+            }}
+            title="Tarief openen"
+          >
+            <ExternalLink className="h-3.5 w-3.5 text-orange-500" />
+          </Button>
+        )}
+      </div>
     ),
   };
 
