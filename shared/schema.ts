@@ -230,6 +230,11 @@ export const lineItemComponents = pgTable("line_item_components", {
   costPrice: decimal("cost_price", { precision: 10, scale: 2 }).default("0"),
   supplierId: varchar("supplier_id").references(() => suppliers.id),
   notes: text("notes"),
+  description: text("description"),
+  technicianNames: text("technician_names"),
+  technicianIds: text("technician_ids"),
+  workDate: timestamp("work_date"),
+  customerRateId: varchar("customer_rate_id"),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
