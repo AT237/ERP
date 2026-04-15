@@ -284,7 +284,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
   const [pendingRows, setPendingRows] = useState<PendingRow[]>([]);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState<"all" | "standard" | "unique">("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "standard" | "unique" | "charge" | "text">("all");
 
   const totalCostPrice = [
     ...components.map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0"))),
@@ -338,6 +338,11 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
       } else {
         payload.componentName = row.componentName;
         payload.componentUnit = row.componentUnit || null;
+      }
+      if (row.componentType === "text") {
+        payload.quantity = "0";
+        payload.unitPrice = "0";
+        payload.costPrice = "0";
       }
       return apiRequest("POST", `/api/line-item-components/${parentLineItemId}`, payload);
     },
@@ -455,10 +460,16 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
               Alle types
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setTypeFilter("standard")} className={cn("text-xs", typeFilter === "standard" && "font-bold")}>
-              Standaard
+              Standard Item
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTypeFilter("charge")} className={cn("text-xs", typeFilter === "charge" && "font-bold")}>
+              Charge
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setTypeFilter("unique")} className={cn("text-xs", typeFilter === "unique" && "font-bold")}>
-              Uniek
+              Unique Item
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTypeFilter("text")} className={cn("text-xs", typeFilter === "text" && "font-bold")}>
+              Text
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
