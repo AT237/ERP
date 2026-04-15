@@ -209,7 +209,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
 
   const tableState = useDataTable({
     defaultColumns: assemblyColumns,
-    tableKey: `assembly-${parentLineItemId}`,
+    tableKey: 'assembly-components',
   });
 
   const handleDeleteComponent = async (comp: LineItemComponent) => {
