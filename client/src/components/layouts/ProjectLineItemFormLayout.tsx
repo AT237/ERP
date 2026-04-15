@@ -968,18 +968,6 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
         createFieldRow(fieldCollieNumber),
       ]
     },
-    ...(lineTypeValue === 'unique' && isEditing ? [{
-      id: 'components',
-      label: 'Onderdelen',
-      rows: [
-        createCustomRow(
-          <LineItemComponentsPanel
-            parentLineItemId={lineItemId!}
-            parentLineItemType="project_item"
-          />
-        ),
-      ],
-    }] : []),
   ];
 
   const snippetSelectionDialog = (
@@ -1087,6 +1075,14 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
         originalValues={originalValues}
         isLoading={isLoadingLineItem}
       />
+      {lineTypeValue === 'unique' && isEditing && lineItemId && (
+        <div className="px-6 py-4 pb-10 bg-white ml-[15px] mr-[15px]">
+          <LineItemComponentsPanel
+            parentLineItemId={lineItemId}
+            parentLineItemType="project_item"
+          />
+        </div>
+      )}
       {snippetSelectionDialog}
       <ValidationErrorDialog
         open={dialogOpen}
