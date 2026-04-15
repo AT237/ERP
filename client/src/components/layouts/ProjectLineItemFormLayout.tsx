@@ -330,7 +330,6 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
   const discountPercentValue = form.watch("discountPercent");
   const lineTotalValue = form.watch("lineTotal");
   const costPriceValue = form.watch("costPrice");
-  const costPriceLaborValue = form.watch("costPriceLabor");
   const customerRateIdValue = form.watch("customerRateId");
 
   const { data: assemblyComponents = [] } = useQuery<any[]>({
@@ -348,14 +347,13 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
         const cost = parseFloat(comp.costPrice || "0") || 0;
         return sum + (qty * cost);
       }, 0);
-      const laborCost = parseFloat(costPriceLaborValue || "0") || 0;
-      const newCost = (materialCost + laborCost).toFixed(2);
+      const newCost = materialCost.toFixed(2);
       const currentCost = form.getValues('costPrice');
       if (currentCost !== newCost) {
         form.setValue('costPrice', newCost);
       }
     }
-  }, [assemblyComponents, lineTypeValue, costPriceLaborValue]);
+  }, [assemblyComponents, lineTypeValue]);
 
   const marginPercent = useMemo(() => {
     const cost = parseFloat(costPriceValue || "0");
