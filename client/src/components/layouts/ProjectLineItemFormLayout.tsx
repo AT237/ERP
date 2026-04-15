@@ -923,7 +923,7 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
       case 'charges':
         return [fieldQuantity, fieldUnitPrice, fieldUnit, fieldCostPrice, fieldMargin, fieldLineTotal];
       case 'unique':
-        return [fieldQuantity, fieldUnit, fieldUnitPrice, fieldCostPriceLabor, fieldCostPrice, fieldMargin, fieldLineTotal];
+        return [fieldQuantity, fieldUnit, fieldUnitPrice, fieldCostPrice, fieldMargin, fieldLineTotal];
       case 'standard':
         return [fieldQuantity, fieldUnit, fieldUnitPrice, fieldDiscount, fieldDiscountedPrice, fieldCostPrice, fieldMargin, fieldLineTotal];
       case 'text':
