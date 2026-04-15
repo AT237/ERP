@@ -104,7 +104,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
         parentLineItemId: component.parentLineItemId,
         parentLineItemType: component.parentLineItemType,
         componentType: component.componentType,
-        quantity: component.quantity ?? "1",
+        quantity: String(Math.round(parseFloat(component.quantity ?? "1"))),
         unitPrice: component.unitPrice ?? "0",
         costPrice: component.costPrice ?? "0",
         componentName: component.componentName ?? "",
