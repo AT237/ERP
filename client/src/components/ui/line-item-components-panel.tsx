@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, FileText, X } from "lucide-react";
 import { DataTableLayout, createPositionColumn, createCurrencyColumn, type DirectInputConfig } from "@/components/layouts/DataTableLayout";
 import { useDataTable } from "@/hooks/useDataTable";
+import { exportTableToCSV } from "@/lib/exportTable";
 import type { LineItemComponent, InventoryItem, UnitOfMeasure } from "@shared/schema";
 
 interface LineItemComponentsPanelProps {
