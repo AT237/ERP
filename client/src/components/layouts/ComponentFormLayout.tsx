@@ -287,10 +287,9 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
   const fieldQuantity: FormField2<ComponentFormData> = {
     key: 'quantity',
     label: 'Aantal',
-    type: 'decimal',
+    type: 'number',
     placeholder: '1',
-    setValue: (value) => { form.setValue('quantity', value); setHasUnsavedChanges(true); },
-    watch: () => form.watch('quantity'),
+    register: form.register('quantity'),
     validation: { isRequired: true },
   };
 
