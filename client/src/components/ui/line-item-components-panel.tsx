@@ -165,6 +165,22 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
         return '';
       },
     },
+    {
+      key: '_manufacturerPartNumber',
+      label: 'Fabrikant Nr',
+      visible: true,
+      width: 140,
+      filterable: true,
+      sortable: true,
+      renderCell: (value: any, row: any) => {
+        if (value) return value;
+        if (row.componentItemId) {
+          const item = inventoryItems.find((i: any) => i.id === row.componentItemId);
+          return item?.manufacturerPartNumber || '';
+        }
+        return '';
+      },
+    },
     createCurrencyColumn('costPrice', 'Cost Price', 100),
     {
       key: 'costPriceTotal',
