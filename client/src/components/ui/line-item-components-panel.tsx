@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -39,9 +40,10 @@ interface ComponentRowProps {
   onDeleted: () => void;
   selected?: boolean;
   onToggleSelect?: () => void;
+  onDoubleClick?: (componentId: string) => void;
 }
 
-function LICComponentRow({ component, inventoryItems, suppliers, parentLineItemId, onDeleted, selected, onToggleSelect }: ComponentRowProps) {
+function LICComponentRow({ component, inventoryItems, suppliers, parentLineItemId, onDeleted, selected, onToggleSelect, onDoubleClick }: ComponentRowProps) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);

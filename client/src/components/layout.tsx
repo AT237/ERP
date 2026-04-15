@@ -55,6 +55,7 @@ const MasterDataTable = lazy(() => import('./masterdata-table'));
 const MasterDataFormLayout = lazy(() => import('@/components/layouts/MasterDataFormLayout'));
 const ProjectLineItemForm = lazy(() => import('@/pages/project-line-item-form'));
 const ContractForm = lazy(() => import('@/pages/contract-form'));
+const ComponentForm = lazy(() => import('@/pages/component-form'));
 const DevFuturesPage = lazy(() => import('@/pages/dev-futures'));
 
 const DashboardPage = lazy(() => import('@/pages/dashboard'));
@@ -191,7 +192,17 @@ export default function Layout({ children }: LayoutProps) {
     if (proformaItemEditMatch) {
       return { id: `proforma-invoice-line-${proformaItemEditMatch[2]}`, name: 'Proforma Regel', parentId: proformaItemEditMatch[1] };
     }
-    
+
+    const componentNewMatch = path.match(/^\/components\/([^/]+)\/([^/]+)\/new$/);
+    if (componentNewMatch) {
+      return { id: `component-new-${componentNewMatch[1]}`, name: 'Onderdeel', parentId: componentNewMatch[1], extra: { parentLineItemType: componentNewMatch[2] } };
+    }
+
+    const componentEditMatch = path.match(/^\/components\/([^/]+)\/([^/]+)\/([^/]+)$/);
+    if (componentEditMatch) {
+      return { id: `component-${componentEditMatch[3]}`, name: 'Onderdeel', parentId: componentEditMatch[1], extra: { parentLineItemType: componentEditMatch[2], componentId: componentEditMatch[3] } };
+    }
+
     switch (path) {
       case '/':
       case '/dashboard':
@@ -1311,6 +1322,34 @@ export default function Layout({ children }: LayoutProps) {
             <ProformaInvoiceLineItemForm
               proformaInvoiceId={tab.parentId || ''}
               itemId={lineItemId}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+
+      const componentNewMatch = tab.id.match(/^component-new-(.+)$/);
+      if (componentNewMatch) {
+        const routeMatch = tab.menuRoute?.match(/^\/components\/([^/]+)\/([^/]+)\/new$/);
+        return (
+          <Suspense fallback={<div></div>}>
+            <ComponentForm
+              parentLineItemId={componentNewMatch[1]}
+              parentLineItemType={routeMatch?.[2] || 'project_item'}
+              onSave={() => {}}
+            />
+          </Suspense>
+        );
+      }
+      if (tab.id.startsWith('component-') && !tab.id.startsWith('component-new-')) {
+        const compId = tab.id.replace('component-', '');
+        const routeMatch = tab.menuRoute?.match(/^\/components\/([^/]+)\/([^/]+)\/([^/]+)$/);
+        return (
+          <Suspense fallback={<div></div>}>
+            <ComponentForm
+              parentLineItemId={tab.parentId || routeMatch?.[1] || ''}
+              parentLineItemType={routeMatch?.[2] || 'project_item'}
+              componentId={compId}
               onSave={() => {}}
             />
           </Suspense>
