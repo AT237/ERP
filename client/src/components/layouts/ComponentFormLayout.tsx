@@ -238,6 +238,13 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
       form.reset(vals);
       setOriginalValues(vals);
 
+      const cp = parseFloat(component.costPrice ?? "0");
+      const up = parseFloat(component.unitPrice ?? "0");
+      if (cp > 0 && up > 0) {
+        const m = ((up - cp) / cp) * 100;
+        setMargin(m.toFixed(2));
+      }
+
       if (component.workDate) {
         setSelectedDate(new Date(component.workDate));
       }
@@ -668,10 +675,28 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     type: 'decimal',
     prefix: '€',
     placeholder: '0,00',
-    setValue: (value) => { form.setValue('unitPrice', value); setHasUnsavedChanges(true); },
+    setValue: (value) => {
+      form.setValue('unitPrice', value);
+      setHasUnsavedChanges(true);
+      const cp = parseFloat(form.getValues('costPrice')) || 0;
+      const up = parseFloat(value) || 0;
+      if (cp > 0 && up > 0) {
+        setMargin((((up - cp) / cp) * 100).toFixed(2));
+      }
+    },
     watch: () => form.watch('unitPrice'),
     validation: { isRequired: true },
   };
+
+  const recalcUnitPrice = useCallback((cp: string, m: string) => {
+    const cpNum = parseFloat(cp) || 0;
+    const mNum = parseFloat(m) || 0;
+    if (cpNum > 0 && mNum !== 0) {
+      const up = cpNum * (1 + mNum / 100);
+      form.setValue('unitPrice', up.toFixed(2));
+      setHasUnsavedChanges(true);
+    }
+  }, [form]);
 
   const fieldCostPrice: FormField2<ComponentFormData> = {
     key: 'costPrice',
@@ -679,8 +704,25 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     type: 'decimal',
     prefix: '€',
     placeholder: '0,00',
-    setValue: (value) => { form.setValue('costPrice', value); setHasUnsavedChanges(true); },
+    setValue: (value) => {
+      form.setValue('costPrice', value);
+      setHasUnsavedChanges(true);
+      recalcUnitPrice(value, margin);
+    },
     watch: () => form.watch('costPrice'),
+  };
+
+  const fieldMargin: FormField2<ComponentFormData> = {
+    key: 'margin' as any,
+    label: 'Marge %',
+    type: 'decimal',
+    placeholder: '0,00',
+    setValue: (value) => {
+      setMargin(value);
+      setHasUnsavedChanges(true);
+      recalcUnitPrice(form.getValues('costPrice'), value);
+    },
+    watch: () => margin,
   };
 
   const fieldLineTotal: FormField2<ComponentFormData> = {
@@ -730,7 +772,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     if (isCharge) {
       return [fieldTechnician, fieldWorkDate, fieldRate, fieldDescription, fieldQuantity, fieldUnitPrice, fieldUnit];
     }
-    return [fieldQuantity, fieldUnit, fieldUnitPrice, fieldCostPrice, fieldLineTotal];
+    return [fieldQuantity, fieldUnit, fieldCostPrice, fieldUnitPrice, fieldMargin, fieldLineTotal];
   };
 
   const formSections: FormSection2<ComponentFormData>[] = [
