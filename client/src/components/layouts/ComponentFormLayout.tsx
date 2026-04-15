@@ -10,7 +10,7 @@ import { InventorySelect } from "@/components/ui/inventory-select";
 import { EntitySelect } from "@/components/ui/entity-select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertLineItemComponentSchema, type LineItemComponent, type InventoryItem } from "@shared/schema";
+import type { LineItemComponent, InventoryItem } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -21,7 +21,9 @@ interface SupplierOption {
   supplierNumber: string;
 }
 
-const componentFormSchema = insertLineItemComponentSchema.extend({
+const componentFormSchema = z.object({
+  parentLineItemId: z.string(),
+  parentLineItemType: z.string(),
   componentType: z.string().min(1, "Type is verplicht"),
   quantity: z.string().default("1"),
   unitPrice: z.string().default("0"),
