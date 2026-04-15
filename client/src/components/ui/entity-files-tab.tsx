@@ -71,7 +71,7 @@ export function EntityFilesTab({ entityType, entityId, emptyMessage }: EntityFil
 
   const reorderMutation = useMutation({
     mutationFn: async (orderedIds: string[]) => {
-      await apiRequest("PATCH", `/api/attachments/reorder`, { ids: orderedIds });
+      await apiRequest("PATCH", `/api/attachments/reorder`, { ids: orderedIds, entityType, entityId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });

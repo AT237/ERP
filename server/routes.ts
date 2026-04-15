@@ -4809,11 +4809,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/attachments/reorder", async (req, res) => {
     try {
-      const { ids } = req.body;
-      if (!Array.isArray(ids)) return res.status(400).json({ message: "ids array required" });
-      for (let i = 0; i < ids.length; i++) {
-        await db.update(schema.entityAttachments).set({ sortOrder: i }).where(eq(schema.entityAttachments.id, ids[i]));
+      const { ids, entityType, entityId } = req.body;
+      if (!Array.isArray(ids) || !ids.length || !entityType || !entityId) {
+        return res.status(400).json({ message: "ids array, entityType and entityId required" });
       }
+      await db.transaction(async (tx) => {
+        for (let i = 0; i < ids.length; i++) {
+          const result = await tx.update(schema.entityAttachments)
+            .set({ sortOrder: i })
+            .where(and(
+              eq(schema.entityAttachments.id, ids[i]),
+              eq(schema.entityAttachments.entityType, entityType),
+              eq(schema.entityAttachments.entityId, entityId)
+            ));
+        }
+      });
       res.json({ success: true });
     } catch (error) {
       console.error("Error reordering attachments:", error);
