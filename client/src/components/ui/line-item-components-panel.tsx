@@ -179,18 +179,18 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
   const [typeFilter, setTypeFilter] = useState<"all" | "standard" | "unique" | "charge" | "text">("all");
   const [articleSearch, setArticleSearch] = useState<Record<string, string>>({});
 
-  const totalCostPrice = [
-    ...components.map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0"))),
-    ...pendingRows.map(r => (parseFloat(r.quantity) || 0) * (parseFloat(r.unitPrice) || 0)),
-  ].reduce((sum, v) => sum + v, 0);
-
-  const totalLineTotal = components
+  const totalUnitPrice = components
     .filter(c => c.componentType !== "text")
-    .map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0")))
+    .map(c => parseFloat(c.unitPrice ?? "0"))
     .reduce((sum, v) => sum + v, 0);
 
-  const totalCost = components
+  const totalCostPrice = components
     .map(c => parseFloat(c.costPrice ?? "0"))
+    .reduce((sum, v) => sum + v, 0);
+
+  const totalBedrag = components
+    .filter(c => c.componentType !== "text")
+    .map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0")))
     .reduce((sum, v) => sum + v, 0);
 
   const onCostPriceChangedRef = useRef(onCostPriceChanged);
@@ -198,14 +198,11 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
   const prevTotalRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const savedTotal = components
-      .map(c => (parseFloat(c.quantity ?? "0") * parseFloat(c.unitPrice ?? "0")))
-      .reduce((sum, v) => sum + v, 0);
-    if (prevTotalRef.current !== savedTotal) {
-      prevTotalRef.current = savedTotal;
-      onCostPriceChangedRef.current?.(savedTotal);
+    if (prevTotalRef.current !== totalBedrag) {
+      prevTotalRef.current = totalBedrag;
+      onCostPriceChangedRef.current?.(totalBedrag);
     }
-  }, [components]);
+  }, [totalBedrag]);
 
   function addRow(type: "standard" | "unique" | "charge" | "text") {
     setPendingRows(prev => [...prev, {
@@ -299,6 +296,14 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
   });
 
   function savePending(row: PendingRow) {
+    if (row.componentType === "standard" && !row.componentItemId) {
+      toast({ title: "Fout", description: "Selecteer een artikel uit de catalogus", variant: "destructive" });
+      return;
+    }
+    if ((row.componentType === "unique" || row.componentType === "charge") && !row.componentName.trim()) {
+      toast({ title: "Fout", description: "Voer een naam in voor het onderdeel", variant: "destructive" });
+      return;
+    }
     createMutation.mutate(row);
   }
 
@@ -672,17 +677,17 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
                   </td>
                   <td className="px-2 py-2 w-24 text-right">
                     <span className="text-xs font-mono font-bold text-slate-600">
-                      € {totalLineTotal.toFixed(2)}
+                      € {totalUnitPrice.toFixed(2)}
                     </span>
                   </td>
                   <td className="px-2 py-2 w-24 text-right">
                     <span className="text-xs font-mono font-bold text-slate-600">
-                      € {totalCost.toFixed(2)}
+                      € {totalCostPrice.toFixed(2)}
                     </span>
                   </td>
                   <td className="px-2 py-2 w-24 text-right">
                     <span className="text-xs font-mono font-bold text-orange-700">
-                      € {totalCostPrice.toFixed(2)}
+                      € {totalBedrag.toFixed(2)}
                     </span>
                   </td>
                   <td className="p-2 w-10" />
