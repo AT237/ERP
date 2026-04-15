@@ -195,12 +195,12 @@ export default function Layout({ children }: LayoutProps) {
 
     const componentNewMatch = path.match(/^\/components\/([^/]+)\/([^/]+)\/new$/);
     if (componentNewMatch) {
-      return { id: `component-new-${componentNewMatch[1]}`, name: 'Onderdeel', parentId: componentNewMatch[1], extra: { parentLineItemType: componentNewMatch[2] } };
+      return { id: `component-new-${componentNewMatch[1]}`, name: 'Onderdeel', parentId: componentNewMatch[1] };
     }
 
     const componentEditMatch = path.match(/^\/components\/([^/]+)\/([^/]+)\/([^/]+)$/);
     if (componentEditMatch) {
-      return { id: `component-${componentEditMatch[3]}`, name: 'Onderdeel', parentId: componentEditMatch[1], extra: { parentLineItemType: componentEditMatch[2], componentId: componentEditMatch[3] } };
+      return { id: `component-${componentEditMatch[3]}`, name: 'Onderdeel', parentId: componentEditMatch[1] };
     }
 
     switch (path) {

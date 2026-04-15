@@ -273,6 +273,17 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
     supportsDelete: true,
     supportsAddNew: false,
   },
+  component: {
+    apiPath: "/api/line-item-components",
+    formType: "component",
+    label: "Onderdeel",
+    labelPlural: "Onderdelen",
+    listQueryKey: "/api/line-item-components",
+    documentType: "component",
+    supportsNavigation: false,
+    supportsDelete: false,
+    supportsAddNew: false,
+  },
   work_order_line_item: {
     apiPath: "/api/work-order-items",
     formType: "work-order-line-item",

@@ -94,7 +94,11 @@ function LICComponentRow({ component, inventoryItems, suppliers, parentLineItemI
   }
 
   return (
-    <tr className={cn("border-b border-gray-100 hover:bg-slate-50 group", selected && "bg-orange-50/50")} style={{ height: '32px', lineHeight: '1.2' }}>
+    <tr
+      className={cn("border-b border-gray-100 hover:bg-slate-50 group cursor-pointer", selected && "bg-orange-50/50")}
+      style={{ height: '32px', lineHeight: '1.2' }}
+      onDoubleClick={() => !editing && onDoubleClick?.(component.id)}
+    >
       <td className="p-2 border-r border-gray-100" style={{ width: '48px', minWidth: '48px', maxWidth: '48px' }}>
         <input
           type="checkbox"
@@ -106,11 +110,12 @@ function LICComponentRow({ component, inventoryItems, suppliers, parentLineItemI
       <td className="p-2 border-r border-gray-100 w-24">
         <Badge variant="outline" className={cn(
           "text-xs font-medium",
-          isStandard
-            ? "bg-blue-50 text-blue-700 border-blue-200"
-            : "bg-purple-50 text-purple-700 border-purple-200"
+          component.componentType === "standard" && "bg-blue-50 text-blue-700 border-blue-200",
+          component.componentType === "unique" && "bg-purple-50 text-purple-700 border-purple-200",
+          component.componentType === "charge" && "bg-amber-50 text-amber-700 border-amber-200",
+          component.componentType === "text" && "bg-gray-50 text-gray-600 border-gray-200",
         )}>
-          {isStandard ? "Standaard" : "Uniek"}
+          {component.componentType === "standard" ? "Standaard" : component.componentType === "unique" ? "Uniek" : component.componentType === "charge" ? "Charge" : "Text"}
         </Badge>
       </td>
 
@@ -261,11 +266,18 @@ interface LineItemComponentsPanelProps {
   parentLineItemId: string;
   parentLineItemType: string;
   onCostPriceChanged?: (total: number) => void;
+  enableNavigation?: boolean;
 }
 
-export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, onCostPriceChanged }: LineItemComponentsPanelProps) {
+export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, onCostPriceChanged, enableNavigation = true }: LineItemComponentsPanelProps) {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const [, navigate] = useLocation();
+
+  const handleComponentDoubleClick = (componentId: string) => {
+    if (!enableNavigation) return;
+    navigate(`/components/${parentLineItemId}/${parentLineItemType}/${componentId}`);
+  };
 
   const { data: components = [], isLoading } = useQuery<LineItemComponent[]>({
     queryKey: ["/api/line-item-components", parentLineItemId],
@@ -578,6 +590,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
                   onDeleted={() => {}}
                   selected={selectedRows.includes(c.id)}
                   onToggleSelect={() => toggleRowSelection(c.id)}
+                  onDoubleClick={handleComponentDoubleClick}
                 />
               ))}
 
