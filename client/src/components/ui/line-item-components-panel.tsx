@@ -159,6 +159,12 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
       sortable: true,
       align: 'right' as const,
       isCurrency: true,
+      getValue: (row: any) => {
+        if (row.componentType === 'text') return null;
+        const qty = parseFloat(row.quantity || "0") || 0;
+        const cost = parseFloat(row.costPrice || "0") || 0;
+        return qty * cost;
+      },
       renderCell: (_value: any, row: any) => {
         if (row.componentType === 'text') return '';
         const qty = parseFloat(row.quantity || "0") || 0;
