@@ -17,7 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProjectSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { FolderOpen, Calendar, DollarSign, Image, Truck, List, RefreshCw, Paperclip, Plus, FileText, X, ClipboardList } from "lucide-react";
+import { FolderOpen, Calendar, DollarSign, Image, Truck, List, RefreshCw, Paperclip, Plus, FileText, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ProjectRelatedRecords } from "@/components/ui/project-related-records";
 import { AttachmentsGallery } from "@/components/ui/attachments-gallery";
@@ -719,21 +719,6 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
       ]
     },
     {
-      id: "items",
-      label: "Regels",
-      icon: <ClipboardList className="h-4 w-4" />,
-      rows: [
-        {
-          type: "custom" as const,
-          customContent: (
-            <div className="text-xs text-muted-foreground italic">
-              {isEditing ? "Regels worden hieronder weergegeven." : "Sla het project eerst op om regels toe te voegen."}
-            </div>
-          ),
-        },
-      ],
-    },
-    {
       id: "images",
       label: "Images",
       icon: <Image className="h-4 w-4" />,
@@ -831,7 +816,7 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
           />
         }
       />
-      {isEditing && activeSection === "items" && (
+      {isEditing && (
         <div className="px-6 py-4 pb-10 bg-white ml-[15px] mr-[15px]">
           <DataTableLayout
             data={projectItemsList}
