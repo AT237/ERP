@@ -478,13 +478,15 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
         onValueChange={(val) => {
           form.setValue("componentItemId", val);
           setHasUnsavedChanges(true);
-        }}
-        onItemRefreshed={(freshItem) => {
-          const price = freshItem.sellingPrice || freshItem.unitPrice;
-          if (price) { form.setValue("unitPrice", Number(price).toFixed(2)); setHasUnsavedChanges(true); }
-          if (freshItem.unit) form.setValue("componentUnit", freshItem.unit);
-          if (freshItem.description) form.setValue("componentName", freshItem.description);
-          if (freshItem.costPrice) form.setValue("costPrice", Number(freshItem.costPrice).toFixed(2));
+          fetch(`/api/inventory/${val}`).then(r => r.json()).then((freshItem: any) => {
+            if (!freshItem) return;
+            const price = freshItem.sellingPrice || freshItem.unitPrice;
+            if (price) form.setValue("unitPrice", Number(price).toFixed(2));
+            if (freshItem.unit) form.setValue("componentUnit", freshItem.unit);
+            if (freshItem.description) form.setValue("componentName", freshItem.description);
+            const cp = freshItem.costPrice;
+            if (cp !== null && cp !== undefined) form.setValue("costPrice", Number(cp).toFixed(2));
+          }).catch(() => {});
         }}
         placeholder="Artikel zoeken..."
       />
