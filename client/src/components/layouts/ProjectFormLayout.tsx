@@ -198,15 +198,15 @@ export function ProjectFormLayout({ onSave, projectId, parentId }: ProjectFormLa
     setIsBulkDeleteOpen(false);
   };
   const handleDuplicateItem = async (item: ProjectItem) => {
-    const { id, ...rest } = item;
     const maxPos = projectItemsList.length > 0
       ? Math.max(...projectItemsList.map(i => parseInt(i.positionNo || '0', 10) || 0)) + 10
       : 10;
-    await apiRequest("POST", `/api/projects/${currentProjectId}/items`, {
-      ...rest,
-      projectId: currentProjectId,
-      position: maxPos,
+    const response = await apiRequest("POST", `/api/project-items/${item.id}/duplicate`);
+    const copy = await response.json();
+    await apiRequest("PUT", `/api/project-items/${copy.id}`, {
+      ...copy,
       positionNo: String(maxPos).padStart(3, '0'),
+      description: item.description || '',
     });
     queryClient.invalidateQueries({ queryKey: ["/api/projects", currentProjectId, "items"] });
   };

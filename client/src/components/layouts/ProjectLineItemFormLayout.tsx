@@ -348,7 +348,11 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
         return sum + (qty * cost);
       }, 0);
       const laborCost = parseFloat(costPriceLaborValue || "0") || 0;
-      form.setValue('costPrice', (materialCost + laborCost).toFixed(2));
+      const newCost = (materialCost + laborCost).toFixed(2);
+      const currentCost = form.getValues('costPrice');
+      if (currentCost !== newCost) {
+        form.setValue('costPrice', newCost);
+      }
     }
   }, [assemblyComponents, lineTypeValue, costPriceLaborValue]);
 
