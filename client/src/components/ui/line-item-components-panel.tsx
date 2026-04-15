@@ -142,8 +142,9 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
       width: 200,
       filterable: true,
       sortable: true,
-      renderCell: (value: any) => {
+      renderCell: (value: any, row: any) => {
         if (!value) return <span className="text-gray-400">—</span>;
+        if (row?._stockItemLabel) return <span>{row._stockItemLabel}</span>;
         const item = inventoryItems.find((i: any) => i.id === value);
         return <span>{item ? `${item.sku || ''} - ${item.name || ''}`.trim() : value}</span>;
       },
