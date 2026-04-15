@@ -1237,7 +1237,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const components = await db.select().from(lineItemComponents)
         .where(eq(lineItemComponents.parentLineItemId, req.params.parentId))
         .orderBy(lineItemComponents.sortOrder, lineItemComponents.createdAt);
-      res.json(components);
+      const enriched = await Promise.all(components.map(async (comp) => {
+        if (comp.componentItemId) {
+          try {
+            const [inv] = await db.select({ unit: inventoryItems.unit })
+              .from(inventoryItems)
+              .where(eq(inventoryItems.id, comp.componentItemId));
+            if (inv?.unit) return { ...comp, componentUnit: inv.unit };
+          } catch {}
+        }
+        return comp;
+      }));
+      res.json(enriched);
     } catch (error: any) {
       handleRouteError(res, error, "Failed to fetch line item components");
     }
