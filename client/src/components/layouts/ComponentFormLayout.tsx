@@ -726,7 +726,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
 
   const getLeftColumnFields = (): FormField2<ComponentFormData>[] => {
     if (isCharge) {
-      return [fieldPositionNo, fieldType, fieldCustomerDisplay, fieldInternalNotes];
+      return [fieldPositionNo, fieldType, fieldInternalNotes];
     }
     const fields: FormField2<ComponentFormData>[] = [fieldPositionNo, fieldType];
     if (isStandard) {
