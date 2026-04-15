@@ -65,9 +65,9 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
         const isStd = row.componentType === "standard";
         if (isStd) {
           const item = inventoryItems.find((i: any) => i.id === row.componentItemId);
-          return item ? (item.description || item.name || '') : (row.componentName || '');
+          return item ? (item.description || item.name || '') : (row.description || row.componentName || '');
         }
-        return row.componentName || row.notes || '';
+        return row.description || row.componentName || row.notes || '';
       },
     },
     {
@@ -372,6 +372,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
           quantity: String(qty),
           unitPrice: String(price),
           costPrice: rowData.costPrice || '0.00',
+          description: rowData.description || '',
           notes: rowData.description || '',
           componentName: rowData.componentName || rowData.description || '',
           componentUnit: rowData.componentUnit || 'Pcs.',
@@ -403,6 +404,7 @@ export function LineItemComponentsPanel({ parentLineItemId, parentLineItemType, 
         if (rowData.componentUnit != null) updateData.componentUnit = rowData.componentUnit;
         if (rowData.componentItemId != null) updateData.componentItemId = rowData.componentItemId;
         if (rowData.description != null) {
+          updateData.description = rowData.description;
           updateData.notes = rowData.description;
           updateData.componentName = rowData.description;
         }
