@@ -657,14 +657,14 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
     setValue: (value) => { form.setValue('costPrice', value); setHasUnsavedChanges(true); },
     watch: () => form.watch('costPrice'),
     testId: 'input-cost-price',
-    labelExtra: lineTypeValue === 'unique' && assemblyComponents.length > 0 ? (
+    suffix: lineTypeValue === 'unique' ? (
       <button
         type="button"
         onClick={recalcCostFromAssembly}
-        className="ml-1 p-0.5 rounded hover:bg-orange-100 dark:hover:bg-orange-900 text-orange-500 hover:text-orange-600 transition-colors"
+        className="p-1.5 rounded hover:bg-orange-100 dark:hover:bg-orange-900 text-orange-500 hover:text-orange-600 transition-colors"
         title="Herbereken vanuit assembly"
       >
-        <RefreshCw className="h-3.5 w-3.5" />
+        <RefreshCw className="h-4 w-4" />
       </button>
     ) : undefined,
   };
