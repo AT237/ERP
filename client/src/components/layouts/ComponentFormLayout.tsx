@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { LayoutForm2, buildFormPersistenceKey, type FormSection2, type FormField2, createTwoColumnRow, createFieldRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
@@ -6,14 +6,21 @@ import type { InfoField } from './InfoHeaderLayout';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
 import { InventorySelect } from "@/components/ui/inventory-select";
 import { EntitySelect } from "@/components/ui/entity-select";
+import { EmployeeSelectWithAdd } from "@/components/ui/employee-select-with-add";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { LineItemComponent, InventoryItem } from "@shared/schema";
+import type { LineItemComponent, InventoryItem, CustomerRate, RateAndCharge, Employee } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface SupplierOption {
   id: string;
@@ -33,6 +40,11 @@ const componentFormSchema = z.object({
   componentItemId: z.string().optional().nullable(),
   supplierId: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  technicianNames: z.string().optional().nullable(),
+  technicianIds: z.string().optional().nullable(),
+  workDate: z.string().optional().nullable(),
+  customerRateId: z.string().optional().nullable(),
   sortOrder: z.number().optional(),
 });
 
@@ -50,6 +62,8 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
   const [activeSection, setActiveSection] = useState("general");
   const [originalValues, setOriginalValues] = useState<Partial<ComponentFormData>>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const { toast } = useToast();
   const isEditing = !!componentId;
   const hasClearedRef = useRef(false);
@@ -79,6 +93,11 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
       componentItemId: undefined,
       supplierId: undefined,
       notes: "",
+      description: "",
+      technicianNames: "",
+      technicianIds: "",
+      workDate: undefined,
+      customerRateId: "",
       sortOrder: 0,
     },
   });
@@ -98,6 +117,62 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     staleTime: 30000,
   });
 
+  const { data: allEmployees = [] } = useQuery<Employee[]>({
+    queryKey: ["/api/employees"],
+    staleTime: 30000,
+  });
+
+  const { data: allRates = [] } = useQuery<RateAndCharge[]>({
+    queryKey: ["/api/masterdata/rates-and-charges"],
+    staleTime: 30000,
+  });
+
+  const { data: parentLineItem } = useQuery<any>({
+    queryKey: ["/api/project-items", parentLineItemId],
+    queryFn: () => fetch(`/api/project-items/${parentLineItemId}`).then(r => {
+      if (!r.ok) return null;
+      return r.json();
+    }),
+    enabled: !!parentLineItemId,
+    staleTime: 60000,
+  });
+
+  const parentProjectId = parentLineItem?.projectId;
+
+  const { data: parentProject } = useQuery<any>({
+    queryKey: ["/api/projects", parentProjectId],
+    enabled: !!parentProjectId,
+    staleTime: 60000,
+  });
+
+  const customerId = parentLineItem?.customerId || parentProject?.customerId;
+
+  const { data: customerRates = [] } = useQuery<CustomerRate[]>({
+    queryKey: [`/api/customer-rates/${customerId}`],
+    enabled: !!customerId,
+    staleTime: 30000,
+  });
+
+  const customerRateOptions = useMemo(() => {
+    const customerRateMap = new Map<string, CustomerRate>();
+    customerRates.forEach(cr => customerRateMap.set(cr.rateId, cr));
+
+    return allRates
+      .filter(r => (r as any).isActive !== false && customerRateMap.has(r.id))
+      .map(r => {
+        const customerRate = customerRateMap.get(r.id);
+        const discount = customerRate ? Number(customerRate.discountPercent) || 0 : 0;
+        const baseRate = Number(r.rate) || 0;
+        const discountedPrice = discount > 0 ? baseRate * (1 - discount / 100) : baseRate;
+        return {
+          rateId: r.id,
+          label: `${r.code} — ${r.name} (€ ${discountedPrice.toFixed(2)}${discount > 0 ? ` / -${discount}%` : ''})`,
+          unit: r.unit || "hrs",
+          discountedPrice,
+        };
+      });
+  }, [customerRates, allRates]);
+
   useEffect(() => {
     if (component && componentId) {
       const vals: Partial<ComponentFormData> = {
@@ -112,10 +187,22 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
         componentItemId: component.componentItemId ?? undefined,
         supplierId: component.supplierId ?? undefined,
         notes: component.notes ?? "",
+        description: component.description ?? "",
+        technicianNames: component.technicianNames ?? "",
+        technicianIds: component.technicianIds ?? "",
+        workDate: component.workDate ? new Date(component.workDate).toISOString() : undefined,
+        customerRateId: component.customerRateId ?? "",
         sortOrder: component.sortOrder ?? 0,
       };
       form.reset(vals);
       setOriginalValues(vals);
+
+      if (component.workDate) {
+        setSelectedDate(new Date(component.workDate));
+      }
+      if (component.technicianIds) {
+        setSelectedEmployeeId(component.technicianIds);
+      }
     }
   }, [component, componentId]);
 
@@ -161,13 +248,18 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
   });
 
   const onSubmit = (data: ComponentFormData) => {
-    const transformedData = {
+    const transformedData: any = {
       ...data,
       componentName: data.componentName || null,
       componentUnit: data.componentUnit || null,
       componentItemId: data.componentItemId || null,
       supplierId: data.supplierId || null,
       notes: data.notes || null,
+      description: data.description || null,
+      technicianNames: data.technicianNames || null,
+      technicianIds: data.technicianIds || null,
+      workDate: data.workDate || null,
+      customerRateId: data.customerRateId || null,
     };
 
     if (data.componentType === "text") {
@@ -186,7 +278,9 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
   const componentTypeValue = form.watch("componentType");
   const quantityValue = form.watch("quantity");
   const unitPriceValue = form.watch("unitPrice");
+  const customerRateIdValue = form.watch("customerRateId");
   const isStandard = componentTypeValue === "standard";
+  const isCharge = componentTypeValue === "charge";
   const isText = componentTypeValue === "text";
 
   const lineTotal = isText ? 0 : (parseFloat(quantityValue || "0") * parseFloat(unitPriceValue || "0"));
@@ -196,6 +290,32 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     const price = parseFloat(form.getValues("unitPrice") || "0");
     form.setValue("lineTotal" as any, (qty * price).toFixed(2));
   }, [quantityValue, unitPriceValue]);
+
+  const handleCustomerRateChange = (rateId: string) => {
+    form.setValue("customerRateId", rateId);
+    const rateOpt = customerRateOptions.find(opt => opt.rateId === rateId);
+    if (rateOpt) {
+      form.setValue("unitPrice", rateOpt.discountedPrice.toFixed(2));
+      form.setValue("componentUnit", rateOpt.unit || "hrs");
+    }
+    setHasUnsavedChanges(true);
+  };
+
+  const handleDateChange = (date: Date | undefined) => {
+    setSelectedDate(date);
+    form.setValue("workDate", date ? date.toISOString() : undefined);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleEmployeeChange = (employeeId: string) => {
+    setSelectedEmployeeId(employeeId);
+    const emp = allEmployees.find(e => e.id === employeeId);
+    const prefix = emp ? ((emp as any).firstInitial || emp.firstName) : "";
+    const fullName = emp ? `${prefix} ${emp.lastName}` : "";
+    form.setValue("technicianNames", fullName);
+    form.setValue("technicianIds", employeeId);
+    setHasUnsavedChanges(true);
+  };
 
   const componentTypeLabel = () => {
     switch (componentTypeValue) {
@@ -228,7 +348,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
 
   const typeOptions = [
     { value: "standard", label: "Standard Item" },
-    { value: "charge", label: "Charge" },
+    { value: "charge", label: "Charges" },
     { value: "unique", label: "Unique Item" },
     { value: "text", label: "Text" },
   ];
@@ -238,7 +358,13 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     label: 'Type',
     type: 'select',
     options: typeOptions,
-    setValue: (value: string) => { form.setValue('componentType', value); setHasUnsavedChanges(true); },
+    setValue: (value: string) => {
+      form.setValue('componentType', value);
+      if (value === 'charge') {
+        form.setValue('componentUnit', 'hrs');
+      }
+      setHasUnsavedChanges(true);
+    },
     watch: () => form.watch('componentType'),
     validation: { isRequired: true },
   };
@@ -272,16 +398,101 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     type: 'text',
     register: form.register('componentName'),
     placeholder: 'Naam onderdeel...',
-    validation: { isRequired: !isStandard },
+    validation: { isRequired: !isStandard && !isCharge },
+  };
+
+  const fieldInternalNotes: FormField2<ComponentFormData> = {
+    key: 'notes',
+    label: 'Interne omschrijving',
+    type: 'textarea',
+    placeholder: 'Interne omschrijving (niet zichtbaar op factuur)',
+    rows: 4,
+    register: form.register('notes'),
   };
 
   const fieldDescription: FormField2<ComponentFormData> = {
+    key: 'description',
+    label: 'Description',
+    type: 'textarea',
+    placeholder: 'Description (zichtbaar op factuur)',
+    rows: 3,
+    register: form.register('description'),
+  };
+
+  const fieldNotesGeneral: FormField2<ComponentFormData> = {
     key: 'notes',
     label: 'Omschrijving / Notities',
     type: 'textarea',
     placeholder: 'Omschrijving of notities...',
     rows: 4,
     register: form.register('notes'),
+  };
+
+  const fieldTechnician: FormField2<ComponentFormData> = {
+    key: 'technicianNames',
+    label: 'Technician',
+    type: 'custom',
+    customComponent: (
+      <EmployeeSelectWithAdd
+        value={selectedEmployeeId}
+        onValueChange={handleEmployeeChange}
+      />
+    ),
+  };
+
+  const fieldWorkDate: FormField2<ComponentFormData> = {
+    key: 'workDate',
+    label: 'Work Date',
+    type: 'custom',
+    customComponent: (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn("w-full justify-start text-left font-normal h-10", !selectedDate && "text-muted-foreground")}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {selectedDate ? format(selectedDate, "dd-MM-yy") : "Selecteer datum..."}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar mode="single" selected={selectedDate} onSelect={handleDateChange} initialFocus />
+        </PopoverContent>
+      </Popover>
+    ),
+  };
+
+  const fieldRate: FormField2<ComponentFormData> = {
+    key: 'customerRateId',
+    label: 'Rate',
+    type: 'custom',
+    customComponent: (
+      <Select
+        value={customerRateIdValue || ""}
+        onValueChange={(value) => handleCustomerRateChange(value === "__none__" ? "" : value)}
+      >
+        <SelectTrigger className="h-10">
+          <SelectValue placeholder="Selecteer tarief..." />
+        </SelectTrigger>
+        <SelectContent>
+          {customerRateIdValue && (
+            <SelectItem value="__none__" className="text-muted-foreground italic">
+              — Selectie wissen —
+            </SelectItem>
+          )}
+          {customerRateOptions.map(opt => (
+            <SelectItem key={opt.rateId} value={opt.rateId}>
+              {opt.label}
+            </SelectItem>
+          ))}
+          {customerRateOptions.length === 0 && (
+            <SelectItem value="__none__" disabled className="text-muted-foreground italic text-xs">
+              Geen tarieven beschikbaar
+            </SelectItem>
+          )}
+        </SelectContent>
+      </Select>
+    ),
   };
 
   const fieldQuantity: FormField2<ComponentFormData> = {
@@ -318,6 +529,7 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
     placeholder: '0,00',
     setValue: (value) => { form.setValue('unitPrice', value); setHasUnsavedChanges(true); },
     watch: () => form.watch('unitPrice'),
+    validation: { isRequired: true },
   };
 
   const fieldCostPrice: FormField2<ComponentFormData> = {
@@ -367,13 +579,16 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
   };
 
   const getLeftColumnFields = (): FormField2<ComponentFormData>[] => {
+    if (isCharge) {
+      return [fieldType, fieldInternalNotes];
+    }
     const fields: FormField2<ComponentFormData>[] = [fieldType];
     if (isStandard) {
       fields.push(fieldStockItem);
     } else {
       fields.push(fieldComponentName);
     }
-    fields.push(fieldDescription);
+    fields.push(fieldNotesGeneral);
     if (!isStandard) {
       fields.push(fieldSupplier);
     }
@@ -382,8 +597,10 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
 
   const getRightColumnFields = (): FormField2<ComponentFormData>[] => {
     if (isText) return [];
-    const fields: FormField2<ComponentFormData>[] = [fieldQuantity, fieldUnit, fieldUnitPrice, fieldCostPrice, fieldLineTotal];
-    return fields;
+    if (isCharge) {
+      return [fieldTechnician, fieldWorkDate, fieldRate, fieldDescription, fieldQuantity, fieldUnitPrice, fieldUnit];
+    }
+    return [fieldQuantity, fieldUnit, fieldUnitPrice, fieldCostPrice, fieldLineTotal];
   };
 
   const formSections: FormSection2<ComponentFormData>[] = [
