@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSupplierSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { Building2, CreditCard, MapPin } from "lucide-react";
+import { Building2, CreditCard, MapPin, Paperclip } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Supplier, InsertSupplier } from "@shared/schema";
 import { z } from "zod";
+import { EntityFilesTab } from "@/components/ui/entity-files-tab";
 import { 
   LayoutForm2, 
   type FormSection2, 
@@ -27,6 +28,7 @@ import {
   createFieldsRow, 
   createSectionHeaderRow,
   createTwoColumnRow,
+  createCustomRow,
   type ChangeTrackingConfig 
 } from './LayoutForm2';
 import type { InfoField } from './InfoHeaderLayout';
@@ -512,6 +514,20 @@ export function SupplierFormLayout({ onSave, supplierId, parentId }: SupplierFor
           },
           testId: "select-supplier-status"
         } as FormField2<SupplierFormData>)
+      ]
+    },
+    {
+      id: "attachments",
+      label: "Bijlagen",
+      icon: <Paperclip className="h-4 w-4" />,
+      rows: [
+        createCustomRow(
+          <EntityFilesTab
+            entityType="supplier-file"
+            entityId={currentSupplierId}
+            emptyMessage="Sla de leverancier eerst op om bijlagen te uploaden."
+          />
+        ),
       ]
     }
   ];
