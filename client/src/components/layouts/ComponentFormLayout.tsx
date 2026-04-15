@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { LayoutForm2, buildFormPersistenceKey, type FormSection2, type FormField2, createTwoColumnRow, createFieldRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
@@ -50,6 +50,17 @@ export function ComponentFormLayout({ onSave, parentLineItemId, parentLineItemTy
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { toast } = useToast();
   const isEditing = !!componentId;
+  const hasClearedRef = useRef(false);
+
+  if (!isEditing && !hasClearedRef.current) {
+    hasClearedRef.current = true;
+    const persistKey = buildFormPersistenceKey({
+      formType: "component",
+      entityId: undefined,
+      scope: parentLineItemId,
+    });
+    try { localStorage.removeItem(persistKey); } catch (_) {}
+  }
 
   const form = useForm<ComponentFormData>({
     resolver: zodResolver(componentFormSchema),
