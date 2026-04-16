@@ -339,6 +339,8 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
     staleTime: 10000,
   });
 
+  const recalcSourceRef = useRef<'margin' | 'price' | 'cost' | null>(null);
+
   const recalcCostFromAssembly = useCallback(() => {
     if (lineTypeValue === 'unique') {
       const materialCost = assemblyComponents.reduce((sum: number, comp: any) => {
@@ -347,19 +349,58 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
         const cost = parseFloat(comp.costPrice || "0") || 0;
         return sum + (qty * cost);
       }, 0);
+      recalcSourceRef.current = 'cost';
       form.setValue('costPrice', materialCost.toFixed(2));
       setHasUnsavedChanges(true);
     }
   }, [assemblyComponents, lineTypeValue]);
 
-  const marginPercent = useMemo(() => {
-    const cost = parseFloat(costPriceValue || "0");
-    const price = parseFloat(unitPriceValue || "0");
-    if (cost > 0 && price > 0) {
-      return (((price - cost) / price) * 100).toFixed(1);
+  const recalcPriceFromAssembly = useCallback(() => {
+    if (lineTypeValue === 'unique') {
+      const salesTotal = assemblyComponents.reduce((sum: number, comp: any) => {
+        if (comp.componentType === 'text') return sum;
+        const qty = parseFloat(comp.quantity || "0") || 0;
+        const price = parseFloat(comp.unitPrice || "0") || 0;
+        return sum + (qty * price);
+      }, 0);
+      recalcSourceRef.current = 'price';
+      form.setValue('unitPrice', salesTotal.toFixed(2));
+      setHasUnsavedChanges(true);
     }
-    return null;
+  }, [assemblyComponents, lineTypeValue]);
+
+  const [marginValue, setMarginValue] = useState<string>("");
+
+  const recalcMarginFromPrices = useCallback(() => {
+    const cost = parseFloat(form.getValues('costPrice') || "0");
+    const price = parseFloat(form.getValues('unitPrice') || "0");
+    if (cost > 0 && price > 0) {
+      setMarginValue(((( price - cost) / price) * 100).toFixed(1));
+    } else {
+      setMarginValue("");
+    }
+  }, [form]);
+
+  useEffect(() => {
+    if (recalcSourceRef.current === 'margin') {
+      recalcSourceRef.current = null;
+      return;
+    }
+    recalcMarginFromPrices();
+    recalcSourceRef.current = null;
   }, [costPriceValue, unitPriceValue]);
+
+  const handleMarginChange = useCallback((val: string) => {
+    setMarginValue(val);
+    const marginPct = parseFloat(val.replace(',', '.') || "0");
+    const cost = parseFloat(form.getValues('costPrice') || "0");
+    if (cost > 0 && marginPct < 100) {
+      const newPrice = (cost / (1 - marginPct / 100)).toFixed(2);
+      recalcSourceRef.current = 'margin';
+      form.setValue('unitPrice', newPrice);
+      setHasUnsavedChanges(true);
+    }
+  }, [form]);
 
   const SNIPPET_CATEGORIES = [
     { value: "all", label: "Alle categorieën" },
@@ -672,12 +713,24 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
   const fieldMargin: FormField2<LineItemFormData> = {
     key: 'margin' as any,
     label: 'Marge',
-    type: 'custom',
-    customComponent: (
-      <div className="mt-1 px-3 py-2 rounded-md border bg-muted/50 text-sm" data-testid="margin-display">
-        {marginPercent ? `${marginPercent.replace('.', ',')}%` : '—'}
-      </div>
+    type: 'decimal',
+    placeholder: '0,0',
+    suffix: (
+      <>
+        <span className="text-sm text-muted-foreground select-none">%</span>
+        <button
+          type="button"
+          onClick={recalcMarginFromPrices}
+          className="p-1.5 rounded hover:bg-orange-100 dark:hover:bg-orange-900 text-orange-500 hover:text-orange-600 transition-colors"
+          title="Herbereken marge"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </button>
+      </>
     ),
+    setValue: handleMarginChange,
+    watch: () => marginValue,
+    testId: 'input-margin',
   };
 
   const fieldTechnician: FormField2<LineItemFormData> = {
@@ -784,6 +837,16 @@ export function ProjectLineItemFormLayout({ onSave, lineItemId, projectId, paren
     watch: () => form.watch('unitPrice'),
     validation: { isRequired: true },
     testId: 'input-unit-price',
+    suffix: lineTypeValue === 'unique' ? (
+      <button
+        type="button"
+        onClick={recalcPriceFromAssembly}
+        className="p-1.5 rounded hover:bg-orange-100 dark:hover:bg-orange-900 text-orange-500 hover:text-orange-600 transition-colors"
+        title="Herbereken vanuit assembly"
+      >
+        <RefreshCw className="h-4 w-4" />
+      </button>
+    ) : undefined,
   };
 
   const fieldUnit: FormField2<LineItemFormData> = {
