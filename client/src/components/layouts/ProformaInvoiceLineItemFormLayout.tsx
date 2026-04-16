@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HsCodeInput } from "@/components/ui/hs-code-input";
+import { HsCodeInput, validateHsCodeWarning } from "@/components/ui/hs-code-input";
 import { Label } from "@/components/ui/label";
 import { LayoutForm2, buildFormPersistenceKey, type FormSection2, type FormField2, createFieldRow, createFieldsRow, createCustomRow, createSectionHeaderRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
@@ -576,6 +576,11 @@ export function ProformaInvoiceLineItemFormLayout({ onSave, lineItemId, proforma
   };
 
   const onSubmit = (data: LineItemFormData) => {
+    const hsCodeWarning = validateHsCodeWarning((data as any).hsCode);
+    if (hsCodeWarning) {
+      toast({ title: "Let op", description: hsCodeWarning, variant: "default" });
+    }
+
     const emp = allEmployees.find(e => e.id === selectedEmployeeId);
     const techPrefix = emp ? ((emp as any).firstInitial || emp.firstName) : "";
     const techName = emp ? `${techPrefix} ${emp.lastName}` : undefined;

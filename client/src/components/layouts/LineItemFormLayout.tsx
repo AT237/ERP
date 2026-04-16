@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HsCodeInput } from "@/components/ui/hs-code-input";
+import { HsCodeInput, validateHsCodeWarning } from "@/components/ui/hs-code-input";
 import { Label } from "@/components/ui/label";
 import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createCustomRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
@@ -440,6 +440,11 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
   };
 
   const onSubmit = (data: LineItemFormData) => {
+    const hsCodeWarning = validateHsCodeWarning(data.hsCode);
+    if (hsCodeWarning) {
+      toast({ title: "Let op", description: hsCodeWarning, variant: "default" });
+    }
+
     const transformedData = {
       ...data,
       quantity: Number(data.quantity),

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HsCodeInput } from "@/components/ui/hs-code-input";
+import { HsCodeInput, validateHsCodeWarning } from "@/components/ui/hs-code-input";
 import { LayoutForm2, buildFormPersistenceKey, type FormSection2, type FormField2, createFieldRow, createFieldsRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
@@ -321,6 +321,11 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
   });
 
   const onSubmit = (data: PackingListItemFormData) => {
+    const hsCodeWarning = validateHsCodeWarning((data as any).hsCode);
+    if (hsCodeWarning) {
+      toast({ title: "Let op", description: hsCodeWarning, variant: "default" });
+    }
+
     const description = data.description || '';
     const transformedData = {
       ...data,

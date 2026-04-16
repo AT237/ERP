@@ -10,7 +10,17 @@ interface HsCodeInputProps {
   testId?: string;
 }
 
-const HS_CODE_LENGTH = 9;
+export const HS_CODE_LENGTH = 9;
+
+export function validateHsCodeWarning(hsCode: string | undefined | null): string | null {
+  if (!hsCode) return null;
+  const digits = hsCode.replace(/\D/g, "");
+  if (digits.length === 0) return null;
+  if (digits.length < HS_CODE_LENGTH) {
+    return `HS code heeft ${digits.length} van de ${HS_CODE_LENGTH} cijfers. Controleer of de code compleet is.`;
+  }
+  return null;
+}
 
 function formatHsCode(digits: string): string {
   const d = digits.replace(/\D/g, "").slice(0, HS_CODE_LENGTH);

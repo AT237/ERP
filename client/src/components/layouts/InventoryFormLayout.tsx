@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { EntitySelect } from "@/components/ui/entity-select";
-import { HsCodeInput } from "@/components/ui/hs-code-input";
+import { HsCodeInput, validateHsCodeWarning } from "@/components/ui/hs-code-input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInventoryItemSchema, type Country } from "@shared/schema";
@@ -1107,6 +1107,11 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
   });
 
   const onSubmit = (data: InventoryFormData) => {
+    const hsCodeWarning = validateHsCodeWarning((data as any).hsCode);
+    if (hsCodeWarning) {
+      toast({ title: "Let op", description: hsCodeWarning, variant: "default" });
+    }
+
     const transformedData = {
       ...data,
       unitPrice: String(parseFloat(data.unitPrice) || 0),
