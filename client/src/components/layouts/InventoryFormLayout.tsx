@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { EntitySelect } from "@/components/ui/entity-select";
-import { HsCodeInput, validateHsCodeWarning } from "@/components/ui/hs-code-input";
+import { HsCodeInput, validateHsCodeWarning, hsCodeZodField } from "@/components/ui/hs-code-input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInventoryItemSchema, type Country } from "@shared/schema";

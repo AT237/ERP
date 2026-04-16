@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
+import { z } from "zod";
 
 interface HsCodeInputProps {
   value: string;
@@ -21,6 +22,15 @@ export function validateHsCodeWarning(hsCode: string | undefined | null): string
   }
   return null;
 }
+
+export const hsCodeZodField = z.string().optional().refine(
+  (val) => {
+    if (!val) return true;
+    const digits = val.replace(/\D/g, "");
+    return digits.length === 0 || digits.length === HS_CODE_LENGTH;
+  },
+  { message: "HS code moet leeg zijn of exact 9 cijfers bevatten (0000.00.000)" }
+);
 
 function formatHsCode(digits: string): string {
   const d = digits.replace(/\D/g, "").slice(0, HS_CODE_LENGTH);

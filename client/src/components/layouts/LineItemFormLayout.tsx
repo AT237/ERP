@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HsCodeInput, validateHsCodeWarning } from "@/components/ui/hs-code-input";
+import { HsCodeInput, validateHsCodeWarning, hsCodeZodField } from "@/components/ui/hs-code-input";
 import { Label } from "@/components/ui/label";
 import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createCustomRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
@@ -47,7 +47,7 @@ const lineItemFormSchema = insertQuotationItemSchema.extend({
   sourceSnippetVersion: z.number().optional(),
   deliveryDate: z.string().optional(),
   supplierId: z.string().optional(),
-  hsCode: z.string().optional(),
+  hsCode: hsCodeZodField,
   countryOfOrigin: z.string().optional(),
 }).refine((data) => {
   if ((data.lineType === 'standard' || data.lineType === 'unique') && data.quantity < 1) {

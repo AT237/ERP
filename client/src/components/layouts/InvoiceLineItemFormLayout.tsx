@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HsCodeInput, validateHsCodeWarning } from "@/components/ui/hs-code-input";
+import { HsCodeInput, validateHsCodeWarning, hsCodeZodField } from "@/components/ui/hs-code-input";
 import { Label } from "@/components/ui/label";
 import { LayoutForm2, buildFormPersistenceKey, type FormSection2, type FormField2, createFieldRow, createFieldsRow, createCustomRow, createSectionHeaderRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
@@ -52,6 +52,8 @@ const lineItemFormSchema = insertInvoiceItemSchema.extend({
   customerRateId: z.string().optional(),
   technicianNames: z.string().optional(),
   technicianIds: z.string().optional(),
+  hsCode: hsCodeZodField,
+  countryOfOrigin: z.string().optional(),
 }).refine((data) => {
   if ((data.lineType === 'standard' || data.lineType === 'unique') && data.quantity <= 0) {
     return false;
@@ -73,6 +75,8 @@ type LineItemFormData = z.infer<typeof lineItemFormSchema> & {
   customerRateId?: string;
   technicianNames?: string;
   technicianIds?: string;
+  hsCode?: string;
+  countryOfOrigin?: string;
 };
 
 interface InvoiceLineItemFormLayoutProps {

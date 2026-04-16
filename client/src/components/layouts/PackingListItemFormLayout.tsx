@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HsCodeInput, validateHsCodeWarning } from "@/components/ui/hs-code-input";
+import { HsCodeInput, validateHsCodeWarning, hsCodeZodField } from "@/components/ui/hs-code-input";
 import { LayoutForm2, buildFormPersistenceKey, type FormSection2, type FormField2, createFieldRow, createFieldsRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
 import { useValidationErrors } from "@/hooks/use-validation-errors";
@@ -39,6 +39,8 @@ const packingListItemFormSchema = insertPackingListItemSchema.extend({
   descriptionInternal: z.string().optional(),
   discountPercent: z.string().optional(),
   packedQuantity: z.string().optional(),
+  hsCode: hsCodeZodField,
+  countryOfOrigin: z.string().optional(),
 }).refine((data) => {
   if ((data.lineType === 'standard' || data.lineType === 'unique') && data.quantity <= 0) {
     return false;
@@ -55,6 +57,8 @@ type PackingListItemFormData = z.infer<typeof packingListItemFormSchema> & {
   descriptionInternal?: string;
   discountPercent?: string;
   packedQuantity?: string;
+  hsCode?: string;
+  countryOfOrigin?: string;
 };
 
 interface PackingListItemFormLayoutProps {
