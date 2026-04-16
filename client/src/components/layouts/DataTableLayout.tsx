@@ -657,8 +657,12 @@ export function DataTableLayout<T = any>({
         setEditingRowId(null);
         setEditingRowData({});
       }
+    } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if (!isNewRow && editingRowId) {
+        handleEditRowSave();
+      }
     }
-  }, [directInput, directInputRow, editingRowData, handleDirectInputSave, handleEditRowSave]);
+  }, [directInput, directInputRow, editingRowData, editingRowId, handleDirectInputSave, handleEditRowSave]);
 
   const startEditingRow = useCallback((row: T) => {
     if (!directInput?.onUpdate || !directInputMode) return;

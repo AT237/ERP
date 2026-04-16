@@ -498,11 +498,13 @@ export function LayoutForm2<T extends FieldValues = FieldValues>({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        if (toolbar?.onSave) {
-          toolbar.onSave();
-        } else {
-          form.handleSubmit(onSubmit)();
-        }
+        setTimeout(() => {
+          if (toolbar?.onSave) {
+            toolbar.onSave();
+          } else {
+            form.handleSubmit(onSubmit)();
+          }
+        }, 50);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
