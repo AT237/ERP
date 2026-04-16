@@ -580,7 +580,7 @@ export function ProformaInvoiceLineItemFormLayout({ onSave, lineItemId, proforma
   };
 
   const onSubmit = (data: LineItemFormData) => {
-    const hsCodeWarning = validateHsCodeWarning((data as any).hsCode);
+    const hsCodeWarning = validateHsCodeWarning(data.hsCode);
     if (hsCodeWarning) {
       toast({ title: "Let op", description: hsCodeWarning, variant: "default" });
     }

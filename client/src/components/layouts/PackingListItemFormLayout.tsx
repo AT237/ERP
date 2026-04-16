@@ -325,7 +325,7 @@ export function PackingListItemFormLayout({ onSave, lineItemId, packingListId }:
   });
 
   const onSubmit = (data: PackingListItemFormData) => {
-    const hsCodeWarning = validateHsCodeWarning((data as any).hsCode);
+    const hsCodeWarning = validateHsCodeWarning(data.hsCode);
     if (hsCodeWarning) {
       toast({ title: "Let op", description: hsCodeWarning, variant: "default" });
     }

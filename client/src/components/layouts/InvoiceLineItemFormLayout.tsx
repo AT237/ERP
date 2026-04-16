@@ -577,7 +577,7 @@ export function InvoiceLineItemFormLayout({ onSave, lineItemId, invoiceId, paren
   };
 
   const onSubmit = (data: LineItemFormData) => {
-    const hsCodeWarning = validateHsCodeWarning((data as any).hsCode);
+    const hsCodeWarning = validateHsCodeWarning(data.hsCode);
     if (hsCodeWarning) {
       toast({ title: "Let op", description: hsCodeWarning, variant: "default" });
     }

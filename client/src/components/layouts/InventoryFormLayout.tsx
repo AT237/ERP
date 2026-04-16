@@ -39,6 +39,7 @@ const inventoryFormSchema = insertInventoryItemSchema.extend({
   unitPrice: z.string().min(1, "Unit price is required"),
   costPrice: z.string().min(1, "Cost price is required"),
   margin: z.string().optional(),
+  hsCode: hsCodeZodField,
 });
 
 type InventoryFormData = z.infer<typeof inventoryFormSchema>;
@@ -1107,7 +1108,7 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
   });
 
   const onSubmit = (data: InventoryFormData) => {
-    const hsCodeWarning = validateHsCodeWarning((data as any).hsCode);
+    const hsCodeWarning = validateHsCodeWarning(data.hsCode);
     if (hsCodeWarning) {
       toast({ title: "Let op", description: hsCodeWarning, variant: "default" });
     }
