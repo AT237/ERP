@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { Type, Heading, Table2, ImageIcon, ListOrdered, Trash2 } from "lucide-react";
+import { Type, Heading, Table2, ImageIcon, ListOrdered, Trash2, Copy } from "lucide-react";
 import { insertContractSchema, type Contract, type ContractItem, type Customer, type DocumentLayout } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -553,6 +553,23 @@ export function ContractFormLayout({ onSave, contractId, parentId }: ContractFor
           }
         }}
         rowActions={(row: any) => [
+          {
+            key: 'duplicate',
+            label: 'Dupliceren',
+            icon: <Copy className="h-4 w-4" />,
+            onClick: () => {
+              const sourceRow = rows[row._rowIdx];
+              if (sourceRow) {
+                const newRow = { ...sourceRow, id: undefined, articleNumber: sourceRow.articleNumber ? sourceRow.articleNumber + ' (kopie)' : '' };
+                setRows(prev => {
+                  const updated = [...prev];
+                  updated.splice(row._rowIdx + 1, 0, newRow);
+                  return updated;
+                });
+                setHasUnsavedChanges(true);
+              }
+            },
+          },
           {
             key: 'delete',
             label: 'Verwijderen',
