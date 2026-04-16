@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { HsCodeInput } from "@/components/ui/hs-code-input";
 import { Label } from "@/components/ui/label";
 import { LayoutForm2, type FormSection2, type FormField2, createFieldRow, createCustomRow, createTwoColumnRow } from './LayoutForm2';
 import { useFormToolbar } from "@/hooks/use-form-toolbar";
@@ -769,13 +770,14 @@ export function LineItemFormLayout({ onSave, lineItemId, quotationId, parentId }
     {
       key: 'hsCode',
       label: 'HS Code',
-      type: 'text',
-      placeholder: 'Bijv. 8471.30.00',
-      register: form.register('hsCode'),
-      validation: {
-        error: form.formState.errors.hsCode?.message
-      },
-      testId: 'input-hs-code'
+      type: 'custom',
+      customComponent: (
+        <HsCodeInput
+          value={form.watch('hsCode' as any) || ''}
+          onChange={(v) => { form.setValue('hsCode' as any, v); }}
+          testId="input-hs-code"
+        />
+      ),
     },
     {
       key: 'countryOfOrigin',

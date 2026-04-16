@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { EntitySelect } from "@/components/ui/entity-select";
+import { HsCodeInput } from "@/components/ui/hs-code-input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertInventoryItemSchema, type Country } from "@shared/schema";
@@ -1331,13 +1332,14 @@ export function InventoryFormLayout({ onSave, inventoryId, parentId }: Inventory
             {
               key: "hsCode",
               label: "HS Code",
-              type: "text",
-              placeholder: "Bijv. 8471.30.00",
-              register: form.register("hsCode"),
-              validation: {
-                error: form.formState.errors.hsCode?.message
-              },
-              testId: "input-inventory-hs-code"
+              type: "custom",
+              customComponent: (
+                <HsCodeInput
+                  value={form.watch("hsCode" as any) || ""}
+                  onChange={(v) => { form.setValue("hsCode" as any, v); }}
+                  testId="input-inventory-hs-code"
+                />
+              ),
             } as FormField2<InventoryFormData>,
             {
               key: "countryOfOrigin",
