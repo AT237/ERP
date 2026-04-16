@@ -824,9 +824,19 @@ export function ItemRepeaterRenderer({ block, printData, currentPage = 1, totalP
   );
 }
 
+function preserveLeadingSpaces(text: string): string {
+  return text.split('\n').map(line => {
+    const match = line.match(/^( +)/);
+    if (match) {
+      return '\u00A0'.repeat(match[1].length) + line.slice(match[1].length);
+    }
+    return line;
+  }).join('\n');
+}
+
 function renderContractItem(item: any, idx: number, printData: any, fontSize: number, titleColor: string, accentColor: string) {
   const indent = (item.indentLevel || 0) * 16;
-  const content = replaceTextVariables(item.content || '', printData);
+  const content = preserveLeadingSpaces(replaceTextVariables(item.content || '', printData));
   const artNum = item.articleNumber || '';
   const itemFontFamily = item.fontFamily || undefined;
   const itemFontSize = item.fontSize || undefined;
