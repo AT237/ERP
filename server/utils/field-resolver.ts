@@ -1320,6 +1320,7 @@ export async function loadContractPrintData(contractId: string): Promise<any | n
     },
     customer: customerData,
     company: companyData,
+    contractItems: itemsData,
     items: itemsData,
   };
 }
