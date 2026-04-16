@@ -813,6 +813,32 @@ export function VisualDesignerView({ layout }: { layout: any }) {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedChildBlock) {
+          e.preventDefault();
+          const sectionId = sections.find(s =>
+            s.config.blocks?.some((b: any) => b.id === selectedChildBlock.parentGroupId)
+          )?.id;
+          if (sectionId) {
+            setDeleteTarget({ type: 'childBlock', id: selectedChildBlock.block.id, sectionId, parentGroupId: selectedChildBlock.parentGroupId });
+            setShowDeleteConfirmDialog(true);
+          }
+        } else if (selectedBlock) {
+          e.preventDefault();
+          const sectionId = sections.find(s => s.config.blocks?.some((b: any) => b.id === selectedBlock.id))?.id;
+          if (sectionId) {
+            setDeleteTarget({ type: 'block', id: selectedBlock.id, sectionId });
+            setShowDeleteConfirmDialog(true);
+          }
+        } else if (selectedSection) {
+          e.preventDefault();
+          setDeleteTarget({ type: 'section', id: selectedSection.id });
+          setShowDeleteConfirmDialog(true);
+        }
+        return;
+      }
+
       if (!e.ctrlKey && !e.metaKey) return;
 
       switch (e.key.toLowerCase()) {
@@ -894,7 +920,7 @@ export function VisualDesignerView({ layout }: { layout: any }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [sections, selectedBlock, selectedSection]);
+  }, [sections, selectedBlock, selectedSection, selectedChildBlock]);
 
   if (!layout) {
     return (
